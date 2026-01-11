@@ -2,7 +2,8 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import routes from './routes/index.js';
-
+import { connectDB } from "./database/connection.js";
+import "./models/relations.js";    
 // Load environment variables
 dotenv.config();
 
@@ -17,6 +18,9 @@ app.use(express.static('public'));
 
 // Main routes
 app.use('/', routes);
+
+// Connect to the database
+connectDB();
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
