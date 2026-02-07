@@ -1,12 +1,9 @@
-const express = require('express');
-const router = express.Router();
-const PatentsController = require('../../controllers/PatentsController');
-const authMiddleware = require('../../middleware/auth');
+import { Router } from 'express';
+import * as PatentsController from '../../app/Http/Controllers/PatentsController.js';
+import authMiddleware from '../../middleware/auth.middleware.js';
 
-// router.post('/', PatentsController.load); // commented out in PHP
+const router = Router();
+
 router.post('/', authMiddleware, PatentsController.store);
-// router.put('/', authMiddleware, PatentsController.update); // commented out in PHP
-// router.post('/submit', authMiddleware, PatentsController.submit); // commented out in PHP
 
-module.exports = router;
-
+export default router;

@@ -1,16 +1,16 @@
-const express = require('express');
-const router = express.Router();
-const SupervisorAllocationController = require('../../controllers/SupervisorAllocationController');
-const authMiddleware = require('../../middleware/auth');
+import { Router } from 'express';
+import * as SupervisorAllocationController from '../../app/Http/Controllers/SupervisorAllocationController.js';
+import authMiddleware from '../../middleware/auth.middleware.js';
+
+const router = Router();
 
 router.use(authMiddleware);
 
 router.get('/', SupervisorAllocationController.listForm);
 router.post('/', SupervisorAllocationController.createForm);
-router.post('/bulk', SupervisorAllocationController.bulkSubmit); // form.bulk.create
+router.post('/bulk', SupervisorAllocationController.bulkSubmit);
 router.get('/filters', SupervisorAllocationController.listFilters);
-router.get('/:form_id', SupervisorAllocationController.loadForm); // form.load
-router.post('/:form_id', SupervisorAllocationController.submit); // form.submit
+router.get('/:form_id', SupervisorAllocationController.loadForm);
+router.post('/:form_id', SupervisorAllocationController.submit);
 
-module.exports = router;
-
+export default router;

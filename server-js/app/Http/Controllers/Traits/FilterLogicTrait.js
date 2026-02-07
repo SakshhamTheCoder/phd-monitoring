@@ -1,5 +1,5 @@
 import { Op } from 'sequelize';
-import { sequelize } from '../../../../models/index.js';
+import { sequelize } from '../../../Models/index.js';
 
 /**
  * FilterLogicTrait utility functions for dynamic filtering

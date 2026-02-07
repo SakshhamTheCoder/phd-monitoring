@@ -1,4 +1,4 @@
-import { Semester, User, Student, Department, Faculty, Supervisor, DoctoralCommittee } from '../../../models/index.js';
+import { Semester, User, Student, Department, Faculty, Supervisor, DoctoralCommittee } from '../../Models/index.js';
 import { Op } from 'sequelize';
 
 // Helper function to list semester data based on role

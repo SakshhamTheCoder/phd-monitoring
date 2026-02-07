@@ -4,14 +4,20 @@ import dotenv from 'dotenv';
 import routes from './routes/index.js';
 import { connectDB } from "./database/connection.js";
 import "./models/relations.js";    
+
+// Import middleware
+import logRequestResponse from './middleware/LogRequestResponse.js';
+
 // Load environment variables
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 8000;
 
+// Apply middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(logRequestResponse);  // Request/Response logging
 
 // Static files (public directory)
 app.use(express.static('public'));

@@ -1,4 +1,4 @@
-import { Patent, User, Student } from '../../../models/index.js';
+import { Patent, User, Student } from '../../Models/index.js';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';

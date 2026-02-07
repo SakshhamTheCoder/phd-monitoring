@@ -1,14 +1,15 @@
 // Ported from Laravel's routes/base/admin.php
 
 import { Router } from 'express';
-const SupervisorController = require('../../controllers/SupervisorController');
-const AdminFormController = require('../../controllers/AdminFormController');
-const LogViewerController = require('../../controllers/LogViewerController');
-// const authMiddleware = require('../../middleware/auth'); // Uncomment if/when implemented
+import * as SupervisorController from '../../app/Http/Controllers/SupervisorController.js';
+import * as AdminFormController from '../../app/Http/Controllers/AdminFormController.js';
+import * as LogViewerController from '../../app/Http/Controllers/LogViewerController.js';
+import authMiddleware from '../../middleware/auth.middleware.js';
+
 const router = Router();
 
-// All routes below should be protected by auth middleware if available
-// router.use(authMiddleware);
+// All routes protected by auth middleware
+router.use(authMiddleware);
 
 // Supervisor assignment
 router.post('/allot-supervisor', SupervisorController.assign);
@@ -34,5 +35,4 @@ router.post('/bulk-forgot-password', (req, res) => {
 // Log viewer
 router.get('/logs', LogViewerController.fetchLogs);
 
-module.exports = router;
-
+export default router;

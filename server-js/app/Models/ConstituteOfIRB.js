@@ -1,11 +1,11 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../../database/connection.js";
-import { Student } from "../../models/Student.js";
-import { Faculty } from "../../models/Faculty.js";
+import Student from "./Student.js";
+import { Faculty } from "./Faculty.js";
 import { ConstituteIrbSupervisorApproval } from "./ConstituteIrbSupervisorApproval.js";
 import { AreaOfSpecialization } from "./AreaOfSpecialization.js";
 import { BroadAreaSpecialization } from "./BroadAreaSpecialization.js";
-import { OutsideExpert } from "./OutsideExpert.js";
+import OutsideExpert from "./OutsideExpert.js";
 import { IrbNomineeCognate } from "./IrbNomineeCognate.js";
 import { IrbOutsideExpert } from "./IrbOutsideExpert.js";
 import { IrbExpertDepartment } from "./IrbExpertDepartment.js";

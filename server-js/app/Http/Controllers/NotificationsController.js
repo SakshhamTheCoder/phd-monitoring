@@ -1,5 +1,4 @@
-import { User } from "../../../models/User.js";
-import { Notification } from "../../../models/Notification.js";
+import { User, Notifications } from "../../Models/index.js";
 
 /**
  * Notifications Controller
@@ -57,7 +56,7 @@ export const markAsRead = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const notification = await Notification.findOne({
+    const notification = await Notifications.findOne({
       where: {
         id: id,
         user_id: user.id,
@@ -124,7 +123,7 @@ export const deleteNotification = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const notification = await Notification.findOne({
+    const notification = await Notifications.findOne({
       where: {
         id: id,
         user_id: user.id,

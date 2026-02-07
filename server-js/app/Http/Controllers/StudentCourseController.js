@@ -1,4 +1,4 @@
-import { StudentCourse, Student, Course, User, Department, Semester } from '../../../models/index.js';
+import { StudentCourse, Student, Course, User, Department, Semester } from '../../Models/index.js';
 import { Op } from 'sequelize';
 import fs from 'fs';
 import csvParser from 'csv-parser';

@@ -1,8 +1,9 @@
-const express = require('express');
-const router = express.Router();
-const RolesController = require('../../controllers/RolesController');
-const Role = require('../../models/Role');
-const authMiddleware = require('../../middleware/auth');
+import { Router } from 'express';
+import * as RolesController from '../../app/Http/Controllers/RolesController.js';
+import { Role } from '../../app/Models/index.js';
+import authMiddleware from '../../middleware/auth.middleware.js';
+
+const router = Router();
 
 router.get('/', async (req, res) => {
     const roles = await Role.findAll();
@@ -11,5 +12,4 @@ router.get('/', async (req, res) => {
 
 router.post('/add', authMiddleware, RolesController.add);
 
-module.exports = router;
-
+export default router;

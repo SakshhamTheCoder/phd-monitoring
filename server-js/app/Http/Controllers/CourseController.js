@@ -1,9 +1,9 @@
-import { Course } from "../../../models/Course.js";
-import { Department } from "../../../models/Department.js";
-import { User } from "../../../models/User.js";
-import { Faculty } from "../../../models/Faculty.js";
-import { PhdCoordinator } from "../../../models/PhdCoordinator.js";
-import { StudentCourse } from "../../../models/StudentCourse.js";
+import { Course } from "../../Models/Course.js";
+import { Department } from "../../Models/Department.js";
+import { User } from "../../Models/User.js";
+import { Faculty } from "../../Models/Faculty.js";
+import { PhdCoordinator } from "../../Models/PhdCoordinator.js";
+import { StudentCourse } from "../../Models/StudentCourse.js";
 import { Op } from "sequelize";
 
 /**

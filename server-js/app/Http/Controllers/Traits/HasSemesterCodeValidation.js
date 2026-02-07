@@ -1,4 +1,4 @@
-import { Semester } from '../../../../models/index.js';
+import { Semester } from '../../../Models/index.js';
 import { Op } from 'sequelize';
 
 /**

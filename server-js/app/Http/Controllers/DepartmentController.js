@@ -1,10 +1,10 @@
-import { Department } from "../../../models/Department.js";
-import { Faculty } from "../../../models/Faculty.js";
-import { PhdCoordinator } from "../../../models/PhdCoordinator.js";
-import { Role } from "../../../models/Role.js";
-import { User } from "../../../models/User.js";
-import { AreaOfSpecialization } from "../../../models/AreaOfSpecialization.js";
-import { BroadAreaSpecialization } from "../../../models/BroadAreaSpecialization.js";
+import { Department } from "../../Models/Department.js";
+import { Faculty } from "../../Models/Faculty.js";
+import { PhdCoordinator } from "../../Models/PhdCoordinator.js";
+import { Role } from "../../Models/Role.js";
+import { User } from "../../Models/User.js";
+import { AreaOfSpecialization } from "../../Models/AreaOfSpecialization.js";
+import { BroadAreaSpecialization } from "../../Models/BroadAreaSpecialization.js";
 import { Op } from "sequelize";
 
 /**

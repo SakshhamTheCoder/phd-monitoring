@@ -15,8 +15,8 @@ import {
   SynopsisSubmission,
   ThesisExtentionForm,
   ThesisSubmission
-} from '../../../models/index.js';
-import { sequelize } from '../../../models/index.js';
+} from '../../Models/index.js';
+import sequelize from '../../../database/connection.js';
 
 const formModels = {
   'irb-constitution': ConstituteOfIRB,

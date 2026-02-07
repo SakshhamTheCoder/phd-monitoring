@@ -1,16 +1,18 @@
-const express = require('express');
-const router = express.Router();
-const ListOfExaminersController = require('../../controllers/ListOfExaminersController');
-const authMiddleware = require('../../middleware/auth');
+// Ported from Laravel's routes
+
+import { Router } from 'express';
+import * as ListOfExaminersController from '../../app/Http/Controllers/ListOfExaminersController.js';
+import authMiddleware from '../../middleware/auth.middleware.js';
+
+const router = Router();
 
 router.use(authMiddleware);
 
 router.get('/', ListOfExaminersController.listForm);
 router.post('/', ListOfExaminersController.createForm);
-router.post('/bulk', ListOfExaminersController.bulkSubmit); // form.bulk.create
+router.post('/bulk', ListOfExaminersController.bulkSubmit);
 router.get('/filters', ListOfExaminersController.listFilters);
-router.get('/:form_id', ListOfExaminersController.loadForm); // form.load
-router.post('/:form_id', ListOfExaminersController.submit); // form.submit
+router.get('/:form_id', ListOfExaminersController.loadForm);
+router.post('/:form_id', ListOfExaminersController.submit);
 
-module.exports = router;
-
+export default router;

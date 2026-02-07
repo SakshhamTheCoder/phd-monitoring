@@ -1,7 +1,8 @@
-const express = require('express');
-const router = express.Router();
-const SupervisorDoctoralChangeController = require('../../controllers/SupervisorDoctoralChangeController');
-const authMiddleware = require('../../middleware/auth');
+import { Router } from 'express';
+import * as SupervisorDoctoralChangeController from '../../app/Http/Controllers/SupervisorDoctoralChangeController.js';
+import authMiddleware from '../../middleware/auth.middleware.js';
+
+const router = Router();
 
 router.use(authMiddleware);
 
@@ -15,5 +16,4 @@ router.get('/student/:studentId/pending', SupervisorDoctoralChangeController.get
 router.put('/approve/:changeId', SupervisorDoctoralChangeController.approveChange);
 router.put('/reject/:changeId', SupervisorDoctoralChangeController.rejectChange);
 
-module.exports = router;
-
+export default router;

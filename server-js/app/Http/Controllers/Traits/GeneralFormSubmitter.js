@@ -1,4 +1,4 @@
-import { Forms, Presentation, Student, User, Faculty, Department } from '../../../../models/index.js';
+import { Forms, Presentation, Student, User, Faculty, Department } from '../../../Models/index.js';
 import { formNotification } from './NotificationManager.js';
 
 /**

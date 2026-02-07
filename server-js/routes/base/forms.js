@@ -1,19 +1,20 @@
 // Ported from Laravel's routes/base/forms.php
 
 import { Router } from 'express';
-const UserController = require('../../controllers/UserController');
-const irbcFormRouter = require('./irb/irbc_form');
-const irbsFormRouter = require('./irb/irbs_form');
-const presentationRouter = require('./presentation');
-const thesisSubmissionRouter = require('./thesis_submission');
-const thesisExtentionRouter = require('./thesis_extention');
-const researchExtentionRouter = require('./research_extention');
-const supervisorChangeRouter = require('./supervisor_change');
-const supervisorAllocationRouter = require('./supervisor_allocation');
-const studentStatusChangeRouter = require('./student_status_change');
-const synopsisSubmissionRouter = require('./synopsis_submission');
-const semesterOffRouter = require('./semester_off');
-const listOfExaminersRouter = require('./list-of-examiners');
+import * as UserController from '../../app/Http/Controllers/UserController.js';
+import irbcFormRouter from './irb/irbc_form.js';
+import irbsFormRouter from './irb/irbs_form.js';
+import presentationRouter from './presentation.js';
+import thesisSubmissionRouter from './thesis_submission.js';
+import thesisExtentionRouter from './thesis_extention.js';
+import researchExtentionRouter from './research_extention.js';
+import supervisorChangeRouter from './supervisor_change.js';
+import supervisorAllocationRouter from './supervisor_allocation.js';
+import studentStatusChangeRouter from './student_status_change.js';
+import synopsisSubmissionRouter from './synopsis_submission.js';
+import semesterOffRouter from './semester_off.js';
+import listOfExaminersRouter from './list-of-examiners.js';
+
 const router = Router();
 
 // All routes below should be protected by auth middleware if available
@@ -34,5 +35,4 @@ router.use('/revise-title', synopsisSubmissionRouter);
 router.use('/semester-off', semesterOffRouter);
 router.use('/list-of-examiners', listOfExaminersRouter);
 
-module.exports = router;
-
+export default router;

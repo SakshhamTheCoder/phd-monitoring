@@ -1,16 +1,16 @@
-const express = require('express');
-const router = express.Router();
-const SupervisorChangeFormController = require('../../controllers/SupervisorChangeFormController');
-const authMiddleware = require('../../middleware/auth');
+import { Router } from 'express';
+import * as SupervisorChangeFormController from '../../app/Http/Controllers/SupervisorChangeFormController.js';
+import authMiddleware from '../../middleware/auth.middleware.js';
+
+const router = Router();
 
 router.use(authMiddleware);
 
 router.get('/', SupervisorChangeFormController.listForm);
 router.post('/', SupervisorChangeFormController.createForm);
-router.post('/bulk', SupervisorChangeFormController.bulkSubmit); // form.bulk.create
+router.post('/bulk', SupervisorChangeFormController.bulkSubmit);
 router.get('/filters', SupervisorChangeFormController.listFilters);
-router.get('/:form_id', SupervisorChangeFormController.loadForm); // form.load
-router.post('/:form_id', SupervisorChangeFormController.submit); // form.submit
+router.get('/:form_id', SupervisorChangeFormController.loadForm);
+router.post('/:form_id', SupervisorChangeFormController.submit);
 
-module.exports = router;
-
+export default router;

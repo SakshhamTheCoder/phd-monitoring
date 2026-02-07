@@ -1,4 +1,4 @@
-import { Student, User, Faculty, Department } from '../../../../models/index.js';
+import { Student, User, Faculty, Department } from '../../../Models/index.js';
 
 /**
  * GeneralFormHandler utility functions for handling form access based on user roles

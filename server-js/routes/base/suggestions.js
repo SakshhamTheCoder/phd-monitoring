@@ -1,7 +1,8 @@
-const express = require('express');
-const router = express.Router();
-const SuggestionController = require('../../controllers/SuggestionController');
-const authMiddleware = require('../../middleware/auth');
+import { Router } from 'express';
+import * as SuggestionController from '../../app/Http/Controllers/SuggestionController.js';
+import authMiddleware from '../../middleware/auth.middleware.js';
+
+const router = Router();
 
 router.use(authMiddleware);
 
@@ -15,5 +16,4 @@ router.post('/state', SuggestionController.suggestState);
 router.post('/city', SuggestionController.suggestCity);
 router.post('/designation', SuggestionController.suggestDesignation);
 
-module.exports = router;
-
+export default router;

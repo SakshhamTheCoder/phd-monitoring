@@ -1,8 +1,9 @@
-const express = require('express');
-const router = express.Router();
-const PresentationController = require('../../controllers/PresentationController');
-const SemesterController = require('../../controllers/SemesterController');
-const authMiddleware = require('../../middleware/auth');
+import { Router } from 'express';
+import * as PresentationController from '../../app/Http/Controllers/PresentationController.js';
+import * as SemesterController from '../../app/Http/Controllers/SemesterController.js';
+import authMiddleware from '../../middleware/auth.middleware.js';
+
+const router = Router();
 
 router.use(authMiddleware);
 
@@ -29,5 +30,4 @@ router.post('/semester/:semester_id/:form_id', PresentationController.submit);
 router.post('/semester/:semester_id/:form_id/link', PresentationController.linkPublication);
 router.post('/semester/:semester_id/:form_id/unlink', PresentationController.unlinkPublication);
 
-module.exports = router;
-
+export default router;

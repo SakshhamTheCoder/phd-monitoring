@@ -1,4 +1,4 @@
-import { Student, User, Faculty } from '../../../../models/index.js';
+import { Student, User, Faculty } from '../../../Models/index.js';
 import { applyDynamicFilters } from './FilterLogicTrait.js';
 import { Op } from 'sequelize';
 

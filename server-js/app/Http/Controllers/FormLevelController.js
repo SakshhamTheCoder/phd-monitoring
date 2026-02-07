@@ -13,7 +13,7 @@ import {
   SynopsisSubmission,
   ThesisExtentionForm,
   ThesisSubmission
-} from '../../../models/index.js';
+} from '../../Models/index.js';
 
 // Helper function to get the model based on form type
 const getModel = (formType) => {

@@ -1,10 +1,10 @@
-const express = require('express');
-const router = express.Router();
-const PublicationController = require('../../controllers/PublicationController');
-const authMiddleware = require('../../middleware/auth');
+import { Router } from 'express';
+import * as PublicationController from '../../app/Http/Controllers/PublicationController.js';
+import authMiddleware from '../../middleware/auth.middleware.js';
+
+const router = Router();
 
 router.post('/', authMiddleware, PublicationController.store);
 router.get('/', authMiddleware, PublicationController.get);
 
-module.exports = router;
-
+export default router;

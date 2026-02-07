@@ -1,7 +1,7 @@
-import { User } from "../../../models/User.js";
-import { Faculty } from "../../../models/Faculty.js";
-import { Department } from "../../../models/Department.js";
-import { Role } from "../../../models/Role.js";
+import { User } from "../../Models/User.js";
+import { Faculty } from "../../Models/Faculty.js";
+import { Department } from "../../Models/Department.js";
+import { Role } from "../../Models/Role.js";
 import bcrypt from "bcrypt";
 import { Op } from "sequelize";
 import { sequelize } from "../../../config/database.js";

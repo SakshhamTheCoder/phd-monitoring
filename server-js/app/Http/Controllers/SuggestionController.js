@@ -5,7 +5,7 @@ import {
   Faculty,
   OutsideExpert,
   User
-} from '../../../models/index.js';
+} from '../../Models/index.js';
 import { Op } from 'sequelize';
 import axios from 'axios';
 

@@ -1,4 +1,4 @@
-import { ResearchExtentionsForm, User, Student, Faculty } from '../../../models/index.js';
+import { ResearchExtentionsForm, User, Student, Faculty } from '../../Models/index.js';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';

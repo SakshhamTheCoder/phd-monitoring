@@ -1,7 +1,8 @@
-const express = require('express');
-const router = express.Router();
-const OutsideExpertController = require('../../controllers/OutsideExpertController');
-const authMiddleware = require('../../middleware/auth');
+import { Router } from 'express';
+import * as OutsideExpertController from '../../app/Http/Controllers/OutsideExpertController.js';
+import authMiddleware from '../../middleware/auth.middleware.js';
+
+const router = Router();
 
 router.use(authMiddleware);
 
@@ -11,7 +12,6 @@ router.get('/filters', OutsideExpertController.listFilters);
 router.post('/add', OutsideExpertController.add);
 router.post('/bulk-import', OutsideExpertController.bulkImportFromCSV);
 router.put('/update/:id', OutsideExpertController.update);
-router.delete('/delete/:id', OutsideExpertController.delete);
+router.delete('/delete/:id', OutsideExpertController.remove);
 
-module.exports = router;
-
+export default router;

@@ -1,4 +1,4 @@
-import { Notifications, Faculty, Role, Student, User } from '../../../../models/index.js';
+import { Notifications, Faculty, Role, Student, User } from '../../../Models/index.js';
 
 /**
  * NotificationManager utility functions for sending notifications

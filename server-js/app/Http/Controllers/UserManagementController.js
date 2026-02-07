@@ -1,4 +1,4 @@
-import { User, Role, Student, Faculty, Department } from '../../../models/index.js';
+import { User, Role, Student, Faculty, Department } from '../../Models/index.js';
 import { Op } from 'sequelize';
 import bcrypt from 'bcrypt';
 

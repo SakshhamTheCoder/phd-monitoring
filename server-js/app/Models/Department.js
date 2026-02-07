@@ -3,7 +3,7 @@ import sequelize from "../../database/connection.js";
 import { Faculty } from "../../models/Faculty.js";
 import { Student } from "../../models/Student.js";
 import { BroadAreaSpecialization } from "./BroadAreaSpecialization.js";
-import { PhdCoordinator } from "./PhdCoordinator.js";
+import PhdCoordinator from "./PhdCoordinator.js";
 
 const Department = sequelize.define(
     "Department",

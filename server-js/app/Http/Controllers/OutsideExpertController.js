@@ -1,4 +1,4 @@
-import { OutsideExpert } from '../../../models/index.js';
+import { OutsideExpert } from '../../Models/index.js';
 import { Op } from 'sequelize';
 import fs from 'fs';
 import csvParser from 'csv-parser';

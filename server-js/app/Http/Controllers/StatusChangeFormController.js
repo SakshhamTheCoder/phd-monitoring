@@ -1,4 +1,4 @@
-import { StudentStatusChangeForms, User, Student } from '../../../models/index.js';
+import { StudentStatusChangeForms, User, Student } from '../../Models/index.js';
 
 // TODO: Implement trait equivalents (same as ResearchExtentionController)
 // - GeneralFormHandler

@@ -1,4 +1,4 @@
-import { Forms } from '../../../../models/index.js';
+import { Forms } from '../../../Models/index.js';
 
 /**
  * GeneralFormCreate utility functions for creating forms

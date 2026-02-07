@@ -1,18 +1,18 @@
-const express = require('express');
-const router = express.Router();
-const ThesisSubmissionController = require('../../controllers/ThesisSubmissionController');
-const authMiddleware = require('../../middleware/auth');
+import { Router } from 'express';
+import * as ThesisSubmissionController from '../../app/Http/Controllers/ThesisSubmissionController.js';
+import authMiddleware from '../../middleware/auth.middleware.js';
+
+const router = Router();
 
 router.use(authMiddleware);
 
 router.get('/', ThesisSubmissionController.listForm);
 router.post('/', ThesisSubmissionController.createForm);
-router.post('/bulk', ThesisSubmissionController.bulkSubmit); // form.bulk.create
+router.post('/bulk', ThesisSubmissionController.bulkSubmit);
 router.get('/filters', ThesisSubmissionController.listFilters);
-router.post('/:form_id/link', ThesisSubmissionController.linkPublication); // form.load
-router.post('/:form_id/unlink', ThesisSubmissionController.unlinkPublication); // form.load
-router.get('/:form_id', ThesisSubmissionController.loadForm); // form.load
-router.post('/:form_id', ThesisSubmissionController.submit); // form.submit
+router.post('/:form_id/link', ThesisSubmissionController.linkPublication);
+router.post('/:form_id/unlink', ThesisSubmissionController.unlinkPublication);
+router.get('/:form_id', ThesisSubmissionController.loadForm);
+router.post('/:form_id', ThesisSubmissionController.submit);
 
-module.exports = router;
-
+export default router;

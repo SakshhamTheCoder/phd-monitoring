@@ -1,4 +1,4 @@
-import { Supervisor, DoctoralCommittee, Student, Faculty, User } from '../../../models/index.js';
+import { Supervisor, DoctoralCommittee, Student, Faculty, User } from '../../Models/index.js';
 
 export const assign = async (req, res) => {
   try {
