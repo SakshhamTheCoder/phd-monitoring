@@ -12,6 +12,6 @@ router.get('/filters', OutsideExpertController.listFilters);
 router.post('/add', OutsideExpertController.add);
 router.post('/bulk-import', OutsideExpertController.bulkImportFromCSV);
 router.put('/update/:id', OutsideExpertController.update);
-router.delete('/delete/:id', OutsideExpertController.remove);
-
+// router.delete('/delete/:id', OutsideExpertController.remove);
+router.delete('/delete/:id', OutsideExpertController.deleteExpert);
 export default router;

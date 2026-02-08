@@ -69,10 +69,12 @@ Role.hasMany(User, { foreignKey: "role_id" });
 
 // User ↔ Student / Faculty
 User.hasOne(Student, { foreignKey: "user_id", as: "student" });
-Student.belongsTo(User, { foreignKey: "user_id", as: "user" });
+//Student.belongsTo(User, { foreignKey: "user_id", as: "user" });
+Student.belongsTo(User, { foreignKey: "user_id", as: "studentUser" });
 
 User.hasOne(Faculty, { foreignKey: "user_id", as: "faculty" });
-Faculty.belongsTo(User, { foreignKey: "user_id", as: "user" });
+// Faculty.belongsTo(User, { foreignKey: "user_id", as: "user" });
+Faculty.belongsTo(User, { foreignKey: "user_id", as: "facultyUser" });
 
 // User ↔ Notifications
 User.hasMany(Notifications, { foreignKey: "user_id", as: "notifications" });

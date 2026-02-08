@@ -1,8 +1,8 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../../database/connection.js";
 import { IrbDoctoralApproval } from "./IrbDoctoralApproval.js";
-import { Student } from "../../models/Student.js";
-import { User } from "../../models/User.js";
+import Student from "./Student.js";
+import User from "./User.js";
 
 const IrbSubForm = sequelize.define(
     "IrbSubForm",
@@ -44,16 +44,7 @@ const IrbSubForm = sequelize.define(
     }
 );
 
-IrbSubForm.belongsTo(Student, {
-    foreignKey: "student_id",
-    targetKey: "roll_no",
-    as: "student",
-});
-
-IrbSubForm.hasMany(IrbDoctoralApproval, {
-    foreignKey: "irb_sub_form_id",
-    as: "doctoralApprovals",
-});
+// Relations are defined in server-js/models/relations.js
 
 IrbSubForm.prototype.fullForm = async function (user) {
     let formData = this.toJSON();

@@ -23,6 +23,6 @@ const User = sequelize.define(
 );
 
 // Relations
-User.belongsTo(Role, { foreignKey: "current_role_id", as: "current_role" });
+// User.belongsTo(Role, { foreignKey: "current_role_id", as: "current_role" });
 
 export { User };

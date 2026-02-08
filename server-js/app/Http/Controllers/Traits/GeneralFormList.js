@@ -502,7 +502,17 @@ export const listSemester = async (semester) => {
     unscheduled: Array.isArray(unscheduledStudents) ? unscheduledStudents.length : 0
   };
 };
+export const getAvailableFilters = (Model) => {
+  if (!Model || !Model.rawAttributes) {
+    return [];
+  }
 
+  return Object.keys(Model.rawAttributes).map(field => ({
+    key: field,
+    label: field.replace(/_/g, ' ').toUpperCase(),
+    type: Model.rawAttributes[field].type?.key || 'STRING'
+  }));
+};
 export default {
   listForms,
   paginateAndMap,

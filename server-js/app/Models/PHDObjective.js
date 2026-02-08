@@ -1,5 +1,5 @@
 import { Model, DataTypes } from 'sequelize';
-import sequelize from '../../config/database.js';
+import sequelize from '../../database/connection.js';
 
 class PHDObjective extends Model {
     static associate(models) {

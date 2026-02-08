@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../../database/connection.js";
 import { ExaminersRecommendation } from "./ExaminersRecommendation.js";
-import { Student } from "../../models/Student.js";
+import Student from "./Student.js";
 
 const ListOfExaminersForm = sequelize.define(
     "ListOfExaminersForm",
@@ -31,11 +31,7 @@ const ListOfExaminersForm = sequelize.define(
     }
 );
 
-ListOfExaminersForm.belongsTo(Student, {
-    foreignKey: "student_id",
-    targetKey: "roll_no",
-    as: "student",
-});
+// Student relation defined in server-js/models/relations.js
 
 ListOfExaminersForm.hasMany(ExaminersRecommendation, {
     foreignKey: "form_id",

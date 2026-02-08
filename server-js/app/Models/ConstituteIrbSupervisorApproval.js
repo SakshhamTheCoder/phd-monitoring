@@ -1,6 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../../database/connection.js";
-import { Faculty } from "../../models/Faculty.js";
+import { Faculty } from "./Faculty.js";
 // import { ConstituteOfIRB } from "./ConstituteOfIRB.js"; // To be created
 
 const ConstituteIrbSupervisorApproval = sequelize.define(

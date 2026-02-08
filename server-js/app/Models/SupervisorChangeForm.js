@@ -1,5 +1,5 @@
 import { Model, DataTypes } from 'sequelize';
-import sequelize from '../../config/database.js';
+import sequelize from '../../database/connection.js';
 
 class SupervisorChangeForm extends Model {
 

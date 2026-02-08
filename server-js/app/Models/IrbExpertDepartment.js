@@ -1,6 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../../database/connection.js";
-import { Faculty } from "../../models/Faculty.js";
+import { Faculty } from "./Faculty.js";
 
 const IrbExpertDepartment = sequelize.define(
     "IrbExpertDepartment",
@@ -24,10 +24,6 @@ const IrbExpertDepartment = sequelize.define(
     }
 );
 
-IrbExpertDepartment.belongsTo(Faculty, {
-    foreignKey: "expert_id",
-    targetKey: "faculty_code",
-    as: "expert",
-});
+// Relations are defined in server-js/models/relations.js
 
 export { IrbExpertDepartment };

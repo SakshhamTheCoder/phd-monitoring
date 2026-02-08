@@ -1,6 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../../database/connection.js";
-import { Faculty } from "../../models/Faculty.js";
+import { Faculty } from "./Faculty.js";
 // import { ListOfExaminersRecommendation } from "./ListOfExaminersRecommendation.js"; // To be created
 
 const ExaminersDetail = sequelize.define(

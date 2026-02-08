@@ -1,6 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../../database/connection.js";
-import { Faculty } from "../../models/Faculty.js";
+import { Faculty } from "./Faculty.js";
 import { IrbSubForm } from "./IrbSubForm.js";
 
 const IrbSupervisorApproval = sequelize.define(
@@ -28,15 +28,6 @@ const IrbSupervisorApproval = sequelize.define(
     }
 );
 
-IrbSupervisorApproval.belongsTo(Faculty, {
-    foreignKey: "supervisor_id",
-    targetKey: "faculty_code",
-    as: "supervisor",
-});
-
-IrbSupervisorApproval.belongsTo(IrbSubForm, {
-    foreignKey: "irb_sub_form_id",
-    as: "irbSubForm",
-});
+// Relations are defined in server-js/models/relations.js
 
 export { IrbSupervisorApproval };

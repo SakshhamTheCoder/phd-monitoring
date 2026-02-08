@@ -1,5 +1,5 @@
 import { Model, DataTypes, Op } from 'sequelize';
-import sequelize from '../../config/database.js';
+import sequelize from '../../database/connection.js';
 
 class Semester extends Model {
     /*

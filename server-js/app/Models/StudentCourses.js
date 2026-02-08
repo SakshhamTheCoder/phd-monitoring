@@ -1,5 +1,5 @@
 import { Model } from 'sequelize';
-import sequelize from '../../config/database.js';
+import sequelize from '../../database/connection.js';
 
 class StudentCourses extends Model {
     // Empty in PHP, so likely just an unused or base model in that context, 

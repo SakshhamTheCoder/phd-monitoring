@@ -1,4 +1,4 @@
-import { Role } from "../../Models/Role.js";
+import Role  from "../../Models/Role.js";
 
 /**
  * Roles Controller

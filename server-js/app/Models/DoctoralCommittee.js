@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../../database/connection.js";
-import { Faculty } from "../../models/Faculty.js";
-import { Student } from "../../models/Student.js";
+import { Faculty } from "./Faculty.js";
+import Student from "./Student.js";
 
 const DoctoralCommittee = sequelize.define(
     "DoctoralCommittee",
@@ -30,16 +30,6 @@ const DoctoralCommittee = sequelize.define(
 
 // Faculty relation
 // belongsTo(Faculty::class, 'faculty_id', 'faculty_code')
-DoctoralCommittee.belongsTo(Faculty, {
-    foreignKey: "faculty_id",
-    targetKey: "faculty_code",
-    as: "faculty",
-});
-
-// Student relation
-DoctoralCommittee.belongsTo(Student, {
-    foreignKey: "student_id",
-    as: "student",
-});
+// Relations are defined in server-js/models/relations.js
 
 export { DoctoralCommittee };

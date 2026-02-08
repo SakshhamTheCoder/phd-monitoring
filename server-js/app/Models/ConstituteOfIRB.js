@@ -54,43 +54,7 @@ const ConstituteOfIRB = sequelize.define(
     }
 );
 
-ConstituteOfIRB.belongsTo(Student, { foreignKey: "student_id" });
-
-ConstituteOfIRB.belongsTo(Faculty, {
-    foreignKey: "cognate_expert",
-    targetKey: "faculty_code",
-    as: "expertCognate",
-});
-
-ConstituteOfIRB.belongsTo(OutsideExpert, {
-    foreignKey: "outside_expert",
-    as: "expertOutside",
-});
-
-ConstituteOfIRB.hasMany(ConstituteIrbSupervisorApproval, {
-    foreignKey: "irb_cons_form_id",
-    as: "supervisorApprovals",
-});
-
-ConstituteOfIRB.hasMany(IrbNomineeCognate, {
-    foreignKey: "irb_form_id",
-    as: "nomineeCognates",
-});
-
-ConstituteOfIRB.hasMany(IrbOutsideExpert, {
-    foreignKey: "irb_form_id",
-    as: "outsideExperts",
-});
-
-ConstituteOfIRB.hasMany(IrbExpertDepartment, {
-    foreignKey: "irb_form_id",
-    as: "expertDepartments",
-});
-
-ConstituteOfIRB.hasMany(IrbExpertChairman, {
-    foreignKey: "irb_form_id",
-    as: "chairmanExperts",
-});
+// Relations are defined in server-js/models/relations.js
 
 ConstituteOfIRB.prototype.fullForm = async function (user) {
     let student = this.student;

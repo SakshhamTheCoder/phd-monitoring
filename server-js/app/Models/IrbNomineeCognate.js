@@ -1,6 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../../database/connection.js";
-import { Faculty } from "../../models/Faculty.js";
+import { Faculty } from "./Faculty.js";
 
 const IrbNomineeCognate = sequelize.define(
     "IrbNomineeCognate",
@@ -35,10 +35,6 @@ IrbNomineeCognate.belongsTo(Faculty, {
     as: "supervisor",
 });
 
-IrbNomineeCognate.belongsTo(Faculty, {
-    foreignKey: "nominee_id",
-    targetKey: "faculty_code",
-    as: "nominee",
-});
+// Nominee relation defined in server-js/models/relations.js
 
 export { IrbNomineeCognate };

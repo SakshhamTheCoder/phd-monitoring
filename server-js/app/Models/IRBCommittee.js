@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../../database/connection.js";
-import { Student } from "../../models/Student.js";
-import { Faculty } from "../../models/Faculty.js";
+import Student from "./Student.js";
+import { Faculty } from "./Faculty.js";
 
 const IRBCommittee = sequelize.define(
     "IRBCommittee",

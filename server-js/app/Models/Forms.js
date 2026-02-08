@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../../database/connection.js";
-import { Student } from "../../models/Student.js";
-import { Department } from "../../models/Department.js";
+import Student from "./Student.js";
+import { Department } from "./Department.js";
 
 const Forms = sequelize.define(
     "Forms",
@@ -88,17 +88,7 @@ const Forms = sequelize.define(
 
 // Student relation
 // belongsTo(Student::class, 'student_id', 'roll_no')
-Forms.belongsTo(Student, {
-    foreignKey: "student_id",
-    targetKey: "roll_no",
-    as: "student",
-});
-
-// Department relation
-Forms.belongsTo(Department, {
-    foreignKey: "department_id",
-    as: "department",
-});
+// Relations are defined in server-js/models/relations.js
 
 // Scopes wrapper for ease of use matching PHP
 Forms.ofType = function (type) {

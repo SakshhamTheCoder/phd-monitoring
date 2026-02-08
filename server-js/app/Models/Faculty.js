@@ -1,8 +1,8 @@
 import { DataTypes, Op } from "sequelize";
 import sequelize from "../../database/connection.js";
-import { User } from "../../models/User.js";
-import { Department } from "../../models/Department.js";
-import { Student } from "../../models/Student.js";
+import User from "./User.js";
+import { Department } from "./Department.js";
+import Student from "./Student.js";
 
 const Faculty = sequelize.define(
     "Faculty",
@@ -43,32 +43,7 @@ const Faculty = sequelize.define(
     }
 );
 
-Faculty.belongsTo(User, { foreignKey: "user_id" });
-
-Faculty.belongsTo(Department, { foreignKey: "department_id" });
-
-Faculty.belongsToMany(Student, {
-    through: "supervisors",
-    foreignKey: "faculty_id",
-    otherKey: "student_id",
-    sourceKey: "faculty_code",
-    targetKey: "roll_no",
-    as: "supervisedStudents",
-});
-
-Faculty.belongsToMany(Student, {
-    through: "doctoral_commitee",
-    foreignKey: "faculty_id",
-    otherKey: "student_id",
-    sourceKey: "faculty_code",
-    as: "doctoredStudents",
-});
-
-Faculty.hasMany(Department, {
-    foreignKey: "adordc_id",
-    sourceKey: "faculty_code",
-    as: "adordcDepartments",
-});
+// Relations are defined in server-js/models/relations.js
 
 Faculty.prototype.students = async function () {
     const supervised = await this.getSupervisedStudents({ include: [User, Department] });

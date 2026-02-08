@@ -1,6 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../../database/connection.js";
-import { Department } from "../../models/Department.js";
+import { Department } from "./Department.js";
 // import { StudentBroadAreaSpecialization } from "./StudentBroadAreaSpecialization.js"; // To be created
 
 const BroadAreaSpecialization = sequelize.define(
@@ -25,7 +25,7 @@ const BroadAreaSpecialization = sequelize.define(
     }
 );
 
-BroadAreaSpecialization.belongsTo(Department, { foreignKey: "department_id" });
+// Relations are defined in server-js/models/relations.js
 
 // BroadAreaSpecialization.hasMany(StudentBroadAreaSpecialization, {
 //   foreignKey: "specialization_id",

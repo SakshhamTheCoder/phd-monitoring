@@ -1,10 +1,10 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../../database/connection.js";
 import bcrypt from "bcrypt";
-import { User } from "../../models/User.js";
-import { Faculty } from "../../models/Faculty.js";
-import { Department } from "../../models/Department.js";
-import { Student } from "../../models/Student.js";
+import User from "./User.js";
+import { Faculty } from "./Faculty.js";
+import { Department } from "./Department.js";
+import Student from "./Student.js";
 
 const AreaOfSpecialization = sequelize.define(
     "area_of_specialization",
@@ -46,8 +46,7 @@ const AreaOfSpecialization = sequelize.define(
     }
 );
 
-AreaOfSpecialization.belongsTo(Department, { foreignKey: "department_id" });
-AreaOfSpecialization.hasMany(Student, { foreignKey: "area_of_specialization_id" });
+// Relations are defined in server-js/models/relations.js
 
 AreaOfSpecialization.prototype.getExpertFaculty = async function () {
     let user = await User.findOne({ where: { email: this.expert_email } });

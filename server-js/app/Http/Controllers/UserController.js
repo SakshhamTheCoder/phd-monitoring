@@ -1,5 +1,5 @@
-import { User } from "../../Models/User.js";
-import { Student } from "../../Models/Student.js";
+import User  from "../../Models/User.js";
+import Student  from "../../Models/Student.js";
 import { Faculty } from "../../Models/Faculty.js";
 
 /**

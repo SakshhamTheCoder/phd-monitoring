@@ -1,7 +1,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../../database/connection.js";
-import { Faculty } from "../../models/Faculty.js";
-import { Student } from "../../models/Student.js";
+import { Faculty } from "./Faculty.js";
+import Student from "./Student.js";
 import { BroadAreaSpecialization } from "./BroadAreaSpecialization.js";
 import PhdCoordinator from "./PhdCoordinator.js";
 
@@ -34,27 +34,7 @@ const Department = sequelize.define(
 );
 
 // HOD relation
-Department.belongsTo(Faculty, {
-    foreignKey: "hod_id",
-    targetKey: "faculty_code",
-    as: "hod",
-});
-
-// ADORDC relation
-Department.belongsTo(Faculty, {
-    foreignKey: "adordc_id",
-    targetKey: "faculty_code",
-    as: "adordc",
-});
-
-Department.hasMany(Student, { foreignKey: "department_id" });
-
-Department.hasMany(BroadAreaSpecialization, { foreignKey: "department_id" });
-
-Department.hasMany(PhdCoordinator, {
-    foreignKey: "department_id",
-    as: "phdCoordinators",
-});
+// Relations are defined in server-js/models/relations.js
 
 Department.prototype.checkCoordinates = async function (facultyId) {
     return await PhdCoordinator.count({
