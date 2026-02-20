@@ -341,8 +341,20 @@ export const list = async (req, res) => {
     const includeOptions = [
       "user",
       "department",
-      { association: "supervisors", include: ["user"] },
-      { association: "doctoralCommittee", include: ["user"] },
+      { 
+        association: "supervisors",
+        include: ["user"],
+        through: {
+          attributes: [] // 🔥 THIS FIXES EVERYTHING
+        }
+      },
+      { 
+        association: "doctoralCommittee",
+        include: ["user"],
+        through: {
+          attributes: [] // 🔥 SAME HERE
+        }
+      },
     ];
 
     switch (role) {

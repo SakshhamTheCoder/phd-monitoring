@@ -68,13 +68,32 @@ User.belongsTo(Role, { foreignKey: "default_role_id", as: "default_role" });
 Role.hasMany(User, { foreignKey: "role_id" });
 
 // User ↔ Student / Faculty
-User.hasOne(Student, { foreignKey: "user_id", as: "student" });
-//Student.belongsTo(User, { foreignKey: "user_id", as: "user" });
-Student.belongsTo(User, { foreignKey: "user_id", as: "studentUser" });
+// User.hasOne(Student, { foreignKey: "user_id", as: "student" });
+// //Student.belongsTo(User, { foreignKey: "user_id", as: "user" });
+// Student.belongsTo(User, { foreignKey: "user_id", as: "studentUser" });
+
+Student.belongsTo(User, { 
+  foreignKey: "user_id", 
+  as: "user"   
+});
+
+User.hasOne(Student, { 
+  foreignKey: "user_id", 
+  as: "student" 
+});
+
+
+
+// User.hasOne(Faculty, { foreignKey: "user_id", as: "faculty" });
+// // Faculty.belongsTo(User, { foreignKey: "user_id", as: "user" });
+// Faculty.belongsTo(User, { foreignKey: "user_id", as: "facultyUser" });
+
 
 User.hasOne(Faculty, { foreignKey: "user_id", as: "faculty" });
-// Faculty.belongsTo(User, { foreignKey: "user_id", as: "user" });
-Faculty.belongsTo(User, { foreignKey: "user_id", as: "facultyUser" });
+Faculty.belongsTo(User, { 
+  foreignKey: "user_id", 
+  as: "user" 
+});
 
 // User ↔ Notifications
 User.hasMany(Notifications, { foreignKey: "user_id", as: "notifications" });
@@ -93,9 +112,9 @@ Department.hasMany(Faculty, { foreignKey: "department_id", as: "faculties" });
 // Department ↔ HOD (Faculty)
 Department.belongsTo(Faculty, { foreignKey: "hod_id", targetKey: "faculty_code", as: "hod" });
 
-// Department ↔ ADORDC (Faculty)
-Department.belongsTo(Faculty, { foreignKey: "adordc_id", targetKey: "faculty_code", as: "adordc" });
-Faculty.hasMany(Department, { foreignKey: "adordc_id", sourceKey: "faculty_code", as: "adordcDepartments" });
+// // Department ↔ ADORDC (Faculty)
+// Department.belongsTo(Faculty, { foreignKey: "adordc_id", targetKey: "faculty_code", as: "adordc" });
+// Faculty.hasMany(Department, { foreignKey: "adordc_id", sourceKey: "faculty_code", as: "adordcDepartments" });
 
 // Department ↔ PhD Coordinators
 Department.hasMany(PhdCoordinator, { foreignKey: "department_id", as: "phdCoordinators" });
@@ -111,9 +130,9 @@ BroadAreaSpecialization.belongsTo(Department, { foreignKey: "department_id" });
 // ============================================
 
 // Student ↔ Area of Specialization
-Student.belongsTo(AreaOfSpecialization, { foreignKey: "area_of_specialization_id", as: "areaOfSpecialization" });
-AreaOfSpecialization.hasMany(Student, { foreignKey: "area_of_specialization_id" });
-AreaOfSpecialization.belongsTo(Department, { foreignKey: "department_id" });
+// Student.belongsTo(AreaOfSpecialization, { foreignKey: "area_of_specialization_id", as: "areaOfSpecialization" });
+// AreaOfSpecialization.hasMany(Student, { foreignKey: "area_of_specialization_id" });
+// AreaOfSpecialization.belongsTo(Department, { foreignKey: "department_id" });
 
 // Student ↔ Broad Area Specialization (many-to-many through StudentBroadAreaSpecialization)
 Student.hasMany(StudentBroadAreaSpecialization, { foreignKey: "student_id", sourceKey: "roll_no", as: "broadAreaSpecializations" });

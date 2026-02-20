@@ -22,9 +22,9 @@ const Department = sequelize.define(
         hod_id: {
             type: DataTypes.INTEGER,
         },
-        adordc_id: {
-            type: DataTypes.INTEGER,
-        },
+        // adordc_id: {
+        //     type: DataTypes.INTEGER,
+        // },
     },
     {
         tableName: "departments",

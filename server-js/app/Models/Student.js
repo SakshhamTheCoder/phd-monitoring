@@ -243,7 +243,7 @@ Student.init({
         allowNull: false
     },
     department_id: DataTypes.INTEGER,
-    area_of_specialization_id: DataTypes.INTEGER,
+    // area_of_specialization_id: DataTypes.INTEGER,
     date_of_registration: DataTypes.DATEONLY,
     date_of_irb: DataTypes.DATEONLY,
     date_of_synopsis: DataTypes.DATEONLY,
