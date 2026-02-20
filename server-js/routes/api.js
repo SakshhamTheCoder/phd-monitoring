@@ -40,6 +40,7 @@ router.post('/login', async (req, res) => {
         // Find user
         const user = await User.findOne({ 
             where: { email },
+            attributes: { exclude: ['available_roles'] },
             include: ['role', 'current_role', 'default_role']
         });
 

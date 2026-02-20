@@ -23,18 +23,18 @@ const Faculty = sequelize.define(
         supervised_campus: {
             type: DataTypes.INTEGER,
         },
-        supervied_outside: {
+        supervised_outside: {
             type: DataTypes.INTEGER,
         },
-        type: {
-            type: DataTypes.STRING,
-        },
-        institution: {
-            type: DataTypes.STRING,
-        },
-        website_link: {
-            type: DataTypes.STRING,
-        },
+        // type: {
+        //     type: DataTypes.STRING,
+        // },
+        // institution: {
+        //     type: DataTypes.STRING,
+        // },
+        // website_link: {
+        //     type: DataTypes.STRING,
+        // },
     },
     {
         tableName: "faculty",
