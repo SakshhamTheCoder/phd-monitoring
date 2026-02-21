@@ -5,6 +5,8 @@ import routes from './routes/index.js';
 import { connectDB } from "./database/connection.js";
 import "./models/relations.js";    
 
+import cors from "cors";
+
 // Import middleware
 import logRequestResponse from './middleware/LogRequestResponse.js';
 
@@ -18,6 +20,9 @@ const port = process.env.PORT || 8000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(logRequestResponse);  // Request/Response logging
+
+
+app.use(cors());
 
 // Static files (public directory)
 app.use(express.static('public'));
