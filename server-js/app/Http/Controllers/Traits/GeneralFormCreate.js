@@ -108,7 +108,6 @@ export const createForms = async (Model, data, callback = null, stage = null) =>
     }
 
     // Add history entry
-    // TODO: Implement addHistoryEntry method on form models
     if (form.addHistoryEntry) {
       form.addHistoryEntry('Form has been initiated', data.name);
     }

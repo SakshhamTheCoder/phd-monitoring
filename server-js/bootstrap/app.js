@@ -1,9 +1,9 @@
 // Bootstrap application configuration for Express (ported from Laravel)
 import express from 'express';
-import logRequestResponse from '../app/Http/Middleware/LogRequestResponse.js';
-import parseRollNumber from '../app/Http/Middleware/ParseRollNumber.js';
-import addApprovalFlag from '../app/Http/Middleware/AddApprovalFlag.js';
-import routes from '../routes/index.js';
+import logRequestResponse from '../middleware/LogRequestResponse.js';
+import parseRollNumber from '../middleware/ParseRollNumber.js';
+import addApprovalFlag from '../middleware/AddApprovalFlag.js';
+import apiRoutes from '../routes/api.js';
 
 const app = express();
 
@@ -23,7 +23,6 @@ app.use((err, req, res, next) => {
 });
 
 // Routing
-app.use('/', routes);
+app.use('/api', apiRoutes);
 
 export default app;
-

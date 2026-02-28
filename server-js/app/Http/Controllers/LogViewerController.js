@@ -18,8 +18,8 @@ export const fetchLogs = async (req, res) => {
       });
     }
 
-    // TODO: Update log file path based on your logging configuration
-    const filePath = path.join(__dirname, '../../../storage/logs/application.log');
+    // Log file path matches PHP's storage_path('logs/laravel.log')
+    const filePath = process.env.LOG_FILE_PATH || path.join(__dirname, '../../../storage/logs/laravel.log');
     const offset = parseInt(req.query.offset) || 0;
     const direction = req.query.direction || 'forward';
 

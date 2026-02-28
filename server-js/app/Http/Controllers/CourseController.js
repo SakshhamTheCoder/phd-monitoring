@@ -5,6 +5,7 @@ import { Faculty } from "../../Models/Faculty.js";
 import { PhdCoordinator } from "../../Models/PhdCoordinator.js";
 import { StudentCourse } from "../../Models/StudentCourse.js";
 import { Op } from "sequelize";
+import { getAvailableFilters } from "./Traits/FilterLogicTrait.js";
 
 /**
  * Course Controller
@@ -16,12 +17,7 @@ import { Op } from "sequelize";
  */
 export const listFilters = async (req, res) => {
   try {
-    // TODO: Implement getAvailableFilters logic from FilterLogicTrait
-    const filters = {
-      department_id: [],
-      credits: [],
-    };
-
+    const filters = await getAvailableFilters('courses');
     return res.json(filters);
   } catch (error) {
     console.error("Error in listFilters:", error);

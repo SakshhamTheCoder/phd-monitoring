@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
-import User from '../../models/User.js';
-import Faculty from '../../models/Faculty.js';
+import User from '../Models/User.js';
+import { Faculty } from '../Models/Faculty.js';
 
 class FacultyImport {
     /*

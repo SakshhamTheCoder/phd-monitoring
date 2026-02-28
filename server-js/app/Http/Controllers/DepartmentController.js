@@ -4,8 +4,10 @@ import { PhdCoordinator } from "../../Models/PhdCoordinator.js";
 import { Role } from "../../Models/Role.js";
 import { User } from "../../Models/User.js";
 import { AreaOfSpecialization } from "../../Models/AreaOfSpecialization.js";
+import { Student } from "../../Models/Student.js";
 import { BroadAreaSpecialization } from "../../Models/BroadAreaSpecialization.js";
 import { Op } from "sequelize";
+import { getAvailableFilters, applyDynamicFilters } from "./Traits/FilterLogicTrait.js";
 
 /**
  * Department Controller
@@ -17,8 +19,7 @@ import { Op } from "sequelize";
  */
 export const listFilters = async (req, res) => {
   try {
-    // TODO: Implement getAvailableFilters logic
-    const filters = {};
+    const filters = await getAvailableFilters('departments');
     return res.json(filters);
   } catch (error) {
     console.error("Error in listFilters:", error);
@@ -34,8 +35,7 @@ export const listFilters = async (req, res) => {
  */
 export const listAreaFilters = async (req, res) => {
   try {
-    // TODO: Implement getAvailableFilters logic
-    const filters = {};
+    const filters = await getAvailableFilters('areas_of_specialization');
     return res.json(filters);
   } catch (error) {
     console.error("Error in listAreaFilters:", error);
@@ -63,23 +63,29 @@ export const list = async (req, res) => {
       });
     }
 
-    const filtersParam = req.query.filters;
-    let filters = {};
-    if (filtersParam) {
-      try {
-        filters = typeof filtersParam === "string" ? JSON.parse(decodeURIComponent(filtersParam)) : filtersParam;
-      } catch (e) {
-        console.error("Error parsing filters:", e);
-      }
-    }
+    let whereClause = {};
 
     const perPage = parseInt(req.query.rows) || 15;
     const page = parseInt(req.query.page) || 1;
     const offset = (page - 1) * perPage;
 
-    // TODO: Apply dynamic filters
+    // Apply dynamic filters from request
+    const filtersParam = req.query.filters;
+    if (filtersParam) {
+      try {
+        const parsedFilters = typeof filtersParam === 'string'
+          ? JSON.parse(decodeURIComponent(filtersParam))
+          : filtersParam;
+        const queryOptions = { where: whereClause };
+        const filtered = applyDynamicFilters(queryOptions, parsedFilters);
+        Object.assign(whereClause, filtered.where);
+      } catch (e) {
+        console.error('Error applying dynamic filters:', e);
+      }
+    }
 
     const { count, rows: departments } = await Department.findAndCountAll({
+      where: whereClause,
       include: [
         {
           association: "hod",

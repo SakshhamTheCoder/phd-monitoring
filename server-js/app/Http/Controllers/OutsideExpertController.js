@@ -2,17 +2,7 @@ import { OutsideExpert } from '../../Models/index.js';
 import { Op } from 'sequelize';
 import fs from 'fs';
 import csvParser from 'csv-parser';
-
-// TODO: Implement FilterLogicTrait equivalent
-const applyDynamicFilters = (query, filters) => {
-  // Placeholder for dynamic filtering logic
-  return query;
-};
-
-const getAvailableFilters = (model) => {
-  // TODO: Implement filter metadata based on model
-  return [];
-};
+import { getAvailableFilters, applyDynamicFilters } from './Traits/FilterLogicTrait.js';
 
 export const list = async (req, res) => {
   try {
@@ -27,10 +17,19 @@ export const list = async (req, res) => {
       offset: offset
     };
 
-    // TODO: Apply filters if provided
-    // if (filters) {
-    //   queryOptions = applyDynamicFilters(queryOptions, filters);
-    // }
+    // Apply filters if provided
+    if (filters) {
+      try {
+        const parsedFilters = typeof filters === 'string'
+          ? JSON.parse(decodeURIComponent(filters))
+          : filters;
+        if (parsedFilters.conditions) {
+          queryOptions = applyDynamicFilters(queryOptions, parsedFilters);
+        }
+      } catch (e) {
+        console.error('Error applying filters:', e);
+      }
+    }
 
     const { rows: experts, count: total } = await OutsideExpert.findAndCountAll(queryOptions);
 
@@ -261,7 +260,7 @@ export const deleteExpert = async (req, res) => {
 
 export const listFilters = async (req, res) => {
   try {
-    const filters = getAvailableFilters('outside_experts');
+    const filters = await getAvailableFilters('outside_experts');
     return res.status(200).json(filters);
   } catch (error) {
     console.error('Error fetching filters:', error);

@@ -1,20 +1,10 @@
 import { User, Role, Student, Faculty, Department } from '../../Models/index.js';
 import { Op } from 'sequelize';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
+import { getAvailableFilters, applyDynamicFilters } from './Traits/FilterLogicTrait.js';
+import EmailService from '../../Services/EmailService.js';
 
-// TODO: Implement FilterLogicTrait equivalent for dynamic filtering
-const applyDynamicFilters = (query, filters) => {
-  // This is a placeholder for dynamic filtering logic
-  // The actual implementation depends on the filter structure
-  // from FilterLogicTrait in the PHP code
-  return query;
-};
-
-const getAvailableFilters = (model) => {
-  // TODO: Implement filter metadata based on model
-  // This should return available filter fields for the given model
-  return [];
-};
 
 const generatePassword = (length = 8) => {
   const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
@@ -27,7 +17,7 @@ const generatePassword = (length = 8) => {
 
 export const listFilters = async (req, res) => {
   try {
-    const filters = getAvailableFilters('users');
+    const filters = await getAvailableFilters('users');
     return res.status(200).json(filters);
   } catch (error) {
     console.error('Error fetching filters:', error);
@@ -97,9 +87,11 @@ export const list = async (req, res) => {
     };
 
     // Apply filters if provided
-    if (filters && filters.length > 0) {
-      // TODO: Implement dynamic filtering based on FilterLogicTrait
-      // usersQuery = applyDynamicFilters(usersQuery, filters);
+    if (filters && (filters.length > 0 || filters.conditions)) {
+      const filterInput = Array.isArray(filters) 
+        ? { conditions: filters, combine: 'and' }
+        : filters;
+      usersQuery = applyDynamicFilters(usersQuery, filterInput);
     }
 
     const { rows: users, count: total } = await User.findAndCountAll(usersQuery);
@@ -410,9 +402,20 @@ export const sendResetEmail = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // TODO: Implement email sending functionality
-    // This would require setting up a mail service (nodemailer, sendgrid, etc.)
-    // and creating password reset tokens
+    // Generate password reset token and send email
+    const token = crypto.randomBytes(32).toString('hex');
+    const frontendUrl = process.env.FRONTEND_URL || 'https://phdportal.thapar.edu';
+    const resetUrl = `${frontendUrl}/reset-password?token=${token}&email=${encodeURIComponent(user.email)}`;
+
+    await EmailService.sendHtmlEmail(
+      user.email,
+      'Welcome to PhD Portal – Reset Your Password',
+      'welcome_reset',
+      {
+        user_name: `${user.first_name} ${user.last_name}`,
+        resetUrl: resetUrl,
+      }
+    );
 
     return res.status(200).json({
       message: 'Password reset email sent successfully'

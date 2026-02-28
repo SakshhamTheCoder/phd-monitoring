@@ -1,32 +1,17 @@
 // Ported from Laravel's routes/base/irb/irbc_form.php
 import { Router } from 'express';
-// TODO: Import auth:sanctum middleware equivalent
-// TODO: Import ConstituteOfIRBController
+import ConstituteOfIRBController from '../../app/Http/Controllers/ConstituteOfIRBController.js';
+import authMiddleware from '../../../middleware/auth.middleware.js';
+
 const router = Router();
 
-// All routes below should be protected by auth:sanctum middleware
-// TODO: Add auth middleware when implemented
+// All routes protected by auth middleware
+router.use(authMiddleware);
 
-router.get('/', (req, res) => {
-    // TODO: ConstituteOfIRBController.listForm
-    res.status(501).json({ todo: 'ConstituteOfIRBController.listForm' });
-});
-router.post('/', (req, res) => {
-    // TODO: ConstituteOfIRBController.createForm
-    res.status(501).json({ todo: 'ConstituteOfIRBController.createForm' });
-});
-router.get('/filters', (req, res) => {
-    // TODO: ConstituteOfIRBController.listFilters
-    res.status(501).json({ todo: 'ConstituteOfIRBController.listFilters' });
-});
-router.get('/:form_id', (req, res) => {
-    // TODO: ConstituteOfIRBController.loadForm
-    res.status(501).json({ todo: 'ConstituteOfIRBController.loadForm' });
-});
-router.post('/:form_id', (req, res) => {
-    // TODO: ConstituteOfIRBController.submit
-    res.status(501).json({ todo: 'ConstituteOfIRBController.submit' });
-});
+router.get('/', ConstituteOfIRBController.listForm);
+router.post('/', ConstituteOfIRBController.createForm);
+router.get('/filters', ConstituteOfIRBController.listFilters);
+router.get('/:form_id', ConstituteOfIRBController.loadForm);
+router.post('/:form_id', ConstituteOfIRBController.submit);
 
 export default router;
-

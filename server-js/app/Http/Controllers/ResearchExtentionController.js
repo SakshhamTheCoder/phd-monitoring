@@ -1,45 +1,34 @@
-import { ResearchExtentionsForm, User, Student, Faculty } from '../../Models/index.js';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
+/**
+ * ResearchExtentionController
+ * Ported from PHP: app/Http/Controllers/ResearchExtentionController.php
+ *
+ * Uses traits: GeneralFormHandler, GeneralFormSubmitter, GeneralFormList,
+ *              GeneralFormCreate, SaveFile, FilterLogicTrait
+ */
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// TODO: Implement trait equivalents:
-// - GeneralFormHandler
-// - GeneralFormSubmitter
-// - GeneralFormList
-// - SaveFile
-// - GeneralFormCreate
-// - FilterLogicTrait
-
-const saveUploadedFile = (file, folder, studentId) => {
-  if (!file) return null;
-
-  const uploadDir = path.join(__dirname, '../../../storage/uploads', folder);
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-  }
-
-  const timestamp = Date.now();
-  const fileName = `${folder}_${studentId}_${timestamp}${path.extname(file.originalname)}`;
-  const filePath = path.join(uploadDir, fileName);
-
-  fs.writeFileSync(filePath, file.buffer);
-
-  return `uploads/${folder}/${fileName}`;
-};
+import { ResearchExtentionsForm, ResearchExtentions, User, Student } from '../../Models/index.js';
+import { getAvailableFilters } from './Traits/FilterLogicTrait.js';
+import { saveUploadedFile } from './Traits/SaveFile.js';
+import { createForms } from './Traits/GeneralFormCreate.js';
+import { submitForm } from './Traits/GeneralFormSubmitter.js';
+import { listForms, listFormsStudent } from './Traits/GeneralFormList.js';
+import {
+  handleStudentForm,
+  handleHodForm,
+  handleCoordinatorForm,
+  handleAdminForm,
+  handleFacultyForm,
+} from './Traits/GeneralFormHandler.js';
 
 export const listFilters = async (req, res) => {
   try {
-    // TODO: Implement getAvailableFilters
-    return res.status(200).json([]);
+    const filters = await getAvailableFilters('research_extentions');
+    return res.status(200).json(filters);
   } catch (error) {
     console.error('Error fetching filters:', error);
     return res.status(500).json({
       message: 'Failed to fetch filters',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -48,32 +37,23 @@ export const listForm = async (req, res) => {
   try {
     const { student_id } = req.params;
     const user = await User.findByPk(req.user.id, {
-      include: ['current_role', 'student', 'faculty']
+      include: ['current_role', 'student', 'faculty'],
     });
 
-    // TODO: Implement listForms and listFormsStudent trait methods
-    // This should list all research extension forms based on user role
+    if (student_id) {
+      const result = await listFormsStudent(user, ResearchExtentionsForm, student_id);
+      return res.status(200).json(result);
+    }
 
-    const forms = await ResearchExtentionsForm.findAll({
-      include: [
-        {
-          model: Student,
-          as: 'student',
-          include: ['user', 'supervisors', 'department']
-        }
-      ]
-    });
-
-    return res.status(200).json({
-      forms: forms,
-      fields: ['name', 'roll_no', 'date_of_synopsis', 'supervisors'],
-      titles: ['Name', 'Roll No', 'Date of Synopsis', 'Supervisors']
-    });
+    const result = await listForms(user, ResearchExtentionsForm, req, null, false, [
+      'name', 'roll_no', 'date_of_synopsis', 'supervisors',
+    ]);
+    return res.status(200).json(result);
   } catch (error) {
     console.error('Error listing forms:', error);
     return res.status(500).json({
       message: 'Failed to list forms',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -81,60 +61,40 @@ export const listForm = async (req, res) => {
 export const createForm = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id, {
-      include: ['current_role', 'student']
+      include: ['current_role', 'student'],
     });
 
-    if (user.current_role?.role !== 'student') {
+    const role = user.current_role;
+    if (role?.role !== 'student') {
       return res.status(403).json({
-        message: 'You are not authorized to access this resource'
+        message: 'You are not authorized to access this resource',
       });
     }
 
     const changes = await user.student.getResearchExtentions();
 
-    let steps = [
-      'student',
-      'faculty',
-      'phd_coordinator',
-      'hod',
-      'dra',
-      'dordc',
-      'complete'
-    ];
-
-    if (changes.length > 0) {
-      steps = [
-        'student',
-        'faculty',
-        'phd_coordinator',
-        'hod',
-        'dra',
-        'dordc',
-        'director',
-        'complete'
-      ];
+    let steps = ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc', 'complete'];
+    if (changes && changes.length > 0) {
+      steps = ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc', 'director', 'complete'];
     }
 
-    // TODO: Implement createForms trait method
-    const form = await ResearchExtentionsForm.create({
-      student_id: user.student.roll_no,
+    const data = {
+      roll_no: user.student.roll_no,
       steps: steps,
-      stage: 'student',
-      current_step: 0,
-      maximum_step: 0,
-      status: 'pending',
-      student_lock: false
-    });
+      role: role.role,
+      name: `${user.first_name} ${user.last_name}`,
+    };
 
-    return res.status(201).json({
-      message: 'Form created successfully',
-      form: form
+    const result = await createForms(ResearchExtentionsForm, data);
+    return res.status(result.status).json({
+      message: result.message,
+      form: result.form,
     });
   } catch (error) {
     console.error('Error creating form:', error);
     return res.status(500).json({
       message: 'Failed to create form',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -143,32 +103,45 @@ export const loadForm = async (req, res) => {
   try {
     const { form_id } = req.params;
     const user = await User.findByPk(req.user.id, {
-      include: ['current_role', 'student', 'faculty']
+      include: ['current_role', 'student', 'faculty'],
     });
 
-    const form = await ResearchExtentionsForm.findByPk(form_id, {
-      include: [
-        {
-          model: Student,
-          as: 'student',
-          include: ['user', 'department', 'supervisors']
-        }
-      ]
-    });
+    const role = user.current_role;
+    const Model = ResearchExtentionsForm;
+    const steps = ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc', 'director'];
 
-    if (!form) {
-      return res.status(404).json({ message: 'Form not found' });
+    let result;
+    switch (role?.role) {
+      case 'student':
+        result = await handleStudentForm(user, form_id, Model, steps);
+        break;
+      case 'hod':
+        result = await handleHodForm(user, form_id, Model);
+        break;
+      case 'phd_coordinator':
+        result = await handleCoordinatorForm(user, form_id, Model);
+        break;
+      case 'dra':
+      case 'dordc':
+      case 'director':
+        result = await handleAdminForm(user, form_id, Model);
+        break;
+      case 'faculty':
+        result = await handleFacultyForm(user, form_id, Model);
+        break;
+      case 'admin':
+        result = await handleAdminForm(user, form_id, Model, true);
+        break;
+      default:
+        return res.status(403).json({ message: 'You are not authorized to access this resource' });
     }
 
-    // TODO: Implement role-specific form handlers
-    // (handleStudentForm, handleHodForm, handleCoordinatorForm, etc.)
-
-    return res.status(200).json({ form });
+    return res.status(result.status || 200).json(result);
   } catch (error) {
     console.error('Error loading form:', error);
     return res.status(500).json({
       message: 'Failed to load form',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -177,107 +150,44 @@ export const submit = async (req, res) => {
   try {
     const { form_id } = req.params;
     const user = await User.findByPk(req.user.id, {
-      include: ['current_role', 'student']
+      include: ['current_role', 'student'],
     });
 
-    const form = await ResearchExtentionsForm.findByPk(form_id);
-    if (!form) {
-      return res.status(404).json({ message: 'Form not found' });
-    }
+    const role = user.current_role;
 
-    const role = user.current_role?.role;
-
-    // Handle role-specific submissions
-    switch (role) {
+    let result;
+    switch (role?.role) {
       case 'student':
-        const { reason, duration, research_pdf } = req.body;
-
-        if (!reason || !req.file) {
-          return res.status(400).json({
-            message: 'reason and research_pdf are required'
-          });
-        }
-
-        const filePath = saveUploadedFile(req.file, 'research_extentions', user.student.roll_no);
-
-        form.reason = reason;
-        if (duration) {
-          form.duration = duration;
-        }
-        form.research_pdf = filePath;
-        form.stage = 'faculty';
-        form.student_lock = true;
-        await form.save();
-
-        return res.status(200).json({
-          message: 'Form submitted successfully',
-          form
-        });
-
+        result = await studentSubmit(user, req, form_id);
+        break;
       case 'faculty':
-        // TODO: Implement supervisor submission logic
-        form.stage = 'phd_coordinator';
-        form.supervisor_lock = true;
-        await form.save();
+        result = await supervisorSubmit(user, req, form_id);
         break;
-
       case 'phd_coordinator':
-        form.stage = 'hod';
-        form.phd_coordinator_lock = true;
-        await form.save();
+        result = await coordinatorSubmit(user, req, form_id);
         break;
-
       case 'hod':
-        form.stage = 'dra';
-        form.hod_lock = true;
-        await form.save();
+        result = await hodSubmit(user, req, form_id);
         break;
-
       case 'dra':
-        form.stage = 'dordc';
-        form.dra_lock = true;
-        await form.save();
+        result = await draSubmit(user, req, form_id);
         break;
-
       case 'dordc':
-        const prevExtensions = await form.student.getResearchExtentions();
-
-        if (prevExtensions.length === 0) {
-          form.status = 'approved';
-          form.stage = 'complete';
-          form.dordc_lock = true;
-          // TODO: Create research extension record
-          await form.save();
-        } else {
-          form.stage = 'director';
-          form.dordc_lock = true;
-          await form.save();
-        }
+        result = await dordcSubmit(user, req, form_id);
         break;
-
       case 'director':
-        form.status = 'approved';
-        form.stage = 'complete';
-        form.director_lock = true;
-        // TODO: Create research extension record
-        await form.save();
+        result = await directorSubmit(user, req, form_id);
         break;
-
       default:
-        return res.status(403).json({
-          message: 'You are not authorized to access this resource'
-        });
+        return res.status(403).json({ message: 'You are not authorized to access this resource' });
     }
 
-    return res.status(200).json({
-      message: 'Form submitted successfully',
-      form
-    });
+    return res.status(result.status || 200).json(result);
   } catch (error) {
     console.error('Error submitting form:', error);
     return res.status(500).json({
       message: 'Failed to submit form',
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -285,39 +195,131 @@ export const submit = async (req, res) => {
 export const bulkSubmit = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id, {
-      include: ['current_role']
+      include: ['current_role'],
     });
 
     const allowedRoles = ['hod', 'phd_coordinator', 'dra', 'dordc', 'director'];
     if (!allowedRoles.includes(user.current_role?.role)) {
       return res.status(403).json({
-        message: 'You are not authorized to access this resource'
+        message: 'You are not authorized to access this resource',
       });
     }
 
     const { form_ids } = req.body;
-
     if (!form_ids || !Array.isArray(form_ids)) {
-      return res.status(400).json({
-        message: 'form_ids array is required'
-      });
+      return res.status(400).json({ message: 'form_ids array is required' });
     }
 
-    // Submit each form
+    req.body.approval = true;
     for (const formId of form_ids) {
       req.params.form_id = formId;
-      req.body.approval = true;
       await submit(req, res);
     }
 
-    return res.status(200).json({
-      message: 'Forms submitted successfully'
-    });
+    return res.status(200).json({ message: 'Forms submitted successfully' });
   } catch (error) {
     console.error('Error bulk submitting forms:', error);
     return res.status(500).json({
       message: 'Failed to bulk submit forms',
-      error: error.message
+      error: error.message,
     });
   }
+};
+
+// ---- Private submit methods (match PHP exactly) ----
+
+const studentSubmit = async (user, req, form_id) => {
+  const Model = ResearchExtentionsForm;
+  return await submitForm(user, req, form_id, Model, 'student', 'student', 'faculty', async (formInstance) => {
+    const { reason, duration } = req.body;
+    if (!reason) {
+      throw new Error('reason is required');
+    }
+
+    formInstance.reason = reason;
+    if (duration) {
+      formInstance.duration = duration;
+    }
+
+    if (req.file) {
+      const filePath = saveUploadedFile(req.file, 'research_extentions', user.student.roll_no);
+      formInstance.research_pdf = filePath;
+    }
+  });
+};
+
+const supervisorSubmit = async (user, req, form_id) => {
+  const Model = ResearchExtentionsForm;
+  return await submitForm(user, req, form_id, Model, 'faculty', 'student', 'phd_coordinator');
+};
+
+const coordinatorSubmit = async (user, req, form_id) => {
+  const Model = ResearchExtentionsForm;
+  return await submitForm(user, req, form_id, Model, 'phd_coordinator', 'faculty', 'hod');
+};
+
+const hodSubmit = async (user, req, form_id) => {
+  const Model = ResearchExtentionsForm;
+  return await submitForm(user, req, form_id, Model, 'hod', 'phd_coordinator', 'dra');
+};
+
+const draSubmit = async (user, req, form_id) => {
+  const Model = ResearchExtentionsForm;
+  return await submitForm(user, req, form_id, Model, 'dra', 'hod', 'dordc');
+};
+
+const dordcSubmit = async (user, req, form_id) => {
+  const Model = ResearchExtentionsForm;
+  const form = await ResearchExtentionsForm.findByPk(form_id, { include: ['student'] });
+  const prevExtentions = await form.student.getResearchExtentions();
+
+  if (!prevExtentions || prevExtentions.length === 0) {
+    // First extension — approve at dordc level
+    return await submitForm(user, req, form_id, Model, 'dordc', 'dra', 'complete', async (formInstance) => {
+      formInstance.status = 'approved';
+      // Create research extension record
+      const student = await formInstance.getStudent();
+      await ResearchExtentions.create({
+        period_of_extension: formInstance.period_of_extention,
+        research_pdf: formInstance.research_pdf,
+        reason: formInstance.reason,
+        research_extentions_id: formInstance.id,
+        student_id: student.roll_no,
+      });
+      if (formInstance.addHistoryEntry) {
+        formInstance.addHistoryEntry('Form Approved by DORDC', `${user.first_name} ${user.last_name}`);
+      }
+    });
+  } else {
+    // Subsequent extensions — forward to director
+    return await submitForm(user, req, form_id, Model, 'dordc', 'dra', 'director');
+  }
+};
+
+const directorSubmit = async (user, req, form_id) => {
+  const Model = ResearchExtentionsForm;
+  return await submitForm(user, req, form_id, Model, 'director', 'dordc', 'complete', async (formInstance) => {
+    formInstance.status = 'approved';
+    // Create research extension record
+    const student = await formInstance.getStudent();
+    await ResearchExtentions.create({
+      period_of_extension: formInstance.period_of_extention,
+      research_pdf: formInstance.research_pdf,
+      reason: formInstance.reason,
+      research_extentions_id: formInstance.id,
+      student_id: student.roll_no,
+    });
+    if (formInstance.addHistoryEntry) {
+      formInstance.addHistoryEntry('Form Approved by Director', `${user.first_name} ${user.last_name}`);
+    }
+  });
+};
+
+export default {
+  listFilters,
+  listForm,
+  createForm,
+  loadForm,
+  submit,
+  bulkSubmit,
 };

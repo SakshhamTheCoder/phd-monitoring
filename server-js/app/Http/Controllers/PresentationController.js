@@ -5,6 +5,7 @@
  * Handles PhD presentation scheduling, submissions, and reviews
  */
 
+import { Op } from 'sequelize';
 import {
     handleStudentForm,
     handleHodForm,
@@ -254,7 +255,7 @@ export const listSemesterPresentation = async (req, res) => {
 
         const currentDate = new Date();
         const { count, rows } = await Semester.findAndCountAll({
-            where: { end_date: { [require('sequelize').Op.lt]: currentDate } },
+            where: { end_date: { [Op.lt]: currentDate } },
             order: [['year', 'DESC'], ['semester', 'DESC']],
             limit: perPage,
             offset: (page - 1) * perPage

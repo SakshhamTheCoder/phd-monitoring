@@ -2,6 +2,9 @@ import { User, Student, Role, Department, Forms, Faculty } from "../../Models/in
 import bcrypt from "bcrypt";
 import sequelize from "../../../database/connection.js";
 import { Op } from "sequelize";
+import { getAvailableFilters, applyDynamicFilters } from "./Traits/FilterLogicTrait.js";
+import { Supervisor } from "../../Models/Supervisor.js";
+import { DoctoralCommittee } from "../../Models/DoctoralCommittee.js";
 
 /**
  * Student Controller
@@ -56,11 +59,7 @@ const ListStudentProfile = (student) => {
  */
 export const listFilters = async (req, res) => {
   try {
-    // TODO: Implement getAvailableFilters logic
-    const filters = {
-      department_id: [],
-      current_status: ["part-time", "full-time", "executive"],
-    };
+    const filters = await getAvailableFilters('students');
     return res.json(filters);
   } catch (error) {
     console.error("Error in listFilters:", error);
@@ -168,8 +167,16 @@ export const add = async (req, res) => {
         { transaction: t }
       );
 
-      // TODO: Create supervisor allocation form
-      // This requires AdminFormController.getFormCreationData() implementation
+      // Create supervisor allocation form (matching PHP)
+      const { getFormCreationData } = await import('./AdminFormController.js');
+      const formData = getFormCreationData(
+        'supervisor-allocation',
+        student.roll_no,
+        student.department_id
+      );
+      if (formData) {
+        await Forms.create(formData, { transaction: t });
+      }
 
       return { user, student, password };
     });
@@ -364,19 +371,47 @@ export const list = async (req, res) => {
           whereClause.department_id = loggedInUser.faculty.department_id;
         }
         break;
-      case "faculty":
-        // TODO: Implement supervisedStudents relationship
+      case "faculty": {
+        // Get students supervised by this faculty
+        const supervisedRollNos = await Supervisor.findAll({
+          where: { faculty_id: loggedInUser.faculty?.faculty_code },
+          attributes: ['student_id'],
+        });
+        if (supervisedRollNos.length > 0) {
+          whereClause.roll_no = { [Op.in]: supervisedRollNos.map(s => s.student_id) };
+        } else {
+          whereClause.roll_no = null; // No results
+        }
         break;
+      }
       case "doctoral":
-      case "external":
-        // TODO: Implement doctoredStudents relationship
+      case "external": {
+        // Get students on this faculty's doctoral committee
+        const doctoralRollNos = await DoctoralCommittee.findAll({
+          where: { faculty_id: loggedInUser.faculty?.faculty_code },
+          attributes: ['student_id'],
+        });
+        if (doctoralRollNos.length > 0) {
+          whereClause.roll_no = { [Op.in]: doctoralRollNos.map(d => d.student_id) };
+        } else {
+          whereClause.roll_no = null; // No results
+        }
         break;
+      }
       case "student":
         whereClause.user_id = loggedInUser.id;
         break;
-      case "adordc":
-        // TODO: Implement adordcDepartments relationship
+      case "adordc": {
+        // Get departments where this faculty is the ADORDC
+        const adordcDepts = await Department.findAll({
+          where: { adordc_id: loggedInUser.faculty?.faculty_code },
+          attributes: ['id'],
+        });
+        if (adordcDepts.length > 0) {
+          whereClause.department_id = { [Op.in]: adordcDepts.map(d => d.id) };
+        }
         break;
+      }
       case "admin":
       case "director":
       case "dra":
@@ -390,7 +425,21 @@ export const list = async (req, res) => {
     }
 
     // Apply dynamic filters
-    // TODO: Implement applyDynamicFilters logic
+    const filtersParam2 = req.query.filters;
+    if (filtersParam2) {
+      try {
+        const parsedFilters = typeof filtersParam2 === 'string'
+          ? JSON.parse(decodeURIComponent(filtersParam2))
+          : filtersParam2;
+        if (parsedFilters.conditions) {
+          const queryOpts = { where: whereClause };
+          const filtered = applyDynamicFilters(queryOpts, parsedFilters);
+          Object.assign(whereClause, filtered.where);
+        }
+      } catch (e) {
+        console.error('Error applying dynamic filters:', e);
+      }
+    }
 
     const queryOptions = {
       where: whereClause,
@@ -467,13 +516,22 @@ export const get = async (req, res) => {
           ],
         });
         break;
-      case "adordc":
-        // TODO: Implement adordcDepartments check
+      case "adordc": {
+        // Check adordc departments
+        const adordcDepts2 = await Department.findAll({
+          where: { adordc_id: loggedInUser.faculty?.faculty_code },
+          attributes: ['id'],
+        });
+        const adordcDeptIds = adordcDepts2.map(d => d.id);
         student = await Student.findOne({
-          where: { roll_no },
+          where: {
+            roll_no,
+            department_id: { [Op.in]: adordcDeptIds },
+          },
           include: ["user", "department", { association: "supervisors", include: ["user"] }, { association: "doctoralCommittee", include: ["user"] }],
         });
         break;
+      }
       case "hod":
       case "phd_coordinator":
         student = await Student.findOne({
@@ -484,12 +542,30 @@ export const get = async (req, res) => {
           include: ["user", "department", { association: "supervisors", include: ["user"] }, { association: "doctoralCommittee", include: ["user"] }],
         });
         break;
-      case "faculty":
+      case "faculty": {
         student = await Student.findByPk(roll_no, {
           include: ["user", "department", { association: "supervisors", include: ["user"] }, { association: "doctoralCommittee", include: ["user"] }],
         });
-        // TODO: Check if faculty supervises this student
+        // Check if faculty supervises this student
+        if (student) {
+          const isSupervisor = await Supervisor.findOne({
+            where: {
+              faculty_id: loggedInUser.faculty?.faculty_code,
+              student_id: roll_no,
+            },
+          });
+          const isDoctoral = await DoctoralCommittee.findOne({
+            where: {
+              faculty_id: loggedInUser.faculty?.faculty_code,
+              student_id: roll_no,
+            },
+          });
+          if (!isSupervisor && !isDoctoral) {
+            student = null; // Faculty doesn't supervise this student
+          }
+        }
         break;
+      }
       case "student":
         student = await Student.findOne({
           where: {

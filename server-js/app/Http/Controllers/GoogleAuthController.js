@@ -116,8 +116,7 @@ export const loginWithGoogleToken = async (req, res) => {
     );
 
     // Get available roles
-    // TODO: Implement availableRoles() method on User model
-    const availableRoles = []; // Placeholder
+    const availableRoles = await user.availableRoles();
 
     // Prepare user data
     const userData = {

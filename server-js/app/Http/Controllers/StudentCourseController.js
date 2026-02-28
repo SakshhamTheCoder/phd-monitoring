@@ -346,65 +346,22 @@ export const bulkImportFromCSV = async (req, res) => {
   }
 };
 
-export const getAllStudentCourses = async (req, res) => {
+/**
+ * Get courses for a specific student
+ * Matches PHP: StudentCourseController@getCoursesForStudent
+ */
+export const getCoursesForStudent = async (req, res) => {
   try {
-    const user = await User.findByPk(req.user.id, {
-      include: ['role']
-    });
+    const { studentId } = req.params;
 
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    const student = await Student.findByPk(studentId);
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
     }
 
-    // Check if user has permission
-    const allowedRoles = ['admin', 'hod', 'phd_coordinator', 'faculty'];
-    if (!allowedRoles.includes(user.role?.name)) {
-      return res.status(403).json({
-        message: 'You do not have permission to view all student courses'
-      });
-    }
-
-    const { student_id, course_id, semester, status, page = 1, limit = 10 } = req.query;
-
-    const whereClause = {};
-
-    if (student_id) {
-      whereClause.student_id = student_id;
-    }
-
-    if (course_id) {
-      whereClause.course_id = course_id;
-    }
-
-    if (semester) {
-      whereClause.semester = semester;
-    }
-
-    if (status) {
-      whereClause.status = status;
-    }
-
-    const offset = (parseInt(page) - 1) * parseInt(limit);
-
-    const { rows: studentCourses, count: total } = await StudentCourse.findAndCountAll({
-      where: whereClause,
+    const courses = await StudentCourse.findAll({
+      where: { student_id: studentId },
       include: [
-        {
-          model: Student,
-          as: 'student',
-          include: [
-            {
-              model: User,
-              as: 'user',
-              attributes: ['id', 'name', 'email', 'roll_no']
-            },
-            {
-              model: Department,
-              as: 'department',
-              attributes: ['id', 'department_name']
-            }
-          ]
-        },
         {
           model: Course,
           as: 'course',
@@ -412,31 +369,61 @@ export const getAllStudentCourses = async (req, res) => {
             {
               model: Department,
               as: 'department',
-              attributes: ['id', 'department_name']
             }
           ]
         }
       ],
-      limit: parseInt(limit),
-      offset: offset,
-      order: [['created_at', 'DESC']],
-      distinct: true
+      order: [['semester', 'DESC']],
     });
 
+    const result = courses.map((studentCourse) => ({
+      id: studentCourse.id,
+      course_code: studentCourse.course?.course_code,
+      course_name: studentCourse.course?.course_name,
+      credits: studentCourse.course?.credits,
+      department_name: studentCourse.course?.department?.name ?? 'N/A',
+      semester: studentCourse.semester,
+      status: studentCourse.status,
+      grade: studentCourse.grade,
+    }));
+
     return res.status(200).json({
-      student_courses: studentCourses,
-      pagination: {
-        total,
-        current_page: parseInt(page),
-        per_page: parseInt(limit),
-        last_page: Math.ceil(total / limit)
-      }
+      success: true,
+      data: result,
+      student_name: student.name,
+      student_code: student.student_code,
     });
   } catch (error) {
-    console.error('Error fetching all student courses:', error);
+    console.error('Error fetching courses for student:', error);
     return res.status(500).json({
-      message: 'Failed to fetch student courses',
-      error: error.message
+      message: 'An error occurred: ' + error.message,
+    });
+  }
+};
+
+/**
+ * Remove student from course
+ * Matches PHP: StudentCourseController@removeStudentFromCourse
+ */
+export const removeStudentFromCourse = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const studentCourse = await StudentCourse.findByPk(id);
+    if (!studentCourse) {
+      return res.status(404).json({ message: 'Student course record not found' });
+    }
+
+    await studentCourse.destroy();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Student removed from course successfully',
+    });
+  } catch (error) {
+    console.error('Error removing student from course:', error);
+    return res.status(500).json({
+      message: 'An error occurred: ' + error.message,
     });
   }
 };

@@ -138,10 +138,13 @@ router.post('/forgot-password', async (req, res) => {
         // Generate reset token
         const resetToken = crypto.randomBytes(32).toString('hex');
         
-        // Store token (you may want to create a password_resets table)
-        // For now, we'll use the remember_token field
-        user.remember_token = resetToken;
-        await user.save();
+        // Store token in PasswordReset with timestamp
+        const PasswordReset = (await import('../app/Models/PasswordReset.js')).default;
+        await PasswordReset.upsert({
+            email: email,
+            token: resetToken,
+            created_at: new Date()
+        });
 
         // Send password reset notification
         await user.sendPasswordResetNotification(resetToken);
@@ -183,15 +186,39 @@ router.post('/reset-password', async (req, res) => {
             return res.status(422).json({ errors });
         }
 
-        // Find user with matching email and token
-        const user = await User.findOne({ 
-            where: { email, remember_token: token } 
+        // Verify token exists and is valid
+        const PasswordReset = (await import('../app/Models/PasswordReset.js')).default;
+        const resetRecord = await PasswordReset.findOne({
+            where: { email, token }
         });
 
-        if (!user) {
+        if (!resetRecord) {
             return res.status(500).json({
                 success: false,
                 error: 'This password reset token is invalid.'
+            });
+        }
+
+        // Enforce 60-minute expiration rule
+        const tokenTime = new Date(resetRecord.created_at).getTime();
+        const now = new Date().getTime();
+        const sixtyMinutes = 60 * 60 * 1000;
+
+        if (now - tokenTime > sixtyMinutes) {
+            // Token expired, delete from DB
+            await PasswordReset.destroy({ where: { email } });
+            return res.status(500).json({
+                success: false,
+                error: 'This password reset token has expired.'
+            });
+        }
+
+        // Find user
+        const user = await User.findOne({ where: { email } });
+        if (!user) {
+            return res.status(500).json({
+                success: false,
+                error: 'We can\'t find a user with that email address.'
             });
         }
 
@@ -205,6 +232,9 @@ router.post('/reset-password', async (req, res) => {
         }
         
         await user.save();
+
+        // Delete the used token
+        await PasswordReset.destroy({ where: { email } });
 
         return res.status(200).json({
             success: true,
