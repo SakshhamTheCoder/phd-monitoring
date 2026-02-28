@@ -1,9 +1,9 @@
 // Entry point for Express app
 import express from 'express';
 import dotenv from 'dotenv';
-import routes from './routes/index.js';
+import apiRoutes from './routes/api.js';
 import { connectDB } from "./database/connection.js";
-import "./models/relations.js";    
+import "./app/Models/relations.js";    
 
 import cors from "cors";
 
@@ -28,7 +28,12 @@ app.use(cors());
 app.use(express.static('public'));
 
 // Main routes
-app.use('/', routes);
+app.use('/api', apiRoutes);
+
+// Root endpoint
+app.get('/', (req, res) => {
+    res.send('Express server replica root');
+});
 
 // Connect to the database
 connectDB();
@@ -36,4 +41,3 @@ connectDB();
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
-

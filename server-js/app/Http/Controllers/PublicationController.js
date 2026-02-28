@@ -2,36 +2,15 @@ import { Publication, Patent, User, Student } from '../../Models/index.js';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { getAvailableFilters } from './Traits/FilterLogicTrait.js';
+import { saveUploadedFile } from './Traits/SaveFile.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// TODO: Implement FilterLogicTrait equivalent
-const getAvailableFilters = (model) => {
-  return [];
-};
-
-// TODO: Implement SaveFile trait equivalent
-const saveUploadedFile = (file, folder, studentId) => {
-  if (!file) return null;
-
-  const uploadDir = path.join(__dirname, '../../../storage/uploads', folder);
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-  }
-
-  const timestamp = Date.now();
-  const fileName = `${folder}_${studentId}_${timestamp}${path.extname(file.originalname)}`;
-  const filePath = path.join(uploadDir, fileName);
-
-  fs.writeFileSync(filePath, file.buffer);
-
-  return `uploads/${folder}/${fileName}`;
-};
-
 export const listFilters = async (req, res) => {
   try {
-    const filters = getAvailableFilters('publications');
+    const filters = await getAvailableFilters('publications');
     return res.status(200).json(filters);
   } catch (error) {
     console.error('Error fetching filters:', error);
@@ -308,8 +287,78 @@ export const show = async (req, res) => {
 };
 
 export const update = async (req, res) => {
-  // TODO: Implement update method
-  return res.status(501).json({
-    message: 'Update method not yet implemented'
-  });
+  try {
+    const { id } = req.params;
+    const user = await User.findByPk(req.user.id, {
+      include: ['current_role', 'student']
+    });
+
+    if (!user || user.current_role?.role !== 'student') {
+      return res.status(403).json({
+        message: 'You are not authorized to access this resource'
+      });
+    }
+
+    const publication = await Publication.findByPk(id);
+    if (!publication) {
+      return res.status(404).json({ message: 'Publication not found' });
+    }
+
+    const { title, publication_type, authors, status, doi_link, year, name } = req.body;
+
+    if (!title || !publication_type || !authors || !status || !doi_link || !year || !name) {
+      return res.status(400).json({
+        errors: { message: 'title, publication_type, authors, status, doi_link, year, and name are required' }
+      });
+    }
+
+    publication.student_id = user.student.roll_no;
+    publication.title = title;
+    publication.authors = authors;
+    publication.doi_link = doi_link;
+    publication.year = parseInt(year);
+    publication.name = name;
+    publication.status = status;
+    publication.publication_type = publication_type;
+
+    // Type-specific fields
+    if (publication_type === 'journal') {
+      const { impact_factor, type, volume, page_no } = req.body;
+      publication.impact_factor = impact_factor ? parseFloat(impact_factor) : publication.impact_factor;
+      publication.type = type || publication.type;
+      publication.volume = volume ? parseInt(volume) : publication.volume;
+      publication.page_no = page_no ? parseInt(page_no) : publication.page_no;
+    } else if (publication_type === 'conference') {
+      const { country, state, city, type: confType } = req.body;
+      publication.country = country || publication.country;
+      publication.state = state || publication.state;
+      publication.city = city || publication.city;
+      publication.type = confType || publication.type;
+    } else if (publication_type === 'book') {
+      const { issn, volume: bookVolume, page_no: bookPageNo, publisher } = req.body;
+      publication.issn = issn ? parseInt(issn) : publication.issn;
+      publication.volume = bookVolume ? parseInt(bookVolume) : publication.volume;
+      publication.page_no = bookPageNo ? parseInt(bookPageNo) : publication.page_no;
+      publication.publisher = publisher || publication.publisher;
+    }
+
+    // Update file if provided
+    if (req.file) {
+      const filePath = saveUploadedFile(req.file, 'publication', user.student.roll_no);
+      publication.first_page = filePath;
+    }
+
+    await publication.save();
+
+    return res.status(200).json({
+      message: 'Publication updated successfully',
+      publication
+    });
+  } catch (error) {
+    console.error('Error updating publication:', error);
+    return res.status(500).json({
+      message: 'Failed to update publication',
+      error: error.message
+    });
+  }
 };

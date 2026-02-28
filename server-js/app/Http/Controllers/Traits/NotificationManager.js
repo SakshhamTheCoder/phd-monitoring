@@ -59,9 +59,17 @@ export const formNotification = async (student, title, body, link, role, email_r
     case 'dra':
       await sendDraNotification(student, title, body, link, email_req);
       break;
-    case 'director':
-      // TODO: Implement director notification
+    case 'director': {
+      // Send to all users with director role
+      const directorRole = await Role.findOne({ where: { role: 'director' } });
+      if (directorRole) {
+        const directors = await User.findAll({ where: { role_id: directorRole.id } });
+        for (const director of directors) {
+          await sendNotification(director, title, body, link, directorRole.id, email_req);
+        }
+      }
       break;
+    }
     default:
       break;
   }
@@ -174,20 +182,29 @@ const phdCoordinatorNotification = async (student, title, body, link, email_req 
   }
 };
 
-/**
- * Send notification to DORDC
- * TODO: Implement DORDC notification logic
- */
 const sendDordcNotification = async (student, title, body, link, email_req = false) => {
-  // TODO: Implement
+  // Send to all users with dordc role
+  const dordcRole = await Role.findOne({ where: { role: 'dordc' } });
+  if (dordcRole) {
+    const dordcUsers = await User.findAll({ where: { role_id: dordcRole.id } });
+    for (const dordcUser of dordcUsers) {
+      await sendNotification(dordcUser, title, body, link, dordcRole.id, email_req);
+    }
+  }
 };
 
 /**
  * Send notification to DRA
- * TODO: Implement DRA notification logic
  */
 const sendDraNotification = async (student, title, body, link, email_req = false) => {
-  // TODO: Implement
+  // Send to all users with dra role
+  const draRole = await Role.findOne({ where: { role: 'dra' } });
+  if (draRole) {
+    const draUsers = await User.findAll({ where: { role_id: draRole.id } });
+    for (const draUser of draUsers) {
+      await sendNotification(draUser, title, body, link, draRole.id, email_req);
+    }
+  }
 };
 
 export default {

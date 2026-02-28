@@ -398,8 +398,9 @@ export const updateFormControl = async (req, res) => {
       }
     }
 
-    // TODO: Implement addHistoryEntry method on form models
-    // formInstance.addHistoryEntry('Form control updated by admin', 'Admin');
+    if (formInstance.addHistoryEntry) {
+      formInstance.addHistoryEntry('Form control updated by admin', 'Admin');
+    }
     await formInstance.save();
 
     return res.status(200).json({

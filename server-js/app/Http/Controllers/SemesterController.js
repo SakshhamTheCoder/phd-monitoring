@@ -1,5 +1,8 @@
 import { Semester, User, Student, Department, Faculty, Supervisor, DoctoralCommittee } from '../../Models/index.js';
+import EmailService from '../../Services/EmailService.js';
 import { Op } from 'sequelize';
+import sequelize from '../../../database/connection.js';
+import { saveUploadedFile } from './Traits/SaveFile.js';
 
 // Helper function to list semester data based on role
 const ListSemester = async (semester, user) => {
@@ -124,13 +127,17 @@ const ListSemesterDepartment = async (semester, user) => {
 const ListNotScheduled = async (semester, user, rowsPerPage = 10, page = 1) => {
   const offset = (page - 1) * rowsPerPage;
 
-  // TODO: Implement unscheduledStudents relationship on Student model
-  // This should filter students who don't have a presentation scheduled
+  // Filter students who don't have a presentation scheduled for this semester
+  // Equivalent to PHP: Student::whereDoesntHave('presentations', q => q->where('semester_id', id))
   const { rows: students, count: total } = await Student.findAndCountAll({
     where: {
-      semester_id: semester.id,
-      // TODO: Add condition to filter unscheduled students
-      // '$presentations.id$': null or similar
+      [Op.and]: [
+        sequelize.literal(`NOT EXISTS (
+          SELECT 1 FROM presentations
+          WHERE presentations.student_id = \`Student\`.\`roll_no\`
+          AND presentations.semester_id = ${parseInt(semester.id)}
+        )`)
+      ]
     },
     include: [
       {
@@ -303,7 +310,7 @@ export const create = async (req, res) => {
       });
     }
 
-    const { semester_name, start_date, end_date } = req.body;
+    const { semester_name, start_date, end_date, notification } = req.body;
 
     if (!semester_name || !start_date || !end_date) {
       return res.status(400).json({
@@ -311,19 +318,44 @@ export const create = async (req, res) => {
       });
     }
 
-    // TODO: Handle ppt_file upload if provided in req.file
-    const semesterData = {
-      semester_name,
-      start_date,
-      end_date
-    };
+    // Use createOrUpdateFromCode to maintain 1:1 parity with PHP model logic
+    const semester = await Semester.createOrUpdateFromCode(semester_name, start_date, end_date);
 
     if (req.file) {
-      // TODO: Implement file upload handling for ppt_file
-      semesterData.ppt_file = req.file.path;
+      // Use SaveFile trait to handle file upload (matching PHP SaveFile trait)
+      const filePath = saveUploadedFile(req.file, 'semester_ppt', semester.semester_name);
+      semester.ppt_file = filePath;
+      await semester.save();
     }
 
-    const semester = await Semester.create(semesterData);
+    // Send generic notification email to students if requested
+    if (notification === 'true' || notification === true) {
+      const students = await Student.findAll({
+        include: [{ 
+          model: User, 
+          as: 'user', 
+          attributes: ['email'] 
+        }]
+      });
+
+      const emails = students
+        .filter(s => s.user && s.user.email)
+        .map(s => s.user.email);
+
+      if (emails.length > 0) {
+        // Send asynchronously to avoid blocking response
+        EmailService.sendHtmlEmail(
+          emails,
+          `New Presentation Semester Announced: ${semester.semester_name}`,
+          'semester_notification', // fallback template name
+          {
+            semester_name: semester.semester_name,
+            start_date: semester.start_date,
+            end_date: semester.end_date,
+          }
+        ).catch(err => console.error("Semester Email Failed:", err));
+      }
+    }
 
     return res.status(201).json({
       message: 'Semester created successfully',
@@ -374,9 +406,14 @@ export const notScheduled = async (req, res) => {
 
       const { rows: students, count: total } = await Student.findAndCountAll({
         where: {
-          semester_id: semester.id,
-          department_id: user.department_id
-          // TODO: Add condition to filter unscheduled students
+          department_id: user.department_id,
+          [Op.and]: [
+            sequelize.literal(`NOT EXISTS (
+              SELECT 1 FROM presentations
+              WHERE presentations.student_id = \`Student\`.\`roll_no\`
+              AND presentations.semester_id = ${parseInt(semester.id)}
+            )`)
+          ]
         },
         include: [
           {

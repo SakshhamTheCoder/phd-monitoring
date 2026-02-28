@@ -5,6 +5,7 @@ import { Role } from "../../Models/Role.js";
 import bcrypt from "bcrypt";
 import { Op } from "sequelize";
 import { sequelize } from "../../../database/connection.js";
+import { getAvailableFilters, applyDynamicFilters } from "./Traits/FilterLogicTrait.js";
 
 /**
  * Faculty Controller
@@ -28,11 +29,7 @@ const generatePassword = (length = 8) => {
  */
 export const listFilters = async (req, res) => {
   try {
-    // TODO: Implement getAvailableFilters logic
-    const filters = {
-      department_id: [],
-      type: ["internal", "external"],
-    };
+    const filters = await getAvailableFilters('faculties');
     return res.json(filters);
   } catch (error) {
     console.error("Error in listFilters:", error);
@@ -308,16 +305,34 @@ export const list = async (req, res) => {
         whereClause.department_id = loggedInUser.faculty.department_id;
       }
     } else if (role === "adordc") {
-      // TODO: Implement adordcDepartments relationship
-      // const departments = await loggedInUser.faculty.getAdordcDepartments();
-      // whereClause.department_id = { [Op.in]: departments.map(d => d.id) };
+      // Get departments where this faculty is the ADORDC
+      const adordcDepartments = await Department.findAll({
+        where: { adordc_id: loggedInUser.faculty?.faculty_code },
+        attributes: ['id'],
+      });
+      if (adordcDepartments.length > 0) {
+        whereClause.department_id = { [Op.in]: adordcDepartments.map(d => d.id) };
+      }
     } else if (!["admin", "director", "dra", "dordc"].includes(role)) {
       return res.status(403).json({
         message: "You are not authorized to access this resource",
       });
     }
 
-    // TODO: Apply dynamic filters
+    // Apply dynamic filters from request
+    const filtersParam2 = req.query.filters;
+    if (filtersParam2 && typeof filtersParam2 === 'string') {
+      try {
+        const parsedFilters = JSON.parse(decodeURIComponent(filtersParam2));
+        if (parsedFilters.conditions) {
+          const queryOptions = { where: whereClause };
+          const filtered = applyDynamicFilters(queryOptions, parsedFilters);
+          Object.assign(whereClause, filtered.where);
+        }
+      } catch (e) {
+        console.error('Error applying dynamic filters:', e);
+      }
+    }
 
     const { count, rows: faculties } = await Faculty.findAndCountAll({
       where: whereClause,

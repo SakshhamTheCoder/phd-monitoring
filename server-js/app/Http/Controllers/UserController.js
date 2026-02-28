@@ -1,6 +1,8 @@
 import User  from "../../Models/User.js";
 import Student  from "../../Models/Student.js";
 import { Faculty } from "../../Models/Faculty.js";
+import { getAvailableFilters } from "./Traits/FilterLogicTrait.js";
+import { Forms } from "../../Models/Forms.js";
 
 /**
  * User Controller
@@ -38,14 +40,7 @@ export const list = async (req, res) => {
  */
 export const listFilters = async (req, res) => {
   try {
-    // TODO: Implement getAvailableFilters logic from FilterLogicTrait
-    // This should return available filters for the "forms" entity
-    const filters = {
-      // Placeholder - implement based on your filter requirements
-      status: ["pending", "approved", "rejected"],
-      type: ["irb", "synopsis", "thesis", "presentation"],
-    };
-
+    const filters = await getAvailableFilters('forms');
     return res.json(filters);
   } catch (error) {
     console.error("Error in listFilters:", error);
@@ -83,12 +78,12 @@ export const listForms = async (req, res) => {
           return res.status(404).json({ message: "Student record not found" });
         }
 
-        // TODO: Implement student.forms() method
-        // This should return all forms associated with the student
-        data = {
-          message: "Student forms - implementation needed",
-          student_id: student.id,
-        };
+        // Get all forms associated with the student
+        const forms = await Forms.findAll({
+          where: { student_id: student.roll_no || student.id },
+          order: [['created_at', 'DESC']],
+        });
+        data = forms;
         break;
       }
 
@@ -108,13 +103,16 @@ export const listForms = async (req, res) => {
           return res.status(404).json({ message: "Faculty record not found" });
         }
 
-        // TODO: Implement faculty.forms(roll_no) method
-        // This should return forms accessible by faculty, optionally filtered by roll_no
-        data = {
-          message: "Faculty forms - implementation needed",
-          faculty_id: faculty.id,
-          roll_no: roll_no || null,
-        };
+        // Get forms accessible by faculty, optionally filtered by roll_no
+        const formsWhereClause = {};
+        if (roll_no) {
+          formsWhereClause.student_id = roll_no;
+        }
+        const forms = await Forms.findAll({
+          where: formsWhereClause,
+          order: [['created_at', 'DESC']],
+        });
+        data = forms;
         break;
       }
 
