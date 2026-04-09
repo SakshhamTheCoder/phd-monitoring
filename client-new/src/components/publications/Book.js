@@ -26,7 +26,7 @@ const Book = ({ callback, updateValue }) => {
         elements={[
           <InputField
             label={"Author(s)"}
-            hint={"Enter Author(s)"}
+            hint={"Enter Author(s),separated by commas"}
             onChange={(value) => {
               setBodyValue("authors", value);
             }}

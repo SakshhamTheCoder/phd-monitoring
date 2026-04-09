@@ -24,7 +24,7 @@ const SCIJournal = ({callback,updateValue,data={}}) => {
     return (
         <>
             <GridContainer elements={[
-                <InputField label={"Author(s)"} hint={"Enter Author(s)"} initialValue={data.authors} onChange={(value)=>{setBodyValue("authors",value)}} />,
+                <InputField label={"Author(s)"} hint={"Enter Author(s), separated by commas"} initialValue={data.authors} onChange={(value)=>{setBodyValue("authors",value)}} />,
             ]}/>
             <GridContainer elements={[
                 <DropdownField label={"Year of Publication/Acceptance"} initialValue={data.year} options={yearRange.map((year)=>{return {title:year,value:year}})} onChange={(value)=>{setBodyValue("year",value)}}/>
