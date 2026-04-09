@@ -482,6 +482,25 @@ class PresentationController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
         $form = Presentation::find($form_id);
+
+        if (!$form && $user->current_role->role === 'student') {
+            // Auto create presentation
+            $validator = $this->validateSemesterCode($request->period_of_report);
+
+            if (!$validator['valid']) {
+                return response()->json(['message' => 'Invalid Semester Code'], 422);
+            }
+
+            $form = Presentation::create([
+                'student_id' => $user->student->roll_no,
+                'period_of_report' => $request->period_of_report,
+                'semester_id' => $validator['semester_id'],
+                'status' => 'pending',
+                'completion' => 'incomplete',
+                'steps' => ['student', 'faculty', 'doctoral', 'hod','adordc','dordc','dra','complete'],
+            ]);
+        }
+
         $cur = $role->role;
         if ($form) {
             if ($form->student->checkDoctoralCommittee($user->faculty?->faculty_code)) {
@@ -616,6 +635,11 @@ class PresentationController extends Controller
     private function studentSubmit($user, $request, $form_id)
     {
         $model = Presentation::class;
+
+        $formInstance = Presentation::find($form_id);
+        if (!$formInstance) {
+            throw new \Exception("Presentation not found. Please try again.");
+        }
 
         return $this->submitForm(
             $user,

@@ -25,6 +25,7 @@ Route::post('/login', function (Request $request) {
     ]);
 
     // Verify captcha if provided (optional)
+    if (!env('BYPASS_CAPTCHA')) {
     if ($request->has('captcha_token') && $request->captcha_token) {
         if (!CloudflareHelper::verifyCaptcha($request->captcha_token)) {
             return response()->json([
@@ -32,6 +33,7 @@ Route::post('/login', function (Request $request) {
             ], 422);
         }
     }
+}
 
     if (Auth::attempt($request->only('email', 'password'))) {
         /** @var \App\Models\MyUserModel $user **/
