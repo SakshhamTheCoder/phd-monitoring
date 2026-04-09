@@ -73,6 +73,16 @@ class PublicationController extends Controller
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
+
+        $authors = $request->authors;
+        if (strpos($authors, ',') === false) {
+            return response()->json([
+                'errors' => [
+                    'authors' => 'Please separate multiple authors using   commas (,).'
+        ]
+    ], 400);
+}
+
         $publication = new Publication();
         $publication->student_id = $user->student->roll_no;
 
@@ -95,7 +105,7 @@ class PublicationController extends Controller
                         'impact_factor' => 'required|numeric',
                         'type'=>'required|in:sci,non-sci',
                         'volume'=>'required|integer',
-                        'page_no'=>'required|integer',
+                        'page_no'=>'required|string',
                     ]
                 );
                 $publication->volume=$request->volume;
@@ -124,7 +134,7 @@ class PublicationController extends Controller
                     [
                         'issn'=>'required|integer',
                         'volume'=>'required|integer',
-                        'page_no'=>'required|integer',
+                        'page_no'=>'required|string',
                         'publisher'=>'required|string',
                     ]
                 );
