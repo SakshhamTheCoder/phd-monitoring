@@ -60,7 +60,7 @@ class PublicationController extends Controller
             'authors'=>'required|string',
             'status'=>'required|in:published,accepted',
             'doi_link'=>'required|string',
-            'first_page'=>'required|file|mimes:pdf|max:2048',
+            'first_page'=>'required|file|mimes:pdf|max:15360',
             'year'=>'required|string',
             'name'=>'required|string'
         ]);

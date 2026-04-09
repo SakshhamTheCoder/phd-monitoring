@@ -135,6 +135,7 @@ const Book = ({ callback, updateValue }) => {
             onChange={(value) => {
               setBodyValue("first_page", value);
             }}
+            maxSizeMB={15}
           />,
         ]}
       />

@@ -364,4 +364,34 @@ class StudentController extends Controller {
             'data'=>[$stu]
         ],200);
     }
+
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+        if ($user->current_role->role !== 'student') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'phone'       => 'nullable|string',
+            'address'     => 'nullable|string',
+            'fathers_name'=> 'nullable|string',
+            'phd_title'   => 'nullable|string',
+            'cgpa'        => 'nullable|numeric',
+        ]);
+
+        $user->phone = $request->phone ?? $user->phone;
+        $user->save();
+
+        $student = $user->student;
+        if ($student) {
+            if ($request->has('address'))      $student->address      = $request->address;
+            if ($request->has('fathers_name')) $student->fathers_name = $request->fathers_name;
+            if ($request->has('phd_title'))    $student->phd_title    = $request->phd_title;
+            if ($request->has('cgpa'))         $student->cgpa         = $request->cgpa;
+            $student->save();
+        }
+
+        return response()->json(['message' => 'Profile updated successfully'], 200);
+    }
 }

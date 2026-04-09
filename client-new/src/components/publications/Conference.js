@@ -61,7 +61,7 @@ const Conference = ({callback,updateValue}) => {
             ]}/>
 
             <GridContainer elements={[
-                <FileUploadField label={"Upload First Page"} onChange={(value)=>{setBodyValue("first_page",value)}} />,
+                <FileUploadField label={"Upload First Page"} onChange={(value)=>{setBodyValue("first_page",value)}} maxSizeMB={15} />,
             ]}/>
 
             
