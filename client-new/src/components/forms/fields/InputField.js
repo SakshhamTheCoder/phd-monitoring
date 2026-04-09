@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import "./Fields.css";
 
-const InputField = ({ label, initialValue, isLocked, onChange,hint=null,showLabel=true }) => {
+const InputField = ({ label, initialValue, isLocked, onChange,hint=null,showLabel=true, required = false }) => {
     const [hintText, setHintText] = useState(hint || 'Enter Value...');
     const [value, updateValue] = useState(initialValue);
     useEffect(() => {
@@ -13,7 +13,7 @@ const InputField = ({ label, initialValue, isLocked, onChange,hint=null,showLabe
       
     return (
         <div className="input-field-container">
-            {showLabel && (<label className="input-label">{label}</label>)}
+            {showLabel && (<label className="input-label">{label}{required && <span style={{ color: 'red', marginLeft: '4px' }}>*</span>}</label>)}
             <input
                 type="text"
                 className="input-field"

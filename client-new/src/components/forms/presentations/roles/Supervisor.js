@@ -132,6 +132,7 @@ const Supervisor = ({ formData }) => {
                       initialValue={body.progress}
                       isLocked={lock}
                       onChange={updateTotal}
+                      required={true}
                     />,
                   ]}
                   space={2}
@@ -165,6 +166,7 @@ const Supervisor = ({ formData }) => {
                             attendance: updated,
                           }));
                         }}
+                        required={true}
                       />,
                     ]}
                   />
@@ -181,6 +183,7 @@ const Supervisor = ({ formData }) => {
                             contact_hours: updated,
                           }));
                         }}
+                        required={true}
                       />,
                     ]}
                   />

@@ -99,6 +99,7 @@ const SchedulePresentation = ({ close, semester }) => {
                 onChange={(value) =>
                   setBody((prev) => ({ ...prev, student_id: value }))
                 }
+                required={true}
               />,
             ]}
             space={2}
@@ -109,6 +110,7 @@ const SchedulePresentation = ({ close, semester }) => {
                 label={"Period of Report"}
                 isLocked={true}
                 initialValue={semester}
+                required={true}
               />
             ]}
             space={2}
@@ -120,12 +122,14 @@ const SchedulePresentation = ({ close, semester }) => {
                 onChange={(value) =>
                   setBody((prev) => ({ ...prev, date: value }))
                 }
+                required={true}
               />,
               <TimeField
                 label="Time"
                 onChange={(value) =>
                   setBody((prev) => ({ ...prev, time: value }))
                 }
+                required={true}
               />,
              
             ]}

@@ -254,6 +254,7 @@ const Student = ({ formData, refetchData = null, }) => {
                     teaching_work: value,
                   }));
                 }}
+                required={true}
               />,
             ]}
           />
@@ -388,6 +389,7 @@ const Student = ({ formData, refetchData = null, }) => {
                 }}
                  isLocked={lock}
                 initialValue={formData.presentation_pdf}
+                required={true}
               />,
                <FileUploadField
                 label={"Download Sample PDF"}
