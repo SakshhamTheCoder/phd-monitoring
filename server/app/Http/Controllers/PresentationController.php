@@ -67,11 +67,48 @@ class PresentationController extends Controller
                 (string)$filter['value'] === '1';
         });
 
-        $isAction=collect($parsedFilters)->contains(function ($filter) {
+        $isAction = collect($parsedFilters)->contains(function ($filter) {
             return isset($filter['key'], $filter['value']) &&
                 $filter['key'] === 'action' &&
                 (string)$filter['value'] === '1';
         });
+
+        if($isAction){
+            $parsedFilters = array_values(array_filter($parsedFilters, function ($filter) {
+                return !(isset($filter['key'], $filter['value']) &&
+                    $filter['key'] === 'action' &&
+                    in_array($filter['value'], ['1', 1], true));
+            }));            
+
+            $role = $user->current_role->role;
+            if($role == 'faculty') $role = 'supervisor';
+
+            // Existing condition
+            $mandatoryFilters[] = [
+                'key' => $role.'_lock',
+                'op' => '=',
+                'value' => 0
+            ];
+
+            $presentationIds = \App\Models\PresentationReview::where('faculty_id', $user->faculty->faculty_code)
+                ->where('review_status', 'pending')
+                ->pluck('presentation_id')
+                ->toArray();
+
+            if (!empty($presentationIds)) {
+                $mandatoryFilters[] = [
+                    'key' => 'id',
+                    'op' => 'in',
+                    'value' => $presentationIds
+                ];
+            } else {
+                $mandatoryFilters[] = [
+                    'key' => 'id',
+                    'op' => '=',
+                    'value' => -1
+                ];
+            }
+        }
 
         $titles = ["Name", "Roll No", "Date", "Time", "Progress %", "Supervisors"];
         $fields = ["name", "roll_no", "date", "time", "progress", "supervisors"];
@@ -203,7 +240,7 @@ class PresentationController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
         $cur = $role->role;
-        if ($cur == 'faculty' || $cur == 'phd_coordinator') {
+        if ($cur == 'faculty' || $cur == 'phd_coordinator' || $cur == 'student') {
             $request->validate([
                 'student_id' => 'required|string',
                 'date' => 'required|date',
@@ -225,8 +262,14 @@ class PresentationController extends Controller
             if (!$student) {
                 return response()->json(['message' => 'Student not found'], 404);
             }
-            if (!$student->checkSupervises($user->faculty->faculty_code)&& !$student->department->checkCoordinates($user->faculty->faculty_code)) {
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            if ($cur == 'student') {
+                if ($student->roll_no !== $user->student->roll_no) {
+                    return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                }
+            } else {
+                if (!$student->checkSupervises($user->faculty->faculty_code) && !$student->department->checkCoordinates($user->faculty->faculty_code)) {
+                    return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                }
             }
             $old = Presentation::where('student_id', $request->student_id)->where('semester_id', $validator['semester_id'])->get();
             if (count($old) != 0) {
@@ -247,9 +290,13 @@ class PresentationController extends Controller
                 'steps' => ['student', 'faculty', 'doctoral', 'hod','adordc', 'dordc', 'dra', 'complete'],
             ]);
             if(!$request->venue){
+            $schedulerName = $cur == 'student' 
+                ? $user->name() 
+                : $user->first_name . " of Department " . $user->faculty->department->name;
+
             $calendarResult = PresentationService::scheduleCalendarEvent(
                 "PhD Presentation - " . $student->user->name(),
-                "Please Join for PhD Presentation of " . $student->user->name() . " scheduled for term " . $request->period_of_report . " scheduled by " . $user->first_name . " of Department " . $user->faculty->department->name,
+                "Please Join for PhD Presentation of " . $student->user->name() . " scheduled for term " . $request->period_of_report . " scheduled by " . $schedulerName,
                 $request->date,
                 $request->time,
                 $emails ?? []
@@ -260,7 +307,8 @@ class PresentationController extends Controller
                 $form->venue = $request->venue;
             }
             $form->save();
-            $form->addHistoryEntry("Presentation Scheduled by Supervisor", $user->first_name);
+            $actionBy = $cur == 'student' ? 'Student' : 'Supervisor';
+            $form->addHistoryEntry("Presentation Scheduled by $actionBy", $user->first_name);
             return response()->json($form);
         }
         return response()->json(['message' => 'You are not authorized to access this resource'], 403);
@@ -663,6 +711,9 @@ class PresentationController extends Controller
 
                 $formInstance->presentation_pdf = $this->saveUploadedFile($request->file('presentation_pdf'), 'presentation_pdf', $user->student->roll_no);
                 $formInstance->missed=0;
+
+                $formInstance->supervisor_lock = 0;
+
                 $sups = $user->student->supervisors;
                 foreach ($sups as $sup) {
                     PresentationReview::create([
