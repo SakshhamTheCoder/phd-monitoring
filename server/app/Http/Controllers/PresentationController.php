@@ -48,6 +48,22 @@ class PresentationController extends Controller
         if (!$validator['valid']) {
             return response()->json(['message' => 'Invalid Semester Code'], 422);
         }
+
+        if ($user->current_role->role === 'student' && $semester_id && !empty($validator['current'])) {
+            $existing = Presentation::where('student_id', $user->student->roll_no)
+                ->where('semester_id', $validator['semester_id'])
+                ->exists();
+            if (!$existing) {
+                Presentation::create([
+                    'student_id' => $user->student->roll_no,
+                    'period_of_report' => $semester_id,
+                    'semester_id' => $validator['semester_id'],
+                    'status' => 'pending',
+                    'completion' => 'incomplete',
+                    'steps' => ['student', 'faculty', 'doctoral', 'hod', 'adordc', 'dordc', 'dra', 'complete'],
+                ]);
+            }
+        }
     
         $mandatoryFilter = $filters['mandatory_filter'] ?? null;
         $parsedFilters = [];
@@ -181,7 +197,8 @@ class PresentationController extends Controller
             ];
         }
     
-        if($mandatoryFilter){
+        if(!empty($parsedFilters) || !empty($mandatoryFilters)){
+            $filters = $filters ?? [];
             $filters['mandatory_filter'] = array_merge($parsedFilters, $mandatoryFilters);
             $request->merge(['filters' => $filters]);    
         }
@@ -290,19 +307,8 @@ class PresentationController extends Controller
                 'steps' => ['student', 'faculty', 'doctoral', 'hod','adordc', 'dordc', 'dra', 'complete'],
             ]);
             if(!$request->venue){
-            $schedulerName = $cur == 'student' 
-                ? $user->name() 
-                : $user->first_name . " of Department " . $user->faculty->department->name;
-
-            $calendarResult = PresentationService::scheduleCalendarEvent(
-                "PhD Presentation - " . $student->user->name(),
-                "Please Join for PhD Presentation of " . $student->user->name() . " scheduled for term " . $request->period_of_report . " scheduled by " . $schedulerName,
-                $request->date,
-                $request->time,
-                $emails ?? []
-            );
-            $form->venue = $calendarResult['meet_link'];
-        }
+                $form->venue = 'TBD';
+            }
             else{
                 $form->venue = $request->venue;
             }
@@ -467,14 +473,7 @@ class PresentationController extends Controller
             ]);
 
             $emails = $this->emailList($student, $request);
-            $calendarResult = PresentationService::scheduleCalendarEvent(
-                "PhD Presentation - " . $student->user->name(),
-                "Please Join for PhD Presentation of " . $student->user->name() . " scheduled for term " . $request->period_of_report . " scheduled by " . $user->first_name . " of Department " . $user->faculty->department->name,
-                $formattedDate,
-                $studentData['time'],
-                $emails ?? []
-            );
-            $form->venue = $calendarResult['event_link'];
+            $form->venue = $studentData['venue'] ?? 'TBD';
             $form->addHistoryEntry("Presentation Scheduled by Supervisor", $user->first_name);
             $createdForms[] = $form;
         }
