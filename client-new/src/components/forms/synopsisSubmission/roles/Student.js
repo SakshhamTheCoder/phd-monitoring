@@ -293,7 +293,7 @@ const Student = ({ formData }) => {
                   <GridContainer
                     elements={body.objectives.map((objective, index) => {
                       return (
-                        <InputField
+                        <InputField required={true}
                           initialValue={objective}
                           isLocked={lock || formData.form_type === "draft"}
                           onChange={(value) => {
@@ -354,7 +354,7 @@ const Student = ({ formData }) => {
 
           <GridContainer
             elements={[
-              <FileUploadField
+              <FileUploadField required={true}
                 label={"Upload PDF"}
                 onChange={(file) => {
                   setFiles([{ key: "synopsis_pdf", file }]);

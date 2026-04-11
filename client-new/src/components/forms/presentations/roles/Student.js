@@ -238,7 +238,7 @@ const Student = ({ formData, refetchData = null, }) => {
                 initialValue={formData.extention_availed ? "Yes" : "No"}
                 isLocked={true}
               />,
-              <DropdownField
+              <DropdownField required={true}
                 label="Teaching Work Done"
                 options={[
                   { title: "UG", value: "UG" },
@@ -261,7 +261,7 @@ const Student = ({ formData, refetchData = null, }) => {
 
           <GridContainer
             elements={[
-              <DropdownField
+              <DropdownField required={true}
                 label="Publication During the Period Under Report"
                 options={[
                   { title: "Yes", value: true },
@@ -286,7 +286,7 @@ const Student = ({ formData, refetchData = null, }) => {
               <>      
                <GridContainer
                   elements={[
-                    <InputField
+                    <InputField required={true}
                       label="No. of Papers in SCI/SCIE/SSCI/ABDC/AHCI Journal"
                       initialValue={formData.no_paper_sci_journal}
                       isLocked={lock}
@@ -302,7 +302,7 @@ const Student = ({ formData, refetchData = null, }) => {
                 />
                 <GridContainer
                   elements={[
-                    <InputField
+                    <InputField required={true}
                       label="No. of Papers in Scopus Journal"
                       initialValue={formData.no_paper_scopus_journal}
                       isLocked={lock}
@@ -318,7 +318,7 @@ const Student = ({ formData, refetchData = null, }) => {
                 />
                 <GridContainer
                   elements={[
-                    <InputField
+                    <InputField required={true}
                       label="No. of Papers in Conferences Under Report"
                       initialValue={formData.no_paper_conference}
                       isLocked={lock}
@@ -334,7 +334,7 @@ const Student = ({ formData, refetchData = null, }) => {
                 />
                 <GridContainer
                   elements={[
-                    <InputField
+                    <InputField required={true}
                       label="Total of Number of Papers"
                       initialValue={formData.total_paper_sci_journal}
                       isLocked={true}
@@ -382,7 +382,7 @@ const Student = ({ formData, refetchData = null, }) => {
             )}
           <GridContainer
             elements={[
-              <FileUploadField
+              <FileUploadField required={true}
                 label={"Upload PDF"}
                 onChange={(file) => {
                   setFiles([{ key: "presentation_pdf", file }]);

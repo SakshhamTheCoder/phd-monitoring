@@ -74,7 +74,7 @@ const Supervisor = ({ formData }) => {
                   />
                   <GridContainer
                     elements={[
-                      <InputField
+                      <InputField required={true}
                         label={"Increase in Quantum Progress Percentage"}
                         initialValue={body.current_progress}
                         isLocked={lock}

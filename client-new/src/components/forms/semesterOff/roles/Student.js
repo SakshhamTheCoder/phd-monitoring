@@ -125,7 +125,7 @@ const Student = ({ formData }) => {
             />,
             <>
             {prevOff && (    
-              <FileUploadField
+              <FileUploadField required={true}
             label={"Attach Previous Approval"}
             onChange={(file) => {
               setFiles([{ key: "previous_approval_pdf", file }]);
@@ -142,7 +142,7 @@ const Student = ({ formData }) => {
         
 
         <GridContainer elements={[
-              <DropdownField
+              <DropdownField required={true}
               label="Semester off Required"
               initialValue={formData.semester_off_required}
               isLocked={lock}
@@ -154,7 +154,7 @@ const Student = ({ formData }) => {
                 }));
               }}
             />,
-            <FileUploadField
+            <FileUploadField required={true}
             label={"Attach Proof (if any)"}
             onChange={(file) => {
               setFiles([{ key: "proof_pdf", file }]);
@@ -165,7 +165,7 @@ const Student = ({ formData }) => {
           />,
           ]}/>
            <GridContainer elements={[
-             <InputField
+             <InputField required={true}
              label="Reason for Semester Off"
              initialValue={formData.reason}
              isLocked={lock}

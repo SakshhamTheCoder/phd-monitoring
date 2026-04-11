@@ -271,7 +271,7 @@ const Student = ({ formData }) => {
           />
           <GridContainer
             elements={[
-              <DateField
+              <DateField required={true}
                 label="Date of Synopsis Presentation"
                 initialValue={formData.date_of_synopsis}
                 isLocked={lock}
@@ -283,7 +283,7 @@ const Student = ({ formData }) => {
                 }}
               />,
 
-              <InputField
+              <InputField required={true}
                 label="Receipt Number"
                 initialValue={formData.reciept_no}
                 isLocked={lock}
@@ -294,7 +294,7 @@ const Student = ({ formData }) => {
                   }));
                 }}
               />,
-              <DateField
+              <DateField required={true}
                 label="Date of Fee Submission"
                 initialValue={formData.date_of_synopsis}
                 isLocked={lock}
@@ -341,7 +341,7 @@ const Student = ({ formData }) => {
 
           <GridContainer
             elements={[
-              <FileUploadField
+              <FileUploadField required={true}
                 label={"Upload Thesis PDF"}
                 onChange={(file) => {
                   setFiles((prev) => {
@@ -352,7 +352,7 @@ const Student = ({ formData }) => {
                 isLocked={lock}
                 initialValue={formData.thesis_pdf}
               />,
-              <FileUploadField
+              <FileUploadField required={true}
                 label={"Upload Fee Receipt"}
                 onChange={(file) => {
                   setFiles((prev) => {

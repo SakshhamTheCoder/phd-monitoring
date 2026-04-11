@@ -93,7 +93,7 @@ const SchedulePresentation = ({ close, semester }) => {
         <>
           <GridContainer
             elements={[
-              <DropdownField
+              <DropdownField required={true}
                 label="Student"
                 options={students}
                 onChange={(value) =>
@@ -117,14 +117,14 @@ const SchedulePresentation = ({ close, semester }) => {
           />
           <GridContainer
             elements={[
-              <DateField
+              <DateField required={true}
                 label="Date"
                 onChange={(value) =>
                   setBody((prev) => ({ ...prev, date: value }))
                 }
                 required={true}
               />,
-              <TimeField
+              <TimeField required={true}
                 label="Time"
                 onChange={(value) =>
                   setBody((prev) => ({ ...prev, time: value }))

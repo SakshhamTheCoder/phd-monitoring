@@ -25,13 +25,13 @@ const AddExaminer = ({ data, onSubmit }) => {
         <div>
             <GridContainer
                 elements={[
-                    <InputField
+                    <InputField required={true}
                         label={"Name"}
                         initialValue={formData.name}
                         isLocked={false}
                         onChange={(value) => handleInputChange("name", value)}
                     />,                    
-                    <InputField
+                    <InputField required={true}
                         label={"Email"}
                         initialValue={formData.email}
                         isLocked={false}
@@ -41,13 +41,13 @@ const AddExaminer = ({ data, onSubmit }) => {
             />
             <GridContainer
                 elements={[
-                    <InputField
+                    <InputField required={true}
                         label={"Institution"}
                         initialValue={formData.institution}
                         isLocked={false}
                         onChange={(value) => handleInputChange("institution", value)}
                     />,
-                    <InputField
+                    <InputField required={true}
                         label={"Designation"}
                         initialValue={formData.designation}
                         isLocked={false}
@@ -57,13 +57,13 @@ const AddExaminer = ({ data, onSubmit }) => {
             />
             <GridContainer
                 elements={[
-                    <InputField
+                    <InputField required={true}
                         label={"Department"}
                         initialValue={formData.department}
                         isLocked={false}
                         onChange={(value) => handleInputChange("department", value)}
                     />,
-                    <InputField
+                    <InputField required={true}
                         label={"Phone"}
                         initialValue={formData.phone}
                         isLocked={false}

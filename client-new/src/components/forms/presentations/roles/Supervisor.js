@@ -156,7 +156,7 @@ const Supervisor = ({ formData }) => {
                 {formData.teaching_work === "None" ? (
                   <GridContainer
                     elements={[
-                      <InputField
+                      <InputField required={true}
                         label={"% Attendence"}
                         initialValue={formData.attendance}
                         isLocked={lock}
@@ -173,7 +173,7 @@ const Supervisor = ({ formData }) => {
                 ) : (
                   <GridContainer
                     elements={[
-                      <InputField
+                      <InputField required={true}
                         label={"No. of Contact Hours"}
                         initialValue={formData.contact_hours}
                         isLocked={lock}

@@ -113,7 +113,7 @@ const Student = ({ formData }) => {
 
           <GridContainer
             elements={[
-              <InputField
+              <InputField required={true}
                 initialValue={formData.revised_phd_title}
                 label={"Revised Title of Phd Thesis"}
                 isLocked={lock}
@@ -141,7 +141,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={body.revised_phd_objectives?.map((objective, index) => {
               return (
-                <InputField
+                <InputField required={true}
                   initialValue={objective}
                   isLocked={lock }
                   onChange={(value) => {
@@ -157,7 +157,7 @@ const Student = ({ formData }) => {
           <GridContainer
           label="Revised IRB PDF File"
             elements={[
-              <FileUploadField
+              <FileUploadField required={true}
                 showLabel={false}
                 initialValue={formData.revised_irb_pdf}
                 isLocked={lock}
@@ -171,7 +171,7 @@ const Student = ({ formData }) => {
              {/* {console.log(formData)}, */}
            <GridContainer
                 elements={[
-                  <DateField
+                  <DateField required={true}
                     label={"Date of IRB"}
                     initialValue={formatDate(formData.date_of_irb)}
                     hint={"Select Date..."}
