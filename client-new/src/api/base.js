@@ -72,12 +72,12 @@ export const customFetch = async (
           if (showToast)
             toast.error(data.message || data.error || "Internal server error");
         } else if (error.status === 400) {
-          const errorString = typeof data === 'object' 
-            ? Object.entries(data).map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`).join("\n")
-            : data.toString();
+          const errorString = Object.entries(data)
+            .map(([key, val]) => `${key}: ${val}`)
+            .join("\n");
           if (showToast) toast.error(errorString);
         } else {
-          if (showToast) toast.error(data.message || data.error || "An unexpected error occurred");
+          if (showToast) toast.error(data.message);
         }
 
         return { success: false, response: data };

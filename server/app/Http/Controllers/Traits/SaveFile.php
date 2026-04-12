@@ -23,5 +23,3 @@ trait SaveFile
         return '/app/public/' . $filePath; // This ensures the path starts with /storage/
     }
 }
-
-?>  

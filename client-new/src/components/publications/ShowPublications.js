@@ -11,7 +11,7 @@ const ShowPublications = ({
     formData,
     enableSelect = false,
     enableDelete = false,
-    enableEdit = false,
+    enableEdit = true,
     enableSubmit = false,
     onSubmit,
     onSelect,
@@ -19,6 +19,7 @@ const ShowPublications = ({
     onEdit,
     refetchData = null,
 }) => {
+   const [editData, setEditData] = useState(null);
    const [selectedRows, setSelectedRows] = useState({});
    const [totalPublications, setTotalPublications] = useState(0);
    const handleSelect = (publicationId, publicationType) => {
@@ -47,9 +48,25 @@ const ShowPublications = ({
    }
    const closeModal = () => {
        setOpen(false);
+       setEditData(null);
        if(refetchData)
        refetchData();
    }
+
+   const handleEdit = (id, type) => {
+       let data = null;
+       if (type === 'sci') data = formData.sci.find(p => p.id === id);
+       else if (type === 'non_sci') data = formData.non_sci.find(p => p.id === id);
+       else if (type === 'international') data = formData.international.find(p => p.id === id);
+       else if (type === 'national') data = formData.national.find(p => p.id === id);
+       else if (type === 'book') data = formData.book.find(p => p.id === id);
+       else if (type === 'patents') data = formData.patents.find(p => p.id === id);
+
+       if (data) {
+           setEditData(data);
+           setOpen(true);
+       }
+   };
    useEffect(() => {
     if (!formData) return;
         let c=0;
@@ -73,7 +90,7 @@ const ShowPublications = ({
                />
            )}
            {enableEdit && (
-               <a onClick={() => onEdit && onEdit(publicationId, publicationType)} style={{ cursor: "pointer", marginRight: 10 }}>
+               <a onClick={() => handleEdit(publicationId, publicationType)} style={{ cursor: "pointer", marginRight: 10 }}>
                    <i className="fa fa-pencil" ></i>
                </a>
            )}
@@ -227,9 +244,9 @@ const ShowPublications = ({
                             space={3}
                         ></GridContainer>
                      )}
-                <CustomModal isOpen={open} onClose={closeModal} title={'Add Publication'}
+                <CustomModal isOpen={open} onClose={closeModal} title={editData ? 'Edit Publication' : 'Add Publication'}
                     minHeight='200px' maxHeight='600px' minWidth='650px' maxWidth='700px' closeOnOutsideClick={false}>
-                 <AddPublication close={closeModal}/>
+                 <AddPublication close={closeModal} editData={editData} />
                  </CustomModal>
                 </>
             )}

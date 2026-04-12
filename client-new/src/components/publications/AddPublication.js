@@ -8,14 +8,8 @@ import Book from "./Book";
 import GridContainer from "../forms/fields/GridContainer";
 import { APIaddPublication, APIupdatePublication } from "../../api/publication";
 
-const AddPublication = ({close, initialData = null}) => {
-  const [body, setBody] = useState(initialData || {});
-
-  useEffect(() => {
-    if (initialData) {
-      setBody(initialData);
-    }
-  }, [initialData]);
+const AddPublication = ({ close, editData = null }) => {
+  const [body, setBody] = useState(editData || {});
 
   const handleSelect = (value) => {
     value = JSON.parse(value);
@@ -26,18 +20,18 @@ const AddPublication = ({close, initialData = null}) => {
   };
 
   const callback = async (newData) => {
-    const isEdit = !!initialData?.id;
-    const currentBody = { ...body, ...newData };
-    const updateUrl = currentBody.publication_type === "patents" ? "/patents" : false;
-
-    if (isEdit) {
-      await APIupdatePublication(initialData.id, currentBody, close, updateUrl);
-    } else {
-        if(currentBody.publication_type === "patents"){
-          await APIaddPublication(currentBody,close,"/patents");
+    if (editData && editData.id) {
+        if (body.publication_type === "patents") {
+            await APIupdatePublication(editData.id, body, close, "/patents");
+        } else {
+            await APIupdatePublication(editData.id, body, close);
         }
-        else
-        await APIaddPublication(currentBody,close);
+    } else {
+        if (body.publication_type === "patents") {
+            await APIaddPublication(body, close, "/patents");
+        } else {
+            await APIaddPublication(body, close);
+        }
     }
   };
 
@@ -46,66 +40,66 @@ const AddPublication = ({close, initialData = null}) => {
       ...prev,
       ...newData,
     }));
-  }
+  };
 
   return (
     <>
         {body.label && (<h1 className="add-publication-container-h1">{body.label}</h1>)}
         {!body.label && (<h1 className="add-publication-container-h1">{"Choose a Publication Type"}</h1>)}
       <div className="add-publication-container">
-        <GridContainer
-          elements={[
-            <DropdownField
-              label={"Publication Type"}
-              isLocked={!!initialData?.id}
-              required={true}
-              options={[
-                {
-                  value: JSON.stringify({
-                    publication_type: "journal",
-                    type: "sci",
-                    label: "Papers in SCI/SCIE/SSCI/ABDC/AHCI Journal",
-                  }),
-                  title: "Papers in SCI/SCIE/SSCI/ABDC/AHCI Journal",
-                },
-                {
-                  value: JSON.stringify({
-                    publication_type: "journal",
-                    type: "non-sci",
-                    label: "Papers in Scopus Journal",
-                  }),
-                  title: "Papers in Scopus Journal",
-                },
-                {
-                  value: JSON.stringify({
-                    publication_type: "book",
-                    label: "Book Chapters",
-                  }),
-                  title: "Book Chapters",
-                },
-                {
-                  value: JSON.stringify({
-                    publication_type: "conference",
-                    label: "Papers in Conference",
-                  }),
-                  title: "Papers in Conference",
-                },
-                {
-                  value: JSON.stringify({
-                    publication_type: "patents",
-                    label: "Patents",
-                  }),
-                  title: "Patents",
-                },
-              ]}
-              onChange={handleSelect}
-            />,
-          ]}
-          space={2}
-        />
+        {!editData && (
+          <GridContainer
+            elements={[
+              <DropdownField
+                label={"Publication Type"}
+                options={[
+                  {
+                    value: JSON.stringify({
+                      publication_type: "journal",
+                      type: "sci",
+                      label: "Papers in SCI/SCIE/SSCI/ABDC/AHCI Journal",
+                    }),
+                    title: "Papers in SCI/SCIE/SSCI/ABDC/AHCI Journal",
+                  },
+                  {
+                    value: JSON.stringify({
+                      publication_type: "journal",
+                      type: "non-sci",
+                      label: "Papers in Scopus Journal",
+                    }),
+                    title: "Papers in Scopus Journal",
+                  },
+                  {
+                    value: JSON.stringify({
+                      publication_type: "book",
+                      label: "Book Chapters",
+                    }),
+                    title: "Book Chapters",
+                  },
+                  {
+                    value: JSON.stringify({
+                      publication_type: "conference",
+                      label: "Papers in Conference",
+                    }),
+                    title: "Papers in Conference",
+                  },
+                  {
+                    value: JSON.stringify({
+                      publication_type: "patents",
+                      label: "Patents",
+                    }),
+                    title: "Patents",
+                  },
+                ]}
+                onChange={handleSelect}
+              />,
+            ]}
+            space={2}
+          />
+        )}
 
         <div className="add-publication-box">
-          {body.label && (
+          {body.label || editData ? (
             <>
               {body.publication_type === "journal" && (
                 <SCIJournal callback={callback} updateValue={updateValue} data={body} />
@@ -118,7 +112,7 @@ const AddPublication = ({close, initialData = null}) => {
                 <Patents callback={callback} updateValue={updateValue} data={body} />
               )}
             </>
-          )}
+          ) : null}
         </div>
       </div>
     </>

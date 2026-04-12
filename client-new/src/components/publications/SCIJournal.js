@@ -6,8 +6,7 @@ import FileUploadField from '../forms/fields/FileUploadField';
 import CustomButton from '../forms/fields/CustomButton';
 
 const SCIJournal = ({callback,updateValue,data={}}) => {
-    const [body, setBody] = useState(data);
-    const [loading, setLoading] = useState(false);
+    const [body, setBody] = useState({});
     const year = new Date().getFullYear();
     const yearRange = Array.from({ length: 7 }, (_, i) => year - 3 + i);    
     const setBodyValue = (key,value) => {
@@ -15,51 +14,50 @@ const SCIJournal = ({callback,updateValue,data={}}) => {
             ...prev,
             [key]:value,}));
     }
+    useEffect(()=>{
+        setBody({
+          data
+        })
+    },[]);
 
     useEffect(() => {     updateValue(body);}, [body]);
     return (
         <>
             <GridContainer elements={[
-                <InputField label={"Author(s)"} hint={"Enter Author(s), separated by commas"} initialValue={data.authors} onChange={(value)=>{setBodyValue("authors",value)}} required={true} />,
+                <InputField label={"Author(s)"} hint={"Enter Author(s), separated by commas"} initialValue={data.authors} onChange={(value)=>{setBodyValue("authors",value)}} />,
             ]}/>
             <GridContainer elements={[
-                <DropdownField label={"Year of Publication/Acceptance"} initialValue={data.year} options={yearRange.map((year)=>{return {title:year,value:year}})} onChange={(value)=>{setBodyValue("year",value)}} required={true} />
+                <DropdownField label={"Year of Publication/Acceptance"} initialValue={data.year} options={yearRange.map((year)=>{return {title:year,value:year}})} onChange={(value)=>{setBodyValue("year",value)}}/>
             ]}/>
             <GridContainer elements={[
-                <InputField label={"Title of the Paper"} hint={"Enter Title"} initialValue={data.title} onChange={(value)=>{setBodyValue("title",value)}} required={true} />,
+                <InputField label={"Title of the Paper"} hint={"Enter Title"}initialValue={data.title}  onChange={(value)=>{setBodyValue("title",value)}} />,
             ]} space={2}/>
 
             <GridContainer elements={[
-                <InputField label={"Name of Journal"} hint={"Journal Name"} initialValue={data.name} onChange={(value)=>{setBodyValue("name",value)}} required={true} />,
+                <InputField label={"Name of Journal"} hint={"Journal Name"} initialValue={data.name} onChange={(value)=>{setBodyValue("name",value)}} />,
             ]} space={2}/>
 
             <GridContainer elements={[
-                <InputField label={"Volume"} hint={"Volume"} initialValue={data.volume} onChange={(value)=>{setBodyValue("volume",value)}} required={true} />,
-                <InputField label={"Page Number"} hint={"Page Number"} initialValue={data.page_no} onChange={(value)=>{setBodyValue("page_no",value)}} required={true} />,
-                <DropdownField label={"Status of Paper:"} options={[{title:"Accepted",value:"accepted"},{title:"Published",value:"published"}]} initialValue={data.status}  onChange={(value)=>{setBodyValue("status",value)}} required={true} />,
+                <InputField label={"Volume"} hint={"Volume"} initialValue={data.volume} onChange={(value)=>{setBodyValue("volume",value)}} />,
+                <InputField label={"Page Number"} hint={"Page Number"} initialValue={data.page_no} onChange={(value)=>{setBodyValue("page_no",value)}} />,
+                <DropdownField label={"Status of Paper:"} options={[{title:"Accepted",value:"accepted"},{title:"Published",value:"published"}]} initialValue={data.status}  onChange={(value)=>{setBodyValue("status",value)}} />,
             ]} />
 
             <GridContainer elements={[
-                <InputField label={"Impact Factor"} hint={"Impact Factor"} initialValue={data.impact_factor} onChange={(value)=>{setBodyValue("impact_factor",value)}} required={true} />,
+                <InputField label={"Impact Factor"} hint={"Impact Factor"} initialValue={data.impact_factor} onChange={(value)=>{setBodyValue("impact_factor",value)}} />,
             ]}/>
 
             <GridContainer elements={[
-                <InputField label={"DOI Link"} hint={"DOI Link"} initialValue={data.doi_link} onChange={(value)=>{setBodyValue("doi_link",value)}} required={true} />,
+                <InputField label={"DOI Link"} hint={"DOI Link"} initialValue={data.doi_link} onChange={(value)=>{setBodyValue("doi_link",value)}} />,
             ]}/>
 
             <GridContainer elements={[
-                <FileUploadField label={"Upload First Page"} initialValue={data.first_page} onChange={(value)=>{setBodyValue("first_page",value)}} maxSizeMB={15} required={!data.id} />,
+                <FileUploadField label={"Upload First Page"} initialValue={data.first_page} onChange={(value)=>{setBodyValue("first_page",value)}} maxSizeMB={15} />,
             ]}/>
 
             
             <GridContainer elements={[
-                <CustomButton text={data.id ? (loading ? "Updating..." : "Update") : (loading ? "Submitting..." : "Submit")} 
-                disabled={loading}
-                onClick={async ()=>{
-                    setLoading(true);
-                    await callback(body);
-                    setLoading(false);
-                }}/>
+               <CustomButton text="Submit" onClick={()=>{console.log("Inside",body);callback(body)}}/>
             ]}/>
         </>
     );

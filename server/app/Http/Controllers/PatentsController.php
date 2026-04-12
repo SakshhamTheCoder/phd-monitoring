@@ -24,24 +24,23 @@ class PatentsController extends Controller
         return response()->json($patents);
     }
 
-    public function listFilters(Request $request)
-    {
+    public function listFilters(Request $request){
         return response()->json($this->getAvailableFilters("patents"));
     }
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
-            'authors' => 'required|string',
-            'status' => 'required|in:filed,published,granted',
-            'doi_link' => 'required|string',
-            'first_page' => 'required|file|mimes:pdf|max:15360',
-            'year' => 'required|string',
-            'country' => 'required|in:National,International'
+            'authors'=>'required|string',
+            'status'=>'required|in:filed,published,granted',
+            'doi_link'=>'required|string',
+            'first_page'=>'required|file|mimes:pdf|max:15360',
+            'year'=>'required|string',
+            'country'=>'required|in:National,International'
         ]);
         $user = Auth::user();
         $role = $user->current_role->role;
-        if ($role != 'student') {
+        if($role!='student'){
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
         if ($validator->fails()) {
@@ -51,21 +50,21 @@ class PatentsController extends Controller
         $patents->student_id = $user->student->roll_no;
         $patents->title = $request->title;
         $patents->authors = $request->authors;
-        $patents->doi_link = $request->doi_link;
-        $patents->year = $request->year;
-        $patents->country = $request->country;
-        $patents->status = $request->status;
-        $file = $this->saveUploadedFile($request->file('first_page'), 'patents', $patents->student_id);
-        $patents->first_page = $file;
+        $patents->doi_link=$request->doi_link;
+        $patents->year=$request->year;
+        $patents->country=$request->country;
+        $patents->status=$request->status;
+        $file=$this->saveUploadedFile($request->file('first_page'),'patents',$patents->student_id);
+        $patents->first_page=$file;
         $patents->save();
         return response()->json(['message' => 'Patent added successfully'], 201);
-
+        
     }
 
     public function show($id)
     {
         $patents = Patent::find($id);
-        if ($patents) {
+        if($patents){
             return response()->json($patents);
         }
         return response()->json(['message' => 'Patent not found'], 404);
@@ -74,30 +73,31 @@ class PatentsController extends Controller
     public function update(Request $request, $id)
     {
         $patents = Patent::find($id);
-        if ($patents) {
+        if($patents){
             $validator = Validator::make($request->all(), [
                 'title' => 'required|string|max:255',
-                'authors' => 'required|string',
-                'status' => 'required|in:filed,published,granted',
-                'doi_link' => 'required|string',
-                'first_page' => 'nullable|file|mimes:pdf|max:15360',
-                'year' => 'required|string',
-                'country' => 'required|in:National,International'
+                'authors'=>'required|string',
+                'status'=>'required|in:filed,published,granted',
+                'doi_link'=>'required|string',
+                'first_page'=>'nullable',
+                'year'=>'required|string',
+                'country'=>'required|in:National,International'
             ]);
             $user = Auth::user();
             $role = $user->current_role->role;
-            if ($role != 'student' || $patents->student_id != $user->student->roll_no) {
+            if($role!='student'){
                 return response()->json(['message' => 'You are not authorized to access this resource'], 403);
             }
             if ($validator->fails()) {
                 return response()->json(['errors' => $validator->errors()], 400);
             }
+            $patents->student_id = $user->student->roll_no;
             $patents->title = $request->title;
             $patents->authors = $request->authors;
-            $patents->doi_link = $request->doi_link;
-            $patents->year = $request->year;
-            $patents->country = $request->country;
-            $patents->status = $request->status;
+            $patents->doi_link=$request->doi_link;
+            $patents->year=$request->year;
+            $patents->country=$request->country;
+            $patents->status=$request->status;
 
             if ($request->hasFile('first_page')) {
                 $file = $this->saveUploadedFile($request->file('first_page'), 'patents', $patents->student_id);
@@ -109,5 +109,5 @@ class PatentsController extends Controller
         }
         return response()->json(['message' => 'Patent not found'], 404);
     }
-
+    
 }

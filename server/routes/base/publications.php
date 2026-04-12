@@ -5,6 +5,6 @@ use App\Http\Controllers\PublicationController;
 use Illuminate\Support\Facades\Auth;
 
 
-Route::post('/', [PublicationController::class , 'store'])->middleware('auth:sanctum');
-Route::get('/', [PublicationController::class , 'get'])->middleware('auth:sanctum');
-Route::put('/{id}', [PublicationController::class , 'update'])->middleware('auth:sanctum');
+Route::post('/', [PublicationController::class, 'store'])->middleware('auth:sanctum');
+Route::post('/{id}', [PublicationController::class, 'update'])->middleware('auth:sanctum');
+Route::get('/', [PublicationController::class, 'get'])->middleware('auth:sanctum');

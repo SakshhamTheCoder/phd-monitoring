@@ -7,7 +7,6 @@ import CustomButton from "../forms/fields/CustomButton";
 
 const Book = ({ callback, updateValue, data = {} }) => {
   const [body, setBody] = useState(data);
-  const [loading, setLoading] = useState(false);
   const year = new Date().getFullYear();
   const yearRange = Array.from({ length: 7 }, (_, i) => year - 3 + i);
   useEffect(() => {
@@ -29,7 +28,6 @@ const Book = ({ callback, updateValue, data = {} }) => {
             label={"Author(s)"}
             hint={"Enter Author(s),separated by commas"}
             initialValue={data.authors}
-            required={true}
             onChange={(value) => {
               setBodyValue("authors", value);
             }}
@@ -43,7 +41,6 @@ const Book = ({ callback, updateValue, data = {} }) => {
             label={"Name of Book"}
             hint={"Book Name"}
             initialValue={data.name}
-            required={true}
             onChange={(value) => {
               setBodyValue("name", value);
             }}
@@ -60,13 +57,21 @@ const Book = ({ callback, updateValue, data = {} }) => {
             options={yearRange.map((year) => {
               return { title: year, value: year };
             })}
-            required={true}
             onChange={(value) => {
               setBodyValue("year", value);
             }}
           />,
-          <DropdownField label={"Status of Book:"} initialValue={data.status} options={[{title:"Accepted",value:"accepted"},{title:"Published",value:"published"}]} onChange={(value)=>{setBodyValue("status",value)}} required={true} />,
-          
+          <DropdownField
+            label={"Status of Book:"}
+            initialValue={data.status}
+            options={[
+              { title: "Accepted", value: "accepted" },
+              { title: "Published", value: "published" },
+            ]}
+            onChange={(value) => {
+              setBodyValue("status", value);
+            }}
+          />,
         ]}
         space={2}
       />
@@ -77,7 +82,6 @@ const Book = ({ callback, updateValue, data = {} }) => {
             label={"Chapter Title"}
             hint={"Enter Title"}
             initialValue={data.title}
-            required={true}
             onChange={(value) => {
               setBodyValue("title", value);
             }}
@@ -89,7 +93,9 @@ const Book = ({ callback, updateValue, data = {} }) => {
       <GridContainer
         elements={[
           <InputField
-            required={true}
+            label={"Volume"}
+            hint={"Volume"}
+            initialValue={data.volume}
             onChange={(value) => {
               setBodyValue("volume", value);
             }}
@@ -98,7 +104,6 @@ const Book = ({ callback, updateValue, data = {} }) => {
             label={"Page Number"}
             hint={"Page Number"}
             initialValue={data.page_no}
-            required={true}
             onChange={(value) => {
               setBodyValue("page_no", value);
             }}
@@ -107,7 +112,6 @@ const Book = ({ callback, updateValue, data = {} }) => {
             label={"ISSN"}
             hint={"ISSN"}
             initialValue={data.issn}
-            required={true}
             onChange={(value) => {
               setBodyValue("issn", value);
             }}
@@ -121,7 +125,6 @@ const Book = ({ callback, updateValue, data = {} }) => {
             label={"Name of Publisher"}
             hint={"Publisher Name"}
             initialValue={data.publisher}
-            required={true}
             onChange={(value) => {
               setBodyValue("publisher", value);
             }}
@@ -136,7 +139,6 @@ const Book = ({ callback, updateValue, data = {} }) => {
             label={"DOI Link"}
             hint={"DOI Link"}
             initialValue={data.doi_link}
-            required={true}
             onChange={(value) => {
               setBodyValue("doi_link", value);
             }}
@@ -149,7 +151,6 @@ const Book = ({ callback, updateValue, data = {} }) => {
           <FileUploadField
             label={"Upload First Page"}
             initialValue={data.first_page}
-            required={!data.id}
             onChange={(value) => {
               setBodyValue("first_page", value);
             }}
@@ -161,12 +162,9 @@ const Book = ({ callback, updateValue, data = {} }) => {
       <GridContainer
         elements={[
           <CustomButton
-            text={data.id ? (loading ? "Updating..." : "Update") : (loading ? "Submitting..." : "Submit")}
-            disabled={loading}
-            onClick={async () => {
-              setLoading(true);
-              await callback(body);
-              setLoading(false);
+            text="Submit"
+            onClick={() => {
+              callback(body);
             }}
           />,
         ]}
