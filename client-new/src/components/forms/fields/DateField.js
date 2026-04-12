@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import "./Fields.css";
 
-const DateField = ({ label, initialValue, isLocked, onChange, hint = null, showLabel = true }) => {
+const DateField = ({ label, initialValue, isLocked, onChange, hint = null, showLabel = true, required = false }) => {
     const [hintText] = useState(hint || 'Select Date...');
     const [value, updateValue] = useState('');
 
@@ -15,7 +15,7 @@ const DateField = ({ label, initialValue, isLocked, onChange, hint = null, showL
 
     return (
         <div className="input-field-container">
-            {showLabel && (<label className="input-label">{label}</label>)}
+            {showLabel && (<label className="input-label">{label}{required && <span style={{ color: 'red', marginLeft: '4px' }}>*</span>}</label>)}
             <input
                 type="date"
                 className="input-field"

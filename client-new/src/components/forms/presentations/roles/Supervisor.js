@@ -132,6 +132,7 @@ const Supervisor = ({ formData }) => {
                       initialValue={body.progress}
                       isLocked={lock}
                       onChange={updateTotal}
+                      required={true}
                     />,
                   ]}
                   space={2}
@@ -155,7 +156,7 @@ const Supervisor = ({ formData }) => {
                 {formData.teaching_work === "None" ? (
                   <GridContainer
                     elements={[
-                      <InputField
+                      <InputField required={true}
                         label={"% Attendence"}
                         initialValue={formData.attendance}
                         isLocked={lock}
@@ -165,13 +166,14 @@ const Supervisor = ({ formData }) => {
                             attendance: updated,
                           }));
                         }}
+                        required={true}
                       />,
                     ]}
                   />
                 ) : (
                   <GridContainer
                     elements={[
-                      <InputField
+                      <InputField required={true}
                         label={"No. of Contact Hours"}
                         initialValue={formData.contact_hours}
                         isLocked={lock}
@@ -181,6 +183,7 @@ const Supervisor = ({ formData }) => {
                             contact_hours: updated,
                           }));
                         }}
+                        required={true}
                       />,
                     ]}
                   />

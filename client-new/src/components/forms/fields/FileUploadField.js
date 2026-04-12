@@ -12,6 +12,7 @@ const FileUploadField = ({
   acceptedTypes = '.pdf',
   maxSizeMB = 2,
   fileTypeLabel = 'PDF',
+  required = false,
 }) => {
   const [fileName, setFileName] = useState(
     initialValue ? 'View Uploaded File' : `Upload ${fileTypeLabel} (Max ${maxSizeMB}MB)`
@@ -41,7 +42,7 @@ const FileUploadField = ({
 
   return (
     <div className='file-upload-container'>
-      {showLabel && <label className='input-label'>{label}</label>}
+      {showLabel && <label className='input-label'>{label}{required && <span style={{ color: 'red', marginLeft: '4px' }}>*</span>}</label>}
 
       {initialValue && isLocked ? (
         <a

@@ -104,7 +104,7 @@ const Student = ({ formData }) => {
                 initialValue={formData.name}
                 isLocked={true}
               />,
-              <DropdownField
+              <DropdownField required={true}
                 label={"Gender"}
                 initialValue={formData.gender}
                 options={[
@@ -157,7 +157,7 @@ const Student = ({ formData }) => {
           />
           <GridContainer
             elements={[
-              <InputField
+              <InputField required={true}
                 label={"CGPA"}
                 initialValue={formData.cgpa}
                 isLocked={lock}
@@ -167,7 +167,7 @@ const Student = ({ formData }) => {
           />
           <GridContainer
             elements={[
-              <InputField
+              <InputField required={true}
                 initialValue={formData.address}
                 label={"Address of Correspondence"}
                 isLocked={lock}
@@ -180,7 +180,7 @@ const Student = ({ formData }) => {
           />
           <GridContainer
             elements={[
-              <InputField
+              <InputField required={true}
                 initialValue={formData.phd_title}
                 label={"Title of Phd Thesis"}
                 isLocked={lock}
@@ -195,7 +195,7 @@ const Student = ({ formData }) => {
 
           <GridContainer
             elements={[
-              <DropdownField
+              <DropdownField required={true}
                 label={"Broad Area of Research"}
                 initialValue={formData.broad_area_of_research}
                 options={areasOfSpecialization}
@@ -224,7 +224,7 @@ const Student = ({ formData }) => {
           {formData.role == "student" ? (
             <GridContainer
               elements={body.objectives?.map((objective, index) => (
-                <InputField
+                <InputField required={true}
                   initialValue={objective}
                   isLocked={lock}
                   onChange={(value) => {
@@ -257,7 +257,7 @@ const Student = ({ formData }) => {
           <GridContainer
             label="Upload IRB PDF File"
             elements={[
-              <FileUploadField
+              <FileUploadField required={true}
                 initialValue={formData.irb_pdf}
                 showLabel={false}
                 isLocked={lock || formData.form_type === "revised"}

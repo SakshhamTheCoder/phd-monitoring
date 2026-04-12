@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import "./Fields.css";
 
-const DropdownField = ({ label, options, initialValue, isLocked, onChange }) => {
+const DropdownField = ({ label, options, initialValue, isLocked, onChange, required = false }) => {
     const [value, updateValue] = useState(initialValue || "");
     const [showInitialValue, setShowInitialValue] = useState(!!initialValue);
 
@@ -16,7 +16,7 @@ const DropdownField = ({ label, options, initialValue, isLocked, onChange }) => 
 
     return (
         <div className="input-field-container">
-            {label && (  <label className="input-label">{label}</label>)}
+            {label && (  <label className="input-label">{label}{required && <span style={{ color: 'red', marginLeft: '4px' }}>*</span>}</label>)}
             <select
                 className="input-field"
                 value={value}

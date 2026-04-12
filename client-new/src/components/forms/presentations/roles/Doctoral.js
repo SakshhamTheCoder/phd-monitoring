@@ -82,7 +82,7 @@ const Doctoral = ({ formData }) => {
                 <>
                   <GridContainer
                     elements={[
-                      <InputField
+                      <InputField required={true}
                         label="Name"
                         initialValue={formData.current_supervisor.name}
                         onChange={(value) => {
@@ -90,7 +90,7 @@ const Doctoral = ({ formData }) => {
                         }}
                         isLocked={true}
                       />,
-                      <InputField
+                      <InputField required={true}
                         label="Department"
                         initialValue={formData.current_supervisor.department}
                         onChange={(value) => {
@@ -98,7 +98,7 @@ const Doctoral = ({ formData }) => {
                         }}
                         isLocked={true}
                       />,
-                      <InputField
+                      <InputField required={true}
                         label="Designation"
                         initialValue={formData.current_supervisor.designation}
                         onChange={(value) => {
@@ -121,7 +121,7 @@ const Doctoral = ({ formData }) => {
                         }
                         isLocked={true}
                       />,
-                      <CounterField
+                      <CounterField required={true}
                         label="Outside TIET Students"
                         initialValue={
                           formData.current_supervisor.supervised_outside

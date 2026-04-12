@@ -171,7 +171,7 @@ const Student = ({ formData }) => {
 
           <GridContainer
             elements={[
-              <InputField
+              <InputField required={true}
                 label="Reason for Extension"
                 initialValue={formData.reason}
                 isLocked={lock}
@@ -188,7 +188,7 @@ const Student = ({ formData }) => {
 
           <GridContainer
             elements={[
-              <FileUploadField
+              <FileUploadField required={true}
                 label={"Upload Research Proposal"}
                 onChange={(file) => {
                   setFiles([{ key: "research_pdf", file }]);

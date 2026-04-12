@@ -155,7 +155,7 @@ const Student = ({ formData }) => {
           />
           <GridContainer
             elements={[
-              <InputField
+              <InputField required={true}
                 label="Reason for Status Change"
                 initialValue={formData.reason}
                 isLocked={lock}

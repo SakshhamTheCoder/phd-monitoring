@@ -178,7 +178,7 @@ const Student = ({ formData }) => {
           {(body.revised || formData.revised_title) && (
             <GridContainer
               elements={[
-                <InputField
+                <InputField required={true}
                   label="Revised Title of Phd Thesis"
                   initialValue={formData.revised_title}
                   isLocked={lock}
@@ -240,7 +240,7 @@ const Student = ({ formData }) => {
                   <GridContainer
                     elements={body.objectives.map((objective, index) => {
                       return (
-                        <InputField
+                        <InputField required={true}
                           initialValue={objective}
                           isLocked={lock || formData.form_type === "draft"}
                           onChange={(value) => {
