@@ -19,35 +19,35 @@ const SCIJournal = ({callback,updateValue,data={}}) => {
     return (
         <>
             <GridContainer elements={[
-                <InputField label={"Author(s)"} hint={"Enter Author(s), separated by commas"} initialValue={data.authors} onChange={(value)=>{setBodyValue("authors",value)}} />,
+                <InputField label={"Author(s)"} hint={"Enter Author(s), separated by commas"} initialValue={data.authors} onChange={(value)=>{setBodyValue("authors",value)}} required={true} />,
             ]}/>
             <GridContainer elements={[
-                <DropdownField label={"Year of Publication/Acceptance"} initialValue={data.year} options={yearRange.map((year)=>{return {title:year,value:year}})} onChange={(value)=>{setBodyValue("year",value)}}/>
+                <DropdownField label={"Year of Publication/Acceptance"} initialValue={data.year} options={yearRange.map((year)=>{return {title:year,value:year}})} onChange={(value)=>{setBodyValue("year",value)}} required={true} />
             ]}/>
             <GridContainer elements={[
-                <InputField label={"Title of the Paper"} hint={"Enter Title"} initialValue={data.title} onChange={(value)=>{setBodyValue("title",value)}} />,
+                <InputField label={"Title of the Paper"} hint={"Enter Title"} initialValue={data.title} onChange={(value)=>{setBodyValue("title",value)}} required={true} />,
             ]} space={2}/>
 
             <GridContainer elements={[
-                <InputField label={"Name of Journal"} hint={"Journal Name"} initialValue={data.name} onChange={(value)=>{setBodyValue("name",value)}} />,
+                <InputField label={"Name of Journal"} hint={"Journal Name"} initialValue={data.name} onChange={(value)=>{setBodyValue("name",value)}} required={true} />,
             ]} space={2}/>
 
             <GridContainer elements={[
-                <InputField label={"Volume"} hint={"Volume"} initialValue={data.volume} onChange={(value)=>{setBodyValue("volume",value)}} />,
-                <InputField label={"Page Number"} hint={"Page Number"} initialValue={data.page_no} onChange={(value)=>{setBodyValue("page_no",value)}} />,
-                <DropdownField label={"Status of Paper:"} options={[{title:"Accepted",value:"accepted"},{title:"Published",value:"published"}]} initialValue={data.status}  onChange={(value)=>{setBodyValue("status",value)}} />,
+                <InputField label={"Volume"} hint={"Volume"} initialValue={data.volume} onChange={(value)=>{setBodyValue("volume",value)}} required={true} />,
+                <InputField label={"Page Number"} hint={"Page Number"} initialValue={data.page_no} onChange={(value)=>{setBodyValue("page_no",value)}} required={true} />,
+                <DropdownField label={"Status of Paper:"} options={[{title:"Accepted",value:"accepted"},{title:"Published",value:"published"}]} initialValue={data.status}  onChange={(value)=>{setBodyValue("status",value)}} required={true} />,
             ]} />
 
             <GridContainer elements={[
-                <InputField label={"Impact Factor"} hint={"Impact Factor"} initialValue={data.impact_factor} onChange={(value)=>{setBodyValue("impact_factor",value)}} />,
+                <InputField label={"Impact Factor"} hint={"Impact Factor"} initialValue={data.impact_factor} onChange={(value)=>{setBodyValue("impact_factor",value)}} required={true} />,
             ]}/>
 
             <GridContainer elements={[
-                <InputField label={"DOI Link"} hint={"DOI Link"} initialValue={data.doi_link} onChange={(value)=>{setBodyValue("doi_link",value)}} />,
+                <InputField label={"DOI Link"} hint={"DOI Link"} initialValue={data.doi_link} onChange={(value)=>{setBodyValue("doi_link",value)}} required={true} />,
             ]}/>
 
             <GridContainer elements={[
-                <FileUploadField label={"Upload First Page"} initialValue={data.first_page} onChange={(value)=>{setBodyValue("first_page",value)}} maxSizeMB={15} />,
+                <FileUploadField label={"Upload First Page"} initialValue={data.first_page} onChange={(value)=>{setBodyValue("first_page",value)}} maxSizeMB={15} required={!data.id} />,
             ]}/>
 
             

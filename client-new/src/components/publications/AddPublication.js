@@ -58,6 +58,7 @@ const AddPublication = ({close, initialData = null}) => {
             <DropdownField
               label={"Publication Type"}
               isLocked={!!initialData?.id}
+              required={true}
               options={[
                 {
                   value: JSON.stringify({

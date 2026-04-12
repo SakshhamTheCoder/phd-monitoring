@@ -23,30 +23,30 @@ const Patents = ({callback,updateValue, data = {}}) => {
     return (
         <>
             <GridContainer elements={[
-                <InputField label={"Author(s)"} hint={"Enter Author(s)"} initialValue={data.authors} onChange={(value)=>{setBodyValue("authors",value)}} />,
+                <InputField label={"Author(s)"} hint={"Enter Author(s)"} initialValue={data.authors} onChange={(value)=>{setBodyValue("authors",value)}} required={true} />,
             ]}/>
             <GridContainer elements={[
-                <DropdownField label={"Year of Award"} initialValue={data.year} options={yearRange.map((year)=>{return {title:year,value:year}})} onChange={(value)=>{setBodyValue("year",value)}}/>
+                <DropdownField label={"Year of Award"} initialValue={data.year} options={yearRange.map((year)=>{return {title:year,value:year}})} onChange={(value)=>{setBodyValue("year",value)}} required={true} />
             ]}/>
             <GridContainer elements={[
-                <InputField label={"Title of the Patent"} hint={"Enter Title"} initialValue={data.title} onChange={(value)=>{setBodyValue("title",value)}} />,
+                <InputField label={"Title of the Patent"} hint={"Enter Title"} initialValue={data.title} onChange={(value)=>{setBodyValue("title",value)}} required={true} />,
             ]} space={2}/>
 
             <GridContainer elements={[
-                <DropdownField label={"Type of Patent"} initialValue={data.country} options={[{title:"National",value:"National"},{title:"International",value:"International"}]} onChange={(value)=>{setBodyValue("country",value)}} />,
-                ,<DropdownField label={"Status of Patent:"} initialValue={data.status} options={[
+                <DropdownField label={"Type of Patent"} initialValue={data.country} options={[{title:"National",value:"National"},{title:"International",value:"International"}]} onChange={(value)=>{setBodyValue("country",value)}} required={true} />,
+                <DropdownField label={"Status of Patent:"} initialValue={data.status} options={[
                     {title:"Granted",value:"granted"},
                     {title:"Filed",value:"filed"},
                     {title:"Published",value:"published"},
-                ]} onChange={(value)=>{setBodyValue("status",value)}} />,
+                ]} onChange={(value)=>{setBodyValue("status",value)}} required={true} />,
             ]} />
 
 <GridContainer elements={[
-                <InputField label={"DOI Link"} hint={"DOI Link"} initialValue={data.doi_link} onChange={(value)=>{setBodyValue("doi_link",value)}} />,
+                <InputField label={"DOI Link"} hint={"DOI Link"} initialValue={data.doi_link} onChange={(value)=>{setBodyValue("doi_link",value)}} required={true} />,
             ]}/>
 
             <GridContainer elements={[
-                <FileUploadField label={"Upload First Page"} initialValue={data.first_page} onChange={(value)=>{setBodyValue("first_page",value)}} maxSizeMB={15} />,
+                <FileUploadField label={"Upload First Page"} initialValue={data.first_page} onChange={(value)=>{setBodyValue("first_page",value)}} maxSizeMB={15} required={!data.id} />,
             ]}/>
 
             

@@ -30,38 +30,38 @@ const Conference = ({callback,updateValue, data = {}}) => {
     return (
         <>
             <GridContainer elements={[
-                <InputField label={"Author(s)"} hint={"Enter Author(s)"} initialValue={data.authors} onChange={(value)=>{setBodyValue("authors",value)}} />,
+                <InputField label={"Author(s)"} hint={"Enter Author(s)"} initialValue={data.authors} onChange={(value)=>{setBodyValue("authors",value)}} required={true} />,
             ]}/>
             <GridContainer elements={[
-                <DropdownField label={"Year of Publication/Acceptance"} initialValue={data.year} options={yearRange.map((year)=>{return {title:year,value:year}})} onChange={(value)=>{setBodyValue("year",value)}}/>
+                <DropdownField label={"Year of Publication/Acceptance"} initialValue={data.year} options={yearRange.map((year)=>{return {title:year,value:year}})} onChange={(value)=>{setBodyValue("year",value)}} required={true} />
             ]}/>
             <GridContainer elements={[
-                <InputField label={"Title of the Paper"} hint={"Enter Title"} initialValue={data.title} onChange={(value)=>{setBodyValue("title",value)}} />,
+                <InputField label={"Title of the Paper"} hint={"Enter Title"} initialValue={data.title} onChange={(value)=>{setBodyValue("title",value)}} required={true} />,
             ]} space={2}/>
 
             <GridContainer elements={[
-                <InputField label={"Name of Conference"} hint={"Journal Name"} initialValue={data.name} onChange={(value)=>{setBodyValue("name",value)}} />,
+                <InputField label={"Name of Conference"} hint={"Journal Name"} initialValue={data.name} onChange={(value)=>{setBodyValue("name",value)}} required={true} />,
             ]} space={2}/>
 
             <GridContainer elements={[
-                <InputSuggestions apiUrl={apiCountries} label={"Country"} hint={"Country"} initialValue={data.country} onSelect={(value)=>{body.country=value.name; body.country_code=value.code; setBodyValue("country",value.name)}} suggestionManadatory={false} />,
-                <InputSuggestions apiUrl={apiStates} label="State" hint={"State"} initialValue={data.state} onSelect={(value)=>{body.state=value.name; body.state_code=value.code;  setBodyValue("state",value.name)}} body={body} suggestionManadatory={false} />,
-                <InputSuggestions apiUrl={apiCities} label="City" hint={"City"} initialValue={data.city} onSelect={(value)=>{body.city=value.name;  setBodyValue("city",value.name)}}  body={body} suggestionManadatory={false} />,
+                <InputSuggestions apiUrl={apiCountries} label={"Country"} hint={"Country"} initialValue={data.country} onSelect={(value)=>{body.country=value.name; body.country_code=value.code; setBodyValue("country",value.name)}} suggestionManadatory={false} required={true} />,
+                <InputSuggestions apiUrl={apiStates} label="State" hint={"State"} initialValue={data.state} onSelect={(value)=>{body.state=value.name; body.state_code=value.code;  setBodyValue("state",value.name)}} body={body} suggestionManadatory={false} required={true} />,
+                <InputSuggestions apiUrl={apiCities} label="City" hint={"City"} initialValue={data.city} onSelect={(value)=>{body.city=value.name;  setBodyValue("city",value.name)}}  body={body} suggestionManadatory={false} required={true} />,
             ]}/>
 
 
             <GridContainer elements={[
-                <DropdownField label={"Type of Conference"} initialValue={data.type} options={[{title:"National",value:"national"},{title:"International",value:"international"}]} onChange={(value)=>{setBodyValue("type",value)}} />,
-                <DropdownField label={"Status of Paper:"} initialValue={data.status} options={[{title:"Accepted",value:"accepted"},{title:"Published",value:"published"}]} onChange={(value)=>{setBodyValue("status",value)}} />,
+                <DropdownField label={"Type of Conference"} initialValue={data.type} options={[{title:"National",value:"national"},{title:"International",value:"international"}]} onChange={(value)=>{setBodyValue("type",value)}} required={true} />,
+                <DropdownField label={"Status of Paper:"} initialValue={data.status} options={[{title:"Accepted",value:"accepted"},{title:"Published",value:"published"}]} onChange={(value)=>{setBodyValue("status",value)}} required={true} />,
             ]} />
 
 
 <GridContainer elements={[
-                <InputField label={"DOI Link"} hint={"DOI Link"} initialValue={data.doi_link} onChange={(value)=>{setBodyValue("doi_link",value)}} />,
+                <InputField label={"DOI Link"} hint={"DOI Link"} initialValue={data.doi_link} onChange={(value)=>{setBodyValue("doi_link",value)}} required={true} />,
             ]}/>
 
             <GridContainer elements={[
-                <FileUploadField label={"Upload First Page"} initialValue={data.first_page} onChange={(value)=>{setBodyValue("first_page",value)}} maxSizeMB={15} />,
+                <FileUploadField label={"Upload First Page"} initialValue={data.first_page} onChange={(value)=>{setBodyValue("first_page",value)}} maxSizeMB={15} required={!data.id} />,
             ]}/>
 
             

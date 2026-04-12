@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { customFetch } from '../../../api/base';
 import "./Fields.css";
 
-const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = false, showLabel = true, body, suggestionManadatory = true, fields=["name"]}) => {
+const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = false, showLabel = true, body, suggestionManadatory = true, fields=["name"], required = false}) => {
     const [inputValue, setInputValue] = useState(initialValue || '');
     const [suggestions, setSuggestions] = useState([]);
     const [isLocked, setIsLocked] = useState(lock || false);
@@ -107,7 +107,7 @@ useEffect(() => {
             onBlur={handleBlur}
         >
             <div className="input-field-container">
-                {showLabel && (<label className="input-label">{label}</label>)}
+                {showLabel && (<label className="input-label">{label}{required && <span style={{ color: 'red', marginLeft: '4px' }}>*</span>}</label>)}
                 <input
                     type="text"
                     value={inputValue}
