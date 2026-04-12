@@ -6,10 +6,16 @@ import Patents from "./Patents";
 import Conference from "./Conference";
 import Book from "./Book";
 import GridContainer from "../forms/fields/GridContainer";
-import { APIaddPublication } from "../../api/publication";
+import { APIaddPublication, APIupdatePublication } from "../../api/publication";
 
-const AddPublication = ({close}) => {
-  const [body, setBody] = useState({});
+const AddPublication = ({close, initialData = null}) => {
+  const [body, setBody] = useState(initialData || {});
+
+  useEffect(() => {
+    if (initialData) {
+      setBody(initialData);
+    }
+  }, [initialData]);
 
   const handleSelect = (value) => {
     value = JSON.parse(value);
@@ -20,11 +26,19 @@ const AddPublication = ({close}) => {
   };
 
   const callback = async (newData) => {
-    if(body.publication_type === "patents"){
-      await APIaddPublication(body,close,"/patents");
+    const isEdit = !!initialData?.id;
+    const currentBody = { ...body, ...newData };
+    const updateUrl = currentBody.publication_type === "patents" ? "/patents" : false;
+
+    if (isEdit) {
+      await APIupdatePublication(initialData.id, currentBody, close, updateUrl);
+    } else {
+        if(currentBody.publication_type === "patents"){
+          await APIaddPublication(currentBody,close,"/patents");
+        }
+        else
+        await APIaddPublication(currentBody,close);
     }
-    else
-    await APIaddPublication(body,close);
   };
 
   const updateValue = (newData) => {
@@ -43,6 +57,7 @@ const AddPublication = ({close}) => {
           elements={[
             <DropdownField
               label={"Publication Type"}
+              isLocked={!!initialData?.id}
               options={[
                 {
                   value: JSON.stringify({
@@ -92,14 +107,14 @@ const AddPublication = ({close}) => {
           {body.label && (
             <>
               {body.publication_type === "journal" && (
-                <SCIJournal callback={callback} updateValue={updateValue} />
+                <SCIJournal callback={callback} updateValue={updateValue} data={body} />
               )}
-              {body.publication_type === "book" && <Book callback={callback} updateValue={updateValue} />}
+              {body.publication_type === "book" && <Book callback={callback} updateValue={updateValue} data={body} />}
               {body.publication_type === "conference" && (
-                <Conference callback={callback} updateValue={updateValue} />
+                <Conference callback={callback} updateValue={updateValue} data={body} />
               )}
               {body.publication_type === "patents" && (
-                <Patents callback={callback} updateValue={updateValue} />
+                <Patents callback={callback} updateValue={updateValue} data={body} />
               )}
             </>
           )}

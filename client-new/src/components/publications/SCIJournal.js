@@ -6,7 +6,7 @@ import FileUploadField from '../forms/fields/FileUploadField';
 import CustomButton from '../forms/fields/CustomButton';
 
 const SCIJournal = ({callback,updateValue,data={}}) => {
-    const [body, setBody] = useState({});
+    const [body, setBody] = useState(data);
     const year = new Date().getFullYear();
     const yearRange = Array.from({ length: 7 }, (_, i) => year - 3 + i);    
     const setBodyValue = (key,value) => {
@@ -14,11 +14,6 @@ const SCIJournal = ({callback,updateValue,data={}}) => {
             ...prev,
             [key]:value,}));
     }
-    useEffect(()=>{
-        setBody({
-          data
-        })
-    },[]);
 
     useEffect(() => {     updateValue(body);}, [body]);
     return (
@@ -30,7 +25,7 @@ const SCIJournal = ({callback,updateValue,data={}}) => {
                 <DropdownField label={"Year of Publication/Acceptance"} initialValue={data.year} options={yearRange.map((year)=>{return {title:year,value:year}})} onChange={(value)=>{setBodyValue("year",value)}}/>
             ]}/>
             <GridContainer elements={[
-                <InputField label={"Title of the Paper"} hint={"Enter Title"}initialValue={data.title}  onChange={(value)=>{setBodyValue("title",value)}} />,
+                <InputField label={"Title of the Paper"} hint={"Enter Title"} initialValue={data.title} onChange={(value)=>{setBodyValue("title",value)}} />,
             ]} space={2}/>
 
             <GridContainer elements={[
@@ -57,7 +52,7 @@ const SCIJournal = ({callback,updateValue,data={}}) => {
 
             
             <GridContainer elements={[
-               <CustomButton text="Submit" onClick={()=>{console.log("Inside",body);callback(body)}}/>
+                <CustomButton text={data.id ? "Update" : "Submit"} onClick={()=>{console.log("Inside",body);callback(body)}}/>
             ]}/>
         </>
     );

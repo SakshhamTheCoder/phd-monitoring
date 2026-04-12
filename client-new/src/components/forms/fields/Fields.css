@@ -125,6 +125,10 @@
     grid-column: span 3; /* Occupy 3 columns */
 }
 
+.left-align-header {
+    text-align: left !important;
+}
+
 .input-field-container {
     display: flex;
     flex-direction: column;

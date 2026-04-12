@@ -100,7 +100,7 @@ const ShowPublications = ({
                      )}
                    {formData.sci && formData.sci.length > 0 && (
                         <>
-                            <GridContainer elements={[<h2>SCI/SCIE/SSCI/ABDC/AHCI Journal</h2>]} space={1} />
+                            <GridContainer elements={[<h2 className='left-align-header'>SCI/SCIE/SSCI/ABDC/AHCI Journal</h2>]} space={3} />
                             <GridContainer elements={[
                                 <TableComponent
                                     data={formData.sci}
@@ -118,7 +118,7 @@ const ShowPublications = ({
 
                     {formData.non_sci && formData.non_sci.length > 0 && (
                         <>
-                            <GridContainer elements={[<h2>Papers in Scopus Journal</h2>]} space={1} />
+                            <GridContainer elements={[<h2 className='left-align-header'>Papers in Scopus Journal</h2>]} space={3} />
                             <GridContainer elements={[
                                 <TableComponent
                                     data={formData.non_sci}
@@ -136,7 +136,7 @@ const ShowPublications = ({
 
                     {formData.international && formData.international.length > 0 && (
                         <>
-                            <GridContainer elements={[<h2>Papers in International Conferences</h2>]} space={2} />
+                            <GridContainer elements={[<h2 className='left-align-header'>Papers in International Conferences</h2>]} space={3} />
                             <GridContainer elements={[
                                 <TableComponent
                                     data={formData.international}
@@ -155,7 +155,7 @@ const ShowPublications = ({
 
                     {formData.national && formData.national.length > 0 && (
                         <>
-                            <GridContainer elements={[<h2>Papers in National Conferences</h2>]} space={1} />
+                            <GridContainer elements={[<h2 className='left-align-header'>Papers in National Conferences</h2>]} space={3} />
                             <GridContainer elements={[
                                 <TableComponent
                                     data={formData.national}
@@ -173,7 +173,7 @@ const ShowPublications = ({
 
                     {formData.book && formData.book.length > 0 && (
                         <>
-                            <GridContainer elements={[<h2>Book/Book Chapters</h2>]} space={1} />
+                            <GridContainer elements={[<h2 className='left-align-header'>Book/Book Chapters</h2>]} space={3} />
                             <GridContainer elements={[
                                 <TableComponent
                                     data={formData.book}
@@ -190,7 +190,7 @@ const ShowPublications = ({
 
                     {formData.patents && formData.patents.length > 0 && (
                         <>
-                            <GridContainer elements={[<h2>Patents</h2>]} space={1} />
+                            <GridContainer elements={[<h2 className='left-align-header'>Patents</h2>]} space={3} />
                             <GridContainer elements={[
                                 <TableComponent
                                     data={formData.patents}

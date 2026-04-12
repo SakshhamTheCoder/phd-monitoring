@@ -20,21 +20,22 @@ class PublicationController extends Controller
     use SaveFile;
     use FilterLogicTrait;
 
-    public function listFilters(Request $request){
+    public function listFilters(Request $request)
+    {
         return response()->json($this->getAvailableFilters("publications"));
     }
 
     public function get(Request $request)
     {
-        $user=Auth::user();
-        $role=$user->current_role->role;
-        if($role!='student'){
+        $user = Auth::user();
+        $role = $user->current_role->role;
+        if ($role != 'student') {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
-        $id=$user->student->roll_no;
+        $id = $user->student->roll_no;
         $publicationsQuery = Publication::where('student_id', $id)->where('form_id', null);
         $patents = Patent::where('student_id', $id)->get()->where('form_id', null);
-        
+
         $ret = [
             'sci' => $publicationsQuery->clone()->where('publication_type', 'journal')->where('type', 'sci')->get(),
             'non_sci' => $publicationsQuery->clone()->where('publication_type', 'journal')->where('type', 'non-sci')->get(),
@@ -43,111 +44,113 @@ class PublicationController extends Controller
             'book' => $publicationsQuery->clone()->where('publication_type', 'book')->get(),
             'patents' => $patents
         ];
-        
+
         return response()->json($ret);
     }
     /**
      * Store a newly created publication in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'title' => 'required|string|max:255',
-            'publication_type' => ['required', 'in:journal,conference,book'],
-            'authors'=>'required|string',
-            'status'=>'required|in:published,accepted',
-            'doi_link'=>'required|string',
-            'first_page'=>'required|file|mimes:pdf|max:15360',
-            'year'=>'required|string',
-            'name'=>'required|string'
-        ]);
-        $user = Auth::user();
-        $role = $user->current_role->role;
-        if($role!='student'){
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
-        }
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 400);
-        }
+        \Illuminate\Support\Facades\Log::info('Store Publication Request:', $request->all());
+        try {
+            $user = Auth::user();
+            $role = $user->current_role->role;
+            if ($role != 'student') {
+                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            }
+            $id = $user->student->roll_no;
 
+            $validator = Validator::make($request->all(), [
+                'title' => 'required|string|max:255',
+                'publication_type' => ['required', 'in:journal,conference,book'],
+                'authors' => 'required|string',
+                'status' => 'required|in:published,accepted',
+                'doi_link' => 'required|string',
+                'first_page' => 'required|file|mimes:pdf|max:15360',
+                'year' => 'required|string',
+                'name' => 'required|string'
+            ]);
 
-        $authors = $request->authors;
-        if (strpos($authors, ',') === false) {
-            return response()->json([
-                'errors' => [
-                    'authors' => 'Please separate multiple authors using   commas (,).'
-        ]
-    ], 400);
-}
+            if ($validator->fails()) {
+                \Illuminate\Support\Facades\Log::error('Validation failed:', $validator->errors()->toArray());
+                return response()->json(['errors' => $validator->errors()], 400);
+            }
 
-        $publication = new Publication();
-        $publication->student_id = $user->student->roll_no;
+            $authors = $request->authors;
+            if (str_contains($authors, ';')) {
+                return response()->json([
+                    'errors' => [
+                        'authors' => 'Please use commas (,) instead of semicolons (;) to separate authors.'
+                    ]
+                ], 400);
+            }
 
-        $publication->title = $request->title;
-        $publication->authors = $request->authors;
-        $publication->doi_link=$request->doi_link;
+            $publication = new Publication();
+            $publication->student_id = $user->student->roll_no;
+            $publication->publication_type = $request->publication_type;
+            $publication->title = $request->title;
+            $publication->authors = $request->authors;
+            $publication->doi_link = $request->doi_link;
+            $publication->year = (int)$request->year;
+            $publication->name = $request->name;
+            $publication->status = $request->status;
 
-        $publication->year = (int) $request->year;
-        $publication->name=$request->name;
-        
-        $link=$this->saveUploadedFile($request->first_page,'publication',$user->student->roll_no);
-        $publication->first_page=$link;
-        $publication->status=$request->status;
+            $link = $this->saveUploadedFile($request->first_page, 'publication', $user->student->roll_no);
+            $publication->first_page = $link;
 
-        $type=$request->publication_type;
-        switch($type){
-            case 'journal':
-                $request->validate(
-                    [
+            switch ($request->publication_type) {
+                case 'journal':
+                    $request->validate([
                         'impact_factor' => 'required|numeric',
-                        'type'=>'required|in:sci,non-sci',
-                        'volume'=>'required|integer',
-                        'page_no'=>'required|string',
-                    ]
-                );
-                $publication->volume=$request->volume;
-                $publication->page_no=$request->page_no;
-                $publication->impact_factor=$request->impact_factor;
-                $publication->type=$request->type;
-                break;
-            case 'conference':
-                $request->validate(
-                    [
-                        'country'=>'required|string',
-                        'state'=>'required|string',
-                        'city'=>'required|string',
-                        'type'=>'required|in:national,international'
-                    ]
-                );
-    
-                $publication->country=$request->country;
-                $publication->state=$request->state;
-                $publication->publication_type='conference';
-                $publication->city=$request->city;
-                $publication->type=$request->type;
-                break;
-            case 'book':
-                $request->validate(
-                    [
-                        'issn'=>'required|integer',
-                        'volume'=>'required|integer',
-                        'page_no'=>'required|string',
-                        'publisher'=>'required|string',
-                    ]
-                );
+                        'type' => 'required|in:sci,non-sci',
+                        'volume' => 'required|string',
+                        'page_no' => 'required|string',
+                    ]);
+                    $publication->volume = $request->volume;
+                    $publication->page_no = $request->page_no;
+                    $publication->impact_factor = $request->impact_factor;
+                    $publication->type = $request->type;
+                    break;
+                case 'conference':
+                    $request->validate([
+                        'country' => 'required|string',
+                        'state' => 'required|string',
+                        'city' => 'required|string',
+                        'type' => 'required|in:national,international'
+                    ]);
+                    $publication->country = $request->country;
+                    $publication->state = $request->state;
+                    $publication->city = $request->city;
+                    $publication->type = $request->type;
+                    break;
+                case 'book':
+                    $request->validate([
+                        'issn' => 'required|string',
+                        'volume' => 'required|string',
+                        'page_no' => 'required|string',
+                        'publisher' => 'required|string',
+                    ]);
+                    $publication->issn = $request->issn;
+                    $publication->volume = $request->volume;
+                    $publication->page_no = $request->page_no;
+                    $publication->publisher = $request->publisher;
+                    break;
+            }
 
-                $publication->issn=$request->issn;
-                $publication->volume=$request->volume;
-                $publication->page_no=$request->page_no;
-                $publication->publisher=$request->publisher;
-                $publication->publication_type='book';
-                break;
+            $publication->save();
+            \Illuminate\Support\Facades\Log::info('Publication stored successfully:', $publication->toArray());
+            return response()->json($publication, 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Illuminate\Support\Facades\Log::error('Publication validation failed (inner):', $e->errors());
+            return response()->json(['errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Publication store error:', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['message' => 'Internal server error'], 500);
         }
-        $publication->save();
-        return response()->json($publication, 201);
     }
 
     /**
@@ -176,9 +179,108 @@ class PublicationController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //coming soon
-        //TODO: Implement update method
+        \Illuminate\Support\Facades\Log::info('Update Publication Request:', array_merge($request->all(), ['id' => $id]));
+        try {
+            $publication = Publication::find($id);
+            if (!$publication) {
+                return response()->json(['error' => 'Publication not found'], 404);
+            }
+
+            $user = Auth::user();
+            $role = $user->current_role->role;
+            if ($role != 'student' || $publication->student_id != $user->student->roll_no) {
+                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'title' => 'required|string|max:255',
+                'publication_type' => ['required', 'in:journal,conference,book'],
+                'authors' => 'required|string',
+                'status' => 'required|in:published,accepted',
+                'doi_link' => 'required|string',
+                'first_page' => 'nullable|file|mimes:pdf|max:15360',
+                'year' => 'required|string',
+                'name' => 'required|string'
+            ]);
+
+            if ($validator->fails()) {
+                \Illuminate\Support\Facades\Log::error('Update validation failed:', $validator->errors()->toArray());
+                return response()->json(['errors' => $validator->errors()], 400);
+            }
+
+            $authors = $request->authors;
+            if (str_contains($authors, ';')) {
+                return response()->json([
+                    'errors' => [
+                        'authors' => 'Please use commas (,) instead of semicolons (;) to separate authors.'
+                    ]
+                ], 400);
+            }
+
+            $publication->publication_type = $request->publication_type;
+            $publication->title = $request->title;
+            $publication->authors = $request->authors;
+            $publication->doi_link = $request->doi_link;
+            $publication->year = (int)$request->year;
+            $publication->name = $request->name;
+            $publication->status = $request->status;
+
+            if ($request->hasFile('first_page')) {
+                $link = $this->saveUploadedFile($request->first_page, 'publication', $user->student->roll_no);
+                $publication->first_page = $link;
+            }
+
+            switch ($request->publication_type) {
+                case 'journal':
+                    $request->validate([
+                        'impact_factor' => 'required|numeric',
+                        'type' => 'required|in:sci,non-sci',
+                        'volume' => 'required|string',
+                        'page_no' => 'required|string',
+                    ]);
+                    $publication->volume = $request->volume;
+                    $publication->page_no = $request->page_no;
+                    $publication->impact_factor = $request->impact_factor;
+                    $publication->type = $request->type;
+                    break;
+                case 'conference':
+                    $request->validate([
+                        'country' => 'required|string',
+                        'state' => 'required|string',
+                        'city' => 'required|string',
+                        'type' => 'required|in:national,international'
+                    ]);
+                    $publication->country = $request->country;
+                    $publication->state = $request->state;
+                    $publication->city = $request->city;
+                    $publication->type = $request->type;
+                    break;
+                case 'book':
+                    $request->validate([
+                        'issn' => 'required|string',
+                        'volume' => 'required|string',
+                        'page_no' => 'required|string',
+                        'publisher' => 'required|string',
+                    ]);
+                    $publication->issn = $request->issn;
+                    $publication->volume = $request->volume;
+                    $publication->page_no = $request->page_no;
+                    $publication->publisher = $request->publisher;
+                    break;
+            }
+
+            $publication->save();
+            \Illuminate\Support\Facades\Log::info('Publication updated successfully:', $publication->toArray());
+            return response()->json($publication, 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Illuminate\Support\Facades\Log::error('Publication update validation failed (inner):', $e->errors());
+            return response()->json(['errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Publication update error:', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['message' => 'Internal server error'], 500);
+        }
     }
 
-   
+
 }

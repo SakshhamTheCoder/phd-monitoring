@@ -5,8 +5,8 @@ import DropdownField from "../forms/fields/DropdownField";
 import FileUploadField from "../forms/fields/FileUploadField";
 import CustomButton from "../forms/fields/CustomButton";
 
-const Book = ({ callback, updateValue }) => {
-  const [body, setBody] = useState({});
+const Book = ({ callback, updateValue, data = {} }) => {
+  const [body, setBody] = useState(data);
   const year = new Date().getFullYear();
   const yearRange = Array.from({ length: 7 }, (_, i) => year - 3 + i);
   useEffect(() => {
@@ -27,6 +27,7 @@ const Book = ({ callback, updateValue }) => {
           <InputField
             label={"Author(s)"}
             hint={"Enter Author(s),separated by commas"}
+            initialValue={data.authors}
             onChange={(value) => {
               setBodyValue("authors", value);
             }}
@@ -39,6 +40,7 @@ const Book = ({ callback, updateValue }) => {
           <InputField
             label={"Name of Book"}
             hint={"Book Name"}
+            initialValue={data.name}
             onChange={(value) => {
               setBodyValue("name", value);
             }}
@@ -51,6 +53,7 @@ const Book = ({ callback, updateValue }) => {
         elements={[
           <DropdownField
             label={"Year of Publication/Acceptance"}
+            initialValue={data.year}
             options={yearRange.map((year) => {
               return { title: year, value: year };
             })}
@@ -58,7 +61,7 @@ const Book = ({ callback, updateValue }) => {
               setBodyValue("year", value);
             }}
           />,
-          <DropdownField label={"Status of Book:"} options={[{title:"Accepted",value:"accepted"},{title:"Published",value:"published"}]} onChange={(value)=>{setBodyValue("status",value)}} />,
+          <DropdownField label={"Status of Book:"} initialValue={data.status} options={[{title:"Accepted",value:"accepted"},{title:"Published",value:"published"}]} onChange={(value)=>{setBodyValue("status",value)}} />,
           
         ]}
         space={2}
@@ -69,6 +72,7 @@ const Book = ({ callback, updateValue }) => {
           <InputField
             label={"Chapter Title"}
             hint={"Enter Title"}
+            initialValue={data.title}
             onChange={(value) => {
               setBodyValue("title", value);
             }}
@@ -82,6 +86,7 @@ const Book = ({ callback, updateValue }) => {
           <InputField
             label={"Volume"}
             hint={"Volume"}
+            initialValue={data.volume}
             onChange={(value) => {
               setBodyValue("volume", value);
             }}
@@ -89,6 +94,7 @@ const Book = ({ callback, updateValue }) => {
           <InputField
             label={"Page Number"}
             hint={"Page Number"}
+            initialValue={data.page_no}
             onChange={(value) => {
               setBodyValue("page_no", value);
             }}
@@ -96,6 +102,7 @@ const Book = ({ callback, updateValue }) => {
           <InputField
             label={"ISSN"}
             hint={"ISSN"}
+            initialValue={data.issn}
             onChange={(value) => {
               setBodyValue("issn", value);
             }}
@@ -108,6 +115,7 @@ const Book = ({ callback, updateValue }) => {
           <InputField
             label={"Name of Publisher"}
             hint={"Publisher Name"}
+            initialValue={data.publisher}
             onChange={(value) => {
               setBodyValue("publisher", value);
             }}
@@ -121,6 +129,7 @@ const Book = ({ callback, updateValue }) => {
           <InputField
             label={"DOI Link"}
             hint={"DOI Link"}
+            initialValue={data.doi_link}
             onChange={(value) => {
               setBodyValue("doi_link", value);
             }}
@@ -132,6 +141,7 @@ const Book = ({ callback, updateValue }) => {
         elements={[
           <FileUploadField
             label={"Upload First Page"}
+            initialValue={data.first_page}
             onChange={(value) => {
               setBodyValue("first_page", value);
             }}
@@ -143,7 +153,7 @@ const Book = ({ callback, updateValue }) => {
       <GridContainer
         elements={[
           <CustomButton
-            text="Submit"
+            text={data.id ? "Update" : "Submit"}
             onClick={() => {
               callback(body);
             }}
