@@ -2,9 +2,11 @@ import { customFetch } from "./base"
 import { ENDPOINTS } from "./urls"
 
 export const loginAPI = async (email, password, captchaToken) => {
-    const body = { email, password };
-    if (captchaToken) body.captcha_token = captchaToken;
-    const result = await customFetch(ENDPOINTS.LOGIN,"POST", body);
+    const result = await customFetch(ENDPOINTS.LOGIN,"POST",{
+        email: email,
+        password: password,
+        captcha_token: captchaToken
+    });
   
     if(result && result.success){
         localStorage.setItem("token",result.response.token);

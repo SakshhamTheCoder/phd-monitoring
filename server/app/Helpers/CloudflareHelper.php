@@ -9,12 +9,8 @@ class CloudflareHelper
 {
     public static function verifyCaptcha($token)
     {
-        if (env('BYPASS_CAPTCHA') === 'true' || env('BYPASS_CAPTCHA') === true) {
-            return true;
-        }
-
         $secretKey = config('services.cloudflare.secret_key');
-
+        
         if (!$secretKey) {
             Log::warning('Cloudflare secret key not configured');
             return false;
