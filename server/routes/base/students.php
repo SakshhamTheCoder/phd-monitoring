@@ -11,6 +11,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\UserController;
 
 Route::get('/', [StudentController::class, 'list'])->middleware('auth:sanctum');
+Route::post('/update-profile', [StudentController::class, 'updateProfile'])->middleware('auth:sanctum');
  
 
 Route::post('/add', [StudentController::class, 'add'])->middleware('auth:sanctum');

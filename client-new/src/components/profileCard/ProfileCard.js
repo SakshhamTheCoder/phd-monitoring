@@ -18,6 +18,8 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
   const [showEditButton, setShowEditButton] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [editForm, setEditForm] = useState({});
   const [showSupervisorDoctoralModal, setShowSupervisorDoctoralModal] = useState(false);
   const [courses, setCourses] = useState([]);
   const [allCourses, setAllCourses] = useState([]);
@@ -125,6 +127,28 @@ const [userRole, setUserRole] = useState('');
 
   const navigateToProgress = () => {
     navigate(pathname + "/presentation");
+  };
+
+  const openEditProfile = () => {
+    setEditForm({
+      phone: profile?.phone || '',
+      address: profile?.address || '',
+      fathers_name: profile?.fathers_name || '',
+      phd_title: profile?.phd_title || '',
+      cgpa: profile?.cgpa || '',
+    });
+    setIsEditProfileOpen(true);
+  };
+
+  const handleEditProfileSubmit = async () => {
+    const response = await customFetch(`${baseURL}/students/update-profile`, 'POST', editForm);
+    if (response?.success) {
+      toast.success('Profile updated successfully');
+      setProfile((prev) => ({ ...prev, ...editForm }));
+      setIsEditProfileOpen(false);
+    } else {
+      toast.error('Failed to update profile');
+    }
   };
 
   if (loading) return <p>Loading...</p>;
@@ -243,6 +267,9 @@ const [userRole, setUserRole] = useState('');
               disabled={true}
             />
             </>)}
+            {userRole === "student" && (
+              <CustomButton text="Edit Profile" onClick={openEditProfile} />
+            )}
             {showEditButton && (
               <>
                 <CustomButton text="Tag Course" onClick={() => {
@@ -484,6 +511,36 @@ const [userRole, setUserRole] = useState('');
             />
           </CustomModal>
         )}
+
+        {/* Edit Profile Modal */}
+        <CustomModal isOpen={isEditProfileOpen} onClose={() => setIsEditProfileOpen(false)}>
+          <div style={{ padding: '1rem' }}>
+            <h3>Edit Profile</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+              {[
+                { label: 'Phone', key: 'phone' },
+                { label: "Father's Name", key: 'fathers_name' },
+                { label: 'Address', key: 'address' },
+                { label: 'PhD Title', key: 'phd_title' },
+                { label: 'CGPA', key: 'cgpa' },
+              ].map(({ label, key }) => (
+                <div key={key}>
+                  <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>{label}</label>
+                  <input
+                    type="text"
+                    value={editForm[key] || ''}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, [key]: e.target.value }))}
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '0.25rem', border: '1px solid #d1d5db', boxSizing: 'border-box' }}
+                  />
+                </div>
+              ))}
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                <CustomButton text="Cancel" onClick={() => setIsEditProfileOpen(false)} />
+                <CustomButton text="Submit" onClick={handleEditProfileSubmit} />
+              </div>
+            </div>
+          </div>
+        </CustomModal>
       </>
     );
   } else {

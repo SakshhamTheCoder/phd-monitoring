@@ -52,7 +52,7 @@ const SCIJournal = ({callback,updateValue,data={}}) => {
             ]}/>
 
             <GridContainer elements={[
-                <FileUploadField label={"Upload First Page"} initialValue={data.first_page} onChange={(value)=>{setBodyValue("first_page",value)}} />,
+                <FileUploadField label={"Upload First Page"} initialValue={data.first_page} onChange={(value)=>{setBodyValue("first_page",value)}} maxSizeMB={15} />,
             ]}/>
 
             
