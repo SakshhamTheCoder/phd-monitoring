@@ -7,6 +7,7 @@ import CustomButton from '../forms/fields/CustomButton';
 
 const Patents = ({callback,updateValue, data = {}}) => {
     const [body, setBody] = useState(data);
+    const [loading, setLoading] = useState(false);
     const year = new Date().getFullYear();
     const yearRange = Array.from({ length: 7 }, (_, i) => year - 3 + i);  
  
@@ -51,7 +52,13 @@ const Patents = ({callback,updateValue, data = {}}) => {
 
             
             <GridContainer elements={[
-               <CustomButton text={data.id ? "Update" : "Submit"} onClick={()=>{callback(body)}}/>
+               <CustomButton text={data.id ? (loading ? "Updating..." : "Update") : (loading ? "Submitting..." : "Submit")} 
+               disabled={loading}
+               onClick={async ()=>{
+                   setLoading(true);
+                   await callback(body);
+                   setLoading(false);
+               }}/>
             ]}/>
         </>
     );

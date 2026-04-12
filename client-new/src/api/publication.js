@@ -2,25 +2,23 @@ import { toast } from "react-toastify";
 import { baseURL } from "./urls";
 import { customFetch } from "./base";
 
-export const APIaddPublication = async (body,close,url=false) => {
+export const APIaddPublication = async (body, close, url = false) => {
     try {
         const formData = new FormData();
         Object.keys(body).forEach((key) => {
             formData.append(key, body[key]);
         });
 
-        const result = await customFetch(url?baseURL+url:baseURL+"/publications", 'POST', formData, true, true);
+        // customFetch with showToast=true handles error toasts
+        const result = await customFetch(url ? baseURL + url : baseURL + "/publications", 'POST', formData, true, true);
 
         if (result.success) {
             toast.success("Publication added successfully.");
-            if(close){
-                close(true);
-            }
-        } else {
-            toast.error("Failed to add publication.");
+            if (close) close(true);
         }
     } catch (error) {
-        toast.error(error);
+        console.error("APIaddPublication error:", error);
+        toast.error("An error occurred: " + (error?.message || error.toString()));
     }
 };
 
@@ -33,7 +31,6 @@ export const APIupdatePublication = async (id, body, close, url = false) => {
             }
         });
 
-        // Use _method=PUT for FormData compatibility with PHP PUT requests
         formData.append('_method', 'PUT');
 
         const requestUrl = url ? baseURL + url + "/" + id : baseURL + "/publications/" + id;
@@ -42,10 +39,9 @@ export const APIupdatePublication = async (id, body, close, url = false) => {
         if (result.success) {
             toast.success("Publication updated successfully.");
             if (close) close(true);
-        } else {
-            toast.error(result.message || "Failed to update publication.");
         }
     } catch (error) {
-        toast.error(error.toString());
+        console.error("APIupdatePublication error:", error);
+        toast.error("An error occurred: " + (error?.message || error.toString()));
     }
 };
