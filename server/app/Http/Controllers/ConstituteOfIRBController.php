@@ -180,7 +180,7 @@ class ConstituteOfIRBController extends Controller
             'cgpa' => 'numeric',
             'objectives' => 'required|array',
             'title' => 'required|string',
-            'irb_pdf' => 'required|file|mimes:pdf|max:2048',
+            'irb_pdf' => 'required|file|mimes:pdf|max:15360',
             'address' => 'required|string',
             'broad_area_of_research' => 'nullable|integer|exists:area_of_specializations,id',
         ]);

@@ -699,7 +699,7 @@ class PresentationController extends Controller
             function ($formInstance) use ($request, $user) {
                 $request->validate([
                     'teaching_work' => 'required| in:UG,PG,Both,None',
-                    'presentation_pdf' => 'required|file|mimes:pdf|max:2048',
+                    'presentation_pdf' => 'required|file|mimes:pdf|max:15360',
                 ]);
 
 

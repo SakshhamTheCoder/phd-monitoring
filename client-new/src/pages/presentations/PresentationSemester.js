@@ -163,7 +163,7 @@ const PresentationSemester = () => {
                 onChange={(file) => setEditForm({ ...editForm, ppt_file: file })}
                 showLabel={true}
                 acceptedTypes=".ppt,.pptx"
-                maxSizeMB={5}
+                maxSizeMB={15}
                 fileTypeLabel="PPT/PPTX"
               />
 

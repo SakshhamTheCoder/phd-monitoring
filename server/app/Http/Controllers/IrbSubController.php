@@ -158,7 +158,7 @@ class IrbSubController extends Controller
         $request->validate([
             'revised_phd_objectives' => 'required|array',
             'revised_phd_title' => 'required|string',
-            'irb_pdf' => 'required|file|mimes:pdf|max:2048',
+            'irb_pdf' => 'required|file|mimes:pdf|max:15360',
             'date_of_irb' => 'required|string',
         ]);
 

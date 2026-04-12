@@ -10,7 +10,7 @@ const FileUploadField = ({
   onChange,
   showLabel = true,
   acceptedTypes = '.pdf',
-  maxSizeMB = 2,
+  maxSizeMB = 15,
   fileTypeLabel = 'PDF',
   required = false,
 }) => {

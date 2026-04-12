@@ -171,7 +171,7 @@ class ResearchExtentionController extends Controller
             $request->validate([
                 'reason' => 'required|string',
                 'duration' => 'integer',
-                'research_pdf' => 'required|file|mimes:pdf|max:2048',
+                'research_pdf' => 'required|file|mimes:pdf|max:15360',
             ]);
             $formInstance->reason = $request->reason;
             if($request->has('duration')){

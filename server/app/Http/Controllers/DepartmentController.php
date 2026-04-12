@@ -431,7 +431,7 @@ class DepartmentController extends Controller
             $loggedInUser = Auth::user();
             
             $request->validate([
-                'csv_file' => 'required|file|mimes:csv,txt|max:2048',
+                'csv_file' => 'required|file|mimes:csv,txt|max:15360',
             ]);
 
             $file = $request->file('csv_file');
