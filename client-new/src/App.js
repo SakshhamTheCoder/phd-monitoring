@@ -36,6 +36,7 @@ import SupervisorDoctoralApproval from './pages/SupervisorDoctoralApproval/Super
 import UsersPage from './pages/users/UsersPage';
 import PrivacyPolicy from './pages/privacy/PrivacyPolicy';
 import Support from './pages/support/Support';
+import ResearchProfile from './pages/admin/ResearchProfile';
 
 
 const App = () => {
@@ -47,8 +48,8 @@ const App = () => {
 };
 
 const AppContent = () => {
-  const { loading } = useLoading(); 
-  const role=localStorage.getItem('userRole');
+  const { loading } = useLoading();
+  const role = localStorage.getItem('userRole');
   return (
     <>
       {loading && <Loader />}
@@ -65,7 +66,7 @@ const AppContent = () => {
         <Routes>
           {/* Landing Page */}
           <Route path="/" element={<LandingPage />} />
-          
+
           {/* Public Pages */}
           <Route path="/team" element={<Team />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
@@ -73,74 +74,75 @@ const AppContent = () => {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/google/callback" element={<GoogleCallback />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage/>} />
-          
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+
           {/* Dashboard */}
-          <Route path="/home" element={<Dashboard/>} />
+          <Route path="/home" element={<Dashboard />} />
           {/* <Route path="/team" element={<Team/>} /> */}
-          {role==='student' && (
+          {role === 'student' && (
             <>
-            <Route path="/forms" element={<FormsPage/>} />
-            
-            <Route path="/publications" element={<Publications/>} />  
-            <Route path="/courses" element={<StudentCourses />} />
-            
+              <Route path="/forms" element={<FormsPage />} />
+
+              <Route path="/publications" element={<Publications />} />
+              <Route path="/courses" element={<StudentCourses />} />
+
             </>
           )}
           <Route path="/notifications" element={<AllNotificationsPage />} />
-          <Route path="/presentation" element={<PresentationSemester/>} /> 
-          <Route path="/presentation/semester" element={<Navigate to="/presentation" replace />} /> 
-     
-          {/* <Route path="/presentation/form" element={<PresentationListPage/>} />   */}
-          
-          <Route path="/presentation/semester/:semester_id" element={<PresentationListPage/>} />  
-          <Route path="/presentation/semester/:semester_id/:id" element={<Presentation/>} />  
+          <Route path="/presentation" element={<PresentationSemester />} />
+          <Route path="/presentation/semester" element={<Navigate to="/presentation" replace />} />
 
-          <Route path="/forms/:form_type" element={<FormListPage/>} />
-          <Route path="/forms/:form_type/:id" element={<MainFormPage/>} />
-          {(role === 'faculty' || role === 'phd_coordinator' || role==='hod' || role==='doctoral'|| role==='external'|| role==='dordc'  || role==='adordc'  ||role==='dra' || role==='director' || role==='admin') && (
+          {/* <Route path="/presentation/form" element={<PresentationListPage/>} />   */}
+
+          <Route path="/presentation/semester/:semester_id" element={<PresentationListPage />} />
+          <Route path="/presentation/semester/:semester_id/:id" element={<Presentation />} />
+
+          <Route path="/forms/:form_type" element={<FormListPage />} />
+          <Route path="/forms/:form_type/:id" element={<MainFormPage />} />
+          {(role === 'faculty' || role === 'phd_coordinator' || role === 'hod' || role === 'doctoral' || role === 'external' || role === 'dordc' || role === 'adordc' || role === 'dra' || role === 'director' || role === 'admin') && (
             <>
-                 <Route path="/forms" element={<FacultyFormsPage/>} />
-                <Route path="/students" element={<StudentsPage />} />
-                <Route path="/students/:roll_no" element={<StudentProfile />} />
-                <Route path="/students/:roll_no/forms" element={<FormsPage />} />
-                <Route path="/students/:roll_no/forms/:form_type" element={<FormListPage />} />
-                <Route path="/students/:roll_no/forms/:form_type/:id" element={<MainFormPage />} />
-                {(role === 'hod' || role === 'phd_coordinator' || role==='admin') && (
-                  <Route path="/courses" element={<AdminCourseManagement />} />
-                )}
+              <Route path="/forms" element={<FacultyFormsPage />} />
+              <Route path="/students" element={<StudentsPage />} />
+              <Route path="/students/:roll_no" element={<StudentProfile />} />
+              <Route path="/students/:roll_no/forms" element={<FormsPage />} />
+              <Route path="/students/:roll_no/forms/:form_type" element={<FormListPage />} />
+              <Route path="/students/:roll_no/forms/:form_type/:id" element={<MainFormPage />} />
+              {(role === 'hod' || role === 'phd_coordinator' || role === 'admin') && (
+                <Route path="/courses" element={<AdminCourseManagement />} />
+              )}
             </>
-          ) }
+          )}
           {(
-            role === 'hod' || role === 'phd_coordinator' || role==='doctoral'|| role==='external'|| role==='dordc'  ||role==='adordc'  ||  role==='dra' || role==='director' || role==='admin') && (
+            role === 'hod' || role === 'phd_coordinator' || role === 'doctoral' || role === 'external' || role === 'dordc' || role === 'adordc' || role === 'dra' || role === 'director' || role === 'admin') && (
               <>
-              <Route path="/faculty" element={<FacultyPage />} />
-              <Route path="/departments" element={<DepartmentPage/>}/>
-              {/* <Route path="/faculty/:roll_no" element={<StudentProfile />} />
+                <Route path="/faculty" element={<FacultyPage />} />
+                <Route path="/departments" element={<DepartmentPage />} />
+                {/* <Route path="/faculty/:roll_no" element={<StudentProfile />} />
               <Route path="/faculty/:roll_no/forms" element={<FormsPage />} />
               <Route path="/faculty/:roll_no/forms/:form_type" element={<FormListPage />} />
               <Route path="/faculty/:roll_no/forms/:form_type/:id" element={<MainFormPage />} /> */}
-            </>
-          )}
-            {role === 'dordc' && (
-              <Route path="/supervisor-doctoral-approvals" element={<SupervisorDoctoralApproval />} />
+              </>
             )}
-            {(
-              role==='admin') && (
-                <>
-                <Route path="/forms/manage" element={<AdminFormManagement/>} />
-                <Route path='/areasOfSpecialization' element={<AreaOfSpecialization/>}/>
+          {role === 'dordc' && (
+            <Route path="/supervisor-doctoral-approvals" element={<SupervisorDoctoralApproval />} />
+          )}
+          {(
+            role === 'admin') && (
+              <>
+                <Route path="/forms/manage" element={<AdminFormManagement />} />
+                <Route path='/areasOfSpecialization' element={<AreaOfSpecialization />} />
                 <Route path="/courses/manage" element={<AdminCourseManagement />} />
                 <Route path="/outside-experts" element={<OutsideExperts />} />
                 <Route path="/logs" element={<Logs />} />
                 <Route path="/users" element={<UsersPage />} />
-         
-              {/* <Route path="/faculty/:roll_no" element={<StudentProfile />} />
+                <Route path="/research-profile" element={<ResearchProfile />} />
+
+                {/* <Route path="/faculty/:roll_no" element={<StudentProfile />} />
               <Route path="/faculty/:roll_no/forms" element={<FormsPage />} />
               <Route path="/faculty/:roll_no/forms/:form_type" element={<FormListPage />} />
               <Route path="/faculty/:roll_no/forms/:form_type/:id" element={<MainFormPage />} /> */}
-            </>
-          )}
+              </>
+            )}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
