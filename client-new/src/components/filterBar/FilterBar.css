@@ -17,15 +17,26 @@
   .filter-operator,
   .filter-combinator,
   .filter-input {
-    padding: 0.5rem;
+    padding: 0.6rem 0.8rem;
     min-width: 150px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
+    border-radius: 8px;
+    border: 1px solid #DDD;
+    font-size: 0.88rem;
+    outline: none;
+    font-family: inherit;
+    transition: border 0.2s;
+  }
+  .filter-select:focus,
+  .filter-operator:focus,
+  .filter-combinator:focus,
+  .filter-input:focus {
+    border-color: #900;
+    box-shadow: 0 0 0 3px rgba(153,0,0,0.06);
   }
   .filter-input-container {
     min-width: 200px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
+    border-radius: 8px;
+    border: 1px solid #DDD;
   }
   
   .filter-input {

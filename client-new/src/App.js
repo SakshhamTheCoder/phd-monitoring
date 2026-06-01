@@ -37,6 +37,10 @@ import UsersPage from './pages/users/UsersPage';
 import PrivacyPolicy from './pages/privacy/PrivacyPolicy';
 import Support from './pages/support/Support';
 import ResearchProfile from './pages/admin/ResearchProfile';
+import ProjectsOverview from './pages/projects/ProjectsOverview';
+import CreateProject from './pages/projects/CreateProject';
+import ProjectDetails from './pages/projects/ProjectDetails';
+import ProjectRecruitment from './pages/projects/ProjectRecruitment';
 
 
 const App = () => {
@@ -78,6 +82,10 @@ const AppContent = () => {
 
           {/* Dashboard */}
           <Route path="/home" element={<Dashboard />} />
+          <Route path="/projects" element={<ProjectsOverview />} />
+          <Route path="/projects/create" element={<CreateProject />} />
+          <Route path="/projects/:id" element={<ProjectDetails />} />
+          <Route path="/projects/:id/recruit" element={<ProjectRecruitment />} />
           {/* <Route path="/team" element={<Team/>} /> */}
           {role === 'student' && (
             <>

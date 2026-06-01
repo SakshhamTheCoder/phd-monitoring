@@ -561,21 +561,23 @@
 
 .control-select,
 .control-input {
-  padding: 10px 14px;
-  border: 1px solid #d0d0d0;
-  border-radius: 6px;
-  font-size: 13px;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #DDD;
+  border-radius: 8px;
+  font-size: 0.88rem;
   background: white;
   color: #1a1a1a;
   font-weight: 600;
-  transition: all 0.2s ease;
+  font-family: inherit;
+  outline: none;
+  transition: border 0.2s;
 }
 
 .control-select:focus,
 .control-input:focus {
   outline: none;
-  border-color: #932f2f;
-  box-shadow: 0 0 0 3px rgba(147, 47, 47, 0.1);
+  border-color: #900;
+  box-shadow: 0 0 0 3px rgba(153,0,0,0.06);
 }
 
 .steps-display-modal {

@@ -26,10 +26,13 @@
 .user-form input[type="password"],
 .user-form select {
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 1rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #DDD;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+  font-family: inherit;
+  transition: border 0.2s;
 }
 
 .user-form input[type="text"]:focus,
@@ -37,6 +40,6 @@
 .user-form input[type="password"]:focus,
 .user-form select:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #900;
+  box-shadow: 0 0 0 3px rgba(153,0,0,0.06);
 }
