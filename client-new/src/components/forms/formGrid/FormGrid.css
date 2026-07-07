@@ -1,8 +1,18 @@
 .form-grid-container {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    align-items: flex-start;
     gap: 20px;
     padding: 20px;
+}
+
+/* One fixed column per category (mandatory | optional), each keeping its own
+   forms so the layout never reflows across the divide when some are hidden. */
+.form-grid-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
 }
 
 .form-card {
