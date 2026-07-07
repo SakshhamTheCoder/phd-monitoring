@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import InputField from "../forms/fields/InputField";
 import GridContainer from "../forms/fields/GridContainer";
 import CustomButton from "../forms/fields/CustomButton";
@@ -7,7 +8,7 @@ import DropdownField from "../forms/fields/DropdownField";
 import { customFetch } from "../../api/base";
 import { baseURL } from "../../api/urls";
 
-const FacultyForm = ({ edit = false, facultyData = {} }) => {
+const FacultyForm = ({ edit = false, facultyData = {}, onSuccess, onClose }) => {
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -20,6 +21,10 @@ const FacultyForm = ({ edit = false, facultyData = {} }) => {
     institution: "Thapar Institute of Engineering and Technology",
     website_link: "",
   });
+  // Display name for the department field (InputSuggestions shows the name,
+  // while formData.department_id holds the id sent to the backend).
+  const [departmentName, setDepartmentName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (edit && facultyData) {
@@ -35,6 +40,7 @@ const FacultyForm = ({ edit = false, facultyData = {} }) => {
         institution: facultyData.institution || "Thapar Institute of Engineering and Technology",
         website_link: facultyData.website_link || "",
       });
+      setDepartmentName(facultyData.department || "");
     }
   }, [edit, facultyData]);
 
@@ -45,20 +51,51 @@ const FacultyForm = ({ edit = false, facultyData = {} }) => {
     }));
   };
 
+  const validate = () => {
+    if (!formData.first_name.trim()) return "First Name is required.";
+    if (!formData.email.trim()) return "Email is required.";
+    if (!formData.phone.trim()) return "Phone is required.";
+    if (!formData.designation.trim()) return "Designation is required.";
+    if (!formData.type) return "Faculty Type is required.";
+    if (formData.type === "internal") {
+      if (!formData.department_id) return "Department is required.";
+      if (!formData.faculty_code.trim()) return "Faculty Code is required.";
+    }
+    if (formData.type === "external" && !formData.institution.trim()) {
+      return "Institution is required.";
+    }
+    return null;
+  };
+
   const handleSubmit = async () => {
+    if (submitting) return;
+
+    const error = validate();
+    if (error) {
+      toast.error(error);
+      return;
+    }
+
     const endpoint = edit
       ? baseURL + `/faculty/update/${facultyData.id}`
       : baseURL + "/faculty/add";
 
     const method = edit ? "PUT" : "POST";
 
+    setSubmitting(true);
     const res = await customFetch(endpoint, method, formData);
+    setSubmitting(false);
+
     if (res.success) {
       if (!edit) {
-        alert("Faculty created. Temporary Password: " + res.response.password);
+        toast.success(
+          "Faculty created. Temporary Password: " + res.response.password
+        );
       } else {
-        alert("Faculty updated successfully.");
+        toast.success("Faculty updated successfully.");
       }
+      if (onSuccess) onSuccess();
+      if (onClose) onClose();
     }
   };
 
@@ -119,8 +156,11 @@ const FacultyForm = ({ edit = false, facultyData = {} }) => {
         elements={[
           <InputSuggestions
             label={formData.type === "internal" ? "Department*" : "Department"}
-            initialValue={formData.department_id}
-            onSelect={(val) => handleChange("department_id", val.id)}
+            initialValue={departmentName}
+            onSelect={(val) => {
+              handleChange("department_id", val.id);
+              setDepartmentName(val.name);
+            }}
             apiUrl={baseURL + "/suggestions/department"}
           />,
           <InputField
@@ -168,8 +208,17 @@ const FacultyForm = ({ edit = false, facultyData = {} }) => {
       <GridContainer
         elements={[
           <CustomButton
-            text={edit ? "Update Faculty" : "Add Faculty"}
+            text={
+              submitting
+                ? edit
+                  ? "Updating..."
+                  : "Adding..."
+                : edit
+                ? "Update Faculty"
+                : "Add Faculty"
+            }
             onClick={handleSubmit}
+            disabled={submitting}
           />,
         ]}
       />

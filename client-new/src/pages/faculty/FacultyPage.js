@@ -281,10 +281,11 @@ Jane,,jane.smith@example.com,9876543210,Associate Professor,external,,CHED,Exter
             enableApproval={false}
             customOpenForm={openForm}
             extraTopbarComponents={
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <CustomButton 
-                  text="Bulk Import CSV" 
-                  onClick={() => setShowBulkImportModal(true)} 
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <CustomButton
+                  text="Bulk Import CSV"
+                  variant="secondary"
+                  onClick={() => setShowBulkImportModal(true)}
                 />
                 <CustomButton text="Add Faculty +" onClick={() => openForm()} />
               </div>
@@ -306,6 +307,8 @@ Jane,,jane.smith@example.com,9876543210,Associate Professor,external,,CHED,Exter
             <FacultyForm
               edit={!!editData}
               facultyData={editData}
+              onClose={() => setIsOpen(false)}
+              onSuccess={() => setRefreshKey((prev) => prev + 1)}
             />
           </CustomModal>
 

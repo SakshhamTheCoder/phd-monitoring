@@ -260,6 +260,8 @@ trait GeneralFormList
             'id' => $student->roll_no,
             'database_id' => $student->id,
             'name' => $student->user->name(),
+            'first_name' => $student->user->first_name,
+            'last_name' => $student->user->last_name,
             'phd_title' => $student->phd_title,
             'department_id' => $student->department_id,
             'overall_progress' => $student->overall_progress,

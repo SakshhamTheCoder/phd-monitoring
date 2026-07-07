@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import InputField from "../forms/fields/InputField";
 import GridContainer from "../forms/fields/GridContainer";
 import CustomButton from "../forms/fields/CustomButton";
@@ -9,7 +10,9 @@ import { baseURL } from "../../api/urls";
 import DateField from "../forms/fields/DateField";
 import DropdownField from "../forms/fields/DropdownField";
 
-const StudentForm = ({ edit = false, studentData = {} }) => {
+const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => {
+  const [submitting, setSubmitting] = useState(false);
+  const [departmentName, setDepartmentName] = useState("");
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -45,6 +48,7 @@ const StudentForm = ({ edit = false, studentData = {} }) => {
         overall_progress: studentData.overall_progress || 0,
         cgpa: studentData.cgpa || "",
       });
+      setDepartmentName(studentData.department || "");
     }
   }, [edit, studentData]);
 
@@ -56,19 +60,41 @@ const StudentForm = ({ edit = false, studentData = {} }) => {
   };
 
   const handleSubmit = async () => {
+    if (submitting) return;
+
+    // Basic required-field validation
+    const required = [
+      ["first_name", "First Name"],
+      ["email", "Email"],
+      ["phone", "Phone"],
+      ["roll_no", "Roll Number"],
+    ];
+    const missing = required
+      .filter(([field]) => !String(formData[field] ?? "").trim())
+      .map(([, label]) => label);
+    if (missing.length > 0) {
+      toast.error("Please fill required fields: " + missing.join(", "));
+      return;
+    }
+
     const endpoint = edit
-      ? baseURL+`/students/update/${studentData.id}` // use actual student ID
-      : baseURL+"/students/add";
+      ? baseURL + `/students/${formData.roll_no}/update`
+      : baseURL + "/students/add";
 
-    const method = edit ? "PUT" : "POST";
-
-    const res = await customFetch(endpoint, method, formData);
-    if (res.success) {
-      if (!edit) {
-        alert("Student created. Temporary Password: " + res.response);
-      } else {
-        alert("Student updated successfully.");
+    setSubmitting(true);
+    try {
+      const res = await customFetch(endpoint, "POST", formData);
+      if (res.success) {
+        if (!edit) {
+          toast.success("Student created. Temporary Password: " + res.response);
+        } else {
+          toast.success("Student updated successfully.");
+        }
+        if (onSuccess) onSuccess();
+        else if (onClose) onClose();
       }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -119,12 +145,13 @@ const StudentForm = ({ edit = false, studentData = {} }) => {
           <InputField
             label="Roll Number*"
             initialValue={formData.roll_no}
+            isLocked={edit}
             onChange={(val) => handleChange("roll_no", val)}
           />,
           <InputSuggestions
             label="Department*"
-            initialValue={formData.department_id}
-            onSelect={(val) => {handleChange("department_id", val.id)}}
+            initialValue={departmentName}
+            onSelect={(val) => { handleChange("department_id", val.id); setDepartmentName(val.name || ""); }}
             apiUrl={baseURL + "/suggestions/department"}
           />,
         ]}
@@ -194,8 +221,17 @@ const StudentForm = ({ edit = false, studentData = {} }) => {
       <GridContainer
         elements={[
           <CustomButton
-            text={edit ? "Update Student" : "Add Student"}
+            text={
+              submitting
+                ? edit
+                  ? "Updating..."
+                  : "Adding..."
+                : edit
+                ? "Update Student"
+                : "Add Student"
+            }
             onClick={handleSubmit}
+            disabled={submitting}
           />,
         ]}
       />

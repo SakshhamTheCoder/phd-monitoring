@@ -88,17 +88,38 @@ const AdminCourseManagement = () => {
     }
   };
 
+  const validateCourseForm = () => {
+    if (
+      !`${formData.course_code}`.trim() ||
+      !`${formData.course_name}`.trim() ||
+      !`${formData.credits}`.trim()
+    ) {
+      toast.error('Course code, name and credits are required');
+      return false;
+    }
+    if (isNaN(Number(formData.credits))) {
+      toast.error('Credits must be a number');
+      return false;
+    }
+    return true;
+  };
+
   const handleAddCourse = async () => {
+    if (!validateCourseForm()) {
+      return;
+    }
     try {
       setSubmitting(true);
       setLoading(true);
       const response = await customFetch(`${baseURL}/courses/add`, 'POST', formData, false);
-      
+
       if (response.success) {
         toast.success('Course added successfully');
         setShowAddModal(false);
         resetForm();
         setRefreshKey(prev => prev + 1);
+      } else {
+        toast.error(response.response?.message || 'Something went wrong');
       }
     } catch (error) {
       console.error('Error adding course:', error);
@@ -110,16 +131,21 @@ const AdminCourseManagement = () => {
   };
 
   const handleEditCourse = async () => {
+    if (!validateCourseForm()) {
+      return;
+    }
     try {
       setSubmitting(true);
       setLoading(true);
       const response = await customFetch(`${baseURL}/courses/update/${editingCourse.id}`, 'PUT', formData, false);
-      
+
       if (response.success) {
         toast.success('Course updated successfully');
         setShowEditModal(false);
         resetForm();
         setRefreshKey(prev => prev + 1);
+      } else {
+        toast.error(response.response?.message || 'Something went wrong');
       }
     } catch (error) {
       console.error('Error updating course:', error);
@@ -142,6 +168,8 @@ const AdminCourseManagement = () => {
       if (response.success) {
         toast.success('Course deleted successfully');
         setRefreshKey(prev => prev + 1);
+      } else {
+        toast.error(response.response?.message || 'Something went wrong');
       }
     } catch (error) {
       console.error('Error deleting course:', error);
@@ -162,6 +190,9 @@ const AdminCourseManagement = () => {
         setShowTagModal(false);
         resetTagData();
         setRefreshKey(prev => prev + 1);
+        fetchAllCourses();
+      } else {
+        toast.error(response.response?.message || 'Something went wrong');
       }
     } catch (error) {
       console.error('Error tagging student:', error);
@@ -267,18 +298,20 @@ const AdminCourseManagement = () => {
           endpoint="/courses/list"
           enableApproval={false}
           extraTopbarComponents={
-            <div className="top-actions" style={{ display: 'flex', gap: '1rem' }}>
-              <CustomButton 
-                text="Tag Student" 
-                onClick={() => setShowTagModal(true)} 
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <CustomButton
+                text="Tag Student"
+                variant="secondary"
+                onClick={() => setShowTagModal(true)}
               />
-              <CustomButton 
-                text="Bulk Import CSV" 
-                onClick={() => setShowBulkImportModal(true)} 
+              <CustomButton
+                text="Bulk Import CSV"
+                variant="secondary"
+                onClick={() => setShowBulkImportModal(true)}
               />
-              <CustomButton 
-                text="Add Course +" 
-                onClick={() => setShowAddModal(true)} 
+              <CustomButton
+                text="Add Course +"
+                onClick={() => setShowAddModal(true)}
               />
             </div>
           }
@@ -304,6 +337,7 @@ const AdminCourseManagement = () => {
           resetForm();
         }}
         title="Add New Course"
+        closeOnOutsideClick={false}
       >
         <div className="modal-form">
           <InputField
@@ -368,6 +402,7 @@ const AdminCourseManagement = () => {
           resetForm();
         }}
         title="Edit Course"
+        closeOnOutsideClick={false}
       >
         <div className="modal-form">
           <InputField
@@ -395,11 +430,15 @@ const AdminCourseManagement = () => {
           <DropdownField
             label="Department"
             options={departments}
-            initialValue={formData.department_id}
+            initialValue={
+              departments?.find(
+                (dept) => String(dept.value) === String(formData.department_id)
+              )?.title || ''
+            }
             onChange={(value) => handleInputChange('department_id', value)}
             required
           />
-          
+
           <div className="modal-actions">
             <button
               onClick={() => {
@@ -429,6 +468,7 @@ const AdminCourseManagement = () => {
           resetTagData();
         }}
         title="Tag Student with Course"
+        closeOnOutsideClick={false}
       >
         <div className="modal-form">
           <DropdownField

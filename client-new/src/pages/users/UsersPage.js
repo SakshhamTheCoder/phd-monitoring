@@ -103,6 +103,35 @@ Jane,Smith,jane.smith@example.com,9876543210,female,faculty,"faculty,doctoral",a
     }
   };
 
+  const handleDeleteUser = async (userData) => {
+    if (!window.confirm(`Are you sure you want to delete ${userData.name || 'this user'}? This action cannot be undone.`)) {
+      return;
+    }
+
+    const result = await customFetch(baseURL + `/users/${userData.id}`, 'DELETE', {}, true);
+    if (result.success) {
+      setRefreshKey(prev => prev + 1);
+    }
+  };
+
+  const handleResetPassword = async (userData) => {
+    const newPassword = window.prompt(`Enter a new password for ${userData.name || 'this user'} (min 8 characters):`);
+    if (newPassword === null) {
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast.error('Password must be at least 8 characters');
+      return;
+    }
+
+    await customFetch(
+      baseURL + `/users/${userData.id}/reset-password`,
+      'POST',
+      { password: newPassword },
+      true
+    );
+  };
+
   const handleBulkImport = async () => {
     if (!csvFile || !csvPreview) {
       toast.error('Please select a CSV file');
@@ -252,29 +281,37 @@ Jane,Smith,jane.smith@example.com,9876543210,female,faculty,"faculty,doctoral",a
       children={
         <>
           <FilterBar onSearch={handleFilterChange} />
-           <div style={{ display: 'flex', gap: '1rem' }}>
-                <CustomButton 
-                  text="Bulk Import CSV" 
-                  onClick={() => setShowBulkImportModal(true)} 
-                />
-                <CustomButton text="Add User +" onClick={() => openForm()} />
-              </div>
           <PagenationTable
             key={refreshKey}
             endpoint={location.pathname}
             filters={filter}
             enableApproval={false}
             customOpenForm={openForm}
-          
-            addButton={true}
-            addButtonText="Add User +"
-            onAddButtonClick={() => openForm()}
-            
+            extraTopbarComponents={
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <CustomButton
+                  text="Bulk Import CSV"
+                  variant="secondary"
+                  onClick={() => setShowBulkImportModal(true)}
+                />
+                <CustomButton text="Add User +" onClick={() => openForm()} />
+              </div>
+            }
             actions={[
               {
                 icon: <i className="fa-solid fa-pen-to-square"></i>,
                 tooltip: 'Edit',
                 onClick: (userData) => openForm(userData),
+              },
+              {
+                icon: <i className="fa-solid fa-key"></i>,
+                tooltip: 'Reset Password',
+                onClick: (userData) => handleResetPassword(userData),
+              },
+              {
+                icon: <i className="fa-solid fa-trash"></i>,
+                tooltip: 'Delete',
+                onClick: (userData) => handleDeleteUser(userData),
               },
             ]}
           />
