@@ -256,7 +256,7 @@ class SynopsisSubmissionController extends Controller
             function ($formInstance) use ($request, $user) {
                 $request->validate([
                    'revised_title' => 'string',
-                   'synopsis_pdf' => 'required|file|mimes:pdf|max:15360',
+                   'synopsis_pdf' => 'required|file|mimes:pdf|max:20480',
                 ]);
                 $formInstance->revised_title = $request->revised_title;
                 $link=$this->saveUploadedFile($request->file('synopsis_pdf'), 'synopsis', $user->student->roll_no);

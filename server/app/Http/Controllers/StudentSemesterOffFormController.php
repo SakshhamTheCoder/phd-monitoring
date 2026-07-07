@@ -137,12 +137,12 @@ class StudentSemesterOffFormController extends Controller
                 $request->validate([
                    'reason' => 'required|string',
                    'semester_off_required' => 'required|string',
-                   'proof_pdf' => 'file|mimes:pdf|max:15360',
+                   'proof_pdf' => 'file|mimes:pdf|max:20480',
                 ]);
                 $prev_semester_off=StudentSemesterOff::where('student_id',$user->student->roll_no);
                 if ($prev_semester_off->count() > 0) {
                     $request->validate([
-                        'previous_approval_pdf' => 'required|file|mimes:pdf|max:15360',
+                        'previous_approval_pdf' => 'required|file|mimes:pdf|max:20480',
                     ]);
                     if($request->hasFile('previous_approval_pdf')){
                         $link=$this->saveUploadedFile($request->file('previous_approval_pdf'), 'semester_off', $user->student->roll_no);
