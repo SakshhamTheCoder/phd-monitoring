@@ -149,7 +149,7 @@ class StudentSemesterOffFormController extends Controller
                         $formInstance->previous_approval_pdf = $link;
                     }
                 }
-                $validator=$this->validateSemesterCode($request->semester_code);
+                $validator=$this->validateSemesterCode($request->semester_off_required);
                 if(!$validator['valid']){
                     return response()->json(['message' => 'Invalid semester code'], 422);
                 }

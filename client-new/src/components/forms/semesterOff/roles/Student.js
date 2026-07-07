@@ -31,25 +31,29 @@ const Student = ({ formData }) => {
   const [prevOff,setPrevOff]= useState(null);
 
   useEffect(() => {
-    const periods = generateReportPeriods(0,1,true);
-    const pp=[];
+    const periods = generateReportPeriods(0, 1, true);
+    const pp = [];
     periods.forEach((period) => {
-          const period1 = {};
-          period1.value = period;
-          period1.title = period;
-          pp.push(period1);
+      const period1 = {};
+      period1.value = period;
+      period1.title = period;
+      pp.push(period1);
     });
-    if(formData.previous_off.length>0){
-      let prev=formData.previous_off[formData.previous_off.length-1].semester_off_required
+    if (formData?.previous_off?.length > 0) {
+      let prev = formData.previous_off[formData.previous_off.length - 1].semester_off_required;
       setPrevOff(prev);
     }
-   setReportPeriods(pp);
+    setReportPeriods(pp);
     setLock(formData?.locks?.student);
     setIsLoaded(true);
   }, []);
 
-
-
+  const handleFileChange = (key, file) => {
+    setFiles((prev) => {
+      const filtered = prev.filter((f) => f.key !== key);
+      return [...filtered, { key, file }];
+    });
+  };
 
   useEffect(() => {
     console.log(body);
@@ -89,7 +93,7 @@ const Student = ({ formData }) => {
             ]}
           />
 
-    <GridContainer
+          <GridContainer
             elements={[
               <InputField
                 label="Email"
@@ -103,7 +107,6 @@ const Student = ({ formData }) => {
               />,
             ]}
           />
-        
 
           <GridContainer
             elements={[
@@ -116,54 +119,51 @@ const Student = ({ formData }) => {
             space={2}
           />
 
-
-          <GridContainer elements={[
+          <GridContainer
+            elements={[
               <InputField
-              label="Semester Off (if any earlier)"
-              initialValue={prevOff?prevOff:"N/A"}
-              isLocked={true}
-            />,
-            <>
-            {prevOff && (    
-              <FileUploadField required={true}
-            label={"Attach Previous Approval"}
-            onChange={(file) => {
-              setFiles([{ key: "previous_approval_pdf", file }]);
-            }}
-            isLocked={prevOff && lock}
-            initialValue={formData.previous_approval_pdf}
-          />)}
-            </>
-          ]} />
+                label="Semester Off (if any earlier)"
+                initialValue={prevOff ? prevOff : "N/A"}
+                isLocked={true}
+              />,
+              <>
+                {prevOff && (
+                  <FileUploadField
+                    required={true}
+                    label={"Attach Previous Approval"}
+                    onChange={(file) => handleFileChange("previous_approval_pdf", file)}
+                    isLocked={prevOff && lock}
+                    initialValue={formData.previous_approval_pdf}
+                  />
+                )}
+              </>,
+            ]}
+          />
 
-
-
-        
-        
-
-        <GridContainer elements={[
-              <DropdownField required={true}
-              label="Semester off Required"
-              initialValue={formData.semester_off_required}
-              isLocked={lock}
-              options={reportPeriods}
-              onChange={(value)=>{
-                setBody((prev) => ({
-                  ...prev,
-                  semester_off_required: value,
-                }));
-              }}
-            />,
-            <FileUploadField required={true}
-            label={"Attach Proof (if any)"}
-            onChange={(file) => {
-              setFiles([{ key: "proof_pdf", file }]);
-            }}
-            isLocked={lock}
-            initialValue={formData.proof_pdf}
-            
-          />,
-          ]}/>
+          <GridContainer
+            elements={[
+              <DropdownField
+                required={true}
+                label="Semester off Required"
+                initialValue={formData.semester_off_required}
+                isLocked={lock}
+                options={reportPeriods}
+                onChange={(value) => {
+                  setBody((prev) => ({
+                    ...prev,
+                    semester_off_required: value,
+                  }));
+                }}
+              />,
+              <FileUploadField
+                required={true}
+                label={"Attach Proof (if any)"}
+                onChange={(file) => handleFileChange("proof_pdf", file)}
+                isLocked={lock}
+                initialValue={formData.proof_pdf}
+              />,
+            ]}
+          />
            <GridContainer elements={[
              <InputField required={true}
              label="Reason for Semester Off"
