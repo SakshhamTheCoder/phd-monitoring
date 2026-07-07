@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import "./NotificationBox.css";
-import { APIlistUnreadNotifications, APImarkNotificationAsRead } from "../../api/notifications";
+import { APIlistUnreadNotifications, APImarkNotificationAsRead, APImarkAllNotificationsAsRead } from "../../api/notifications";
 import { toast } from "react-toastify";
 import { getRoleName } from "../../utils/roleName";
 import { timeAgo } from "../../utils/timeParse";
@@ -9,8 +9,10 @@ const NotificationBox = () => {
   const [isOpen, setIsOpen] = useState(false);
   const notificationRef = useRef(null);
   const [notifications, setNotifications] = useState([]);
+  const [allRead, setAllRead] = useState(false);
 
   const fetchNotifications = useCallback(() => {
+    setAllRead(false);
     APIlistUnreadNotifications(setNotifications);
   }, []);
 
@@ -51,35 +53,60 @@ const NotificationBox = () => {
     }
   };
 
-  const count = notifications.length;
+  const isRead = (n) => allRead || n.is_read;
+  const unreadCount = notifications.filter((n) => !isRead(n)).length;
+
+  const handleMarkAllAsRead = async (event) => {
+    event.stopPropagation();
+    if (unreadCount === 0) return;
+    const result = await APImarkAllNotificationsAsRead();
+    if (result && result.success) {
+      // Keep them listed in the dropdown, just mark them read (dots vanish).
+      setAllRead(true);
+      toast.success("All notifications marked as read");
+    } else {
+      toast.error("Couldn't mark notifications as read");
+    }
+  };
 
   return (
     <div className="notification_wrapper" ref={notificationRef}>
       <div className="notification_icon" onClick={toggleNotifications}>
         <img src="/icons/notifications.svg" alt="Notifications" className="notif_icon" />
-        {count > 0 && (
-          <div className="notification_badge">{count > 9 ? "9+" : count}</div>
+        {unreadCount > 0 && (
+          <div className="notification_badge">{unreadCount > 9 ? "9+" : unreadCount}</div>
         )}
       </div>
       {isOpen && (
         <div className="notification_box">
           <div className="notification_header">
             <span>Notifications</span>
-            {count > 0 && <span className="notification_count">{count} new</span>}
+            {unreadCount > 0 && (
+              <div className="notification_header_actions">
+                <span className="notification_count">{unreadCount} new</span>
+                <button
+                  type="button"
+                  className="notification_mark_all"
+                  onClick={handleMarkAllAsRead}
+                >
+                  Mark all as read
+                </button>
+              </div>
+            )}
           </div>
           <div className="notification_content">
-            {count === 0 ? (
+            {notifications.length === 0 ? (
               <div className="notification_empty">
                 <p>You're all caught up.</p>
               </div>
             ) : (
               notifications.map((notification) => (
                 <div
-                  className="notification_item"
+                  className={`notification_item ${isRead(notification) ? "is_read" : ""}`}
                   key={notification.id}
                   onClick={() => onNotificationClick(notification)}
                 >
-                  <span className="notification_unread_dot" />
+                  <span className={`notification_unread_dot ${isRead(notification) ? "hidden_dot" : ""}`} />
                   <div className="notification_item_text">
                     <h4>{notification.title}</h4>
                     <p>{notification.body}</p>

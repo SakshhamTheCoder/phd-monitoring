@@ -75,7 +75,7 @@ class SemesterController extends Controller
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after:start_date',
             'notification' => 'nullable|boolean',
-            'ppt_file' => 'nullable|file|mimes:ppt,pptx|max:5120',
+            'ppt_file' => 'nullable|file|mimes:ppt,pptx|max:20480',
         ]);
 
         $user = Auth::user();

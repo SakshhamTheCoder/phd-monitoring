@@ -61,7 +61,7 @@ class PublicationController extends Controller
             'authors' => 'required|string',
             'status' => 'required|in:published,accepted',
             'doi_link' => 'required|string',
-            'first_page' => 'required|file|mimes:pdf|max:15360',
+            'first_page' => 'required|file|mimes:pdf|max:20480',
             'year' => 'required|string',
             'name' => 'required|string'
         ]);
@@ -256,5 +256,25 @@ class PublicationController extends Controller
         ], 200);
     }
 
+    public function destroy($id)
+    {
+        $user = Auth::user();
+        $role = $user->current_role->role;
+        if ($role !== 'student') {
+            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+        }
+
+        $publication = Publication::find($id);
+        if (!$publication) {
+            return response()->json(['error' => 'Publication not found'], 404);
+        }
+
+        if ($publication->student_id != $user->student->roll_no) {
+            return response()->json(['message' => 'You are not authorized to delete this publication'], 403);
+        }
+
+        $publication->delete();
+        return response()->json(['message' => 'Publication deleted successfully'], 200);
+    }
 
 }

@@ -12,6 +12,7 @@ import { baseURL } from '../../api/urls';
 import TableComponent from '../../components/forms/table/TableComponent';
 import { formatDate } from '../../utils/timeParse';
 import ShowPublications from '../../components/publications/ShowPublications';
+import { APIdeletePublication, APIdeletePatent } from '../../api/publication';
 const Publications = () => {
 
 
@@ -43,6 +44,26 @@ const Publications = () => {
       fetchData();
     }, []);
 
+    const [deleteTarget, setDeleteTarget] = useState(null);
+
+    const handleDelete = (id, type) => {
+        setDeleteTarget({ id, type });
+    };
+
+    const cancelDelete = () => setDeleteTarget(null);
+
+    const confirmDelete = async () => {
+        if (!deleteTarget) return;
+        const { id, type } = deleteTarget;
+        setDeleteTarget(null);
+        setLoading(true);
+        const result = type === 'patents'
+            ? await APIdeletePatent(id)
+            : await APIdeletePublication(id);
+        setLoading(false);
+        if (result && result.success) fetchData();
+    };
+
     const [open, setOpen] = useState(false);
     const openModal = () => {
         setOpen(true);
@@ -66,12 +87,25 @@ const Publications = () => {
                 </div>    
              </div>
 
-                <ShowPublications formData={formData} refetchData={fetchData}/>
+                <ShowPublications formData={formData} refetchData={fetchData} enableDelete={true} onDelete={handleDelete}/>
 
                 <CustomModal isOpen={open} onClose={closeModal} title={'Add Publication'}
                     minHeight='200px' maxHeight='600px' minWidth='650px' maxWidth='700px' closeOnOutsideClick={false}>
                  <AddPublication close={closeModal}/>
                  </CustomModal>
+
+                <CustomModal isOpen={!!deleteTarget} onClose={cancelDelete} title={'Confirm Deletion'}
+                    minHeight='140px' maxHeight='300px' minWidth='380px' maxWidth='460px' closeOnOutsideClick={true}>
+                    <div className='delete-confirm'>
+                        <p className='delete-confirm-text'>
+                            Are you sure you want to delete this {deleteTarget?.type === 'patents' ? 'patent' : 'publication'}? This action cannot be undone.
+                        </p>
+                        <div className='delete-confirm-actions'>
+                            <button className='delete-cancel-btn' onClick={cancelDelete}>Cancel</button>
+                            <button className='delete-confirm-btn' onClick={confirmDelete}>Delete</button>
+                        </div>
+                    </div>
+                </CustomModal>
             </>}/>
         </>
     );

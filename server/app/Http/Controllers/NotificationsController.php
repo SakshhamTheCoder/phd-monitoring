@@ -52,11 +52,7 @@ class NotificationsController extends Controller
     public function markAllAsRead()
     {
         $user = Auth::user();
-        $notifications = $user->notifications->where('is_read', false)->get();
-        foreach ($notifications as $notification) {
-            $notification->is_read = true;
-            $notification->save();
-        }
+        $user->notifications()->where('is_read', false)->update(['is_read' => true]);
         return response()->json(['message' => 'All notifications marked as read']);
     }
 

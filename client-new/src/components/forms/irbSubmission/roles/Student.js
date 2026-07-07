@@ -172,7 +172,7 @@ const Student = ({ formData }) => {
            <GridContainer
                 elements={[
                   <DateField required={true}
-                    label={"Date of IRB"}
+                    label={"Date of IRB Submission"}
                     initialValue={formatDate(formData.date_of_irb)}
                     hint={"Select Date..."}
                     isLocked={lock}

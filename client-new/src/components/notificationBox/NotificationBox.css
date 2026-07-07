@@ -36,6 +36,27 @@
   border-radius: 999px;
 }
 
+.notification_header_actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notification_mark_all {
+  border: none;
+  background: none;
+  color: #991b1b;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 2px;
+}
+
+.notification_mark_all:hover {
+  text-decoration: underline;
+}
+
 .notification_content {
   max-height: 340px;
   overflow-y: auto;
@@ -61,6 +82,16 @@
   margin-top: 6px;
   border-radius: 50%;
   background-color: #991b1b;
+}
+
+/* Read state: keep the item in place but drop the unread emphasis. */
+.notification_unread_dot.hidden_dot {
+  visibility: hidden;
+}
+
+.notification_item.is_read h4 {
+  font-weight: 500;
+  color: #4b5563;
 }
 
 .notification_item_text {

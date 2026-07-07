@@ -10,6 +10,7 @@ import { customFetch } from '../../../../api/base';
 import { useLoading } from '../../../../context/LoadingContext';
 import { useLocation } from 'react-router-dom';
 import RadioButtonGroup from '../../fields/RadioButtonGroup';
+import { toast } from 'react-toastify';
 
 const ExaminerManager = ({
   type,
@@ -134,7 +135,10 @@ const Supervisor = ({ formData }) => {
       international: international,
     }).then((data) => {
       if (data && data.success) {
-        console.log('Examiners submitted successfully');
+        toast.success("Form submitted successfully");
+        setTimeout(() => window.location.reload(), 1200);
+      } else {
+        toast.error((data && data.response && data.response.message) || "Failed to submit the form");
       }
       setLoading(false);
     });
