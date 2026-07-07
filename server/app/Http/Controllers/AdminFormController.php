@@ -265,14 +265,18 @@ class AdminFormController extends Controller
             if (!$generalForm) {
                 // Create new forms table entry
                 $metadata = $this->formMetadata[$request->form_type] ?? [];
-                $availableRoles = $metadata['steps'] ?? ['student'];
+                // Step lists use the 'faculty' role name, but the forms table's stage enum
+                // and availability flags use 'supervisor'. Normalize so both are valid
+                // (e.g. list-of-examiners starts at 'faculty' -> stage 'supervisor').
+                $steps = $metadata['steps'] ?? ['student'];
+                $availableRoles = array_map(fn ($s) => $s === 'faculty' ? 'supervisor' : $s, $steps);
 
                 $generalForm = new Forms([
                     'student_id' => $request->student_id,
                     'form_type' => $request->form_type,
                     'form_name' => $metadata['form_name'] ?? ucwords(str_replace('-', ' ', $request->form_type)),
                     'department_id' => $student->department_id,
-                    'stage' => $metadata['steps'] ? $metadata['steps'][0] : 'student',
+                    'stage' => $availableRoles[0] ?? 'student',
                     'count' => 0,
                     'max_count' => $metadata['max_count'] ?? 1,
                     'student_available' => in_array('student', $availableRoles),
