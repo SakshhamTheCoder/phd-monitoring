@@ -71,47 +71,147 @@
     align-items: center;
     margin-top: 20px;
   }
-  .form-topbar {
+  /* Action toolbar — sits ABOVE the table card, buttons right-aligned */
+  .table-toolbar {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
     width: 100%;
+    margin-bottom: 14px;
   }
-  .form-topbar h3{
-
+  .table-toolbar h3 {
+    margin: 0 auto 0 0; /* push title left, actions stay right */
     font-size: 1.2rem;
     color: #333;
   }
   .top-actions {
     display: flex;
+    align-items: center;
+    flex-wrap: wrap;
     gap: 10px;
   }
-  
+  .extra-components {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  /* Action buttons in the toolbar size to their content (custom-button is 100% by default) */
+  .top-actions .custom-button {
+    width: auto;
+  }
+
+  /* Shared size for all toolbar buttons so Select matches the CustomButtons */
   .select-btn,
   .approve-btn {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 6px;
+    padding: 10px 16px;
+    border-radius: 10px;
     cursor: pointer;
     font-weight: 500;
-    transition: background-color 0.3s ease;
+    font-family: inherit;
+    font-size: 14px;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
-  
+
+  /* Select = outlined brand button, consistent with the secondary CustomButtons */
   .select-btn {
-    background-color: #007bff;
-    color: white;
+    background-color: #fff;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
   }
-  
+
   .select-btn:hover {
-    background-color: #0056b3;
+    background-color: var(--primary-color);
+    color: #fff;
   }
-  
+
   .approve-btn {
     background-color: #28a745;
     color: white;
+    border: 1px solid #28a745;
   }
-  
+
   .approve-btn:hover {
     background-color: #1e7e34;
+  }
+
+  /* Row actions — compact kebab trigger + dropdown menu (prevents cramped icons / misclicks) */
+  .row-actions {
+    position: relative;
+    display: inline-block;
+  }
+  .row-actions-trigger {
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #555;
+    font-size: 16px;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  .row-actions-trigger:hover {
+    background: #f2e6e6;
+    color: var(--primary-color);
+  }
+  .row-actions-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 50;
+    min-width: 200px;
+    padding: 6px;
+    background: #fff;
+    border: 1px solid #e6e6e6;
+    border-radius: 10px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .row-actions-item {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    width: 100%;
+    text-align: left;
+    padding: 9px 12px;
+    border: none;
+    background: transparent;
+    border-radius: 7px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #333;
+    white-space: nowrap;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  .row-actions-item:hover {
+    background: #f6ebeb;
+    color: var(--primary-color);
+  }
+  .row-actions-item .ra-icon {
+    width: 18px;
+    display: flex;
+    justify-content: center;
+    font-size: 14px;
+  }
+  /* Destructive actions: red, and separated from the rest */
+  .row-actions-item.danger {
+    color: #c0392b;
+    border-top: 1px solid #eee;
+    margin-top: 3px;
+    padding-top: 11px;
+  }
+  .row-actions-item.danger:hover {
+    background: #fbe9e7;
+    color: #a5281b;
   }
   
   .no-data-row {

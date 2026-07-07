@@ -27,8 +27,17 @@ const PagenationTable = ({
   const [totalPages, setTotalPages] = useState(1);
   const [selectMode, setSelectMode] = useState(false);
   const [role, setRole] = useState("student");
+  const [openMenu, setOpenMenu] = useState(null);
 
   const { setLoading } = useLoading();
+
+  // Close the open row-actions menu on any outside click
+  useEffect(() => {
+    if (openMenu === null) return;
+    const close = () => setOpenMenu(null);
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, [openMenu]);
 
   const fetchData = async (page = 1, rows = rowsPerPage, filters = null) => {
     setLoading(true);
@@ -101,19 +110,19 @@ const PagenationTable = ({
   };
 
   return (
-    <div className="form-list-container">
-      {role !== "student" && (
-        <div className="form-topbar">
-            <h3>{tableTitle}</h3>
+    <>
+      {(role !== "student" || extraTopbarComponents) && (
+        <div className="table-toolbar">
+            {tableTitle && <h3>{tableTitle}</h3>}
           <div className="top-actions">
           {extraTopbarComponents && (
                <div className="extra-components">{extraTopbarComponents}</div> )}
-               {enableSelect && (
+               {enableSelect && (enableApproval || customBulkAction) && (
             <button className="select-btn" onClick={() => {
               setSelectMode(!selectMode);
-              if (!selectMode) setSelectedForms(new Set());
+              setSelectedForms(new Set());
             }}>
-              
+
               {selectMode ? "Deselect All" : "Select"}
             </button>
             )}
@@ -126,6 +135,7 @@ const PagenationTable = ({
         </div>
       )}
 
+      <div className="form-list-container">
       <table className="form-table">
         <thead>
           <tr>
@@ -140,7 +150,7 @@ const PagenationTable = ({
             /></th>}
             <th>S.No</th>
             {fieldsTitle.map((title, index) => <th key={index}>{title}</th>)}
-            {role === "admin" && <th>Actions</th>}
+            {actions.length > 0 && <th>Actions</th>}
           </tr>
         </thead>
 
@@ -157,7 +167,7 @@ const PagenationTable = ({
             return (
               <tr
                 key={formId}
-                className={`form-row ${selectedForms.has(formId) ? "selected-row" : ""}`}
+                className={`form-row ${selectMode && selectedForms.has(formId) ? "selected-row" : ""}`}
                 onClick={() => selectMode ? toggleSelectOne(formId) : openForm(form)}
               >
                 {selectMode && (
@@ -169,7 +179,7 @@ const PagenationTable = ({
                     />
                   </td>
                 )}
-                <td>{index + 1}</td>
+                <td>{(currentPage - 1) * rowsPerPage + index + 1}</td>
                 {fields.map((field, idx) => {
                   const val = form[field];
                   return (
@@ -178,27 +188,42 @@ const PagenationTable = ({
                     </td>
                   );
                 })}
-                {role === "admin" && (
-                  <>
-                 {actions.length > 0 && (
-                  <div className="action-icons">
-                    {actions.map((action, index) => (
+                {actions.length > 0 && (
+                  <td>
+                    <div className="row-actions">
                       <button
-                      key={index}
-                      className="action-icon-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        action.onClick(form);
-                      }}
-                      title={action.tooltip || ""}
-                      style={{ marginLeft: "8px" }}
-                    >
-                      {action.icon}
-                    </button>
-                    ))}
-                  </div>
-                )}
-                </>
+                        className="row-actions-trigger"
+                        title="Actions"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenu(openMenu === formId ? null : formId);
+                        }}
+                      >
+                        <i className="fa-solid fa-ellipsis-vertical"></i>
+                      </button>
+                      {openMenu === formId && (
+                        <div className="row-actions-menu" onClick={(e) => e.stopPropagation()}>
+                          {actions.map((action, index) => {
+                            const danger = action.danger || /delete|remove/i.test(action.tooltip || "");
+                            return (
+                              <button
+                                key={index}
+                                className={`row-actions-item${danger ? " danger" : ""}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenMenu(null);
+                                  action.onClick(form);
+                                }}
+                              >
+                                <span className="ra-icon">{action.icon}</span>
+                                <span>{action.tooltip || "Action"}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </td>
                 )}
               </tr>
             );
@@ -230,6 +255,7 @@ const PagenationTable = ({
         </div>
       </div>
     </div>
+    </>
   );
 };
 
