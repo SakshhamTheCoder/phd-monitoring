@@ -13,11 +13,14 @@ class NotificationsController extends Controller
     public function unreadNotifications()
     {
         $user = Auth::user();
-        // Only show notifications relevant to the role the user is currently acting as.
+        // Only show notifications relevant to the role the user is currently acting as,
+        // plus role-agnostic (common) ones that have no specific role.
         $activeRoleId = $user->current_role_id ?? $user->role_id;
         $notifications = $user->notifications
             ->where('is_read', false)
-            ->where('role_id', $activeRoleId);
+            ->filter(function ($n) use ($activeRoleId) {
+                return is_null($n->role_id) || $n->role_id == $activeRoleId;
+            });
         $ret=[];
         foreach($notifications as $notification)
         {
@@ -28,7 +31,7 @@ class NotificationsController extends Controller
                 'body'=>ucfirst((string) $notification->body),
                 'link'=>$notification->link,
                 'created_at'=>$notification->created_at,
-                'role'=>$notification->role->role
+                'role'=>$notification->role?->role
             ];
         }
         return response()->json($ret);
@@ -71,9 +74,12 @@ class NotificationsController extends Controller
     public function allNotifications()
     {
         $user = Auth::user();
-        // Only show notifications relevant to the role the user is currently acting as.
+        // Only show notifications relevant to the role the user is currently acting as,
+        // plus role-agnostic (common) ones that have no specific role.
         $activeRoleId = $user->current_role_id ?? $user->role_id;
-        $notifications = $user->notifications->where('role_id', $activeRoleId);
+        $notifications = $user->notifications->filter(function ($n) use ($activeRoleId) {
+            return is_null($n->role_id) || $n->role_id == $activeRoleId;
+        });
         $ret=[];
         foreach($notifications as $notification)
         {
@@ -85,7 +91,7 @@ class NotificationsController extends Controller
                 'link'=>$notification->link,
                 'is_read'=>$notification->is_read,
                 'created_at'=>$notification->created_at,
-                'role'=>$notification->role->role
+                'role'=>$notification->role?->role
             ];
         }
         return response()->json($ret);
