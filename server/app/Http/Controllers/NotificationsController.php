@@ -23,8 +23,9 @@ class NotificationsController extends Controller
         {
             $ret[]=[
                 'id'=>$notification->id,
-                'title'=>$notification->title,
-                'body'=>$notification->body,
+                // Capitalise on read so existing lowercase notifications also display correctly.
+                'title'=>ucfirst((string) $notification->title),
+                'body'=>ucfirst((string) $notification->body),
                 'link'=>$notification->link,
                 'created_at'=>$notification->created_at,
                 'role'=>$notification->role->role
@@ -78,9 +79,9 @@ class NotificationsController extends Controller
         {
             $ret[]=[
                 'id'=>$notification->id,
-                'id'=>$notification->id,
-                'title'=>$notification->title,
-                'body'=>$notification->body,
+                // Capitalise on read so existing lowercase notifications also display correctly.
+                'title'=>ucfirst((string) $notification->title),
+                'body'=>ucfirst((string) $notification->body),
                 'link'=>$notification->link,
                 'is_read'=>$notification->is_read,
                 'created_at'=>$notification->created_at,
