@@ -196,12 +196,12 @@ const PagenationTable = ({
                         title="Actions"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setOpenMenu(openMenu === formId ? null : formId);
+                          setOpenMenu(openMenu === index ? null : index);
                         }}
                       >
                         <i className="fa-solid fa-ellipsis-vertical"></i>
                       </button>
-                      {openMenu === formId && (
+                      {openMenu === index && (
                         <div className="row-actions-menu" onClick={(e) => e.stopPropagation()}>
                           {actions.map((action, index) => {
                             const danger = action.danger || /delete|remove/i.test(action.tooltip || "");
