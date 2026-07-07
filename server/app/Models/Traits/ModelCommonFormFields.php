@@ -5,6 +5,15 @@ use App\Models\Student; // Ensure you have the correct namespace for the Student
 
 trait ModelCommonFormFields
 {
+    /**
+     * Step lists use the 'faculty' role name, but the stage enum uses 'supervisor'.
+     * Normalize on write so 'faculty' can never reach any form's stage column.
+     */
+    public function setStageAttribute($value)
+    {
+        $this->attributes['stage'] = $value === 'faculty' ? 'supervisor' : $value;
+    }
+
     // Common fields that every form will use
     public function getCommonFields()
     {
