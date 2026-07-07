@@ -182,7 +182,9 @@ class ConstituteOfIRBController extends Controller
             'title' => 'required|string',
             'irb_pdf' => 'required|file|mimes:pdf|max:15360',
             'address' => 'required|string',
-            'broad_area_of_research' => 'nullable|integer|exists:area_of_specializations,id',
+            'broad_area_of_research' => 'nullable|string',
+            'subdomains' => 'nullable|array',
+            'subdomains.*' => 'string',
         ]);
         return $this->submitForm($user,$request, $form_id, ConstituteOfIRB::class, 'student','student','faculty',  function ($formInstance) use ($request, $user) {
             if(!$formInstance->student->gender) {
@@ -228,10 +230,27 @@ class ConstituteOfIRBController extends Controller
            
             $formInstance->student->address = $request->address;
             
-            // Save broad area of research
+            // Save broad area of research (free text, or a legacy AreaOfSpecialization id)
             if ($request->has('broad_area_of_research') && $request->broad_area_of_research) {
                 $formInstance->broad_area_of_research = $request->broad_area_of_research;
-                $formInstance->student->area_of_specialization_id = $request->broad_area_of_research;
+                if (is_numeric($request->broad_area_of_research)) {
+                    $formInstance->student->area_of_specialization_id = $request->broad_area_of_research;
+                }
+            }
+
+            // Save subdomain keywords (reusable per student). Normalise + de-dupe,
+            // drop blanks / too-short entries, then replace the student's set.
+            $subdomains = collect($request->subdomains ?? [])
+                ->map(fn ($k) => trim(preg_replace('/\s+/', ' ', (string) $k)))
+                ->filter(fn ($k) => mb_strlen($k) >= 2)
+                ->unique()
+                ->values();
+            $formInstance->student->subdomains()->delete();
+            foreach ($subdomains as $keyword) {
+                \App\Models\StudentSubdomain::create([
+                    'student_id' => $formInstance->student->roll_no,
+                    'keyword' => $keyword,
+                ]);
             }
             
             $formInstance->student->save();

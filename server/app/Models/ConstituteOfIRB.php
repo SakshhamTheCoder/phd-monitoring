@@ -43,8 +43,13 @@ class ConstituteOfIRB extends Model
             'objectives' => $this->student->objectives()?->where('type', 'draft')->get()->map(function ($objective) {
                 return $objective->objective;
             })->values(),
+            'subdomains' => $this->student->subdomains->pluck('keyword')->values(),
             'irb_pdf' => $this->irb_pdf,
-            'broad_area_of_research' => AreaOfSpecialization::find($this->broad_area_of_research)?->name,
+            // Stored value may be a legacy AreaOfSpecialization id (numeric) or, for
+            // newer forms, free text the student typed. Resolve id -> name, else pass through.
+            'broad_area_of_research' => is_numeric($this->broad_area_of_research)
+                ? (AreaOfSpecialization::find($this->broad_area_of_research)?->name ?? $this->broad_area_of_research)
+                : $this->broad_area_of_research,
             'area_of_specialization' => $this->student->areaOfSpecialization ? [
                 'id' => $this->student->areaOfSpecialization->id,
                 'name' => $this->student->areaOfSpecialization->name,

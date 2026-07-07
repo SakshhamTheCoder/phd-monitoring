@@ -44,6 +44,31 @@ class SuggestionController extends Controller
 
     }
 
+    public function suggestSubdomain(Request $request)
+    {
+        $request->validate([
+            'text' => 'required|string',
+        ]);
+        $text = trim($request->text);
+        if ($text === '') {
+            return response()->json([]);
+        }
+        // Only surface keywords that at least 2 distinct students have used, so a
+        // one-off gibberish entry never leaks into everyone else's suggestions.
+        // (Free-typed keywords still always work client-side; this only gates suggestions.)
+        $keywords = \App\Models\StudentSubdomain::where('keyword', 'LIKE', '%' . $text . '%')
+            ->select('keyword')
+            ->groupBy('keyword')
+            ->havingRaw('COUNT(DISTINCT student_id) >= 2')
+            ->orderBy('keyword')
+            ->limit(10)
+            ->pluck('keyword');
+
+        return response()->json(
+            $keywords->map(fn ($k) => ['id' => $k, 'name' => $k])->values()
+        );
+    }
+
     public function suggestExaminer(Request $request)
     {
         $loggenInUser = Auth::user();

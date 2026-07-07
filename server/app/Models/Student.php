@@ -185,6 +185,11 @@ class Student extends Model
         return $this->hasMany(StudentBroadAreaSpecialization::class, 'student_id', 'roll_no');
     }
 
+    public function subdomains()
+    {
+        return $this->hasMany(StudentSubdomain::class, 'student_id', 'roll_no');
+    }
+
     public function initialStatus()
     {
         $changes = $this->statusChanges()->orderBy('created_at', 'asc')?->first();
