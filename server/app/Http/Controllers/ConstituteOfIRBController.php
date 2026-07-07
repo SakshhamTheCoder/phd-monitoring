@@ -233,24 +233,30 @@ class ConstituteOfIRBController extends Controller
             // Save broad area of research (free text, or a legacy AreaOfSpecialization id)
             if ($request->has('broad_area_of_research') && $request->broad_area_of_research) {
                 $formInstance->broad_area_of_research = $request->broad_area_of_research;
-                if (is_numeric($request->broad_area_of_research)) {
+                // Only link the structured area FK when the value is a real, existing
+                // area id — a numeric-looking free-text entry must not hit the FK.
+                if (is_numeric($request->broad_area_of_research)
+                    && \App\Models\AreaOfSpecialization::whereKey($request->broad_area_of_research)->exists()) {
                     $formInstance->student->area_of_specialization_id = $request->broad_area_of_research;
                 }
             }
 
-            // Save subdomain keywords (reusable per student). Normalise + de-dupe,
-            // drop blanks / too-short entries, then replace the student's set.
-            $subdomains = collect($request->subdomains ?? [])
-                ->map(fn ($k) => trim(preg_replace('/\s+/', ' ', (string) $k)))
-                ->filter(fn ($k) => mb_strlen($k) >= 2)
-                ->unique()
-                ->values();
-            $formInstance->student->subdomains()->delete();
-            foreach ($subdomains as $keyword) {
-                \App\Models\StudentSubdomain::create([
-                    'student_id' => $formInstance->student->roll_no,
-                    'keyword' => $keyword,
-                ]);
+            // Save subdomain keywords (reusable per student). Only touch them when the
+            // request actually carries the field, so a resubmit that omits it never
+            // wipes the student's set. Normalise + de-dupe, drop blanks / too-short.
+            if ($request->has('subdomains')) {
+                $subdomains = collect($request->subdomains ?? [])
+                    ->map(fn ($k) => trim(preg_replace('/\s+/', ' ', (string) $k)))
+                    ->filter(fn ($k) => mb_strlen($k) >= 2)
+                    ->unique()
+                    ->values();
+                $formInstance->student->subdomains()->delete();
+                foreach ($subdomains as $keyword) {
+                    \App\Models\StudentSubdomain::create([
+                        'student_id' => $formInstance->student->roll_no,
+                        'keyword' => $keyword,
+                    ]);
+                }
             }
             
             $formInstance->student->save();
