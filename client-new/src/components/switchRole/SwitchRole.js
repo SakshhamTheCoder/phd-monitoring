@@ -27,6 +27,11 @@ const SwitchRole = () => {
     }, [])
 
    const setRole=(role) => {
+        // Ignore the empty "Select" placeholder — switching to "" is rejected by the
+        // backend with a 401, which the fetch layer treats as a session expiry and logs
+        // the user out. Also skip switching to the role that's already active.
+        if (!role) return;
+        if (role === localStorage.getItem("userRole")) return;
         setLoading(true);
         const url = `${baseURL}/switch-role`;
         customFetch(url, "POST",{role:role}).then((data) => {
