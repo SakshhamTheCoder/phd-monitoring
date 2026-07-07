@@ -70,9 +70,10 @@ const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = 
     
 useEffect(() => {
     if(initialValue){
+        setInputValue(initialValue);
         setShowHint(false);
     }
-},[] )
+},[initialValue] )
     const handleSuggestionClick = (suggestion) => {
         setShowHint(false);
         setUserSelected(true);

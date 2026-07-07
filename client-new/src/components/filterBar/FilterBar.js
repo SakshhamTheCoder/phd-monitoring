@@ -78,7 +78,7 @@ const FilterBar = ({ onSearch, default_filter,mandatory_filter }) => {
       <div className="filter-row">
         <select
           className="filter-select"
-          alue={selectedFilter?.key_name || ""}
+          value={selectedFilter?.key_name || ""}
           onChange={(e) => {
             const meta = filtersMeta?.find(
               (f) => f.key_name === e.target.value
