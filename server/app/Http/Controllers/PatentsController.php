@@ -109,5 +109,26 @@ class PatentsController extends Controller
         }
         return response()->json(['message' => 'Patent not found'], 404);
     }
-    
+
+    public function destroy($id)
+    {
+        $user = Auth::user();
+        $role = $user->current_role->role;
+        if ($role !== 'student') {
+            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+        }
+
+        $patent = Patent::find($id);
+        if (!$patent) {
+            return response()->json(['message' => 'Patent not found'], 404);
+        }
+
+        if ($patent->student_id != $user->student->roll_no) {
+            return response()->json(['message' => 'You are not authorized to delete this patent'], 403);
+        }
+
+        $patent->delete();
+        return response()->json(['message' => 'Patent deleted successfully'], 200);
+    }
+
 }

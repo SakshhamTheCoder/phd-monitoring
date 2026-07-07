@@ -23,6 +23,26 @@ export const APIaddPublication = async (body,close,url=false) => {
         toast.error(error);
     }
 };
+export const APIdeletePublication = async (id) => {
+    const result = await customFetch(baseURL + "/publications/" + id, 'DELETE', null, false, false);
+    if (result.success) {
+        toast.success("Publication deleted successfully.");
+    } else {
+        toast.error((result.response && result.response.message) || "Failed to delete publication.");
+    }
+    return result;
+};
+
+export const APIdeletePatent = async (id) => {
+    const result = await customFetch(baseURL + "/patents/" + id, 'DELETE', null, false, false);
+    if (result.success) {
+        toast.success("Patent deleted successfully.");
+    } else {
+        toast.error((result.response && result.response.message) || "Failed to delete patent.");
+    }
+    return result;
+};
+
 export const APIupdatePublication = async (id, body, close, url = false) => {
     try {
         const formData = new FormData();
