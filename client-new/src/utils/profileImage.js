@@ -27,13 +27,14 @@ const predefinedColors = [
   
   // Function to create an image with initials and background color
   export const generateAvatar = (firstName, lastName) => {
+    firstName = firstName || ""; // Guard against undefined/null (e.g. user not loaded yet)
     if( !lastName) {
       if(firstName && firstName.length>4)
       lastName = firstName[4] || ""; // Handle cases where last name is not provided
       else
         lastName="P"
     }
-    const initials = `${firstName[0]}${lastName[0]}`.toUpperCase();
+    const initials = `${firstName[0] || "U"}${lastName[0] || ""}`.toUpperCase();
     const bgColor = generateColorFromInitials(initials);
     const canvas = document.createElement("canvas");
     const size = 100;
