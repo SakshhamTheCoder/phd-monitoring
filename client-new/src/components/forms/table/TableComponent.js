@@ -1,5 +1,6 @@
 import React from 'react';
 import './TableComponent.css';
+import FileLink, { isFilePath } from '../../common/FileLink';
 
 const TableComponent = ({ data, keys, titles, components = [], rowStyle,label }) => {
     // Create a dictionary from components for easy lookup
@@ -32,6 +33,8 @@ const TableComponent = ({ data, keys, titles, components = [], rowStyle,label })
                                     <td key={keyIndex}>
                                         {CustomComponent ? (
                                             <CustomComponent row={row} data={value} /> // Pass the row and data
+                                        ) : isFilePath(value) ? (
+                                            <FileLink value={value} />
                                         ) : (
                                             typeof value === 'string' && value.startsWith('http') ? (
                                                 <a href={value} target="_blank" rel="noopener noreferrer">link</a>

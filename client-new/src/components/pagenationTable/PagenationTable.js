@@ -4,6 +4,7 @@ import { baseURL } from "../../api/urls";
 import { customFetch } from "../../api/base";
 import { useLoading } from "../../context/LoadingContext";
 import { toast } from "react-toastify";
+import FileLink, { isFilePath } from "../common/FileLink";
 
 const PagenationTable = ({
   endpoint,
@@ -169,9 +170,14 @@ const PagenationTable = ({
                   </td>
                 )}
                 <td>{index + 1}</td>
-                {fields.map((field, idx) => (
-                  <td key={idx}>{form[field] ?? "N/A"}</td>
-                ))}
+                {fields.map((field, idx) => {
+                  const val = form[field];
+                  return (
+                    <td key={idx}>
+                      {isFilePath(val) ? <FileLink value={val} /> : (val ?? "N/A")}
+                    </td>
+                  );
+                })}
                 {role === "admin" && (
                   <>
                  {actions.length > 0 && (

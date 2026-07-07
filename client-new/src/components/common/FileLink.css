@@ -1,0 +1,18 @@
+.file-cell-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #991b1b;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.file-cell-link:hover {
+  text-decoration: underline;
+}
+
+.file-cell-icon {
+  font-size: 15px;
+  flex: 0 0 auto;
+}
