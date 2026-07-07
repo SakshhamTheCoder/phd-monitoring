@@ -54,17 +54,28 @@ const FormGrid = ({ forms }) => {
             key={form.form_type}
             onClick={() => handleClick(form)}
             className="form-card"
+            title={form.action_required ? "Action required" : undefined}
         >
-            {form.action_required && (
-                <span className="action-label"></span>
-            )}
-            <h3 className="form-title">{form.form_name}</h3>
+            <span
+                className={`form-status-dot ${form.action_required ? "active" : ""}`}
+                aria-hidden="true"
+            ></span>
+            <h3 className="form-card-title">{form.form_name}</h3>
+            <i className="fa-solid fa-chevron-right form-card-arrow" aria-hidden="true"></i>
         </div>
     );
 
     return (
         <>
-            <h2>Available Forms</h2>
+            <div className="forms-list-header">
+                <h2 className="form-grid-heading">Available Forms</h2>
+                {forms.length > 0 && (
+                    <div className="form-legend">
+                        <span className="legend-item"><span className="legend-dot green"></span>Action required</span>
+                        <span className="legend-item"><span className="legend-dot"></span>No action needed</span>
+                    </div>
+                )}
+            </div>
             {forms.length > 0 ? (
                 <div className="form-grid-container">
                     <div className="form-grid-column">{mandatory.map(renderCard)}</div>

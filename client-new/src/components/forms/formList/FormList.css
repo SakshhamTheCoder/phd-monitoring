@@ -8,34 +8,40 @@
 }
 
 .form-card-list {
+    width: 100%;
     background-color: #ffffff;
-    padding: 20px;
-    border-radius: 10px;
+    padding: 20px 22px;
+    border-radius: 12px;
+    border: 1px solid #ececec;
     position: relative;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 20px; 
+    gap: 20px;
     text-align: center;
     align-items: center;
-    font-weight: bold;
-    color: #4a4a4a;
-    box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.6); /* Subtle shadow effect */
+    color: #3a3a3a;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    cursor: pointer;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 
 .form-card-list:hover {
-    cursor: pointer;
-    color: black;
-    box-shadow: 2px 4px 6px rgba(0, 0, 0, 0.8); /* Slightly stronger shadow on hover */
+    border-color: #f0d3d3;
+    box-shadow: 0 6px 18px -6px rgba(178, 38, 38, 0.28);
+    transform: translateY(-1px);
 }
 
+/* Status indicator in the corner (kept subtle, no longer overlapping the fields) */
 .action-label-list {
-    background-color: rgb(236, 144, 15); /* Green */
-    height: 10px;
-    width: 10px;
+    background-color: rgb(236, 144, 15);
+    height: 9px;
+    width: 9px;
     border-radius: 50%;
     position: absolute;
-    left: 5%;
-    animation: breathe 1.5s infinite;
+    top: 12px;
+    right: 14px;
+    box-shadow: 0 0 0 3px rgba(236, 144, 15, 0.15);
+    animation: breathe 1.6s infinite;
 }
 
 .form-title {
