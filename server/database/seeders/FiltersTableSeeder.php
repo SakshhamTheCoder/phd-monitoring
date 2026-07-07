@@ -159,22 +159,9 @@ class FiltersTableSeeder extends Seeder
                 'label' => 'Form Type (Completed)',
                 'data_type' => 'composite',
                 'function_name' => 'form_stage_combo',
-                'applicable_pages' => ['student'],
-                'options' => [
-                    ['title' => 'IRB Submission', 'value' => ['form_type' => 'irb-submission', 'stage' => 'complete']],
-                    ['title' => 'IRB Constitutuion', 'value' => ['form_type' => 'irb-constitution', 'stage' => 'complete']],
-                    ['title' => 'Supervisor Allocation', 'value' => ['form_type' => 'supervisor-allocation', 'stage' => 'complete']],
-                    ['title' => 'Thesis Submission', 'value' => ['form_type' => 'thesis-submission', 'stage' => 'complete']],
-                    ['title' => 'Synopsis Submission', 'value' => ['form_type' => 'synopsis-submission', 'stage' => 'complete']],
-                ],
-                'api_url' => null,
-            ],
-            [
-                'key_name' => 'form.complete_form_stage',
-                'label' => 'Form Type (Completed)',
-                'data_type' => 'composite',
-                'function_name' => 'form_stage_combo',
-                'applicable_pages' => ['forms', 'presentation'],
+                // Merged: one row served on all three pages (key_name is UNIQUE, so this
+                // filter cannot be duplicated per page-set — applicable_pages is a membership list).
+                'applicable_pages' => ['student', 'forms', 'presentation'],
                 'options' => [
                     ['title' => 'IRB Submission', 'value' => ['form_type' => 'irb-submission', 'stage' => 'complete']],
                     ['title' => 'IRB Constitutuion', 'value' => ['form_type' => 'irb-constitution', 'stage' => 'complete']],
