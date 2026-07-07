@@ -33,7 +33,7 @@ class SupervisorAllocationController extends Controller
         return $this->listFormsStudent($user, SupervisorAllocation::class, $student_id);
         return $this->listForms($user, SupervisorAllocation::class,$request,null,false,[
             'fields' => [
-                "name","roll_no", "progress","email","semester"
+                "name","roll_no", "progress","email"
             ],
             'extra_fields' => [
                "progress" => function ($form) {
@@ -42,11 +42,8 @@ class SupervisorAllocationController extends Controller
                 "email" => function ($form) {
                     return $form->student->user->email;
                 },
-                "semester" => function ($form) {
-                    return $form->id;
-                },
             ],
-            'titles' => [ "Name", "Roll No", "Progress", "Email","Semester",],
+            'titles' => [ "Name", "Roll No", "Progress", "Email",],
         ]);
     }
 
