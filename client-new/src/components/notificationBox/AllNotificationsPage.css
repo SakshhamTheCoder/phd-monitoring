@@ -1,61 +1,141 @@
 .all-notifications-page {
-    padding: 3rem 2rem;
-    max-width: 900px;
-    margin: auto;
-    background-color: #fff;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  }
-  
-  .notification-heading {
-  
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #0f0e0e; /* Deep red */
-    margin-bottom: 1.5rem;
+  padding: 2.5rem 2rem;
+  max-width: 860px;
+  margin: auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
 
-    padding-bottom: 0.5rem;
-    letter-spacing: 0.5px;
-  }
-  
-  .notification-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-  
-  .notification-card {
-    background-color: #fff1f2; /* Light red background */
-    border-left: 6px solid #eeecec; /* Red stripe */
-    border-radius: 0.75rem;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
-    padding: 1.5rem 2rem;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    cursor: pointer;
-  }
-  
-  .notification-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
-    background-color: #ffe4e6;
-  }
-  
-  .notification-title {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #991b1b;
-    margin-bottom: 0.5rem;
-  }
-  
-  .notification-body {
-    font-size: 1rem;
-    color: #7f1d1d;
-    line-height: 1.5;
-  }
-  
-  .notif-date {
-    margin-top: 1rem;
-    font-size: 0.85rem;
-    color: #6b7280;
-    text-align: right;
-  }
- 
+.notification-page-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.notification-heading {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+  letter-spacing: 0.2px;
+}
+
+.notification-unread-pill {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #991b1b;
+  background: #fff1f2;
+  border: 1px solid #f6d5d7;
+  padding: 3px 12px;
+  border-radius: 999px;
+}
+
+.notification-muted {
+  color: #9ca3af;
+}
+
+.notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.notification-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 0.75rem;
+  padding: 1.1rem 1.4rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+/* Unread: brand-red accent, solid, bold — clearly needs attention. */
+.notification-card.is-unread {
+  background-color: #fff;
+  border: 1px solid #f4dcdc;
+  border-left: 4px solid #991b1b;
+  box-shadow: 0 4px 14px rgba(120, 29, 29, 0.08);
+}
+
+.notification-card.is-unread:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(120, 29, 29, 0.12);
+}
+
+/* Read: muted and quiet, so unread items stand out. */
+.notification-card.is-read {
+  background-color: #fafafa;
+  border: 1px solid #eee;
+  border-left: 4px solid #e5e7eb;
+}
+
+.notification-card.is-read:hover {
+  background-color: #f5f5f5;
+}
+
+.notification-card-main {
+  min-width: 0;
+}
+
+.notification-card-titlerow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.notification-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #991b1b;
+}
+
+.notification-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #7f1d1d;
+  line-height: 1.35;
+}
+
+.notification-card.is-read .notification-title {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.notification-body {
+  margin-top: 0.35rem;
+  font-size: 0.92rem;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.notif-date {
+  flex: 0 0 auto;
+  font-size: 0.8rem;
+  color: #9ca3af;
+  white-space: nowrap;
+  padding-top: 2px;
+}
+
+.notification-empty-page {
+  text-align: center;
+  padding: 3.5rem 1rem;
+  border: 1px dashed #e5d3d3;
+  border-radius: 0.75rem;
+  background: #fffafa;
+}
+
+.notification-empty-page p {
+  margin: 0 0 0.4rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #7f1d1d;
+}
+
+.notification-empty-page span {
+  font-size: 0.9rem;
+  color: #9ca3af;
+}
