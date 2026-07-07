@@ -25,8 +25,10 @@ const Student = ({ formData }) => {
   const [showPublication, setShowPublication] = useState(false);
   const [temp, setTemp] = useState([]);
   const [files, setFiles] = useState([]);
-  const objectivesData = formData.objectives.map((obj) => ({ objective: obj }));
-  const robjectivesData = formData.revised_objectives.map((obj) => ({
+  const objectivesData = (formData.objectives || []).map((obj) => ({
+    objective: obj,
+  }));
+  const robjectivesData = (formData.revised_objectives || []).map((obj) => ({
     objective: obj,
   }));
 
@@ -35,14 +37,17 @@ const Student = ({ formData }) => {
       sci: formData.sci,
       non_sci: formData.non_sci,
       patents: formData.patents,
-      books: formData.books,
+      book: formData.book,
       national: formData.national,
       international: formData.international,
       objectives:
-        formData.revised_objectives.length > 0
+        (formData.revised_objectives?.length || 0) > 0
           ? formData.revised_objectives
           : [""],
-      revisedOBJ: formData.revised_objectives.length && formData?.locks?.student> 0?true:false
+      revisedOBJ:
+        (formData.revised_objectives?.length || 0) > 0 && formData?.locks?.student
+          ? true
+          : false,
     });
     setLock(formData?.locks?.student);
     if (formData.publication_count > 0 || formData.patents.length > 0) {
@@ -132,7 +137,7 @@ const Student = ({ formData }) => {
                 sci: formdata.sci,
                 non_sci: formdata.non_sci,
                 patents: formdata.patents,
-                books: formdata.books,
+                book: formdata.book,
                 national: formdata.national,
                 international: formdata.international,
               }));
@@ -198,8 +203,8 @@ const Student = ({ formData }) => {
                 isLocked={true}
               />,
               <InputField
-                label="Father’s Name"
-                initialValue={formData.fathers_name}
+                label="Date of Revised IRB"
+                initialValue={formatDate(formData.date_of_irb)}
                 isLocked={true}
               />,
             ]}

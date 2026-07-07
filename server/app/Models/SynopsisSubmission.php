@@ -58,6 +58,7 @@ class SynopsisSubmission extends Model
                 return $objective->objective;
             })->values(),
             'fathers_name'=>$this->student->fathers_name,
+            'date_of_irb'=>$this->student->date_of_irb,
             'current_status'=>$this->student->current_status,
             'address'=>$this->student->user->address,
 
