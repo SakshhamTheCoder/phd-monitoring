@@ -296,15 +296,8 @@ class IrbSubController extends Controller
                 ]);
                 $faculty=$user->faculty;
                 $faculty->supervised_outside=$request->supervised_outside;
-                $supervised_campus = Faculty::where('faculty_code', $faculty_code)
-                ->whereHas('supervisedStudents', function ($query) {
-                    // Use a raw query to directly check the completion status
-                    $query->whereHas('irbSubForm', function ($subQuery) {
-                        $subQuery->where('status', 'approved')
-                                  ->where('status', 'complete');
-                    });
-                });            
-                $faculty->supervised_campus=$supervised_campus->count();
+                // supervised_campus is now computed live via the Faculty accessor,
+                // so we only persist the manually-entered outside count here.
                 $faculty->save();
             
             $formInstance->supervisorApprovals()->where('supervisor_id', $faculty_code)->update([
