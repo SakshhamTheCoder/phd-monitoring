@@ -72,7 +72,10 @@ trait GeneralFormSubmitter
 
             $formInstance->addHistoryEntry($this->getSubmissionMessage($user->current_role, $user->name()), $user->name());
             $formInstance->save();
-            return response()->json(['message' => 'Form submitted successfully']);
+            return response()->json([
+                'message' => 'Form submitted successfully',
+                'completed' => $formInstance->completion === 'complete',
+            ]);
         } catch (ValidationException $e) {
             Log::error('Validation error in form submission: ' . $e->getMessage());
             return response()->json(['errors' => $e->errors()], 422);

@@ -32,8 +32,10 @@ export const submitForm = async (body, location, setLoading, files = null) => {
     try {
         const data = await customFetch(url, "POST", formData, true, files !== null);
         if (data && data.success) {
-            toast.success("Form Submitted Successfully");
-            window.location.reload();
+            const completed = data.response && data.response.completed;
+            toast.success(completed ? "Form completed successfully" : "Form submitted successfully");
+            // Delay the reload so the toast is visible before the page refreshes.
+            setTimeout(() => window.location.reload(), 1200);
         } else {
             // show validation errors if available
             if (data && data.response && data.response.errors) {
