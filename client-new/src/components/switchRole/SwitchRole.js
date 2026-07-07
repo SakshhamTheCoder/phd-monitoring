@@ -34,9 +34,12 @@ const SwitchRole = () => {
                 localStorage.setItem("user", JSON.stringify(data.response.user));
                 localStorage.setItem("userRole", data.response.user.role.role);
                 toast.success("Role switched successfully");
-            } else {
-                console.error("No data found or unauthorized access.");
+                // Reload so notifications, the dashboard and forms re-fetch for the
+                // newly-active role instead of showing the previous role's data.
+                setTimeout(() => window.location.reload(), 600);
+                return;
             }
+            console.error("No data found or unauthorized access.");
             setLoading(false);
         });
     }
