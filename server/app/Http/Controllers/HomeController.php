@@ -57,8 +57,18 @@ class HomeController extends Controller
         // For faculty and others
         $faculty = $user->faculty;
 
+        // Office/admin roles (admin, dra, director, …) often have no faculty record.
+        // Instead of 404-ing (which the client shows as an error + endless loader),
+        // return a generic home so they land on an admin overview.
         if (!$faculty) {
-            return response()->json(['message' => 'Faculty record not found'], 404);
+            return response()->json([
+                'type' => 'admin',
+                'data' => [
+                    'name' => $user->name(),
+                    'email' => $user->email,
+                    'role' => $role,
+                ],
+            ]);
         }
 
         $supervised = $faculty->supervisedStudents()->with('user')->get()->map(function ($student) {

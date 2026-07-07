@@ -1,0 +1,21 @@
+/* Same container as the student/faculty profile pages. */
+.adminhome-container {
+  background: #ffffff;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  max-width: 1000px;
+  margin: auto;
+}
+
+.adminhome-container h2 {
+  margin-bottom: 0.3rem;
+  font-size: 1.8rem;
+  color: #111827;
+}
+
+.adminhome-sub {
+  font-size: 1rem;
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}

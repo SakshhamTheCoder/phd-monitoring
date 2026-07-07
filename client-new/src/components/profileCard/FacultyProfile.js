@@ -6,7 +6,14 @@ const FacultyProfile = ({ faculty }) => {
   const navigate = useNavigate();
 
   if (!faculty) {
-    return <div className="faculty-container"><p>Loading faculty data...</p></div>;
+    return (
+      <div className="faculty-container">
+        <h3 style={{ fontSize: "1.2rem", color: "#1f2937", margin: 0 }}>No faculty profile</h3>
+        <p className="faculty-sub" style={{ marginTop: "0.5rem", marginBottom: 0 }}>
+          There's no faculty record linked to this account. Use the menu to open the section you need.
+        </p>
+      </div>
+    );
   }
 
   return (

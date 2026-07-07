@@ -24,5 +24,9 @@ export const getRoleName = (role) => {
             return 'Vice Chancellor'
         case 'adordc':
             return 'ADORDC';
+        case 'admin':
+            return 'Administrator';
+        default:
+            return role ? role.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : '';
     }
 }
