@@ -13,7 +13,11 @@ class NotificationsController extends Controller
     public function unreadNotifications()
     {
         $user = Auth::user();
-        $notifications = $user->notifications->where('is_read', false);
+        // Only show notifications relevant to the role the user is currently acting as.
+        $activeRoleId = $user->current_role_id ?? $user->role_id;
+        $notifications = $user->notifications
+            ->where('is_read', false)
+            ->where('role_id', $activeRoleId);
         $ret=[];
         foreach($notifications as $notification)
         {
@@ -66,7 +70,9 @@ class NotificationsController extends Controller
     public function allNotifications()
     {
         $user = Auth::user();
-        $notifications = $user->notifications;
+        // Only show notifications relevant to the role the user is currently acting as.
+        $activeRoleId = $user->current_role_id ?? $user->role_id;
+        $notifications = $user->notifications->where('role_id', $activeRoleId);
         $ret=[];
         foreach($notifications as $notification)
         {
