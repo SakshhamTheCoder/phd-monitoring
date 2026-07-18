@@ -8,6 +8,7 @@ use App\Models\Traits\ModelCommonFormFields;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Traits\GeneralFormSubmitter;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class IrbSubForm extends Model
 {
@@ -114,26 +115,87 @@ class IrbSubForm extends Model
         return $this->hasMany(IrbDoctoralApproval::class, 'irb_sub_form_id', 'id');
     }
 
-    public function handleApproval($email, $id, $val)
+    /**
+     * Record the outside expert's external-review decision.
+     *
+     * Attribution uses an in-memory (never-persisted) User built from the OutsideExpert
+     * record, so no login-capable account is required or created. The comment is passed
+     * as 'comments' (plural) to match what submitForm reads — the old code passed
+     * 'comment' (singular), silently dropping it.
+     */
+    public function handleApproval($email, $id, $val, $comment = null)
     {
-        $user = User::where('email', $email)->first();
+        $expert = OutsideExpert::where('email', $email)->first();
+
+        $actor = new User();
+        $actor->first_name = $expert->first_name ?? 'External';
+        $actor->last_name = $expert->last_name ?? 'Reviewer';
+        $actor->email = $email;
+        $actor->setRelation('current_role', Role::where('role', 'external')->first());
+
         $request = Request::create('/', 'POST', [
             'approval' => $val,
-            'comment' => ' '
-        ]); 
+            'comments' => $comment ?? ' ',
+        ]);
         $model = IrbSubForm::class;
-        Log::info('Handling approval for user: ' . $user->email);
-        Log::info('Approval value: ' . $val);
-        return $this->submitForm($user, $request, $id, $model, 'external', 'faculty', 'doctoral',   function ($formInstance) use ($request, $user) {
-               $student=$formInstance->student;
-                $doctoral = $formInstance->student->doctoralCommittee;        
-               foreach ($doctoral as $doc) {
-                            IrbDoctoralApproval::create([
-                                'irb_sub_form_id' => $formInstance->id,
-                                'doctoral_id' => $doc->faculty_code,
-                                'status' => 'pending',
-                            ]);
-                 }
-        });        
+        Log::info('Handling external review for: ' . $email . ' (recommend=' . var_export($val, true) . ')');
+
+        return $this->submitForm($actor, $request, $id, $model, 'external', 'faculty', 'doctoral', function ($formInstance) use ($request, $actor) {
+            $doctoral = $formInstance->student->doctoralCommittee;
+            foreach ($doctoral as $doc) {
+                IrbDoctoralApproval::create([
+                    'irb_sub_form_id' => $formInstance->id,
+                    'doctoral_id' => $doc->faculty_code,
+                    'status' => 'pending',
+                ]);
+            }
+        });
+    }
+
+    /**
+     * Create (or reuse) the outside expert's review token and email them a link to the
+     * secure review page. One Approval row per (form, expert) — reused on resend and reset
+     * to a fresh unconsumed state whenever the external step is (re)entered, so there are
+     * no stale or duplicate tokens. Returns null if no outside expert is assigned.
+     */
+    public function sendExternalReviewRequest(): ?Approval
+    {
+        $expert = $this->student->outsideExpert();
+        if (!$expert) {
+            return null;
+        }
+
+        $approval = Approval::firstOrNew([
+            'model_type' => static::class,
+            'model_id' => $this->id,
+            'email' => $expert->email,
+        ]);
+        if (!$approval->exists) {
+            $approval->key = Approval::generateKey();
+        }
+        // Fresh review cycle: clear any prior response.
+        $approval->action = 'review';
+        $approval->approved = null;
+        $approval->comment = null;
+        $approval->consumed_at = null;
+        $approval->save();
+
+        $reviewUrl = rtrim(config('app.frontend_url'), '/') . '/external-review/' . $approval->key;
+        $pdfPath = $this->revised_irb_pdf ? storage_path($this->revised_irb_pdf) : null;
+
+        Mail::send('emails.approval', [
+            'expertName' => trim($expert->first_name . ' ' . $expert->last_name),
+            'studentName' => $this->student->user->name(),
+            'title' => $this->revised_phd_title,
+            'formId' => $this->id,
+            'reviewUrl' => $reviewUrl,
+        ], function ($message) use ($expert, $pdfPath) {
+            $message->to($expert->email)->subject('IRB Submission Review Request');
+            if ($pdfPath && file_exists($pdfPath)) {
+                $message->attach($pdfPath);
+            }
+        });
+
+        return $approval;
     }
 }

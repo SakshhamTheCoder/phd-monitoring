@@ -275,6 +275,15 @@ Route::prefix('semester')->group(function () {
 Route::prefix('approval')->group(function () {
     require base_path('routes/base/approvals.php');
 });
+
+// Secure external-expert review (public, token-authenticated — the token is the credential).
+Route::prefix('external-review')->group(function () {
+    Route::get('/{token}', [\App\Http\Controllers\ExternalReviewController::class, 'show']);
+    Route::get('/{token}/pdf', [\App\Http\Controllers\ExternalReviewController::class, 'pdf']);
+    Route::post('/{token}', [\App\Http\Controllers\ExternalReviewController::class, 'submit']);
+});
+Route::post('irb-submissions/{id}/resend-external-review', [\App\Http\Controllers\ExternalReviewController::class, 'resend'])
+    ->middleware('auth:sanctum');
 Route::prefix('admin')->group(function () {
     require base_path('routes/base/admin.php');
 });
