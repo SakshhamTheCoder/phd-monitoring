@@ -1,2 +1,6 @@
 /migrations
 node_modules
+
+# local design mockups & architecture notes (not for VCS)
+/architecture.md
+/design-htmls/
