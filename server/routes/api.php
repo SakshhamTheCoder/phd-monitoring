@@ -243,6 +243,10 @@ Route::prefix('patents')->group(function () {
     require base_path('routes/base/patents.php');
 });
 
+Route::prefix('projects')->group(function () {
+    require base_path('routes/base/projects.php');
+});
+
 Route::prefix('faculty')->group(function () {
     require base_path('routes/base/faculties.php');
 });
