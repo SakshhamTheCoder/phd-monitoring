@@ -502,23 +502,11 @@ class ConstituteOfIRBController extends Controller
                             'type'        => 'outside',
                             'member_type' => OutsideExpert::class,
                             'member_id'   => $outsideExpert->id,
-                        ]);        
-                        $user=User::where('email',$outsideExpert->email)->first();
-                        $role=Role::where('role','external')->first();
-                        if($user){
-                           $user->role_id=$role->id;
-                           $user->save();
-                        }               
-                        else{
-                            $user=User::create([
-                                'email'=>$outsideExpert->email,
-                                'role_id'=>$role->id,
-                                'first_name'=>$outsideExpert->first_name,
-                                'last_name'=>$outsideExpert->last_name,
-                                'password'=>bcrypt('password'),
-                            ]);
-                        }
-                                       
+                        ]);
+                        // No login account is created for the outside expert — the external
+                        // review happens via a secure email link (see IrbSubForm::
+                        // sendExternalReviewRequest / ExternalReviewController), attributed
+                        // to the OutsideExpert record, so no portal user is needed.
 
                     DoctoralCommittee::create([
                         'student_id' => $formInstance->student->roll_no,
