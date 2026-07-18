@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
-import { getProjectById, formatCurrency, getMilestoneProgress, milestoneStatusOptions } from '../../data/projectsData';
+import { getProjectById, formatCurrency, getMilestoneProgress, milestoneStatusOptions, updateProject, budgetHeadTemplate, formatDate } from '../../data/projectsData';
+import { toast } from 'react-toastify';
 import './ProjectDetails.css';
 
 const TABS = ['Overview', 'Funding & Budget', 'Milestones', 'Project Team', 'Documents'];
@@ -17,10 +18,164 @@ const ProjectDetails = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newMs, setNewMs] = useState({ name: '', deliverable: '', dueDate: '', status: 'Not Started' });
 
+  const validateMilestone = (m) => {
+    if (!m.name.trim()) { toast.error('Milestone name is required.'); return false; }
+    if (!m.deliverable.trim()) { toast.error('Deliverable is required.'); return false; }
+    if (!m.dueDate) { toast.error('Due date is required.'); return false; }
+    return true;
+  };
   const startEdit = (i) => { setEditingIdx(i); setEditForm({ ...milestones[i] }); };
   const cancelEdit = () => { setEditingIdx(null); };
-  const saveEdit = () => { const updated = [...milestones]; updated[editingIdx] = { ...editForm }; setMilestones(updated); setEditingIdx(null); };
-  const addMilestone = () => { if (newMs.name.trim()) { setMilestones([...milestones, { ...newMs }]); setNewMs({ name: '', deliverable: '', dueDate: '', status: 'Not Started' }); setShowAddForm(false); } };
+  const saveEdit = () => {
+    if (!validateMilestone(editForm)) return;
+    const updated = [...milestones];
+    updated[editingIdx] = { ...editForm };
+    setMilestones(updated);
+    setEditingIdx(null);
+    toast.success('Milestone updated.');
+  };
+  const addMilestone = () => {
+    if (!validateMilestone(newMs)) return;
+    setMilestones([...milestones, { ...newMs }]);
+    setNewMs({ name: '', deliverable: '', dueDate: '', status: 'Not Started' });
+    setShowAddForm(false);
+    toast.success('Milestone added.');
+  };
+
+  // Budget breakdown inline editing
+  const [budgetData, setBudgetData] = useState(() => (project ? JSON.parse(JSON.stringify(project.budget || {})) : {}));
+  const [editingBudget, setEditingBudget] = useState(false);
+  const [budgetDraft, setBudgetDraft] = useState({});
+  const startBudgetEdit = () => { setBudgetDraft(JSON.parse(JSON.stringify(budgetData))); setEditingBudget(true); };
+  const cancelBudgetEdit = () => setEditingBudget(false);
+  const updateBudgetCell = (year, head, value) => {
+    setBudgetDraft(prev => ({ ...prev, [year]: { ...prev[year], [head]: value === '' ? 0 : Number(value) } }));
+  };
+  const saveBudgetEdit = () => {
+    setBudgetData(budgetDraft);
+    updateProject(project.id, { budget: budgetDraft });
+    setEditingBudget(false);
+    toast.success('Budget updated successfully!');
+  };
+
+  // Co-PI management
+  const emptyCopi = { name: '', type: 'internal', department: '', institute: '', designation: '' };
+  const [coPIs, setCoPIs] = useState(() => (project ? [...(project.coPIs || [])] : []));
+  const [showCopiForm, setShowCopiForm] = useState(false);
+  const [newCopi, setNewCopi] = useState(emptyCopi);
+  const addCopi = () => {
+    if (!newCopi.name.trim()) return;
+    const updated = [...coPIs, { ...newCopi }];
+    setCoPIs(updated);
+    updateProject(project.id, { coPIs: updated });
+    setNewCopi(emptyCopi);
+    setShowCopiForm(false);
+    toast.success('Co-PI added successfully!');
+  };
+  const removeCopi = (i) => {
+    const updated = coPIs.filter((_, idx) => idx !== i);
+    setCoPIs(updated);
+    updateProject(project.id, { coPIs: updated });
+    toast.success('Co-PI removed.');
+  };
+  const [editingCopiIdx, setEditingCopiIdx] = useState(null);
+  const [copiEditForm, setCopiEditForm] = useState(emptyCopi);
+  const startCopiEdit = (i) => { setEditingCopiIdx(i); setCopiEditForm({ ...emptyCopi, ...coPIs[i] }); };
+  const cancelCopiEdit = () => setEditingCopiIdx(null);
+  const saveCopiEdit = () => {
+    if (!copiEditForm.name.trim()) return;
+    const updated = coPIs.map((c, idx) => (idx === editingCopiIdx ? { ...copiEditForm } : c));
+    setCoPIs(updated);
+    updateProject(project.id, { coPIs: updated });
+    setEditingCopiIdx(null);
+    toast.success('Co-PI updated successfully!');
+  };
+
+  // Documents management
+  const emptyDocForm = { name: '', type: '', date: '', url: '', fileName: '' };
+  const [documents, setDocuments] = useState(() => (project ? [...(project.documents || [])] : []));
+  const [showDocModal, setShowDocModal] = useState(false);
+  const [editingDocIdx, setEditingDocIdx] = useState(null);
+  const [docForm, setDocForm] = useState(emptyDocForm);
+  const docFileRef = useRef(null);
+  const openAddDoc = () => { setEditingDocIdx(null); setDocForm(emptyDocForm); setShowDocModal(true); };
+  const openEditDoc = (i) => {
+    const d = documents[i];
+    setEditingDocIdx(i);
+    setDocForm({ name: d.name || '', type: d.type || '', date: d.date || '', url: d.url || '', fileName: '' });
+    setShowDocModal(true);
+  };
+  const handleDocFileSelect = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const ext = file.name.includes('.') ? file.name.split('.').pop().toUpperCase() : 'FILE';
+    setDocForm(prev => ({
+      ...prev,
+      fileName: file.name,
+      type: ext,
+      url: URL.createObjectURL(file),
+      date: new Date().toISOString().split('T')[0],
+      name: prev.name.trim() ? prev.name : file.name.replace(/\.[^.]+$/, ''),
+    }));
+    e.target.value = '';
+  };
+  const saveDoc = () => {
+    if (!docForm.name.trim()) { toast.error('Please enter a document name.'); return; }
+    if (editingDocIdx === null && !docForm.url) { toast.error('Please select a file to upload.'); return; }
+    const doc = { name: docForm.name.trim(), type: docForm.type || 'FILE', date: docForm.date || new Date().toISOString().split('T')[0], url: docForm.url };
+    const updated = editingDocIdx !== null
+      ? documents.map((d, i) => (i === editingDocIdx ? { ...d, ...doc } : d))
+      : [...documents, doc];
+    setDocuments(updated);
+    updateProject(project.id, { documents: updated });
+    setShowDocModal(false);
+    toast.success(editingDocIdx !== null ? 'Document updated!' : 'Document uploaded successfully!');
+  };
+  const removeDoc = (i) => {
+    const updated = documents.filter((_, idx) => idx !== i);
+    setDocuments(updated);
+    updateProject(project.id, { documents: updated });
+    toast.success('Document deleted.');
+  };
+
+  // Sanction letter (file upload)
+  const [sanctionDoc, setSanctionDoc] = useState(() => (
+    project && project.sanctionLetterLink && project.sanctionLetterLink !== '#'
+      ? { name: project.sanctionLetterName || 'Sanction Letter', url: project.sanctionLetterLink }
+      : null
+  ));
+  const sanctionInputRef = useRef(null);
+  const [showSanctionModal, setShowSanctionModal] = useState(false);
+  const [sanctionMode, setSanctionMode] = useState('file');
+  const [sanctionLinkInput, setSanctionLinkInput] = useState('');
+  const [sanctionFileSel, setSanctionFileSel] = useState(null);
+  const openSanctionModal = () => {
+    const isLink = sanctionDoc && /^https?:\/\//i.test(sanctionDoc.url);
+    setSanctionMode(isLink ? 'link' : 'file');
+    setSanctionLinkInput(isLink ? sanctionDoc.url : '');
+    setSanctionFileSel(null);
+    setShowSanctionModal(true);
+  };
+  const handleSanctionFile = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    setSanctionFileSel({ name: file.name, url: URL.createObjectURL(file) });
+    e.target.value = '';
+  };
+  const saveSanctionModal = () => {
+    let doc = null;
+    if (sanctionMode === 'file') {
+      if (!sanctionFileSel) { toast.error('Please select a file.'); return; }
+      doc = sanctionFileSel;
+    } else {
+      if (!sanctionLinkInput.trim()) { toast.error('Please enter a link.'); return; }
+      doc = { name: 'Sanction Letter', url: sanctionLinkInput.trim() };
+    }
+    setSanctionDoc(doc);
+    updateProject(project.id, { sanctionLetterLink: doc.url, sanctionLetterName: doc.name });
+    setShowSanctionModal(false);
+    toast.success('Sanction letter updated!');
+  };
 
   if (!project) {
     return <Layout><div className="pd-empty">Project not found. <button onClick={() => navigate('/projects')}>Go Back</button></div></Layout>;
@@ -31,10 +186,10 @@ const ProjectDetails = () => {
   const statusColors = { Active: '#15803d', Completed: '#15803d', Pending: '#a16207', 'On Hold': '#b91c1c', 'In Progress': '#c2410c' };
   const msIcons = { Completed: '✔', 'In Progress': '🟡', 'Not Started': '🔴', Delayed: '🔴' };
 
-  const budgetYears = Object.keys(project.budget || {});
-  const budgetHeads = budgetYears.length > 0 ? [...new Set(budgetYears.flatMap(y => Object.keys(project.budget[y])))] : [];
-  const yearTotal = (y) => Object.values(project.budget[y] || {}).reduce((s, v) => s + v, 0);
-  const headTotal = (h) => budgetYears.reduce((s, y) => s + (project.budget[y]?.[h] || 0), 0);
+  const activeBudget = editingBudget ? budgetDraft : budgetData;
+  const budgetYears = Object.keys(budgetData || {});
+  const yearTotal = (y) => Object.values(activeBudget[y] || {}).reduce((s, v) => s + Number(v || 0), 0);
+  const headTotal = (h) => budgetYears.reduce((s, y) => s + Number(activeBudget[y]?.[h] || 0), 0);
   const grandTotal = budgetYears.reduce((s, y) => s + yearTotal(y), 0);
 
   const renderTab = () => {
@@ -64,17 +219,6 @@ const ProjectDetails = () => {
                 <div className="pd-meta-row"><span>Grant Type</span><strong>{project.grantType}</strong></div>
                 <div className="pd-meta-row"><span>Project Status</span><strong style={{ color: statusColors[project.status] }}>{project.status}</strong></div>
               </div>
-              <div className="pd-progress-card">
-                <div className="pd-progress-icon"><i className="fa fa-line-chart"></i></div>
-                <span className="pd-progress-label">CURRENT PROGRESS</span>
-                <span className="pd-progress-value">{progress}%</span>
-                <div className="pd-progress-bar"><div className="pd-progress-fill" style={{ width: `${progress}%` }}></div></div>
-                <p className="pd-progress-note">
-                  {progress < 100
-                    ? `On track for Milestone ${project.milestones.filter(m => m.status === 'Completed').length + 1} completion.`
-                    : 'All milestones completed!'}
-                </p>
-              </div>
             </div>
           </div>
         </div>
@@ -88,30 +232,78 @@ const ProjectDetails = () => {
               <div className="pd-fund-item"><span>Funding Agency</span><strong>{project.fundingAgency}</strong></div>
               <div className="pd-fund-item"><span>Total Sanctioned</span><strong>{formatCurrency(project.amount)}</strong></div>
               <div className="pd-fund-item"><span>TIET Share</span><strong>{formatCurrency(project.tietShare)}</strong></div>
-              {project.sanctionLetterLink && (
-                <div className="pd-fund-item"><span>Sanction Letter</span><a href={project.sanctionLetterLink}><i className="fa fa-file-pdf-o"></i> View Document</a></div>
-              )}
+              <div className="pd-fund-item">
+                <span>Sanction Letter</span>
+                <div className="pd-sanction-view">
+                  {sanctionDoc ? (
+                    <a href={sanctionDoc.url} target="_blank" rel="noopener noreferrer"><i className={`fa ${/^https?:\/\//i.test(sanctionDoc.url) ? 'fa-link' : 'fa-file-pdf-o'}`}></i> {sanctionDoc.name}</a>
+                  ) : (
+                    <span className="pd-sanction-none">Not uploaded</span>
+                  )}
+                  <button
+                    className="pd-sanction-edit-btn"
+                    onClick={openSanctionModal}
+                    title={sanctionDoc ? 'Edit sanction letter' : 'Add sanction letter'}
+                  >
+                    <i className={`fa ${sanctionDoc ? 'fa-pencil' : 'fa-plus'}`}></i>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
           {budgetYears.length > 0 && (
             <div className="pd-card">
-              <h3 className="pd-card-title"><i className="fa fa-table"></i> Budget Breakdown</h3>
+              <div className="pd-budget-header">
+                <h3 className="pd-card-title" style={{ marginBottom: 0 }}><i className="fa fa-table"></i> Budget Breakdown</h3>
+                <div className="pd-budget-actions">
+                  {editingBudget ? (
+                    <>
+                      <button className="pd-ms-cancel" onClick={cancelBudgetEdit}>Cancel</button>
+                      <button className="pd-ms-save" onClick={saveBudgetEdit}><i className="fa fa-check"></i> Save Changes</button>
+                    </>
+                  ) : (
+                    <button className="pd-add-ms-btn" onClick={startBudgetEdit}><i className="fa fa-pencil"></i> Edit Budget</button>
+                  )}
+                </div>
+              </div>
               <div className="pd-budget-wrap">
                 <table className="pd-budget-table">
                   <thead>
                     <tr>
                       <th>Budget Head</th>
-                      {budgetYears.map((y, i) => <th key={y}>Year {i + 1}</th>)}
+                      {budgetYears.map((y, i) => <th key={y}>Year {i + 1} (₹)</th>)}
                       <th>Total</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {budgetHeads.map(h => (
-                      <tr key={h}>
-                        <td className="pd-bh-name">{h}</td>
-                        {budgetYears.map(y => <td key={y}>₹{(project.budget[y]?.[h] || 0).toLocaleString('en-IN')}</td>)}
-                        <td className="pd-bh-total">₹{headTotal(h).toLocaleString('en-IN')}</td>
-                      </tr>
+                    {budgetHeadTemplate.map(bh => (
+                      <React.Fragment key={bh.head}>
+                        <tr className="pd-budget-head-row">
+                          <td className="pd-budget-head-name">{bh.head}</td>
+                          {budgetYears.map(y => (
+                            <td key={y}>
+                              {editingBudget ? (
+                                <input
+                                  type="number"
+                                  className="pd-budget-edit-input"
+                                  value={budgetDraft[y]?.[bh.head] ?? 0}
+                                  onChange={e => updateBudgetCell(y, bh.head, e.target.value)}
+                                />
+                              ) : (
+                                <>₹{(budgetData[y]?.[bh.head] || 0).toLocaleString('en-IN')}</>
+                              )}
+                            </td>
+                          ))}
+                          <td className="pd-bh-total">₹{headTotal(bh.head).toLocaleString('en-IN')}</td>
+                        </tr>
+                        {bh.subItems.map(sub => (
+                          <tr key={sub} className="pd-budget-sub-row">
+                            <td className="pd-budget-sub-name">↳ {sub}</td>
+                            {budgetYears.map(y => <td key={y} className="pd-budget-sub-cell">—</td>)}
+                            <td></td>
+                          </tr>
+                        ))}
+                      </React.Fragment>
                     ))}
                     <tr className="pd-grand-row">
                       <td><strong>Grand Total</strong></td>
@@ -158,8 +350,8 @@ const ProjectDetails = () => {
                 <h4 className="pd-ms-form-title">New Milestone</h4>
                 <div className="pd-ms-form-grid">
                   <div className="pd-ms-field"><label>Milestone Name *</label><input type="text" value={newMs.name} onChange={e => setNewMs({...newMs, name: e.target.value})} placeholder="e.g. Prototype Delivery" /></div>
-                  <div className="pd-ms-field"><label>Deliverable</label><input type="text" value={newMs.deliverable} onChange={e => setNewMs({...newMs, deliverable: e.target.value})} placeholder="e.g. Working demo" /></div>
-                  <div className="pd-ms-field"><label>Due Date</label><input type="date" value={newMs.dueDate} onChange={e => setNewMs({...newMs, dueDate: e.target.value})} /></div>
+                  <div className="pd-ms-field"><label>Deliverable *</label><input type="text" value={newMs.deliverable} onChange={e => setNewMs({...newMs, deliverable: e.target.value})} placeholder="e.g. Working demo" /></div>
+                  <div className="pd-ms-field"><label>Due Date *</label><input type="date" value={newMs.dueDate} onChange={e => setNewMs({...newMs, dueDate: e.target.value})} /></div>
                   <div className="pd-ms-field"><label>Status</label>
                     <select value={newMs.status} onChange={e => setNewMs({...newMs, status: e.target.value})}>
                       {milestoneStatusOptions.map(s => <option key={s} value={s}>{s}</option>)}
@@ -182,9 +374,9 @@ const ProjectDetails = () => {
                       /* Inline Edit Mode */
                       <div className="pd-ms-edit-form">
                         <div className="pd-ms-form-grid">
-                          <div className="pd-ms-field"><label>Name</label><input type="text" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} /></div>
-                          <div className="pd-ms-field"><label>Deliverable</label><input type="text" value={editForm.deliverable} onChange={e => setEditForm({...editForm, deliverable: e.target.value})} /></div>
-                          <div className="pd-ms-field"><label>Due Date</label><input type="date" value={editForm.dueDate} onChange={e => setEditForm({...editForm, dueDate: e.target.value})} /></div>
+                          <div className="pd-ms-field"><label>Name *</label><input type="text" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} /></div>
+                          <div className="pd-ms-field"><label>Deliverable *</label><input type="text" value={editForm.deliverable} onChange={e => setEditForm({...editForm, deliverable: e.target.value})} /></div>
+                          <div className="pd-ms-field"><label>Due Date *</label><input type="date" value={editForm.dueDate} onChange={e => setEditForm({...editForm, dueDate: e.target.value})} /></div>
                           <div className="pd-ms-field"><label>Status</label>
                             <select value={editForm.status} onChange={e => setEditForm({...editForm, status: e.target.value})}>
                               {milestoneStatusOptions.map(s => <option key={s} value={s}>{s}</option>)}
@@ -207,7 +399,7 @@ const ProjectDetails = () => {
                           </div>
                         </div>
                         <p className="pd-tl-deliverable">{m.deliverable}</p>
-                        <span className="pd-tl-date"><i className="fa fa-calendar"></i> Due: {m.dueDate}</span>
+                        <span className="pd-tl-date"><i className="fa fa-calendar"></i> Due: {formatDate(m.dueDate)}</span>
                       </>
                     )}
                   </div>
@@ -232,10 +424,69 @@ const ProjectDetails = () => {
               <span className="pd-team-role pi">PI</span>
             </div>
           </div>
-          {project.coPIs.length > 0 && (
-            <div className="pd-card">
-              <h3 className="pd-card-title"><i className="fa fa-users"></i> Co-Investigators</h3>
-              {project.coPIs.map((c, i) => (
+          <div className="pd-card">
+            <div className="pd-ms-header">
+              <h3 className="pd-card-title"><i className="fa fa-users"></i> Co-PIs</h3>
+              <button className="pd-add-ms-btn" onClick={() => setShowCopiForm(!showCopiForm)}>
+                <i className="fa fa-plus"></i> Add Co-PI
+              </button>
+            </div>
+
+            {showCopiForm && (
+              <div className="pd-ms-add-form">
+                <h4 className="pd-ms-form-title">New Co-PI</h4>
+                <div className="pd-ms-form-grid">
+                  <div className="pd-ms-field"><label>Full Name *</label><input type="text" value={newCopi.name} onChange={e => setNewCopi({ ...newCopi, name: e.target.value })} placeholder="e.g. Dr. Robert Chen" /></div>
+                  <div className="pd-ms-field"><label>Type</label>
+                    <select value={newCopi.type} onChange={e => setNewCopi({ ...newCopi, type: e.target.value })}>
+                      <option value="internal">Internal</option>
+                      <option value="external">External</option>
+                    </select>
+                  </div>
+                  <div className="pd-ms-field"><label>{newCopi.type === 'internal' ? 'Department' : 'Institute'}</label>
+                    <input
+                      type="text"
+                      value={newCopi.type === 'internal' ? newCopi.department : newCopi.institute}
+                      onChange={e => setNewCopi(newCopi.type === 'internal' ? { ...newCopi, department: e.target.value } : { ...newCopi, institute: e.target.value })}
+                      placeholder={newCopi.type === 'internal' ? 'e.g. Computer Science & Engineering' : 'e.g. MIT CSAIL'}
+                    />
+                  </div>
+                  <div className="pd-ms-field"><label>Designation</label><input type="text" value={newCopi.designation} onChange={e => setNewCopi({ ...newCopi, designation: e.target.value })} placeholder="e.g. Professor" /></div>
+                </div>
+                <div className="pd-ms-form-actions">
+                  <button className="pd-ms-cancel" onClick={() => { setShowCopiForm(false); setNewCopi(emptyCopi); }}>Cancel</button>
+                  <button className="pd-ms-save" onClick={addCopi}><i className="fa fa-plus"></i> Add Co-PI</button>
+                </div>
+              </div>
+            )}
+
+            {coPIs.length > 0 ? coPIs.map((c, i) => (
+              editingCopiIdx === i ? (
+                <div key={i} className="pd-ms-add-form">
+                  <h4 className="pd-ms-form-title">Edit Co-PI</h4>
+                  <div className="pd-ms-form-grid">
+                    <div className="pd-ms-field"><label>Full Name *</label><input type="text" value={copiEditForm.name} onChange={e => setCopiEditForm({ ...copiEditForm, name: e.target.value })} /></div>
+                    <div className="pd-ms-field"><label>Type</label>
+                      <select value={copiEditForm.type} onChange={e => setCopiEditForm({ ...copiEditForm, type: e.target.value })}>
+                        <option value="internal">Internal</option>
+                        <option value="external">External</option>
+                      </select>
+                    </div>
+                    <div className="pd-ms-field"><label>{copiEditForm.type === 'internal' ? 'Department' : 'Institute'}</label>
+                      <input
+                        type="text"
+                        value={copiEditForm.type === 'internal' ? (copiEditForm.department || '') : (copiEditForm.institute || '')}
+                        onChange={e => setCopiEditForm(copiEditForm.type === 'internal' ? { ...copiEditForm, department: e.target.value } : { ...copiEditForm, institute: e.target.value })}
+                      />
+                    </div>
+                    <div className="pd-ms-field"><label>Designation</label><input type="text" value={copiEditForm.designation || ''} onChange={e => setCopiEditForm({ ...copiEditForm, designation: e.target.value })} /></div>
+                  </div>
+                  <div className="pd-ms-form-actions">
+                    <button className="pd-ms-cancel" onClick={cancelCopiEdit}>Cancel</button>
+                    <button className="pd-ms-save" onClick={saveCopiEdit}><i className="fa fa-check"></i> Save</button>
+                  </div>
+                </div>
+              ) : (
                 <div key={i} className="pd-team-card">
                   <div className="pd-team-avatar co">{c.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</div>
                   <div className="pd-team-info">
@@ -244,24 +495,37 @@ const ProjectDetails = () => {
                     <p className="pd-team-meta">{c.designation}</p>
                   </div>
                   <span className={`pd-team-role ${c.type}`}>{c.type === 'internal' ? 'Internal' : 'External'}</span>
+                  <button className="pd-copi-edit" onClick={() => startCopiEdit(i)} title="Edit Co-PI"><i className="fa fa-pencil"></i></button>
+                  <button className="pd-copi-remove" onClick={() => removeCopi(i)} title="Remove Co-PI"><i className="fa fa-trash"></i></button>
                 </div>
-              ))}
-            </div>
-          )}
+              )
+            )) : (
+              <p className="pd-doc-empty">No Co-PIs added yet.</p>
+            )}
+          </div>
         </div>
       );
 
       case 'Documents': return (
         <div className="pd-tab-content">
           <div className="pd-card">
-            <h3 className="pd-card-title"><i className="fa fa-folder-open"></i> Project Documents</h3>
-            {project.documents.length > 0 ? (
+            <div className="pd-ms-header">
+              <h3 className="pd-card-title"><i className="fa fa-folder-open"></i> Project Documents</h3>
+              <button className="pd-add-ms-btn" onClick={openAddDoc}>
+                <i className="fa fa-plus"></i> Add Document
+              </button>
+            </div>
+            {documents.length > 0 ? (
               <div className="pd-doc-list">
-                {project.documents.map((d, i) => (
+                {documents.map((d, i) => (
                   <div key={i} className="pd-doc-item">
                     <i className="fa fa-file-pdf-o pd-doc-icon"></i>
-                    <div className="pd-doc-info"><strong>{d.name}</strong><span>{d.type} &middot; {d.date}</span></div>
-                    <button className="pd-doc-dl"><i className="fa fa-download"></i></button>
+                    <div className="pd-doc-info"><strong>{d.name}</strong><span>{d.type} &middot; {formatDate(d.date)}</span></div>
+                    <div className="pd-doc-actions">
+                      {d.url && <a className="pd-doc-dl" href={d.url} target="_blank" rel="noopener noreferrer" title="View document"><i className="fa fa-eye"></i></a>}
+                      <button className="pd-doc-edit" onClick={() => openEditDoc(i)} title="Edit document"><i className="fa fa-pencil"></i></button>
+                      <button className="pd-doc-remove" onClick={() => removeDoc(i)} title="Delete document"><i className="fa fa-trash"></i></button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -284,23 +548,40 @@ const ProjectDetails = () => {
         </button>
         {/* Header */}
         <div className="pd-header">
-          <div className="pd-header-top">
-            <span className="pd-header-cat" style={{ color: categoryColors[project.category] || '#555' }}>
-              <i className="fa fa-flask"></i> {project.category.toUpperCase()}
-            </span>
+          <div className="pd-header-main">
+            <div className="pd-header-top">
+              <span className="pd-header-cat" style={{ color: categoryColors[project.category] || '#555' }}>
+                <i className="fa fa-flask"></i> {project.category.toUpperCase()}
+              </span>
+            </div>
+            <h1 className="pd-header-title">{project.title}</h1>
+            <div className="pd-header-meta">
+              <div className="pd-hm-item"><span>FUNDING AGENCY</span><strong>{project.fundingAgency}</strong></div>
+              <div className="pd-hm-item"><span>SANCTIONED AMOUNT</span><strong>₹ {project.amount.toLocaleString('en-IN')}</strong></div>
+            </div>
+            <div className="pd-header-meta">
+              <div className="pd-hm-item"><span>DURATION</span><strong>{project.durationYears * 12 + (project.durationMonths || 0)} Months ({formatDate(project.startDate)} — {formatDate(project.endDate)})</strong></div>
+            </div>
+            <div className="pd-header-actions">
+              <button className="pd-hire-btn" onClick={() => navigate(`/projects/${id}/recruit`)}><i className="fa fa-user-plus"></i> Hire JRF</button>
+              <button className="pd-hire-btn secondary" onClick={() => navigate(`/projects/${id}/recruit`)}><i className="fa fa-graduation-cap"></i> Hire Intern</button>
+            </div>
+          </div>
+          <div className="pd-header-side">
             <span className="pd-header-status" style={{ background: statusColors[project.status], color: '#FFF' }}>{project.status}</span>
-          </div>
-          <h1 className="pd-header-title">{project.title}</h1>
-          <div className="pd-header-meta">
-            <div className="pd-hm-item"><span>FUNDING AGENCY</span><strong>{project.fundingAgency}</strong></div>
-            <div className="pd-hm-item"><span>SANCTIONED AMOUNT</span><strong>₹ {project.amount.toLocaleString('en-IN')}</strong></div>
-          </div>
-          <div className="pd-header-meta">
-            <div className="pd-hm-item"><span>DURATION</span><strong>{project.durationYears * 12 + (project.durationMonths || 0)} Months ({project.startDate} — {project.endDate})</strong></div>
-          </div>
-          <div className="pd-header-actions">
-            <button className="pd-hire-btn" onClick={() => navigate(`/projects/${id}/recruit`)}><i className="fa fa-user-plus"></i> Hire JRF</button>
-            <button className="pd-hire-btn secondary" onClick={() => navigate(`/projects/${id}/recruit`)}><i className="fa fa-graduation-cap"></i> Hire Intern</button>
+            <button className="pd-header-edit-btn" onClick={() => navigate('/projects/create', { state: { editProject: project } })}>
+              <i className="fa fa-pencil"></i> Edit Project
+            </button>
+            <div className="pd-header-progress">
+              <span className="pd-progress-label">CURRENT PROGRESS</span>
+              <span className="pd-progress-value">{progress}%</span>
+              <div className="pd-progress-bar"><div className="pd-progress-fill" style={{ width: `${progress}%` }}></div></div>
+              <p className="pd-progress-note">
+                {progress < 100
+                  ? `On track for Milestone ${milestones.filter(m => m.status === 'Completed').length + 1} completion.`
+                  : 'All milestones completed!'}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -312,6 +593,84 @@ const ProjectDetails = () => {
         </div>
 
         {renderTab()}
+
+        {/* Add / Edit Document Modal */}
+        {showDocModal && (
+          <div className="pd-modal-overlay" onClick={() => setShowDocModal(false)}>
+            <div className="pd-modal" onClick={e => e.stopPropagation()}>
+              <h3 className="pd-modal-title">{editingDocIdx !== null ? 'Edit Document' : 'Add Document'}</h3>
+              <div className="pd-modal-field">
+                <label>Document Name <span className="req">*</span></label>
+                <input
+                  type="text"
+                  value={docForm.name}
+                  onChange={e => setDocForm({ ...docForm, name: e.target.value })}
+                  placeholder="e.g. Year 1 Progress Report"
+                />
+              </div>
+              <div className="pd-modal-field">
+                <label>Upload Document {editingDocIdx !== null && <span className="pd-modal-hint">(optional — replaces current file)</span>}</label>
+                <button type="button" className="pd-upload-label" onClick={() => docFileRef.current && docFileRef.current.click()}>
+                  <i className="fa fa-upload"></i> {docForm.url && !docForm.fileName ? 'Change file' : 'Select file'}
+                </button>
+                <input
+                  type="file"
+                  ref={docFileRef}
+                  style={{ display: 'none' }}
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                  onChange={handleDocFileSelect}
+                />
+                {docForm.fileName && <span className="pd-upload-selected"><i className="fa fa-check-circle"></i> {docForm.fileName}</span>}
+              </div>
+              <div className="pd-modal-actions">
+                <button className="pd-ms-cancel" onClick={() => setShowDocModal(false)}>Cancel</button>
+                <button className="pd-ms-save" onClick={saveDoc}><i className="fa fa-check"></i> {editingDocIdx !== null ? 'Save Changes' : 'Add Document'}</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Sanction Letter Modal (file or link) */}
+        {showSanctionModal && (
+          <div className="pd-modal-overlay" onClick={() => setShowSanctionModal(false)}>
+            <div className="pd-modal" onClick={e => e.stopPropagation()}>
+              <h3 className="pd-modal-title">Sanction Letter</h3>
+              <div className="pd-sanction-tabs">
+                <button type="button" className={`pd-sanction-tab ${sanctionMode === 'file' ? 'active' : ''}`} onClick={() => setSanctionMode('file')}>
+                  <i className="fa fa-upload"></i> Choose File
+                </button>
+                <button type="button" className={`pd-sanction-tab ${sanctionMode === 'link' ? 'active' : ''}`} onClick={() => setSanctionMode('link')}>
+                  <i className="fa fa-link"></i> Paste Link
+                </button>
+              </div>
+              {sanctionMode === 'file' ? (
+                <div className="pd-modal-field">
+                  <label>Choose File</label>
+                  <button type="button" className="pd-upload-label" onClick={() => sanctionInputRef.current && sanctionInputRef.current.click()}>
+                    <i className="fa fa-upload"></i> {sanctionFileSel ? 'Change file' : 'Select file from system'}
+                  </button>
+                  <input
+                    type="file"
+                    ref={sanctionInputRef}
+                    style={{ display: 'none' }}
+                    accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                    onChange={handleSanctionFile}
+                  />
+                  {sanctionFileSel && <span className="pd-upload-selected"><i className="fa fa-check-circle"></i> {sanctionFileSel.name}</span>}
+                </div>
+              ) : (
+                <div className="pd-modal-field">
+                  <label>Document Link</label>
+                  <input type="url" value={sanctionLinkInput} onChange={e => setSanctionLinkInput(e.target.value)} placeholder="https://… link to sanction letter" />
+                </div>
+              )}
+              <div className="pd-modal-actions">
+                <button className="pd-ms-cancel" onClick={() => setShowSanctionModal(false)}>Cancel</button>
+                <button className="pd-ms-save" onClick={saveSanctionModal}><i className="fa fa-check"></i> Save</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );
