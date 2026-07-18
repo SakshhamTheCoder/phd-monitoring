@@ -80,7 +80,7 @@ const Hod = ({ formData }) => {
           ></Recommendation>
           {body.approval && (
             <>
-            <p>List of 3 outside experts proposed by the HOD</p>
+            <p style={{ fontWeight: "bold", textAlign: "left" }}>List of 3 outside experts proposed by the HOD</p>
 
           {greater && lock && formData.outside_experts.length === 3 ? (
             <>
