@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import Layout from '../../components/dashboard/layout';
 import { sampleProjects, getProjectStats, filterProjects, formatCurrency } from '../../data/projectsData';
 import './ProjectsOverview.css';
@@ -7,8 +8,26 @@ import './ProjectsOverview.css';
 const ProjectsOverview = () => {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState('All');
+  const [projects, setProjects] = useState(sampleProjects);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const stats = getProjectStats();
-  const filteredProjects = filterProjects(sampleProjects, activeFilter);
+  const filteredProjects = filterProjects(projects, activeFilter);
+
+  const handleEdit = (e, project) => {
+    e.stopPropagation();
+    navigate('/projects/create', { state: { editProject: project } });
+  };
+
+  const handleDelete = (e, project) => {
+    e.stopPropagation();
+    setDeleteTarget(project);
+  };
+
+  const confirmDelete = () => {
+    setProjects((prev) => prev.filter((p) => p.id !== deleteTarget.id));
+    toast.success('Project deleted.');
+    setDeleteTarget(null);
+  };
 
   const filters = ['All', 'Active', 'Completed', 'In-house', 'Research', 'Consultancy', 'Industry', 'International'];
 
@@ -142,7 +161,6 @@ const ProjectsOverview = () => {
                 <tr key={project.id} onClick={() => navigate(`/projects/${project.id}`)} className="po-row-clickable">
                   <td>
                     <div className="po-project-title">{project.title}</div>
-                    <div className="po-project-id">ID: {project.id}</div>
                   </td>
                   <td>
                     <span className="po-category-badge" style={{ background: categoryColors[project.category]?.bg, color: categoryColors[project.category]?.color }}>
@@ -159,9 +177,22 @@ const ProjectsOverview = () => {
                     </span>
                   </td>
                   <td>
-                    <button className="po-action-btn" onClick={(e) => { e.stopPropagation(); }}>
-                      <i className="fa fa-ellipsis-v"></i>
-                    </button>
+                    <div className="po-action-buttons">
+                      <button
+                        className="po-icon-btn edit"
+                        title="Edit project"
+                        onClick={(e) => handleEdit(e, project)}
+                      >
+                        <i className="fa fa-pencil"></i>
+                      </button>
+                      <button
+                        className="po-icon-btn delete"
+                        title="Delete project"
+                        onClick={(e) => handleDelete(e, project)}
+                      >
+                        <i className="fa fa-trash"></i>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -171,6 +202,29 @@ const ProjectsOverview = () => {
             <div className="po-empty">No projects found for the selected filter.</div>
           )}
         </div>
+
+        {/* Delete Confirmation Modal */}
+        {deleteTarget && (
+          <div className="po-modal-overlay" onClick={() => setDeleteTarget(null)}>
+            <div className="po-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="po-modal-icon">
+                <i className="fa fa-exclamation-triangle"></i>
+              </div>
+              <h3 className="po-modal-title">Delete Project</h3>
+              <p className="po-modal-text">
+                Are you sure you want to delete <strong>{deleteTarget.title}</strong>? This action cannot be undone.
+              </p>
+              <div className="po-modal-actions">
+                <button className="po-modal-btn cancel" onClick={() => setDeleteTarget(null)}>
+                  Cancel
+                </button>
+                <button className="po-modal-btn confirm" onClick={confirmDelete}>
+                  <i className="fa fa-trash"></i> Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );

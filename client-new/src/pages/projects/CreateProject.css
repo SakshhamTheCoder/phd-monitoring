@@ -1,25 +1,25 @@
-.cp-container { padding: 1.5rem 2rem; background: #FAFAFA; font-family: 'Inter', sans-serif; min-height: 80vh; }
+.cp-container { padding: 1.5rem 2rem; background: #FAFAFA; font-family: 'Inter', sans-serif; font-weight: 400; min-height: 80vh; }
 .cp-back-link { background: none; border: none; color: #555; font-size: 0.8rem; font-weight: 600; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
 .cp-back-link:hover { color: #900; }
 .cp-wizard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
 .cp-wizard-header h1 { color: #900; font-size: 1.5rem; font-weight: 700; margin: 0; }
-.cp-draft-badge { background: #fee2e2; color: #b91c1c; padding: 0.3rem 1rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; }
+.cp-draft-badge { background: #fee2e2; color: #b91c1c; padding: 0.3rem 1rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
 
 /* Stepper */
 .cp-stepper { display: flex; align-items: center; justify-content: center; margin-bottom: 0.5rem; max-width: 600px; margin-left: auto; margin-right: auto; }
-.cp-step-dot { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; border: 2px solid #DDD; background: #FFF; color: #999; cursor: pointer; transition: all 0.2s; flex-shrink: 0; }
+.cp-step-dot { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 600; border: 2px solid #DDD; background: #FFF; color: #999; cursor: pointer; transition: all 0.2s; flex-shrink: 0; }
 .cp-step-dot.active { border-color: #900; color: #900; background: #FFF; box-shadow: 0 0 0 4px rgba(153,0,0,0.1); }
 .cp-step-dot.done { border-color: #900; background: #900; color: #FFF; }
 .cp-step-line { flex: 1; height: 2px; background: #DDD; margin: 0 0.25rem; }
 .cp-step-line.done { background: #900; }
 .cp-step-labels { display: flex; justify-content: space-between; max-width: 650px; margin: 0 auto 2rem; }
 .cp-step-label { font-size: 0.72rem; color: #999; font-weight: 500; text-align: center; width: 80px; }
-.cp-step-label.active { color: #900; font-weight: 700; }
+.cp-step-label.active { color: #900; font-weight: 600; }
 
 /* Step Content */
 .cp-step-content { background: #FFF; border-radius: 12px; padding: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 1.5rem; }
 .cp-step-header { margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: flex-start; }
-.cp-step-header h2 { font-size: 1.2rem; font-weight: 700; color: #222; margin: 0 0 0.3rem; }
+.cp-step-header h2 { font-size: 1.2rem; font-weight: 600; color: #222; margin: 0 0 0.3rem; }
 .cp-step-header h2 i { color: #900; margin-right: 0.5rem; }
 .cp-step-header p { font-size: 0.85rem; color: #777; margin: 0; }
 
@@ -36,16 +36,16 @@
 
 /* Section Card */
 .cp-section-card { background: #FAFAFA; border: 1px solid #EEE; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.25rem; }
-.cp-section-title { font-size: 1rem; font-weight: 700; color: #333; margin: 0 0 1rem; padding-left: 0.5rem; border-left: 3px solid #900; }
+.cp-section-title { font-size: 1rem; font-weight: 600; color: #333; margin: 0 0 1rem; padding-left: 0.5rem; border-left: 3px solid #900; }
 .cp-section-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
 
 /* PI Card */
 .cp-pi-card { display: flex; align-items: center; gap: 1rem; background: #FFF; padding: 1rem; border-radius: 10px; border: 1px solid #EEE; }
-.cp-pi-avatar, .cp-copi-avatar { width: 44px; height: 44px; border-radius: 50%; background: #900; color: #FFF; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0; }
+.cp-pi-avatar, .cp-copi-avatar { width: 44px; height: 44px; border-radius: 50%; background: #900; color: #FFF; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.85rem; flex-shrink: 0; }
 .cp-pi-info h4 { margin: 0; font-size: 1rem; color: #222; }
 .cp-pi-dept { color: #900; font-size: 0.85rem; margin: 0.1rem 0; font-weight: 500; }
 .cp-pi-meta { color: #888; font-size: 0.8rem; margin: 0; }
-.cp-role-badge { background: #fee2e2; color: #b91c1c; padding: 0.2rem 0.75rem; border-radius: 4px; font-size: 0.72rem; font-weight: 700; margin-left: auto; }
+.cp-role-badge { background: #fee2e2; color: #b91c1c; padding: 0.2rem 0.75rem; border-radius: 4px; font-size: 0.72rem; font-weight: 600; margin-left: auto; }
 
 /* Co-PI */
 .cp-copi-search { margin-bottom: 1rem; }

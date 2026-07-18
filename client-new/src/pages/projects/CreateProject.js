@@ -1,24 +1,52 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
-import { categoryOptions, fundingAgencies, facultyPI, internalFacultyList, budgetHeadTemplate, milestoneStatusOptions } from '../../data/projectsData';
+import { categoryOptions, fundingAgencies, facultyPI, internalFacultyList, budgetHeadTemplate, milestoneStatusOptions, updateProject, formatDate } from '../../data/projectsData';
 import { toast } from 'react-toastify';
 import './CreateProject.css';
 
 const STEPS = ['Basic Info', 'Team', 'Budget', 'Objectives', 'Milestones', 'Review'];
 
+const emptyForm = {
+  title: '', category: '', fundingAgency: '', description: '',
+  startDate: '', durationYears: 0, durationMonths: 0, endDate: '',
+  coPIs: [],
+  sanctionAmount: '', tietShare: '', sanctionLetterLink: '',
+  budget: { year1: {}, year2: {}, year3: {} },
+  objectives: [{ title: '', description: '' }],
+  milestones: [{ name: '', deliverable: '', dueDate: '', status: 'Not Started' }],
+};
+
+// Map an existing project record into the wizard's form shape for editing
+const buildFormFromProject = (p) => ({
+  title: p.title || '',
+  category: p.category || '',
+  fundingAgency: p.fundingAgency || '',
+  description: p.description || '',
+  startDate: p.startDate || '',
+  durationYears: p.durationYears || 0,
+  durationMonths: p.durationMonths || 0,
+  endDate: p.endDate || '',
+  coPIs: p.coPIs ? p.coPIs.map(c => ({ ...c })) : [],
+  sanctionAmount: p.amount != null ? String(p.amount) : '',
+  tietShare: p.tietShare != null ? String(p.tietShare) : '',
+  sanctionLetterLink: p.sanctionLetterLink && p.sanctionLetterLink !== '#' ? p.sanctionLetterLink : '',
+  budget: {
+    year1: p.budget?.year1 || {},
+    year2: p.budget?.year2 || {},
+    year3: p.budget?.year3 || {},
+  },
+  objectives: p.objectives?.length ? p.objectives.map(o => ({ ...o })) : [{ title: '', description: '' }],
+  milestones: p.milestones?.length ? p.milestones.map(m => ({ ...m })) : [{ name: '', deliverable: '', dueDate: '', status: 'Not Started' }],
+});
+
 const CreateProject = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const editProject = location.state?.editProject || null;
+  const isEditMode = !!editProject;
   const [currentStep, setCurrentStep] = useState(0);
-  const [form, setForm] = useState({
-    title: '', category: '', fundingAgency: '', description: '',
-    startDate: '', durationYears: 0, durationMonths: 0, endDate: '',
-    coPIs: [],
-    sanctionAmount: '', tietShare: '', sanctionLetterLink: '',
-    budget: { year1: {}, year2: {}, year3: {} },
-    objectives: [{ title: '', description: '' }],
-    milestones: [{ name: '', deliverable: '', dueDate: '', status: 'Not Started' }],
-  });
+  const [form, setForm] = useState(() => (editProject ? buildFormFromProject(editProject) : { ...emptyForm }));
   const [copiSearch, setCopiSearch] = useState('');
   const [showExtForm, setShowExtForm] = useState(false);
   const [extCopi, setExtCopi] = useState({ name: '', designation: '', institute: '', email: '', mobile: '', website: '' });
@@ -87,6 +115,28 @@ const CreateProject = () => {
   };
 
   const handleSubmit = () => {
+    if (isEditMode) {
+      updateProject(editProject.id, {
+        title: form.title,
+        category: form.category,
+        fundingAgency: form.fundingAgency,
+        description: form.description,
+        startDate: form.startDate,
+        endDate: form.endDate,
+        durationYears: parseInt(form.durationYears) || 0,
+        durationMonths: parseInt(form.durationMonths) || 0,
+        coPIs: form.coPIs,
+        objectives: form.objectives,
+        milestones: form.milestones,
+        budget: form.budget,
+        amount: parseInt(form.sanctionAmount) || 0,
+        tietShare: parseInt(form.tietShare) || 0,
+        sanctionLetterLink: form.sanctionLetterLink || '#',
+      });
+      toast.success('Project updated successfully!');
+      navigate('/projects');
+      return;
+    }
     localStorage.setItem('projectDraft', JSON.stringify(form));
     toast.success('Project submitted successfully!');
     navigate('/projects');
@@ -374,7 +424,7 @@ const CreateProject = () => {
               <div className="cp-review-row"><span>Title</span><strong>{form.title || '—'}</strong></div>
               <div className="cp-review-row"><span>Category</span><strong>{form.category || '—'}</strong></div>
               <div className="cp-review-row"><span>Funding Agency</span><strong>{form.fundingAgency || '—'}</strong></div>
-              <div className="cp-review-row"><span>Duration</span><strong>{form.startDate || '—'} to {form.endDate || '—'} ({form.durationYears}Y {form.durationMonths}M)</strong></div>
+              <div className="cp-review-row"><span>Duration</span><strong>{form.startDate ? formatDate(form.startDate) : '—'} to {form.endDate ? formatDate(form.endDate) : '—'} ({form.durationYears}Y {form.durationMonths}M)</strong></div>
               <div className="cp-review-row"><span>Description</span><strong style={{ textAlign: 'right', maxWidth: '75%', fontWeight: '500', fontSize: '0.8rem', lineHeight: '1.4' }}>{form.description ? (form.description.length > 150 ? form.description.substring(0, 150) + '...' : form.description) : '—'}</strong></div>
             </div>
             <div className="cp-review-card">
@@ -448,8 +498,8 @@ const CreateProject = () => {
           <i className="fa fa-arrow-left"></i> BACK TO PROJECTS
         </button>
         <div className="cp-wizard-header">
-          <h1>Create New Project Proposal</h1>
-          <span className="cp-draft-badge">DRAFT</span>
+          <h1>{isEditMode ? 'Edit Project' : 'Create New Project Proposal'}</h1>
+          <span className="cp-draft-badge">{isEditMode ? 'EDITING' : 'DRAFT'}</span>
         </div>
         {/* Stepper */}
         <div className="cp-stepper">
@@ -487,7 +537,7 @@ const CreateProject = () => {
               </button>
             ) : (
               <button className="cp-btn-primary" onClick={handleSubmit}>
-                <i className="fa fa-paper-plane"></i> Submit
+                <i className={`fa ${isEditMode ? 'fa-save' : 'fa-paper-plane'}`}></i> {isEditMode ? 'Save Changes' : 'Submit'}
               </button>
             )}
           </div>

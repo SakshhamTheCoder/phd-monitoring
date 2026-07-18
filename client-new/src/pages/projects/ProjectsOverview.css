@@ -2,6 +2,7 @@
   padding: 2rem;
   background-color: #FAFAFA;
   font-family: 'Inter', sans-serif;
+  font-weight: 400;
 }
 
 /* Header */
@@ -83,39 +84,26 @@
   letter-spacing: 0.5px;
 }
 
+/* One branded icon treatment for every KPI — the number stays the hero */
 .po-stat-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.85rem;
+  background: #f7ebeb;
+  color: #900;
 }
 
-.po-stat-icon.active {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-
-.po-stat-icon.completed {
-  background: #dcfce7;
-  color: #15803d;
-}
-
-.po-stat-icon.funding {
-  background: #fff7ed;
-  color: #c2410c;
-}
-
-.po-stat-icon.consultancy {
-  background: #fce7f3;
-  color: #9d174d;
-}
-
+.po-stat-icon.active,
+.po-stat-icon.completed,
+.po-stat-icon.funding,
+.po-stat-icon.consultancy,
 .po-stat-icon.international {
-  background: #e0e7ff;
-  color: #3730a3;
+  background: #f7ebeb;
+  color: #900;
 }
 
 .po-stat-value {
@@ -270,6 +258,7 @@
 .po-table td {
   padding: 1rem;
   font-size: 0.88rem;
+  font-weight: 400;
   color: #333;
   border-bottom: 1px solid #F0F0F0;
   vertical-align: middle;
@@ -285,7 +274,7 @@
 }
 
 .po-project-title {
-  font-weight: 600;
+  font-weight: 400;
   color: #222;
   font-size: 0.9rem;
   max-width: 280px;
@@ -298,16 +287,17 @@
 }
 
 .po-category-badge {
-  padding: 0.25rem 0.65rem;
-  border-radius: 4px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: capitalize;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
   white-space: nowrap;
 }
 
 .po-amount {
-  font-weight: 600;
+  font-weight: 400;
   color: #111;
 }
 
@@ -315,11 +305,12 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.3rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.72rem;
-  font-weight: 600;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 500;
   text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
 .po-status-dot {
@@ -328,17 +319,132 @@
   border-radius: 50%;
 }
 
-.po-action-btn {
-  background: none;
-  border: none;
-  color: #999;
-  font-size: 1rem;
-  cursor: pointer;
-  padding: 0.25rem;
+.po-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 }
 
-.po-action-btn:hover {
+.po-icon-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFF;
+  border: 1px solid #E5E5E5;
+  border-radius: 6px;
+  color: #666;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.po-icon-btn.edit:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  color: #2563eb;
+}
+
+/* Delete is a destructive action — red by default */
+.po-icon-btn.delete {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.po-icon-btn.delete:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #FFF;
+}
+
+/* Delete Confirmation Modal */
+.po-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.po-modal {
+  background: #FFF;
+  border-radius: 14px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.po-modal-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #fef2f2;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin: 0 auto 1rem;
+}
+
+.po-modal-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #111;
+  margin: 0 0 0.5rem;
+}
+
+.po-modal-text {
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.5;
+  margin: 0 0 1.5rem;
+}
+
+.po-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.po-modal-btn {
+  padding: 0.65rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.po-modal-btn.cancel {
+  background: #FFF;
+  border: 1px solid #DDD;
   color: #555;
+}
+
+.po-modal-btn.cancel:hover {
+  background: #f5f5f5;
+}
+
+.po-modal-btn.confirm {
+  background: #dc2626;
+  border: 1px solid #dc2626;
+  color: #FFF;
+}
+
+.po-modal-btn.confirm:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
 }
 
 .po-empty {
