@@ -31,7 +31,7 @@ return new class extends Migration
             $table->string('state')->nullable();
             $table->string('city')->nullable();
             $table->text('publisher')->nullable();
-            $table->integer('volume')->nullable();
+            $table->string('volume')->nullable();
             // page_no holds ranges like "1-18", not just integers, so it must be a string
             // (an integer column truncated those values — see the real schema).
             $table->string('page_no')->nullable();
