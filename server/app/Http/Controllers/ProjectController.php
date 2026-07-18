@@ -62,7 +62,14 @@ class ProjectController extends Controller {
         if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 400);
 
         $project = new Project();
-        $project->pi_faculty_code = optional($user->faculty)->faculty_code;
+        $piCode = optional($user->faculty)->faculty_code;
+        if (!$piCode && $request->filled('pi_faculty_code')) {
+            $piCode = (int) $request->input('pi_faculty_code');
+        }
+        if (!$piCode) {
+            return response()->json(['message' => 'A PI faculty is required to create a project.'], 400);
+        }
+        $project->pi_faculty_code = $piCode;
         $this->fill($project, $request);
         $project->save();
         return response()->json($project, 201);
@@ -73,6 +80,11 @@ class ProjectController extends Controller {
         $project = Project::find($id);
         if (!$project) return response()->json(['message' => 'Project not found'], 404);
         if (!$this->owns($user, $project)) return response()->json(['message' => 'Not authorized'], 403);
+        $validator = Validator::make($request->all(), [
+            'category' => 'sometimes|in:In-house,Research,Consultancy,Industry,International,Other',
+            'status' => 'sometimes|in:Active,Completed,Pending,On Hold',
+        ]);
+        if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 400);
         $this->fill($project, $request);
         if ($request->hasFile('sanction_letter')) {
             $project->sanction_letter_link = $this->saveUploadedFile($request->file('sanction_letter'), 'project_sanction', $project->id);
