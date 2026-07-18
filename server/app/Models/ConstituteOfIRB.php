@@ -38,7 +38,9 @@ class ConstituteOfIRB extends Model
     {
         $commonJSON = $this->fullCommonForm($user);
         return array_merge($commonJSON, [
-            'phd_title'=> $this->phd_title,
+            // Prefill from the student's profile title until this form carries its
+            // own (i.e. before the student first submits it).
+            'phd_title'=> $this->phd_title ?: $this->student->phd_title,
             'address' => $this->student->address,
             'objectives' => $this->student->objectives()?->where('type', 'draft')->get()->map(function ($objective) {
                 return $objective->objective;

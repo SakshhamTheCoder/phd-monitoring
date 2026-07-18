@@ -26,6 +26,7 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
     fathers_name: "",
     address: "",
     current_status: "",
+    gender: "",
     overall_progress: 0,
     cgpa: "",
   });
@@ -45,6 +46,9 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
         fathers_name: studentData.fathers_name || "",
         address: studentData.address || "",
         current_status: studentData.current_status || "",
+        // Exclude legacy null / invalid gender values so the dropdown shows "Select"
+        // instead of a broken option, forcing the admin to pick a valid one.
+        gender: ["Male", "Female"].includes(studentData.gender) ? studentData.gender : "",
         overall_progress: studentData.overall_progress || 0,
         cgpa: studentData.cgpa || "",
       });
@@ -68,6 +72,7 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
       ["email", "Email"],
       ["phone", "Phone"],
       ["roll_no", "Roll Number"],
+      ["gender", "Gender"],
     ];
     const missing = required
       .filter(([field]) => !String(formData[field] ?? "").trim())
@@ -167,6 +172,16 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
             label="Date of IRB"
             initialValue={formData.date_of_irb}
             onChange={(val) => handleChange("date_of_irb", val)}
+          />,
+          <DropdownField
+            label={"Gender"}
+            required={true}
+            initialValue={formData.gender}
+            onChange={(val) => handleChange("gender", val)}
+            options={[
+              { title: "Male", value: "Male" },
+              { title: "Female", value: "Female" },
+            ]}
           />,
         ]}
       />

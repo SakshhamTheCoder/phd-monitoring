@@ -263,6 +263,8 @@ trait GeneralFormList
             'first_name' => $student->user->first_name,
             'last_name' => $student->user->last_name,
             'phd_title' => $student->phd_title,
+            'phd_title_locked' => $student->phdTitleLocked(),
+            'gender' => $student->user->gender,
             'department_id' => $student->department_id,
             'overall_progress' => $student->overall_progress,
             'roll_no' => $student->roll_no,

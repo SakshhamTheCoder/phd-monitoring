@@ -18,7 +18,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
   const [showEditButton, setShowEditButton] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
-  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [isEditingInline, setIsEditingInline] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [showSupervisorDoctoralModal, setShowSupervisorDoctoralModal] = useState(false);
   const [courses, setCourses] = useState([]);
@@ -129,7 +129,7 @@ const [userRole, setUserRole] = useState('');
     navigate(pathname + "/presentation");
   };
 
-  const openEditProfile = () => {
+  const startInlineEdit = () => {
     setEditForm({
       phone: profile?.phone || '',
       address: profile?.address || '',
@@ -137,15 +137,23 @@ const [userRole, setUserRole] = useState('');
       phd_title: profile?.phd_title || '',
       cgpa: profile?.cgpa || '',
     });
-    setIsEditProfileOpen(true);
+    setIsEditingInline(true);
   };
 
-  const handleEditProfileSubmit = async () => {
-    const response = await customFetch(`${baseURL}/students/update-profile`, 'POST', editForm);
+  const cancelInlineEdit = () => {
+    setIsEditingInline(false);
+  };
+
+  const handleInlineSave = async () => {
+    // The PhD title is frozen once the IRB constitution form has been submitted;
+    // never send it in that case (the backend also enforces this).
+    const payload = { ...editForm };
+    if (profile?.phd_title_locked) delete payload.phd_title;
+    const response = await customFetch(`${baseURL}/students/update-profile`, 'POST', payload);
     if (response?.success) {
       toast.success('Profile updated successfully');
-      setProfile((prev) => ({ ...prev, ...editForm }));
-      setIsEditProfileOpen(false);
+      setProfile((prev) => ({ ...prev, ...payload }));
+      setIsEditingInline(false);
     } else {
       toast.error('Failed to update profile');
     }
@@ -175,12 +183,12 @@ const [userRole, setUserRole] = useState('');
     const personalInfo = [
       { label: "Roll Number", value: profile.roll_no },
       { label: "Email", value: email },
-      { label: "Phone", value: phone },
+      { label: "Phone", value: phone, field: "phone" },
       { label: "Department", value: department },
       // { label: 'Supervisors', value: supervisors?.join(', ') },
-      { label: "CGPA", value: cgpa },
-      { label: "Father's Name", value: fathers_name },
-      { label: "Address", value: address },
+      { label: "CGPA", value: cgpa, field: "cgpa" },
+      { label: "Father's Name", value: fathers_name, field: "fathers_name" },
+      { label: "Address", value: address, field: "address" },
       { label: "Current Status", value: current_status },
       { label: "Date of Admission", value: formatDate(date_of_registration) },
       { label: "Date of IRB", value: formatDate(date_of_irb) },
@@ -218,9 +226,29 @@ const [userRole, setUserRole] = useState('');
           <div className="student-header">
             <div className="student-header-text">
               <h2>{name}</h2>
-              <p className="student-sub">
-                {phd_title || "Ph.D. Title Not Available"}
-              </p>
+              {isEditingInline ? (
+                <div className="student-sub-edit">
+                  <input
+                    className="profile-inline-input"
+                    type="text"
+                    placeholder="Ph.D. Title"
+                    value={editForm.phd_title ?? ""}
+                    disabled={profile.phd_title_locked}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({ ...prev, phd_title: e.target.value }))
+                    }
+                  />
+                  {profile.phd_title_locked && (
+                    <small className="profile-lock-note">
+                      Locked — IRB constitution form already submitted.
+                    </small>
+                  )}
+                </div>
+              ) : (
+                <p className="student-sub">
+                  {phd_title || "Ph.D. Title Not Available"}
+                </p>
+              )}
             </div>
             <div className="student-progress">
               <CircularProgressbar
@@ -239,7 +267,19 @@ const [userRole, setUserRole] = useState('');
           <div className="student-info-grid">
             {personalInfo.map((item, idx) => (
               <div key={idx}>
-                <strong>{item.label}:</strong> {item.value || "—"}
+                <strong>{item.label}:</strong>{" "}
+                {isEditingInline && item.field ? (
+                  <input
+                    className="profile-inline-input"
+                    type="text"
+                    value={editForm[item.field] ?? ""}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({ ...prev, [item.field]: e.target.value }))
+                    }
+                  />
+                ) : (
+                  item.value || "—"
+                )}
               </div>
             ))}
           </div>
@@ -262,13 +302,21 @@ const [userRole, setUserRole] = useState('');
             {userRole !== "student" &&(<>
             <CustomButton text="View Forms" onClick={navigateToForms} />
             <CustomButton
-              text="View Presentations"
+              text="View Progress Monitoring"
               onClick={navigateToProgress}
               disabled={true}
             />
             </>)}
-            {userRole === "student" && (
-              <CustomButton text="Edit Profile" onClick={openEditProfile} />
+            {userRole === "student" && !isEditingInline && (
+              <button className="profile-edit-small" onClick={startInlineEdit}>
+                <i className="fa fa-pencil" aria-hidden="true"></i> Edit
+              </button>
+            )}
+            {userRole === "student" && isEditingInline && (
+              <>
+                <CustomButton text="Save" onClick={handleInlineSave} />
+                <CustomButton text="Cancel" onClick={cancelInlineEdit} variant="secondary" />
+              </>
             )}
             {showEditButton && (
               <>
@@ -512,35 +560,6 @@ const [userRole, setUserRole] = useState('');
           </CustomModal>
         )}
 
-        {/* Edit Profile Modal */}
-        <CustomModal isOpen={isEditProfileOpen} onClose={() => setIsEditProfileOpen(false)}>
-          <div style={{ padding: '1rem' }}>
-            <h3>Edit Profile</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-              {[
-                { label: 'Phone', key: 'phone' },
-                { label: "Father's Name", key: 'fathers_name' },
-                { label: 'Address', key: 'address' },
-                { label: 'PhD Title', key: 'phd_title' },
-                { label: 'CGPA', key: 'cgpa' },
-              ].map(({ label, key }) => (
-                <div key={key}>
-                  <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>{label}</label>
-                  <input
-                    type="text"
-                    value={editForm[key] || ''}
-                    onChange={(e) => setEditForm((prev) => ({ ...prev, [key]: e.target.value }))}
-                    style={{ width: '100%', padding: '0.5rem', borderRadius: '0.25rem', border: '1px solid #d1d5db', boxSizing: 'border-box' }}
-                  />
-                </div>
-              ))}
-              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
-                <CustomButton text="Cancel" onClick={() => setIsEditProfileOpen(false)} />
-                <CustomButton text="Submit" onClick={handleEditProfileSubmit} />
-              </div>
-            </div>
-          </div>
-        </CustomModal>
       </>
     );
   } else {

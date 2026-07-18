@@ -45,6 +45,19 @@ class Student extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    /**
+     * The PhD title is editable from the profile only until the student has
+     * submitted their IRB constitution form (its own "Title of Phd Thesis"
+     * field takes over from that point). student_lock flips to true once the
+     * student submits, and back to false if the form is returned for revision.
+     */
+    public function phdTitleLocked(): bool
+    {
+        return ConstituteOfIRB::where('student_id', $this->roll_no)
+            ->where('student_lock', true)
+            ->exists();
+    }
     public function getStudent()
     {
         return [
