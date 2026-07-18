@@ -5,7 +5,7 @@ import './NavBar.css';
 const buttonConfig = [
     { path: '/home', icon: <i class="fa fa-home" aria-hidden="true"></i>, text: 'Home', roles: ['student', 'hod','phd_coordinator','faculty','dordc', 'adordc','dra','director','doctoral','external','admin'] },
     { path: '/forms', icon: <i class="fa fa-file-text" aria-hidden="true"></i>, text: 'Forms', roles: ['student','hod','phd_coordinator','faculty','dordc', 'adordc','dra','director','doctoral','external','admin'] },
-    { path: '/presentation', icon: <i class="fa fa-tasks" aria-hidden="true"></i>, text: 'Presentations', roles: ['student','hod','phd_coordinator','faculty','dordc', 'adordc','dra','director','doctoral','admin'] },
+    { path: '/presentation', icon: <i class="fa fa-tasks" aria-hidden="true"></i>, text: 'Progress Monitoring', roles: ['student','hod','phd_coordinator','faculty','dordc', 'adordc','dra','director','doctoral','admin'] },
     { path: '/publications', icon: <i class="fa fa-book" aria-hidden="true"></i>, text: 'Publications', roles: ['student'] },
     { path: '/courses', icon: <i class="fa fa-graduation-cap" aria-hidden="true"></i>, text: 'Courses', roles: ['student','hod','phd_coordinator','admin'] },
     { path: '/students', icon: <i class="fa fa-users" aria-hidden="true"></i>, text: 'Students', roles: ['hod','phd_coordinator','faculty','dordc', 'adordc','dra','director','doctoral','external','admin'] },

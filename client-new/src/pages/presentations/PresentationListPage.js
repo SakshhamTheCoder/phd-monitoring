@@ -116,7 +116,7 @@ const PresentationListPage = () => {
     <Layout
       children={
         <>
-          <h1>Presentation List</h1>
+          <h1>Progress Monitoring List</h1>
 
           <SemesterStatsCard semesterName={semester_id} setFilters={setExtraFilter} />
 
@@ -127,14 +127,14 @@ const PresentationListPage = () => {
               sx={{ marginBottom: "16px" }}
             >
               <Tab label="Action Required" />
-              <Tab label="Upcoming Presentations" />
+              <Tab label="Upcoming Progress Monitoring" />
               <Tab label="Completed" />
               <Tab label="Not Scheduled" />
 
               <Tab label="Semester Off" />
               <Tab label="Not Submitted" />
 
-              <Tab label="All Presentations" />
+              <Tab label="All Progress Monitoring" />
             </Tabs>
           )}
           {extraFilter && <FilterBar onSearch={handleSearch} />}

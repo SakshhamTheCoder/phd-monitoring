@@ -383,7 +383,7 @@ const Student = ({ formData, refetchData = null, }) => {
           <GridContainer
             elements={[
               <FileUploadField required={true}
-                label={"Upload PDF"}
+                label={"Upload Presentation PDF"}
                 onChange={(file) => {
                   setFiles([{ key: "presentation_pdf", file }]);
                 }}
@@ -391,12 +391,16 @@ const Student = ({ formData, refetchData = null, }) => {
                 initialValue={formData.presentation_pdf}
                 required={true}
               />,
-               <FileUploadField
-                label={"Download Sample PDF"}
-               
-                 isLocked={true}
-                initialValue={formData.ppt_file}
-              />,
+              // Only show the sample when one has actually been set for this semester.
+              ...(formData.ppt_file
+                ? [
+                    <FileUploadField
+                      label={"Download Sample PDF"}
+                      isLocked={true}
+                      initialValue={formData.ppt_file}
+                    />,
+                  ]
+                : []),
             ]}
           />
           <CustomModal
