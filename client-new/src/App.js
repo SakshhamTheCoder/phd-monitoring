@@ -41,6 +41,7 @@ import ProjectsOverview from './pages/projects/ProjectsOverview';
 import CreateProject from './pages/projects/CreateProject';
 import ProjectDetails from './pages/projects/ProjectDetails';
 import ProjectRecruitment from './pages/projects/ProjectRecruitment';
+import Openings from './pages/projects/Openings';
 
 
 const App = () => {
@@ -93,6 +94,7 @@ const AppContent = () => {
 
               <Route path="/publications" element={<Publications />} />
               <Route path="/courses" element={<StudentCourses />} />
+              <Route path="/openings" element={<Openings />} />
 
             </>
           )}

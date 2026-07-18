@@ -8,6 +8,7 @@ const buttonConfig = [
     { path: '/forms', icon: <i class="fa fa-file-text" aria-hidden="true"></i>, text: 'Forms', roles: ['student', 'hod', 'phd_coordinator', 'faculty', 'dordc', 'adordc', 'dra', 'director', 'doctoral', 'external', 'admin'] },
     { path: '/presentation', icon: <i class="fa fa-tasks" aria-hidden="true"></i>, text: 'Presentations', roles: ['student', 'hod', 'phd_coordinator', 'faculty', 'dordc', 'adordc', 'dra', 'director', 'doctoral', 'admin'] },
     { path: '/publications', icon: <i class="fa fa-book" aria-hidden="true"></i>, text: 'Publications', roles: ['student'] },
+    { path: '/openings', icon: <i class="fa fa-bullhorn" aria-hidden="true"></i>, text: 'Openings', roles: ['student'] },
     { path: '/courses', icon: <i class="fa fa-graduation-cap" aria-hidden="true"></i>, text: 'Courses', roles: ['student', 'hod', 'phd_coordinator', 'admin'] },
     { path: '/students', icon: <i class="fa fa-users" aria-hidden="true"></i>, text: 'Students', roles: ['hod', 'phd_coordinator', 'faculty', 'dordc', 'adordc', 'dra', 'director', 'doctoral', 'external', 'admin'] },
     { path: '/faculty', icon: <i class="fa-solid fa-person-chalkboard"></i>, text: 'Faculty', roles: ['hod', 'phd_coordinator', 'dordc', 'adordc', 'dra', 'director', 'admin'] },
