@@ -36,7 +36,7 @@ const Openings = () => {
   useEffect(() => { loadData(); }, []);
 
   const posByKey = (key) => positions.find(p => p.posKey === key);
-  const appliedKeys = new Set(myApps.map(a => a.posKey));
+  const appliedKeys = new Set(myApps.map(a => String(a.posKey)));
   const openPositions = positions.filter(p => !p.deadline || p.deadline >= today);
   const closedPositions = positions.filter(p => p.deadline && p.deadline < today);
 
@@ -113,7 +113,7 @@ const Openings = () => {
         <button className="op-details-btn" onClick={() => setViewJob(pos)}><i className="fa fa-file-text-o"></i> View Details</button>
         {closed ? (
           <button className="op-apply-btn" disabled>Applications Closed</button>
-        ) : appliedKeys.has(pos.posKey) ? (
+        ) : appliedKeys.has(String(pos.posKey)) ? (
           <button className="op-apply-btn applied" disabled><i className="fa fa-check"></i> Applied</button>
         ) : (
           <button className="op-apply-btn" onClick={() => openApply(pos)}><i className="fa fa-paper-plane"></i> Apply Now</button>
@@ -193,7 +193,7 @@ const Openings = () => {
                 <button className="op-btn-outline" onClick={() => setViewJob(null)}>Close</button>
                 {viewJob.deadline && viewJob.deadline < today ? (
                   <button className="op-btn-primary" disabled style={{ opacity: 0.6 }}>Applications Closed</button>
-                ) : appliedKeys.has(viewJob.posKey) ? (
+                ) : appliedKeys.has(String(viewJob.posKey)) ? (
                   <button className="op-btn-primary" disabled style={{ background: '#dcfce7', color: '#15803d' }}><i className="fa fa-check"></i> Applied</button>
                 ) : (
                   <button className="op-btn-primary" onClick={() => { const p = viewJob; setViewJob(null); openApply(p); }}><i className="fa fa-paper-plane"></i> Apply Now</button>
