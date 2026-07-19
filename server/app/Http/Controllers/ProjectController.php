@@ -2,24 +2,13 @@
 namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Http\Controllers\Traits\SaveFile;
+use App\Http\Controllers\Traits\ProjectAuthorizes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class ProjectController extends Controller {
-    use SaveFile;
-
-    private $privileged = ['dordc','adordc','dra','director','admin'];
-
-    private function canManage($user) {
-        $role = optional($user->current_role)->role;
-        return in_array($role, array_merge(['faculty','hod','phd_coordinator'], $this->privileged));
-    }
-    private function owns($user, $project) {
-        $role = optional($user->current_role)->role;
-        if (in_array($role, $this->privileged)) return true;
-        return optional($user->faculty)->faculty_code == $project->pi_faculty_code;
-    }
+    use SaveFile, ProjectAuthorizes;
 
     public function index(Request $request) {
         $user = Auth::user();
@@ -46,7 +35,7 @@ class ProjectController extends Controller {
     }
 
     public function show($id) {
-        $project = Project::find($id);
+        $project = Project::with('milestones')->find($id);
         if (!$project) return response()->json(['message' => 'Project not found'], 404);
         return response()->json($project);
     }
