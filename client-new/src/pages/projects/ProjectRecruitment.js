@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
-import { getProjectById, positionTypes, sampleApplications, updateProject, formatDate } from '../../data/projectsData';
+import { positionTypes, formatDate } from '../../data/projectsData';
+import { apiGetProject, apiListPositions, apiAddPosition, apiUpdatePosition, apiDeletePosition, apiListApplications, apiSetApplicationStatus } from '../../api/projects';
 import { toast } from 'react-toastify';
 import './ProjectRecruitment.css';
 
@@ -10,18 +11,37 @@ const emptyPos = {
   cgpa: '', experience: '', stipend: '', startDate: '', endDate: '', deadline: '', description: '',
 };
 
+// Map the post-opening form to the backend position body.
+const toPositionBody = (f) => ({
+  type: f.type, title: f.title, openings: Number(f.openings) || 1,
+  stipend: f.stipend || '', deadline: f.deadline || null,
+  eligibility: f.eligibility || '', skills: f.skills || '',
+  min_cgpa: f.cgpa || '', description: f.description || '',
+});
+
 const ProjectRecruitment = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const project = getProjectById(id);
+  const [project, setProject] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState('positions');
   const [showPostForm, setShowPostForm] = useState(false);
   const [editingPosIdx, setEditingPosIdx] = useState(null);
   const [selectedApplicant, setSelectedApplicant] = useState(null);
   const [posForm, setPosForm] = useState(emptyPos);
-  const [positions, setPositions] = useState(() => (project ? [...(project.positions || [])] : []));
-  const [applications, setApplications] = useState(() => (project ? sampleApplications.filter(a => !a.projectId || a.projectId === project.id) : []));
+  const [positions, setPositions] = useState([]);
+  const [applications, setApplications] = useState([]);
 
+  const loadAll = async () => {
+    const [p, pos, apps] = await Promise.all([apiGetProject(id), apiListPositions(id), apiListApplications(id)]);
+    setProject(p); setPositions(pos); setApplications(apps); setLoading(false);
+  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { loadAll(); }, [id]);
+
+  if (loading) {
+    return <Layout><div style={{ textAlign: 'center', padding: '4rem', color: '#999' }}>Loading…</div></Layout>;
+  }
   if (!project) {
     return <Layout><div style={{ textAlign: 'center', padding: '4rem', color: '#999' }}>Project not found.</div></Layout>;
   }
@@ -49,33 +69,32 @@ const ProjectRecruitment = () => {
     setShowPostForm(true);
   };
   const closePostForm = () => { setShowPostForm(false); setEditingPosIdx(null); setPosForm(emptyPos); };
-  const publishPosition = () => {
+  const publishPosition = async () => {
     if (!posForm.type) { toast.error('Please select a position type.'); return; }
     if (!posForm.title.trim()) { toast.error('Position title is required.'); return; }
-    let updated;
-    if (editingPosIdx !== null) {
-      updated = positions.map((p, i) => (i === editingPosIdx ? { ...p, ...posForm, openings: Number(posForm.openings) || 1 } : p));
-    } else {
-      updated = [...positions, { ...posForm, openings: Number(posForm.openings) || 1, applicants: 0, shortlisted: 0, projectId: project.id, projectTitle: project.title }];
+    const body = toPositionBody(posForm);
+    const res = editingPosIdx !== null
+      ? await apiUpdatePosition(project.id, positions[editingPosIdx].id, body)
+      : await apiAddPosition(project.id, body);
+    if (res.success) {
+      setPositions(await apiListPositions(project.id));
+      toast.success(editingPosIdx !== null ? 'Position updated!' : 'Position published!');
+      closePostForm();
     }
-    setPositions(updated);
-    updateProject(project.id, { positions: updated });
-    toast.success(editingPosIdx !== null ? 'Position updated!' : 'Position published!');
-    closePostForm();
   };
-  const deletePosition = (i) => {
-    const updated = positions.filter((_, idx) => idx !== i);
-    setPositions(updated);
-    updateProject(project.id, { positions: updated });
-    toast.success('Position deleted.');
+  const deletePosition = async (i) => {
+    const res = await apiDeletePosition(project.id, positions[i].id);
+    if (res.success) { setPositions(prev => prev.filter((_, idx) => idx !== i)); toast.success('Position deleted.'); }
   };
 
   // ---- Application decisions ----
-  const setAppStatus = (newStatus) => {
-    const updated = applications.map(a => (a.id === selectedApplicant.id ? { ...a, status: newStatus } : a));
-    setApplications(updated);
-    setSelectedApplicant({ ...selectedApplicant, status: newStatus });
-    toast.success(`Marked as ${newStatus}.`);
+  const setAppStatus = async (newStatus) => {
+    const res = await apiSetApplicationStatus(selectedApplicant.id, newStatus);
+    if (res.success) {
+      setApplications(prev => prev.map(a => (a.id === selectedApplicant.id ? { ...a, status: newStatus } : a)));
+      setSelectedApplicant({ ...selectedApplicant, status: newStatus });
+      toast.success(`Marked as ${newStatus}.`);
+    }
   };
 
   return (
@@ -231,8 +250,8 @@ const ProjectRecruitment = () => {
                 <div className="pr-resume-info"><i className="fa fa-file-pdf-o"></i> <span>{selectedApplicant.resume || 'No resume attached'}</span></div>
                 {selectedApplicant.resume && (
                   <div className="pr-resume-btns">
-                    <button className="pr-resume-btn" onClick={() => toast.info('Opening resume preview…')}><i className="fa fa-eye"></i> View Resume</button>
-                    <button className="pr-resume-btn outline" onClick={() => toast.info('Downloading resume…')}><i className="fa fa-download"></i> Download</button>
+                    <a className="pr-resume-btn" href={selectedApplicant.resumeUrl} target="_blank" rel="noopener noreferrer"><i className="fa fa-eye"></i> View Resume</a>
+                    <a className="pr-resume-btn outline" href={selectedApplicant.resumeUrl} download target="_blank" rel="noopener noreferrer"><i className="fa fa-download"></i> Download</a>
                   </div>
                 )}
               </div>
