@@ -86,10 +86,28 @@ class SuggestionController extends Controller
         if (!$request->has('text')) {
             return response()->json([], 200);
         }
-        $examiners = ExaminersRecommendation::where('name', 'LIKE', '%' . $request->text . '%')
-            ->orWhere('email', 'LIKE', '%' . $request->text . '%')
-            ->orWhere('phone', 'LIKE', '%' . $request->text . '%')
+        // Word by word, in any order, for the same reason as suggestFaculty.
+        $tokens = preg_split('/[\s.,]+/', trim($request->text), -1, PREG_SPLIT_NO_EMPTY);
+
+        if (empty($tokens)) {
+            return response()->json([], 200);
+        }
+
+        $examinerQuery = ExaminersRecommendation::query();
+
+        foreach ($tokens as $token) {
+            $examinerQuery->where(function ($query) use ($token) {
+                $like = '%' . $token . '%';
+
+                $query->where('name', 'LIKE', $like)
+                    ->orWhere('email', 'LIKE', $like)
+                    ->orWhere('phone', 'LIKE', $like);
+            });
+        }
+
+        $examiners = $examinerQuery
             ->orderBy('name')
+            ->limit(25)
             ->get()
             ->makeHidden('added_by');
 
@@ -109,11 +127,35 @@ class SuggestionController extends Controller
             return response()->json([], 200);
         }
 
-        $facultyQuery = Faculty::with([]) // Include related user and department
-            ->whereHas('user', function ($query) use ($request) {
-            $query->where('first_name', 'LIKE', '%' . $request->text . '%')
-                ->orWhere('last_name', 'LIKE', '%' . $request->text . '%');
-        });
+        // Match each word separately rather than the whole string at once.
+        // Names are stored inconsistently, often entirely in first_name with a
+        // blank last name, so "Dr. S. S. Bhatia" was only findable by typing the
+        // punctuation exactly right: "S.S. Bhatia", "SS Bhatia" and "bhatia s"
+        // all found nothing. Splitting on spaces and punctuation means every
+        // word has to match something, in any order, and the search also covers
+        // email, faculty code and designation.
+        $tokens = preg_split('/[\s.,]+/', trim($request->text), -1, PREG_SPLIT_NO_EMPTY);
+
+        if (empty($tokens)) {
+            return response()->json([], 200);
+        }
+
+        $facultyQuery = Faculty::query();
+
+        foreach ($tokens as $token) {
+            $facultyQuery->where(function ($query) use ($token) {
+                $like = '%' . $token . '%';
+
+                $query->whereHas('user', function ($user) use ($like) {
+                    $user->where('first_name', 'LIKE', $like)
+                        ->orWhere('last_name', 'LIKE', $like)
+                        ->orWhere('email', 'LIKE', $like)
+                        ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", [$like]);
+                })
+                    ->orWhere('faculty_code', 'LIKE', $like)
+                    ->orWhere('designation', 'LIKE', $like);
+            });
+        }
 
         if (!empty($request->department_id)) {
             $department = Department::find($request->department_id);
@@ -123,10 +165,14 @@ class SuggestionController extends Controller
             $facultyQuery->where('department_id', $request->department_id);
         }
 
-        $facultyQuery->orderBy(User::select('first_name')->whereColumn('users.id', 'faculty.user_id'))
-            ->orderBy(User::select('last_name')->whereColumn('users.id', 'faculty.user_id'));
-
-        $faculty = $facultyQuery->get()->map(function ($faculty) {
+        $faculty = $facultyQuery->with(['user', 'department'])
+            ->orderBy(User::select('first_name')->whereColumn('users.id', 'faculty.user_id'))
+            ->orderBy(User::select('last_name')->whereColumn('users.id', 'faculty.user_id'))
+            // A single letter can match a large slice of the table, so cap what
+            // comes back. Anyone past this point should type another word.
+            ->limit(25)
+            ->get()
+            ->map(function ($faculty) {
             return [
             'id' => $faculty->faculty_code,
             'name' => $faculty->user->name(),
@@ -190,13 +236,33 @@ class SuggestionController extends Controller
             return response()->json([], 200);
         }
 
-        $outsideExperts = OutsideExpert::where('first_name', 'LIKE', '%' . $request->text . '%')
-            ->orWhere('last_name', 'LIKE', '%' . $request->text . '%')
-            ->orWhere('designation', 'LIKE', '%' . $request->text . '%')
-            ->orWhere('email', 'LIKE', '%' . $request->text . '%')
-            ->orWhere('phone', 'LIKE', '%' . $request->text . '%')
+        // Word by word, in any order, for the same reason as suggestFaculty.
+        $tokens = preg_split('/[\s.,]+/', trim($request->text), -1, PREG_SPLIT_NO_EMPTY);
+
+        if (empty($tokens)) {
+            return response()->json([], 200);
+        }
+
+        $expertQuery = OutsideExpert::query();
+
+        foreach ($tokens as $token) {
+            $expertQuery->where(function ($query) use ($token) {
+                $like = '%' . $token . '%';
+
+                $query->where('first_name', 'LIKE', $like)
+                    ->orWhere('last_name', 'LIKE', $like)
+                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", [$like])
+                    ->orWhere('designation', 'LIKE', $like)
+                    ->orWhere('email', 'LIKE', $like)
+                    ->orWhere('phone', 'LIKE', $like)
+                    ->orWhere('institution', 'LIKE', $like);
+            });
+        }
+
+        $outsideExperts = $expertQuery
             ->orderBy('first_name')
             ->orderBy('last_name')
+            ->limit(25)
             ->get()->map(function ($faculty) {
             return [
             'id' => $faculty->id,
