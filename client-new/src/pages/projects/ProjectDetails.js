@@ -1,9 +1,17 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
-import { getProjectById, formatCurrency, getMilestoneProgress, milestoneStatusOptions, updateProject, budgetHeadTemplate, formatDate } from '../../data/projectsData';
+import { formatCurrency, getMilestoneProgress, milestoneStatusOptions, budgetHeadTemplate, formatDate } from '../../data/projectsData';
+import { apiGetProject, apiUpdateProject, apiAddMilestone, apiUpdateMilestone, apiAddDocument, apiDeleteDocument, fileUrl, mapMilestone, mapDocument } from '../../api/projects';
 import { toast } from 'react-toastify';
 import './ProjectDetails.css';
+
+// Build the sanction-letter display object from a loaded project.
+const sanctionFromProject = (p) => {
+  if (!p || !p.sanctionLetterLink || p.sanctionLetterLink === '#') return null;
+  const isLink = /^https?:\/\//i.test(p.sanctionLetterLink);
+  return { name: p.sanctionLetterName || 'Sanction Letter', url: fileUrl(p.sanctionLetterLink), isLink };
+};
 
 const TABS = ['Overview', 'Funding & Budget', 'Milestones', 'Project Team', 'Documents'];
 
@@ -11,8 +19,9 @@ const ProjectDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Overview');
-  const project = getProjectById(id);
-  const [milestones, setMilestones] = useState(project ? [...project.milestones] : []);
+  const [project, setProject] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [milestones, setMilestones] = useState([]);
   const [editingIdx, setEditingIdx] = useState(null);
   const [editForm, setEditForm] = useState({ name: '', deliverable: '', dueDate: '', status: 'Not Started' });
   const [showAddForm, setShowAddForm] = useState(false);
@@ -26,24 +35,28 @@ const ProjectDetails = () => {
   };
   const startEdit = (i) => { setEditingIdx(i); setEditForm({ ...milestones[i] }); };
   const cancelEdit = () => { setEditingIdx(null); };
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!validateMilestone(editForm)) return;
-    const updated = [...milestones];
-    updated[editingIdx] = { ...editForm };
-    setMilestones(updated);
-    setEditingIdx(null);
-    toast.success('Milestone updated.');
+    const res = await apiUpdateMilestone(project.id, milestones[editingIdx].id, editForm);
+    if (res.success) {
+      setMilestones(prev => prev.map((x, i) => (i === editingIdx ? { ...x, ...editForm } : x)));
+      setEditingIdx(null);
+      toast.success('Milestone updated.');
+    }
   };
-  const addMilestone = () => {
+  const addMilestone = async () => {
     if (!validateMilestone(newMs)) return;
-    setMilestones([...milestones, { ...newMs }]);
-    setNewMs({ name: '', deliverable: '', dueDate: '', status: 'Not Started' });
-    setShowAddForm(false);
-    toast.success('Milestone added.');
+    const res = await apiAddMilestone(project.id, newMs);
+    if (res.success) {
+      setMilestones(prev => [...prev, mapMilestone(res.response)]);
+      setNewMs({ name: '', deliverable: '', dueDate: '', status: 'Not Started' });
+      setShowAddForm(false);
+      toast.success('Milestone added.');
+    }
   };
 
   // Budget breakdown inline editing
-  const [budgetData, setBudgetData] = useState(() => (project ? JSON.parse(JSON.stringify(project.budget || {})) : {}));
+  const [budgetData, setBudgetData] = useState({});
   const [editingBudget, setEditingBudget] = useState(false);
   const [budgetDraft, setBudgetDraft] = useState({});
   const startBudgetEdit = () => { setBudgetDraft(JSON.parse(JSON.stringify(budgetData))); setEditingBudget(true); };
@@ -51,49 +64,41 @@ const ProjectDetails = () => {
   const updateBudgetCell = (year, head, value) => {
     setBudgetDraft(prev => ({ ...prev, [year]: { ...prev[year], [head]: value === '' ? 0 : Number(value) } }));
   };
-  const saveBudgetEdit = () => {
-    setBudgetData(budgetDraft);
-    updateProject(project.id, { budget: budgetDraft });
-    setEditingBudget(false);
-    toast.success('Budget updated successfully!');
+  const saveBudgetEdit = async () => {
+    const res = await apiUpdateProject(project.id, { budget: budgetDraft });
+    if (res.success) { setBudgetData(budgetDraft); setEditingBudget(false); toast.success('Budget updated successfully!'); }
   };
 
   // Co-PI management
   const emptyCopi = { name: '', type: 'internal', department: '', institute: '', designation: '' };
-  const [coPIs, setCoPIs] = useState(() => (project ? [...(project.coPIs || [])] : []));
+  const [coPIs, setCoPIs] = useState([]);
   const [showCopiForm, setShowCopiForm] = useState(false);
   const [newCopi, setNewCopi] = useState(emptyCopi);
-  const addCopi = () => {
+  const addCopi = async () => {
     if (!newCopi.name.trim()) return;
     const updated = [...coPIs, { ...newCopi }];
-    setCoPIs(updated);
-    updateProject(project.id, { coPIs: updated });
-    setNewCopi(emptyCopi);
-    setShowCopiForm(false);
-    toast.success('Co-PI added successfully!');
+    const res = await apiUpdateProject(project.id, { co_pis: updated });
+    if (res.success) { setCoPIs(updated); setNewCopi(emptyCopi); setShowCopiForm(false); toast.success('Co-PI added successfully!'); }
   };
-  const removeCopi = (i) => {
+  const removeCopi = async (i) => {
     const updated = coPIs.filter((_, idx) => idx !== i);
-    setCoPIs(updated);
-    updateProject(project.id, { coPIs: updated });
-    toast.success('Co-PI removed.');
+    const res = await apiUpdateProject(project.id, { co_pis: updated });
+    if (res.success) { setCoPIs(updated); toast.success('Co-PI removed.'); }
   };
   const [editingCopiIdx, setEditingCopiIdx] = useState(null);
   const [copiEditForm, setCopiEditForm] = useState(emptyCopi);
   const startCopiEdit = (i) => { setEditingCopiIdx(i); setCopiEditForm({ ...emptyCopi, ...coPIs[i] }); };
   const cancelCopiEdit = () => setEditingCopiIdx(null);
-  const saveCopiEdit = () => {
+  const saveCopiEdit = async () => {
     if (!copiEditForm.name.trim()) return;
     const updated = coPIs.map((c, idx) => (idx === editingCopiIdx ? { ...copiEditForm } : c));
-    setCoPIs(updated);
-    updateProject(project.id, { coPIs: updated });
-    setEditingCopiIdx(null);
-    toast.success('Co-PI updated successfully!');
+    const res = await apiUpdateProject(project.id, { co_pis: updated });
+    if (res.success) { setCoPIs(updated); setEditingCopiIdx(null); toast.success('Co-PI updated successfully!'); }
   };
 
-  // Documents management
-  const emptyDocForm = { name: '', type: '', date: '', url: '', fileName: '' };
-  const [documents, setDocuments] = useState(() => (project ? [...(project.documents || [])] : []));
+  // Documents management (backend has no update endpoint -> edit = delete + re-upload)
+  const emptyDocForm = { name: '', type: '', file: null, fileName: '' };
+  const [documents, setDocuments] = useState([]);
   const [showDocModal, setShowDocModal] = useState(false);
   const [editingDocIdx, setEditingDocIdx] = useState(null);
   const [docForm, setDocForm] = useState(emptyDocForm);
@@ -102,55 +107,49 @@ const ProjectDetails = () => {
   const openEditDoc = (i) => {
     const d = documents[i];
     setEditingDocIdx(i);
-    setDocForm({ name: d.name || '', type: d.type || '', date: d.date || '', url: d.url || '', fileName: '' });
+    setDocForm({ name: d.name || '', type: d.type || '', file: null, fileName: '' });
     setShowDocModal(true);
   };
   const handleDocFileSelect = (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
     const ext = file.name.includes('.') ? file.name.split('.').pop().toUpperCase() : 'FILE';
-    setDocForm(prev => ({
-      ...prev,
-      fileName: file.name,
-      type: ext,
-      url: URL.createObjectURL(file),
-      date: new Date().toISOString().split('T')[0],
-      name: prev.name.trim() ? prev.name : file.name.replace(/\.[^.]+$/, ''),
-    }));
+    setDocForm(prev => ({ ...prev, file, fileName: file.name, type: ext, name: prev.name.trim() ? prev.name : file.name.replace(/\.[^.]+$/, '') }));
     e.target.value = '';
   };
-  const saveDoc = () => {
+  const saveDoc = async () => {
     if (!docForm.name.trim()) { toast.error('Please enter a document name.'); return; }
-    if (editingDocIdx === null && !docForm.url) { toast.error('Please select a file to upload.'); return; }
-    const doc = { name: docForm.name.trim(), type: docForm.type || 'FILE', date: docForm.date || new Date().toISOString().split('T')[0], url: docForm.url };
-    const updated = editingDocIdx !== null
-      ? documents.map((d, i) => (i === editingDocIdx ? { ...d, ...doc } : d))
-      : [...documents, doc];
-    setDocuments(updated);
-    updateProject(project.id, { documents: updated });
-    setShowDocModal(false);
-    toast.success(editingDocIdx !== null ? 'Document updated!' : 'Document uploaded successfully!');
+    if (!docForm.file) { toast.error('Please select a file.'); return; }
+    const fd = new FormData();
+    fd.append('name', docForm.name.trim());
+    fd.append('file', docForm.file);
+    if (editingDocIdx !== null) {
+      const old = documents[editingDocIdx];
+      if (old && old.id) await apiDeleteDocument(project.id, old.id);
+    }
+    const res = await apiAddDocument(project.id, fd);
+    if (res.success) {
+      const created = mapDocument(res.response);
+      setDocuments(prev => (editingDocIdx !== null ? prev.map((d, i) => (i === editingDocIdx ? created : d)) : [...prev, created]));
+      setShowDocModal(false);
+      toast.success(editingDocIdx !== null ? 'Document updated!' : 'Document uploaded successfully!');
+    }
   };
-  const removeDoc = (i) => {
-    const updated = documents.filter((_, idx) => idx !== i);
-    setDocuments(updated);
-    updateProject(project.id, { documents: updated });
-    toast.success('Document deleted.');
+  const removeDoc = async (i) => {
+    const d = documents[i];
+    const res = await apiDeleteDocument(project.id, d.id);
+    if (res.success) { setDocuments(prev => prev.filter((_, idx) => idx !== i)); toast.success('Document deleted.'); }
   };
 
-  // Sanction letter (file upload)
-  const [sanctionDoc, setSanctionDoc] = useState(() => (
-    project && project.sanctionLetterLink && project.sanctionLetterLink !== '#'
-      ? { name: project.sanctionLetterName || 'Sanction Letter', url: project.sanctionLetterLink }
-      : null
-  ));
+  // Sanction letter (file or link)
+  const [sanctionDoc, setSanctionDoc] = useState(null);
   const sanctionInputRef = useRef(null);
   const [showSanctionModal, setShowSanctionModal] = useState(false);
   const [sanctionMode, setSanctionMode] = useState('file');
   const [sanctionLinkInput, setSanctionLinkInput] = useState('');
   const [sanctionFileSel, setSanctionFileSel] = useState(null);
   const openSanctionModal = () => {
-    const isLink = sanctionDoc && /^https?:\/\//i.test(sanctionDoc.url);
+    const isLink = !!(sanctionDoc && sanctionDoc.isLink);
     setSanctionMode(isLink ? 'link' : 'file');
     setSanctionLinkInput(isLink ? sanctionDoc.url : '');
     setSanctionFileSel(null);
@@ -159,24 +158,51 @@ const ProjectDetails = () => {
   const handleSanctionFile = (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
-    setSanctionFileSel({ name: file.name, url: URL.createObjectURL(file) });
+    setSanctionFileSel({ name: file.name, file });
     e.target.value = '';
   };
-  const saveSanctionModal = () => {
-    let doc = null;
+  const saveSanctionModal = async () => {
     if (sanctionMode === 'file') {
-      if (!sanctionFileSel) { toast.error('Please select a file.'); return; }
-      doc = sanctionFileSel;
+      if (!sanctionFileSel || !sanctionFileSel.file) { toast.error('Please select a file.'); return; }
+      const fd = new FormData();
+      fd.append('sanction_letter', sanctionFileSel.file);
+      const res = await apiUpdateProject(project.id, fd, true);
+      if (res.success) {
+        const p = await apiGetProject(id);
+        if (p) setSanctionDoc(sanctionFromProject(p));
+        setShowSanctionModal(false);
+        toast.success('Sanction letter updated!');
+      }
     } else {
       if (!sanctionLinkInput.trim()) { toast.error('Please enter a link.'); return; }
-      doc = { name: 'Sanction Letter', url: sanctionLinkInput.trim() };
+      const res = await apiUpdateProject(project.id, { sanction_letter_link: sanctionLinkInput.trim(), sanction_letter_name: 'Sanction Letter' });
+      if (res.success) {
+        setSanctionDoc({ name: 'Sanction Letter', url: sanctionLinkInput.trim(), isLink: true });
+        setShowSanctionModal(false);
+        toast.success('Sanction letter updated!');
+      }
     }
-    setSanctionDoc(doc);
-    updateProject(project.id, { sanctionLetterLink: doc.url, sanctionLetterName: doc.name });
-    setShowSanctionModal(false);
-    toast.success('Sanction letter updated!');
   };
 
+  // Load the project on mount and sync all sub-states from it.
+  const loadProject = async () => {
+    const p = await apiGetProject(id);
+    if (p) {
+      setProject(p);
+      setMilestones(p.milestones || []);
+      setBudgetData(p.budget || {});
+      setCoPIs(p.coPIs || []);
+      setDocuments(p.documents || []);
+      setSanctionDoc(sanctionFromProject(p));
+    }
+    setLoading(false);
+  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { loadProject(); }, [id]);
+
+  if (loading) {
+    return <Layout><div className="pd-empty">Loading project…</div></Layout>;
+  }
   if (!project) {
     return <Layout><div className="pd-empty">Project not found. <button onClick={() => navigate('/projects')}>Go Back</button></div></Layout>;
   }
@@ -236,7 +262,7 @@ const ProjectDetails = () => {
                 <span>Sanction Letter</span>
                 <div className="pd-sanction-view">
                   {sanctionDoc ? (
-                    <a href={sanctionDoc.url} target="_blank" rel="noopener noreferrer"><i className={`fa ${/^https?:\/\//i.test(sanctionDoc.url) ? 'fa-link' : 'fa-file-pdf-o'}`}></i> {sanctionDoc.name}</a>
+                    <a href={sanctionDoc.url} target="_blank" rel="noopener noreferrer"><i className={`fa ${sanctionDoc.isLink ? 'fa-link' : 'fa-file-pdf-o'}`}></i> {sanctionDoc.name}</a>
                   ) : (
                     <span className="pd-sanction-none">Not uploaded</span>
                   )}
