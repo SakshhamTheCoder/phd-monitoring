@@ -127,6 +127,14 @@
     text-align: center;
 }
 
+/* Section headings placed inside a GridContainer element must read as headings:
+   left-aligned and bold (fixes headings that were being centred by .grid-item). */
+.grid-item p {
+    text-align: left;
+    font-weight: bold;
+    margin: 6px 0;
+}
+
 .span-1 {
     grid-column: span 1; /* Occupy 1 column */
 }
@@ -179,6 +187,16 @@
 
 .input-field[readonly] {
     background-color: #f9f9f9;
+}
+
+/* Disabled fields (e.g. a locked <select>) should match the readonly look
+   instead of the browser's washed-out default, and keep their text legible. */
+.input-field:disabled {
+    background-color: #f9f9f9;
+    color: #333;
+    -webkit-text-fill-color: #333;
+    opacity: 1;
+    cursor: not-allowed;
 }
 .recommendation-field {
     display: flex;

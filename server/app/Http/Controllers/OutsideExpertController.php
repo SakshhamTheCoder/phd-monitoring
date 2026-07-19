@@ -29,7 +29,8 @@ class OutsideExpertController extends Controller
                 $query = $this->applyDynamicFilters($query, $filters);
             }
 
-            $experts = $query->orderBy('created_at', 'desc')
+            $experts = $query->orderBy('first_name')
+                ->orderBy('last_name')
                 ->paginate($perPage, ['*'], 'page', $page);
 
             return response()->json([

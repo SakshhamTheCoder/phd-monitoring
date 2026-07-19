@@ -98,7 +98,7 @@ class PublicationController extends Controller
                 [
                     'impact_factor' => 'required|numeric',
                     'type' => 'required|in:sci,non-sci',
-                    'volume' => 'required|integer',
+                    'volume' => 'required|string',
                     'page_no' => 'required|string',
                 ]
                 );
@@ -127,7 +127,7 @@ class PublicationController extends Controller
                 $request->validate(
                 [
                     'issn' => 'required|integer',
-                    'volume' => 'required|integer',
+                    'volume' => 'required|string',
                     'page_no' => 'required|string',
                     'publisher' => 'required|string',
                 ]
@@ -212,7 +212,7 @@ class PublicationController extends Controller
                 $request->validate([
                     'impact_factor' => 'required|numeric',
                     'type' => 'required|in:sci,non-sci',
-                    'volume' => 'required|integer',
+                    'volume' => 'required|string',
                     'page_no' => 'required|string',
                 ]);
                 $publication->volume = $request->volume;
@@ -236,7 +236,7 @@ class PublicationController extends Controller
             case 'book':
                 $request->validate([
                     'issn' => 'required|integer',
-                    'volume' => 'required|integer',
+                    'volume' => 'required|string',
                     'page_no' => 'required|string',
                     'publisher' => 'required|string',
                 ]);

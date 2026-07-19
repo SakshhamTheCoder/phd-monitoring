@@ -7,6 +7,9 @@ import FilterBar from '../../components/filterBar/FilterBar';
 import PagenationTable from '../../components/pagenationTable/PagenationTable';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import UserForm from '../../components/userForm/UserForm';
+import NewUserKindPicker from '../../components/userForm/NewUserKindPicker';
+import StudentForm from '../../components/studentForm/StudentForm';
+import FacultyForm from '../../components/facultyForm/FacultyForm';
 import { baseURL } from '../../api/urls';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import { customFetch } from '../../api/base';
@@ -21,6 +24,10 @@ const UsersPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  // Which creation flow the admin picked: null (picker showing), 'student',
+  // 'faculty' or 'other'. Only used when creating, editing goes straight to
+  // UserForm as before.
+  const [createKind, setCreateKind] = useState(null);
   const { setLoading } = useLoading();
   const location = useLocation();
 
@@ -98,8 +105,23 @@ Jane,Smith,jane.smith@example.com,9876543210,female,faculty,"faculty,doctoral",a
       }
       setLoading(false);
     } else {
+      // Creating: start at the kind picker rather than the bare user form, so
+      // the student/faculty record gets created alongside the login.
       setEditData(null);
+      setCreateKind(null);
       setIsOpen(true);
+    }
+  };
+
+  // `saved` distinguishes a successful save from a dismissal. Re-keying the
+  // table refetches it, so doing that on every close made cancelling or hitting
+  // the X reload the whole list for nothing.
+  const closeUserModal = (saved = false) => {
+    setIsOpen(false);
+    setEditData(null);
+    setCreateKind(null);
+    if (saved) {
+      setRefreshKey(prev => prev + 1);
     }
   };
 
@@ -317,20 +339,27 @@ Jane,Smith,jane.smith@example.com,9876543210,female,faculty,"faculty,doctoral",a
           />
           <CustomModal
             isOpen={isOpen}
-            onClose={() => {
-              setIsOpen(false);
-              setRefreshKey(prev => prev + 1);
-            }}
-            width="800px"
+            onClose={() => closeUserModal(false)}
+            width={createKind === null && !editData ? '520px' : '80vw'}
           >
-            <UserForm
-              edit={!!editData}
-              userData={editData}
-              onClose={() => {
-                setIsOpen(false);
-                setRefreshKey(prev => prev + 1);
-              }}
-            />
+            {/* These forms only invoke onSuccess/onClose after a save completes,
+                so those close with saved=true. The modal's own X and the picker's
+                Cancel are dismissals and close without refetching. */}
+            {editData ? (
+              // Editing an existing user is unchanged, since the record already
+              // exists there is nothing to pick.
+              <UserForm edit={true} userData={editData} onClose={() => closeUserModal(true)} />
+            ) : createKind === null ? (
+              <NewUserKindPicker onSelect={setCreateKind} onCancel={() => closeUserModal(false)} />
+            ) : createKind === 'student' ? (
+              // Creates the User and Student record in one call.
+              <StudentForm onSuccess={() => closeUserModal(true)} onClose={() => closeUserModal(true)} />
+            ) : createKind === 'faculty' ? (
+              // Creates the User and Faculty record in one call.
+              <FacultyForm onSuccess={() => closeUserModal(true)} onClose={() => closeUserModal(true)} />
+            ) : (
+              <UserForm edit={false} userData={null} onClose={() => closeUserModal(true)} />
+            )}
           </CustomModal>
 
           {/* Bulk Import Modal */}

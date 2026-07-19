@@ -1,9 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import "./Fields.css";
 
 const DropdownField = ({ label, options, initialValue, isLocked, onChange, required = false }) => {
     const [value, updateValue] = useState(initialValue || "");
     const [showInitialValue, setShowInitialValue] = useState(!!initialValue);
+
+    // Keep in sync when initialValue arrives/changes after mount (e.g. edit-form prefill).
+    useEffect(() => {
+        if (initialValue !== undefined && initialValue !== null && initialValue !== "") {
+            updateValue(initialValue);
+            setShowInitialValue(true);
+        }
+    }, [initialValue]);
 
     const handleDropdownChange = (e) => {
         updateValue(e.target.value);

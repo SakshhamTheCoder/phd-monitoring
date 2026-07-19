@@ -9,7 +9,7 @@ import RoleBasedWrapper from "../roleWrapper/RoleBasedWrapper";
 const PresentationForm = ({formData, refetchData = null,}) => {
   return (
     <>
-      <FormTitleBar formName={"Presentation " + formData.period_of_report} formData={formData} />
+      <FormTitleBar formName={"Progress Monitoring " + formData.period_of_report} formData={formData} />
       <div className="form-container">
           
     <RoleBasedWrapper
@@ -37,11 +37,6 @@ const PresentationForm = ({formData, refetchData = null,}) => {
         <Recommendation
           formData={formData}
           role="dordc"
-          allowRejection={false}
-        ></Recommendation>
-       <Recommendation
-          formData={formData}
-          role="dra"
           allowRejection={false}
         ></Recommendation>
        </RoleBasedWrapper>

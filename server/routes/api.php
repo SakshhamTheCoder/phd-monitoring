@@ -169,7 +169,34 @@ Route::post('/switch-role', function (Request $request) {
             return response()->json([
                 'error' => 'Unauthorized'
             ], 401);
-        } else {
+        }
+
+        // Being granted a role is not the same as having the data it depends on.
+        // Roles are deliberately assigned before their linkage exists during
+        // provisioning, so this is the boundary where it has to hold: you may
+        // hold the role, but you cannot act as it until the record backing it
+        // exists. Without this, switching succeeded and every subsequent action
+        // failed with an opaque 403 (or a 500 on a missing faculty record).
+        // Gated by roles.enforce_backing, which is off by default, so existing
+        // accounts keep switching as before until an audit has been run against
+        // the real database. See config/roles.php.
+        $unmet = \App\Support\RoleRequirements::unmet($user, $role->role);
+        if ($unmet !== null) {
+            \Illuminate\Support\Facades\Log::warning('Role switch into a role with no backing record', [
+                'user_id' => $user->id,
+                'role' => $role->role,
+                'problem' => $unmet,
+                'enforced' => (bool) config('roles.enforce_backing'),
+            ]);
+
+            if (config('roles.enforce_backing')) {
+                return response()->json([
+                    'error' => "You cannot switch to this role because your account {$unmet}.",
+                ], 403);
+            }
+        }
+
+        {
             $user->current_role_id = $role->id;
             $user->save();
             $user->refresh();
@@ -275,6 +302,15 @@ Route::prefix('semester')->group(function () {
 Route::prefix('approval')->group(function () {
     require base_path('routes/base/approvals.php');
 });
+
+// Secure external-expert review (public, token-authenticated, the token is the credential).
+Route::prefix('external-review')->group(function () {
+    Route::get('/{token}', [\App\Http\Controllers\ExternalReviewController::class, 'show']);
+    Route::get('/{token}/pdf', [\App\Http\Controllers\ExternalReviewController::class, 'pdf']);
+    Route::post('/{token}', [\App\Http\Controllers\ExternalReviewController::class, 'submit']);
+});
+Route::post('irb-submissions/{id}/resend-external-review', [\App\Http\Controllers\ExternalReviewController::class, 'resend'])
+    ->middleware('auth:sanctum');
 Route::prefix('admin')->group(function () {
     require base_path('routes/base/admin.php');
 });

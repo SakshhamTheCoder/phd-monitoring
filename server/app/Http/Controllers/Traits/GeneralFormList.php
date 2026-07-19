@@ -60,6 +60,22 @@ trait GeneralFormList
             : count($formsQuery);
         $totalPages = ceil($total / $perPage);
 
+        // Sort alphabetically by the student's name, matching the "Name" column
+        // every form list shows. Form tables only carry student_id (a roll_no), so
+        // this hops students -> users via nested correlated subqueries. Applied
+        // before pagination so page 1 really is the first names alphabetically.
+        if ($formsQuery instanceof \Illuminate\Database\Eloquent\Builder) {
+            $formsTable = $formsQuery->getModel()->getTable();
+            foreach (['first_name', 'last_name'] as $nameColumn) {
+                $formsQuery->orderBy(
+                    \App\Models\User::select('users.' . $nameColumn)
+                        ->join('students', 'students.user_id', '=', 'users.id')
+                        ->whereColumn('students.roll_no', $formsTable . '.student_id')
+                        ->limit(1)
+                );
+            }
+        }
+
         $forms = $this->applyPagination($formsQuery, $page, $perPage);
 
         if ($forms instanceof \Illuminate\Database\Eloquent\Builder || $forms instanceof \Illuminate\Database\Query\Builder) {
@@ -263,6 +279,8 @@ trait GeneralFormList
             'first_name' => $student->user->first_name,
             'last_name' => $student->user->last_name,
             'phd_title' => $student->phd_title,
+            'phd_title_locked' => $student->phdTitleLocked(),
+            'gender' => $student->user->gender,
             'department_id' => $student->department_id,
             'overall_progress' => $student->overall_progress,
             'roll_no' => $student->roll_no,

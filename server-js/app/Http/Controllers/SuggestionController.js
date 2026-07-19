@@ -59,7 +59,8 @@ export const suggestSpecialization = async (req, res) => {
         broad_area: {
           [Op.like]: `%${text}%`
         }
-      }
+      },
+      order: [['broad_area', 'ASC']]
     });
 
     const result = specializations.map(spec => ({
@@ -103,7 +104,8 @@ export const suggestExaminer = async (req, res) => {
           { phone: { [Op.like]: `%${text}%` } }
         ]
       },
-      attributes: { exclude: ['added_by'] }
+      attributes: { exclude: ['added_by'] },
+      order: [['name', 'ASC']]
     });
 
     return res.status(200).json(examiners);
@@ -150,6 +152,10 @@ export const suggestFaculty = async (req, res) => {
           model: Department,
           as: 'department'
         }
+      ],
+      order: [
+        [{ model: User, as: 'user' }, 'first_name', 'ASC'],
+        [{ model: User, as: 'user' }, 'last_name', 'ASC']
       ]
     });
 
@@ -182,7 +188,8 @@ export const suggestDepartment = async (req, res) => {
     const departments = await Department.findAll({
       where: {
         department_name: { [Op.like]: `%${text}%` }
-      }
+      },
+      order: [['department_name', 'ASC']]
     });
 
     const result = departments.map(dept => ({
@@ -217,7 +224,8 @@ export const suggestOutsideExpert = async (req, res) => {
           { email: { [Op.like]: `%${text}%` } },
           { phone: { [Op.like]: `%${text}%` } }
         ]
-      }
+      },
+      order: [['first_name', 'ASC'], ['last_name', 'ASC']]
     });
 
     const result = outsideExperts.map(expert => ({

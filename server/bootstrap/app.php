@@ -24,6 +24,13 @@ return Application::configure(basePath: dirname(__DIR__))
             LogRequestResponse::class,
         ]);
 
+        // Blocks requests from a user whose current role has no backing record,
+        // so the ~30 unguarded `$user->faculty->faculty_code` style reads in the
+        // controllers cannot produce a 500. Runs after auth; no-ops for guests.
+        $middleware->append([
+            \App\Http\Middleware\EnsureCurrentRoleIsBacked::class,
+        ]);
+
         $middleware->alias([
             'add.approval' => \App\Http\Middleware\AddApprovalFlag::class,
         ]);

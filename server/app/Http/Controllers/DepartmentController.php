@@ -42,13 +42,19 @@ class DepartmentController extends Controller
             $facultyQuery = $this->applyDynamicFilters($facultyQuery, $filters);
         }
     
-        $faculties = $facultyQuery->paginate($perPage, ['*'], 'page', $page);
-    
+        $faculties = $facultyQuery->orderBy('name')->paginate($perPage, ['*'], 'page', $page);
+
         $result = $faculties->getCollection()->map(function ($department) {
             return [
                 'id' => $department->id,
                 'name' => $department->name,
                 'code' => $department->code,
+                // The table renders `fields` as flat keys on the row, so the HOD
+                // details are flattened here as well as kept nested below for the
+                // manage-department modal.
+                'hod_name' => optional(optional($department->hod)->user)->name(),
+                'hod_email' => optional(optional($department->hod)->user)->email,
+                'hod_phone' => optional(optional($department->hod)->user)->phone,
                 'hod' => $department->hod ? [
                     'faculty_code' => $department->hod->faculty_code,
                     'designation' => $department->hod->designation,
@@ -102,8 +108,8 @@ class DepartmentController extends Controller
             'current_page' => $faculties->currentPage(),
             'totalPages' => $faculties->lastPage(),
             'role' => $role,
-            'fields' => ['name', 'hod.user.name', 'hod.user.email', 'hod.user.phone', 'department'],
-            'fieldsTitles' => ['Name', 'HOD Name', 'Email', 'Phone', 'Department'],
+            'fields' => ['name', 'hod_name', 'hod_email', 'hod_phone'],
+            'fieldsTitles' => ['Name', 'HOD Name', 'Email', 'Phone'],
         ]);
     }
     
@@ -283,7 +289,7 @@ class DepartmentController extends Controller
                 $query = $this->applyDynamicFilters($query, $filters);
             }
 
-            $areas = $query->paginate($perPage, ['*'], 'page', $page);
+            $areas = $query->orderBy('name')->paginate($perPage, ['*'], 'page', $page);
 
             $result = $areas->getCollection()->map(function ($area) {
                 return [
@@ -532,27 +538,30 @@ class DepartmentController extends Controller
             ], 400);
         }
 
-        // If there's an existing HOD, revert their role to faculty
-        if($department->hod_id) {
-            $oldHod = Faculty::where('faculty_code', $department->hod_id)->first();
-            if($oldHod && $oldHod->user) {
-                $oldHod->user->role_id = Role::where('role', 'faculty')->first()->id;
-                $oldHod->user->current_role_id = $oldHod->user->role_id;
-                $oldHod->user->save();
+        // Demote the outgoing HOD, set the department linkage, then grant the
+        // role, in that order and atomically. Granting the role first (as this
+        // did) leaves a window where the user is an HOD of no department, and an
+        // error before the department save made that state permanent.
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $department, $faculty) {
+            if($department->hod_id) {
+                $oldHod = Faculty::where('faculty_code', $department->hod_id)->first();
+                if($oldHod && $oldHod->user) {
+                    $oldHod->user->role_id = Role::where('role', 'faculty')->first()->id;
+                    $oldHod->user->current_role_id = $oldHod->user->role_id;
+                    $oldHod->user->save();
+                }
             }
-        }
 
-        // Update new HOD's role
-        $user = $faculty->user;
-        $hodRole = Role::where('role', 'hod')->first();
-        $user->role_id = $hodRole->id;
-        $user->current_role_id = $hodRole->id;
-        $user->save();
-        
-        // Update department's HOD
-        $department->hod_id = $request->faculty_code;
-        $department->save();
-        
+            $department->hod_id = $request->faculty_code;
+            $department->save();
+
+            $user = $faculty->user;
+            $hodRole = Role::where('role', 'hod')->first();
+            $user->role_id = $hodRole->id;
+            $user->current_role_id = $hodRole->id;
+            $user->save();
+        });
+
         return response()->json([
             'message' => 'HOD assigned successfully'
         ], 200);
@@ -594,33 +603,35 @@ class DepartmentController extends Controller
         }
      
 
-        // If there's an existing ADORDC, revert their role to faculty
-        if($department->adordc_id) {
-            $oldAdordc = Faculty::where('faculty_code', $department->adordc_id)->first();
-            if($oldAdordc && $oldAdordc->user) {
-                $facultyRole = Role::where('role', 'faculty')->first();
-                $oldAdordc->user->role_id = $facultyRole->id;
-                $oldAdordc->user->current_role_id = $facultyRole->id;
-                $oldAdordc->user->save();
-            }
-        }
-
-        // Update new ADORDC's role
-        $user = $faculty->user;
         $adordcRole = Role::where('role', 'adordc')->first();
         if(!$adordcRole) {
             return response()->json([
                 'message' => 'ADORDC role not found in system'
             ], 404);
         }
-        $user->role_id = $adordcRole->id;
-        $user->current_role_id = $adordcRole->id;
-        $user->save();
-        
-        // Update department's ADORDC
-        $department->adordc_id = $request->faculty_code;
-        $department->save();
-        
+
+        // Demotion, linkage, then role, atomically. Same reasoning as addHOD.
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $department, $faculty, $adordcRole) {
+            // If there's an existing ADORDC, revert their role to faculty
+            if($department->adordc_id) {
+                $oldAdordc = Faculty::where('faculty_code', $department->adordc_id)->first();
+                if($oldAdordc && $oldAdordc->user) {
+                    $facultyRole = Role::where('role', 'faculty')->first();
+                    $oldAdordc->user->role_id = $facultyRole->id;
+                    $oldAdordc->user->current_role_id = $facultyRole->id;
+                    $oldAdordc->user->save();
+                }
+            }
+
+            $department->adordc_id = $request->faculty_code;
+            $department->save();
+
+            $user = $faculty->user;
+            $user->role_id = $adordcRole->id;
+            $user->current_role_id = $adordcRole->id;
+            $user->save();
+        });
+
         return response()->json([
             'success' => true,
             'message' => 'ADORDC assigned successfully'
@@ -678,17 +689,22 @@ class DepartmentController extends Controller
             ], 400);
         }
 
-        // Update role
-        $user = $faculty->user;
-        $coordinatorRole = Role::where('role', 'phd_coordinator')->first();
-        $user->role_id = $coordinatorRole->id;
-        $user->current_role_id = $coordinatorRole->id;
-        $user->save();
-        
-        PhdCoordinator::create([
-            'department_id' => $request->department_id,
-            'faculty_id' => $request->faculty_code
-        ]);
+        // Create the linkage before granting the role, and do both atomically.
+        // Previously the role was saved first and unwrapped, so a failure here
+        // left a user holding phd_coordinator with no phd_coordinators row -
+        // a role that looks assigned and silently rejects every action.
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $faculty) {
+            PhdCoordinator::create([
+                'department_id' => $request->department_id,
+                'faculty_id' => $request->faculty_code
+            ]);
+
+            $user = $faculty->user;
+            $coordinatorRole = Role::where('role', 'phd_coordinator')->first();
+            $user->role_id = $coordinatorRole->id;
+            $user->current_role_id = $coordinatorRole->id;
+            $user->save();
+        });
 
         return response()->json([
             'message' => 'PhD Coordinator added successfully'

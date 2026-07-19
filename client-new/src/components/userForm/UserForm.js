@@ -109,7 +109,14 @@ const UserForm = ({ edit, userData, onClose }) => {
       } else {
         toast.success(`User ${edit ? 'updated' : 'created'} successfully!`);
       }
-      
+
+      // Roles can be granted before the record backing them exists, so the save
+      // succeeds but the role won't work yet. Surface that instead of letting it
+      // fail silently later.
+      (response.warnings || []).forEach((warning) =>
+        toast.warn(warning, { autoClose: 10000 })
+      );
+
       onClose();
     } catch (error) {
       toast.error(error.message || `Failed to ${edit ? 'update' : 'create'} user`);
@@ -312,6 +319,15 @@ const UserForm = ({ edit, userData, onClose }) => {
           <label style={{ fontWeight: '600', marginBottom: '0.5rem', display: 'block' }}>
             Available Roles (Select multiple)
           </label>
+          <p style={{ fontSize: '0.8rem', color: '#92400e', background: '#fffbeb',
+                      border: '1px solid #fcd34d', borderRadius: '0.375rem',
+                      padding: '0.5rem 0.75rem', marginTop: 0, marginBottom: '0.5rem' }}>
+            Ticking a role here grants it, but does not create the record it depends on.
+            <strong> Hod</strong>, <strong>Phd_coordinator</strong> and <strong>Adordc</strong> are
+            assigned from the Departments page. <strong>Faculty</strong>-type roles need a faculty
+            record and <strong>Student</strong> needs a student record. Until those exist the user
+            cannot switch into the role.
+          </p>
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',

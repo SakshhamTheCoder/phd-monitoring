@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Role;
 use App\Models\Student;
 use App\Models\Department;
+use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -41,6 +42,7 @@ class StudentController extends Controller {
                 'department_id' => 'required|integer',
                 'date_of_registration' => 'required|date',
                 'current_status' => 'required|in:part-time,full-time,executive',
+                'gender' => 'required|in:Male,Female',
                 'date_of_irb' => 'nullable|date',
                 'phd_title' => 'nullable|string',
                 'fathers_name' => 'nullable|string',
@@ -59,6 +61,7 @@ class StudentController extends Controller {
         $user->email = $request->email;
         $user->password = bcrypt($password);
         $user->address = $request->address;
+        $user->gender = $request->gender;
         $user->role_id = $role_id;
         //crate new entry in users table
 
@@ -279,7 +282,12 @@ class StudentController extends Controller {
     if ($filters) {
         $studentsQuery = $this->applyDynamicFilters($studentsQuery, $filters);
     }
-    
+
+    // Sort alphabetically by the student's name. Ordered via a correlated subquery
+    // rather than a join so the eager loads and `select *` above stay intact.
+    $studentsQuery->orderBy(User::select('first_name')->whereColumn('users.id', 'students.user_id'))
+        ->orderBy(User::select('last_name')->whereColumn('users.id', 'students.user_id'));
+
     // Check if all flag is set
     if ($all) {
         $students = $studentsQuery->get();
@@ -390,6 +398,7 @@ class StudentController extends Controller {
             'department_id' => 'required|integer',
             'date_of_registration' => 'required|date',
             'current_status' => 'required|in:part-time,full-time,executive',
+            'gender' => 'required|in:Male,Female',
             'date_of_irb' => 'nullable|date',
             'phd_title' => 'nullable|string',
             'fathers_name' => 'nullable|string',
@@ -403,6 +412,7 @@ class StudentController extends Controller {
         $user->phone = $request->phone;
         $user->email = $request->email;
         if ($request->has('address')) $user->address = $request->address;
+        if ($request->has('gender')) $user->gender = $request->gender;
         $user->save();
 
         $student->department_id = $request->department_id;
@@ -441,7 +451,11 @@ class StudentController extends Controller {
         if ($student) {
             if ($request->has('address'))      $student->address      = $request->address;
             if ($request->has('fathers_name')) $student->fathers_name = $request->fathers_name;
-            if ($request->has('phd_title'))    $student->phd_title    = $request->phd_title;
+            // The PhD title can only be edited from the profile until the IRB
+            // constitution form is submitted; after that it is owned by that form.
+            if ($request->has('phd_title') && !$student->phdTitleLocked()) {
+                $student->phd_title = $request->phd_title;
+            }
             if ($request->has('cgpa'))         $student->cgpa         = $request->cgpa;
             $student->save();
         }

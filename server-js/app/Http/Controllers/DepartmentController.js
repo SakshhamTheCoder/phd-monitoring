@@ -169,8 +169,8 @@ export const list = async (req, res) => {
       current_page: page,
       totalPages: Math.ceil(count / perPage),
       role: role,
-      fields: ["name", "hod.user.name", "hod.user.email", "hod.user.phone", "department"],
-      fieldsTitles: ["Name", "HOD Name", "Email", "Phone", "Department"],
+      fields: ["name", "hod.user.name", "hod.user.email", "hod.user.phone"],
+      fieldsTitles: ["Name", "HOD Name", "Email", "Phone"],
     });
   } catch (error) {
     console.error("Error listing departments:", error);
@@ -384,6 +384,7 @@ export const listAreasOfSpecialization = async (req, res) => {
     const { count, rows: areas } = await AreaOfSpecialization.findAndCountAll({
       where: whereClause,
       include: ["department"],
+      order: [["name", "ASC"]],
       limit: perPage,
       offset: offset,
     });

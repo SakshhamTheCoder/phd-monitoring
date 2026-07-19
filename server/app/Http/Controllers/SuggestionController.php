@@ -8,6 +8,7 @@ use App\Models\ExaminersDetail;
 use App\Models\ExaminersRecommendation;
 use App\Models\Faculty;
 use App\Models\OutsideExpert;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -35,6 +36,7 @@ class SuggestionController extends Controller
 
         $specializations = BroadAreaSpecialization::where('department_id', $department->id)
             ->where('broad_area', 'LIKE', '%' . $request->text . '%')
+            ->orderBy('broad_area')
             ->get();
         foreach ($specializations as $specialization) {
             $specialization->name = $specialization->broad_area;
@@ -87,6 +89,7 @@ class SuggestionController extends Controller
         $examiners = ExaminersRecommendation::where('name', 'LIKE', '%' . $request->text . '%')
             ->orWhere('email', 'LIKE', '%' . $request->text . '%')
             ->orWhere('phone', 'LIKE', '%' . $request->text . '%')
+            ->orderBy('name')
             ->get()
             ->makeHidden('added_by');
 
@@ -120,6 +123,9 @@ class SuggestionController extends Controller
             $facultyQuery->where('department_id', $request->department_id);
         }
 
+        $facultyQuery->orderBy(User::select('first_name')->whereColumn('users.id', 'faculty.user_id'))
+            ->orderBy(User::select('last_name')->whereColumn('users.id', 'faculty.user_id'));
+
         $faculty = $facultyQuery->get()->map(function ($faculty) {
             return [
             'id' => $faculty->faculty_code,
@@ -143,6 +149,7 @@ class SuggestionController extends Controller
         }
 
         $departments = Department::where('name', 'LIKE', '%' . $request->text . '%')
+            ->orderBy('name')
             ->get()
             ->map(function ($department) {
             return [
@@ -169,6 +176,8 @@ class SuggestionController extends Controller
             ->orWhere('designation', 'LIKE', '%' . $request->text . '%')
             ->orWhere('email', 'LIKE', '%' . $request->text . '%')
             ->orWhere('phone', 'LIKE', '%' . $request->text . '%')
+            ->orderBy('first_name')
+            ->orderBy('last_name')
             ->get()->map(function ($faculty) {
             return [
             'id' => $faculty->id,

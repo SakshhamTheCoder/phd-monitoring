@@ -312,30 +312,8 @@ class IrbSubController extends Controller
                 throw new \Exception('Your Prefrences Saved, Form Will be submitted once all Supervisors approve',201);
             }
             else{
-                //send Email with accept reject link
-                $outsideExpert = $formInstance->student->outsideExpert();
-                if($outsideExpert){
-                $approval = Approval::create([
-                    'key' => Approval::generateKey(),
-                    'email' => $outsideExpert->email,
-                    'action' => 'review',
-                    'model_type' => get_class($formInstance),
-                    'model_id' => $formInstance->id,
-                ]);
-                $link= storage_path($formInstance->revised_irb_pdf);
-
-                Mail::send('emails.approval', [
-                    'name' => $outsideExpert->first_name . ' ' . $outsideExpert->last_name,
-                    'email' => $outsideExpert->email,
-                    'approverName' => $user->name(),
-                    'formId' => $formInstance->id,
-                    'approvalKey' => $approval->key,
-                ], function ($message) use ($outsideExpert, $link) {
-                    $message->to($outsideExpert->email)
-                            ->subject('IRB Submission Approval Request')
-                            ->attach($link); // This must be full path to the PDF
-                });            
-            }
+                // Email the outside expert a secure, single-use link to the review page.
+                $formInstance->sendExternalReviewRequest();
             }
         }
         else{

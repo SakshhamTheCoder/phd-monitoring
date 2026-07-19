@@ -9,6 +9,7 @@ import GridContainer from "../../components/forms/fields/GridContainer";
 import CustomButton from "../../components/forms/fields/CustomButton";
 import CustomModal from "../../components/forms/modal/CustomModal";
 import InputField from "../../components/forms/fields/InputField";
+import BulkAllocateSupervisors from "../../components/bulkAllocateSupervisors/BulkAllocateSupervisors";
 
 const FormListPage = () => {
   const location = useLocation();
@@ -18,7 +19,16 @@ const FormListPage = () => {
   const [modalButtonShow, setModalButtonShow] = useState(false);
   const [rollNumber, setRollNumber] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBulkAllocateOpen, setIsBulkAllocateOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [filters, setFilters] = useState({}); // Initialize filters state
+
+  // Only the PhD Coordinator allocates supervisors, and only from the
+  // department-wide allocation list (not a single student's form list).
+  const showBulkAllocate =
+    role === "phd_coordinator" &&
+    location.pathname === "/forms/supervisor-allocation";
+
   useEffect(() => {
     // Set the user role from localStorage
     setRole(localStorage.getItem("userRole"));
@@ -66,15 +76,37 @@ const FormListPage = () => {
             <>
               <FilterBar onSearch={handleSearch} />
               <PagenationTable
+                key={refreshKey}
                 endpoint={location.pathname}
                 filters={filters}
                 enableApproval={role !== "faculty" && role !== "admin"}
                 enableSelect={role !== "faculty" && role !== "admin"}
+                extraTopbarComponents={
+                  showBulkAllocate ? (
+                    <CustomButton
+                      text="Bulk Allocate"
+                      variant="secondary"
+                      onClick={() => setIsBulkAllocateOpen(true)}
+                    />
+                  ) : null
+                }
               />
             </>
           ) : (
             <FormList />
           )}
+          <CustomModal
+            isOpen={isBulkAllocateOpen}
+            onClose={() => setIsBulkAllocateOpen(false)}
+            width="90vw"
+          >
+            <BulkAllocateSupervisors
+              onSuccess={() => {
+                setIsBulkAllocateOpen(false);
+                setRefreshKey((prev) => prev + 1);
+              }}
+            />
+          </CustomModal>
           <CustomModal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}

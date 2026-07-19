@@ -77,3 +77,49 @@
   margin-top: 0.5rem;
   display: block;
 }
+
+/* Inline profile editing */
+.profile-inline-input {
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  box-sizing: border-box;
+  font-size: 0.9rem;
+}
+
+.profile-inline-input:disabled {
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.student-sub-edit {
+  margin-top: 0.35rem;
+  max-width: 520px;
+}
+
+.profile-lock-note {
+  display: block;
+  margin-top: 0.25rem;
+  color: #991b1b;
+  font-size: 0.75rem;
+}
+
+.profile-edit-small {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+  background: #fff;
+  color: #991b1b;
+  border: 1px solid #991b1b;
+  border-radius: 0.35rem;
+  cursor: pointer;
+}
+
+.profile-edit-small:hover {
+  background: #991b1b;
+  color: #fff;
+}

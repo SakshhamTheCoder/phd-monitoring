@@ -54,11 +54,24 @@
   
   .responsive-table th,
   .responsive-table td {
-    padding: 0.9rem 1rem;
+    padding: 0.9rem 0.75rem;
     text-align: left;
     border-bottom: 1px solid #e5e7eb;
   }
-  
+
+  /* Headers stay on one line so "Date of Admission" doesn't stack and
+     inflate the row height. */
+  .responsive-table th {
+    white-space: nowrap;
+  }
+
+  /* Dates, roll numbers, phone numbers and percentages read as single
+     tokens, wrapping them mid-value is what made the rows look ragged.
+     Names and emails are still free to wrap and absorb the slack. */
+  .responsive-table .col-tight {
+    white-space: nowrap;
+  }
+
   .responsive-table thead {
     background-color: #f3f4f6;
     color: #374151;

@@ -137,7 +137,9 @@ class UserManagementController extends Controller
             'current_role_id' => 'nullable|exists:roles,id',
             'default_role_id' => 'nullable|exists:roles,id',
             'available_roles' => 'nullable|array',
-            'available_roles.*' => 'string',
+            // Was 'string', which let a typo or a crafted request store a role
+            // name matching no roles row, an unswitchable, invisible dead role.
+            'available_roles.*' => 'string|exists:roles,role',
             'status' => 'nullable|in:active,inactive,suspended',
         ];
 
@@ -184,9 +186,21 @@ class UserManagementController extends Controller
 
         $user->save();
 
+        // Granting a role before its linkage exists is a supported workflow (an
+        // admin creates the user shell, then attaches the faculty/student record
+        // or the department assignment). So this warns rather than rejects, but
+        // it warns, because previously the admin got no signal at all that the
+        // role they just granted would silently do nothing.
+        $grantedRoles = array_filter(array_merge(
+            $request->available_roles ?? [],
+            [optional(\App\Models\Role::find($request->role_id))->role]
+        ));
+        $warnings = \App\Support\RoleRequirements::warningsFor($user->fresh(), $grantedRoles);
+
         return response()->json([
             'message' => $isUpdate ? 'User updated successfully' : 'User created successfully',
             'user' => $user,
+            'warnings' => $warnings,
             'password' => $isUpdate ? null : ($password ?? null),
         ]);
     }
