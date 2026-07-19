@@ -8,7 +8,7 @@ import InputSuggestions from "../forms/fields/InputSuggestions";
 import { useLoading } from '../../context/LoadingContext';
 import TableComponent from '../forms/table/TableComponent';
 
-const DepartmentManager = ({ departmentId, departmentName, currentHod, currentAdordc, currentCoordinators = [], onClose, onUpdate }) => {
+const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod, currentAdordc, currentCoordinators = [], onClose, onUpdate }) => {
   const [showHodModal, setShowHodModal] = useState(false);
   const [showAdordcModal, setShowAdordcModal] = useState(false);
   const [showCoordinatorModal, setShowCoordinatorModal] = useState(false);
@@ -172,12 +172,21 @@ const DepartmentManager = ({ departmentId, departmentName, currentHod, currentAd
     <div className="department-manager">
       <h2>Manage Department: {departmentName}</h2>
 
+      {hodEmail && (
+        <p style={{ margin: '0 0 1rem', fontSize: '0.85rem', color: '#374151' }}>
+          <strong>Official HOD email:</strong> {hodEmail}
+          <span style={{ color: '#6b7280' }}>
+            {' '}(belongs to the department, stays the same when the HOD changes)
+          </span>
+        </p>
+      )}
+
       <GridContainer
         label="Head of Department (HOD)"
         elements={[
           <div>
-            <CustomButton 
-              text={currentHod ? "Change HOD" : "Assign HOD"} 
+            <CustomButton
+              text={currentHod ? "Change HOD" : "Assign HOD"}
               onClick={() => {
                 setSelectedFaculty(null);
                 setShowHodModal(true);

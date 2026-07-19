@@ -143,9 +143,11 @@ class StudentController extends Controller {
         try {
             foreach ($request->students as $index => $studentData) {
                 try {
-                    // Find department by code
-                    $department = Department::where('code', $studentData['department_code'])->first();
-                    
+                    // Find department by code, accepting superseded codes so
+                    // spreadsheets saved before the codes were corrected still
+                    // import cleanly.
+                    $department = \App\Support\DepartmentCodes::resolve($studentData['department_code']);
+
                     if (!$department) {
                         $errors[] = "Row " . ($index + 1) . ": Department code '{$studentData['department_code']}' not found";
                         $failed++;

@@ -77,6 +77,7 @@ const DepartmentPage = () => {
               <DepartmentManager
                 departmentId={editData.id}
                 departmentName={editData.name || editData.department_name}
+                hodEmail={editData.hod_email}
                 currentHod={editData.hod}
                 currentAdordc={editData.adordc}
                 currentCoordinators={editData.phd_coordinators || []}
