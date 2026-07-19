@@ -25,6 +25,7 @@ export const mapPosition = (p) => ({
   applicants: p.applications_count ?? p.applicants ?? 0,
   shortlisted: p.shortlisted_count ?? p.shortlisted ?? 0,
   projectId: p.project_id, projectTitle: p.project ? p.project.title : p.project_title,
+  posKey: p.id,
 });
 export const mapApplication = (a) => ({
   id: a.id, name: a.name, email: a.email, phone: a.phone, degree: a.degree, institute: a.institute,
