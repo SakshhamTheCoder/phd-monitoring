@@ -6,106 +6,118 @@ use App\Models\Department;
 use Illuminate\Console\Command;
 
 /**
- * Populates the official departmental HoD addresses.
+ * Brings departments in line with the official listing on thapar.edu/academics:
+ * the full display name and the standing HoD address.
  *
- * Matches on department code rather than name, since names vary between the
- * official list and what is stored. Reports and does nothing unless --apply is
- * passed, because this is meant to be run against production.
+ * Matches on `code` and never writes it. Codes are the join key for the student
+ * and faculty CSV imports, and the faculty importer creates a department when a
+ * code does not resolve, so renaming codes would let one stale spreadsheet
+ * silently fill the table with duplicates. Names are display only, nothing
+ * resolves a department by name, so they are safe to correct.
  *
- * Derabassi campus departments are deliberately absent: the official list has
- * no address for them.
+ * This command only ever updates rows that already exist. It never creates a
+ * department and never deletes one.
  */
 class SetDepartmentHodEmails extends Command
 {
-    protected $signature = 'departments:set-hod-emails
+    protected $signature = 'departments:sync-official
                             {--apply : Write the changes. Without this the command only reports.}
-                            {--include-probable : Also apply the codes marked PROBABLE below.}
-                            {--overwrite : Replace addresses that are already set.}';
+                            {--emails-only : Set the HoD addresses but leave the display names alone.}
+                            {--overwrite-email : Replace HoD addresses that are already set to something else.}';
 
-    protected $description = 'Set the official HoD email on each department';
+    protected $description = 'Sync department names and official HoD emails with the institute listing';
 
     /**
-     * local code => [email, confident?, official name, official subdomain]
+     * local code => [official name, hod email, official subdomain]
      *
      * Every address is `h` plus the department's own subdomain as listed on
      * thapar.edu/academics, which is what makes these verifiable rather than
      * guessed: scbc.thapar.edu gives hscbc@thapar.edu, and so on.
      *
-     * The codes stored here do not always match the official abbreviation.
-     * DBT is btd, DCB is scbc, DOM is som, DEE is see, DPMS is spms and SHSS is
-     * smss, so the subdomain column is the evidence for each pairing.
+     * The codes stored here are not the official abbreviations. DBT is btd, DCB
+     * is scbc, DOM is som, DEE is see, DPMS is spms and SHSS is smss, so the
+     * subdomain is recorded as the evidence for each pairing.
      *
-     * LMTSM (lmtsm) and SLAS (tslas) are real departments with no HoD address
-     * in the official list, so they are deliberately absent, as are the Dera
-     * Bassi campus departments.
+     * LMTSM (lmtsm) and SLAS (tslas) are real departments with no HoD address in
+     * the official list, so they are deliberately absent, as are the Dera Bassi
+     * campus departments and DSAI.
      */
     private const MAPPING = [
-        'DBT'  => ['hbtd@thapar.edu',  true, 'Department of Biotechnology',                    'btd'],
-        'CHED' => ['hched@thapar.edu', true, 'Chemical Engineering',                           'ched'],
-        'CED'  => ['hced@thapar.edu',  true, 'Civil Engineering',                              'ced'],
-        'CSED' => ['hcsed@thapar.edu', true, 'Computer Science & Engineering',                 'csed'],
-        'EIED' => ['heied@thapar.edu', true, 'Electrical & Instrumentation Engineering',       'eied'],
-        'ECED' => ['heced@thapar.edu', true, 'Electronics & Communication Engineering',        'eced'],
-        'MED'  => ['hmed@thapar.edu',  true, 'Mechanical Engineering Department',              'med'],
-        'SHSS' => ['hsmss@thapar.edu', true, 'School of Humanities & Social Sciences',         'smss'],
-        'DPMS' => ['hspms@thapar.edu', true, 'Department of Physics & Materials Science',      'spms'],
-        'DCB'  => ['hscbc@thapar.edu', true, 'Department of Chemistry & Biochemistry',         'scbc'],
-        'DOM'  => ['hsom@thapar.edu',  true, 'Department of Mathematics',                      'som'],
-        'DEE'  => ['hsee@thapar.edu',  true, 'Department of Energy and Environment',           'see'],
+        'DBT'  => ['Biotechnology',                              'hbtd@thapar.edu',  'btd'],
+        'CHED' => ['Chemical Engineering',                       'hched@thapar.edu', 'ched'],
+        'CED'  => ['Civil Engineering',                          'hced@thapar.edu',  'ced'],
+        'CSED' => ['Computer Science & Engineering',             'hcsed@thapar.edu', 'csed'],
+        'EIED' => ['Electrical & Instrumentation Engineering',   'heied@thapar.edu', 'eied'],
+        'ECED' => ['Electronics & Communication Engineering',    'heced@thapar.edu', 'eced'],
+        'MED'  => ['Mechanical Engineering',                     'hmed@thapar.edu',  'med'],
+        'SHSS' => ['School of Humanities & Social Sciences',     'hsmss@thapar.edu', 'smss'],
+        'DPMS' => ['Physics & Materials Science',                'hspms@thapar.edu', 'spms'],
+        'DCB'  => ['Chemistry & Biochemistry',                   'hscbc@thapar.edu', 'scbc'],
+        'DOM'  => ['Mathematics',                                'hsom@thapar.edu',  'som'],
+        'DEE'  => ['Energy and Environment',                     'hsee@thapar.edu',  'see'],
     ];
 
     public function handle()
     {
         $apply = $this->option('apply');
-        $includeProbable = $this->option('include-probable');
-        $overwrite = $this->option('overwrite');
+        $emailsOnly = $this->option('emails-only');
+        $overwriteEmail = $this->option('overwrite-email');
 
         $rows = [];
         $toWrite = [];
         $missing = [];
 
-        foreach (self::MAPPING as $code => [$email, $confident, $officialName, $subdomain]) {
+        foreach (self::MAPPING as $code => [$officialName, $email, $subdomain]) {
             $department = Department::where('code', $code)->first();
-            $confidence = $confident ? $subdomain . '.thapar.edu' : 'PROBABLE';
 
             if (!$department) {
                 $missing[] = [$code, $officialName, $email];
-                $rows[] = [$code, $confidence, $email, 'NO SUCH DEPARTMENT', 'skip'];
+                $rows[] = [$code, $subdomain . '.thapar.edu', 'NOT IN THIS DATABASE', '', 'skip'];
                 continue;
             }
 
-            $current = $department->hod_email;
+            $changes = [];
 
-            if ($current === $email) {
-                $rows[] = [$code, $confidence, $email, $current, 'already set'];
+            if (!$emailsOnly && $department->name !== $officialName) {
+                $changes['name'] = $officialName;
+            }
+
+            $currentEmail = $department->hod_email;
+            if ($currentEmail !== $email) {
+                if ($currentEmail && !$overwriteEmail) {
+                    $this->warn("{$code} already has {$currentEmail}, leaving it (use --overwrite-email to replace).");
+                } else {
+                    $changes['hod_email'] = $email;
+                }
+            }
+
+            if (empty($changes)) {
+                $rows[] = [$code, $subdomain . '.thapar.edu', $department->name, $currentEmail ?? '(none)', 'up to date'];
                 continue;
             }
 
-            if ($current && !$overwrite) {
-                $rows[] = [$code, $confidence, $email, $current, 'has another address, skip (use --overwrite)'];
-                continue;
-            }
-
-            if (!$confident && !$includeProbable) {
-                $rows[] = [$code, $confidence, $email, $current ?? '(none)', 'skip (use --include-probable)'];
-                continue;
-            }
-
-            $rows[] = [$code, $confidence, $email, $current ?? '(none)', $apply ? 'WRITING' : 'would write'];
-            $toWrite[] = [$department, $email];
+            $rows[] = [
+                $code,
+                $subdomain . '.thapar.edu',
+                array_key_exists('name', $changes) ? $department->name . ' -> ' . $changes['name'] : $department->name,
+                array_key_exists('hod_email', $changes) ? ($currentEmail ?: '(none)') . ' -> ' . $changes['hod_email'] : ($currentEmail ?? '(none)'),
+                $apply ? 'WRITING' : 'would write',
+            ];
+            $toWrite[] = [$department, $changes];
         }
 
-        $this->table(['Code', 'Official site', 'Official email', 'Currently', 'Action'], $rows);
+        $this->table(['Code', 'Official site', 'Name', 'HoD email', 'Action'], $rows);
 
         if (!empty($missing)) {
-            $this->warn('These departments are not in this database, so nothing was set for them:');
+            $this->warn('Not in this database, so nothing was written for them:');
             foreach ($missing as [$code, $name, $email]) {
                 $this->line("  {$code}  {$name}  ({$email})");
             }
+            $this->line('No department is ever created by this command. Add them by hand if they should exist.');
         }
 
         if (empty($toWrite)) {
-            $this->info('Nothing to write.');
+            $this->info('Everything is already up to date.');
             return self::SUCCESS;
         }
 
@@ -115,12 +127,12 @@ class SetDepartmentHodEmails extends Command
             return self::SUCCESS;
         }
 
-        foreach ($toWrite as [$department, $email]) {
-            $department->hod_email = $email;
+        foreach ($toWrite as [$department, $changes]) {
+            $department->fill($changes);
             $department->save();
         }
 
-        $this->info('Updated ' . count($toWrite) . ' department(s).');
+        $this->info('Updated ' . count($toWrite) . ' department(s). Codes were not touched.');
 
         return self::SUCCESS;
     }
