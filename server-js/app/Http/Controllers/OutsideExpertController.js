@@ -12,7 +12,7 @@ export const list = async (req, res) => {
     const offset = (page - 1) * perPage;
 
     let queryOptions = {
-      order: [['created_at', 'DESC']],
+      order: [['first_name', 'ASC'], ['last_name', 'ASC']],
       limit: perPage,
       offset: offset
     };

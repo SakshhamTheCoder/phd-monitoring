@@ -342,6 +342,11 @@ export const list = async (req, res) => {
         { association: "supervisedStudents", include: ["user"] },
         { association: "doctoralCommittee", include: ["user"] },
       ],
+      // Sort alphabetically by the faculty member's name.
+      order: [
+        ["user", "first_name", "ASC"],
+        ["user", "last_name", "ASC"],
+      ],
       limit: perPage,
       offset: offset,
     });
