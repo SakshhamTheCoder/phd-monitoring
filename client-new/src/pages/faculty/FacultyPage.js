@@ -29,7 +29,7 @@ const FacultyPage = () => {
 
   const downloadSampleCSV = () => {
     const csvContent = `first_name,last_name,email,phone,designation,type,faculty_code,department_code,institution,website_link
-John,Doe,john.doe@example.com,1234567890,Professor,internal,FAC001,CSE,Thapar Institute of Engineering and Technology,https://johndoe.com
+John,Doe,john.doe@example.com,1234567890,Professor,internal,FAC001,CSED,Thapar Institute of Engineering and Technology,https://johndoe.com
 Jane,,jane.smith@example.com,9876543210,Associate Professor,external,,CHED,External University Name,https://janesmith.com`;
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });

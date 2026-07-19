@@ -3,64 +3,66 @@
 namespace App\Console\Commands;
 
 use App\Models\Department;
+use App\Support\DepartmentCodes;
 use Illuminate\Console\Command;
 
 /**
  * Brings departments in line with the official listing on thapar.edu/academics:
- * the full display name and the standing HoD address.
+ * the institute's own code, the full display name and the standing HoD address.
  *
- * Matches on `code` and never writes it. Codes are the join key for the student
- * and faculty CSV imports, and the faculty importer creates a department when a
- * code does not resolve, so renaming codes would let one stale spreadsheet
- * silently fill the table with duplicates. Names are display only, nothing
- * resolves a department by name, so they are safe to correct.
+ * All three come from one place. A department's subdomain is its code, and the
+ * HoD address is that subdomain with an h in front, so som.thapar.edu gives the
+ * code SOM and the address hsom@thapar.edu.
+ *
+ * Codes are the join key for the student and faculty CSV imports, so changing
+ * them is the risky part. Two things make it safe: the faculty importer no
+ * longer creates a department when a code does not resolve, and both importers
+ * go through DepartmentCodes::resolve, which still accepts the superseded codes.
+ * Spreadsheets saved before the rename keep working.
  *
  * This command only ever updates rows that already exist. It never creates a
- * department and never deletes one.
+ * department and never deletes one, and it refuses to rename a code onto one
+ * that is already taken.
  */
 class SetDepartmentHodEmails extends Command
 {
     protected $signature = 'departments:sync-official
                             {--apply : Write the changes. Without this the command only reports.}
-                            {--emails-only : Set the HoD addresses but leave the display names alone.}
+                            {--skip-codes : Leave codes alone, only sync names and HoD addresses.}
                             {--overwrite-email : Replace HoD addresses that are already set to something else.}';
 
-    protected $description = 'Sync department names and official HoD emails with the institute listing';
+    protected $description = 'Sync department codes, names and official HoD emails with the institute listing';
 
     /**
-     * local code => [official name, hod email, official subdomain]
+     * official code => [official name, hod email, official subdomain]
      *
-     * Every address is `h` plus the department's own subdomain as listed on
-     * thapar.edu/academics, which is what makes these verifiable rather than
-     * guessed: scbc.thapar.edu gives hscbc@thapar.edu, and so on.
-     *
-     * The codes stored here are not the official abbreviations. DBT is btd, DCB
-     * is scbc, DOM is som, DEE is see, DPMS is spms and SHSS is smss, so the
-     * subdomain is recorded as the evidence for each pairing.
+     * Keyed by the official code. Departments still stored under a superseded
+     * code are found through DepartmentCodes::LEGACY_ALIASES, so this command is
+     * idempotent: it works before the rename and after it.
      *
      * LMTSM (lmtsm) and SLAS (tslas) are real departments with no HoD address in
      * the official list, so they are deliberately absent, as are the Dera Bassi
      * campus departments and DSAI.
      */
     private const MAPPING = [
-        'DBT'  => ['Biotechnology',                              'hbtd@thapar.edu',  'btd'],
+        'BTD'  => ['Biotechnology',                              'hbtd@thapar.edu',  'btd'],
         'CHED' => ['Chemical Engineering',                       'hched@thapar.edu', 'ched'],
         'CED'  => ['Civil Engineering',                          'hced@thapar.edu',  'ced'],
         'CSED' => ['Computer Science & Engineering',             'hcsed@thapar.edu', 'csed'],
         'EIED' => ['Electrical & Instrumentation Engineering',   'heied@thapar.edu', 'eied'],
         'ECED' => ['Electronics & Communication Engineering',    'heced@thapar.edu', 'eced'],
         'MED'  => ['Mechanical Engineering',                     'hmed@thapar.edu',  'med'],
-        'SHSS' => ['School of Humanities & Social Sciences',     'hsmss@thapar.edu', 'smss'],
-        'DPMS' => ['Physics & Materials Science',                'hspms@thapar.edu', 'spms'],
-        'DCB'  => ['Chemistry & Biochemistry',                   'hscbc@thapar.edu', 'scbc'],
-        'DOM'  => ['Mathematics',                                'hsom@thapar.edu',  'som'],
-        'DEE'  => ['Energy and Environment',                     'hsee@thapar.edu',  'see'],
+        'SMSS' => ['School of Humanities & Social Sciences',     'hsmss@thapar.edu', 'smss'],
+        'SPMS' => ['Physics & Materials Science',                'hspms@thapar.edu', 'spms'],
+        'SCBC' => ['Chemistry & Biochemistry',                   'hscbc@thapar.edu', 'scbc'],
+        'SOM'  => ['Mathematics',                                'hsom@thapar.edu',  'som'],
+        'SEE'  => ['Energy and Environment',                     'hsee@thapar.edu',  'see'],
     ];
 
     public function handle()
     {
         $apply = $this->option('apply');
-        $emailsOnly = $this->option('emails-only');
+        $skipCodes = $this->option('skip-codes');
         $overwriteEmail = $this->option('overwrite-email');
 
         $rows = [];
@@ -68,7 +70,9 @@ class SetDepartmentHodEmails extends Command
         $missing = [];
 
         foreach (self::MAPPING as $code => [$officialName, $email, $subdomain]) {
-            $department = Department::where('code', $code)->first();
+            // Finds the department whether it still carries the superseded code
+            // or has already been renamed, which is what makes this idempotent.
+            $department = DepartmentCodes::resolveOfficial($code);
 
             if (!$department) {
                 $missing[] = [$code, $officialName, $email];
@@ -78,7 +82,21 @@ class SetDepartmentHodEmails extends Command
 
             $changes = [];
 
-            if (!$emailsOnly && $department->name !== $officialName) {
+            if (!$skipCodes && $department->code !== $code) {
+                // Never collapse two departments into one code. Codes have no
+                // unique index, so nothing at the database level would stop it.
+                $taken = Department::whereRaw('UPPER(code) = ?', [strtoupper($code)])
+                    ->where('id', '!=', $department->id)
+                    ->first();
+
+                if ($taken) {
+                    $this->error("{$department->code}: cannot rename to {$code}, department #{$taken->id} already uses it. Resolve by hand.");
+                } else {
+                    $changes['code'] = $code;
+                }
+            }
+
+            if ($department->name !== $officialName) {
                 $changes['name'] = $officialName;
             }
 
@@ -92,12 +110,12 @@ class SetDepartmentHodEmails extends Command
             }
 
             if (empty($changes)) {
-                $rows[] = [$code, $subdomain . '.thapar.edu', $department->name, $currentEmail ?? '(none)', 'up to date'];
+                $rows[] = [$department->code, $subdomain . '.thapar.edu', $department->name, $currentEmail ?? '(none)', 'up to date'];
                 continue;
             }
 
             $rows[] = [
-                $code,
+                array_key_exists('code', $changes) ? $department->code . ' -> ' . $changes['code'] : $department->code,
                 $subdomain . '.thapar.edu',
                 array_key_exists('name', $changes) ? $department->name . ' -> ' . $changes['name'] : $department->name,
                 array_key_exists('hod_email', $changes) ? ($currentEmail ?: '(none)') . ' -> ' . $changes['hod_email'] : ($currentEmail ?? '(none)'),
@@ -132,7 +150,7 @@ class SetDepartmentHodEmails extends Command
             $department->save();
         }
 
-        $this->info('Updated ' . count($toWrite) . ' department(s). Codes were not touched.');
+        $this->info('Updated ' . count($toWrite) . ' department(s). Nothing was created or deleted.');
 
         return self::SUCCESS;
     }
