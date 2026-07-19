@@ -247,6 +247,10 @@ Route::prefix('projects')->group(function () {
     require base_path('routes/base/projects.php');
 });
 
+Route::prefix('applications')->group(function () {
+    require base_path('routes/base/applications.php');
+});
+
 Route::prefix('faculty')->group(function () {
     require base_path('routes/base/faculties.php');
 });

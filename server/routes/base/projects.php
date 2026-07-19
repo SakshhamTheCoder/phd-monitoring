@@ -3,6 +3,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMilestoneController;
 use App\Http\Controllers\ProjectDocumentController;
 use App\Http\Controllers\ProjectPositionController;
+use App\Http\Controllers\PositionApplicationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/stats', [ProjectController::class, 'stats'])->middleware('auth:sanctum');
@@ -20,3 +21,4 @@ Route::get('/{id}/positions', [ProjectPositionController::class, 'index'])->midd
 Route::post('/{id}/positions', [ProjectPositionController::class, 'store'])->middleware('auth:sanctum');
 Route::post('/{id}/positions/{positionId}', [ProjectPositionController::class, 'update'])->middleware('auth:sanctum');
 Route::delete('/{id}/positions/{positionId}', [ProjectPositionController::class, 'destroy'])->middleware('auth:sanctum');
+Route::get('/{id}/applications', [PositionApplicationController::class, 'index'])->middleware('auth:sanctum');

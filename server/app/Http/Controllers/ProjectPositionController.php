@@ -16,7 +16,14 @@ class ProjectPositionController extends Controller {
     public function index($projectId) {
         $project = Project::find($projectId);
         if (!$project) return response()->json(['message' => 'Project not found'], 404);
-        return response()->json(ProjectPosition::where('project_id', $project->id)->orderByDesc('id')->get());
+        return response()->json(
+            ProjectPosition::where('project_id', $project->id)
+                ->withCount([
+                    'applications',
+                    'applications as shortlisted_count' => function ($q) { $q->where('status', 'Shortlisted'); },
+                ])
+                ->orderByDesc('id')->get()
+        );
     }
 
     public function store(Request $request, $projectId) {
