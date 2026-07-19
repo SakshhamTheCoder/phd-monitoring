@@ -47,6 +47,7 @@ class ProjectController extends Controller {
             'title' => 'required|string',
             'category' => 'required|in:In-house,Research,Consultancy,Industry,International,Other',
             'status' => 'nullable|in:Active,Completed,Pending,On Hold',
+            'pi_faculty_code' => 'sometimes|integer|exists:faculty,faculty_code',
         ]);
         if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 400);
 
