@@ -1,10 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Layout from '../../components/dashboard/layout';
-import { getAllPositions, getStudentApplications, addApplication, formatDate } from '../../data/projectsData';
+import { formatDate } from '../../data/projectsData';
+import { apiOpenings, apiApply, apiMyApplications } from '../../api/openings';
 import { toast } from 'react-toastify';
 import './Openings.css';
 
-const emptyApply = { name: '', email: '', phone: '', degree: '', institute: '', cgpa: '', skills: '', research: '', resume: '', coverNote: '' };
+const emptyApply = { name: '', email: '', phone: '', degree: '', institute: '', cgpa: '', skills: '', research: '', resume: '', resumeFile: null, coverNote: '' };
 
 const statusColors = {
   Applied: { bg: '#e0e7ff', color: '#3730a3' },
@@ -20,10 +21,18 @@ const Openings = () => {
   const [applyFor, setApplyFor] = useState(null);
   const [viewJob, setViewJob] = useState(null);
   const [form, setForm] = useState(emptyApply);
-  const [myApps, setMyApps] = useState(getStudentApplications());
+  const [positions, setPositions] = useState([]);
+  const [myApps, setMyApps] = useState([]);
   const resumeRef = useRef(null);
 
-  const positions = getAllPositions();
+  const loadData = async () => {
+    const [pos, apps] = await Promise.all([apiOpenings(), apiMyApplications()]);
+    setPositions(pos);
+    setMyApps(apps);
+  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { loadData(); }, []);
+
   const posByKey = (key) => positions.find(p => p.posKey === key);
   const appliedKeys = new Set(myApps.map(a => a.posKey));
   const openPositions = positions.filter(p => !p.deadline || p.deadline >= today);
@@ -32,35 +41,31 @@ const Openings = () => {
   const openApply = (pos) => { setForm(emptyApply); setApplyFor(pos); };
   const handleResume = (e) => {
     const f = e.target.files && e.target.files[0];
-    if (f) setForm(prev => ({ ...prev, resume: f.name }));
+    if (f) setForm(prev => ({ ...prev, resume: f.name, resumeFile: f }));
     e.target.value = '';
   };
-  const submitApply = () => {
+  const submitApply = async () => {
     if (!form.name.trim() || !form.email.trim() || !form.phone.trim()) { toast.error('Please fill in your contact details.'); return; }
     if (!form.degree.trim() || !form.institute.trim() || !form.cgpa.trim()) { toast.error('Please fill in your academic details.'); return; }
-    if (!form.resume) { toast.error('Please attach your resume.'); return; }
-    addApplication({
-      name: form.name.trim(),
-      email: form.email.trim(),
-      phone: form.phone.trim(),
-      degree: form.degree.trim(),
-      institute: form.institute.trim(),
-      cgpa: form.cgpa.trim(),
-      skills: form.skills ? form.skills.split(',').map(s => s.trim()).filter(Boolean) : [],
-      research: form.research.trim(),
-      resume: form.resume,
-      coverNote: form.coverNote.trim(),
-      position: applyFor.type,
-      positionTitle: applyFor.title,
-      projectId: applyFor.projectId,
-      projectTitle: applyFor.projectTitle,
-      posKey: applyFor.posKey,
-      appliedDate: today,
-    });
-    setMyApps(getStudentApplications());
-    setApplyFor(null);
-    toast.success('Application submitted successfully!');
-    setTab('Applied');
+    if (!form.resumeFile) { toast.error('Please attach your resume.'); return; }
+    const fd = new FormData();
+    fd.append('name', form.name.trim());
+    fd.append('email', form.email.trim());
+    fd.append('phone', form.phone.trim());
+    fd.append('degree', form.degree.trim());
+    fd.append('institute', form.institute.trim());
+    fd.append('cgpa', form.cgpa.trim());
+    fd.append('research', form.research.trim());
+    fd.append('cover_note', form.coverNote.trim());
+    fd.append('skills', form.skills.trim());
+    fd.append('resume', form.resumeFile);
+    const res = await apiApply(applyFor.id, fd);
+    if (res.success) {
+      setMyApps(await apiMyApplications());
+      setApplyFor(null);
+      toast.success('Application submitted successfully!');
+      setTab('Applied');
+    }
   };
 
   const skillList = (skills) => (Array.isArray(skills) ? skills : String(skills || '').split(',')).map(s => (typeof s === 'string' ? s.trim() : s)).filter(Boolean);
