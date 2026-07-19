@@ -128,6 +128,105 @@ class SupervisorAllocationController extends Controller
         return response()->json(['message' => 'Form submitted successfully'], 200);
     }
 
+    /**
+     * Allocate supervisors for many students at once from an uploaded sheet.
+     *
+     * Each row is funnelled through the ordinary coordinator submission so the
+     * existing validation, authorization, locking, history and stage handling
+     * all still apply, the forms land on the HOD exactly as they would have if
+     * the coordinator had filled them in one at a time.
+     */
+    public function bulkAllocate(Request $request)
+    {
+        $user = Auth::user();
+        $role = $user->current_role;
+
+        if ($role->role != 'phd_coordinator') {
+            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+        }
+
+        $request->validate([
+            'batch_data' => 'required|array',
+            'batch_data.*.row_number' => 'required|integer',
+            'batch_data.*.roll_no' => 'required',
+            'batch_data.*.supervisors' => 'required|array|min:1',
+        ]);
+
+        $successCount = 0;
+        $errorCount = 0;
+        $errors = [];
+
+        foreach ($request->batch_data as $row) {
+            $rowNumber = $row['row_number'];
+
+            try {
+                $supervisors = collect($row['supervisors'])
+                    ->map(fn ($code) => trim((string) $code))
+                    ->filter(fn ($code) => $code !== '')
+                    ->values()
+                    ->all();
+
+                if (empty($supervisors)) {
+                    throw new \Exception('No supervisors provided');
+                }
+
+                // A coordinator filling in a sheet is far more likely to know a
+                // supervisor's email than their numeric faculty code, so accept
+                // either and normalise to the faculty code the form expects.
+                $supervisors = array_map(function ($identifier) {
+                    if (!str_contains($identifier, '@')) {
+                        return $identifier;
+                    }
+                    $faculty = Faculty::whereHas('user', fn ($q) => $q->where('email', $identifier))->first();
+                    if (!$faculty) {
+                        throw new \Exception("No faculty found with email {$identifier}");
+                    }
+                    return $faculty->faculty_code;
+                }, $supervisors);
+
+                $formInstance = SupervisorAllocation::where('student_id', $row['roll_no'])
+                    ->where('completion', 'incomplete')
+                    ->first();
+
+                if (!$formInstance) {
+                    throw new \Exception("No open supervisor allocation form found for roll number {$row['roll_no']}");
+                }
+
+                if ($formInstance->stage != 'phd_coordinator') {
+                    throw new \Exception("Form for roll number {$row['roll_no']} is awaiting the '{$formInstance->stage}' stage, not the PhD coordinator");
+                }
+
+                $rowRequest = new Request([
+                    'supervisors' => $supervisors,
+                    'approval' => true,
+                ]);
+                $rowRequest->setUserResolver($request->getUserResolver());
+
+                $response = $this->coordinatorSubmit($user, $rowRequest, $formInstance->id);
+
+                if ($response->getStatusCode() >= 400) {
+                    $payload = $response->getData(true);
+                    throw new \Exception($payload['message'] ?? 'Allocation failed');
+                }
+
+                $successCount++;
+            } catch (\Exception $e) {
+                $errorCount++;
+                $errors[] = "Row {$rowNumber}: " . $e->getMessage();
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Allocation completed: {$successCount} allocated, {$errorCount} errors",
+            'data' => [
+                'success_count' => $successCount,
+                'error_count' => $errorCount,
+                'errors' => $errors,
+            ],
+        ], 200);
+    }
+
     private function studentSubmit($user, $request, $form_id)
     {
         $model = SupervisorAllocation::class;
