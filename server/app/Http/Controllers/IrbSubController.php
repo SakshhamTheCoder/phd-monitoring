@@ -167,7 +167,7 @@ class IrbSubController extends Controller
         return $this->submitForm($user, $request, $form_id, $model,'student', 'student','faculty',
         function ($formInstance) use ($request, $user) {
         
-            $link=$this->saveUploadedFile($request->file('irb_pdf'), 'irb_sub_rev', $user->student->roll_no);
+            $link=$this->replaceUploadedFile($formInstance->revised_irb_pdf, $request->file('irb_pdf'), 'irb_sub_rev', $user->student->roll_no);
           
                 $formInstance->revised_phd_title = $request->revised_phd_title;
                 $formInstance->revised_irb_pdf = $link;

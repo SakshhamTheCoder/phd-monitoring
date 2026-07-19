@@ -145,7 +145,7 @@ class StudentSemesterOffFormController extends Controller
                         'previous_approval_pdf' => 'required|file|mimes:pdf|max:15360',
                     ]);
                     if($request->hasFile('previous_approval_pdf')){
-                        $link=$this->saveUploadedFile($request->file('previous_approval_pdf'), 'semester_off', $user->student->roll_no);
+                        $link=$this->replaceUploadedFile($formInstance->previous_approval_pdf, $request->file('previous_approval_pdf'), 'semester_off', $user->student->roll_no);
                         $formInstance->previous_approval_pdf = $link;
                     }
                 }
@@ -164,7 +164,7 @@ class StudentSemesterOffFormController extends Controller
                 $formInstance->semester_off_required = $request->semester_off_required;
 
                 if($request->hasFile('proof_pdf')){
-                    $link=$this->saveUploadedFile($request->file('proof_pdf'), 'semester_off', $user->student->roll_no);
+                    $link=$this->replaceUploadedFile($formInstance->proof_pdf, $request->file('proof_pdf'), 'semester_off', $user->student->roll_no);
                     $formInstance->proof_pdf = $link;
                 }
              

@@ -202,7 +202,7 @@ class PublicationController extends Controller
         $publication->status = $request->status;
 
         if ($request->hasFile('first_page')) {
-            $link = $this->saveUploadedFile($request->first_page, 'publication', $user->student->roll_no);
+            $link = $this->replaceUploadedFile($publication->first_page, $request->first_page, 'publication', $user->student->roll_no);
             $publication->first_page = $link;
         }
 
