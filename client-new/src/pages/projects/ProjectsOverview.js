@@ -1,17 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import Layout from '../../components/dashboard/layout';
-import { sampleProjects, getProjectStats, filterProjects, formatCurrency } from '../../data/projectsData';
+import { filterProjects, formatCurrency } from '../../data/projectsData';
+import { apiListProjects, apiProjectStats, apiDeleteProject } from '../../api/projects';
 import './ProjectsOverview.css';
+
+const emptyStats = { active: 0, completed: 0, totalFunding: 0, consultancy: 0, industry: 0, international: 0 };
 
 const ProjectsOverview = () => {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState('All');
-  const [projects, setProjects] = useState(sampleProjects);
+  const [projects, setProjects] = useState([]);
+  const [stats, setStats] = useState(emptyStats);
+  const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const stats = getProjectStats();
   const filteredProjects = filterProjects(projects, activeFilter);
+
+  const loadData = async () => {
+    const [list, s] = await Promise.all([apiListProjects(), apiProjectStats()]);
+    setProjects(list);
+    setStats(s);
+    setLoading(false);
+  };
+
+  useEffect(() => { loadData(); }, []);
 
   const handleEdit = (e, project) => {
     e.stopPropagation();
@@ -23,10 +35,14 @@ const ProjectsOverview = () => {
     setDeleteTarget(project);
   };
 
-  const confirmDelete = () => {
-    setProjects((prev) => prev.filter((p) => p.id !== deleteTarget.id));
-    toast.success('Project deleted.');
+  const confirmDelete = async () => {
+    const target = deleteTarget;
     setDeleteTarget(null);
+    const res = await apiDeleteProject(target.id);
+    if (res.success) {
+      setProjects((prev) => prev.filter((p) => p.id !== target.id));
+      apiProjectStats().then(setStats);
+    }
   };
 
   const filters = ['All', 'Active', 'Completed', 'In-house', 'Research', 'Consultancy', 'Industry', 'International'];
@@ -198,7 +214,9 @@ const ProjectsOverview = () => {
               ))}
             </tbody>
           </table>
-          {filteredProjects.length === 0 && (
+          {loading ? (
+            <div className="po-empty">Loading projects…</div>
+          ) : filteredProjects.length === 0 && (
             <div className="po-empty">No projects found for the selected filter.</div>
           )}
         </div>

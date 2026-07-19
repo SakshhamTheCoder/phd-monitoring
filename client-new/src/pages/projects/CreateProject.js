@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
-import { categoryOptions, fundingAgencies, facultyPI, internalFacultyList, budgetHeadTemplate, milestoneStatusOptions, updateProject, formatDate } from '../../data/projectsData';
+import { categoryOptions, fundingAgencies, facultyPI, internalFacultyList, budgetHeadTemplate, milestoneStatusOptions, formatDate } from '../../data/projectsData';
+import { apiCreateProject, apiUpdateProjectFromForm } from '../../api/projects';
 import { toast } from 'react-toastify';
 import './CreateProject.css';
 
@@ -114,32 +115,19 @@ const CreateProject = () => {
     toast.success('Draft saved successfully!');
   };
 
-  const handleSubmit = () => {
+  const [submitting, setSubmitting] = useState(false);
+  const handleSubmit = async () => {
+    if (submitting) return;
+    setSubmitting(true);
     if (isEditMode) {
-      updateProject(editProject.id, {
-        title: form.title,
-        category: form.category,
-        fundingAgency: form.fundingAgency,
-        description: form.description,
-        startDate: form.startDate,
-        endDate: form.endDate,
-        durationYears: parseInt(form.durationYears) || 0,
-        durationMonths: parseInt(form.durationMonths) || 0,
-        coPIs: form.coPIs,
-        objectives: form.objectives,
-        milestones: form.milestones,
-        budget: form.budget,
-        amount: parseInt(form.sanctionAmount) || 0,
-        tietShare: parseInt(form.tietShare) || 0,
-        sanctionLetterLink: form.sanctionLetterLink || '#',
-      });
-      toast.success('Project updated successfully!');
-      navigate('/projects');
+      const res = await apiUpdateProjectFromForm(editProject.id, form);
+      setSubmitting(false);
+      if (res.success) { toast.success('Project updated successfully!'); navigate('/projects'); }
       return;
     }
-    localStorage.setItem('projectDraft', JSON.stringify(form));
-    toast.success('Project submitted successfully!');
-    navigate('/projects');
+    const res = await apiCreateProject(form);
+    setSubmitting(false);
+    if (res.success) { toast.success('Project created successfully!'); navigate('/projects'); }
   };
 
   const filteredFaculty = copiSearch.length > 1
