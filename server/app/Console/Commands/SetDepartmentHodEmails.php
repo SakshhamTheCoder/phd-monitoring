@@ -8,11 +8,14 @@ use Illuminate\Console\Command;
 
 /**
  * Brings departments in line with the official listing on thapar.edu/academics:
- * the institute's own code, the full display name and the standing HoD address.
+ * the institute's own code and the standing HoD address.
  *
- * All three come from one place. A department's subdomain is its code, and the
- * HoD address is that subdomain with an h in front, so som.thapar.edu gives the
- * code SOM and the address hsom@thapar.edu.
+ * Both come from one place. A department's subdomain is its code, and the HoD
+ * address is that subdomain with an h in front, so som.thapar.edu gives the code
+ * SOM and the address hsom@thapar.edu.
+ *
+ * The stored name is kept identical to the code, which is how the portal has
+ * always displayed departments.
  *
  * Codes are the join key for the student and faculty CSV imports, so changing
  * them is the risky part. Two things make it safe: the faculty importer no
@@ -28,13 +31,17 @@ class SetDepartmentHodEmails extends Command
 {
     protected $signature = 'departments:sync-official
                             {--apply : Write the changes. Without this the command only reports.}
-                            {--skip-codes : Leave codes alone, only sync names and HoD addresses.}
+                            {--skip-codes : Leave codes and names alone, only sync HoD addresses.}
                             {--overwrite-email : Replace HoD addresses that are already set to something else.}';
 
     protected $description = 'Sync department codes, names and official HoD emails with the institute listing';
 
     /**
-     * official code => [official name, hod email, official subdomain]
+     * official code => [hod email, official subdomain, full title for reference]
+     *
+     * The stored name is the code itself, which is how the portal has always
+     * shown departments and what people recognise. The full title is here only
+     * so the report can show what each code stands for.
      *
      * Keyed by the official code. Departments still stored under a superseded
      * code are found through DepartmentCodes::LEGACY_ALIASES, so this command is
@@ -45,18 +52,18 @@ class SetDepartmentHodEmails extends Command
      * campus departments and DSAI.
      */
     private const MAPPING = [
-        'BTD'  => ['Biotechnology',                              'hbtd@thapar.edu',  'btd'],
-        'CHED' => ['Chemical Engineering',                       'hched@thapar.edu', 'ched'],
-        'CED'  => ['Civil Engineering',                          'hced@thapar.edu',  'ced'],
-        'CSED' => ['Computer Science & Engineering',             'hcsed@thapar.edu', 'csed'],
-        'EIED' => ['Electrical & Instrumentation Engineering',   'heied@thapar.edu', 'eied'],
-        'ECED' => ['Electronics & Communication Engineering',    'heced@thapar.edu', 'eced'],
-        'MED'  => ['Mechanical Engineering',                     'hmed@thapar.edu',  'med'],
-        'SMSS' => ['School of Humanities & Social Sciences',     'hsmss@thapar.edu', 'smss'],
-        'SPMS' => ['Physics & Materials Science',                'hspms@thapar.edu', 'spms'],
-        'SCBC' => ['Chemistry & Biochemistry',                   'hscbc@thapar.edu', 'scbc'],
-        'SOM'  => ['Mathematics',                                'hsom@thapar.edu',  'som'],
-        'SEE'  => ['Energy and Environment',                     'hsee@thapar.edu',  'see'],
+        'BTD'  => ['hbtd@thapar.edu',  'btd',  'Biotechnology'],
+        'CHED' => ['hched@thapar.edu', 'ched', 'Chemical Engineering'],
+        'CED'  => ['hced@thapar.edu',  'ced',  'Civil Engineering'],
+        'CSED' => ['hcsed@thapar.edu', 'csed', 'Computer Science & Engineering'],
+        'EIED' => ['heied@thapar.edu', 'eied', 'Electrical & Instrumentation Engineering'],
+        'ECED' => ['heced@thapar.edu', 'eced', 'Electronics & Communication Engineering'],
+        'MED'  => ['hmed@thapar.edu',  'med',  'Mechanical Engineering'],
+        'SMSS' => ['hsmss@thapar.edu', 'smss', 'School of Humanities & Social Sciences'],
+        'SPMS' => ['hspms@thapar.edu', 'spms', 'Physics & Materials Science'],
+        'SCBC' => ['hscbc@thapar.edu', 'scbc', 'Chemistry & Biochemistry'],
+        'SOM'  => ['hsom@thapar.edu',  'som',  'Mathematics'],
+        'SEE'  => ['hsee@thapar.edu',  'see',  'Energy and Environment'],
     ];
 
     public function handle()
@@ -69,14 +76,19 @@ class SetDepartmentHodEmails extends Command
         $toWrite = [];
         $missing = [];
 
-        foreach (self::MAPPING as $code => [$officialName, $email, $subdomain]) {
+        foreach (self::MAPPING as $code => [$email, $subdomain, $fullTitle]) {
+            // The stored name is the code. Keeping them identical is what the
+            // portal has always shown and what the department typeahead matches
+            // most naturally.
+            $officialName = $code;
+
             // Finds the department whether it still carries the superseded code
             // or has already been renamed, which is what makes this idempotent.
             $department = DepartmentCodes::resolveOfficial($code);
 
             if (!$department) {
-                $missing[] = [$code, $officialName, $email];
-                $rows[] = [$code, $subdomain . '.thapar.edu', 'NOT IN THIS DATABASE', '', 'skip'];
+                $missing[] = [$code, $fullTitle, $email];
+                $rows[] = [$code, $fullTitle, 'NOT IN THIS DATABASE', '', 'skip'];
                 continue;
             }
 
@@ -96,7 +108,9 @@ class SetDepartmentHodEmails extends Command
                 }
             }
 
-            if ($department->name !== $officialName) {
+            // Name follows the code, so skipping one has to skip the other or
+            // the two would end up disagreeing.
+            if (!$skipCodes && $department->name !== $officialName) {
                 $changes['name'] = $officialName;
             }
 
@@ -110,13 +124,13 @@ class SetDepartmentHodEmails extends Command
             }
 
             if (empty($changes)) {
-                $rows[] = [$department->code, $subdomain . '.thapar.edu', $department->name, $currentEmail ?? '(none)', 'up to date'];
+                $rows[] = [$department->code, $fullTitle, $department->name, $currentEmail ?? '(none)', 'up to date'];
                 continue;
             }
 
             $rows[] = [
                 array_key_exists('code', $changes) ? $department->code . ' -> ' . $changes['code'] : $department->code,
-                $subdomain . '.thapar.edu',
+                $fullTitle,
                 array_key_exists('name', $changes) ? $department->name . ' -> ' . $changes['name'] : $department->name,
                 array_key_exists('hod_email', $changes) ? ($currentEmail ?: '(none)') . ' -> ' . $changes['hod_email'] : ($currentEmail ?? '(none)'),
                 $apply ? 'WRITING' : 'would write',
@@ -124,7 +138,7 @@ class SetDepartmentHodEmails extends Command
             $toWrite[] = [$department, $changes];
         }
 
-        $this->table(['Code', 'Official site', 'Name', 'HoD email', 'Action'], $rows);
+        $this->table(['Code', 'Department', 'Name', 'HoD email', 'Action'], $rows);
 
         if (!empty($missing)) {
             $this->warn('Not in this database, so nothing was written for them:');
