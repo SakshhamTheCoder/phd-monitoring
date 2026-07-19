@@ -55,7 +55,8 @@ const ProjectDetails = () => {
     }
   };
 
-  // Budget breakdown inline editing
+  // Budget breakdown inline editing (heads + sub-items, kept reconciled).
+  // Sub-item amounts live under a reserved `__subitems` key: budget.__subitems[year][head][sub].
   const [budgetData, setBudgetData] = useState({});
   const [editingBudget, setEditingBudget] = useState(false);
   const [budgetDraft, setBudgetDraft] = useState({});
@@ -64,7 +65,40 @@ const ProjectDetails = () => {
   const updateBudgetCell = (year, head, value) => {
     setBudgetDraft(prev => ({ ...prev, [year]: { ...prev[year], [head]: value === '' ? 0 : Number(value) } }));
   };
+  const updateSubCell = (year, head, sub, value) => {
+    setBudgetDraft(prev => {
+      const subs = { ...(prev.__subitems || {}) };
+      const ys = { ...(subs[year] || {}) };
+      const hs = { ...(ys[head] || {}) };
+      hs[sub] = value === '' ? 0 : Number(value);
+      ys[head] = hs; subs[year] = ys;
+      return { ...prev, __subitems: subs };
+    });
+  };
+  const subVal = (b, year, head, sub) => Number(b && b.__subitems && b.__subitems[year] && b.__subitems[year][head] ? (b.__subitems[year][head][sub] || 0) : 0);
+  const subSum = (b, year, head) => {
+    const tmpl = budgetHeadTemplate.find(t => t.head === head);
+    if (!tmpl || !tmpl.subItems.length) return 0;
+    return tmpl.subItems.reduce((s, sub) => s + subVal(b, year, head, sub), 0);
+  };
+  // A head "mismatches" when it has sub-items entered whose sum ≠ the head amount.
+  const cellMismatch = (b, year, head) => {
+    const ss = subSum(b, year, head);
+    return ss > 0 && ss !== Number(b[year] ? (b[year][head] || 0) : 0);
+  };
+  const budgetMismatches = (b) => {
+    const out = [];
+    Object.keys(b || {}).filter(k => k !== '__subitems').forEach(year => {
+      budgetHeadTemplate.forEach(t => { if (t.subItems.length && cellMismatch(b, year, t.head)) out.push(t.head); });
+    });
+    return [...new Set(out)];
+  };
   const saveBudgetEdit = async () => {
+    const mism = budgetMismatches(budgetDraft);
+    if (mism.length) {
+      toast.error(`Sub-item totals don't match the head amount for: ${mism.join(', ')}. Fix the highlighted cells.`);
+      return;
+    }
     const res = await apiUpdateProject(project.id, { budget: budgetDraft });
     if (res.success) { setBudgetData(budgetDraft); setEditingBudget(false); toast.success('Budget updated successfully!'); }
   };
@@ -214,10 +248,12 @@ const ProjectDetails = () => {
   const msIcons = { Completed: '✔', 'In Progress': '🟡', 'Not Started': '🔴', Delayed: '🔴' };
 
   const activeBudget = editingBudget ? budgetDraft : budgetData;
-  const budgetYears = Object.keys(budgetData || {});
+  const budgetYears = Object.keys(budgetData || {}).filter(k => k !== '__subitems');
   const yearTotal = (y) => Object.values(activeBudget[y] || {}).reduce((s, v) => s + Number(v || 0), 0);
   const headTotal = (h) => budgetYears.reduce((s, y) => s + Number(activeBudget[y]?.[h] || 0), 0);
   const grandTotal = budgetYears.reduce((s, y) => s + yearTotal(y), 0);
+  // Total across all years for a single sub-item (for the sub-row Total column).
+  const subYearTotal = (head, sub) => budgetYears.reduce((s, y) => s + subVal(activeBudget, y, head, sub), 0);
 
   const renderTab = () => {
     switch (activeTab) {
@@ -307,29 +343,57 @@ const ProjectDetails = () => {
                       <React.Fragment key={bh.head}>
                         <tr className="pd-budget-head-row">
                           <td className="pd-budget-head-name">{bh.head}</td>
-                          {budgetYears.map(y => (
-                            <td key={y}>
-                              {editingBudget ? (
-                                <input
-                                  type="number"
-                                  className="pd-budget-edit-input"
-                                  value={budgetDraft[y]?.[bh.head] ?? 0}
-                                  onChange={e => updateBudgetCell(y, bh.head, e.target.value)}
-                                />
-                              ) : (
-                                <>₹{(budgetData[y]?.[bh.head] || 0).toLocaleString('en-IN')}</>
-                              )}
-                            </td>
-                          ))}
+                          {budgetYears.map(y => {
+                            const mism = editingBudget && bh.subItems.length > 0 && cellMismatch(budgetDraft, y, bh.head);
+                            return (
+                              <td key={y}>
+                                {editingBudget ? (
+                                  <input
+                                    type="number"
+                                    className={`pd-budget-edit-input${mism ? ' pd-budget-mismatch' : ''}`}
+                                    value={budgetDraft[y]?.[bh.head] ?? 0}
+                                    onChange={e => updateBudgetCell(y, bh.head, e.target.value)}
+                                    title={mism ? `Sub-items sum to ₹${subSum(budgetDraft, y, bh.head).toLocaleString('en-IN')}` : undefined}
+                                  />
+                                ) : (
+                                  <>₹{(budgetData[y]?.[bh.head] || 0).toLocaleString('en-IN')}</>
+                                )}
+                              </td>
+                            );
+                          })}
                           <td className="pd-bh-total">₹{headTotal(bh.head).toLocaleString('en-IN')}</td>
                         </tr>
                         {bh.subItems.map(sub => (
                           <tr key={sub} className="pd-budget-sub-row">
                             <td className="pd-budget-sub-name">↳ {sub}</td>
-                            {budgetYears.map(y => <td key={y} className="pd-budget-sub-cell">—</td>)}
-                            <td></td>
+                            {budgetYears.map(y => (
+                              <td key={y} className="pd-budget-sub-cell">
+                                {editingBudget ? (
+                                  <input
+                                    type="number"
+                                    className="pd-budget-edit-input sub"
+                                    value={subVal(budgetDraft, y, bh.head, sub) || 0}
+                                    onChange={e => updateSubCell(y, bh.head, sub, e.target.value)}
+                                  />
+                                ) : (
+                                  <>{subVal(budgetData, y, bh.head, sub) ? `₹${subVal(budgetData, y, bh.head, sub).toLocaleString('en-IN')}` : '—'}</>
+                                )}
+                              </td>
+                            ))}
+                            <td className="pd-budget-sub-total">{subYearTotal(bh.head, sub) ? `₹${subYearTotal(bh.head, sub).toLocaleString('en-IN')}` : ''}</td>
                           </tr>
                         ))}
+                        {editingBudget && bh.subItems.length > 0 && (
+                          <tr className="pd-budget-subsum-row">
+                            <td className="pd-budget-sub-name">↳ sub-items total</td>
+                            {budgetYears.map(y => {
+                              const ss = subSum(budgetDraft, y, bh.head);
+                              const bad = cellMismatch(budgetDraft, y, bh.head);
+                              return <td key={y} className={`pd-budget-subsum ${bad ? 'bad' : (ss > 0 ? 'ok' : '')}`}>₹{ss.toLocaleString('en-IN')}{bad ? ' ⚠' : (ss > 0 ? ' ✓' : '')}</td>;
+                            })}
+                            <td></td>
+                          </tr>
+                        )}
                       </React.Fragment>
                     ))}
                     <tr className="pd-grand-row">

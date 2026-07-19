@@ -78,6 +78,14 @@
 .pd-budget-actions { display: flex; gap: 0.5rem; }
 .pd-budget-edit-input { width: 100%; max-width: 120px; padding: 0.35rem 0.5rem; border: 1px solid #DDD; border-radius: 6px; font-size: 0.85rem; font-family: inherit; color: #333; }
 .pd-budget-edit-input:focus { outline: none; border-color: #900; box-shadow: 0 0 0 2px rgba(153,0,0,0.1); }
+.pd-budget-edit-input.sub { max-width: 110px; background: #FAFAFA; font-size: 0.8rem; color: #555; }
+.pd-budget-mismatch { border-color: #dc2626 !important; background: #fef2f2; color: #b91c1c; }
+.pd-budget-mismatch:focus { box-shadow: 0 0 0 2px rgba(220,38,38,0.15) !important; }
+.pd-budget-sub-total { font-size: 0.78rem; color: #999; }
+.pd-budget-subsum-row td { background: #FBFBFB; }
+.pd-budget-subsum { font-size: 0.72rem; font-weight: 600; }
+.pd-budget-subsum.ok { color: #15803d; }
+.pd-budget-subsum.bad { color: #dc2626; }
 /* Detailed budget rows (heads + sub-items), matching the creation flow */
 .pd-budget-head-row td { background: #FAFAFA; }
 .pd-budget-head-name { font-weight: 600; color: #333; }
