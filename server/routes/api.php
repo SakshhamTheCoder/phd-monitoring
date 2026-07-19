@@ -177,11 +177,23 @@ Route::post('/switch-role', function (Request $request) {
         // hold the role, but you cannot act as it until the record backing it
         // exists. Without this, switching succeeded and every subsequent action
         // failed with an opaque 403 (or a 500 on a missing faculty record).
+        // Gated by roles.enforce_backing, which is off by default, so existing
+        // accounts keep switching as before until an audit has been run against
+        // the real database. See config/roles.php.
         $unmet = \App\Support\RoleRequirements::unmet($user, $role->role);
         if ($unmet !== null) {
-            return response()->json([
-                'error' => "You cannot switch to this role because your account {$unmet}.",
-            ], 403);
+            \Illuminate\Support\Facades\Log::warning('Role switch into a role with no backing record', [
+                'user_id' => $user->id,
+                'role' => $role->role,
+                'problem' => $unmet,
+                'enforced' => (bool) config('roles.enforce_backing'),
+            ]);
+
+            if (config('roles.enforce_backing')) {
+                return response()->json([
+                    'error' => "You cannot switch to this role because your account {$unmet}.",
+                ], 403);
+            }
         }
 
         {

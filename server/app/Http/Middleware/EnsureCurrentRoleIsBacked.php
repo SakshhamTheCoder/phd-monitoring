@@ -61,19 +61,42 @@ class EnsureCurrentRoleIsBacked
             return $next($request);
         }
 
-        $unmet = RoleRequirements::unmet($user, $role);
+        // This runs on every authenticated request and touches the database, so
+        // a fault here would take the whole portal down rather than degrade it.
+        // Fail open: if the check itself cannot run, let the request through and
+        // leave a trace, instead of turning a transient problem into an outage.
+        try {
+            $unmet = RoleRequirements::unmet($user, $role);
+        } catch (\Throwable $e) {
+            Log::error('Role backing check failed, allowing request through', [
+                'user_id' => $user->id,
+                'role' => $role,
+                'error' => $e->getMessage(),
+            ]);
+            return $next($request);
+        }
+
         if ($unmet === null) {
             return $next($request);
         }
 
-        // Worth logging: this is a data inconsistency an admin needs to fix, not
-        // an ordinary permission denial.
-        Log::warning('Blocked request from user acting in an unbacked role', [
+        // Worth logging either way: this is a data inconsistency an admin needs
+        // to fix, not an ordinary permission denial.
+        Log::warning('User is acting in a role with no backing record', [
             'user_id' => $user->id,
             'role' => $role,
             'problem' => $unmet,
             'url' => $request->fullUrl(),
+            'enforced' => (bool) config('roles.enforce_backing'),
         ]);
+
+        // Observe first, refuse later. Enabling this refuses requests, and the
+        // number of legacy accounts in this state is not knowable from a
+        // development database, so it stays off until an audit has been run
+        // against the real one.
+        if (!config('roles.enforce_backing')) {
+            return $next($request);
+        }
 
         return response()->json([
             'message' => "Your account {$unmet}, so the '{$role}' role cannot be used. "
