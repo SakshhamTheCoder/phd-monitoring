@@ -148,13 +148,32 @@ class SuggestionController extends Controller
             return response()->json([], 200);
         }
 
-        $departments = Department::where('name', 'LIKE', '%' . $request->text . '%')
+        // Search the code as well as the name. Names used to hold the code, so
+        // typing CSED found the department; now that names are the full title,
+        // matching on name alone would return nothing for a code, or worse,
+        // match the wrong campus. Superseded codes resolve too, so anyone still
+        // typing DOM finds Mathematics.
+        $text = trim($request->text);
+        $legacyOf = \App\Support\DepartmentCodes::LEGACY_ALIASES[strtoupper($text)] ?? null;
+
+        $departments = Department::where(function ($query) use ($text, $legacyOf) {
+                $query->where('name', 'LIKE', '%' . $text . '%')
+                    ->orWhere('code', 'LIKE', '%' . $text . '%');
+
+                if ($legacyOf) {
+                    $query->orWhere('code', 'LIKE', '%' . $legacyOf . '%');
+                }
+            })
             ->orderBy('name')
             ->get()
             ->map(function ($department) {
             return [
             'id' => $department->id,
+            // Kept as the bare name: the filter bar sends this value back to be
+            // matched against departments.name, so decorating it would stop
+            // department filters matching anything.
             'name' => $department->name,
+            'code' => $department->code,
             ];
         });
 

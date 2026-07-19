@@ -21,6 +21,10 @@ class DepartmentCodes
 {
     /**
      * Superseded code => official code.
+     *
+     * Keys are compared upper case, so they are written that way. The Dera Bassi
+     * entries also normalise the suffix, which was stored three different ways
+     * (Derabassi, DeraBassi, Dera Bassi).
      */
     public const LEGACY_ALIASES = [
         'DBT'  => 'BTD',
@@ -29,6 +33,11 @@ class DepartmentCodes
         'DEE'  => 'SEE',
         'DPMS' => 'SPMS',
         'SHSS' => 'SMSS',
+
+        'DCB (DERABASSI)'   => 'SCBC (Derabassi)',
+        'DOM (DERABASSI)'   => 'SOM (Derabassi)',
+        'DPMS (DERABASSI)'  => 'SPMS (Derabassi)',
+        'EIED (DERA BASSI)' => 'EIED (Derabassi)',
     ];
 
     /**
