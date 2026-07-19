@@ -66,6 +66,22 @@ class SetDepartmentHodEmails extends Command
         'SEE'  => ['hsee@thapar.edu',  'see',  'Energy and Environment'],
     ];
 
+    /**
+     * Dera Bassi campus departments, which follow their main campus counterpart.
+     *
+     * They are not in the official listing and have no HoD address of their own,
+     * so only the code and name change. The suffix is normalised at the same
+     * time: it was stored as Derabassi, DeraBassi and Dera Bassi.
+     *
+     * current code => corrected code
+     */
+    private const CAMPUS_RENAMES = [
+        'DCB (Derabassi)'   => 'SCBC (Derabassi)',
+        'DOM (Derabassi)'   => 'SOM (Derabassi)',
+        'DPMS (DeraBassi)'  => 'SPMS (Derabassi)',
+        'EIED (Dera Bassi)' => 'EIED (Derabassi)',
+    ];
+
     public function handle()
     {
         $apply = $this->option('apply');
@@ -136,6 +152,38 @@ class SetDepartmentHodEmails extends Command
                 $apply ? 'WRITING' : 'would write',
             ];
             $toWrite[] = [$department, $changes];
+        }
+
+        // Dera Bassi departments follow their main campus counterpart. Handled
+        // separately because they carry no HoD address.
+        if (!$skipCodes) {
+            foreach (self::CAMPUS_RENAMES as $currentCode => $correctedCode) {
+                $department = Department::whereRaw('UPPER(code) = ?', [strtoupper($currentCode)])->first();
+
+                if (!$department) {
+                    // Already renamed, or never existed here. Either way nothing
+                    // to do, and nothing is created.
+                    continue;
+                }
+
+                $taken = Department::whereRaw('UPPER(code) = ?', [strtoupper($correctedCode)])
+                    ->where('id', '!=', $department->id)
+                    ->first();
+
+                if ($taken) {
+                    $this->error("{$currentCode}: cannot rename to {$correctedCode}, department #{$taken->id} already uses it. Resolve by hand.");
+                    continue;
+                }
+
+                $rows[] = [
+                    $department->code . ' -> ' . $correctedCode,
+                    'Dera Bassi campus',
+                    $department->name . ' -> ' . $correctedCode,
+                    '(none)',
+                    $apply ? 'WRITING' : 'would write',
+                ];
+                $toWrite[] = [$department, ['code' => $correctedCode, 'name' => $correctedCode]];
+            }
         }
 
         $this->table(['Code', 'Department', 'Name', 'HoD email', 'Action'], $rows);
