@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
 import { formatCurrency, getMilestoneProgress, milestoneStatusOptions, budgetHeadTemplate, formatDate } from '../../data/projectsData';
-import { apiGetProject, apiUpdateProject, apiAddMilestone, apiUpdateMilestone, apiAddDocument, apiDeleteDocument, fileUrl, mapMilestone, mapDocument } from '../../api/projects';
+import { apiGetProject, apiUpdateProject, apiAddMilestone, apiUpdateMilestone, apiAddDocument, apiUpdateDocument, apiDeleteDocument, fileUrl, mapMilestone, mapDocument } from '../../api/projects';
 import { toast } from 'react-toastify';
 import './ProjectDetails.css';
 
@@ -97,7 +97,7 @@ const ProjectDetails = () => {
   };
 
   // Documents management (backend has no update endpoint -> edit = delete + re-upload)
-  const emptyDocForm = { name: '', type: '', file: null, fileName: '' };
+  const emptyDocForm = { name: '', type: '', file: null, fileName: '', currentLabel: '' };
   const [documents, setDocuments] = useState([]);
   const [showDocModal, setShowDocModal] = useState(false);
   const [editingDocIdx, setEditingDocIdx] = useState(null);
@@ -107,7 +107,10 @@ const ProjectDetails = () => {
   const openEditDoc = (i) => {
     const d = documents[i];
     setEditingDocIdx(i);
-    setDocForm({ name: d.name || '', type: d.type || '', file: null, fileName: '' });
+    setDocForm({
+      name: d.name || '', type: d.type || '', file: null, fileName: '',
+      currentLabel: d.file_path ? `Current file attached (${d.type || 'file'})` : (d.link ? 'Current: linked document' : ''),
+    });
     setShowDocModal(true);
   };
   const handleDocFileSelect = (e) => {
@@ -119,18 +122,16 @@ const ProjectDetails = () => {
   };
   const saveDoc = async () => {
     if (!docForm.name.trim()) { toast.error('Please enter a document name.'); return; }
-    if (!docForm.file) { toast.error('Please select a file.'); return; }
+    if (editingDocIdx === null && !docForm.file) { toast.error('Please select a file.'); return; }
     const fd = new FormData();
     fd.append('name', docForm.name.trim());
-    fd.append('file', docForm.file);
-    if (editingDocIdx !== null) {
-      const old = documents[editingDocIdx];
-      if (old && old.id) await apiDeleteDocument(project.id, old.id);
-    }
-    const res = await apiAddDocument(project.id, fd);
+    if (docForm.file) fd.append('file', docForm.file);
+    const res = editingDocIdx !== null
+      ? await apiUpdateDocument(project.id, documents[editingDocIdx].id, fd)
+      : await apiAddDocument(project.id, fd);
     if (res.success) {
-      const created = mapDocument(res.response);
-      setDocuments(prev => (editingDocIdx !== null ? prev.map((d, i) => (i === editingDocIdx ? created : d)) : [...prev, created]));
+      const doc = mapDocument((res.response && res.response.document) || res.response);
+      setDocuments(prev => (editingDocIdx !== null ? prev.map((d, i) => (i === editingDocIdx ? doc : d)) : [...prev, doc]));
       setShowDocModal(false);
       toast.success(editingDocIdx !== null ? 'Document updated!' : 'Document uploaded successfully!');
     }
@@ -635,9 +636,12 @@ const ProjectDetails = () => {
                 />
               </div>
               <div className="pd-modal-field">
-                <label>Upload Document {editingDocIdx !== null && <span className="pd-modal-hint">(optional — replaces current file)</span>}</label>
+                <label>{editingDocIdx !== null ? 'Replace Document' : 'Upload Document'} {editingDocIdx !== null && <span className="pd-modal-hint">(optional — leave empty to keep the current file)</span>}</label>
+                {editingDocIdx !== null && docForm.currentLabel && !docForm.fileName && (
+                  <span className="pd-upload-selected" style={{ color: '#666' }}><i className="fa fa-paperclip"></i> {docForm.currentLabel}</span>
+                )}
                 <button type="button" className="pd-upload-label" onClick={() => docFileRef.current && docFileRef.current.click()}>
-                  <i className="fa fa-upload"></i> {docForm.url && !docForm.fileName ? 'Change file' : 'Select file'}
+                  <i className="fa fa-upload"></i> {editingDocIdx !== null ? 'Replace file' : 'Select file from system'}
                 </button>
                 <input
                   type="file"
