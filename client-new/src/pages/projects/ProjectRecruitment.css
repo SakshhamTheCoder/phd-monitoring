@@ -33,7 +33,13 @@
 .pr-btn-outline { background: #FFF; color: #555; border: 1px solid #DDD; padding: 0.65rem 1.3rem; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
 
 /* Position Card */
+.pr-section-heading { font-size: 0.95rem; font-weight: 600; color: #333; margin: 0 0 1rem; }
+.pr-back-to-positions { background: none; border: none; color: #555; font-size: 0.82rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; margin-bottom: 1rem; padding: 0; }
+.pr-back-to-positions:hover { color: #900; }
 .pr-position-card { border-left: 4px solid #900; }
+.pr-position-clickable { cursor: pointer; transition: box-shadow 0.15s, transform 0.15s; }
+.pr-position-clickable:hover { box-shadow: 0 6px 18px rgba(0,0,0,0.08); transform: translateY(-1px); }
+.pr-pos-view-hint { margin-top: 0.85rem; padding-top: 0.75rem; border-top: 1px dashed #EEE; font-size: 0.8rem; color: #900; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; }
 .pr-pos-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
 .pr-pos-type { background: #fee2e2; color: #b91c1c; padding: 0.3rem 0.7rem; border-radius: 6px; font-size: 0.7rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.4px; }
 .pr-pos-title { font-size: 1.05rem; font-weight: 600; color: #222; margin: 0.4rem 0 0; }

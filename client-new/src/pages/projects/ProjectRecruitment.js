@@ -24,7 +24,7 @@ const ProjectRecruitment = () => {
   const navigate = useNavigate();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeView, setActiveView] = useState('positions');
+  const [selectedPosition, setSelectedPosition] = useState(null);
   const [showPostForm, setShowPostForm] = useState(false);
   const [editingPosIdx, setEditingPosIdx] = useState(null);
   const [selectedApplicant, setSelectedApplicant] = useState(null);
@@ -46,11 +46,13 @@ const ProjectRecruitment = () => {
     return <Layout><div style={{ textAlign: 'center', padding: '4rem', color: '#999' }}>Project not found.</div></Layout>;
   }
 
+  // Applications for the currently-opened position.
+  const posApps = selectedPosition ? applications.filter(a => a.posKey === selectedPosition.id) : [];
   const appStats = {
-    total: applications.length,
-    shortlisted: applications.filter(a => a.status === 'Shortlisted').length,
-    interview: applications.filter(a => a.status === 'Interview Scheduled').length,
-    selected: applications.filter(a => a.status === 'Selected').length,
+    total: posApps.length,
+    shortlisted: posApps.filter(a => a.status === 'Shortlisted').length,
+    interview: posApps.filter(a => a.status === 'Interview Scheduled').length,
+    selected: posApps.filter(a => a.status === 'Selected').length,
   };
 
   const appStatusColors = {
@@ -62,7 +64,7 @@ const ProjectRecruitment = () => {
   };
 
   // ---- Position CRUD ----
-  const openAddPos = () => { setEditingPosIdx(null); setPosForm(emptyPos); setShowPostForm(true); };
+  const openAddPos = () => { setSelectedPosition(null); setEditingPosIdx(null); setPosForm(emptyPos); setShowPostForm(true); };
   const openEditPos = (i) => {
     setEditingPosIdx(i);
     setPosForm({ ...emptyPos, ...positions[i] });
@@ -113,12 +115,6 @@ const ProjectRecruitment = () => {
           </button>
         </div>
 
-        {/* View Toggle */}
-        <div className="pr-view-toggle">
-          <button className={activeView === 'positions' ? 'active' : ''} onClick={() => setActiveView('positions')}>Open Positions</button>
-          <button className={activeView === 'applications' ? 'active' : ''} onClick={() => setActiveView('applications')}>Applications</button>
-        </div>
-
         {/* Post / Edit Opening Form */}
         {showPostForm && (
           <div className="pr-card pr-form-card">
@@ -153,22 +149,23 @@ const ProjectRecruitment = () => {
           </div>
         )}
 
-        {/* Positions View */}
-        {activeView === 'positions' && (
+        {/* Open Positions — click a card to see its applications */}
+        {!selectedPosition && !showPostForm && (
           <>
+            <h3 className="pr-section-heading">Open Positions</h3>
             {positions.length > 0 ? (
               positions.map((pos, i) => (
-                <div key={i} className="pr-card pr-position-card">
+                <div key={i} className="pr-card pr-position-card pr-position-clickable" onClick={() => setSelectedPosition(pos)}>
                   <div className="pr-pos-top">
                     <div>
                       <span className="pr-pos-type">{pos.type}</span>
                       <h3 className="pr-pos-title">{pos.title}</h3>
                     </div>
                     <div className="pr-pos-top-right">
-                      <span className="pr-pos-deadline"><i className="fa fa-calendar"></i> Deadline: {pos.deadline || '—'}</span>
+                      <span className="pr-pos-deadline"><i className="fa fa-calendar"></i> Deadline: {pos.deadline ? formatDate(pos.deadline) : '—'}</span>
                       <div className="pr-pos-actions">
-                        <button className="pr-pos-edit" onClick={() => openEditPos(i)} title="Edit position"><i className="fa fa-pencil"></i></button>
-                        <button className="pr-pos-delete" onClick={() => deletePosition(i)} title="Delete position"><i className="fa fa-trash"></i></button>
+                        <button className="pr-pos-edit" onClick={(e) => { e.stopPropagation(); openEditPos(i); }} title="Edit position"><i className="fa fa-pencil"></i></button>
+                        <button className="pr-pos-delete" onClick={(e) => { e.stopPropagation(); deletePosition(i); }} title="Delete position"><i className="fa fa-trash"></i></button>
                       </div>
                     </div>
                   </div>
@@ -178,6 +175,7 @@ const ProjectRecruitment = () => {
                     <div className="pr-pos-stat"><span>Applicants</span><strong>{pos.applicants ?? 0}</strong></div>
                     <div className="pr-pos-stat"><span>Shortlisted</span><strong>{pos.shortlisted ?? 0}</strong></div>
                   </div>
+                  <div className="pr-pos-view-hint"><i className="fa fa-users"></i> View applications <i className="fa fa-arrow-right"></i></div>
                 </div>
               ))
             ) : (
@@ -186,9 +184,13 @@ const ProjectRecruitment = () => {
           </>
         )}
 
-        {/* Applications View */}
-        {activeView === 'applications' && (
+        {/* Applications for the opened position */}
+        {selectedPosition && (
           <>
+            <button className="pr-back-to-positions" onClick={() => setSelectedPosition(null)}>
+              <i className="fa fa-arrow-left"></i> Back to positions
+            </button>
+            <h3 className="pr-section-heading">Applications — {selectedPosition.title}</h3>
             <div className="pr-app-stats">
               <div className="pr-app-stat"><span>Total Applications</span><strong>{appStats.total}</strong></div>
               <div className="pr-app-stat shortlisted"><span>Shortlisted</span><strong>{appStats.shortlisted}</strong></div>
@@ -196,27 +198,31 @@ const ProjectRecruitment = () => {
               <div className="pr-app-stat selected"><span>Selected</span><strong>{appStats.selected}</strong></div>
             </div>
             <div className="pr-card">
-              <table className="pr-app-table">
-                <thead>
-                  <tr><th>Applicant Name</th><th>Position</th><th>Institute</th><th>CGPA</th><th>Status</th><th>Actions</th></tr>
-                </thead>
-                <tbody>
-                  {applications.map(app => (
-                    <tr key={app.id}>
-                      <td className="pr-app-name">{app.name}</td>
-                      <td>{app.position}</td>
-                      <td>{app.institute}</td>
-                      <td>{app.cgpa}</td>
-                      <td>
-                        <span className="pr-app-badge" style={{ background: appStatusColors[app.status]?.bg, color: appStatusColors[app.status]?.color }}>{app.status}</span>
-                      </td>
-                      <td>
-                        <button className="pr-view-btn" onClick={() => setSelectedApplicant(app)}><i className="fa fa-eye"></i> View</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              {posApps.length > 0 ? (
+                <table className="pr-app-table">
+                  <thead>
+                    <tr><th>Applicant Name</th><th>Position</th><th>Institute</th><th>CGPA</th><th>Status</th><th>Actions</th></tr>
+                  </thead>
+                  <tbody>
+                    {posApps.map(app => (
+                      <tr key={app.id}>
+                        <td className="pr-app-name">{app.name}</td>
+                        <td>{app.position}</td>
+                        <td>{app.institute}</td>
+                        <td>{app.cgpa}</td>
+                        <td>
+                          <span className="pr-app-badge" style={{ background: appStatusColors[app.status]?.bg, color: appStatusColors[app.status]?.color }}>{app.status}</span>
+                        </td>
+                        <td>
+                          <button className="pr-view-btn" onClick={() => setSelectedApplicant(app)}><i className="fa fa-eye"></i> View</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="pr-empty" style={{ padding: '2rem', textAlign: 'center', color: '#999' }}>No applications for this position yet.</div>
+              )}
             </div>
           </>
         )}
