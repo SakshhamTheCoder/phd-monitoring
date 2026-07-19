@@ -42,13 +42,19 @@ class DepartmentController extends Controller
             $facultyQuery = $this->applyDynamicFilters($facultyQuery, $filters);
         }
     
-        $faculties = $facultyQuery->paginate($perPage, ['*'], 'page', $page);
-    
+        $faculties = $facultyQuery->orderBy('name')->paginate($perPage, ['*'], 'page', $page);
+
         $result = $faculties->getCollection()->map(function ($department) {
             return [
                 'id' => $department->id,
                 'name' => $department->name,
                 'code' => $department->code,
+                // The table renders `fields` as flat keys on the row, so the HOD
+                // details are flattened here as well as kept nested below for the
+                // manage-department modal.
+                'hod_name' => optional(optional($department->hod)->user)->name(),
+                'hod_email' => optional(optional($department->hod)->user)->email,
+                'hod_phone' => optional(optional($department->hod)->user)->phone,
                 'hod' => $department->hod ? [
                     'faculty_code' => $department->hod->faculty_code,
                     'designation' => $department->hod->designation,
@@ -102,8 +108,8 @@ class DepartmentController extends Controller
             'current_page' => $faculties->currentPage(),
             'totalPages' => $faculties->lastPage(),
             'role' => $role,
-            'fields' => ['name', 'hod.user.name', 'hod.user.email', 'hod.user.phone', 'department'],
-            'fieldsTitles' => ['Name', 'HOD Name', 'Email', 'Phone', 'Department'],
+            'fields' => ['name', 'hod_name', 'hod_email', 'hod_phone'],
+            'fieldsTitles' => ['Name', 'HOD Name', 'Email', 'Phone'],
         ]);
     }
     
@@ -283,7 +289,7 @@ class DepartmentController extends Controller
                 $query = $this->applyDynamicFilters($query, $filters);
             }
 
-            $areas = $query->paginate($perPage, ['*'], 'page', $page);
+            $areas = $query->orderBy('name')->paginate($perPage, ['*'], 'page', $page);
 
             $result = $areas->getCollection()->map(function ($area) {
                 return [
