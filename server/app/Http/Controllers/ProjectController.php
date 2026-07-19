@@ -35,7 +35,7 @@ class ProjectController extends Controller {
     }
 
     public function show($id) {
-        $project = Project::with('milestones')->find($id);
+        $project = Project::with(['milestones','documents'])->find($id);
         if (!$project) return response()->json(['message' => 'Project not found'], 404);
         return response()->json($project);
     }
