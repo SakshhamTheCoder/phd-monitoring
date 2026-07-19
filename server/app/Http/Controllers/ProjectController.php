@@ -77,9 +77,11 @@ class ProjectController extends Controller {
         if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 400);
         $this->fill($project, $request);
         if ($request->hasFile('sanction_letter')) {
-            $project->sanction_letter_link = $this->saveUploadedFile($request->file('sanction_letter'), 'project_sanction', $project->id);
+            $project->sanction_letter_link = $this->replaceUploadedFile($project->sanction_letter_link, $request->file('sanction_letter'), 'project_sanction', $project->id);
             $project->sanction_letter_name = $request->file('sanction_letter')->getClientOriginalName();
         } elseif ($request->filled('sanction_letter_link')) {
+            // Switching to an external link supersedes any stored file.
+            $this->deleteStoredFile($project->sanction_letter_link);
             $project->sanction_letter_link = $request->sanction_letter_link;
             $project->sanction_letter_name = $request->input('sanction_letter_name', 'Sanction Letter');
         }

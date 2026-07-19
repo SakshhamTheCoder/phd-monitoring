@@ -16,6 +16,7 @@ Route::post('/{id}/milestones', [ProjectMilestoneController::class, 'store'])->m
 Route::post('/{id}/milestones/{milestoneId}', [ProjectMilestoneController::class, 'update'])->middleware('auth:sanctum');
 Route::delete('/{id}/milestones/{milestoneId}', [ProjectMilestoneController::class, 'destroy'])->middleware('auth:sanctum');
 Route::post('/{id}/documents', [ProjectDocumentController::class, 'store'])->middleware('auth:sanctum');
+Route::post('/{id}/documents/{documentId}', [ProjectDocumentController::class, 'update'])->middleware('auth:sanctum');
 Route::delete('/{id}/documents/{documentId}', [ProjectDocumentController::class, 'destroy'])->middleware('auth:sanctum');
 Route::get('/{id}/positions', [ProjectPositionController::class, 'index'])->middleware('auth:sanctum');
 Route::post('/{id}/positions', [ProjectPositionController::class, 'store'])->middleware('auth:sanctum');
