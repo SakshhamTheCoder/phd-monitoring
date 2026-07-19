@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Role;
 use App\Models\Student;
 use App\Models\Department;
+use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -281,7 +282,12 @@ class StudentController extends Controller {
     if ($filters) {
         $studentsQuery = $this->applyDynamicFilters($studentsQuery, $filters);
     }
-    
+
+    // Sort alphabetically by the student's name. Ordered via a correlated subquery
+    // rather than a join so the eager loads and `select *` above stay intact.
+    $studentsQuery->orderBy(User::select('first_name')->whereColumn('users.id', 'students.user_id'))
+        ->orderBy(User::select('last_name')->whereColumn('users.id', 'students.user_id'));
+
     // Check if all flag is set
     if ($all) {
         $students = $studentsQuery->get();

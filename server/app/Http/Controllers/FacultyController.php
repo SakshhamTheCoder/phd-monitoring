@@ -205,7 +205,11 @@ class FacultyController extends Controller
         if ($filters) {
             $facultyQuery = $this->applyDynamicFilters($facultyQuery, $filters);
         }
-    
+
+        // Sort alphabetically by the faculty member's name.
+        $facultyQuery->orderBy(User::select('first_name')->whereColumn('users.id', 'faculty.user_id'))
+            ->orderBy(User::select('last_name')->whereColumn('users.id', 'faculty.user_id'));
+
         $faculties = $facultyQuery->paginate($perPage, ['*'], 'page', $page);
     
         $result = $faculties->getCollection()->map(function ($faculty) {
