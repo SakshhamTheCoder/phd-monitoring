@@ -53,7 +53,11 @@ class DepartmentController extends Controller
                 // details are flattened here as well as kept nested below for the
                 // manage-department modal.
                 'hod_name' => optional(optional($department->hod)->user)->name(),
-                'hod_email' => optional(optional($department->hod)->user)->email,
+                // The official departmental address belongs to the department and
+                // outlives any one HOD, so it wins when set. Falls back to the
+                // person's own address for departments that have no official one.
+                'hod_email' => $department->hod_email ?: optional(optional($department->hod)->user)->email,
+                'hod_personal_email' => optional(optional($department->hod)->user)->email,
                 'hod_phone' => optional(optional($department->hod)->user)->phone,
                 'hod' => $department->hod ? [
                     'faculty_code' => $department->hod->faculty_code,
