@@ -92,4 +92,22 @@ class PositionApplicationController extends Controller {
                 ->where('student_id', $rollNo)->orderByDesc('id')->get()
         );
     }
+
+    // Prefill values for the apply form, sourced from the logged-in student's profile.
+    public function applicantProfile() {
+        $user = Auth::user();
+        if (optional($user->current_role)->role !== 'student') {
+            return response()->json(['message' => 'Only students have a profile'], 403);
+        }
+        $s = $user->student;
+        return response()->json([
+            'name' => trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')),
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'cgpa' => $s && $s->cgpa !== null ? (string) $s->cgpa : '',
+            'institute' => 'Thapar Institute of Engineering & Technology',
+            'degree' => 'PhD',
+            'research' => $s ? $s->phd_title : '',
+        ]);
+    }
 }

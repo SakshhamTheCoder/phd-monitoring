@@ -15,3 +15,8 @@ export const apiMyApplications = async () => {
   const { success, response } = await customFetch(`${baseURL}/my-applications`, 'GET', {}, false);
   return success ? (response || []).map(mapApplication) : [];
 };
+
+export const apiApplicantProfile = async () => {
+  const { success, response } = await customFetch(`${baseURL}/openings/profile`, 'GET', {}, false);
+  return success ? (response || {}) : {};
+};

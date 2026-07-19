@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Layout from '../../components/dashboard/layout';
 import { formatDate } from '../../data/projectsData';
-import { apiOpenings, apiApply, apiMyApplications } from '../../api/openings';
+import { apiOpenings, apiApply, apiMyApplications, apiApplicantProfile } from '../../api/openings';
 import { toast } from 'react-toastify';
 import './Openings.css';
 
@@ -23,12 +23,14 @@ const Openings = () => {
   const [form, setForm] = useState(emptyApply);
   const [positions, setPositions] = useState([]);
   const [myApps, setMyApps] = useState([]);
+  const [profile, setProfile] = useState({});
   const resumeRef = useRef(null);
 
   const loadData = async () => {
-    const [pos, apps] = await Promise.all([apiOpenings(), apiMyApplications()]);
+    const [pos, apps, prof] = await Promise.all([apiOpenings(), apiMyApplications(), apiApplicantProfile()]);
     setPositions(pos);
     setMyApps(apps);
+    setProfile(prof || {});
   };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { loadData(); }, []);
@@ -38,7 +40,20 @@ const Openings = () => {
   const openPositions = positions.filter(p => !p.deadline || p.deadline >= today);
   const closedPositions = positions.filter(p => p.deadline && p.deadline < today);
 
-  const openApply = (pos) => { setForm(emptyApply); setApplyFor(pos); };
+  // Prefill the apply form from the logged-in student's profile; all fields stay editable.
+  const openApply = (pos) => {
+    setForm({
+      ...emptyApply,
+      name: profile.name || '',
+      email: profile.email || '',
+      phone: profile.phone || '',
+      degree: profile.degree || '',
+      institute: profile.institute || '',
+      cgpa: profile.cgpa || '',
+      research: profile.research || '',
+    });
+    setApplyFor(pos);
+  };
   const handleResume = (e) => {
     const f = e.target.files && e.target.files[0];
     if (f) setForm(prev => ({ ...prev, resume: f.name, resumeFile: f }));
