@@ -25,26 +25,33 @@ class SetDepartmentHodEmails extends Command
     protected $description = 'Set the official HoD email on each department';
 
     /**
-     * code => [email, confident?, official name for reporting]
+     * local code => [email, confident?, official name, official subdomain]
      *
-     * Confident entries are an unambiguous code match. Probable entries are a
-     * judgement call about which local code the official name refers to, so
-     * they need --include-probable and a human eye first.
+     * Every address is `h` plus the department's own subdomain as listed on
+     * thapar.edu/academics, which is what makes these verifiable rather than
+     * guessed: scbc.thapar.edu gives hscbc@thapar.edu, and so on.
+     *
+     * The codes stored here do not always match the official abbreviation.
+     * DBT is btd, DCB is scbc, DOM is som, DEE is see, DPMS is spms and SHSS is
+     * smss, so the subdomain column is the evidence for each pairing.
+     *
+     * LMTSM (lmtsm) and SLAS (tslas) are real departments with no HoD address
+     * in the official list, so they are deliberately absent, as are the Dera
+     * Bassi campus departments.
      */
     private const MAPPING = [
-        'DBT'  => ['hbtd@thapar.edu',  true,  'Biotechnology'],
-        'CHED' => ['hched@thapar.edu', true,  'Chemical Engineering'],
-        'CED'  => ['hced@thapar.edu',  true,  'Civil Engineering'],
-        'CSED' => ['hcsed@thapar.edu', true,  'Computer Science & Engineering'],
-        'EIED' => ['heied@thapar.edu', true,  'Electrical & Instrumentation Engineering'],
-        'ECED' => ['heced@thapar.edu', true,  'Electronics & Communication Engineering'],
-        'MED'  => ['hmed@thapar.edu',  true,  'Mechanical Engineering'],
-        'SHSS' => ['hsmss@thapar.edu', true,  'School of Humanities & Social Sciences'],
-        'DPMS' => ['hspms@thapar.edu', true,  'School of Physics & Materials Science'],
-
-        'DCB'  => ['hscbc@thapar.edu', false, 'School of Chemistry & Biochemistry'],
-        'DOM'  => ['hsom@thapar.edu',  false, 'School of Mathematics'],
-        'DEE'  => ['hsee@thapar.edu',  false, 'School of Energy & Environment'],
+        'DBT'  => ['hbtd@thapar.edu',  true, 'Department of Biotechnology',                    'btd'],
+        'CHED' => ['hched@thapar.edu', true, 'Chemical Engineering',                           'ched'],
+        'CED'  => ['hced@thapar.edu',  true, 'Civil Engineering',                              'ced'],
+        'CSED' => ['hcsed@thapar.edu', true, 'Computer Science & Engineering',                 'csed'],
+        'EIED' => ['heied@thapar.edu', true, 'Electrical & Instrumentation Engineering',       'eied'],
+        'ECED' => ['heced@thapar.edu', true, 'Electronics & Communication Engineering',        'eced'],
+        'MED'  => ['hmed@thapar.edu',  true, 'Mechanical Engineering Department',              'med'],
+        'SHSS' => ['hsmss@thapar.edu', true, 'School of Humanities & Social Sciences',         'smss'],
+        'DPMS' => ['hspms@thapar.edu', true, 'Department of Physics & Materials Science',      'spms'],
+        'DCB'  => ['hscbc@thapar.edu', true, 'Department of Chemistry & Biochemistry',         'scbc'],
+        'DOM'  => ['hsom@thapar.edu',  true, 'Department of Mathematics',                      'som'],
+        'DEE'  => ['hsee@thapar.edu',  true, 'Department of Energy and Environment',           'see'],
     ];
 
     public function handle()
@@ -57,9 +64,9 @@ class SetDepartmentHodEmails extends Command
         $toWrite = [];
         $missing = [];
 
-        foreach (self::MAPPING as $code => [$email, $confident, $officialName]) {
+        foreach (self::MAPPING as $code => [$email, $confident, $officialName, $subdomain]) {
             $department = Department::where('code', $code)->first();
-            $confidence = $confident ? 'CONFIRMED' : 'PROBABLE';
+            $confidence = $confident ? $subdomain . '.thapar.edu' : 'PROBABLE';
 
             if (!$department) {
                 $missing[] = [$code, $officialName, $email];
@@ -88,7 +95,7 @@ class SetDepartmentHodEmails extends Command
             $toWrite[] = [$department, $email];
         }
 
-        $this->table(['Code', 'Confidence', 'Official email', 'Currently', 'Action'], $rows);
+        $this->table(['Code', 'Official site', 'Official email', 'Currently', 'Action'], $rows);
 
         if (!empty($missing)) {
             $this->warn('These departments are not in this database, so nothing was set for them:');
