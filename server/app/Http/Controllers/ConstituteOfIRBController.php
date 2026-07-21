@@ -536,13 +536,20 @@ class ConstituteOfIRBController extends Controller
                             'member_id'   => $irbExpert->expert_id,
                         ]);
                     }
-                    $area=$formInstance->student->areaOfSpecialization;
-                    $expert=$area->getExpertFaculty();
-                    DoctoralCommittee::create([
-                        'student_id' => $formInstance->student->roll_no,
-                        'faculty_id' => $expert->faculty_code,
-                        'type' => 'external',
-                    ]);
+                    // The structured area of specialization is optional. A student who
+                    // entered a free-text broad area has no area FK (see studentSubmit,
+                    // which only links the FK for a real area id). Only add the area's
+                    // expert to the committee when it actually resolves; a missing area
+                    // must not crash the whole DORDC approval.
+                    $area = $formInstance->student->areaOfSpecialization;
+                    $areaExpert = $area?->getExpertFaculty();
+                    if ($areaExpert) {
+                        DoctoralCommittee::create([
+                            'student_id' => $formInstance->student->roll_no,
+                            'faculty_id' => $areaExpert->faculty_code,
+                            'type' => 'external',
+                        ]);
+                    }
                     $formInstance->update([
                         'outside_expert' => $outsideExpertId,
                         'cognate_expert' => $cognateExpertId,
