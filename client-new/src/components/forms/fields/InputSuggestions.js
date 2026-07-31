@@ -10,6 +10,10 @@ const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = 
     const [showHint, setShowHint] = useState(true);
     const [userSelected, setUserSelected] = useState(false);
     const [loading, setLoading] = useState(false);
+    // The list used to render purely on `inputValue`, so once a field had text its
+    // dropdown stayed mounted for good — sitting over the field below and
+    // swallowing that field's clicks. It must not outlive focus.
+    const [isFocused, setIsFocused] = useState(false);
 
     const containerRef = useRef(null);
     const abortControllerRef = useRef(null);
@@ -86,13 +90,15 @@ useEffect(() => {
 
     const handleBlur = (event) => {
         if (!containerRef.current.contains(event.relatedTarget)) { // Check if the newly focused element is outside the component
-            console.log("hiii",event,inputValue)
+            // Always close on the way out. Whether the typed text is committed as a
+            // free-text value still depends on suggestionManadatory, but that is a
+            // separate question from whether the dropdown stays on screen.
+            setIsFocused(false);
+            setSuggestions([]);
             if (!suggestionManadatory) {
-                setSuggestions([]);
                 setShowHint(false);
                 setUserSelected(true);
                 onSelect({ name: inputValue, id: inputValue });
-                console.log("Clicked outside, suggestions hidden", inputValue);
             }
         }
     };
@@ -113,13 +119,14 @@ useEffect(() => {
                     type="text"
                     value={inputValue}
                     onChange={handleInputChange}
+                    onFocus={() => setIsFocused(true)}
                     placeholder={hintText}
                     className="input-field"
                     disabled={isLocked}
                 />
             </div>
 
-            {inputValue && (
+            {isFocused && inputValue && (loading || suggestions.length > 0 || showHint) && (
                 <ul className="suggestions-list">
                     {loading && (
                         <li className="suggestion-item loading">Loading...</li>
@@ -127,6 +134,9 @@ useEffect(() => {
                     {!loading && suggestions.length > 0 && suggestions.map((suggestion) => (
                         <li
                             key={suggestion.id}
+                            // Keep focus on the input: without this the input blurs on
+                            // mousedown, the list unmounts, and the click never lands.
+                            onMouseDown={(event) => event.preventDefault()}
                             onClick={() => handleSuggestionClick(suggestion)}
                             className="suggestion-item"
                         >
