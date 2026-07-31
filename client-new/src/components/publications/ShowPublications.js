@@ -67,16 +67,12 @@ const ShowPublications = ({
            setOpen(true);
        }
    };
+   // Some callers pass a partial set (the form pickers only offer journals and
+   // patents), so count defensively rather than assuming every group is present.
    useEffect(() => {
     if (!formData) return;
-        let c=0;
-        c+=formData?.sci?.length;
-        c+=formData?.non_sci?.length;
-        c+=formData?.international?.length;
-        c+=formData?.national?.length;
-        c+=formData?.book?.length;
-        c+=formData?.patents?.length;
-        setTotalPublications(c);
+        const groups = ['sci', 'non_sci', 'international', 'national', 'book', 'patents'];
+        setTotalPublications(groups.reduce((total, group) => total + (formData[group]?.length || 0), 0));
    }, [formData]);
 
    const renderActions = (publicationId, publicationType) => (
@@ -222,16 +218,9 @@ const ShowPublications = ({
                             ]} space={3} />
                         </>
                     )}
-                    {
-                       formData.patents && formData.patents.length === 0 &&
-                          formData.book && formData.book.length === 0 &&
-                            formData.national && formData.national.length === 0 &&
-                            formData.international && formData.international.length === 0 &&
-                            formData.sci && formData.sci.length === 0 &&
-                            formData.non_sci && formData.non_sci.length === 0 && (
-                                <p style={{textAlign:'center'}}>No Publications Found, Add One to Continue</p>
-                            )
-                    }
+                    {totalPublications === 0 && (
+                        <p style={{textAlign:'center'}}>No Publications Found, Add One to Continue</p>
+                    )}
                      {enableSubmit && (
                         <GridContainer elements={[
                             <> {Object.values(selectedRows).some(

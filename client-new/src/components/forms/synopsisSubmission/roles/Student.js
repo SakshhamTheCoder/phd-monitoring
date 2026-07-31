@@ -25,6 +25,12 @@ const Student = ({ formData }) => {
   const [showPublication, setShowPublication] = useState(false);
   const [temp, setTemp] = useState([]);
   const [files, setFiles] = useState([]);
+  // The scholar's unlinked publication library, shown in the "Add Publications"
+  // picker. Kept in state so a publication added from inside the picker appears
+  // without reloading the page.
+  const [studentPublications, setStudentPublications] = useState(
+    formData.student_publications
+  );
   const objectivesData = (formData.objectives || []).map((obj) => ({
     objective: obj,
   }));
@@ -73,6 +79,33 @@ const Student = ({ formData }) => {
       objectives: [...prevBody.objectives, ""],
     }));
   };
+  // The form GET returns both the publications linked to this form and the
+  // scholar's unlinked library, so one call refreshes the page and the picker.
+  const refetchPublications = () => {
+    setLoading(true);
+    return customFetch(baseURL + location.pathname, "GET")
+      .then((data) => {
+        if (data && data.success) {
+          const formdata = data.response;
+          setBody((prev) => ({
+            ...prev,
+            sci: formdata.sci,
+            non_sci: formdata.non_sci,
+            patents: formdata.patents,
+            book: formdata.book,
+            national: formdata.national,
+            international: formdata.international,
+          }));
+          setStudentPublications(formdata.student_publications);
+        }
+        setLoading(false);
+      })
+      .catch((error) => {
+        setLoading(false);
+        toast.error("Could not refresh publications: " + error);
+      });
+  };
+
   const removePublication = (id, type) => {
     const tt = {
       publications: [],
@@ -87,20 +120,14 @@ const Student = ({ formData }) => {
     customFetch(baseURL + location.pathname + "/unlink", "POST", tt)
       .then((data) => {
         if (data && data.success) {
-          customFetch(baseURL + location.pathname, "GET").then((data) => {
-            if (data && data.success) {
-              setBody(data.response);
-              setLoading(false);
-              closeModal();
-            }
-          });
+          refetchPublications();
         } else {
           setLoading(false);
         }
       })
       .catch((error) => {
         setLoading(false);
-        toast.error("Error in linking publications: " + error);
+        toast.error("Error in unlinking publications: " + error);
       });
   };
 
@@ -129,22 +156,7 @@ const Student = ({ formData }) => {
     customFetch(baseURL + location.pathname + "/link", "POST", tt)
       .then((data) => {
         if (data && data.success) {
-          customFetch(baseURL + location.pathname, "GET").then((data) => {
-            if (data && data.success) {
-              let formdata = data.response;
-              setBody((prev) => ({
-                ...prev,
-                sci: formdata.sci,
-                non_sci: formdata.non_sci,
-                patents: formdata.patents,
-                book: formdata.book,
-                national: formdata.national,
-                international: formdata.international,
-              }));
-              setLoading(false);
-              closeModal();
-            }
-          });
+          refetchPublications().then(closeModal);
         } else {
           setLoading(false);
         }
@@ -170,7 +182,7 @@ const Student = ({ formData }) => {
         }
 
         // Find the publication object with a matching id
-        const publication = formData.student_publications[type].find(
+        const publication = studentPublications?.[type]?.find(
           (pub) => pub.id === parseInt(id, 10)
         );
 
@@ -351,6 +363,7 @@ const Student = ({ formData }) => {
                   enableEdit={!lock}
                   enableDelete={!lock}
                   onDelete={removePublication}
+                  refetchData={refetchPublications}
                 />,
               ]}
               space={3}
@@ -380,11 +393,12 @@ const Student = ({ formData }) => {
             closeOnOutsideClick={false}
           >
             <ShowPublications
-              formData={formData.student_publications}
+              formData={studentPublications}
               enableSelect={true}
               enableSubmit={true}
               onSelect={updateValue}
               onSubmit={submitPublication}
+              refetchData={refetchPublications}
             />
           </CustomModal>
         </>
