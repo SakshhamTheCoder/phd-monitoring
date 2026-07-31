@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Traits;
 
 use App\Models\Forms;
 use App\Models\Presentation;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -79,6 +80,16 @@ trait GeneralFormSubmitter
         } catch (ValidationException $e) {
             Log::error('Validation error in form submission: ' . $e->getMessage());
             return response()->json(['errors' => $e->errors()], 422);
+        } catch (QueryException $e) {
+            // A database error's message carries the full SQL, table and index names,
+            // and the generic handler below returns getMessage() straight to the
+            // browser — so it would be shown to the user verbatim. Log the detail and
+            // hand back something safe. The deliberate domain exceptions below are
+            // written for users and still pass through unchanged.
+            Log::error('Database error in form submission: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'This could not be saved. Please check the details and try again.',
+            ], 403);
         } catch (\Exception $e) {
             Log::error('Error in form submission: ' . $e->getMessage());
             if ($e->getCode() == 201) {
