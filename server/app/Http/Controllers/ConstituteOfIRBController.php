@@ -508,13 +508,20 @@ class ConstituteOfIRBController extends Controller
                         // sendExternalReviewRequest / ExternalReviewController), attributed
                         // to the OutsideExpert record, so no portal user is needed.
 
-                    DoctoralCommittee::create([
-                        'student_id' => $formInstance->student->roll_no,
-                        'faculty_id' => $cognateExpertId,
-                        'type' => 'internal',
-                    ]);
+                    // firstOrCreate, not create: the nominated cognate may already sit
+                    // on this student's committee, and (faculty_id, student_id) is
+                    // unique — a plain insert then aborts the whole DORDC approval
+                    // with a raw SQL error. Adding someone twice is a no-op, not an
+                    // error.
+                    DoctoralCommittee::firstOrCreate(
+                        [
+                            'student_id' => $formInstance->student->roll_no,
+                            'faculty_id' => $cognateExpertId,
+                        ],
+                        ['type' => 'internal']
+                    );
 
-                    
+
                     IRBCommittee::create([
                         'student_id'  => $formInstance->student->roll_no,
                         'type'        => 'inside',
@@ -524,11 +531,13 @@ class ConstituteOfIRBController extends Controller
                     
                     $irbExperts=IrbExpertChairman::where('irb_form_id',$formInstance->id)->get();
                     foreach($irbExperts as $irbExpert){
-                        DoctoralCommittee::create([
-                            'student_id' => $formInstance->student->roll_no,
-                            'faculty_id' => $irbExpert->expert_id,
-                            'type' => 'internal',
-                        ]);
+                        DoctoralCommittee::firstOrCreate(
+                            [
+                                'student_id' => $formInstance->student->roll_no,
+                                'faculty_id' => $irbExpert->expert_id,
+                            ],
+                            ['type' => 'internal']
+                        );
                         IRBCommittee::create([
                             'student_id'  => $formInstance->student->roll_no,
                             'type'        => 'inside',
@@ -544,11 +553,13 @@ class ConstituteOfIRBController extends Controller
                     $area = $formInstance->student->areaOfSpecialization;
                     $areaExpert = $area?->getExpertFaculty();
                     if ($areaExpert) {
-                        DoctoralCommittee::create([
-                            'student_id' => $formInstance->student->roll_no,
-                            'faculty_id' => $areaExpert->faculty_code,
-                            'type' => 'external',
-                        ]);
+                        DoctoralCommittee::firstOrCreate(
+                            [
+                                'student_id' => $formInstance->student->roll_no,
+                                'faculty_id' => $areaExpert->faculty_code,
+                            ],
+                            ['type' => 'external']
+                        );
                     }
                     $formInstance->update([
                         'outside_expert' => $outsideExpertId,

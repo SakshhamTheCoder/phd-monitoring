@@ -84,7 +84,21 @@ const Dordc = ({ formData }) => {
             formData.role === "dordc" && !lock && (
                 <>
                   <GridContainer elements={[
-                    <CustomButton text="Submit" onClick={() => {submitForm(body,location,setLoading)}}/>
+                    <CustomButton text="Submit" onClick={() => {
+                      // The two nominations live behind `body.approval`, but this
+                      // button does not — so without these checks the form submits
+                      // with both still undefined, records nothing, and silently
+                      // never advances.
+                      if (!body.approval) {
+                        toast.error("Record your recommendation before submitting.");
+                        return;
+                      }
+                      if (!body.cognate_expert || !body.outside_expert) {
+                        toast.error("Nominate one cognate expert and one outside expert.");
+                        return;
+                      }
+                      submitForm(body,location,setLoading);
+                    }}/>
                   ]}/>
                 </>
             )
