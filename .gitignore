@@ -1,2 +1,10 @@
 /migrations
 node_modules
+
+# local design mockups & architecture notes (not for VCS)
+/architecture.md
+/design-htmls/
+
+# local planning docs & agent scratch (not for VCS)
+/docs/
+/.superpowers/

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\EmailNotificationController;
+use App\Http\Controllers\PositionApplicationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -269,6 +270,19 @@ Route::prefix('publications')->group(function () {
 Route::prefix('patents')->group(function () {
     require base_path('routes/base/patents.php');
 });
+
+Route::prefix('projects')->group(function () {
+    require base_path('routes/base/projects.php');
+});
+
+Route::prefix('applications')->group(function () {
+    require base_path('routes/base/applications.php');
+});
+
+Route::prefix('openings')->group(function () {
+    require base_path('routes/base/openings.php');
+});
+Route::get('/my-applications', [PositionApplicationController::class, 'myApplications'])->middleware('auth:sanctum');
 
 Route::prefix('faculty')->group(function () {
     require base_path('routes/base/faculties.php');

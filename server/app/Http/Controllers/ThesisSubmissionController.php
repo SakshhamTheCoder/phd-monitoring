@@ -230,8 +230,8 @@ class ThesisSubmissionController extends Controller
                 $formInstance->date_of_synopsis = $request->date_of_synopsis;
                 $formInstance->reciept_no = $request->reciept_no;
                 $formInstance->date_of_fee_submission = $request->date_of_fee_submission;
-                $formInstance->thesis_pdf = $this->saveUploadedFile($request->file('thesis_pdf'), 'thesis', $user->student->roll_no);
-                $formInstance->fee_receipt = $this->saveUploadedFile($request->file('fee_receipt'), 'fee_receipt', $user->student->roll_no);
+                $formInstance->thesis_pdf = $this->replaceUploadedFile($formInstance->thesis_pdf, $request->file('thesis_pdf'), 'thesis', $user->student->roll_no);
+                $formInstance->fee_receipt = $this->replaceUploadedFile($formInstance->fee_receipt, $request->file('fee_receipt'), 'fee_receipt', $user->student->roll_no);
                
         }
         );

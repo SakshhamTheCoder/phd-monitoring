@@ -1,0 +1,522 @@
+.rp-container {
+    padding: 2rem;
+    background-color: #FAFAFA;
+    font-family: 'Inter', sans-serif;
+}
+
+.loading-state {
+    padding: 2rem;
+    text-align: center;
+    font-size: 1.2rem;
+    color: #666;
+}
+
+/* Top Nav */
+.rp-top-nav {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.rp-nav-left {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.rp-back-btn {
+    background: none;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #555;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.rp-page-title {
+    color: #900;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.rp-search-bar {
+    display: flex;
+    align-items: center;
+    background: #EAEAEA;
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    margin-left: 2rem;
+}
+
+.rp-search-bar input {
+    background: transparent;
+    border: none;
+    outline: none;
+    margin-left: 0.5rem;
+    font-size: 0.9rem;
+}
+
+/* Banner Grid */
+.rp-banner-grid {
+    display: grid;
+    grid-template-columns: 300px 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.rp-user-card,
+.rp-info-card,
+.rp-sync-card {
+    background: #FFF;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.rp-user-card {
+    text-align: center;
+}
+
+.rp-avatar-wrapper {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 1rem;
+    border-radius: 50%;
+    border: 3px solid #FFF;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.rp-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #EEE;
+}
+
+.rp-status-badge {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 20px;
+    height: 20px;
+    background: #900;
+    border: 3px solid #FFF;
+    border-radius: 50%;
+}
+
+.rp-user-card h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.rp-designation {
+    color: #900;
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0.2rem 0;
+}
+
+.rp-department {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+}
+
+.rp-user-stats {
+    border-top: 1px solid #EEE;
+    padding-top: 1rem;
+}
+
+.rp-stat-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.rp-stat-row strong {
+    color: #000;
+    font-weight: 600;
+}
+
+/* Info Cards */
+.rp-middle-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.rp-right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.rp-card-title {
+    margin: 0 0 1rem;
+    padding-left: 0.5rem;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.border-red {
+    border-left: 4px solid #900;
+}
+
+.rp-contact-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.rp-contact-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.border-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #FAFAFA;
+    color: #900;
+}
+
+.rp-contact-item label {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: #777;
+    margin-bottom: 0.2rem;
+    font-weight: 600;
+}
+
+.rp-contact-item p {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #222;
+}
+
+/* Stats Cards */
+.rp-stats-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+.rp-mini-stat {
+    background: #FFF;
+    padding: 1rem;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    border-bottom: 4px solid #EEE;
+}
+
+.rp-mini-stat.stat-green {
+    border-bottom-color: #22c55e;
+}
+
+.rp-mini-stat.stat-yellow {
+    border-bottom-color: #eab308;
+}
+
+.rp-mini-stat.stat-red {
+    border-bottom-color: #ef4444;
+}
+
+.rp-mini-stat label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 0.5rem;
+}
+
+.stat-num {
+    font-size: 1.6rem;
+    font-weight: 700;
+}
+
+.stat-num.black {
+    color: #000;
+}
+
+.stat-num.green {
+    color: #22c55e;
+}
+
+.stat-num.yellow {
+    color: #eab308;
+}
+
+.stat-num.red {
+    color: #ef4444;
+}
+
+/* Sync Card */
+.rp-sync-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.rp-sync-info h4 {
+    margin: 0 0 0.5rem;
+    color: #333;
+}
+
+.rp-sync-info p {
+    margin: 0.2rem 0;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.rp-sync-info strong {
+    color: #000;
+}
+
+.rp-sync-btn {
+    background: #900;
+    color: #FFF;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Tabs */
+.rp-tabs {
+    display: flex;
+    border-bottom: 1px solid #CCC;
+    margin-bottom: 2rem;
+}
+
+.rp-tabs button {
+    background: none;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #777;
+    cursor: pointer;
+    position: relative;
+}
+
+.rp-tabs button.active {
+    color: #900;
+    font-weight: 600;
+}
+
+.rp-tabs button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: #900;
+}
+
+/* Filter Bar */
+.rp-filter-bar {
+    background: #F0F0F0;
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.rp-filters {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.rp-filters label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #555;
+}
+
+.rp-filter-group {
+    display: flex;
+    background: #FFF;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.rp-filter-group button {
+    background: none;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.rp-filter-group button.active {
+    background: #900;
+    color: #FFF;
+}
+
+.rp-filters select {
+    padding: 0.6rem 0.8rem;
+    border: 1px solid #DDD;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    outline: none;
+    font-family: inherit;
+    transition: border 0.2s;
+}
+
+.rp-filters select:focus {
+    border-color: #900;
+    box-shadow: 0 0 0 3px rgba(153,0,0,0.06);
+}
+
+.rp-year-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.rp-year-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.rp-year-tag {
+    background: #900;
+    color: #FFF;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.rp-year-tag button {
+    background: none;
+    border: none;
+    color: #FFF;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0;
+}
+
+.rp-year-input {
+    padding: 0.5rem;
+    border: 1px solid #DDD;
+    border-radius: 4px;
+    outline: none;
+    width: 200px;
+}
+
+.rp-export-btn {
+    background: none;
+    border: none;
+    color: #900;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+/* Tables */
+.rp-table-section {
+    margin-bottom: 3rem;
+}
+
+.rp-table-section h3 {
+    margin-bottom: 1rem;
+    color: #333;
+    font-size: 1.1rem;
+}
+
+.rp-table-wrapper {
+    background: #FFF;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.rp-table-wrapper table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.rp-table-wrapper th {
+    background: #FAFAFA;
+    padding: 1.2rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #777;
+    border-bottom: 1px solid #EEE;
+    text-transform: uppercase;
+}
+
+.rp-table-wrapper td {
+    padding: 1rem;
+    font-size: 0.9rem;
+    color: #333;
+    border-bottom: 1px solid #EEE;
+    vertical-align: middle;
+    font-weight: 400 !important;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-badge.pending {
+    background: #fef08a;
+    color: #a16207;
+}
+
+.status-badge.rejected {
+    background: #fecaca;
+    color: #b91c1c;
+}
+
+.status-badge.approved,
+.status-badge.granted {
+    background: #bbf7d0;
+    color: #15803d;
+}
+
+.small-text {
+    font-size: 0.75rem;
+    color: #888;
+    font-style: italic;
+}
+
+.rp-table-wrapper a {
+    color: #0066CC;
+    text-decoration: none;
+    font-weight: 600;
+}

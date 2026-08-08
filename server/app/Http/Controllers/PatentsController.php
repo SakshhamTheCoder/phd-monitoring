@@ -100,7 +100,7 @@ class PatentsController extends Controller
             $patents->status=$request->status;
 
             if ($request->hasFile('first_page')) {
-                $file = $this->saveUploadedFile($request->file('first_page'), 'patents', $patents->student_id);
+                $file = $this->replaceUploadedFile($patents->first_page, $request->file('first_page'), 'patents', $patents->student_id);
                 $patents->first_page = $file;
             }
 

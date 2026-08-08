@@ -262,7 +262,7 @@ class SynopsisSubmissionController extends Controller
                    'synopsis_pdf' => 'required|file|mimes:pdf|max:20480',
                 ]);
                 $formInstance->revised_title = $request->revised_title;
-                $link=$this->saveUploadedFile($request->file('synopsis_pdf'), 'synopsis', $user->student->roll_no);
+                $link=$this->replaceUploadedFile($formInstance->synopsis_pdf, $request->file('synopsis_pdf'), 'synopsis', $user->student->roll_no);
                 $formInstance->synopsis_pdf = $link;
                 // $oldObjectives = $formInstance->objectives;
                 // if($oldObjectives->count() > 0){

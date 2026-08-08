@@ -177,7 +177,7 @@ class ResearchExtentionController extends Controller
             if($request->has('duration')){
                 $formInstance->duration = $request->duration;
             }
-            $filePath=$this->saveUploadedFile($request->file('research_pdf'), 'research_extentions', $user->student->roll_no);
+            $filePath=$this->replaceUploadedFile($formInstance->research_pdf, $request->file('research_pdf'), 'research_extentions', $user->student->roll_no);
             $formInstance->research_pdf = $filePath;
         });
     }

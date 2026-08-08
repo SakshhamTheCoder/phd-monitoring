@@ -169,20 +169,21 @@
 
 
 .input-field {
-    padding: 10px;
-    font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.9rem;
+    border: 1px solid #DDD;
+    border-radius: 8px;
     width: 100%;
     box-sizing: border-box;
     outline: none;
-    font-size: 16px;
+    font-family: inherit;
     font-weight: 400;
-   
+    transition: border 0.2s;
 }
 
 .input-field:focus {
-    border-color: #007bff;
+    border-color: #900;
+    box-shadow: 0 0 0 3px rgba(153,0,0,0.06);
 }
 
 .input-field[readonly] {

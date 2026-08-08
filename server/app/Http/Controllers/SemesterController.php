@@ -93,7 +93,7 @@ class SemesterController extends Controller
 
         // Handle PPT file upload
         if ($request->hasFile('ppt_file')) {
-            $link = $this->saveUploadedFile($request->file('ppt_file'), 'semester_ppt', $request->semester_name);
+            $link = $this->replaceUploadedFile($semester->ppt_file, $request->file('ppt_file'), 'semester_ppt', $request->semester_name);
             $semester->ppt_file = $link;
             $semester->save();
         }

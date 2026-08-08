@@ -1,0 +1,455 @@
+.po-container {
+  padding: 2rem;
+  background-color: #FAFAFA;
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+}
+
+/* Header */
+.po-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+}
+
+.po-page-title {
+  color: #900;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+}
+
+.po-subtitle {
+  color: #777;
+  font-size: 0.9rem;
+  margin: 0;
+  font-weight: 400;
+}
+
+.po-create-btn {
+  background: #900;
+  color: #FFF;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background 0.2s;
+}
+
+.po-create-btn:hover {
+  background: #700;
+}
+
+/* Stats Grid */
+.po-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.5fr 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.po-stat-card {
+  background: #FFF;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.po-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+.po-stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.po-stat-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* One branded icon treatment for every KPI — the number stays the hero */
+.po-stat-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  background: #f7ebeb;
+  color: #900;
+}
+
+.po-stat-icon.active,
+.po-stat-icon.completed,
+.po-stat-icon.funding,
+.po-stat-icon.consultancy,
+.po-stat-icon.international {
+  background: #f7ebeb;
+  color: #900;
+}
+
+.po-stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111;
+  line-height: 1;
+}
+
+.po-stat-value.accent {
+  color: #15803d;
+}
+
+.po-stat-value.large {
+  font-size: 1.8rem;
+  color: #900;
+}
+
+.po-stat-trend {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.po-stat-trend.up {
+  color: #15803d;
+}
+
+.po-stat-meta {
+  font-size: 0.75rem;
+  color: #999;
+}
+
+.po-funding-split {
+  font-size: 0.75rem;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.po-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.po-dot.internal {
+  background: #900;
+}
+
+.po-dot.external {
+  background: #3b82f6;
+}
+
+/* Filter Bar */
+.po-filter-bar {
+  background: #F0F0F0;
+  border-radius: 10px;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.po-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.po-filter-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.po-filter-pills {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.po-filter-pill {
+  background: #FFF;
+  border: 1px solid #DDD;
+  border-radius: 20px;
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #555;
+}
+
+.po-filter-pill:hover {
+  border-color: #900;
+  color: #900;
+}
+
+.po-filter-pill.active {
+  background: #900;
+  color: #FFF;
+  border-color: #900;
+}
+
+.po-export-btn {
+  background: none;
+  border: none;
+  color: #900;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.po-export-btn:hover {
+  color: #700;
+}
+
+/* Table */
+.po-table-wrapper {
+  background: #FFF;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.po-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.po-table th {
+  background: #FAFAFA;
+  padding: 1rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #777;
+  border-bottom: 1px solid #EEE;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.po-table td {
+  padding: 1rem;
+  font-size: 0.88rem;
+  font-weight: 400;
+  color: #333;
+  border-bottom: 1px solid #F0F0F0;
+  vertical-align: middle;
+}
+
+.po-row-clickable {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.po-row-clickable:hover {
+  background: #fef2f2;
+}
+
+.po-project-title {
+  font-weight: 400;
+  color: #222;
+  font-size: 0.9rem;
+  max-width: 280px;
+}
+
+.po-project-id {
+  font-size: 0.72rem;
+  color: #aaa;
+  margin-top: 0.2rem;
+}
+
+.po-category-badge {
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.po-amount {
+  font-weight: 400;
+  color: #111;
+}
+
+.po-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.po-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.po-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.po-icon-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFF;
+  border: 1px solid #E5E5E5;
+  border-radius: 6px;
+  color: #666;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.po-icon-btn.edit:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  color: #2563eb;
+}
+
+/* Delete is a destructive action — red by default */
+.po-icon-btn.delete {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.po-icon-btn.delete:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #FFF;
+}
+
+/* Delete Confirmation Modal */
+.po-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.po-modal {
+  background: #FFF;
+  border-radius: 14px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.po-modal-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #fef2f2;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin: 0 auto 1rem;
+}
+
+.po-modal-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #111;
+  margin: 0 0 0.5rem;
+}
+
+.po-modal-text {
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.5;
+  margin: 0 0 1.5rem;
+}
+
+.po-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.po-modal-btn {
+  padding: 0.65rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.po-modal-btn.cancel {
+  background: #FFF;
+  border: 1px solid #DDD;
+  color: #555;
+}
+
+.po-modal-btn.cancel:hover {
+  background: #f5f5f5;
+}
+
+.po-modal-btn.confirm {
+  background: #dc2626;
+  border: 1px solid #dc2626;
+  color: #FFF;
+}
+
+.po-modal-btn.confirm:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
+.po-empty {
+  text-align: center;
+  padding: 3rem;
+  color: #999;
+  font-size: 0.95rem;
+}

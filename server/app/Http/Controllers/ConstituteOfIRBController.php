@@ -226,7 +226,7 @@ class ConstituteOfIRBController extends Controller
                 ]);
             }
             //save pdf
-            $link=$this->saveUploadedFile($request->file('irb_pdf'), 'irb_const', $user->student->roll_no);
+            $link=$this->replaceUploadedFile($formInstance->irb_pdf, $request->file('irb_pdf'), 'irb_const', $user->student->roll_no);
            
             $formInstance->student->address = $request->address;
             
