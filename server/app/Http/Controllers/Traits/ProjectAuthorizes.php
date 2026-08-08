@@ -11,6 +11,7 @@ trait ProjectAuthorizes {
     protected function owns($user, $project) {
         $role = optional($user->current_role)->role;
         if (in_array($role, $this->privileged)) return true;
-        return optional($user->faculty)->faculty_code == $project->pi_faculty_code;
+        $code = optional($user->faculty)->faculty_code;
+        return $code !== null && $code == $project->pi_faculty_code;
     }
 }

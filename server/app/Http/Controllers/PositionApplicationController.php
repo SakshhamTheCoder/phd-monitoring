@@ -17,7 +17,10 @@ class PositionApplicationController extends Controller {
         $project = Project::find($projectId);
         if (!$project) return response()->json(['message' => 'Project not found'], 404);
         if (!$this->owns($user, $project)) return response()->json(['message' => 'Not authorized'], 403);
-        return response()->json(PositionApplication::where('project_id', $project->id)->orderByDesc('id')->get());
+        return response()->json(
+            PositionApplication::with('position:id,type,title')
+                ->where('project_id', $project->id)->orderByDesc('id')->get()
+        );
     }
 
     public function updateStatus(Request $request, $applicationId) {

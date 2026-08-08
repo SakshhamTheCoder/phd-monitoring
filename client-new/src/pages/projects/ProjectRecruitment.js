@@ -247,7 +247,6 @@ const ProjectRecruitment = () => {
                 <div className="pr-modal-item"><span>CGPA</span><strong>{selectedApplicant.cgpa}</strong></div>
                 <div className="pr-modal-item"><span>Degree</span><strong>{selectedApplicant.degree}</strong></div>
                 <div className="pr-modal-item"><span>Institute</span><strong>{selectedApplicant.institute}</strong></div>
-                <div className="pr-modal-item"><span>Experience</span><strong>{selectedApplicant.experience || '—'}</strong></div>
                 <div className="pr-modal-item"><span>Applied On</span><strong>{selectedApplicant.appliedDate ? formatDate(selectedApplicant.appliedDate) : '—'}</strong></div>
                 <div className="pr-modal-item full"><span>Research Interest</span><strong>{selectedApplicant.research}</strong></div>
                 <div className="pr-modal-item full"><span>Skills</span><strong>{(selectedApplicant.skills || []).join(', ')}</strong></div>

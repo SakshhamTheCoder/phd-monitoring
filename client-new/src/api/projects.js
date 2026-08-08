@@ -50,7 +50,11 @@ export const mapProject = (p) => (p ? {
   coPIs: p.co_pis || [], objectives: p.objectives || [], budget: p.budget || {},
   equipmentDetails: p.equipment_details || [],
   sanctionLetterLink: p.sanction_letter_link, sanctionLetterName: p.sanction_letter_name,
-  pi: p.pi || null,
+  pi: p.pi ? {
+    name: p.pi.user ? `${p.pi.user.first_name || ''} ${p.pi.user.last_name || ''}`.trim() : '',
+    department: p.pi.department ? p.pi.department.name : '',
+    designation: p.pi.designation || '',
+  } : null,
   milestones: (p.milestones || []).map(mapMilestone),
   documents: (p.documents || []).map(mapDocument),
   positions: (p.positions || []).map(mapPosition),

@@ -85,10 +85,14 @@ const AppContent = () => {
 
           {/* Dashboard */}
           <Route path="/home" element={<Dashboard />} />
-          <Route path="/projects" element={<ProjectsOverview />} />
-          <Route path="/projects/create" element={<CreateProject />} />
-          <Route path="/projects/:id" element={<ProjectDetails />} />
-          <Route path="/projects/:id/recruit" element={<ProjectRecruitment />} />
+          {(role === 'faculty' || role === 'hod' || role === 'phd_coordinator' || role === 'dordc' || role === 'adordc' || role === 'dra' || role === 'director' || role === 'admin') && (
+            <>
+              <Route path="/projects" element={<ProjectsOverview />} />
+              <Route path="/projects/create" element={<CreateProject />} />
+              <Route path="/projects/:id" element={<ProjectDetails />} />
+              <Route path="/projects/:id/recruit" element={<ProjectRecruitment />} />
+            </>
+          )}
           {/* <Route path="/team" element={<Team/>} /> */}
           {role === 'student' && (
             <>

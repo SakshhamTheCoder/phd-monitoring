@@ -98,7 +98,6 @@ const ProjectsOverview = () => {
               <span className="po-stat-icon active"><i className="fa fa-rocket"></i></span>
             </div>
             <span className="po-stat-value">{String(stats.active).padStart(2, '0')}</span>
-            <span className="po-stat-trend up"><i className="fa fa-arrow-up"></i> +12% this quarter</span>
           </div>
           <div className="po-stat-card">
             <div className="po-stat-header">
@@ -106,7 +105,6 @@ const ProjectsOverview = () => {
               <span className="po-stat-icon completed"><i className="fa fa-check-circle"></i></span>
             </div>
             <span className="po-stat-value accent">{String(stats.completed).padStart(2, '0')}</span>
-            <span className="po-stat-meta">Cumulative 2015–2026</span>
           </div>
           <div className="po-stat-card wide">
             <div className="po-stat-header">
@@ -114,10 +112,6 @@ const ProjectsOverview = () => {
               <span className="po-stat-icon funding"><i className="fa fa-inr"></i></span>
             </div>
             <span className="po-stat-value large">{formatCurrency(stats.totalFunding)}</span>
-            <div className="po-funding-split">
-              <span className="po-dot internal"></span> Internal: {formatCurrency(stats.totalFunding * 0.6)}
-              <span className="po-dot external"></span> External: {formatCurrency(stats.totalFunding * 0.4)}
-            </div>
           </div>
           <div className="po-stat-card">
             <div className="po-stat-header">

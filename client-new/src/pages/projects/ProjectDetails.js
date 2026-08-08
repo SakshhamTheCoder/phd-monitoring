@@ -505,15 +505,19 @@ const ProjectDetails = () => {
         <div className="pd-tab-content">
           <div className="pd-card">
             <h3 className="pd-card-title"><i className="fa fa-user"></i> Principal Investigator</h3>
-            <div className="pd-team-card">
-              <div className="pd-team-avatar">{project.pi.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</div>
-              <div className="pd-team-info">
-                <h4>{project.pi.name}</h4>
-                <p className="pd-team-dept">{project.pi.department}</p>
-                <p className="pd-team-meta">{project.pi.designation}</p>
+            {project.pi ? (
+              <div className="pd-team-card">
+                <div className="pd-team-avatar">{project.pi.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</div>
+                <div className="pd-team-info">
+                  <h4>{project.pi.name}</h4>
+                  <p className="pd-team-dept">{project.pi.department}</p>
+                  <p className="pd-team-meta">{project.pi.designation}</p>
+                </div>
+                <span className="pd-team-role pi">PI</span>
               </div>
-              <span className="pd-team-role pi">PI</span>
-            </div>
+            ) : (
+              <p className="pd-doc-empty">No principal investigator on record for this project.</p>
+            )}
           </div>
           <div className="pd-card">
             <div className="pd-ms-header">

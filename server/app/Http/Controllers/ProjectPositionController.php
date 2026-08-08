@@ -14,8 +14,10 @@ class ProjectPositionController extends Controller {
     private $typeRule = 'in:JRF,SRF,Research Associate,Research Intern,UG Intern,PG Intern';
 
     public function index($projectId) {
+        $user = Auth::user();
         $project = Project::find($projectId);
         if (!$project) return response()->json(['message' => 'Project not found'], 404);
+        if (!$this->owns($user, $project)) return response()->json(['message' => 'Not authorized'], 403);
         return response()->json(
             ProjectPosition::where('project_id', $project->id)
                 ->withCount([
