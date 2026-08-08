@@ -105,6 +105,7 @@ class PatentsController extends Controller
             }
 
             $patents->save();
+            $this->commitFileDeletions();
             return response()->json(['message' => 'Patent updated successfully'], 200);
         }
         return response()->json(['message' => 'Patent not found'], 404);

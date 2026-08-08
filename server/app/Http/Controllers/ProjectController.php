@@ -81,11 +81,12 @@ class ProjectController extends Controller {
             $project->sanction_letter_name = $request->file('sanction_letter')->getClientOriginalName();
         } elseif ($request->filled('sanction_letter_link')) {
             // Switching to an external link supersedes any stored file.
-            $this->deleteStoredFile($project->sanction_letter_link);
+            $this->queueFileDeletion($project->sanction_letter_link);
             $project->sanction_letter_link = $request->sanction_letter_link;
             $project->sanction_letter_name = $request->input('sanction_letter_name', 'Sanction Letter');
         }
         $project->save();
+        $this->commitFileDeletions();
         return response()->json(['message' => 'Project updated', 'project' => $project]);
     }
 

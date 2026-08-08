@@ -54,13 +54,14 @@ class ProjectDocumentController extends Controller {
             $doc->type = $request->file('file')->getClientOriginalExtension();
             $doc->link = null;
         } elseif ($request->filled('link')) {
-            $this->deleteStoredFile($doc->file_path);
+            $this->queueFileDeletion($doc->file_path);
             $doc->file_path = null;
             $doc->link = $request->input('link');
             $doc->type = $request->input('type', 'LINK');
         }
         // No file/link supplied -> keep the existing one (name-only edit).
         $doc->save();
+        $this->commitFileDeletions();
         return response()->json(['message' => 'Document updated', 'document' => $doc]);
     }
 
@@ -71,8 +72,9 @@ class ProjectDocumentController extends Controller {
         if (!$this->owns($user, $project)) return response()->json(['message' => 'Not authorized'], 403);
         $doc = ProjectDocument::where('project_id', $project->id)->find($documentId);
         if (!$doc) return response()->json(['message' => 'Document not found'], 404);
-        $this->deleteStoredFile($doc->file_path);
+        $this->queueFileDeletion($doc->file_path);
         $doc->delete();
+        $this->commitFileDeletions();
         return response()->json(['message' => 'Document deleted']);
     }
 }

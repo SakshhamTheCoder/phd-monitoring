@@ -60,6 +60,7 @@ class ProjectPositionController extends Controller {
             $pos->advertisement_path = $this->replaceUploadedFile($pos->advertisement_path, $request->file('advertisement'), 'project_advertisement', $project->id);
         }
         $pos->save();
+        $this->commitFileDeletions();
         return response()->json(['message' => 'Position updated', 'position' => $pos]);
     }
 
@@ -70,8 +71,9 @@ class ProjectPositionController extends Controller {
         if (!$this->owns($user, $project)) return response()->json(['message' => 'Not authorized'], 403);
         $pos = ProjectPosition::where('project_id', $project->id)->find($positionId);
         if (!$pos) return response()->json(['message' => 'Position not found'], 404);
-        $this->deleteStoredFile($pos->advertisement_path);
+        $this->queueFileDeletion($pos->advertisement_path);
         $pos->delete();
+        $this->commitFileDeletions();
         return response()->json(['message' => 'Position deleted']);
     }
 

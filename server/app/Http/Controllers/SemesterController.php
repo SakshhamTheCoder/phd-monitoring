@@ -96,6 +96,7 @@ class SemesterController extends Controller
             $link = $this->replaceUploadedFile($semester->ppt_file, $request->file('ppt_file'), 'semester_ppt', $request->semester_name);
             $semester->ppt_file = $link;
             $semester->save();
+            $this->commitFileDeletions();
         }
 
         return response()->json([
