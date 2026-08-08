@@ -186,19 +186,27 @@
     box-shadow: 0 0 0 3px var(--primary-tint);
 }
 
-.input-field[readonly] {
-    background-color: #f9f9f9;
-}
-
-/* Disabled fields (e.g. a locked <select>) should match the readonly look
-   instead of the browser's washed-out default, and keep their text legible. */
-.input-field:disabled {
-    background-color: #f9f9f9;
-    color: #333;
-    -webkit-text-fill-color: #333;
+/* A field you cannot edit has to look like one. #f9f9f9 on white was almost
+   invisible, so a completed form read as an editable one. Grey enough to
+   register at a glance, dark enough to stay readable. */
+.input-field[readonly],
+.input-field:disabled,
+.field-readonly {
+    background-color: #F1F2F4;
+    border-color: #E2E4E8;
+    color: #5A5F66;
+    -webkit-text-fill-color: #5A5F66;
     opacity: 1;
     cursor: not-allowed;
 }
+
+/* No focus ring on something that cannot take input. */
+.input-field[readonly]:focus,
+.input-field:disabled:focus {
+    border-color: #E2E4E8;
+    box-shadow: none;
+}
+
 .recommendation-field {
     display: flex;
     align-items: center;

@@ -4,7 +4,6 @@ import FormList from "../../components/forms/formList/FormList";
 import CustomModal from "../../components/forms/modal/CustomModal";
 import CustomButton from "../../components/forms/fields/CustomButton";
 import GridContainer from "../../components/forms/fields/GridContainer";
-import { Tabs, Tab } from "@mui/material";
 import BulkSchedulePresentation from "../../components/forms/presentations/BulkSchedulePresentation";
 import SchedulePresentation from "../../components/forms/presentations/SchedulePresentation";
 import FormTable from "../../components/forms/formTable/FormTable";
@@ -125,21 +124,25 @@ const PresentationListPage = () => {
           <SemesterStatsCard semesterName={semester_id} setFilters={setExtraFilter} />
 
           {role !== "student" && (
-            <Tabs
-              value={presentationTab}
-              onChange={(e, newVal) => setPresentationTab(newVal)}
-              sx={{ marginBottom: "16px" }}
-            >
-              <Tab label="Action Required" />
-              <Tab label="Upcoming Progress Monitoring" />
-              <Tab label="Completed" />
-              <Tab label="Not Scheduled" />
-
-              <Tab label="Semester Off" />
-              <Tab label="Not Submitted" />
-
-              <Tab label="All Progress Monitoring" />
-            </Tabs>
+            <div className="tabs">
+              {[
+                'Action Required',
+                'Upcoming Progress Monitoring',
+                'Completed',
+                'Not Scheduled',
+                'Semester Off',
+                'Not Submitted',
+                'All Progress Monitoring',
+              ].map((label, i) => (
+                <button
+                  key={label}
+                  className={`tab ${presentationTab === i ? 'active' : ''}`}
+                  onClick={() => setPresentationTab(i)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           )}
           {extraFilter && <FilterBar onSearch={handleSearch} />}
           <PagenationTable

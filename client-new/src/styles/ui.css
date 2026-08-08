@@ -48,12 +48,19 @@
 
 /* --- Tabs ----------------------------------------------------------------
    Underline style. The active tab is brand, everywhere. */
+/* Scrolls rather than wraps or clips. Progress Monitoring has seven tabs and
+   the last one used to run off the right edge with no way to reach it. */
 .tabs {
     display: flex;
     gap: 0.5rem;
     border-bottom: 1px solid var(--border-subtle);
     margin-bottom: 1.5rem;
-    flex-wrap: wrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.tab {
+    white-space: nowrap;
 }
 
 .tab {

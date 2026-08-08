@@ -12,7 +12,6 @@ import GridContainer from "../../components/forms/fields/GridContainer";
 import { generateReportPeriods } from "../../utils/semester";
 import InputField from "../../components/forms/fields/InputField";
 import { toast } from "react-toastify";
-import { Tabs, Tab } from "@mui/material";
 import BulkSchedulePresentation from "../../components/forms/presentations/BulkSchedulePresentation";
 import SchedulePresentation from "../../components/forms/presentations/SchedulePresentation";
 import FileUploadField from "../../components/forms/fields/FileUploadField";
@@ -224,7 +223,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
               onChange={(date) =>
                 setCreateForm({ ...createForm, start_date: date })
               }
-              className="field-editable"
+              className="input-field"
             />
 
             <label>Evaluation End Date:</label>
@@ -233,7 +232,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
               onChange={(date) =>
                 setCreateForm({ ...createForm, end_date: date })
               }
-              className="field-editable"
+              className="input-field"
             />
 
             <label>Notification:</label>
@@ -324,7 +323,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
             onChange={(date) =>
               setCreateForm({ ...createForm, start_date: date })
             }
-            className="field-editable"
+            className="input-field"
           />
 
           <label>Evaluation End Date:</label>
@@ -333,7 +332,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
             onChange={(date) =>
               setCreateForm({ ...createForm, end_date: date })
             }
-            className="field-editable"
+            className="input-field"
           />
 
           <label>Notification:</label>
@@ -408,24 +407,15 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
             </>
           )}
           {(role === "admin" || role === "dordc") && (
-            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", width: "100%" }}>
-             <div style={{ flex: 1, minWidth: "250px" }}>
-             <CustomButton
-               onClick={() => setFiltersEnabled(prev => !prev)}
-               text={filtersEnabled ? "Disable Advanced Filters" : "Enable Advanced Filters"}
-               fullWidth
-             />
-           </div>
-            {(isInSemester || isBeforeSemester) && (
-              <div>
-                <button
-                  className="button"
-                  onClick={() => setOpenEditModal(true)}
-                >
-                  Edit Evaluation Semester
-                </button>
-              </div>
-            )}
+            <div className="semester-actions">
+              <CustomButton
+                onClick={() => setFiltersEnabled(prev => !prev)}
+                text={filtersEnabled ? "Disable Advanced Filters" : "Enable Advanced Filters"}
+                variant="secondary"
+              />
+              {(isInSemester || isBeforeSemester) && (
+                <CustomButton text="Edit Evaluation Semester" onClick={() => setOpenEditModal(true)} />
+              )}
             </div>
           )}
 
@@ -479,14 +469,17 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
       closeOnOutsideClick={false}
     >
       <>
-        <Tabs
-          value={tabIndex}
-          onChange={(e, index) => setTabIndex(index)}
-          style={{ marginBottom: "12px" }}
-        >
-          <Tab label="Individual Schedule" />
-          <Tab label="Bulk Schedule" />
-        </Tabs>
+        <div className="tabs">
+          {['Individual Schedule', 'Bulk Schedule'].map((label, i) => (
+            <button
+              key={label}
+              className={`tab ${tabIndex === i ? 'active' : ''}`}
+              onClick={() => setTabIndex(i)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
         {tabIndex === 0 && (
           <SchedulePresentation semester={semester_name} />
@@ -525,14 +518,14 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
             selected={editForm.start_date}
             readOnly
             disabled
-            className="field-readonly"
+            className="input-field field-readonly"
           />
 
           <label>Evaluation End Date:</label>
           <DatePicker
             selected={editForm.end_date}
             onChange={(date) => setEditForm({ ...editForm, end_date: date })}
-            className="field-editable"
+            className="input-field"
           />
 
           <label>Notification:</label>
