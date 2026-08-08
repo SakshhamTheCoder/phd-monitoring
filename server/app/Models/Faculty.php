@@ -26,6 +26,14 @@ class Faculty extends Model
         'type',
         'institution',
         'website_link',
+        'orcid_id',
+        'scopus_id',
+        'google_scholar_id',
+        'citations',
+        'h_index',
+        'joined_on',
+        'last_synced_at',
+        'last_sync_source',
     ];
 
     /**
@@ -68,6 +76,11 @@ class Faculty extends Model
     public function supervisedStudents()
     {
         return $this->belongsToMany(Student::class, 'supervisors',  'faculty_id', 'student_id',  'faculty_code', 'roll_no');
+    }
+
+    public function publications()
+    {
+        return $this->hasMany(FacultyPublication::class, 'faculty_code', 'faculty_code');
     }
 
     /**

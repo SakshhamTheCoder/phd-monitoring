@@ -35,6 +35,12 @@ return [
         'secret_key' => env('CLOUDFLARE_SECRET_KEY'),
     ],
 
+    // ORCID's public record needs no credentials, so only Scopus is configured here.
+    'scopus' => [
+        'key' => env('SCOPUS_API_KEY'),
+        'inst_token' => env('SCOPUS_INST_TOKEN'),
+    ],
+
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
