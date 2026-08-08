@@ -172,6 +172,7 @@ trait GeneralFormSubmitter
             case 'adordc':
                 $formInstance->adordc_comments=$request->comments;
                 $formInstance->adordc_lock = true;
+                break;
             case 'dordc':
                 $formInstance->dordc_comments = $request->comments;
                 $formInstance->dordc_lock = true;
@@ -320,7 +321,7 @@ trait GeneralFormSubmitter
                 break;
             case 'adordc':
                 if (!$user->faculty->adordcDepartments->pluck('id')->contains($formInstance->student->department_id)) {
-                    return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                    throw new \Exception('You are not authorized to access this resource');
                 }
                 break;
 
