@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../../components/dashboard/layout";
+import PageHeader from "../../components/pageHeader/PageHeader";
 import FormList from "../../components/forms/formList/FormList";
 import { useLocation } from "react-router-dom";
 import CreateNewBar from "../../components/forms/formList/CreateNewBar";
@@ -13,6 +14,10 @@ import BulkAllocateSupervisors from "../../components/bulkAllocateSupervisors/Bu
 
 const FormListPage = () => {
   const location = useLocation();
+  // The form type is the last path segment: /forms/synopsis-submission
+  const formTypeLabel = (location.pathname.split('/').filter(Boolean).pop() || 'Forms')
+    .replace(/[-_]/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
   const [role, setRole] = useState();
   const [showBar, setShowBar] = useState(false);
   const [showButton, setShowButton] = useState(false);
@@ -55,6 +60,7 @@ const FormListPage = () => {
     <Layout
       children={
         <>
+          <PageHeader title={formTypeLabel} />
           {role === "faculty" && showButton && (
             <CreateNewBar rollNumber={rollNumber} />
           )}

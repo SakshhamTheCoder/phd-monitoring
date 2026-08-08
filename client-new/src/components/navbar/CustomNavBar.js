@@ -2,7 +2,9 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './NavBar.css';
 
-const buttonConfig = [
+// Exported so the breadcrumb names a route the same way the nav does, instead
+// of keeping a second list that drifts.
+export const buttonConfig = [
     { path: '/home', icon: <i class="fa fa-home" aria-hidden="true"></i>, text: 'Home', roles: ['student', 'hod', 'phd_coordinator', 'faculty', 'dordc', 'adordc', 'dra', 'director', 'doctoral', 'external', 'admin'] },
     { path: '/projects', icon: <i class="fa fa-briefcase" aria-hidden="true"></i>, text: 'Projects', roles: ['faculty', 'hod', 'phd_coordinator', 'dordc', 'adordc', 'dra', 'director', 'admin'] },
     { path: '/forms', icon: <i class="fa fa-file-text" aria-hidden="true"></i>, text: 'Forms', roles: ['student', 'hod', 'phd_coordinator', 'faculty', 'dordc', 'adordc', 'dra', 'director', 'doctoral', 'external', 'admin'] },

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Layout from '../../components/dashboard/layout';
+import PageHeader from '../../components/pageHeader/PageHeader';
 import { useLoading } from '../../context/LoadingContext';
 import { useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -302,6 +303,7 @@ Jane,Smith,jane.smith@example.com,9876543210,female,faculty,"faculty,doctoral",a
     <Layout
       children={
         <>
+          <PageHeader title="Manage Users" subtitle="Create accounts and assign roles." />
           <FilterBar onSearch={handleFilterChange} />
           <PagenationTable
             key={refreshKey}

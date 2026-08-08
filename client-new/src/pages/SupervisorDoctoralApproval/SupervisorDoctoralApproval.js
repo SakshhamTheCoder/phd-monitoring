@@ -154,11 +154,13 @@ const SupervisorDoctoralApproval = () => {
   return (
     <Layout>
     <div style={{ padding: '2rem' }}>
-      <div style={{ marginBottom: '2rem' }}>
-        <h2>Supervisor & Doctoral Committee Change Approvals</h2>
-        <p style={{ color: '#6b7280', marginTop: '0.5rem' }}>
-          Review and approve/reject pending change requests from HOD and PhD Coordinators
-        </p>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Supervisor &amp; Doctoral Committee Change Approvals</h1>
+          <p className="page-subtitle">
+            Review and approve/reject pending change requests from HOD and PhD Coordinators
+          </p>
+        </div>
       </div>
 
       <CustomButton

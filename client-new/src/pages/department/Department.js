@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Layout from '../../components/dashboard/layout';
+import PageHeader from '../../components/pageHeader/PageHeader';
 import { useLoading } from '../../context/LoadingContext';
 import { useLocation } from 'react-router-dom';
 import FilterBar from '../../components/filterBar/FilterBar';
@@ -46,6 +47,7 @@ const DepartmentPage = () => {
     <Layout
       children={
         <>
+          <PageHeader title="Departments" subtitle="Departments, their HoD and PhD coordinators." />
           <FilterBar onSearch={handleFilterChange} />
           <PagenationTable
             key={refreshKey}

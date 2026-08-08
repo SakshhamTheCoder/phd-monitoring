@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Layout from '../../components/dashboard/layout';
+import PageHeader from '../../components/pageHeader/PageHeader';
 import { useLoading } from '../../context/LoadingContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -274,6 +275,7 @@ Jane,,jane.smith@example.com,9876543210,Associate Professor,external,,CHED,Exter
     <Layout
       children={
         <>
+          <PageHeader title="Faculty" subtitle="Directory of internal and external faculty." />
           <FilterBar onSearch={handleFilterChange} />
           <PagenationTable
             key={refreshKey}

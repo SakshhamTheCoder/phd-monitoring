@@ -1,5 +1,6 @@
 import React, { useEffect,useState } from 'react';
 import Layout from '../../components/dashboard/layout';
+import PageHeader from '../../components/pageHeader/PageHeader';
 import LogViewer from '../../components/logViewer/LogViewer';
 
 const Logs = () => {
@@ -10,6 +11,7 @@ const Logs = () => {
 
        <Layout children={
         <>
+          <PageHeader title="Logs" />
           <LogViewer/>
         </>
         }/>

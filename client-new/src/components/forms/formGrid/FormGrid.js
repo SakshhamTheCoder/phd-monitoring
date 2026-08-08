@@ -68,7 +68,7 @@ const FormGrid = ({ forms }) => {
     return (
         <>
             <div className="forms-list-header">
-                <h2 className="form-grid-heading">Available Forms</h2>
+                <h1 className="page-title">Available Forms</h1>
                 {forms.length > 0 && (
                     <div className="form-legend">
                         <span className="legend-item"><span className="legend-dot green"></span>Action required</span>
