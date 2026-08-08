@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../../components/dashboard/layout";
+import Tabs from "../../components/tabs/Tabs";
 import FormList from "../../components/forms/formList/FormList";
 import CustomModal from "../../components/forms/modal/CustomModal";
 import CustomButton from "../../components/forms/fields/CustomButton";
@@ -124,8 +125,10 @@ const PresentationListPage = () => {
           <SemesterStatsCard semesterName={semester_id} setFilters={setExtraFilter} />
 
           {role !== "student" && (
-            <div className="tabs">
-              {[
+            <Tabs
+              value={presentationTab}
+              onChange={setPresentationTab}
+              items={[
                 'Action Required',
                 'Upcoming Progress Monitoring',
                 'Completed',
@@ -133,16 +136,8 @@ const PresentationListPage = () => {
                 'Semester Off',
                 'Not Submitted',
                 'All Progress Monitoring',
-              ].map((label, i) => (
-                <button
-                  key={label}
-                  className={`tab ${presentationTab === i ? 'active' : ''}`}
-                  onClick={() => setPresentationTab(i)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+              ].map((label, i) => ({ value: i, label }))}
+            />
           )}
           {extraFilter && <FilterBar onSearch={handleSearch} />}
           <PagenationTable

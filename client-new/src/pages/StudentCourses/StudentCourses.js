@@ -4,6 +4,8 @@ import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
 import Loader from '../../components/loader/loader';
 import Layout from '../../components/dashboard/layout';
+import PageHeader from '../../components/pageHeader/PageHeader';
+import Tabs from '../../components/tabs/Tabs';
 
 const StudentCourses = () => {
   const [activeTab, setActiveTab] = useState('ongoing'); // 'ongoing' or 'past'
@@ -82,26 +84,16 @@ const StudentCourses = () => {
   return (
     <Layout> 
     <div className="student-courses-container">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">My Courses</h1>
-        </div>
-      </div>
+      <PageHeader title="My Courses" />
 
-      <div className="tabs">
-        <button
-          className={`tab ${activeTab === 'ongoing' ? 'active' : ''}`}
-          onClick={() => setActiveTab('ongoing')}
-        >
-          Ongoing Courses ({ongoingCourses.length})
-        </button>
-        <button
-          className={`tab ${activeTab === 'past' ? 'active' : ''}`}
-          onClick={() => setActiveTab('past')}
-        >
-          Past Courses ({pastCourses.length})
-        </button>
-      </div>
+      <Tabs
+        value={activeTab}
+        onChange={setActiveTab}
+        items={[
+          { value: 'ongoing', label: `Ongoing Courses (${ongoingCourses.length})` },
+          { value: 'past', label: `Past Courses (${pastCourses.length})` },
+        ]}
+      />
 
       <div className="courses-content">
         {activeTab === 'ongoing' && (

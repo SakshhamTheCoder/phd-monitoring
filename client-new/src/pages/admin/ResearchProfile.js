@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
 import AddPublication from '../../components/publications/AddPublication';
 import CustomModal from '../../components/forms/modal/CustomModal';
+import Tabs from '../../components/tabs/Tabs';
 import { generateAvatar } from '../../utils/profileImage';
 import { formatDate } from '../../data/projectsData';
 import {
@@ -315,10 +316,14 @@ const ResearchProfile = () => {
                     </div>
                 </div>
 
-                <div className="tabs">
-                    <button className={`tab ${activeTab === 'phd' ? 'active' : ''}`} onClick={() => setActiveTab('phd')}>PhD Student Publications</button>
-                    <button className={`tab ${isOwnTab ? 'active' : ''}`} onClick={() => setActiveTab('faculty')}>Faculty Publications</button>
-                </div>
+                <Tabs
+                    value={activeTab}
+                    onChange={setActiveTab}
+                    items={[
+                        { value: 'phd', label: 'PhD Student Publications' },
+                        { value: 'faculty', label: 'Faculty Publications' },
+                    ]}
+                />
 
                 <div className="rp-filter-bar">
                     <div className="rp-filters">

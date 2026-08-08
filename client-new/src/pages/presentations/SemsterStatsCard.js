@@ -4,6 +4,7 @@ import { baseURL } from "../../api/urls";
 import "./SemesterStatsCard.css";
 import CustomButton from "../../components/forms/fields/CustomButton";
 import CustomModal from "../../components/forms/modal/CustomModal";
+import Tabs from "../../components/tabs/Tabs";
 import ToggleSwitch from "../../components/forms/fields/ToggleSwitch";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -469,17 +470,14 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
       closeOnOutsideClick={false}
     >
       <>
-        <div className="tabs">
-          {['Individual Schedule', 'Bulk Schedule'].map((label, i) => (
-            <button
-              key={label}
-              className={`tab ${tabIndex === i ? 'active' : ''}`}
-              onClick={() => setTabIndex(i)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        <Tabs
+          value={tabIndex}
+          onChange={setTabIndex}
+          items={[
+            { value: 0, label: 'Individual Schedule' },
+            { value: 1, label: 'Bulk Schedule' },
+          ]}
+        />
 
         {tabIndex === 0 && (
           <SchedulePresentation semester={semester_name} />

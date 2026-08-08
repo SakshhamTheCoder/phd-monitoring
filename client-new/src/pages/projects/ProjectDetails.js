@@ -5,6 +5,7 @@ import { formatCurrency, getMilestoneProgress, milestoneStatusOptions, budgetHea
 import { apiGetProject, apiUpdateProject, apiAddMilestone, apiUpdateMilestone, apiAddDocument, apiUpdateDocument, apiDeleteDocument, fileUrl, mapMilestone, mapDocument } from '../../api/projects';
 import InputSuggestions from '../../components/forms/fields/InputSuggestions';
 import CustomModal from '../../components/forms/modal/CustomModal';
+import Tabs from '../../components/tabs/Tabs';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import { baseURL } from '../../api/urls';
 import { toast } from 'react-toastify';
@@ -700,11 +701,7 @@ const ProjectDetails = () => {
         </div>
 
         {/* Tabs */}
-        <div className="tabs pd-tabs">
-          {TABS.map(tab => (
-            <button key={tab} className={`tab ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab)}>{tab}</button>
-          ))}
-        </div>
+        <Tabs items={TABS} value={activeTab} onChange={setActiveTab} className="pd-tabs" />
 
         {renderTab()}
 

@@ -3,6 +3,7 @@ import Layout from '../../components/dashboard/layout';
 import { formatDate } from '../../data/projectsData';
 import { apiOpenings, apiApply, apiMyApplications, apiApplicantProfile } from '../../api/openings';
 import CustomModal from '../../components/forms/modal/CustomModal';
+import Tabs from '../../components/tabs/Tabs';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import { toast } from 'react-toastify';
 import './Openings.css';
@@ -134,11 +135,15 @@ const Openings = () => {
           </div>
         </div>
 
-        <div className="tabs">
-          <button className={`tab ${tab === 'All' ? 'active' : ''}`} onClick={() => setTab('All')}>All ({openPositions.length})</button>
-          <button className={`tab ${tab === 'Applied' ? 'active' : ''}`} onClick={() => setTab('Applied')}>Applied ({myApps.length})</button>
-          <button className={`tab ${tab === 'Closed' ? 'active' : ''}`} onClick={() => setTab('Closed')}>Closed ({closedPositions.length})</button>
-        </div>
+        <Tabs
+          value={tab}
+          onChange={setTab}
+          items={[
+            { value: 'All', label: `All (${openPositions.length})` },
+            { value: 'Applied', label: `Applied (${myApps.length})` },
+            { value: 'Closed', label: `Closed (${closedPositions.length})` },
+          ]}
+        />
 
         {tab === 'All' && (openPositions.length ? (
           <div className="op-grid">{openPositions.map(p => renderPosCard(p, false))}</div>
