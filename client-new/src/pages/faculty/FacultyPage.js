@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Layout from '../../components/dashboard/layout';
 import { useLoading } from '../../context/LoadingContext';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import FilterBar from '../../components/filterBar/FilterBar';
 import PagenationTable from '../../components/pagenationTable/PagenationTable';
@@ -22,6 +22,7 @@ const FacultyPage = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const { setLoading } = useLoading();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const handleFilterChange = (newFilter) => {
     setFilter(newFilter);
@@ -296,6 +297,11 @@ Jane,,jane.smith@example.com,9876543210,Associate Professor,external,,CHED,Exter
                 icon: <i className="fa-solid fa-pen-to-square"></i>,
                 tooltip: 'Edit',
                 onClick: (facultyData) => openForm(facultyData),
+              },
+              {
+                icon: <i className="fa fa-user-circle"></i>,
+                tooltip: 'Research Profile',
+                onClick: (facultyData) => navigate(`/faculty/${facultyData.faculty_code}/profile`),
               },
             ]}
           />

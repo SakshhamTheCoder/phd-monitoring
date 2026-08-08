@@ -8,7 +8,9 @@ import Book from "./Book";
 import GridContainer from "../forms/fields/GridContainer";
 import { APIaddPublication, APIupdatePublication } from "../../api/publication";
 
-const AddPublication = ({ close, editData = null }) => {
+// onSave lets a caller send the record somewhere other than the student
+// publication endpoints; the field forms below stay the same either way.
+const AddPublication = ({ close, editData = null, onSave = null }) => {
   const [body, setBody] = useState(editData || {});
 
   const handleSelect = (value) => {
@@ -20,6 +22,10 @@ const AddPublication = ({ close, editData = null }) => {
   };
 
   const callback = async (newData) => {
+    if (onSave) {
+      await onSave(body);
+      return;
+    }
     if (editData && editData.id) {
         if (body.publication_type === "patents") {
             await APIupdatePublication(editData.id, body, close, "/patents");

@@ -520,3 +520,38 @@
     text-decoration: none;
     font-weight: 600;
 }
+/* Edit, source and modal additions */
+.rp-card-head-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.rp-inline-edit { background: none; border: none; color: #900; cursor: pointer; font-size: 0.85rem; padding: 0.2rem 0.4rem; }
+.rp-inline-edit:hover { color: #700; }
+
+.rp-id-form { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.5rem; }
+.rp-id-form label { font-size: 0.7rem; font-weight: 600; color: #666; letter-spacing: 0.03em; }
+.rp-id-form input { padding: 0.5rem 0.7rem; border: 1px solid #DDD; border-radius: 8px; font-size: 0.85rem; outline: none; font-family: inherit; }
+.rp-id-form input:focus { border-color: #900; box-shadow: 0 0 0 3px rgba(153,0,0,0.06); }
+.rp-id-form-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.6rem; }
+
+.rp-btn-outline, .rp-btn-primary { padding: 0.45rem 0.9rem; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+.rp-btn-outline { background: #FFF; border: 1px solid #DDD; color: #444; }
+.rp-btn-primary { background: #900; border: 1px solid #900; color: #FFF; }
+.rp-btn-primary:hover { background: #700; }
+
+.rp-filter-actions { display: flex; align-items: center; gap: 0.6rem; }
+.rp-add-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 0.9rem; background: #900; color: #FFF; border: none; border-radius: 8px; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.04em; cursor: pointer; }
+.rp-add-btn:hover { background: #700; }
+
+.rp-source-badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.68rem; font-weight: 600; background: #f3f4f6; color: #374151; }
+.rp-source-badge.scopus { background: #e0e7ff; color: #3730a3; }
+.rp-source-badge.orcid { background: #dcfce7; color: #15803d; }
+.rp-source-badge.student { background: #fef3c7; color: #92400e; }
+
+.rp-row-actions { white-space: nowrap; }
+.rp-row-actions button { background: none; border: none; cursor: pointer; color: #777; padding: 0.2rem 0.35rem; }
+.rp-row-actions button:hover { color: #900; }
+
+.rp-empty { padding: 3rem 1rem; text-align: center; color: #888; font-size: 0.9rem; }
+
+.rp-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
+.rp-modal { background: #FFF; border-radius: 12px; padding: 1.5rem; width: 100%; max-width: 900px; max-height: 90vh; overflow-y: auto; position: relative; }
+.rp-modal-close { position: absolute; top: 0.8rem; right: 0.9rem; background: none; border: none; font-size: 1rem; color: #888; cursor: pointer; }
+.rp-modal-close:hover { color: #900; }

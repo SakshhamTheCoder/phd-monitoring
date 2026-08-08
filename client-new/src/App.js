@@ -105,6 +105,8 @@ const AppContent = () => {
             </>
           )}
           <Route path="/notifications" element={<AllNotificationsPage />} />
+          <Route path="/research-profile" element={<ResearchProfile />} />
+          <Route path="/faculty/:facultyCode/profile" element={<ResearchProfile />} />
           <Route path="/presentation" element={<PresentationSemester />} />
           <Route path="/presentation/semester" element={<Navigate to="/presentation" replace />} />
 
@@ -151,7 +153,6 @@ const AppContent = () => {
                 <Route path="/outside-experts" element={<OutsideExperts />} />
                 <Route path="/logs" element={<Logs />} />
                 <Route path="/users" element={<UsersPage />} />
-                <Route path="/research-profile" element={<ResearchProfile />} />
 
                 {/* <Route path="/faculty/:roll_no" element={<StudentProfile />} />
               <Route path="/faculty/:roll_no/forms" element={<FormsPage />} />

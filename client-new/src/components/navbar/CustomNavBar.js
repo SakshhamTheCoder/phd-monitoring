@@ -19,7 +19,7 @@ const buttonConfig = [
     { path: '/notifications', icon: <i class="fa-solid fa-bell"></i>, text: 'Notifications', roles: ['student', 'hod', 'phd_coordinator', 'faculty', 'dordc', 'adordc', 'dra', 'director', 'doctoral', 'external', 'admin'] },
     { path: '/areasOfSpecialization', icon: <i class="fa fa-list" aria-hidden="true"></i>, text: 'Areas of Specialization', roles: ['admin'] },
     { path: '/outside-experts', icon: <i class="fa fa-user-tie" aria-hidden="true"></i>, text: 'Outside Experts', roles: ['admin'] },
-    { path: '/research-profile', icon: <i class="fa fa-user-circle" aria-hidden="true"></i>, text: 'Research Profile', roles: ['admin'] },
+    { path: '/research-profile', icon: <i class="fa fa-user-circle" aria-hidden="true"></i>, text: 'Research Profile', roles: ['faculty', 'hod', 'phd_coordinator', 'dordc', 'adordc', 'dra', 'director', 'admin'] },
 ];
 
 const CustomNavBar = () => {
