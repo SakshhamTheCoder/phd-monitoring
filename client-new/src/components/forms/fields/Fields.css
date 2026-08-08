@@ -121,16 +121,14 @@
     gap: 10px;
 }
 
+/* No horizontal padding: the grid gap handles spacing, and 10px here indented
+   every field inside a GridContainer relative to one outside it. Left-aligned,
+   because centring form fields was wrong and needed two override rules below. */
 .grid-item {
-    padding: 10px 10px;
-    border-radius: 5px;
-    text-align: center;
+    text-align: left;
 }
 
-/* Section headings placed inside a GridContainer element must read as headings:
-   left-aligned and bold (fixes headings that were being centred by .grid-item). */
 .grid-item p {
-    text-align: left;
     font-weight: bold;
     margin: 6px 0;
 }
@@ -157,14 +155,25 @@
     margin: 0px 0;
 }
 
-.input-label {
-    font-weight: bold;
-    margin-bottom: 1px; 
-    font-size: 14px;
-    min-height: 20px; 
+/* The one form label. The projects pages each had their own at 0.78rem and
+   0.8rem, and raw <label> elements fell back to the browser default, so three
+   fields stacked in one dialog could carry three different labels. */
+.input-label,
+.op-field label,
+.pr-field label,
+.cp-field label,
+.pd-ms-field label,
+.pd-modal-field label,
+.rp-id-form label {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #444;
+    margin-bottom: 0.35rem;
+    min-height: 20px;
     text-align: left;
-    display: flex; 
-    align-items: center; 
 }
 
 

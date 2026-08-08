@@ -52,7 +52,6 @@
 .op-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; }
 .op-field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.85rem; }
 .op-field.full { grid-column: 1 / -1; }
-.op-field label { font-size: 0.78rem; font-weight: 600; color: #444; }
 .op-field input, .op-field textarea { padding: 0.55rem 0.7rem; border: 1px solid #DDD; border-radius: 8px; font-size: 0.85rem; font-family: inherit; color: #333; resize: vertical; }
 .op-field input:focus, .op-field textarea:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px var(--primary-tint); }
 .op-upload { display: inline-flex; align-items: center; gap: 0.5rem; align-self: flex-start; background: #FFF; border: 1px dashed var(--primary-color); color: var(--primary-color); padding: 0.55rem 1rem; border-radius: 8px; font-size: 0.82rem; font-family: inherit; cursor: pointer; max-width: 100%; }

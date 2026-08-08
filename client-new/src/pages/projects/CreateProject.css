@@ -27,7 +27,6 @@
 .cp-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
 .cp-field { display: flex; flex-direction: column; gap: 0.4rem; }
 .cp-field.full { grid-column: 1 / -1; }
-.cp-field label { font-size: 0.8rem; font-weight: 600; color: #444; }
 .req { color: #b91c1c; }
 .cp-field input, .cp-field select, .cp-field textarea { padding: 0.65rem 0.85rem; border: 1px solid #DDD; border-radius: 8px; font-size: 0.9rem; outline: none; transition: border 0.2s; font-family: inherit; }
 .cp-field input:focus, .cp-field select:focus, .cp-field textarea:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px var(--primary-tint); }
@@ -49,7 +48,6 @@
 
 /* Co-PI */
 .cp-copi-search { margin-bottom: 1rem; }
-.cp-copi-search label { display: block; font-size: 0.8rem; font-weight: 600; color: #444; margin-bottom: 0.4rem; }
 .cp-copi-search input { width: 100%; padding: 0.6rem 0.85rem; border: 1px solid #DDD; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box; }
 .cp-copi-search input:focus { border-color: var(--primary-color); }
 .cp-search-results { background: #FFF; border: 1px solid #DDD; border-radius: 8px; margin-top: 0.25rem; max-height: 150px; overflow-y: auto; }

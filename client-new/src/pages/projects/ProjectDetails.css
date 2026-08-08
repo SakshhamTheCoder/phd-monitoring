@@ -172,7 +172,6 @@
 
 /* Document Add/Edit Modal */
 .pd-modal-field { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1.1rem; }
-.pd-modal-field label { font-size: 0.8rem; font-weight: 600; color: #444; }
 .pd-modal-field .req { color: #dc2626; }
 .pd-modal-hint { font-weight: 400; color: #999; font-size: 0.75rem; }
 .pd-modal-field input[type="text"], .pd-modal-field input[type="url"] { padding: 0.55rem 0.7rem; border: 1px solid #DDD; border-radius: 8px; font-size: 0.88rem; font-family: inherit; color: #333; }
@@ -191,7 +190,6 @@
 .pd-ms-form-title { font-size: 0.95rem; font-weight: 600; color: var(--primary-color); margin: 0 0 1rem; }
 .pd-ms-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; }
 .pd-ms-field { display: flex; flex-direction: column; gap: 0.3rem; }
-.pd-ms-field label { font-size: 0.75rem; font-weight: 600; color: #555; }
 .pd-ms-field input, .pd-ms-field select { padding: 0.55rem 0.75rem; border: 1px solid #DDD; border-radius: 7px; font-size: 0.85rem; outline: none; font-family: inherit; transition: border 0.2s; }
 .pd-ms-field input:focus, .pd-ms-field select:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px var(--primary-tint); }
 .pd-ms-form-actions { display: flex; gap: 0.6rem; justify-content: flex-end; margin-top: 1rem; }

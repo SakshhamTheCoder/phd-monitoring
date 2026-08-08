@@ -218,7 +218,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
               space={2}
             />
 
-            <label>Evaluation Start Date:</label>
+            <label className="input-label">Evaluation Start Date</label>
             <DatePicker
               selected={createForm.start_date}
               onChange={(date) =>
@@ -227,7 +227,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
               className="input-field"
             />
 
-            <label>Evaluation End Date:</label>
+            <label className="input-label">Evaluation End Date</label>
             <DatePicker
               selected={createForm.end_date}
               onChange={(date) =>
@@ -236,7 +236,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
               className="input-field"
             />
 
-            <label>Notification:</label>
+            <label className="input-label">Notification</label>
             <ToggleSwitch
               isOn={createForm.notification}
               onToggle={() =>
@@ -318,7 +318,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
             space={2}
           />
 
-          <label>Evaluation Start Date:</label>
+          <label className="input-label">Evaluation Start Date</label>
           <DatePicker
             selected={createForm.start_date}
             onChange={(date) =>
@@ -327,7 +327,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
             className="input-field"
           />
 
-          <label>Evaluation End Date:</label>
+          <label className="input-label">Evaluation End Date</label>
           <DatePicker
             selected={createForm.end_date}
             onChange={(date) =>
@@ -336,7 +336,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
             className="input-field"
           />
 
-          <label>Notification:</label>
+          <label className="input-label">Notification</label>
           <ToggleSwitch
             isOn={createForm.notification}
             onToggle={() =>
@@ -511,7 +511,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
             space={2}
           />
 
-          <label>Evaluation Start Date:</label>
+          <label className="input-label">Evaluation Start Date</label>
           <DatePicker
             selected={editForm.start_date}
             readOnly
@@ -519,14 +519,14 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
             className="input-field field-readonly"
           />
 
-          <label>Evaluation End Date:</label>
+          <label className="input-label">Evaluation End Date</label>
           <DatePicker
             selected={editForm.end_date}
             onChange={(date) => setEditForm({ ...editForm, end_date: date })}
             className="input-field"
           />
 
-          <label>Notification:</label>
+          <label className="input-label">Notification</label>
           <ToggleSwitch
             isOn={editForm.notification}
             onToggle={() =>

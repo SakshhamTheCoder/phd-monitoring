@@ -489,7 +489,6 @@
 .rp-inline-edit:hover { color: var(--hover-color); }
 
 .rp-id-form { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.5rem; }
-.rp-id-form label { font-size: 0.7rem; font-weight: 600; color: #666; letter-spacing: 0.03em; }
 .rp-id-form input { padding: 0.5rem 0.7rem; border: 1px solid #DDD; border-radius: 8px; font-size: 0.85rem; outline: none; font-family: inherit; }
 .rp-id-form input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px var(--primary-tint); }
 .rp-id-form-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.6rem; }
