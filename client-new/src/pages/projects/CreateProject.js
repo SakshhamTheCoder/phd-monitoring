@@ -1,19 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
-import { categoryOptions, fundingAgencies, facultyPI, internalFacultyList, budgetHeadTemplate, milestoneStatusOptions, formatDate } from '../../data/projectsData';
-import { apiCreateProject, apiUpdateProjectFromForm } from '../../api/projects';
+import { categoryOptions, roleOptions, budgetHeadTemplate, milestoneStatusOptions, formatDate, subVal, subSum, cellMismatch, budgetMismatches, setSubCell } from '../../data/projectsData';
+import { apiCreateProject, apiUpdateProjectFromForm, apiUpdateProject, apiCurrentFaculty } from '../../api/projects';
+import InputSuggestions from '../../components/forms/fields/InputSuggestions';
+import { baseURL } from '../../api/urls';
 import { toast } from 'react-toastify';
 import './CreateProject.css';
 
 const STEPS = ['Basic Info', 'Team', 'Budget', 'Objectives', 'Milestones', 'Review'];
 
 const emptyForm = {
-  title: '', category: '', fundingAgency: '', description: '',
+  title: '', category: '', role: 'PI', focusArea: '', grantType: '',
+  fundingAgency: '', description: '',
   startDate: '', durationYears: 0, durationMonths: 0, endDate: '',
   coPIs: [],
   sanctionAmount: '', tietShare: '', sanctionLetterLink: '',
-  budget: { year1: {}, year2: {}, year3: {} },
+  sanctionLetterFile: null, sanctionLetterFileName: '',
+  budget: { year1: {}, year2: {}, year3: {}, __subitems: {} },
   objectives: [{ title: '', description: '' }],
   milestones: [{ name: '', deliverable: '', dueDate: '', status: 'Not Started' }],
 };
@@ -22,6 +26,9 @@ const emptyForm = {
 const buildFormFromProject = (p) => ({
   title: p.title || '',
   category: p.category || '',
+  role: p.role || 'PI',
+  focusArea: p.focusArea || '',
+  grantType: p.grantType || '',
   fundingAgency: p.fundingAgency || '',
   description: p.description || '',
   startDate: p.startDate || '',
@@ -31,11 +38,15 @@ const buildFormFromProject = (p) => ({
   coPIs: p.coPIs ? p.coPIs.map(c => ({ ...c })) : [],
   sanctionAmount: p.amount != null ? String(p.amount) : '',
   tietShare: p.tietShare != null ? String(p.tietShare) : '',
-  sanctionLetterLink: p.sanctionLetterLink && p.sanctionLetterLink !== '#' ? p.sanctionLetterLink : '',
+  // Only an external URL belongs in the link box; a stored file is a path, not a link.
+  sanctionLetterLink: /^https?:\/\//i.test(p.sanctionLetterLink || '') ? p.sanctionLetterLink : '',
+  sanctionLetterFile: null,
+  sanctionLetterFileName: '',
   budget: {
     year1: p.budget?.year1 || {},
     year2: p.budget?.year2 || {},
     year3: p.budget?.year3 || {},
+    __subitems: p.budget?.__subitems || {},
   },
   objectives: p.objectives?.length ? p.objectives.map(o => ({ ...o })) : [{ title: '', description: '' }],
   milestones: p.milestones?.length ? p.milestones.map(m => ({ ...m })) : [{ name: '', deliverable: '', dueDate: '', status: 'Not Started' }],
@@ -48,9 +59,15 @@ const CreateProject = () => {
   const isEditMode = !!editProject;
   const [currentStep, setCurrentStep] = useState(0);
   const [form, setForm] = useState(() => (editProject ? buildFormFromProject(editProject) : { ...emptyForm }));
-  const [copiSearch, setCopiSearch] = useState('');
   const [showExtForm, setShowExtForm] = useState(false);
   const [extCopi, setExtCopi] = useState({ name: '', designation: '', institute: '', email: '', mobile: '', website: '' });
+  const [pi, setPi] = useState(editProject?.pi || null);
+  const sanctionRef = useRef(null);
+
+  useEffect(() => {
+    if (!pi) apiCurrentFaculty().then(f => f && setPi(f));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const updateField = (field, value) => {
     const updated = { ...form, [field]: value };
@@ -69,10 +86,15 @@ const CreateProject = () => {
   };
 
   const addInternalCopi = (fac) => {
-    if (!form.coPIs.find(c => c.name === fac.name)) {
-      setForm({ ...form, coPIs: [...form.coPIs, { type: 'internal', ...fac }] });
-    }
-    setCopiSearch('');
+    if (!fac || !fac.name) return;
+    if (form.coPIs.find(c => c.name === fac.name)) return;
+    setForm({
+      ...form,
+      coPIs: [...form.coPIs, {
+        type: 'internal', faculty_code: fac.id, name: fac.name,
+        department: fac.department, designation: fac.designation, email: fac.email,
+      }],
+    });
   };
 
   const addExternalCopi = () => {
@@ -87,6 +109,15 @@ const CreateProject = () => {
 
   const updateBudget = (year, head, value) => {
     setForm({ ...form, budget: { ...form.budget, [year]: { ...form.budget[year], [head]: parseFloat(value) || 0 } } });
+  };
+
+  const updateSubBudget = (year, head, sub, value) => {
+    setForm(prev => ({ ...prev, budget: setSubCell(prev.budget, year, head, sub, value) }));
+  };
+
+  const handleSanctionFile = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) setForm(prev => ({ ...prev, sanctionLetterFile: file, sanctionLetterFileName: file.name }));
   };
 
   const addObjective = () => setForm({ ...form, objectives: [...form.objectives, { title: '', description: '' }] });
@@ -116,23 +147,41 @@ const CreateProject = () => {
   };
 
   const [submitting, setSubmitting] = useState(false);
-  const handleSubmit = async () => {
-    if (submitting) return;
-    setSubmitting(true);
-    if (isEditMode) {
-      const res = await apiUpdateProjectFromForm(editProject.id, form);
-      setSubmitting(false);
-      if (res.success) { toast.success('Project updated successfully!'); navigate('/projects'); }
-      return;
+
+  // The sanction letter rides on the update endpoint, which already knows how to
+  // swap a file for a link and clean up whichever it replaced.
+  const saveSanctionLetter = async (projectId) => {
+    if (form.sanctionLetterFile) {
+      const fd = new FormData();
+      fd.append('sanction_letter', form.sanctionLetterFile);
+      return apiUpdateProject(projectId, fd, true);
     }
-    const res = await apiCreateProject(form);
-    setSubmitting(false);
-    if (res.success) { toast.success('Project created successfully!'); navigate('/projects'); }
+    const link = (form.sanctionLetterLink || '').trim();
+    if (/^https?:\/\//i.test(link)) {
+      return apiUpdateProject(projectId, { sanction_letter_link: link, sanction_letter_name: 'Sanction Letter' });
+    }
+    return null;
   };
 
-  const filteredFaculty = copiSearch.length > 1
-    ? internalFacultyList.filter(f => f.name.toLowerCase().includes(copiSearch.toLowerCase()))
-    : [];
+  const handleSubmit = async () => {
+    if (submitting) return;
+    const mismatched = budgetMismatches(form.budget);
+    if (mismatched.length) {
+      toast.error(`Sub-item totals don't match the head amount for: ${mismatched.join(', ')}.`);
+      setCurrentStep(2);
+      return;
+    }
+    setSubmitting(true);
+    const res = isEditMode
+      ? await apiUpdateProjectFromForm(editProject.id, form)
+      : await apiCreateProject(form);
+    if (res.success) await saveSanctionLetter(isEditMode ? editProject.id : res.project.id);
+    setSubmitting(false);
+    if (res.success) {
+      toast.success(isEditMode ? 'Project updated successfully!' : 'Project created successfully!');
+      navigate('/projects');
+    }
+  };
 
   const budgetYears = ['year1', 'year2', 'year3'];
   const budgetTotal = (year) => Object.values(form.budget[year] || {}).reduce((s, v) => s + (v || 0), 0);
@@ -161,6 +210,14 @@ const CreateProject = () => {
             <div className="cp-field">
               <label>Funding Agency <span className="req">*</span></label>
               <input type="text" value={form.fundingAgency} onChange={e => updateField('fundingAgency', e.target.value)} placeholder="e.g. DST, CSIR, ISRO" />
+            </div>
+            <div className="cp-field">
+              <label>Focus Area</label>
+              <input type="text" value={form.focusArea} onChange={e => updateField('focusArea', e.target.value)} placeholder="e.g. AI/ML & IoT" />
+            </div>
+            <div className="cp-field">
+              <label>Grant Type</label>
+              <input type="text" value={form.grantType} onChange={e => updateField('grantType', e.target.value)} placeholder="e.g. CRG (Core Research Grant)" />
             </div>
             <div className="cp-field full">
               <label>Project Description</label>
@@ -202,14 +259,26 @@ const CreateProject = () => {
           {/* PI Section */}
           <div className="cp-section-card">
             <h3 className="cp-section-title">Principal Investigator</h3>
-            <div className="cp-pi-card">
-              <div className="cp-pi-avatar">{facultyPI.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</div>
-              <div className="cp-pi-info">
-                <h4>{facultyPI.name}</h4>
-                <p className="cp-pi-dept">{facultyPI.department}</p>
-                <p className="cp-pi-meta">{facultyPI.designation} &middot; Joined {facultyPI.dateOfJoining}</p>
+            {pi ? (
+              <div className="cp-pi-card">
+                <div className="cp-pi-avatar">{pi.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</div>
+                <div className="cp-pi-info">
+                  <h4>{pi.name}</h4>
+                  <p className="cp-pi-dept">{pi.department}</p>
+                  <p className="cp-pi-meta">{pi.designation}</p>
+                </div>
+                <span className="cp-role-badge">PI</span>
               </div>
-              <span className="cp-role-badge">PI</span>
+            ) : (
+              <p className="cp-pi-none">No faculty record is linked to your account, so no PI can be set.</p>
+            )}
+            <div className="cp-form-grid">
+              <div className="cp-field">
+                <label>Role on this project</label>
+                <select value={form.role} onChange={e => updateField('role', e.target.value)}>
+                  {roleOptions.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
             </div>
           </div>
           {/* Co-PIs */}
@@ -222,17 +291,13 @@ const CreateProject = () => {
             </div>
             {/* Internal Search */}
             <div className="cp-copi-search">
-              <label>Search Internal Faculty</label>
-              <input type="text" placeholder="Type faculty name..." value={copiSearch} onChange={e => setCopiSearch(e.target.value)} />
-              {filteredFaculty.length > 0 && (
-                <div className="cp-search-results">
-                  {filteredFaculty.map(f => (
-                    <div key={f.id} className="cp-search-item" onClick={() => addInternalCopi(f)}>
-                      <strong>{f.name}</strong> — {f.department}
-                    </div>
-                  ))}
-                </div>
-              )}
+              <InputSuggestions
+                apiUrl={`${baseURL}/suggestions/faculty`}
+                label="Search Internal Faculty"
+                hint="Type faculty name, code or email..."
+                fields={['name', 'department']}
+                onSelect={addInternalCopi}
+              />
             </div>
             {/* External Form */}
             {showExtForm && (
@@ -280,7 +345,11 @@ const CreateProject = () => {
               <div className="cp-field"><label>Total Sanctioned Amount (₹)</label><input type="number" value={form.sanctionAmount} onChange={e => updateField('sanctionAmount', e.target.value)} placeholder="e.g. 4850000" /></div>
               <div className="cp-field"><label>TIET Share (₹)</label><input type="number" value={form.tietShare} onChange={e => updateField('tietShare', e.target.value)} /></div>
               <div className="cp-field"><label>Sanction Letter Link</label><input type="url" value={form.sanctionLetterLink} onChange={e => updateField('sanctionLetterLink', e.target.value)} placeholder="https://..." /></div>
-              <div className="cp-field"><label>Sanction Letter Upload</label><input type="file" accept=".pdf,.doc,.docx" /></div>
+              <div className="cp-field">
+                <label>Sanction Letter Upload</label>
+                <input type="file" accept=".pdf,.doc,.docx" ref={sanctionRef} onChange={handleSanctionFile} />
+                {form.sanctionLetterFileName && <span className="cp-file-hint"><i className="fa fa-check-circle"></i> {form.sanctionLetterFileName}</span>}
+              </div>
             </div>
           </div>
           <div className="cp-section-card">
@@ -300,17 +369,46 @@ const CreateProject = () => {
                       <tr className="cp-budget-head-row">
                         <td className="cp-budget-head-name">{bh.head}</td>
                         {budgetYears.map(y => (
-                          <td key={y}><input type="number" className="cp-budget-input" value={form.budget[y]?.[bh.head] || ''} onChange={e => updateBudget(y, bh.head, e.target.value)} placeholder="0" /></td>
+                          <td key={y}>
+                            <input
+                              type="number"
+                              className={`cp-budget-input${bh.subItems.length && cellMismatch(form.budget, y, bh.head) ? ' cp-budget-mismatch' : ''}`}
+                              value={form.budget[y]?.[bh.head] || ''}
+                              onChange={e => updateBudget(y, bh.head, e.target.value)}
+                              placeholder="0"
+                            />
+                          </td>
                         ))}
                         <td className="cp-budget-total">₹{budgetYears.reduce((s, y) => s + (form.budget[y]?.[bh.head] || 0), 0).toLocaleString('en-IN')}</td>
                       </tr>
                       {bh.subItems.map(sub => (
                         <tr key={sub} className="cp-budget-sub-row">
                           <td className="cp-budget-sub-name">↳ {sub}</td>
-                          {budgetYears.map(y => <td key={y}><input type="number" className="cp-budget-input sub" placeholder="0" /></td>)}
-                          <td></td>
+                          {budgetYears.map(y => (
+                            <td key={y}>
+                              <input
+                                type="number"
+                                className="cp-budget-input sub"
+                                value={subVal(form.budget, y, bh.head, sub) || ''}
+                                onChange={e => updateSubBudget(y, bh.head, sub, e.target.value)}
+                                placeholder="0"
+                              />
+                            </td>
+                          ))}
+                          <td className="cp-budget-total">₹{budgetYears.reduce((s, y) => s + subVal(form.budget, y, bh.head, sub), 0).toLocaleString('en-IN')}</td>
                         </tr>
                       ))}
+                      {bh.subItems.length > 0 && (
+                        <tr className="cp-budget-sub-row">
+                          <td className="cp-budget-sub-name">↳ sub-items total</td>
+                          {budgetYears.map(y => {
+                            const ss = subSum(form.budget, y, bh.head);
+                            const bad = cellMismatch(form.budget, y, bh.head);
+                            return <td key={y} className={`cp-budget-subsum${bad ? ' bad' : (ss > 0 ? ' ok' : '')}`}>₹{ss.toLocaleString('en-IN')}{bad ? ' ⚠' : (ss > 0 ? ' ✓' : '')}</td>;
+                          })}
+                          <td></td>
+                        </tr>
+                      )}
                     </React.Fragment>
                   ))}
                   <tr className="cp-budget-grand-row">
@@ -417,7 +515,8 @@ const CreateProject = () => {
             </div>
             <div className="cp-review-card">
               <h4>Team</h4>
-              <div className="cp-review-row"><span>PI</span><strong>{facultyPI.name}</strong></div>
+              <div className="cp-review-row"><span>PI</span><strong>{pi ? pi.name : '—'}</strong></div>
+              <div className="cp-review-row"><span>Your Role</span><strong>{form.role || '—'}</strong></div>
               {form.coPIs.length > 0 ? (
                 form.coPIs.map((copi, idx) => (
                   <div key={idx} className="cp-review-row">
@@ -524,7 +623,7 @@ const CreateProject = () => {
                 Continue <i className="fa fa-chevron-right"></i>
               </button>
             ) : (
-              <button className="cp-btn-primary" onClick={handleSubmit}>
+              <button className="cp-btn-primary" onClick={handleSubmit} disabled={submitting}>
                 <i className={`fa ${isEditMode ? 'fa-save' : 'fa-paper-plane'}`}></i> {isEditMode ? 'Save Changes' : 'Submit'}
               </button>
             )}

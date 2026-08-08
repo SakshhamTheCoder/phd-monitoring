@@ -91,6 +91,12 @@
 .cp-budget-input { width: 100%; padding: 0.4rem 0.6rem; border: 1px solid #EEE; border-radius: 6px; font-size: 0.85rem; outline: none; }
 .cp-budget-input:focus { border-color: #900; }
 .cp-budget-input.sub { background: #FAFAFA; }
+.cp-budget-mismatch { border-color: #b91c1c; background: #fef2f2; }
+.cp-budget-subsum { font-size: 0.78rem; color: #777; }
+.cp-budget-subsum.ok { color: #15803d; }
+.cp-budget-subsum.bad { color: #b91c1c; font-weight: 600; }
+.cp-file-hint { font-size: 0.78rem; color: #15803d; display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.3rem; }
+.cp-pi-none { font-size: 0.85rem; color: #777; margin: 0 0 1rem; }
 .cp-budget-total { font-weight: 600; color: #333; font-size: 0.85rem; }
 .cp-budget-grand-row td { background: #FFF; border-top: 2px solid #900; }
 .cp-budget-grand { font-weight: 700; color: #900; font-size: 0.95rem; }

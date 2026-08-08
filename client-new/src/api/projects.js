@@ -20,10 +20,12 @@ export const mapDocument = (d) => ({
 });
 export const mapPosition = (p) => ({
   id: p.id, type: p.type, title: p.title, openings: p.openings, stipend: p.stipend,
+  status: p.status || 'Open',
   deadline: p.deadline, eligibility: p.eligibility, skills: p.skills, cgpa: p.min_cgpa,
   description: p.description, advertisementPath: p.advertisement_path,
   applicants: p.applications_count ?? p.applicants ?? 0,
   shortlisted: p.shortlisted_count ?? p.shortlisted ?? 0,
+  selected: p.selected_count ?? p.selected ?? 0,
   projectId: p.project_id, projectTitle: p.project ? p.project.title : p.project_title,
   posKey: p.id,
 });
@@ -64,6 +66,9 @@ export const mapProject = (p) => (p ? {
 export const toProjectBody = (form) => ({
   title: form.title,
   category: form.category,
+  role: form.role || '',
+  focus_area: form.focusArea || '',
+  grant_type: form.grantType || '',
   funding_agency: form.fundingAgency,
   description: form.description,
   start_date: form.startDate || null,
@@ -76,6 +81,11 @@ export const toProjectBody = (form) => ({
   objectives: form.objectives || [],
   budget: form.budget || {},
 });
+
+export const apiCurrentFaculty = async () => {
+  const { success, response } = await customFetch(`${baseURL}/faculty/me`, 'GET', {}, false);
+  return success ? response : null;
+};
 
 // ---- projects CRUD ----
 export const apiListProjects = async () => {
@@ -130,8 +140,9 @@ export const apiListPositions = async (projectId) => {
   const { success, response } = await customFetch(`${baseURL}/projects/${projectId}/positions`, 'GET', {}, false);
   return success ? (response || []).map(mapPosition) : [];
 };
-export const apiAddPosition = (projectId, body) => customFetch(`${baseURL}/projects/${projectId}/positions`, 'POST', body, true);
-export const apiUpdatePosition = (projectId, positionId, body) => customFetch(`${baseURL}/projects/${projectId}/positions/${positionId}`, 'POST', body, true);
+const isForm = (body) => body instanceof FormData;
+export const apiAddPosition = (projectId, body) => customFetch(`${baseURL}/projects/${projectId}/positions`, 'POST', body, true, isForm(body));
+export const apiUpdatePosition = (projectId, positionId, body) => customFetch(`${baseURL}/projects/${projectId}/positions/${positionId}`, 'POST', body, true, isForm(body));
 export const apiDeletePosition = (projectId, positionId) => customFetch(`${baseURL}/projects/${projectId}/positions/${positionId}`, 'DELETE');
 
 // ---- applications (faculty) ----

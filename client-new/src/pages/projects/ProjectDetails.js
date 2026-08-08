@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
-import { formatCurrency, getMilestoneProgress, milestoneStatusOptions, budgetHeadTemplate, formatDate } from '../../data/projectsData';
+import { formatCurrency, getMilestoneProgress, milestoneStatusOptions, budgetHeadTemplate, formatDate, subVal, subSum, cellMismatch, budgetMismatches, setSubCell } from '../../data/projectsData';
 import { apiGetProject, apiUpdateProject, apiAddMilestone, apiUpdateMilestone, apiAddDocument, apiUpdateDocument, apiDeleteDocument, fileUrl, mapMilestone, mapDocument } from '../../api/projects';
+import InputSuggestions from '../../components/forms/fields/InputSuggestions';
+import { baseURL } from '../../api/urls';
 import { toast } from 'react-toastify';
 import './ProjectDetails.css';
 
@@ -66,32 +68,7 @@ const ProjectDetails = () => {
     setBudgetDraft(prev => ({ ...prev, [year]: { ...prev[year], [head]: value === '' ? 0 : Number(value) } }));
   };
   const updateSubCell = (year, head, sub, value) => {
-    setBudgetDraft(prev => {
-      const subs = { ...(prev.__subitems || {}) };
-      const ys = { ...(subs[year] || {}) };
-      const hs = { ...(ys[head] || {}) };
-      hs[sub] = value === '' ? 0 : Number(value);
-      ys[head] = hs; subs[year] = ys;
-      return { ...prev, __subitems: subs };
-    });
-  };
-  const subVal = (b, year, head, sub) => Number(b && b.__subitems && b.__subitems[year] && b.__subitems[year][head] ? (b.__subitems[year][head][sub] || 0) : 0);
-  const subSum = (b, year, head) => {
-    const tmpl = budgetHeadTemplate.find(t => t.head === head);
-    if (!tmpl || !tmpl.subItems.length) return 0;
-    return tmpl.subItems.reduce((s, sub) => s + subVal(b, year, head, sub), 0);
-  };
-  // A head "mismatches" when it has sub-items entered whose sum ≠ the head amount.
-  const cellMismatch = (b, year, head) => {
-    const ss = subSum(b, year, head);
-    return ss > 0 && ss !== Number(b[year] ? (b[year][head] || 0) : 0);
-  };
-  const budgetMismatches = (b) => {
-    const out = [];
-    Object.keys(b || {}).filter(k => k !== '__subitems').forEach(year => {
-      budgetHeadTemplate.forEach(t => { if (t.subItems.length && cellMismatch(b, year, t.head)) out.push(t.head); });
-    });
-    return [...new Set(out)];
+    setBudgetDraft(prev => setSubCell(prev, year, head, sub, value));
   };
   const saveBudgetEdit = async () => {
     const mism = budgetMismatches(budgetDraft);
@@ -103,13 +80,26 @@ const ProjectDetails = () => {
     if (res.success) { setBudgetData(budgetDraft); setEditingBudget(false); toast.success('Budget updated successfully!'); }
   };
 
-  // Co-PI management
-  const emptyCopi = { name: '', type: 'internal', department: '', institute: '', designation: '' };
+  // Co-PI management. An internal Co-PI must carry a faculty_code, since that is
+  // what grants them access to the project.
+  const emptyCopi = { name: '', type: 'internal', faculty_code: null, department: '', institute: '', designation: '' };
+  const pickInternal = (setter) => (fac) => {
+    if (!fac || !fac.id) return;
+    setter(prev => ({
+      ...prev, type: 'internal', faculty_code: fac.id,
+      name: fac.name, department: fac.department, designation: fac.designation,
+    }));
+  };
   const [coPIs, setCoPIs] = useState([]);
   const [showCopiForm, setShowCopiForm] = useState(false);
   const [newCopi, setNewCopi] = useState(emptyCopi);
+  const invalidCopi = (c) => {
+    if (c.type === 'internal' && !c.faculty_code) { toast.error('Pick a faculty member from the suggestions.'); return true; }
+    if (!c.name.trim()) { toast.error('A name is required.'); return true; }
+    return false;
+  };
   const addCopi = async () => {
-    if (!newCopi.name.trim()) return;
+    if (invalidCopi(newCopi)) return;
     const updated = [...coPIs, { ...newCopi }];
     const res = await apiUpdateProject(project.id, { co_pis: updated });
     if (res.success) { setCoPIs(updated); setNewCopi(emptyCopi); setShowCopiForm(false); toast.success('Co-PI added successfully!'); }
@@ -124,7 +114,7 @@ const ProjectDetails = () => {
   const startCopiEdit = (i) => { setEditingCopiIdx(i); setCopiEditForm({ ...emptyCopi, ...coPIs[i] }); };
   const cancelCopiEdit = () => setEditingCopiIdx(null);
   const saveCopiEdit = async () => {
-    if (!copiEditForm.name.trim()) return;
+    if (invalidCopi(copiEditForm)) return;
     const updated = coPIs.map((c, idx) => (idx === editingCopiIdx ? { ...copiEditForm } : c));
     const res = await apiUpdateProject(project.id, { co_pis: updated });
     if (res.success) { setCoPIs(updated); setEditingCopiIdx(null); toast.success('Co-PI updated successfully!'); }
@@ -531,22 +521,35 @@ const ProjectDetails = () => {
               <div className="pd-ms-add-form">
                 <h4 className="pd-ms-form-title">New Co-PI</h4>
                 <div className="pd-ms-form-grid">
-                  <div className="pd-ms-field"><label>Full Name *</label><input type="text" value={newCopi.name} onChange={e => setNewCopi({ ...newCopi, name: e.target.value })} placeholder="e.g. Dr. Robert Chen" /></div>
                   <div className="pd-ms-field"><label>Type</label>
-                    <select value={newCopi.type} onChange={e => setNewCopi({ ...newCopi, type: e.target.value })}>
+                    <select value={newCopi.type} onChange={e => setNewCopi({ ...emptyCopi, type: e.target.value })}>
                       <option value="internal">Internal</option>
                       <option value="external">External</option>
                     </select>
                   </div>
+                  {newCopi.type === 'internal' ? (
+                    <div className="pd-ms-field">
+                      <InputSuggestions
+                        apiUrl={`${baseURL}/suggestions/faculty`}
+                        label="Faculty *"
+                        hint="Type faculty name, code or email..."
+                        fields={['name', 'department']}
+                        onSelect={pickInternal(setNewCopi)}
+                      />
+                    </div>
+                  ) : (
+                    <div className="pd-ms-field"><label>Full Name *</label><input type="text" value={newCopi.name} onChange={e => setNewCopi({ ...newCopi, name: e.target.value })} placeholder="e.g. Dr. Robert Chen" /></div>
+                  )}
                   <div className="pd-ms-field"><label>{newCopi.type === 'internal' ? 'Department' : 'Institute'}</label>
                     <input
                       type="text"
+                      readOnly={newCopi.type === 'internal'}
                       value={newCopi.type === 'internal' ? newCopi.department : newCopi.institute}
                       onChange={e => setNewCopi(newCopi.type === 'internal' ? { ...newCopi, department: e.target.value } : { ...newCopi, institute: e.target.value })}
-                      placeholder={newCopi.type === 'internal' ? 'e.g. Computer Science & Engineering' : 'e.g. MIT CSAIL'}
+                      placeholder={newCopi.type === 'internal' ? 'Filled from the selected faculty' : 'e.g. MIT CSAIL'}
                     />
                   </div>
-                  <div className="pd-ms-field"><label>Designation</label><input type="text" value={newCopi.designation} onChange={e => setNewCopi({ ...newCopi, designation: e.target.value })} placeholder="e.g. Professor" /></div>
+                  <div className="pd-ms-field"><label>Designation</label><input type="text" readOnly={newCopi.type === 'internal'} value={newCopi.designation} onChange={e => setNewCopi({ ...newCopi, designation: e.target.value })} placeholder="e.g. Professor" /></div>
                 </div>
                 <div className="pd-ms-form-actions">
                   <button className="pd-ms-cancel" onClick={() => { setShowCopiForm(false); setNewCopi(emptyCopi); }}>Cancel</button>
@@ -560,21 +563,35 @@ const ProjectDetails = () => {
                 <div key={i} className="pd-ms-add-form">
                   <h4 className="pd-ms-form-title">Edit Co-PI</h4>
                   <div className="pd-ms-form-grid">
-                    <div className="pd-ms-field"><label>Full Name *</label><input type="text" value={copiEditForm.name} onChange={e => setCopiEditForm({ ...copiEditForm, name: e.target.value })} /></div>
                     <div className="pd-ms-field"><label>Type</label>
-                      <select value={copiEditForm.type} onChange={e => setCopiEditForm({ ...copiEditForm, type: e.target.value })}>
+                      <select value={copiEditForm.type} onChange={e => setCopiEditForm({ ...emptyCopi, type: e.target.value })}>
                         <option value="internal">Internal</option>
                         <option value="external">External</option>
                       </select>
                     </div>
+                    {copiEditForm.type === 'internal' ? (
+                      <div className="pd-ms-field">
+                        <InputSuggestions
+                          apiUrl={`${baseURL}/suggestions/faculty`}
+                          label="Faculty *"
+                          hint="Type faculty name, code or email..."
+                          initialValue={copiEditForm.name}
+                          fields={['name', 'department']}
+                          onSelect={pickInternal(setCopiEditForm)}
+                        />
+                      </div>
+                    ) : (
+                      <div className="pd-ms-field"><label>Full Name *</label><input type="text" value={copiEditForm.name} onChange={e => setCopiEditForm({ ...copiEditForm, name: e.target.value })} /></div>
+                    )}
                     <div className="pd-ms-field"><label>{copiEditForm.type === 'internal' ? 'Department' : 'Institute'}</label>
                       <input
                         type="text"
+                        readOnly={copiEditForm.type === 'internal'}
                         value={copiEditForm.type === 'internal' ? (copiEditForm.department || '') : (copiEditForm.institute || '')}
                         onChange={e => setCopiEditForm(copiEditForm.type === 'internal' ? { ...copiEditForm, department: e.target.value } : { ...copiEditForm, institute: e.target.value })}
                       />
                     </div>
-                    <div className="pd-ms-field"><label>Designation</label><input type="text" value={copiEditForm.designation || ''} onChange={e => setCopiEditForm({ ...copiEditForm, designation: e.target.value })} /></div>
+                    <div className="pd-ms-field"><label>Designation</label><input type="text" readOnly={copiEditForm.type === 'internal'} value={copiEditForm.designation || ''} onChange={e => setCopiEditForm({ ...copiEditForm, designation: e.target.value })} /></div>
                   </div>
                   <div className="pd-ms-form-actions">
                     <button className="pd-ms-cancel" onClick={cancelCopiEdit}>Cancel</button>
