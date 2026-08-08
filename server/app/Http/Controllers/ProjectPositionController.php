@@ -17,12 +17,13 @@ class ProjectPositionController extends Controller {
         $user = Auth::user();
         $project = Project::find($projectId);
         if (!$project) return response()->json(['message' => 'Project not found'], 404);
-        if (!$this->owns($user, $project)) return response()->json(['message' => 'Not authorized'], 403);
+        if (!$this->canView($user, $project)) return response()->json(['message' => 'Not authorized'], 403);
         return response()->json(
             ProjectPosition::where('project_id', $project->id)
                 ->withCount([
                     'applications',
                     'applications as shortlisted_count' => function ($q) { $q->where('status', 'Shortlisted'); },
+                    'applications as selected_count' => function ($q) { $q->where('status', 'Selected'); },
                 ])
                 ->orderByDesc('id')->get()
         );
@@ -36,6 +37,7 @@ class ProjectPositionController extends Controller {
         $validator = Validator::make($request->all(), [
             'type' => 'required|' . $this->typeRule,
             'title' => 'required|string',
+            'status' => 'nullable|in:Open,Closed',
         ]);
         if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 400);
         $pos = new ProjectPosition();
@@ -55,7 +57,10 @@ class ProjectPositionController extends Controller {
         if (!$this->owns($user, $project)) return response()->json(['message' => 'Not authorized'], 403);
         $pos = ProjectPosition::where('project_id', $project->id)->find($positionId);
         if (!$pos) return response()->json(['message' => 'Position not found'], 404);
-        $validator = Validator::make($request->all(), ['type' => 'sometimes|' . $this->typeRule]);
+        $validator = Validator::make($request->all(), [
+            'type' => 'sometimes|' . $this->typeRule,
+            'status' => 'nullable|in:Open,Closed',
+        ]);
         if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 400);
         $this->fillPos($pos, $request);
         if ($request->hasFile('advertisement')) {
@@ -80,7 +85,7 @@ class ProjectPositionController extends Controller {
     }
 
     private function fillPos(ProjectPosition $pos, Request $request) {
-        foreach (['type','title','stipend','deadline','eligibility','skills','min_cgpa','description'] as $f) {
+        foreach (['type','title','status','stipend','deadline','eligibility','skills','min_cgpa','description'] as $f) {
             if ($request->exists($f)) $pos->$f = $request->input($f);
         }
         if ($request->exists('openings')) {

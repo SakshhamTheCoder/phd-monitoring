@@ -17,6 +17,21 @@ use Maatwebsite\Excel\Facades\Excel;
 class FacultyController extends Controller
 {
     use FilterLogicTrait;
+
+    public function me()
+    {
+        $faculty = optional(Auth::user())->faculty;
+        if (!$faculty) return response()->json(['message' => 'No faculty record for this user'], 404);
+        $faculty->loadMissing(['user', 'department']);
+        return response()->json([
+            'id' => $faculty->faculty_code,
+            'name' => $faculty->user->name(),
+            'email' => $faculty->user->email,
+            'designation' => $faculty->designation,
+            'department' => $faculty->department->name ?? 'N/A',
+        ]);
+    }
+
     public function listFilters(Request $request){
         return response()->json($this->getAvailableFilters("faculty"));
     }

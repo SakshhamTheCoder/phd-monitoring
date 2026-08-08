@@ -35,7 +35,7 @@ class ProjectController extends Controller {
         $user = Auth::user();
         $project = Project::with(['milestones','documents','positions','pi.user','pi.department'])->find($id);
         if (!$project) return response()->json(['message' => 'Project not found'], 404);
-        if (!$this->owns($user, $project)) return response()->json(['message' => 'Not authorized'], 403);
+        if (!$this->canView($user, $project)) return response()->json(['message' => 'Not authorized'], 403);
         return response()->json($project);
     }
 
@@ -61,6 +61,7 @@ class ProjectController extends Controller {
         $project->pi_faculty_code = $piCode;
         $this->fill($project, $request);
         $project->save();
+        $this->syncCoPis($project);
         return response()->json($project, 201);
     }
 
@@ -85,6 +86,7 @@ class ProjectController extends Controller {
             $project->sanction_letter_name = $request->input('sanction_letter_name', 'Sanction Letter');
         }
         $project->save();
+        if ($request->exists('co_pis')) $this->syncCoPis($project);
         $this->commitFileDeletions();
         return response()->json(['message' => 'Project updated', 'project' => $project]);
     }
@@ -109,9 +111,23 @@ class ProjectController extends Controller {
     private function visibleTo($user) {
         $query = Project::query();
         if (!in_array(optional($user->current_role)->role, $this->privileged)) {
-            $query->where('pi_faculty_code', optional($user->faculty)->faculty_code);
+            $code = optional($user->faculty)->faculty_code;
+            $query->where(function ($q) use ($code) {
+                $q->where('pi_faculty_code', $code)
+                  ->orWhereHas('coPiFaculty', fn ($f) => $f->where('faculty.faculty_code', $code));
+            });
         }
         return $query;
+    }
+
+    /**
+     * projects.co_pis stays the display record; this keeps the access index in
+     * step with it so an internal Co-PI can reach the project.
+     */
+    private function syncCoPis(Project $project) {
+        $codes = collect($project->co_pis ?: [])
+            ->pluck('faculty_code')->filter()->map(fn ($c) => (int) $c)->unique()->all();
+        $project->coPiFaculty()->sync($codes);
     }
 
     private function fill(Project $project, Request $request) {

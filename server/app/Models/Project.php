@@ -18,6 +18,9 @@ class Project extends Model {
     protected $hidden = ['created_at','updated_at'];
 
     public function pi() { return $this->belongsTo(Faculty::class, 'pi_faculty_code', 'faculty_code'); }
+    public function coPiFaculty() {
+        return $this->belongsToMany(Faculty::class, 'project_co_pis', 'project_id', 'faculty_code', 'id', 'faculty_code');
+    }
     public function milestones() { return $this->hasMany(ProjectMilestone::class, 'project_id'); }
     public function documents() { return $this->hasMany(ProjectDocument::class, 'project_id'); }
     public function positions() { return $this->hasMany(ProjectPosition::class, 'project_id'); }

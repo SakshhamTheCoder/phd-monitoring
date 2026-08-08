@@ -5,18 +5,19 @@ use App\Models\PositionApplication;
 use App\Models\ProjectPosition;
 use App\Http\Controllers\Traits\SaveFile;
 use App\Http\Controllers\Traits\ProjectAuthorizes;
+use App\Http\Controllers\Traits\NotificationManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class PositionApplicationController extends Controller {
-    use SaveFile, ProjectAuthorizes;
+    use SaveFile, ProjectAuthorizes, NotificationManager;
 
     public function index($projectId) {
         $user = Auth::user();
         $project = Project::find($projectId);
         if (!$project) return response()->json(['message' => 'Project not found'], 404);
-        if (!$this->owns($user, $project)) return response()->json(['message' => 'Not authorized'], 403);
+        if (!$this->canView($user, $project)) return response()->json(['message' => 'Not authorized'], 403);
         return response()->json(
             PositionApplication::with('position:id,type,title')
                 ->where('project_id', $project->id)->orderByDesc('id')->get()
@@ -35,11 +36,28 @@ class PositionApplicationController extends Controller {
         if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 400);
         $app->status = $request->input('status');
         $app->save();
+        $this->notifyApplicant($app, $project);
         return response()->json(['message' => 'Status updated', 'application' => $app]);
+    }
+
+    private function notifyApplicant(PositionApplication $app, Project $project) {
+        $user = optional($app->student)->user;
+        if (!$user) return;
+        $position = optional($app->position)->title ?: 'a position';
+        $this->sendNotification(
+            $user,
+            'Application ' . $app->status,
+            "Your application for {$position} on {$project->title} is now {$app->status}.",
+            '/openings'
+        );
     }
 
     public function openings() {
         $positions = ProjectPosition::with('project:id,title,category')
+            ->where('status', 'Open')
+            ->where(function ($q) {
+                $q->whereNull('deadline')->orWhereDate('deadline', '>=', date('Y-m-d'));
+            })
             ->orderByDesc('id')->get();
         return response()->json($positions);
     }
@@ -51,8 +69,13 @@ class PositionApplicationController extends Controller {
         }
         $position = ProjectPosition::find($positionId);
         if (!$position) return response()->json(['message' => 'Position not found'], 404);
+        // Without a roll number the unique index cannot hold, so one person could
+        // apply repeatedly. Refuse rather than let duplicates through.
         $rollNo = optional($user->student)->roll_no;
-        if ($rollNo && PositionApplication::where('position_id', $position->id)->where('student_id', $rollNo)->exists()) {
+        if (!$rollNo) {
+            return response()->json(['message' => 'No student record is linked to your account.'], 403);
+        }
+        if (PositionApplication::where('position_id', $position->id)->where('student_id', $rollNo)->exists()) {
             return response()->json(['message' => 'You have already applied to this position'], 409);
         }
         $validator = Validator::make($request->all(), [
