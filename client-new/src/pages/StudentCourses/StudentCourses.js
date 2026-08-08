@@ -82,17 +82,21 @@ const StudentCourses = () => {
   return (
     <Layout> 
     <div className="student-courses-container">
-      <h1 className="page-title">My Courses</h1>
-      
-      <div className="tabs-container">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">My Courses</h1>
+        </div>
+      </div>
+
+      <div className="tabs">
         <button
-          className={`tab-button ${activeTab === 'ongoing' ? 'active' : ''}`}
+          className={`tab ${activeTab === 'ongoing' ? 'active' : ''}`}
           onClick={() => setActiveTab('ongoing')}
         >
           Ongoing Courses ({ongoingCourses.length})
         </button>
         <button
-          className={`tab-button ${activeTab === 'past' ? 'active' : ''}`}
+          className={`tab ${activeTab === 'past' ? 'active' : ''}`}
           onClick={() => setActiveTab('past')}
         >
           Past Courses ({pastCourses.length})
@@ -132,42 +136,7 @@ const StudentCourses = () => {
           margin: 0 auto;
         }
 
-        .page-title {
-          font-size: 2rem;
-          font-weight: 600;
-          color: #1f2937;
-          margin-bottom: 2rem;
-        }
-
-        .tabs-container {
-          display: flex;
-          gap: 1rem;
-          margin-bottom: 2rem;
-          border-bottom: 2px solid #e5e7eb;
-        }
-
-        .tab-button {
-          padding: 0.75rem 1.5rem;
-          font-size: 1rem;
-          font-weight: 500;
-          background: none;
-          border: none;
-          color: #6b7280;
-          cursor: pointer;
-          border-bottom: 3px solid transparent;
-          transition: all 0.3s;
-          position: relative;
-          bottom: -2px;
-        }
-
-        .tab-button:hover {
-          color: #3b82f6;
-        }
-
-        .tab-button.active {
-          color: #3b82f6;
-          border-bottom-color: #3b82f6;
-        }
+        /* Header, tabs and empty state come from styles/ui.css */
 
         .courses-content {
           margin-top: 2rem;
@@ -248,16 +217,9 @@ const StudentCourses = () => {
           font-size: 1rem;
         }
 
-        .empty-state {
-          grid-column: 1 / -1;
-          text-align: center;
-          padding: 3rem;
-          color: #6b7280;
-        }
-
-        .empty-state p {
-          font-size: 1.125rem;
-        }
+        /* Spans the grid; the rest comes from styles/ui.css */
+        .empty-state { grid-column: 1 / -1; }
+        .empty-state p { margin: 0; }
 
         @media (max-width: 768px) {
           .student-courses-container {
@@ -266,10 +228,6 @@ const StudentCourses = () => {
 
           .courses-grid {
             grid-template-columns: 1fr;
-          }
-
-          .page-title {
-            font-size: 1.5rem;
           }
         }
       `}</style>

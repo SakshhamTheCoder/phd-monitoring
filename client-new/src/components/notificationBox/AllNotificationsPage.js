@@ -50,7 +50,7 @@ const AllNotificationsPage = () => {
     <Layout>
       <div className="all-notifications-page">
         <div className="notification-page-head">
-          <h1 className="notification-heading">Notifications</h1>
+          <h1 className="page-title">Notifications</h1>
           {unreadCount > 0 && (
             <span className="notification-unread-pill">{unreadCount} unread</span>
           )}

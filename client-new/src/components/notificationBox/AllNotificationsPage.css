@@ -1,8 +1,8 @@
+/* The measure stays capped so a wall of cards is readable, but it starts at
+   the same left gutter as every other page instead of floating centred. */
 .all-notifications-page {
   padding: 2.5rem 2rem;
   max-width: 860px;
-  margin: auto;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .notification-page-head {
@@ -12,12 +12,9 @@
   margin-bottom: 1.5rem;
 }
 
-.notification-heading {
-  font-size: 1.7rem;
-  font-weight: 700;
-  color: #1f2937;
+/* Sits inline with the unread pill, so it drops the title's bottom margin. */
+.notification-page-head .page-title {
   margin: 0;
-  letter-spacing: 0.2px;
 }
 
 .notification-unread-pill {

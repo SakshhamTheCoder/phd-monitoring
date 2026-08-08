@@ -78,9 +78,9 @@ const Publications = () => {
         <>
 
         <Layout children={<>
-            <div className='publication-top-bar'> 
+            <div className='page-header publication-top-bar'>
                 <div className='publication-top-bar-left'>
-                    <h1>Publications</h1>
+                    <h1 className='page-title'>Publications</h1>
                 </div>
                 <div className='publication-top-bar-right'>
                    <CustomButton text={'+ Add Publication'} onClick={openModal}/>

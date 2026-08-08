@@ -1,0 +1,159 @@
+/* ==========================================================================
+   Shared page patterns
+
+   Six things every list page re-implemented: header, tabs, empty state,
+   card, section heading, table. Each page had its own prefixed copy, so
+   the same element drifted apart page by page. The tabs were maroon on
+   Openings and blue on Courses; the page title was four different sizes.
+
+   Buttons and inputs are NOT here. They already exist as .custom-button
+   and .input-field in components/forms/fields/Fields.css. Use those.
+
+   Loaded globally from index.js, after the tokens.
+   ========================================================================== */
+
+/* --- Page header ---------------------------------------------------------
+   Title, optional subtitle, optional right-aligned actions. The topbar
+   already carries a large "Dashboard" heading, so the page title sits below
+   it in scale rather than competing with it. */
+.page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+.page-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin: 0 0 0.25rem;
+}
+
+.page-subtitle {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin: 0;
+    max-width: 70ch;
+}
+
+.page-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-shrink: 0;
+}
+
+/* --- Tabs ----------------------------------------------------------------
+   Underline style. The active tab is brand, everywhere. */
+.tabs {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.tab {
+    background: none;
+    border: none;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--text-subtle);
+    cursor: pointer;
+    position: relative;
+}
+
+.tab:hover { color: var(--text-color); }
+
+.tab.active {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.tab.active::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    background: var(--primary-color);
+}
+
+.tab:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+}
+
+/* --- Empty state ---------------------------------------------------------
+   A solid subtle panel. A dashed border reads as a drop target, which is
+   the wrong signal for "there is nothing here yet". */
+.empty-state {
+    background: #FAFAFA;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    padding: 3rem 1.5rem;
+    text-align: center;
+    color: var(--text-subtle);
+    font-size: 0.9rem;
+}
+
+/* --- Card ---------------------------------------------------------------- */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+}
+
+/* --- Section heading, for a titled block inside a page ------------------- */
+.section-heading {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0 0 0.75rem;
+}
+
+/* --- Data table ----------------------------------------------------------
+   Matches .custom-table in TableComponent.css, which the form pages use,
+   but takes its colours from the tokens. */
+.data-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    background: var(--surface);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.data-table th {
+    background: #F5F5F5;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.data-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-color);
+}
+
+.data-table tbody tr:last-child td { border-bottom: none; }
+.data-table tbody tr:hover { background: #FAFAFA; }
+.data-table a { color: var(--primary-color); }

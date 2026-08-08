@@ -1,14 +1,6 @@
 .op-container { padding: 2rem; background: #FAFAFA; font-family: 'Inter', sans-serif; font-weight: 400; min-height: 80vh; }
 
-.op-header { margin-bottom: 1.5rem; }
-.op-page-title { color: var(--primary-color); font-size: 1.6rem; font-weight: 700; margin: 0 0 0.25rem; }
-.op-subtitle { color: #777; font-size: 0.9rem; margin: 0; }
-
-/* Tabs */
-.op-tabs { display: flex; gap: 0.5rem; border-bottom: 1px solid #EAEAEA; margin-bottom: 1.5rem; }
-.op-tab { background: none; border: none; padding: 0.75rem 1.25rem; font-size: 0.9rem; font-weight: 500; color: #777; cursor: pointer; font-family: inherit; position: relative; }
-.op-tab.active { color: var(--primary-color); font-weight: 600; }
-.op-tab.active::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--primary-color); }
+/* Header, tabs and empty state come from styles/ui.css */
 
 /* Grid of opening cards */
 .op-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.25rem; }
@@ -42,7 +34,6 @@
 
 .op-status { flex-shrink: 0; padding: 0.3rem 0.7rem; border-radius: 6px; font-size: 0.68rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap; }
 
-.op-empty { text-align: center; padding: 3rem; color: #999; font-size: 0.95rem; background: #FFF; border: 1px dashed #E5E5E5; border-radius: 12px; }
 
 /* Apply Modal */
 .op-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }

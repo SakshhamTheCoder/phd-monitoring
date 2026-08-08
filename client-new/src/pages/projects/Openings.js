@@ -125,24 +125,26 @@ const Openings = () => {
   return (
     <Layout>
       <div className="op-container">
-        <div className="op-header">
-          <h1 className="op-page-title">Openings</h1>
-          <p className="op-subtitle">Browse research positions and internships, and apply directly through the portal.</p>
+        <div className="page-header">
+          <div>
+            <h1 className="page-title">Openings</h1>
+            <p className="page-subtitle">Browse research positions and internships, and apply directly through the portal.</p>
+          </div>
         </div>
 
-        <div className="op-tabs">
-          <button className={`op-tab ${tab === 'All' ? 'active' : ''}`} onClick={() => setTab('All')}>All ({openPositions.length})</button>
-          <button className={`op-tab ${tab === 'Applied' ? 'active' : ''}`} onClick={() => setTab('Applied')}>Applied ({myApps.length})</button>
-          <button className={`op-tab ${tab === 'Closed' ? 'active' : ''}`} onClick={() => setTab('Closed')}>Closed ({closedPositions.length})</button>
+        <div className="tabs">
+          <button className={`tab ${tab === 'All' ? 'active' : ''}`} onClick={() => setTab('All')}>All ({openPositions.length})</button>
+          <button className={`tab ${tab === 'Applied' ? 'active' : ''}`} onClick={() => setTab('Applied')}>Applied ({myApps.length})</button>
+          <button className={`tab ${tab === 'Closed' ? 'active' : ''}`} onClick={() => setTab('Closed')}>Closed ({closedPositions.length})</button>
         </div>
 
         {tab === 'All' && (openPositions.length ? (
           <div className="op-grid">{openPositions.map(p => renderPosCard(p, false))}</div>
-        ) : <div className="op-empty">No open positions right now. Check back soon.</div>)}
+        ) : <div className="empty-state">No open positions right now. Check back soon.</div>)}
 
         {tab === 'Closed' && (closedPositions.length ? (
           <div className="op-grid">{closedPositions.map(p => renderPosCard(p, true))}</div>
-        ) : <div className="op-empty">No closed positions.</div>)}
+        ) : <div className="empty-state">No closed positions.</div>)}
 
         {tab === 'Applied' && (myApps.length ? (
           <div className="op-grid">
@@ -168,7 +170,7 @@ const Openings = () => {
               </div>
             ))}
           </div>
-        ) : <div className="op-empty">You haven't applied to any openings yet.</div>)}
+        ) : <div className="empty-state">You haven't applied to any openings yet.</div>)}
 
         {/* Job Description Modal */}
         {viewJob && (
