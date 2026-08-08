@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
 import CustomButton from '../forms/fields/CustomButton';
+import CustomModal from '../forms/modal/CustomModal';
 import GridContainer from "../forms/fields/GridContainer";
 import InputSuggestions from "../forms/fields/InputSuggestions";
 import { useLoading } from '../../context/LoadingContext';
@@ -263,220 +264,120 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
       />
 
       {/* HOD Assignment Modal */}
-      {showHodModal && (
-        <div className="modal-overlay" style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            background: 'white',
-            padding: '2rem',
-            borderRadius: '0.5rem',
-            maxWidth: '600px',
-            width: '90%',
-            maxHeight: '80vh',
-            overflow: 'auto'
-          }}>
-            <h3>{currentHod ? 'Change HOD' : 'Assign HOD'}</h3>
-            
-            <div style={{
-              background: '#f0f9ff',
-              border: '1px solid #bae6fd',
-              borderRadius: '0.5rem',
-              padding: '1rem',
-              marginBottom: '1rem',
-              fontSize: '0.875rem'
-            }}>
-              <strong>Note:</strong> Assigning a new HOD will update the faculty's role to HOD (role_id: 3).
-              {currentHod && ' The current HOD\'s role will be reverted to Faculty.'}
-            </div>
-
-            <GridContainer
-              elements={[
-                <InputSuggestions
-                  label="Select Faculty from Department*"
-                  apiUrl={`${baseURL}/suggestions/faculty?department_id=${departmentId}`}
-                  onSelect={(val) => setSelectedFaculty(val.id)}
-                  fields={['name', 'designation', 'email']}
-                />
-              ]}
-              space={3}
-            />
-
-            <div style={{ 
-              display: 'flex', 
-              gap: '1rem', 
-              justifyContent: 'flex-end',
-              marginTop: '1rem'
-            }}>
-              <CustomButton
-                text="Cancel"
-                onClick={() => {
-                  setShowHodModal(false);
-                  setSelectedFaculty(null);
-                }}
-              />
-              <CustomButton
-                text={loading ? 'Assigning...' : 'Assign as HOD'}
-                onClick={handleAssignHod}
-                disabled={loading || !selectedFaculty}
-              />
-            </div>
-          </div>
+      <CustomModal
+        isOpen={showHodModal}
+        onClose={() => { setShowHodModal(false); setSelectedFaculty(null); }}
+        title={currentHod ? 'Change HOD' : 'Assign HOD'}
+        maxWidth="600px"
+        minHeight="auto"
+      >
+        <div className="modal-note">
+          <strong>Note:</strong> Assigning a new HOD will update the faculty's role to HOD (role_id: 3).
+          {currentHod && ' The current HOD\'s role will be reverted to Faculty.'}
         </div>
-      )}
+
+        <GridContainer
+          elements={[
+            <InputSuggestions
+              label="Select Faculty from Department*"
+              apiUrl={`${baseURL}/suggestions/faculty?department_id=${departmentId}`}
+              onSelect={(val) => setSelectedFaculty(val.id)}
+              fields={['name', 'designation', 'email']}
+            />
+          ]}
+          space={3}
+        />
+
+        <div className="modal-actions">
+          <CustomButton
+            text="Cancel"
+            variant="secondary"
+            onClick={() => { setShowHodModal(false); setSelectedFaculty(null); }}
+          />
+          <CustomButton
+            text={loading ? 'Assigning...' : 'Assign as HOD'}
+            onClick={handleAssignHod}
+            disabled={loading || !selectedFaculty}
+          />
+        </div>
+      </CustomModal>
 
       {/* ADORDC Assignment Modal */}
-      {showAdordcModal && (
-        <div className="modal-overlay" style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            background: 'white',
-            padding: '2rem',
-            borderRadius: '0.5rem',
-            maxWidth: '600px',
-            width: '90%',
-            maxHeight: '80vh',
-            overflow: 'auto'
-          }}>
-            <h3>{currentAdordc ? 'Change ADORDC' : 'Assign ADORDC'}</h3>
-            
-            <div style={{
-              background: '#f0f9ff',
-              border: '1px solid #bae6fd',
-              borderRadius: '0.5rem',
-              padding: '1rem',
-              marginBottom: '1rem',
-              fontSize: '0.875rem'
-            }}>
-              <strong>Note:</strong> Assigning a new ADORDC will update the faculty's role to ADORDC.
-              {currentAdordc && ' The current ADORDC\'s role will be reverted to Faculty.'}
-            </div>
-
-            <GridContainer
-              elements={[
-                <InputSuggestions
-                  label="Select Faculty from Department*"
-                  apiUrl={`${baseURL}/suggestions/faculty`}
-                  onSelect={(val) => setSelectedFaculty(val.id)}
-                  fields={['name', 'designation', 'email']}
-                />
-              ]}
-              space={3}
-            />
-
-            <div style={{ 
-              display: 'flex', 
-              gap: '1rem', 
-              justifyContent: 'flex-end',
-              marginTop: '1rem'
-            }}>
-              <CustomButton
-                text="Cancel"
-                onClick={() => {
-                  setShowAdordcModal(false);
-                  setSelectedFaculty(null);
-                }}
-              />
-              <CustomButton
-                text={loading ? 'Assigning...' : 'Assign as ADORDC'}
-                onClick={handleAssignAdordc}
-                disabled={loading || !selectedFaculty}
-              />
-            </div>
-          </div>
+      <CustomModal
+        isOpen={showAdordcModal}
+        onClose={() => { setShowAdordcModal(false); setSelectedFaculty(null); }}
+        title={currentAdordc ? 'Change ADORDC' : 'Assign ADORDC'}
+        maxWidth="600px"
+        minHeight="auto"
+      >
+        <div className="modal-note">
+          <strong>Note:</strong> Assigning a new ADORDC will update the faculty's role to ADORDC.
+          {currentAdordc && " The current ADORDC's role will be reverted to Faculty."}
         </div>
-      )}
+
+        <GridContainer
+          elements={[
+            <InputSuggestions
+              label="Select Faculty from Department*"
+              apiUrl={`${baseURL}/suggestions/faculty`}
+              onSelect={(val) => setSelectedFaculty(val.id)}
+              fields={['name', 'designation', 'email']}
+            />
+          ]}
+          space={3}
+        />
+
+        <div className="modal-actions">
+          <CustomButton
+            text="Cancel"
+            variant="secondary"
+            onClick={() => { setShowAdordcModal(false); setSelectedFaculty(null); }}
+          />
+          <CustomButton
+            text={loading ? 'Assigning...' : 'Assign as ADORDC'}
+            onClick={handleAssignAdordc}
+            disabled={loading || !selectedFaculty}
+          />
+        </div>
+      </CustomModal>
 
       {/* Coordinator Assignment Modal */}
-      {showCoordinatorModal && (
-        <div className="modal-overlay" style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            background: 'white',
-            padding: '2rem',
-            borderRadius: '0.5rem',
-            maxWidth: '600px',
-            width: '90%',
-            maxHeight: '80vh',
-            overflow: 'auto'
-          }}>
-            <h3>Add PhD Coordinator</h3>
-            
-            <div style={{
-              background: '#f0f9ff',
-              border: '1px solid #bae6fd',
-              borderRadius: '0.5rem',
-              padding: '1rem',
-              marginBottom: '1rem',
-              fontSize: '0.875rem'
-            }}>
-              <strong>Note:</strong> Adding a PhD Coordinator will update the faculty's role to PhD Coordinator (role_id: 2).
-              Multiple coordinators can be assigned per department.
-            </div>
-
-            <GridContainer
-              elements={[
-                <InputSuggestions
-                  label="Select Faculty from Department*"
-                  apiUrl={`${baseURL}/suggestions/faculty?department_id=${departmentId}`}
-                  onSelect={(val) => setSelectedFaculty(val.id)}
-                  fields={['name', 'designation', 'email']}
-                />
-              ]}
-                 space={3}
-            />
-
-            <div style={{ 
-              display: 'flex', 
-              gap: '1rem', 
-              justifyContent: 'flex-end',
-              marginTop: '1rem'
-            }}>
-              <CustomButton
-                text="Cancel"
-                onClick={() => {
-                  setShowCoordinatorModal(false);
-                  setSelectedFaculty(null);
-                }}
-              />
-              <CustomButton
-                text={loading ? 'Adding...' : 'Add Coordinator'}
-                onClick={handleAddCoordinator}
-                disabled={loading || !selectedFaculty}
-              />
-            </div>
-          </div>
+      <CustomModal
+        isOpen={showCoordinatorModal}
+        onClose={() => { setShowCoordinatorModal(false); setSelectedFaculty(null); }}
+        title="Add PhD Coordinator"
+        maxWidth="600px"
+        minHeight="auto"
+      >
+        <div className="modal-note">
+          <strong>Note:</strong> Adding a PhD Coordinator will update the faculty's role to PhD Coordinator (role_id: 2).
         </div>
-      )}
+
+        <GridContainer
+          elements={[
+            <InputSuggestions
+              label="Select Faculty from Department*"
+              apiUrl={`${baseURL}/suggestions/faculty?department_id=${departmentId}`}
+              onSelect={(val) => setSelectedFaculty(val.id)}
+              fields={['name', 'designation', 'email']}
+            />
+          ]}
+          space={3}
+        />
+
+        <div className="modal-actions">
+          <CustomButton
+            text="Cancel"
+            variant="secondary"
+            onClick={() => { setShowCoordinatorModal(false); setSelectedFaculty(null); }}
+          />
+          <CustomButton
+            text={loading ? 'Adding...' : 'Add Coordinator'}
+            onClick={handleAddCoordinator}
+            disabled={loading || !selectedFaculty}
+          />
+        </div>
+      </CustomModal>
 
       <div style={{ marginTop: '2rem', textAlign: 'right' }}>
         <CustomButton text="Close" onClick={onClose} />

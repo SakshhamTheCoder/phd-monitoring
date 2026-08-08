@@ -154,6 +154,17 @@
     border-top: 1px solid var(--border-subtle);
 }
 
+/* An explanatory note inside a dialog, above the fields. */
+.modal-note {
+    background: var(--primary-wash);
+    border: 1px solid #F0DADA;
+    border-radius: var(--radius);
+    padding: 0.85rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
 /* A modal's fields should share one width rather than each sizing itself. */
 .modal-content .input-field,
 .modal-content select,
