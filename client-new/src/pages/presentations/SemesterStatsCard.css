@@ -59,8 +59,7 @@
     font-size: 14px;
   }
   
-/* Actions sit inline and size to their label. They used to be wrapped in
-   flex:1 boxes, which stretched a single button across the whole card. */
+/* Actions sit inline. They used to be wrapped in flex:1 boxes. */
 .semester-actions {
   display: flex;
   flex-wrap: wrap;
@@ -68,6 +67,3 @@
   margin-top: 1rem;
 }
 
-.semester-actions .custom-button {
-  width: auto;
-}

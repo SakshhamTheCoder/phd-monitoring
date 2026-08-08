@@ -47,9 +47,8 @@
 }
 
 /* --- Tabs ----------------------------------------------------------------
-   Underline style. The active tab is brand, everywhere. */
-/* Scrolls rather than wraps or clips. Progress Monitoring has seven tabs and
-   the last one used to run off the right edge with no way to reach it. */
+   Underline style, brand indicator. Scrolls rather than wraps or clips:
+   Progress Monitoring has seven, and the last used to run off the edge. */
 .tabs {
     display: flex;
     gap: 0.5rem;
@@ -57,10 +56,6 @@
     margin-bottom: 1.5rem;
     overflow-x: auto;
     scrollbar-width: thin;
-}
-
-.tab {
-    white-space: nowrap;
 }
 
 .tab {
@@ -73,6 +68,7 @@
     color: var(--text-subtle);
     cursor: pointer;
     position: relative;
+    white-space: nowrap;
 }
 
 .tab:hover { color: var(--text-color); }
@@ -137,14 +133,7 @@
     margin: 0 0 1rem;
 }
 
-/* --- Modal footer --------------------------------------------------------
-   .custom-button is width:100% because most of its callers sit in a grid
-   cell. Inside a dialog that is wrong: a lone Save became a full-width red
-   bar across the panel. Buttons in a modal size to their label. */
-.modal-content .custom-button {
-    width: auto;
-}
-
+/* --- Modal footer -------------------------------------------------------- */
 .modal-actions {
     display: flex;
     justify-content: flex-end;

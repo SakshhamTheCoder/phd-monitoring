@@ -1,10 +1,20 @@
+/* Sizes to its label. It used to be width:100%, which is why a lone Save
+   became a full-width bar in a dialog, on a stats card and in a section
+   header, each needing its own override. Use --block where a button really
+   should fill its container. */
 .custom-button{
-    padding: 10px 15px;
-    width: 100%;
-    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 10px 18px;
+    border-radius: var(--radius);
     background-color: var(--primary-color);
     color: white;
+    font-weight: 600;
 }
+
+.custom-button--block { width: 100%; }
 .custom-button:hover{
     background-color: var(--hover-color);
     cursor: pointer;
@@ -121,10 +131,12 @@
     gap: 10px;
 }
 
-/* No horizontal padding: the grid gap handles spacing, and 10px here indented
-   every field inside a GridContainer relative to one outside it. Left-aligned,
-   because centring form fields was wrong and needed two override rules below. */
+/* Vertical padding only. The horizontal 10px indented every field inside a
+   GridContainer relative to one outside it; the vertical is the row rhythm and
+   has to stay. Left-aligned, because centring a form field was wrong and
+   needed two override rules to undo. */
 .grid-item {
+    padding: 10px 0;
     text-align: left;
 }
 

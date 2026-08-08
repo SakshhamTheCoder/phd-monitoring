@@ -8,6 +8,7 @@ import GridContainer from "../forms/fields/GridContainer";
 import InputSuggestions from "../forms/fields/InputSuggestions";
 import { useLoading } from '../../context/LoadingContext';
 import TableComponent from '../forms/table/TableComponent';
+import './DepartmentManager.css';
 
 const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod, currentAdordc, currentCoordinators = [], onClose, onUpdate }) => {
   const [showHodModal, setShowHodModal] = useState(false);
@@ -169,99 +170,97 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
     }
   };
 
+  // The same shape three times: a role, the action that changes it, and who
+  // currently holds it. It was three GridContainers used only for their label,
+  // which stacked a button straight onto a full-width table with no grouping.
+  const RoleSection = ({ title, action, isEmpty, emptyText, children }) => (
+    <section className="card dm-section">
+      <div className="dm-section-head">
+        <h3 className="section-heading">{title}</h3>
+        {action}
+      </div>
+      {isEmpty ? <p className="dm-none">{emptyText}</p> : children}
+    </section>
+  );
+
+  const roleColumns = {
+    keys: ['name', 'email', 'phone', 'designation', 'department'],
+    titles: ['Name', 'Email', 'Phone', 'Designation', 'Department'],
+  };
+
   return (
     <div className="department-manager">
-      <h2>Manage Department: {departmentName}</h2>
+      <div className="page-header">
+        <div>
+          <h2 className="modal-title">Manage Department: {departmentName}</h2>
+          {hodEmail && (
+            <p className="page-subtitle">
+              Official HOD email: <strong>{hodEmail}</strong>. It belongs to the
+              department and stays the same when the HOD changes.
+            </p>
+          )}
+        </div>
+      </div>
 
-      {hodEmail && (
-        <p style={{ margin: '0 0 1rem', fontSize: '0.85rem', color: '#374151' }}>
-          <strong>Official HOD email:</strong> {hodEmail}
-          <span style={{ color: '#6b7280' }}>
-            {' '}(belongs to the department, stays the same when the HOD changes)
-          </span>
-        </p>
-      )}
+      <RoleSection
+        title="Head of Department (HOD)"
+        action={
+          <CustomButton
+            text={currentHod ? 'Change HOD' : 'Assign HOD'}
+            variant={currentHod ? 'secondary' : undefined}
+            onClick={() => { setSelectedFaculty(null); setShowHodModal(true); }}
+          />
+        }
+        isEmpty={!currentHod}
+        emptyText="No HOD assigned yet."
+      >
+        <TableComponent data={hodTableData} {...roleColumns} />
+      </RoleSection>
 
-      <GridContainer
-        label="Head of Department (HOD)"
-        elements={[
-          <div>
-            <CustomButton
-              text={currentHod ? "Change HOD" : "Assign HOD"}
-              onClick={() => {
-                setSelectedFaculty(null);
-                setShowHodModal(true);
-              }} 
-            />
-            {currentHod && (
-              <TableComponent
-                data={hodTableData}
-                keys={['name', 'email', 'phone', 'designation', 'department']}
-                titles={['Name', 'Email', 'Phone', 'Designation', 'Department']}
-              />
-            )}
-          </div>
-        ]}
-        space={3}
-      />
+      <RoleSection
+        title="Associate Dean of R&D (ADORDC)"
+        action={
+          <CustomButton
+            text={currentAdordc ? 'Change ADORDC' : 'Assign ADORDC'}
+            variant={currentAdordc ? 'secondary' : undefined}
+            onClick={() => { setSelectedFaculty(null); setShowAdordcModal(true); }}
+          />
+        }
+        isEmpty={!currentAdordc}
+        emptyText="No ADORDC assigned yet."
+      >
+        <TableComponent data={adordcTableData} {...roleColumns} />
+      </RoleSection>
 
-      <GridContainer
-        label="Associate Dean of R&D (ADORDC)"
-        elements={[
-          <div>
-            <CustomButton 
-              text={currentAdordc ? "Change ADORDC" : "Assign ADORDC"} 
-              onClick={() => {
-                setSelectedFaculty(null);
-                setShowAdordcModal(true);
-              }} 
-            />
-            {currentAdordc && (
-              <TableComponent
-                data={adordcTableData}
-                keys={['name', 'email', 'phone', 'designation', 'department']}
-                titles={['Name', 'Email', 'Phone', 'Designation', 'Department']}
-              />
-            )}
-          </div>
-        ]}
-        space={3}
-      />
-
-      <GridContainer
-        label="PhD Coordinators"
-        elements={[
-          <div>
-            <CustomButton 
-              text="Add PhD Coordinator +" 
-              onClick={() => {
-                setSelectedFaculty(null);
-                setShowCoordinatorModal(true);
-              }} 
-            />
-            {coordinatorsTableData.length > 0 && (
-              <TableComponent
-                data={coordinatorsTableData}
-                keys={['name', 'email', 'phone', 'designation', 'actions']}
-                titles={['Name', 'Email', 'Phone', 'Designation', 'Actions']}
-                components={[
-                  {
-                    key: 'actions',
-                    component: ({ row }) => (
-                      <CustomButton 
-                        text="Remove" 
-                        variant="danger"
-                        onClick={() => handleRemoveCoordinator(row.actions.coordinator_id, row.actions.faculty_code)} 
-                      />
-                    ),
-                  },
-                ]}
-              />
-            )}
-          </div>
-        ]}
-        space={3}
-      />
+      <RoleSection
+        title="PhD Coordinators"
+        action={
+          <CustomButton
+            text="Add PhD Coordinator"
+            onClick={() => { setSelectedFaculty(null); setShowCoordinatorModal(true); }}
+          />
+        }
+        isEmpty={coordinatorsTableData.length === 0}
+        emptyText="No PhD coordinators for this department yet."
+      >
+        <TableComponent
+          data={coordinatorsTableData}
+          keys={['name', 'email', 'phone', 'designation', 'actions']}
+          titles={['Name', 'Email', 'Phone', 'Designation', 'Actions']}
+          components={[
+            {
+              key: 'actions',
+              component: ({ row }) => (
+                <CustomButton
+                  text="Remove"
+                  variant="danger"
+                  onClick={() => handleRemoveCoordinator(row.actions.coordinator_id, row.actions.faculty_code)}
+                />
+              ),
+            },
+          ]}
+        />
+      </RoleSection>
 
       {/* HOD Assignment Modal */}
       <CustomModal
