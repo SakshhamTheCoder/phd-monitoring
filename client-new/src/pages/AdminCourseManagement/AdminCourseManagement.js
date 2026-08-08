@@ -604,7 +604,6 @@ const AdminCourseManagement = () => {
 
       <style jsx>{`
         .admin-course-management {
-          padding: 2rem;
         }
 
         .page-header {

@@ -497,7 +497,6 @@ const OutsideExperts = () => {
 
       <style jsx>{`
         .outside-experts-management {
-          padding: 2rem;
         }
 
         .page-header {

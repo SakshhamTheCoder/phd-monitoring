@@ -78,7 +78,7 @@ const Publications = () => {
         <>
 
         <Layout children={<>
-            <div className='page-header publication-top-bar'>
+            <div className='page-header'>
                 <div className='publication-top-bar-left'>
                     <h1 className='page-title'>Publications</h1>
                 </div>

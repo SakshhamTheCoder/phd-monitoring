@@ -1,4 +1,4 @@
-.pr-container { padding: 1.5rem 2rem; background: #FAFAFA; font-family: 'Inter', sans-serif; font-weight: 400; }
+.pr-container { font-family: 'Inter', sans-serif; font-weight: 400; }
 .pr-back-link { background: none; border: none; color: #555; font-size: 0.8rem; font-weight: 600; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
 .pr-back-link:hover { color: var(--primary-color); }
 .pr-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }

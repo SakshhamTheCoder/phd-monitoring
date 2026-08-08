@@ -1,4 +1,4 @@
-.op-container { padding: 2rem; background: #FAFAFA; font-family: 'Inter', sans-serif; font-weight: 400; min-height: 80vh; }
+.op-container { font-family: 'Inter', sans-serif; font-weight: 400; min-height: 80vh; }
 
 /* Header, tabs and empty state come from styles/ui.css */
 

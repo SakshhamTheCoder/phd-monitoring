@@ -1,4 +1,4 @@
-.pd-container { padding: 1.5rem 2rem; background: #FAFAFA; font-family: 'Inter', sans-serif; font-weight: 400; }
+.pd-container { font-family: 'Inter', sans-serif; font-weight: 400; }
 .pd-empty { text-align: center; padding: 4rem; color: #999; font-size: 1rem; }
 .pd-empty button { margin-top: 1rem; background: var(--primary-color); color: #FFF; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; cursor: pointer; }
 .pd-back-link { background: none; border: none; color: #555; font-size: 0.8rem; font-weight: 600; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }

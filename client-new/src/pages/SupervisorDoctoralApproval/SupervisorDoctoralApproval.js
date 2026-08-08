@@ -153,7 +153,7 @@ const SupervisorDoctoralApproval = () => {
 
   return (
     <Layout>
-    <div style={{ padding: '2rem' }}>
+    <div>
       <div className="page-header">
         <div>
           <h1 className="page-title">Supervisor &amp; Doctoral Committee Change Approvals</h1>

@@ -131,7 +131,6 @@ const StudentCourses = () => {
 
       <style jsx>{`
         .student-courses-container {
-          padding: 2rem;
           max-width: 1400px;
           margin: 0 auto;
         }

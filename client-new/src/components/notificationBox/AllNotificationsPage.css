@@ -1,7 +1,6 @@
 /* The measure stays capped so a wall of cards is readable, but it starts at
    the same left gutter as every other page instead of floating centred. */
 .all-notifications-page {
-  padding: 2.5rem 2rem;
   max-width: 860px;
 }
 

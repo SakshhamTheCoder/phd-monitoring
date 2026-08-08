@@ -1,7 +1,4 @@
-/* Layout comes from .page-header in styles/ui.css; this adds the page gutter. */
-.publication-top-bar{
-    padding: 0 30px;
-}
+/* Layout comes from .page-header in styles/ui.css; the gutter from the shell. */
 .publication-top-bar-right{
     width: 200px;
 }
