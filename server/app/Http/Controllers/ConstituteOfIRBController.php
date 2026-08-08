@@ -180,9 +180,11 @@ class ConstituteOfIRBController extends Controller
             'cgpa' => 'numeric',
             'objectives' => 'required|array',
             'title' => 'required|string',
-            'irb_pdf' => 'required|file|mimes:pdf|max:15360',
+            'irb_pdf' => 'required|file|mimes:pdf|max:20480',
             'address' => 'required|string',
-            'broad_area_of_research' => 'nullable|integer|exists:area_of_specializations,id',
+            'broad_area_of_research' => 'nullable|string',
+            'subdomains' => 'nullable|array',
+            'subdomains.*' => 'string',
         ]);
         return $this->submitForm($user,$request, $form_id, ConstituteOfIRB::class, 'student','student','faculty',  function ($formInstance) use ($request, $user) {
             if(!$formInstance->student->gender) {
@@ -228,10 +230,33 @@ class ConstituteOfIRBController extends Controller
            
             $formInstance->student->address = $request->address;
             
-            // Save broad area of research
+            // Save broad area of research (free text, or a legacy AreaOfSpecialization id)
             if ($request->has('broad_area_of_research') && $request->broad_area_of_research) {
                 $formInstance->broad_area_of_research = $request->broad_area_of_research;
-                $formInstance->student->area_of_specialization_id = $request->broad_area_of_research;
+                // Only link the structured area FK when the value is a real, existing
+                // area id — a numeric-looking free-text entry must not hit the FK.
+                if (is_numeric($request->broad_area_of_research)
+                    && \App\Models\AreaOfSpecialization::whereKey($request->broad_area_of_research)->exists()) {
+                    $formInstance->student->area_of_specialization_id = $request->broad_area_of_research;
+                }
+            }
+
+            // Save subdomain keywords (reusable per student). Only touch them when the
+            // request actually carries the field, so a resubmit that omits it never
+            // wipes the student's set. Normalise + de-dupe, drop blanks / too-short.
+            if ($request->has('subdomains')) {
+                $subdomains = collect($request->subdomains ?? [])
+                    ->map(fn ($k) => trim(preg_replace('/\s+/', ' ', (string) $k)))
+                    ->filter(fn ($k) => mb_strlen($k) >= 2)
+                    ->unique()
+                    ->values();
+                $formInstance->student->subdomains()->delete();
+                foreach ($subdomains as $keyword) {
+                    \App\Models\StudentSubdomain::create([
+                        'student_id' => $formInstance->student->roll_no,
+                        'keyword' => $keyword,
+                    ]);
+                }
             }
             
             $formInstance->student->save();
@@ -477,31 +502,26 @@ class ConstituteOfIRBController extends Controller
                             'type'        => 'outside',
                             'member_type' => OutsideExpert::class,
                             'member_id'   => $outsideExpert->id,
-                        ]);        
-                        $user=User::where('email',$outsideExpert->email)->first();
-                        $role=Role::where('role','external')->first();
-                        if($user){
-                           $user->role_id=$role->id;
-                           $user->save();
-                        }               
-                        else{
-                            $user=User::create([
-                                'email'=>$outsideExpert->email,
-                                'role_id'=>$role->id,
-                                'first_name'=>$outsideExpert->first_name,
-                                'last_name'=>$outsideExpert->last_name,
-                                'password'=>bcrypt('password'),
-                            ]);
-                        }
-                                       
+                        ]);
+                        // No login account is created for the outside expert — the external
+                        // review happens via a secure email link (see IrbSubForm::
+                        // sendExternalReviewRequest / ExternalReviewController), attributed
+                        // to the OutsideExpert record, so no portal user is needed.
 
-                    DoctoralCommittee::create([
-                        'student_id' => $formInstance->student->roll_no,
-                        'faculty_id' => $cognateExpertId,
-                        'type' => 'internal',
-                    ]);
+                    // firstOrCreate, not create: the nominated cognate may already sit
+                    // on this student's committee, and (faculty_id, student_id) is
+                    // unique — a plain insert then aborts the whole DORDC approval
+                    // with a raw SQL error. Adding someone twice is a no-op, not an
+                    // error.
+                    DoctoralCommittee::firstOrCreate(
+                        [
+                            'student_id' => $formInstance->student->roll_no,
+                            'faculty_id' => $cognateExpertId,
+                        ],
+                        ['type' => 'internal']
+                    );
 
-                    
+
                     IRBCommittee::create([
                         'student_id'  => $formInstance->student->roll_no,
                         'type'        => 'inside',
@@ -511,11 +531,13 @@ class ConstituteOfIRBController extends Controller
                     
                     $irbExperts=IrbExpertChairman::where('irb_form_id',$formInstance->id)->get();
                     foreach($irbExperts as $irbExpert){
-                        DoctoralCommittee::create([
-                            'student_id' => $formInstance->student->roll_no,
-                            'faculty_id' => $irbExpert->expert_id,
-                            'type' => 'internal',
-                        ]);
+                        DoctoralCommittee::firstOrCreate(
+                            [
+                                'student_id' => $formInstance->student->roll_no,
+                                'faculty_id' => $irbExpert->expert_id,
+                            ],
+                            ['type' => 'internal']
+                        );
                         IRBCommittee::create([
                             'student_id'  => $formInstance->student->roll_no,
                             'type'        => 'inside',
@@ -523,13 +545,22 @@ class ConstituteOfIRBController extends Controller
                             'member_id'   => $irbExpert->expert_id,
                         ]);
                     }
-                    $area=$formInstance->student->areaOfSpecialization;
-                    $expert=$area->getExpertFaculty();
-                    DoctoralCommittee::create([
-                        'student_id' => $formInstance->student->roll_no,
-                        'faculty_id' => $expert->faculty_code,
-                        'type' => 'external',
-                    ]);
+                    // The structured area of specialization is optional. A student who
+                    // entered a free-text broad area has no area FK (see studentSubmit,
+                    // which only links the FK for a real area id). Only add the area's
+                    // expert to the committee when it actually resolves; a missing area
+                    // must not crash the whole DORDC approval.
+                    $area = $formInstance->student->areaOfSpecialization;
+                    $areaExpert = $area?->getExpertFaculty();
+                    if ($areaExpert) {
+                        DoctoralCommittee::firstOrCreate(
+                            [
+                                'student_id' => $formInstance->student->roll_no,
+                                'faculty_id' => $areaExpert->faculty_code,
+                            ],
+                            ['type' => 'external']
+                        );
+                    }
                     $formInstance->update([
                         'outside_expert' => $outsideExpertId,
                         'cognate_expert' => $cognateExpertId,

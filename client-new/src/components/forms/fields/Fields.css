@@ -10,6 +10,20 @@
     cursor: pointer;
 }
 
+/* Button variants (an inline style prop still overrides these) */
+.custom-button--danger { background-color: #c0392b; }
+.custom-button--danger:hover { background-color: #a5281b; }
+/* Secondary = outlined brand button, for less-primary actions (Bulk Import, Tag, Select) */
+.custom-button--secondary {
+    background-color: #fff;
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+}
+.custom-button--secondary:hover { background-color: var(--primary-color); color: #fff; }
+.custom-button--success { background-color: #2e7d46; }
+.custom-button--success:hover { background-color: #256639; }
+.custom-button:disabled { opacity: 0.6; cursor: not-allowed; }
+
 .input-suggestions-container {
     position: relative;
     width: 100%;
@@ -113,6 +127,14 @@
     text-align: center;
 }
 
+/* Section headings placed inside a GridContainer element must read as headings:
+   left-aligned and bold (fixes headings that were being centred by .grid-item). */
+.grid-item p {
+    text-align: left;
+    font-weight: bold;
+    margin: 6px 0;
+}
+
 .span-1 {
     grid-column: span 1; /* Occupy 1 column */
 }
@@ -166,6 +188,16 @@
 
 .input-field[readonly] {
     background-color: #f9f9f9;
+}
+
+/* Disabled fields (e.g. a locked <select>) should match the readonly look
+   instead of the browser's washed-out default, and keep their text legible. */
+.input-field:disabled {
+    background-color: #f9f9f9;
+    color: #333;
+    -webkit-text-fill-color: #333;
+    opacity: 1;
+    cursor: not-allowed;
 }
 .recommendation-field {
     display: flex;

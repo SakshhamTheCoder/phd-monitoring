@@ -20,7 +20,8 @@ Route::get('/filters', [StudentController::class, 'listFilters'])->middleware('a
 
 Route::prefix('{id}')->group(function () {
     Route::get('', [StudentController::class, 'get'])->middleware('auth:sanctum');
-    
+    Route::post('/update', [StudentController::class, 'adminUpdate'])->middleware('auth:sanctum');
+
     Route::get('/forms', [UserController::class, 'listForms'])->middleware('auth:sanctum');
 
     Route::prefix('/forms')->group(function () {

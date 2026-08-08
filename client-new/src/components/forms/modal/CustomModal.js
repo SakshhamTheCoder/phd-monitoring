@@ -1,48 +1,40 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import './CustomModal.css'; // Ensure you have this CSS file
 
-const CustomModal = ({ 
-    isOpen, 
-    onClose, 
-    children, 
-    minWidth = '300px', 
-    maxWidth = '800px', 
-    minHeight = '200px', 
-    maxHeight = '600px' ,
+const CustomModal = ({
+    isOpen,
+    onClose,
+    children,
+    title,
+    width,
+    minWidth = '300px',
+    maxWidth = '800px',
+    minHeight = '200px',
+    maxHeight = '600px',
     closeOnOutsideClick = true
 }) => {
-    
-    // Close the modal on outside click
-    useEffect(() => {
-        const handleOutsideClick = (e) => {
-            if (e.target.classList.contains('modal-overlay')) {
-                if(closeOnOutsideClick)
-                onClose();
-            }
-        };
-
-        if (isOpen) {
-            document.addEventListener('click', handleOutsideClick);
-        } else {
-            document.removeEventListener('click', handleOutsideClick);
-        }
-
-        return () => {
-            document.removeEventListener('click', handleOutsideClick);
-        };
-    }, [isOpen, onClose]);
-
     if (!isOpen) return null;
 
+    // Close only when the click lands on THIS overlay — not on the content, and not on
+    // a nested modal's overlay bubbling up. Fixes nested modals closing the parent.
+    const handleOverlayClick = (e) => {
+        if (closeOnOutsideClick && e.target === e.currentTarget) {
+            onClose();
+        }
+    };
+
+    // When an explicit width is given, let it win over the default maxWidth cap.
+    const sizeStyle = width
+        ? { width, minWidth, maxWidth: width, minHeight, maxHeight }
+        : { minWidth, maxWidth, minHeight, maxHeight };
+
     return (
-        <div className="modal-overlay">
-            <div 
-                className="modal-content"
-                style={{ minWidth, maxWidth, minHeight, maxHeight }}
-            >
+        <div className="modal-overlay" onClick={handleOverlayClick}>
+            <div className="modal-content" style={sizeStyle}>
                 <button className="modal-close-button" onClick={onClose}>
                     ✖
                 </button>
+                {title && <div className="modal-title">{title}</div>}
                 <div className="modal-body">
                     {children}
                 </div>

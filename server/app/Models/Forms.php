@@ -72,4 +72,13 @@ class Forms extends Model
         return $query->where('supervisor_available', true);
     }
 
+    /**
+     * Step lists use the 'faculty' role name, but the stage enum uses 'supervisor'.
+     * Normalize on write so 'faculty' can never reach the stage column.
+     */
+    public function setStageAttribute($value)
+    {
+        $this->attributes['stage'] = $value === 'faculty' ? 'supervisor' : $value;
+    }
+
 }

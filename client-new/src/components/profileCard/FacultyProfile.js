@@ -6,7 +6,14 @@ const FacultyProfile = ({ faculty }) => {
   const navigate = useNavigate();
 
   if (!faculty) {
-    return <div className="faculty-container"><p>Loading faculty data...</p></div>;
+    return (
+      <div className="faculty-container">
+        <h3 style={{ fontSize: "1.2rem", color: "#1f2937", margin: 0 }}>No faculty profile</h3>
+        <p className="faculty-sub" style={{ marginTop: "0.5rem", marginBottom: 0 }}>
+          There's no faculty record linked to this account. Use the menu to open the section you need.
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -20,15 +27,15 @@ const FacultyProfile = ({ faculty }) => {
         <div><strong>Email:</strong> {faculty.email}</div>
         <div><strong>Phone:</strong> {faculty.phone || "N/A"}</div>
         <div><strong>Faculty Code:</strong> {faculty.faculty_code}</div>
-        <div><strong>Supervised (Campus):</strong> {faculty.supervised_campus ?? 0}</div>
-        <div><strong>Supervised (Outside):</strong> {faculty.supervised_outside ?? 0}</div>
+        <div><strong>Supervised (Within TIET):</strong> {faculty.supervised_campus ?? 0}</div>
+        <div><strong>Supervised (Outside TIET):</strong> {faculty.supervised_outside ?? 0}</div>
       </div>
 
-      {/* Supervised Students */}
+      {/* Supervising Students */}
       <div className="faculty-table-section">
-        <h3>Supervised Students</h3>
+        <h3>Supervising Students</h3>
         {faculty.supervised_students?.length === 0 ? (
-          <p className="empty-msg">No students currently supervised.</p>
+          <p className="empty-msg">No students currently being supervised.</p>
         ) : (
           <div className="responsive-table">
             <table>
@@ -39,7 +46,7 @@ const FacultyProfile = ({ faculty }) => {
                   <th>Roll No</th>
                   <th>Email</th>
                   <th>Phone</th>
-                  <th>Progress</th>
+                  <th>Date of Admission</th>
                 </tr>
               </thead>
               <tbody>
@@ -49,12 +56,12 @@ const FacultyProfile = ({ faculty }) => {
                     onClick={() => navigate(`/students/${student.roll_no}`)}
                     style={{ cursor: 'pointer' }}
                   >
-                    <td>{idx + 1}</td>
+                    <td className="col-tight">{idx + 1}</td>
                     <td>{student.name}</td>
-                    <td>{student.roll_no}</td>
+                    <td className="col-tight">{student.roll_no}</td>
                     <td>{student.email}</td>
-                    <td>{student.phone}</td>
-                    <td>{student.overall_progress}%</td>
+                    <td className="col-tight">{student.phone}</td>
+                    <td className="col-tight">{student.date_of_admission || "N/A"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -74,20 +81,28 @@ const FacultyProfile = ({ faculty }) => {
               <thead>
                 <tr>
                   <th>S.No</th>
-                  <th>Student Name</th>
+                  <th>Name</th>
                   <th>Roll No</th>
                   <th>Email</th>
+                  <th>Phone</th>
                   <th>Department</th>
+                  <th>Date of Admission</th>
                 </tr>
               </thead>
               <tbody>
                 {faculty.doctoral_committee_students?.map((student, idx) => (
-                  <tr key={idx}>
-                    <td>{idx + 1}</td>
+                  <tr
+                    key={idx}
+                    onClick={() => navigate(`/students/${student.roll_no}`)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <td className="col-tight">{idx + 1}</td>
                     <td>{student.name}</td>
-                    <td>{student.roll_no}</td>
+                    <td className="col-tight">{student.roll_no}</td>
                     <td>{student.email}</td>
-                    <td>{student.department}</td>
+                    <td className="col-tight">{student.phone}</td>
+                    <td className="col-tight">{student.department || "N/A"}</td>
+                    <td className="col-tight">{student.date_of_admission || "N/A"}</td>
                   </tr>
                 ))}
               </tbody>

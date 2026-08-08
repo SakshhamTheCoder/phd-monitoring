@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Approval Request</title>
+    <title>IRB Submission Review Request</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -24,37 +24,49 @@
             padding-bottom: 10px;
             border-bottom: 1px solid #ddd;
         }
+        .details {
+            margin: 16px 0;
+        }
         .button {
-            padding: 10px 20px;
+            padding: 12px 24px;
             margin: 10px;
             border-radius: 5px;
-            color: white;
+            color: white !important;
+            background-color: #B22626;
             text-decoration: none;
             display: inline-block;
+            font-weight: bold;
         }
-        .approve {
-            background-color: #4CAF50;
-        }
-        .reject {
-            background-color: #FF5733;
+        .muted {
+            color: #888;
+            font-size: 12px;
+            word-break: break-all;
         }
     </style>
 </head>
 <body>
     <div class="email-container">
         <div class="header">
-            <h2>IRB Submission Approval Request</h2>
-            <p><strong>Submitted By:</strong> {{ $name }} ({{ $email }})</p>
-            <p><strong>Form ID:</strong> {{ $formId }}</p>
+            <h2>IRB Submission Review Request</h2>
         </div>
 
-        <p>Dear {{ $approverName }},</p>
-        <p>The following IRB submission requires your approval. Please review the submission and choose one of the options below:</p>
-        <p>Please Find the IRB PDF attached</p>
-        <div style="text-align: center;">
-            <a href="{{ url('/api/approval/'.$approvalKey . '?email=' . $email . '&token=' . $approvalKey.'&action=accept') }}" class="button approve">Approve</a>
-            <a href="{{ url('/api/approval/'.$approvalKey . '?email=' . $email . '&token=' . $approvalKey.'&action=reject') }}" class="button reject">Reject</a>
+        <p>Dear {{ $expertName }},</p>
+        <p>You have been requested to review an IRB submission and provide your recommendation.</p>
+
+        <div class="details">
+            <p><strong>Student:</strong> {{ $studentName }}</p>
+            <p><strong>Title:</strong> {{ $title }}</p>
+            <p><strong>Reference:</strong> #{{ $formId }}</p>
         </div>
+
+        <p>The submission PDF is attached for your review. Please click below to open the secure
+        review page and record your recommendation.</p>
+
+        <div style="text-align: center;">
+            <a href="{{ $reviewUrl }}" class="button">Review &amp; Respond</a>
+        </div>
+
+        <p class="muted">If the button does not work, copy and paste this link into your browser:<br>{{ $reviewUrl }}</p>
 
         <p>Thank you,<br>
         Thapar Institute - IRB Coordination Team</p>

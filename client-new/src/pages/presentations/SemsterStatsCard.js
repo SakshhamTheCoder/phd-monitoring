@@ -201,7 +201,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
           <CustomModal
             isOpen={openCreateModal}
             onClose={() => {setOpenCreateModal(false); window.location.reload();}}
-            title="Create New Semester Presentation"
+            title="Create New Semester Progress Monitoring"
             minWidth="300px"
             minHeight="300px"
           >
@@ -301,7 +301,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
         <CustomModal
           isOpen={openCreateModal}
           onClose={() => {setOpenCreateModal(false);window.location.reload();}}
-          title="Create New Semester Presentation"
+          title="Create New Semester Progress Monitoring"
           minWidth="300px"
           minHeight="300px"
         >
@@ -457,7 +457,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
   <div style={{ flex: 1, minWidth: "250px" }}>
     <CustomButton
       onClick={openModal}
-      text="Schedule Presentation +"
+      text="Schedule Progress Monitoring +"
       fullWidth
     />
   </div>
@@ -471,7 +471,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
     <CustomModal
       isOpen={open}
       onClose={closeModal}
-      title={"Schedule Presentation"}
+      title={"Schedule Progress Monitoring"}
       minHeight="300px"
       maxHeight="600px"
       minWidth="650px"

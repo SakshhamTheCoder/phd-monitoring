@@ -32,7 +32,7 @@ return new class extends Migration
             $table->boolean('dra_available')->default(false);
             $table->boolean('director_available')->default(false);
             $table->boolean('doctoral_available')->default(false);
-            $table->enum('stage', ['student', 'hod','phd_coordinator', 'supervisor','doctoral','external','adordc', 'dordc', 'dra','complete'])->nullable()->default('student'); // Common field
+            $table->enum('stage', ['student', 'hod','phd_coordinator', 'supervisor','doctoral','external','adordc', 'dordc', 'dra','director','complete'])->nullable()->default('student'); // Common field
             $table->integer('count')->default(0);
             $table->integer('max_count')->default(1);
 

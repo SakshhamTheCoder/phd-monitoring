@@ -67,16 +67,12 @@ const ShowPublications = ({
            setOpen(true);
        }
    };
+   // Some callers pass a partial set (the form pickers only offer journals and
+   // patents), so count defensively rather than assuming every group is present.
    useEffect(() => {
     if (!formData) return;
-        let c=0;
-        c+=formData?.sci?.length;
-        c+=formData?.non_sci?.length;
-        c+=formData?.international?.length;
-        c+=formData?.national?.length;
-        c+=formData?.book?.length;
-        c+=formData?.patents?.length;
-        setTotalPublications(c);
+        const groups = ['sci', 'non_sci', 'international', 'national', 'book', 'patents'];
+        setTotalPublications(groups.reduce((total, group) => total + (formData[group]?.length || 0), 0));
    }, [formData]);
 
    const renderActions = (publicationId, publicationType) => (
@@ -90,12 +86,12 @@ const ShowPublications = ({
                />
            )}
            {enableEdit && (
-               <a onClick={() => handleEdit(publicationId, publicationType)} style={{ cursor: "pointer", marginRight: 10 }}>
+               <a onClick={() => handleEdit(publicationId, publicationType)} style={{ cursor: "pointer", marginRight: 10, color: "#991b1b" }}>
                    <i className="fa fa-pencil" ></i>
                </a>
            )}
            {enableDelete && (
-               <a onClick={() => onDelete && onDelete(publicationId, publicationType)} style={{ cursor: "pointer" }}>
+               <a onClick={() => onDelete && onDelete(publicationId, publicationType)} style={{ cursor: "pointer", color: "#991b1b" }}>
                    <i className="fa fa-trash-o"></i>
                </a>
            )}
@@ -124,7 +120,7 @@ const ShowPublications = ({
                                     keys={['authors', 'year', 'title', 'name', 'impact_factor', 'doi_link', 'id']}
                                     titles={['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of the Journal', 'Impact Factor', 'DOI', '']}
                                     components={[
-                                        { key: 'doi_link', component: ({ data }) => <a href={data} target="_blank" rel="noopener noreferrer">link</a> },
+                                        { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>N/A</span> },
                                           { key: 'id', component: ({ data }) => renderActions(data, 'sci') }
                                     ]}
                                     rowStyle={(data) => getRowStyle(data.id, 'sci')}
@@ -142,7 +138,7 @@ const ShowPublications = ({
                                     keys={['authors', 'year', 'title', 'name', 'impact_factor', 'doi_link','id']}
                                     titles={['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of the Journal', 'Impact Factor', 'DOI','']}
                                     components={[
-                                        { key: 'doi_link', component: ({ data }) => <a href={data} target="_blank" rel="noopener noreferrer">link</a> },
+                                        { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>N/A</span> },
                                          { key: 'id', component: ({ data }) => renderActions(data, 'non_sci') }
                                     ]}
                                     rowStyle={(data) => getRowStyle(data.id, 'non_sci')}
@@ -160,7 +156,7 @@ const ShowPublications = ({
                                     keys={['authors', 'year', 'title', 'name', 'country', 'doi_link','id']}
                                     titles={['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of Conference', 'Place of Conference', 'DOI',' ']}
                                     components={[
-                                        { key: 'doi_link', component: ({ data }) => <a href={data} target="_blank" rel="noopener noreferrer">link</a> },
+                                        { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>N/A</span> },
                                          { key: 'country', component: ({ data }) => <span>{data}</span> },
                                         { key: 'id', component: ({ data }) => renderActions(data, 'international') }
                                     ]}
@@ -179,7 +175,7 @@ const ShowPublications = ({
                                     keys={['authors', 'year', 'title', 'name', 'city', 'doi_link','id']}
                                     titles={['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of Conference', 'Place of Conference', 'DOI',' ']}
                                     components={[
-                                        { key: 'doi_link', component: ({ data }) => <a href={data} target="_blank" rel="noopener noreferrer">link</a> },
+                                        { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>N/A</span> },
                                          {key: 'id', component: ({ data }) => renderActions(data, 'national') }
                                     ]}
                                     rowStyle={(data) => getRowStyle(data.id, 'national')}
@@ -222,16 +218,9 @@ const ShowPublications = ({
                             ]} space={3} />
                         </>
                     )}
-                    {
-                       formData.patents && formData.patents.length === 0 &&
-                          formData.book && formData.book.length === 0 &&
-                            formData.national && formData.national.length === 0 &&
-                            formData.international && formData.international.length === 0 &&
-                            formData.sci && formData.sci.length === 0 &&
-                            formData.non_sci && formData.non_sci.length === 0 && (
-                                <p style={{textAlign:'center'}}>No Publications Found, Add One to Continue</p>
-                            )
-                    }
+                    {totalPublications === 0 && (
+                        <p style={{textAlign:'center'}}>No Publications Found, Add One to Continue</p>
+                    )}
                      {enableSubmit && (
                         <GridContainer elements={[
                             <> {Object.values(selectedRows).some(

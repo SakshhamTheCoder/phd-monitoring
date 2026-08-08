@@ -19,6 +19,7 @@ class Department extends Model
         'name',
         'code',
         'hod_id',
+        'hod_email',
         'adordc_id',
     ];
 

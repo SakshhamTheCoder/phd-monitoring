@@ -6,6 +6,7 @@ import FilterBar from '../../components/filterBar/FilterBar';
 import PagenationTable from '../../components/pagenationTable/PagenationTable';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import DepartmentManager from '../../components/departmentManager/DepartmentManager';
+import AddDepartmentForm from './AddDepartmentForm';
 import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
 import CustomButton from '../../components/forms/fields/CustomButton';
@@ -76,6 +77,7 @@ const DepartmentPage = () => {
               <DepartmentManager
                 departmentId={editData.id}
                 departmentName={editData.name || editData.department_name}
+                hodEmail={editData.hod_email}
                 currentHod={editData.hod}
                 currentAdordc={editData.adordc}
                 currentCoordinators={editData.phd_coordinators || []}
@@ -86,7 +88,13 @@ const DepartmentPage = () => {
                 onUpdate={handleUpdate}
               />
             ) : (
-              <div>Add Department Form - To be implemented</div>
+              <AddDepartmentForm
+                onClose={() => {
+                  setIsOpen(false);
+                  setEditData(null);
+                }}
+                onCreated={handleUpdate}
+              />
             )}
           </CustomModal>
         </>

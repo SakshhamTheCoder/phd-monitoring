@@ -112,8 +112,8 @@ const Student = ({ formData }) => {
                 isLocked={true}
               />,
               <InputField
-                label="Father’s Name"
-                initialValue={formData.fathers_name}
+                label="Date of Revised IRB"
+                initialValue={formatDate(formData.date_of_irb)}
                 isLocked={true}
               />,
             ]}

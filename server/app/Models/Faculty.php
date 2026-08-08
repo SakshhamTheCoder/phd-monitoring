@@ -70,6 +70,16 @@ class Faculty extends Model
         return $this->belongsToMany(Student::class, 'supervisors',  'faculty_id', 'student_id',  'faculty_code', 'roll_no');
     }
 
+    /**
+     * Live count of students this faculty is currently supervising on campus.
+     * Overrides the stored `supervised_campus` column (which was stale/broken)
+     * so every profile/list reads the real number of supervised students.
+     */
+    public function getSupervisedCampusAttribute()
+    {
+        return $this->supervisedStudents()->count();
+    }
+
     public function doctoredStudents()
     {
         return $this->belongsToMany(Student::class, 'doctoral_commitee', 'faculty_id', 'student_id');

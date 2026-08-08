@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Traits;
 use App\Models\Faculty;
 use App\Models\Notifications;
 use App\Models\Role;
+use App\Models\User;
 
 trait NotificationManager
 {
@@ -14,8 +15,10 @@ trait NotificationManager
         }
         $notification = new Notifications();
         $notification->user_id = $user->id;
-        $notification->title = $title;
-        $notification->body = $body;
+        // Ensure the first character is capitalised (titles are built from
+        // lowercase form-type slugs). Only affects newly-created notifications.
+        $notification->title = $title === null ? $title : ucfirst($title);
+        $notification->body = $body === null ? $body : ucfirst($body);
         $notification->link = $link;
         $notification->role_id = $role_id;
         $notification->email_req = $email_req;
@@ -42,18 +45,19 @@ trait NotificationManager
                 break;
 
             case 'dordc':
-              
+                $this->sendDordcNotification($student, $title, $body, $link, $email_req);
                 break;
 
             case 'dra':
-              
-                break;
-            case 'external':
-             
+                $this->sendDraNotification($student, $title, $body, $link, $email_req);
                 break;
 
             case 'director':
-              
+                $this->sendDirectorNotification($student, $title, $body, $link, $email_req);
+                break;
+
+            case 'adordc':
+                $this->sendAdordcNotification($student, $title, $body, $link, $email_req);
                 break;
 
             default:
@@ -100,10 +104,42 @@ trait NotificationManager
     }
     
     private function sendDordcNotification($student,$title,$body,$link,$email_req=false){
-       
+        $this->notifyRoleHolders('dordc',$title,$body,$link,$email_req);
     }
     private function sendDraNotification($student,$title,$body,$link,$email_req=false){
-    
+        $this->notifyRoleHolders('dra',$title,$body,$link,$email_req);
+    }
+    private function sendDirectorNotification($student,$title,$body,$link,$email_req=false){
+        $this->notifyRoleHolders('director',$title,$body,$link,$email_req);
+    }
+
+    /**
+     * Notify the ADORDC of the student's department (department-scoped, unlike the
+     * institute-wide roles). Tagged with the adordc role id for active-role filtering.
+     */
+    private function sendAdordcNotification($student,$title,$body,$link,$email_req=false){
+        $adordc=$student->department?->adordc;
+        if(!$adordc || !$adordc->user){
+            return;
+        }
+        $role=Role::where('role','adordc')->first();
+        $this->sendNotification($adordc->user,$title,$body,$link,$role?->id,$email_req);
+    }
+
+    /**
+     * Notify every user whose primary role is the given institute-wide role
+     * (dra / dordc / director). Tags each notification with that role's id so it
+     * shows up only when the recipient is acting in that role.
+     */
+    private function notifyRoleHolders($roleName,$title,$body,$link,$email_req=false){
+        $role=Role::where('role',$roleName)->first();
+        if(!$role){
+            return;
+        }
+        $users=User::where('role_id',$role->id)->get();
+        foreach($users as $user){
+            $this->sendNotification($user,$title,$body,$link,$role->id,$email_req);
+        }
     }
     
 

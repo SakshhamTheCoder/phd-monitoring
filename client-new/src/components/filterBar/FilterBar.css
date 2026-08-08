@@ -12,7 +12,18 @@
     gap: 10px;
     align-items: center;
   }
-  
+
+  /* Uniform height so every control sits on the same center line */
+  .filter-select,
+  .filter-operator,
+  .filter-combinator,
+  .filter-input,
+  .filter-add,
+  .filter-search {
+    height: 40px;
+    box-sizing: border-box;
+  }
+
   .filter-select,
   .filter-operator,
   .filter-combinator,
@@ -21,6 +32,7 @@
     min-width: 150px;
     border-radius: 8px;
     border: 1px solid #DDD;
+    background-color: #fff;
     font-size: 0.88rem;
     outline: none;
     font-family: inherit;
@@ -35,39 +47,49 @@
   }
   .filter-input-container {
     min-width: 200px;
+    height: 40px;
     border-radius: 8px;
     border: 1px solid #DDD;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
   }
-  
+  /* Normalize field controls (DropdownField/InputSuggestions) used as the value input */
+  .filter-row .input-field-container { margin: 0; width: 100%; }
+  .filter-row .input-field { height: 40px; box-sizing: border-box; }
+  .filter-input-container input { border: none; height: 100%; box-sizing: border-box; }
+
   .filter-input {
     min-width: 200px;
   }
-  
+
   .filter-add {
-    padding: 0.5rem 1rem;
-    background-color: #ddd;
+    padding: 0 1rem;
+    background-color: #e6e6e6;
+    color: #333;
     border: none;
     border-radius: 6px;
     cursor: pointer;
     transition: 0.2s;
   }
-  
+
   .filter-add:hover {
-    background-color: #ccc;
+    background-color: #d5d5d5;
   }
-  
+
   .filter-search {
-    padding: 0.5rem 1rem;
-    background-color: #2b1fd1;
+    padding: 0 1.2rem;
+    background-color: var(--primary-color);
     color: white;
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    font-weight: 500;
     transition: 0.2s;
   }
-  
+
   .filter-search:hover {
-    background-color: #1d14a3;
+    background-color: var(--hover-color);
   }
   
   .active-filters {
@@ -75,6 +97,11 @@
     gap: 10px;
     flex-wrap: wrap;
     margin-top: 1rem;
+  }
+
+  /* No active filters → don't reserve space below the row (keeps the row centered) */
+  .active-filters:empty {
+    display: none;
   }
   
   .filter-chip {

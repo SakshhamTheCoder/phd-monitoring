@@ -3,6 +3,7 @@ import { formatDate } from "../../../../utils/timeParse";
 import GridContainer from "../../fields/GridContainer";
 import InputField from "../../fields/InputField";
 import DropdownField from "../../fields/DropdownField";
+import InputSuggestions from "../../fields/InputSuggestions";
 import CustomButton from "../../fields/CustomButton";
 import { submitForm } from "../../../../api/form";
 import { resolvePath, useLocation } from "react-router-dom";
@@ -18,7 +19,6 @@ const Student = ({ formData }) => {
   const [body, setBody] = useState({});
   const [isLoaded, setIsLoaded] = useState(false);
   const [files, setFiles] = useState([]);
-  const [areasOfSpecialization, setAreasOfSpecialization] = useState([]);
   const location = useLocation();
   const { setLoading } = useLoading();
 
@@ -31,42 +31,21 @@ const Student = ({ formData }) => {
       title: formData.phd_title,
       objectives: formData.objectives ? formData.objectives : [],
       broad_area_of_research: formData.broad_area_of_research || null,
+      subdomains: formData.subdomains ? formData.subdomains : [],
     });
     setIsLoaded(true);
-    console.log("Form Data in Student:", formData.department_id);
-    // Fetch areas of specialization for the department
-    if (formData.department_id) {
-      fetchAreasOfSpecialization(formData.department_id);
-    }
   }, [formData]);
-
-  const fetchAreasOfSpecialization = async (departmentId) => {
-    try {
-      let response = await customFetch(
-        `${baseURL}/departments/area-of-specialization?department_id=${departmentId}`,
-        "GET",
-        {},
-        false
-      );
-       response=response.response;
-      if (response.success && response.data) {
-        setAreasOfSpecialization(
-          response.data.map((area) => ({
-            title: area.name,
-            value: area.id,
-          }))
-        );
-       
-      }
-    } catch (error) {
-      console.error("Failed to fetch areas of specialization:", error);
-    }
-  };
 
   const addObjective = () => {
     setBody((prevBody) => ({
       ...prevBody,
       objectives: [...prevBody.objectives, ""],
+    }));
+  };
+  const addSubdomain = () => {
+    setBody((prevBody) => ({
+      ...prevBody,
+      subdomains: [...(prevBody.subdomains || []), ""],
     }));
   };
   const onUpdateCGPA = (value) => {
@@ -104,6 +83,16 @@ const Student = ({ formData }) => {
                 initialValue={formData.name}
                 isLocked={true}
               />,
+            ]}
+          />
+
+          <GridContainer
+            elements={[
+              <InputField
+                label={"Department"}
+                initialValue={formData.department}
+                isLocked={true}
+              />,
               <DropdownField required={true}
                 label={"Gender"}
                 initialValue={formData.gender}
@@ -116,21 +105,6 @@ const Student = ({ formData }) => {
                   console.log("hi", body);
                   body.gender = value;
                 }}
-              />,
-            ]}
-          />
-
-          <GridContainer
-            elements={[
-              <InputField
-                label={"Date of Admission"}
-                initialValue={formatDate(formData.date_of_registration)}
-                isLocked={true}
-              />,
-              <InputField
-                label={"Department"}
-                initialValue={formData.department}
-                isLocked={true}
               />,
             ]}
           />
@@ -195,15 +169,16 @@ const Student = ({ formData }) => {
 
           <GridContainer
             elements={[
-              <DropdownField required={true}
+              <InputSuggestions required={true}
                 label={"Broad Area of Research"}
                 initialValue={formData.broad_area_of_research}
-                options={areasOfSpecialization}
-                isLocked={lock}
-                onChange={(value) => {
-                  body.broad_area_of_research = value;
+                apiUrl={baseURL + "/suggestions/specialization"}
+                onSelect={(value) => {
+                  body.broad_area_of_research = value.name;
                 }}
-                hint="Select your area of specialization"
+                lock={lock}
+                suggestionManadatory={false}
+                hint="Type your broad area of research"
               />,
             ]}
             space={2}
@@ -252,6 +227,50 @@ const Student = ({ formData }) => {
                 space={2}
               />
             </>
+          )}
+
+          <GridContainer
+            label={[<p>Subdomain</p>]}
+            elements={[
+              <></>,
+              <></>,
+              <>
+                {!lock && (
+                  <CustomButton text={"+ Add"} onClick={addSubdomain} />
+                )}
+              </>,
+            ]}
+          />
+          {formData.role == "student" ? (
+            <GridContainer
+              elements={(body.subdomains || []).map((keyword, index) => (
+                <InputSuggestions
+                  initialValue={keyword}
+                  apiUrl={baseURL + "/suggestions/subdomain"}
+                  onSelect={(value) => {
+                    body.subdomains[index] = value.name;
+                  }}
+                  lock={lock}
+                  suggestionManadatory={false}
+                  showLabel={false}
+                  hint={`Enter keyword ${index + 1}`}
+                />
+              ))}
+              space={2}
+            />
+          ) : (
+            <GridContainer
+              elements={[
+                <TableComponent
+                  data={(formData.subdomains || []).map((k) => ({
+                    keyword: k,
+                  }))}
+                  keys={["keyword"]}
+                  titles={["Subdomain"]}
+                />,
+              ]}
+              space={2}
+            />
           )}
 
           <GridContainer

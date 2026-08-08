@@ -22,9 +22,20 @@ const StudentsPage = () => {
   const [isModalEditStudentOpen, setIsModalEditStudentOpen] = useState(false);
   const [isBulkUploadModalOpen, setIsBulkUploadModalOpen] = useState(false);
   const [studentToEdit, setStudentToEdit] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const closeForm = () => {
+    setIsModalOpen(false);
+    setEditMode(false);
+    setStudentToEdit(null);
+  };
+
+  const handleFormSuccess = () => {
+    closeForm();
+    setRefreshKey((k) => k + 1);
+  };
 
   const handleOpenForm = (studentData = null) => {
-    console.log(studentData);
     if (studentData) {
       setEditMode(true);
       setStudentToEdit(studentData);
@@ -44,38 +55,20 @@ const StudentsPage = () => {
           {role === "admin" ? (
             <>
               <PagenationTable
+                key={refreshKey}
                 endpoint={location.pathname}
                 filters={filter}
                 enableApproval={false}
                 extraTopbarComponents={
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <CustomButton
-                      text="Add Student"
-                      onClick={() => handleOpenForm()}
-                      style={{
-                        backgroundColor: '#4CAF50',
-                        color: 'white',
-                        padding: '10px 20px',
-                        borderRadius: '6px',
-                        fontWeight: '500',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                      }}
-                    />
+                  <div style={{ display: 'flex', gap: '10px' }}>
                     <CustomButton
                       text="Bulk Upload"
+                      variant="secondary"
                       onClick={() => setIsBulkUploadModalOpen(true)}
-                      style={{
-                        backgroundColor: '#2196F3',
-                        color: 'white',
-                        padding: '10px 20px',
-                        borderRadius: '6px',
-                        fontWeight: '500',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                      }}
+                    />
+                    <CustomButton
+                      text="Add Student +"
+                      onClick={() => handleOpenForm()}
                     />
                   </div>
                 }
@@ -83,6 +76,13 @@ const StudentsPage = () => {
                   {
                     icon: <i className="fa-solid fa-pen-to-square"></i>,
                     tooltip: "Edit",
+                    onClick: (studentData) => {
+                      handleOpenForm(studentData);
+                    },
+                  },
+                  {
+                    icon: <i className="fa-solid fa-users-gear"></i>,
+                    tooltip: "Manage Supervisors/Doctoral",
                     onClick: (studentData) => {
                       setStudentToEdit(studentData);
                       setIsModalEditStudentOpen(true);
@@ -129,16 +129,17 @@ const StudentsPage = () => {
           )}
           <CustomModal
             isOpen={isModalOpen}
-            onClose={() => {
-              setIsModalOpen(false);
-              setEditMode(false);
-              setStudentToEdit(null);
-            }}
+            onClose={closeForm}
             setIsOpen={setIsModalOpen}
             title={editMode ? "Edit Student" : "Add Student"}
             width="80vw"
           >
-            <StudentForm edit={editMode} studentData={studentToEdit} />
+            <StudentForm
+              edit={editMode}
+              studentData={studentToEdit}
+              onClose={closeForm}
+              onSuccess={handleFormSuccess}
+            />
           </CustomModal>
 
           <CustomModal
@@ -175,7 +176,7 @@ const StudentsPage = () => {
             <BulkUploadStudents
               onSuccess={() => {
                 setIsBulkUploadModalOpen(false);
-                window.location.reload();
+                setRefreshKey((k) => k + 1);
               }}
             />
           </CustomModal>

@@ -92,6 +92,7 @@ class SynopsisSubmissionController extends Controller
                 return $this->handleAdordcForm($user,$form_id,$model);
             case 'dra':
             case 'dordc':
+            case 'director':
                 return $this->handleAdminForm($user, $form_id, $model);
             case 'faculty':
                 return $this->handleFacultyForm($user, $form_id, $model);
@@ -131,6 +132,8 @@ class SynopsisSubmissionController extends Controller
                 return $this->dordcSubmit($user, $request, $form_id);
             case 'phd_coordinator':
                 return $this->coordinatorSubmit($user, $request, $form_id);
+            case 'director':
+                return $this->directorSubmit($user, $request, $form_id);
             default:
                 return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
@@ -256,7 +259,7 @@ class SynopsisSubmissionController extends Controller
             function ($formInstance) use ($request, $user) {
                 $request->validate([
                    'revised_title' => 'string',
-                   'synopsis_pdf' => 'required|file|mimes:pdf|max:15360',
+                   'synopsis_pdf' => 'required|file|mimes:pdf|max:20480',
                 ]);
                 $formInstance->revised_title = $request->revised_title;
                 $link=$this->replaceUploadedFile($formInstance->synopsis_pdf, $request->file('synopsis_pdf'), 'synopsis', $user->student->roll_no);

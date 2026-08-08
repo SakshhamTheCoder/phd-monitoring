@@ -29,7 +29,7 @@ const FacultyPage = () => {
 
   const downloadSampleCSV = () => {
     const csvContent = `first_name,last_name,email,phone,designation,type,faculty_code,department_code,institution,website_link
-John,Doe,john.doe@example.com,1234567890,Professor,internal,FAC001,CSE,Thapar Institute of Engineering and Technology,https://johndoe.com
+John,Doe,john.doe@example.com,1234567890,Professor,internal,FAC001,CSED,Thapar Institute of Engineering and Technology,https://johndoe.com
 Jane,,jane.smith@example.com,9876543210,Associate Professor,external,,CHED,External University Name,https://janesmith.com`;
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -281,10 +281,11 @@ Jane,,jane.smith@example.com,9876543210,Associate Professor,external,,CHED,Exter
             enableApproval={false}
             customOpenForm={openForm}
             extraTopbarComponents={
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <CustomButton 
-                  text="Bulk Import CSV" 
-                  onClick={() => setShowBulkImportModal(true)} 
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <CustomButton
+                  text="Bulk Import CSV"
+                  variant="secondary"
+                  onClick={() => setShowBulkImportModal(true)}
                 />
                 <CustomButton text="Add Faculty +" onClick={() => openForm()} />
               </div>
@@ -306,6 +307,8 @@ Jane,,jane.smith@example.com,9876543210,Associate Professor,external,,CHED,Exter
             <FacultyForm
               edit={!!editData}
               facultyData={editData}
+              onClose={() => setIsOpen(false)}
+              onSuccess={() => setRefreshKey((prev) => prev + 1)}
             />
           </CustomModal>
 

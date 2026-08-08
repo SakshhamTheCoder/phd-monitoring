@@ -205,7 +205,11 @@ class FacultyController extends Controller
         if ($filters) {
             $facultyQuery = $this->applyDynamicFilters($facultyQuery, $filters);
         }
-    
+
+        // Sort alphabetically by the faculty member's name.
+        $facultyQuery->orderBy(User::select('first_name')->whereColumn('users.id', 'faculty.user_id'))
+            ->orderBy(User::select('last_name')->whereColumn('users.id', 'faculty.user_id'));
+
         $faculties = $facultyQuery->paginate($perPage, ['*'], 'page', $page);
     
         $result = $faculties->getCollection()->map(function ($faculty) {
@@ -285,6 +289,8 @@ class FacultyController extends Controller
         $updateCount = 0;
         $errorCount = 0;
         $errors = [];
+        // Kept so the response shape does not change for existing callers. This
+        // import no longer creates departments, so it stays empty.
         $createdDepartments = [];
 
         foreach ($batchData as $data) {
@@ -349,20 +355,20 @@ class FacultyController extends Controller
                     continue;
                 }
 
-                // Find or create department
+                // Resolve the department. This used to create one when the code
+                // did not match, which meant a single typo in a spreadsheet
+                // silently added a department with no HOD, no coordinator and a
+                // name generated from the typo, and quietly filed faculty under
+                // it. Departments are now only ever created deliberately, so an
+                // unknown code rejects the row and says so.
                 $department = null;
                 if ($departmentCode) {
-                    $department = Department::where('code', $departmentCode)->first();
+                    $department = \App\Support\DepartmentCodes::resolve($departmentCode);
                     if (!$department) {
-                        // Auto-create department for bulk upload
-                        $department = Department::create([
-                            'code' => $departmentCode,
-                            'name' => ucfirst($departmentCode) . ' Department', // Auto-generate name from code
-                        ]);
-                        
-                        if (!in_array($departmentCode, $createdDepartments)) {
-                            $createdDepartments[] = $departmentCode;
-                        }
+                        $errors[] = "Row " . $rowNumber . ": Department code '{$departmentCode}' not found. "
+                            . "Create the department first, or correct the code.";
+                        $errorCount++;
+                        continue;
                     }
                 }
 
@@ -452,8 +458,7 @@ class FacultyController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "Import completed: {$successCount} created, {$updateCount} updated, {$errorCount} errors" . 
-                        (count($createdDepartments) > 0 ? ", " . count($createdDepartments) . " department(s) auto-created" : ""),
+            'message' => "Import completed: {$successCount} created, {$updateCount} updated, {$errorCount} errors",
             'data' => [
                 'success_count' => $successCount,
                 'update_count' => $updateCount,

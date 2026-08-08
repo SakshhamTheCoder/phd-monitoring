@@ -142,7 +142,7 @@ class ThesisExtentionController extends Controller
                 }
                 if($formInstance->student->thesisExtentions->count()>0){
                     $request->validate([
-                        'previous_extention_pdf' => 'required|file|mimes:pdf|max:15360',
+                        'previous_extention_pdf' => 'required|file|mimes:pdf|max:20480',
                     ]);
                     $link=$this->replaceUploadedFile($formInstance->previous_extention_pdf, $request->file('previous_extention_pdf'), 'thesis_extention', $user->student->roll_no);
                     $formInstance->previous_extention_pdf = $link;

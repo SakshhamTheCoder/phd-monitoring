@@ -57,29 +57,48 @@ class HomeController extends Controller
         // For faculty and others
         $faculty = $user->faculty;
 
+        // Office/admin roles (admin, dra, director, …) often have no faculty record.
+        // Instead of 404-ing (which the client shows as an error + endless loader),
+        // return a generic home so they land on an admin overview.
         if (!$faculty) {
-            return response()->json(['message' => 'Faculty record not found'], 404);
+            return response()->json([
+                'type' => 'admin',
+                'data' => [
+                    'name' => $user->name(),
+                    'email' => $user->email,
+                    'role' => $role,
+                ],
+            ]);
         }
 
-        $supervised = $faculty->supervisedStudents()->with('user')->get()->map(function ($student) {
-            return [
-                'name' => $student->user->name(),
-                'roll_no' => $student->roll_no,
-                'email' => $student->user->email,
-                'phone' => $student->user->phone,
-                'overall_progress' => $student->overall_progress,
-            ];
-        });
+        $supervised = $faculty->supervisedStudents()->with('user')->get()
+            ->sortBy(fn ($student) => $student->user->name())
+            ->values()
+            ->map(function ($student) {
+                return [
+                    'name' => $student->user->name(),
+                    'roll_no' => $student->roll_no,
+                    'email' => $student->user->email,
+                    'phone' => $student->user->phone,
+                    'date_of_admission' => $student->date_of_registration?->format('Y-m-d'),
+                    'overall_progress' => $student->overall_progress,
+                ];
+            });
 
-        $doctoral = $faculty->doctoredStudents()->with('user')->get()->map(function ($student) {
-            return [
-                'name' => $student->user->name(),
-                'roll_no' => $student->roll_no,
-                'email' => $student->user->email,
-                'phone' => $student->user->phone,
-                'overall_progress' => $student->overall_progress,
-            ];
-        });
+        $doctoral = $faculty->doctoredStudents()->with(['user', 'department'])->get()
+            ->sortBy(fn ($student) => $student->user->name())
+            ->values()
+            ->map(function ($student) {
+                return [
+                    'name' => $student->user->name(),
+                    'roll_no' => $student->roll_no,
+                    'email' => $student->user->email,
+                    'phone' => $student->user->phone,
+                    'department' => $student->department?->name,
+                    'date_of_admission' => $student->date_of_registration?->format('Y-m-d'),
+                    'overall_progress' => $student->overall_progress,
+                ];
+            });
 
         return response()->json([
             'type' => 'faculty',

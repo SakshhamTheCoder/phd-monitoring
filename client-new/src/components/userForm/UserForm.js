@@ -37,8 +37,6 @@ const UserForm = ({ edit, userData, onClose }) => {
 
   useEffect(() => {
     if (edit && userData && rolesLoaded) {
-      console.log('Loading user data:', userData);
-      console.log('Current roles state:', roles);
       setFormData({
         id: userData.id,
         first_name: userData.first_name || '',
@@ -53,7 +51,6 @@ const UserForm = ({ edit, userData, onClose }) => {
         status: userData.status || 'active',
         password: '',
       });
-      console.log('Form data set with role_id:', userData.role_id, 'current_role_id:', userData.current_role_id);
     } else if (!edit) {
       // Reset form for new user
       setFormData({
@@ -76,13 +73,11 @@ const UserForm = ({ edit, userData, onClose }) => {
   const fetchRoles = async () => {
     try {
       const response = await customFetch(baseURL + '/roles', 'GET');
-      console.log('Roles response:', response);
       const roleData = response.response.map(r => ({
         value: r.id,
         title: r.role.charAt(0).toUpperCase() + r.role.slice(1),
         role_name: r.role
       }));
-      console.log('Processed role data:', roleData);
       setRoles(roleData);
       setAllRoleOptions(roleData.map(r => r.role_name));
       setRolesLoaded(true);
@@ -114,7 +109,14 @@ const UserForm = ({ edit, userData, onClose }) => {
       } else {
         toast.success(`User ${edit ? 'updated' : 'created'} successfully!`);
       }
-      
+
+      // Roles can be granted before the record backing them exists, so the save
+      // succeeds but the role won't work yet. Surface that instead of letting it
+      // fail silently later.
+      (response.warnings || []).forEach((warning) =>
+        toast.warn(warning, { autoClose: 10000 })
+      );
+
       onClose();
     } catch (error) {
       toast.error(error.message || `Failed to ${edit ? 'update' : 'create'} user`);
@@ -191,6 +193,12 @@ const UserForm = ({ edit, userData, onClose }) => {
     { value: 'Female', title: 'Female' },
   ];
 
+  const statusOptions = [
+    { value: 'active', title: 'Active' },
+    { value: 'inactive', title: 'Inactive' },
+    { value: 'suspended', title: 'Suspended' },
+  ];
+
 
 
   return (
@@ -248,6 +256,13 @@ const UserForm = ({ edit, userData, onClose }) => {
               onChange={(value) => setFormData({ ...formData, gender: value })}
               key={`gender_${formData.id || 'new'}`}
             />,
+            <DropdownField
+              label="Status"
+              options={statusOptions}
+              initialValue={statusOptions.find(s => s.value === formData.status)?.title || 'Active'}
+              onChange={(value) => setFormData({ ...formData, status: value })}
+              key={`status_${formData.id || 'new'}`}
+            />,
           ]}
           space={2}
         />
@@ -266,9 +281,6 @@ const UserForm = ({ edit, userData, onClose }) => {
           ) : (
             <p>Loading roles...</p>
           )}
-          <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
-            Current value: {formData.role_id} | Options: {roles.length} | Loaded: {rolesLoaded.toString()}
-          </p>
         </div>
 
         <GridContainer
@@ -285,9 +297,6 @@ const UserForm = ({ edit, userData, onClose }) => {
               ) : (
                 <p>Loading...</p>
               )}
-              <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
-                Current value: {formData.current_role_id}
-              </p>
             </div>,
             <div>
               {rolesLoaded && roles.length > 0 ? (
@@ -301,9 +310,6 @@ const UserForm = ({ edit, userData, onClose }) => {
               ) : (
                 <p>Loading...</p>
               )}
-              <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
-                Current value: {formData.default_role_id}
-              </p>
             </div>
           ]}
           space={2}
@@ -313,6 +319,15 @@ const UserForm = ({ edit, userData, onClose }) => {
           <label style={{ fontWeight: '600', marginBottom: '0.5rem', display: 'block' }}>
             Available Roles (Select multiple)
           </label>
+          <p style={{ fontSize: '0.8rem', color: '#92400e', background: '#fffbeb',
+                      border: '1px solid #fcd34d', borderRadius: '0.375rem',
+                      padding: '0.5rem 0.75rem', marginTop: 0, marginBottom: '0.5rem' }}>
+            Ticking a role here grants it, but does not create the record it depends on.
+            <strong> Hod</strong>, <strong>Phd_coordinator</strong> and <strong>Adordc</strong> are
+            assigned from the Departments page. <strong>Faculty</strong>-type roles need a faculty
+            record and <strong>Student</strong> needs a student record. Until those exist the user
+            cannot switch into the role.
+          </p>
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',

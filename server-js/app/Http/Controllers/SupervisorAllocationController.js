@@ -17,6 +17,7 @@ import { createForms } from './Traits/GeneralFormCreate.js';
 import {
     SupervisorAllocation,
     Faculty,
+    User,
     Supervisor,
     Forms,
     BroadAreaSpecialization,
@@ -185,6 +186,114 @@ export const bulkSubmit = async (req, res) => {
     }
 };
 
+/**
+ * Allocate supervisors for many students at once from an uploaded sheet.
+ *
+ * Each row is funnelled through the ordinary coordinator submission so the
+ * existing validation, authorization, locking, history and stage handling
+ * all still apply - the forms land on the HOD exactly as they would have if
+ * the coordinator had filled them in one at a time.
+ */
+export const bulkAllocate = async (req, res) => {
+    try {
+        const user = req.user;
+        const role = user.current_role;
+
+        if (role?.role !== 'phd_coordinator') {
+            return res.status(403).json({ message: 'You are not authorized to access this resource' });
+        }
+
+        const { batch_data } = req.body;
+        if (!batch_data || !Array.isArray(batch_data)) {
+            return res.status(422).json({ message: 'batch_data array is required' });
+        }
+
+        for (const row of batch_data) {
+            if (row?.row_number === undefined || row === null || !Number.isInteger(row.row_number)) {
+                return res.status(422).json({ message: 'batch_data.row_number is required and must be an integer' });
+            }
+            if (row.roll_no === undefined || row.roll_no === null || row.roll_no === '') {
+                return res.status(422).json({ message: 'batch_data.roll_no is required' });
+            }
+            if (!Array.isArray(row.supervisors) || row.supervisors.length < 1) {
+                return res.status(422).json({ message: 'batch_data.supervisors is required and must have at least 1 entry' });
+            }
+        }
+
+        let successCount = 0;
+        let errorCount = 0;
+        const errors = [];
+
+        for (const row of batch_data) {
+            const rowNumber = row.row_number;
+
+            try {
+                const identifiers = row.supervisors
+                    .map((code) => String(code).trim())
+                    .filter((code) => code !== '');
+
+                if (identifiers.length === 0) {
+                    throw new Error('No supervisors provided');
+                }
+
+                // A coordinator filling in a sheet is far more likely to know a
+                // supervisor's email than their numeric faculty code, so accept
+                // either and normalise to the faculty code the form expects.
+                const supervisors = [];
+                for (const identifier of identifiers) {
+                    if (!identifier.includes('@')) {
+                        supervisors.push(identifier);
+                        continue;
+                    }
+                    const faculty = await Faculty.findOne({
+                        include: [{ model: User, as: 'user', where: { email: identifier }, required: true }]
+                    });
+                    if (!faculty) {
+                        throw new Error(`No faculty found with email ${identifier}`);
+                    }
+                    supervisors.push(faculty.faculty_code);
+                }
+
+                const formInstance = await SupervisorAllocation.findOne({
+                    where: { student_id: row.roll_no, completion: 'incomplete' }
+                });
+
+                if (!formInstance) {
+                    throw new Error(`No open supervisor allocation form found for roll number ${row.roll_no}`);
+                }
+
+                if (formInstance.stage !== 'phd_coordinator') {
+                    throw new Error(`Form for roll number ${row.roll_no} is awaiting the '${formInstance.stage}' stage, not the PhD coordinator`);
+                }
+
+                const rowReq = { ...req, body: { supervisors, approval: true } };
+                const result = await coordinatorSubmit(user, rowReq, formInstance.id);
+
+                if ((result?.status || 200) >= 400) {
+                    throw new Error(result?.data?.message || result?.message || 'Allocation failed');
+                }
+
+                successCount++;
+            } catch (error) {
+                errorCount++;
+                errors.push(`Row ${rowNumber}: ${error.message}`);
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: `Allocation completed: ${successCount} allocated, ${errorCount} errors`,
+            data: {
+                success_count: successCount,
+                error_count: errorCount,
+                errors: errors
+            }
+        });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+
 // --- Private submission handlers ---
 
 const studentSubmit = async (user, req, form_id) => {
@@ -320,5 +429,6 @@ export default {
     createForm,
     loadForm,
     submit,
-    bulkSubmit
+    bulkSubmit,
+    bulkAllocate
 };

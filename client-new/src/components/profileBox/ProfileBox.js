@@ -16,7 +16,14 @@ const ProfileBox = () => {
     user && user.first_name && user.last_name
       ? `${user.first_name} ${user.last_name}`
       : "Name";
-  const role = getRoleName(localStorage.getItem("userRole")) || "Role";
+  const [role, setRole] = useState(getRoleName(localStorage.getItem("userRole")) || "Role");
+
+  useEffect(() => {
+    const onRoleChange = () =>
+      setRole(getRoleName(localStorage.getItem("userRole")) || "Role");
+    window.addEventListener("rolechange", onRoleChange);
+    return () => window.removeEventListener("rolechange", onRoleChange);
+  }, []);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 

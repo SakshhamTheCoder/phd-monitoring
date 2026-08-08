@@ -444,7 +444,11 @@ export const list = async (req, res) => {
     const queryOptions = {
       where: whereClause,
       include: includeOptions,
-      order: [["created_at", "DESC"]],
+      // Sort alphabetically by the student's name.
+      order: [
+        ["user", "first_name", "ASC"],
+        ["user", "last_name", "ASC"],
+      ],
     };
 
     if (all) {

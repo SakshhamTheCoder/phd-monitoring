@@ -9,6 +9,7 @@ router.use(authMiddleware);
 router.get('/', SupervisorAllocationController.listForm);
 router.post('/', SupervisorAllocationController.createForm);
 router.post('/bulk', SupervisorAllocationController.bulkSubmit);
+router.post('/bulk-allocate', SupervisorAllocationController.bulkAllocate);
 router.get('/filters', SupervisorAllocationController.listFilters);
 router.get('/:form_id', SupervisorAllocationController.loadForm);
 router.post('/:form_id', SupervisorAllocationController.submit);

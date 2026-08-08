@@ -32,6 +32,7 @@ import AreaOfSpecialization from './pages/areaOfSpecialization/AreaOfSpecializat
 import StudentCourses from './pages/StudentCourses/StudentCourses';
 import AdminCourseManagement from './pages/AdminCourseManagement/AdminCourseManagement';
 import OutsideExperts from './pages/OutsideExperts/OutsideExperts';
+import ExternalReview from './pages/externalReview/ExternalReview';
 import SupervisorDoctoralApproval from './pages/SupervisorDoctoralApproval/SupervisorDoctoralApproval';
 import UsersPage from './pages/users/UsersPage';
 import PrivacyPolicy from './pages/privacy/PrivacyPolicy';
@@ -80,6 +81,7 @@ const AppContent = () => {
           <Route path="/google/callback" element={<GoogleCallback />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/external-review/:token" element={<ExternalReview />} />
 
           {/* Dashboard */}
           <Route path="/home" element={<Dashboard />} />

@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Role;
 use App\Models\Student;
 use App\Models\Department;
+use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -41,6 +42,7 @@ class StudentController extends Controller {
                 'department_id' => 'required|integer',
                 'date_of_registration' => 'required|date',
                 'current_status' => 'required|in:part-time,full-time,executive',
+                'gender' => 'required|in:Male,Female',
                 'date_of_irb' => 'nullable|date',
                 'phd_title' => 'nullable|string',
                 'fathers_name' => 'nullable|string',
@@ -59,6 +61,7 @@ class StudentController extends Controller {
         $user->email = $request->email;
         $user->password = bcrypt($password);
         $user->address = $request->address;
+        $user->gender = $request->gender;
         $user->role_id = $role_id;
         //crate new entry in users table
 
@@ -140,9 +143,11 @@ class StudentController extends Controller {
         try {
             foreach ($request->students as $index => $studentData) {
                 try {
-                    // Find department by code
-                    $department = Department::where('code', $studentData['department_code'])->first();
-                    
+                    // Find department by code, accepting superseded codes so
+                    // spreadsheets saved before the codes were corrected still
+                    // import cleanly.
+                    $department = \App\Support\DepartmentCodes::resolve($studentData['department_code']);
+
                     if (!$department) {
                         $errors[] = "Row " . ($index + 1) . ": Department code '{$studentData['department_code']}' not found";
                         $failed++;
@@ -279,7 +284,12 @@ class StudentController extends Controller {
     if ($filters) {
         $studentsQuery = $this->applyDynamicFilters($studentsQuery, $filters);
     }
-    
+
+    // Sort alphabetically by the student's name. Ordered via a correlated subquery
+    // rather than a join so the eager loads and `select *` above stay intact.
+    $studentsQuery->orderBy(User::select('first_name')->whereColumn('users.id', 'students.user_id'))
+        ->orderBy(User::select('last_name')->whereColumn('users.id', 'students.user_id'));
+
     // Check if all flag is set
     if ($all) {
         $students = $studentsQuery->get();
@@ -365,6 +375,62 @@ class StudentController extends Controller {
         ],200);
     }
 
+    // Admin/privileged update of any student, keyed by roll_no. Distinct from
+    // updateProfile (which is the student editing their own limited fields).
+    public function adminUpdate(Request $request, $roll_no)
+    {
+        $loggedInUser = Auth::user();
+        if ($loggedInUser->current_role->can_add_student == 'false') {
+            return response()->json([
+                'message' => 'You do not have permission to edit student'
+            ], 403);
+        }
+
+        $student = Student::where('roll_no', $roll_no)->first();
+        if (!$student) {
+            return response()->json(['message' => 'Student not found'], 404);
+        }
+        $user = $student->user;
+
+        $request->validate([
+            'first_name' => 'required|string',
+            'last_name' => 'nullable|string',
+            'phone' => 'required|string',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'department_id' => 'required|integer',
+            'date_of_registration' => 'required|date',
+            'current_status' => 'required|in:part-time,full-time,executive',
+            'gender' => 'required|in:Male,Female',
+            'date_of_irb' => 'nullable|date',
+            'phd_title' => 'nullable|string',
+            'fathers_name' => 'nullable|string',
+            'address' => 'nullable|string',
+            'overall_progress' => 'nullable|numeric',
+            'cgpa' => 'nullable|numeric',
+        ]);
+
+        $user->first_name = $request->first_name;
+        $user->last_name = $request->last_name ?? $user->last_name;
+        $user->phone = $request->phone;
+        $user->email = $request->email;
+        if ($request->has('address')) $user->address = $request->address;
+        if ($request->has('gender')) $user->gender = $request->gender;
+        $user->save();
+
+        $student->department_id = $request->department_id;
+        $student->date_of_registration = $request->date_of_registration;
+        $student->date_of_irb = $request->date_of_irb;
+        $student->phd_title = $request->phd_title;
+        $student->fathers_name = $request->fathers_name;
+        $student->current_status = $request->current_status;
+        if ($request->has('address')) $student->address = $request->address;
+        $student->cgpa = $request->cgpa;
+        if ($request->has('overall_progress')) $student->overall_progress = $request->overall_progress;
+        $student->save();
+
+        return response()->json(['message' => 'Student updated successfully'], 200);
+    }
+
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
@@ -387,7 +453,11 @@ class StudentController extends Controller {
         if ($student) {
             if ($request->has('address'))      $student->address      = $request->address;
             if ($request->has('fathers_name')) $student->fathers_name = $request->fathers_name;
-            if ($request->has('phd_title'))    $student->phd_title    = $request->phd_title;
+            // The PhD title can only be edited from the profile until the IRB
+            // constitution form is submitted; after that it is owned by that form.
+            if ($request->has('phd_title') && !$student->phdTitleLocked()) {
+                $student->phd_title = $request->phd_title;
+            }
             if ($request->has('cgpa'))         $student->cgpa         = $request->cgpa;
             $student->save();
         }

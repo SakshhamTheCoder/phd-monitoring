@@ -3,37 +3,32 @@
   z-index: 2;
   display: flex;
   flex-direction: column;
-  top: 0;
-  left: 0;
   background-color: #f4f4f4;
   width: 100%;
   min-height: 100vh;
-  height: fit-content;
   padding: 24px 0;
   box-shadow: 2px 0 12px rgba(0, 0, 0, 0.1);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Logo Styling */
+/* Logo Styling — normal flow (was absolutely positioned, which broke the spacing) */
 .tietlogo {
-  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 30px 0 10px 0;
+  margin: 10px 0 20px;
 }
 
 .tietlogo img {
-  position: absolute;
   width: 70%;
-  margin-top: 50%;
+  max-width: 150px;
+  height: auto;
 }
 
-/* Icons Container */
+/* Icons Container — fills remaining height instead of the old margin-top: 70% gap */
 .icons {
-  margin-top: 70%;
+  flex: 1;
   width: 100%;
-  max-height: 600px;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
@@ -51,48 +46,47 @@
 .menu-button {
   display: flex;
   align-items: center;
-  padding: 14px 20px;
-  margin: 20px 14px; /* increased spacing between buttons */
-  width: 88%;
+  padding: 8px 16px;
+  margin: 6px 12px;
+  width: calc(100% - 24px);
+  min-height: 50px; /* uniform height for one- and two-line labels */
   border: none;
-  border-radius: 25px; /* pill shape */
+  border-radius: 14px;
   background-color: transparent;
   color: #555;
   font-size: 15px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: background-color 0.18s ease, box-shadow 0.18s ease;
   text-align: left;
 
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
 }
 
 .menu-button:hover {
-  /* background-color: #ffe6e6; */
- /* color: #b22626; */
-  transform: translateX(2px);
- 
+  background-color: #ececec;
 }
 
 .menu-button.active {
-  /* background-color: #b22626; */
-  /* color: white; */
-  box-shadow: 0 4px 10px rgba(64, 59, 59, 0.3);
+  background-color: #b22626;
+  color: white;
+  box-shadow: 0 4px 12px rgba(178, 38, 38, 0.3);
 }
 
 /* Icon Styling */
 .icon {
-  margin-right: 14px;
-  font-size: 18px;
-  width: 30px;
+  margin-right: 12px;
+  font-size: 17px;
+  width: 26px;
   display: flex;
   justify-content: center;
 }
 
 /* Text Styling */
 .text {
-  font-size: 16px;
+  font-size: 14.5px;
   font-weight: 600;
   color: inherit;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
+  line-height: 1.25;
 }

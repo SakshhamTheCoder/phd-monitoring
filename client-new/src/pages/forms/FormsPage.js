@@ -63,9 +63,7 @@ const FormsPage = () => {
             irbDate={user?.date_of_irb} 
             synopsisDate={user?.date_of_synopsis}
         /> */}
-        <div style={{marginTop:"30px"}}>
         <FormGrid forms={forms}/>
-        </div>
         </>
         }/>
 

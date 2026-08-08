@@ -158,7 +158,7 @@ class IrbSubController extends Controller
         $request->validate([
             'revised_phd_objectives' => 'required|array',
             'revised_phd_title' => 'required|string',
-            'irb_pdf' => 'required|file|mimes:pdf|max:15360',
+            'irb_pdf' => 'required|file|mimes:pdf|max:20480',
             'date_of_irb' => 'required|string',
         ]);
 
@@ -296,15 +296,8 @@ class IrbSubController extends Controller
                 ]);
                 $faculty=$user->faculty;
                 $faculty->supervised_outside=$request->supervised_outside;
-                $supervised_campus = Faculty::where('faculty_code', $faculty_code)
-                ->whereHas('supervisedStudents', function ($query) {
-                    // Use a raw query to directly check the completion status
-                    $query->whereHas('irbSubForm', function ($subQuery) {
-                        $subQuery->where('status', 'approved')
-                                  ->where('status', 'complete');
-                    });
-                });            
-                $faculty->supervised_campus=$supervised_campus->count();
+                // supervised_campus is now computed live via the Faculty accessor,
+                // so we only persist the manually-entered outside count here.
                 $faculty->save();
             
             $formInstance->supervisorApprovals()->where('supervisor_id', $faculty_code)->update([
@@ -319,30 +312,8 @@ class IrbSubController extends Controller
                 throw new \Exception('Your Prefrences Saved, Form Will be submitted once all Supervisors approve',201);
             }
             else{
-                //send Email with accept reject link
-                $outsideExpert = $formInstance->student->outsideExpert();
-                if($outsideExpert){
-                $approval = Approval::create([
-                    'key' => Approval::generateKey(),
-                    'email' => $outsideExpert->email,
-                    'action' => 'review',
-                    'model_type' => get_class($formInstance),
-                    'model_id' => $formInstance->id,
-                ]);
-                $link= storage_path($formInstance->revised_irb_pdf);
-
-                Mail::send('emails.approval', [
-                    'name' => $outsideExpert->first_name . ' ' . $outsideExpert->last_name,
-                    'email' => $outsideExpert->email,
-                    'approverName' => $user->name(),
-                    'formId' => $formInstance->id,
-                    'approvalKey' => $approval->key,
-                ], function ($message) use ($outsideExpert, $link) {
-                    $message->to($outsideExpert->email)
-                            ->subject('IRB Submission Approval Request')
-                            ->attach($link); // This must be full path to the PDF
-                });            
-            }
+                // Email the outside expert a secure, single-use link to the review page.
+                $formInstance->sendExternalReviewRequest();
             }
         }
         else{

@@ -13,7 +13,9 @@ return new class extends Migration
     {
          Schema::table('faculty', function (Blueprint $table) {
             $table->enum('type', ['internal', 'external'])->default('internal');
-            $table->text('institution')->nullable()->default('Thapar Institute of Engineering and Technology');
+            // NOTE: MySQL can't give a TEXT column a default value (strict mode rejects it),
+            // and the real schema has none — so this column is nullable with no default.
+            $table->text('institution')->nullable();
             $table->text('website_link')->nullable();
         });
        

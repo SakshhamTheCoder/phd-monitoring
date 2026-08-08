@@ -224,8 +224,8 @@ class ThesisSubmissionController extends Controller
                     'date_of_synopsis' => 'required|date',
                     'reciept_no' => 'required|string',
                     'date_of_fee_submission' => 'required|date',
-                    'thesis_pdf' => 'required|file|mimes:pdf|max:15360',
-                    'fee_receipt' => 'required|file|mimes:pdf,jpg,jpeg,png|max:15360',
+                    'thesis_pdf' => 'required|file|mimes:pdf|max:20480',
+                    'fee_receipt' => 'required|file|mimes:pdf,jpg,jpeg,png|max:20480',
                 ]);
                 $formInstance->date_of_synopsis = $request->date_of_synopsis;
                 $formInstance->reciept_no = $request->reciept_no;

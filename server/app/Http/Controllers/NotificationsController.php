@@ -13,17 +13,25 @@ class NotificationsController extends Controller
     public function unreadNotifications()
     {
         $user = Auth::user();
-        $notifications = $user->notifications->where('is_read', false);
+        // Only show notifications relevant to the role the user is currently acting as,
+        // plus role-agnostic (common) ones that have no specific role.
+        $activeRoleId = $user->current_role_id ?? $user->role_id;
+        $notifications = $user->notifications
+            ->where('is_read', false)
+            ->filter(function ($n) use ($activeRoleId) {
+                return is_null($n->role_id) || $n->role_id == $activeRoleId;
+            });
         $ret=[];
         foreach($notifications as $notification)
         {
             $ret[]=[
                 'id'=>$notification->id,
-                'title'=>$notification->title,
-                'body'=>$notification->body,
+                // Capitalise on read so existing lowercase notifications also display correctly.
+                'title'=>ucfirst((string) $notification->title),
+                'body'=>ucfirst((string) $notification->body),
                 'link'=>$notification->link,
                 'created_at'=>$notification->created_at,
-                'role'=>$notification->role->role
+                'role'=>$notification->role?->role
             ];
         }
         return response()->json($ret);
@@ -44,11 +52,7 @@ class NotificationsController extends Controller
     public function markAllAsRead()
     {
         $user = Auth::user();
-        $notifications = $user->notifications->where('is_read', false)->get();
-        foreach ($notifications as $notification) {
-            $notification->is_read = true;
-            $notification->save();
-        }
+        $user->notifications()->where('is_read', false)->update(['is_read' => true]);
         return response()->json(['message' => 'All notifications marked as read']);
     }
 
@@ -66,19 +70,24 @@ class NotificationsController extends Controller
     public function allNotifications()
     {
         $user = Auth::user();
-        $notifications = $user->notifications;
+        // Only show notifications relevant to the role the user is currently acting as,
+        // plus role-agnostic (common) ones that have no specific role.
+        $activeRoleId = $user->current_role_id ?? $user->role_id;
+        $notifications = $user->notifications->filter(function ($n) use ($activeRoleId) {
+            return is_null($n->role_id) || $n->role_id == $activeRoleId;
+        });
         $ret=[];
         foreach($notifications as $notification)
         {
             $ret[]=[
                 'id'=>$notification->id,
-                'id'=>$notification->id,
-                'title'=>$notification->title,
-                'body'=>$notification->body,
+                // Capitalise on read so existing lowercase notifications also display correctly.
+                'title'=>ucfirst((string) $notification->title),
+                'body'=>ucfirst((string) $notification->body),
                 'link'=>$notification->link,
                 'is_read'=>$notification->is_read,
                 'created_at'=>$notification->created_at,
-                'role'=>$notification->role->role
+                'role'=>$notification->role?->role
             ];
         }
         return response()->json($ret);

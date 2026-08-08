@@ -91,13 +91,25 @@ const Supervisor = ({ formData }) => {
         <>
           {lock && (
             <>
-              <p>Supervisor(s) Review</p>
+              <p style={{ fontWeight: "bold", textAlign: "left" }}>Supervisor(s) Review</p>
               <GridContainer
                 elements={[
                   <TableComponent
                     data={formData.supervisorReviews}
                     keys={["faculty", "progress", "comments"]}
                     titles={["Name", "Progress", "Comments"]}
+                    components={[
+                      {
+                        key: "progress",
+                        component: ({ data }) => (
+                          <span>
+                            {data
+                              ? data.replace(/\b\w/g, (c) => c.toUpperCase())
+                              : data}
+                          </span>
+                        ),
+                      },
+                    ]}
                   />,
                 ]}
                 space={3}

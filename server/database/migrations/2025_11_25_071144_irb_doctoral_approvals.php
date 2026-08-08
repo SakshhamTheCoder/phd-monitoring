@@ -18,7 +18,9 @@ return new class extends Migration
             $table->foreign('irb_sub_form_id')->references('id')->on('irb_sub_forms')->onDelete('cascade');
             $table->integer('doctoral_id')->unsigned()->index();
             $table->foreign('doctoral_id')->references('faculty_code')->on('faculty')->onDelete('cascade');
-            $table->enum('status',['awaited','approved','rejected']);
+            // App creates these rows with 'pending' (IrbSubForm) then updates to 'approved'.
+            // 'pending' must be in the enum — matches the real/prod schema.
+            $table->enum('status',['pending','approved','rejected']);
             $table->unique(['irb_sub_form_id','doctoral_id'],'uiniqe_approval');
             $table->timestamps();
         });

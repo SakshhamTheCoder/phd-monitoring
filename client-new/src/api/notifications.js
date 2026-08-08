@@ -30,6 +30,15 @@ export const APImarkNotificationAsRead = async (notificationId) => {
     });
 };
 
+// Mark ALL notifications as read (dropdown "Mark all as read" action)
+export const APImarkAllNotificationsAsRead = async () => {
+  return customFetch(baseURL + "/notifications/mark-all-as-read", "PUT", null, false, false)
+    .catch((error) => {
+      console.error("Error marking all notifications as read", error);
+      return { success: false };
+    });
+};
+
 // ✅ New: Fetch ALL notifications (for full notifications page)
 export const APIlistAllNotifications = async (setNotifications) => {
   customFetch(baseURL + "/notifications", "GET", null, false, false)
