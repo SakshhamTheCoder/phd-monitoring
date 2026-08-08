@@ -119,6 +119,17 @@
     margin: 0 0 0.75rem;
 }
 
+/* --- Modal / dialog title ------------------------------------------------
+   Promoted from CustomModal.css, which had the only sensible version. Six
+   near-identical copies existed at 1.15rem, 1.2rem, 22px and 24px.
+   CustomModal keeps its own chrome (the divider) on top of this. */
+.modal-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0 0 1rem;
+}
+
 /* --- Data table ----------------------------------------------------------
    Matches .custom-table in TableComponent.css, which the form pages use,
    but takes its colours from the tokens. */

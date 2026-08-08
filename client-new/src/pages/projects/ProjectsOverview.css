@@ -6,26 +6,7 @@
 }
 
 /* Header */
-.po-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 2rem;
-}
-
-.po-page-title {
-  color: var(--primary-color);
-  font-size: 1.6rem;
-  font-weight: 700;
-  margin: 0 0 0.25rem;
-}
-
-.po-subtitle {
-  color: #777;
-  font-size: 0.9rem;
-  margin: 0;
-  font-weight: 400;
-}
+/* Header comes from styles/ui.css */
 
 .po-create-btn {
   background: var(--primary-color);
@@ -394,13 +375,6 @@
   margin: 0 auto 1rem;
 }
 
-.po-modal-title {
-  font-size: 1.15rem;
-  font-weight: 600;
-  color: #111;
-  margin: 0 0 0.5rem;
-}
-
 .po-modal-text {
   font-size: 0.9rem;
   color: #666;
@@ -445,11 +419,4 @@
 .po-modal-btn.confirm:hover {
   background: #b91c1c;
   border-color: #b91c1c;
-}
-
-.po-empty {
-  text-align: center;
-  padding: 3rem;
-  color: #999;
-  font-size: 0.95rem;
 }

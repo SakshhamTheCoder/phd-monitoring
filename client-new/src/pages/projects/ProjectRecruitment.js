@@ -135,14 +135,16 @@ const ProjectRecruitment = () => {
         <button className="pr-back-link" onClick={() => navigate(`/projects/${id}`)}>
           <i className="fa fa-arrow-left"></i> BACK TO PROJECT
         </button>
-        <div className="pr-header">
+        <div className="page-header">
           <div>
-            <h1 className="pr-title">Recruitment — {project.title.length > 50 ? project.title.slice(0, 50) + '...' : project.title}</h1>
-            <p className="pr-subtitle">Manage positions and applications for this project.</p>
+            <h1 className="page-title">Recruitment: {project.title.length > 50 ? project.title.slice(0, 50) + '...' : project.title}</h1>
+            <p className="page-subtitle">Manage positions and applications for this project.</p>
           </div>
-          <button className="pr-post-btn" onClick={() => (showPostForm ? closePostForm() : openAddPos())}>
-            <i className="fa fa-plus"></i> Post Opening
-          </button>
+          <div className="page-actions">
+            <button className="pr-post-btn" onClick={() => (showPostForm ? closePostForm() : openAddPos())}>
+              <i className="fa fa-plus"></i> Post Opening
+            </button>
+          </div>
         </div>
 
         {/* Post / Edit Opening Form */}
@@ -226,7 +228,7 @@ const ProjectRecruitment = () => {
                 </div>
               ))
             ) : (
-              <div className="pr-card pr-empty">No positions posted yet. Click "Post Opening" to create one.</div>
+              <div className="empty-state">No positions posted yet. Click "Post Opening" to create one.</div>
             )}
           </>
         )}
@@ -268,7 +270,7 @@ const ProjectRecruitment = () => {
                   </tbody>
                 </table>
               ) : (
-                <div className="pr-empty" style={{ padding: '2rem', textAlign: 'center', color: '#999' }}>No applications for this position yet.</div>
+                <div className="empty-state" style={{ padding: '2rem', textAlign: 'center', color: '#999' }}>No applications for this position yet.</div>
               )}
             </div>
           </>

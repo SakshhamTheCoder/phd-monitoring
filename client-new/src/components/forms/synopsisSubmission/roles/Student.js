@@ -342,9 +342,7 @@ const Student = ({ formData }) => {
               <GridContainer
                 elements={[
                   <>
-                    <h1 style={{ fontSize: "24px", textAlign: "left" }}>
-                      Publications
-                    </h1>
+                    <h2 className="section-heading">Publications</h2>
                   </>,
                   <></>,
                   <CustomButton

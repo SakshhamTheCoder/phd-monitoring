@@ -104,7 +104,7 @@ const ShowPublications = ({
                     <GridContainer elements={[]} space={3} />
                     {enableSubmit && (
                         <GridContainer elements={[
-                            <h1 className='title-modal'>{enableSubmit && ("Link ")}Publications</h1>,
+                            <h1 className='modal-title'>{enableSubmit && ("Link ")}Publications</h1>,
                             <CustomButton text="Add New" onClick={openModal} />
                         ]}
                          space={2}

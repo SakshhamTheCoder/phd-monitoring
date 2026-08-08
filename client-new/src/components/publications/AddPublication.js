@@ -50,8 +50,8 @@ const AddPublication = ({ close, editData = null, onSave = null }) => {
 
   return (
     <>
-        {body.label && (<h1 className="add-publication-container-h1">{body.label}</h1>)}
-        {!body.label && (<h1 className="add-publication-container-h1">{"Choose a Publication Type"}</h1>)}
+        {body.label && (<h1 className="modal-title">{body.label}</h1>)}
+        {!body.label && (<h1 className="modal-title">{"Choose a Publication Type"}</h1>)}
       <div className="add-publication-container">
         {!editData && (
           <GridContainer

@@ -2,7 +2,7 @@
 .cp-back-link { background: none; border: none; color: #555; font-size: 0.8rem; font-weight: 600; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
 .cp-back-link:hover { color: var(--primary-color); }
 .cp-wizard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-.cp-wizard-header h1 { color: var(--primary-color); font-size: 1.5rem; font-weight: 700; margin: 0; }
+.cp-wizard-header .page-title { margin: 0; }
 .cp-draft-badge { background: #fee2e2; color: #b91c1c; padding: 0.3rem 1rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
 
 /* Stepper */

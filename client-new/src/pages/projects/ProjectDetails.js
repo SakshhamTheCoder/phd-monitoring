@@ -506,7 +506,7 @@ const ProjectDetails = () => {
                 <span className="pd-team-role pi">PI</span>
               </div>
             ) : (
-              <p className="pd-doc-empty">No principal investigator on record for this project.</p>
+              <p className="empty-state">No principal investigator on record for this project.</p>
             )}
           </div>
           <div className="pd-card">
@@ -612,7 +612,7 @@ const ProjectDetails = () => {
                 </div>
               )
             )) : (
-              <p className="pd-doc-empty">No Co-PIs added yet.</p>
+              <p className="empty-state">No Co-PIs added yet.</p>
             )}
           </div>
         </div>
@@ -642,7 +642,7 @@ const ProjectDetails = () => {
                 ))}
               </div>
             ) : (
-              <p className="pd-doc-empty">No documents uploaded yet.</p>
+              <p className="empty-state">No documents uploaded yet.</p>
             )}
           </div>
         </div>
@@ -666,7 +666,7 @@ const ProjectDetails = () => {
                 <i className="fa fa-flask"></i> {project.category.toUpperCase()}
               </span>
             </div>
-            <h1 className="pd-header-title">{project.title}</h1>
+            <h1 className="page-title">{project.title}</h1>
             <div className="pd-header-meta">
               <div className="pd-hm-item"><span>FUNDING AGENCY</span><strong>{project.fundingAgency}</strong></div>
               <div className="pd-hm-item"><span>SANCTIONED AMOUNT</span><strong>₹ {project.amount.toLocaleString('en-IN')}</strong></div>
@@ -698,9 +698,9 @@ const ProjectDetails = () => {
         </div>
 
         {/* Tabs */}
-        <div className="pd-tabs">
+        <div className="tabs pd-tabs">
           {TABS.map(tab => (
-            <button key={tab} className={`pd-tab ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab)}>{tab}</button>
+            <button key={tab} className={`tab ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab)}>{tab}</button>
           ))}
         </div>
 
@@ -710,7 +710,7 @@ const ProjectDetails = () => {
         {showDocModal && (
           <div className="pd-modal-overlay" onClick={() => setShowDocModal(false)}>
             <div className="pd-modal" onClick={e => e.stopPropagation()}>
-              <h3 className="pd-modal-title">{editingDocIdx !== null ? 'Edit Document' : 'Add Document'}</h3>
+              <h3 className="modal-title">{editingDocIdx !== null ? 'Edit Document' : 'Add Document'}</h3>
               <div className="pd-modal-field">
                 <label>Document Name <span className="req">*</span></label>
                 <input
@@ -749,7 +749,7 @@ const ProjectDetails = () => {
         {showSanctionModal && (
           <div className="pd-modal-overlay" onClick={() => setShowSanctionModal(false)}>
             <div className="pd-modal" onClick={e => e.stopPropagation()}>
-              <h3 className="pd-modal-title">Sanction Letter</h3>
+              <h3 className="modal-title">Sanction Letter</h3>
               <div className="pd-sanction-tabs">
                 <button type="button" className={`pd-sanction-tab ${sanctionMode === 'file' ? 'active' : ''}`} onClick={() => setSanctionMode('file')}>
                   <i className="fa fa-upload"></i> Choose File

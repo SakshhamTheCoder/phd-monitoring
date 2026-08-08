@@ -210,7 +210,7 @@ const Openings = () => {
           <div className="op-modal-overlay" onClick={() => setApplyFor(null)}>
             <div className="op-modal" onClick={e => e.stopPropagation()}>
               <button className="op-modal-close" onClick={() => setApplyFor(null)}><i className="fa fa-times"></i></button>
-              <h2 className="op-modal-title">Apply — {applyFor.title}</h2>
+              <h2 className="modal-title">Apply — {applyFor.title}</h2>
               <p className="op-modal-sub">{applyFor.type} &middot; {applyFor.projectTitle}</p>
 
               <div className="op-modal-section">Contact Details</div>

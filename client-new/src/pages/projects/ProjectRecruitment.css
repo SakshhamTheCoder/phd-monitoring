@@ -2,8 +2,7 @@
 .pr-back-link { background: none; border: none; color: #555; font-size: 0.8rem; font-weight: 600; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
 .pr-back-link:hover { color: var(--primary-color); }
 .pr-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
-.pr-title { color: var(--primary-color); font-size: 1.4rem; font-weight: 700; margin: 0 0 0.25rem; }
-.pr-subtitle { color: #777; font-size: 0.85rem; margin: 0; font-weight: 400; }
+/* Header comes from styles/ui.css */
 .pr-post-btn { background: var(--primary-color); color: #FFF; border: none; padding: 0.7rem 1.3rem; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; }
 .pr-post-btn:hover { background: var(--hover-color); }
 
@@ -17,7 +16,6 @@
 .pr-card { background: #FFF; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 1.25rem; }
 .pr-card-title { font-size: 1rem; font-weight: 600; color: #222; margin: 0 0 1.25rem; padding-left: 0.5rem; border-left: 3px solid var(--primary-color); }
 .pr-card-title i { color: var(--primary-color); margin-right: 0.5rem; }
-.pr-empty { text-align: center; color: #999; font-size: 0.9rem; padding: 2rem 0; }
 
 /* Form */
 .pr-form-card { border: 1px solid #fca5a5; }

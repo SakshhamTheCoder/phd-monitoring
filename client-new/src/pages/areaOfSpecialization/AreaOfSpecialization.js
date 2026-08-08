@@ -202,8 +202,10 @@ const AreaOfSpecialization = () => {
     <Layout>
       <div className="area-specialization-page">
         <div className="page-header">
-          <h1>Area of Specialization Management</h1>
-          <p>Manage research areas and associated experts for each department</p>
+          <div>
+            <h1 className="page-title">Area of Specialization Management</h1>
+            <p className="page-subtitle">Manage research areas and associated experts for each department</p>
+          </div>
         </div>
 
         {/* <FilterBar onSearch={handleFilterChange} /> */}

@@ -3,24 +3,8 @@
   min-height: 100vh;
 }
 
-.page-header {
-  margin-bottom: 30px;
-  border-bottom: 3px solid var(--primary-color);
-  padding-bottom: 15px;
-}
-
-.page-header h1 {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin: 0 0 8px 0;
-}
-
-.page-header p {
-  font-size: 14px;
-  color: #6c757d;
-  margin: 0;
-}
+/* Header comes from styles/ui.css. It used to be redefined here, and because
+   the page stylesheets share one bundle, that leaked onto every other page. */
 
 .top-actions {
   display: flex;

@@ -5,26 +5,7 @@
   min-height: 100vh;
 }
 
-.management-header {
-  margin-bottom: 35px;
-  border-bottom: 3px solid var(--primary-color);
-  padding-bottom: 20px;
-}
-
-.management-header h1 {
-  font-size: 32px;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin: 0 0 8px 0;
-  letter-spacing: -0.5px;
-}
-
-.management-header p {
-  font-size: 15px;
-  color: #6c757d;
-  margin: 0;
-  font-weight: 400;
-}
+/* Header comes from styles/ui.css */
 
 .student-selector-section {
   margin-bottom: 35px;

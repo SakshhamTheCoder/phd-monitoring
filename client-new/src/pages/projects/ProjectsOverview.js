@@ -80,14 +80,16 @@ const ProjectsOverview = () => {
     <Layout>
       <div className="po-container">
         {/* Page Header */}
-        <div className="po-header">
-          <div className="po-header-left">
-            <h1 className="po-page-title">Projects Overview</h1>
-            <p className="po-subtitle">Monitoring all ongoing research initiatives and funding channels.</p>
+        <div className="page-header">
+          <div>
+            <h1 className="page-title">Projects Overview</h1>
+            <p className="page-subtitle">Monitoring all ongoing research initiatives and funding channels.</p>
           </div>
-          <button className="po-create-btn" onClick={() => navigate('/projects/create')}>
-            <i className="fa fa-plus"></i> Create Project
-          </button>
+          <div className="page-actions">
+            <button className="po-create-btn" onClick={() => navigate('/projects/create')}>
+              <i className="fa fa-plus"></i> Create Project
+            </button>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -209,9 +211,9 @@ const ProjectsOverview = () => {
             </tbody>
           </table>
           {loading ? (
-            <div className="po-empty">Loading projects…</div>
+            <div className="empty-state">Loading projects…</div>
           ) : filteredProjects.length === 0 && (
-            <div className="po-empty">No projects found for the selected filter.</div>
+            <div className="empty-state">No projects found for the selected filter.</div>
           )}
         </div>
 
@@ -222,7 +224,7 @@ const ProjectsOverview = () => {
               <div className="po-modal-icon">
                 <i className="fa fa-exclamation-triangle"></i>
               </div>
-              <h3 className="po-modal-title">Delete Project</h3>
+              <h3 className="modal-title">Delete Project</h3>
               <p className="po-modal-text">
                 Are you sure you want to delete <strong>{deleteTarget.title}</strong>? This action cannot be undone.
               </p>

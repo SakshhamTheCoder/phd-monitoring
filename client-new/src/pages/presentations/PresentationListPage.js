@@ -116,7 +116,11 @@ const PresentationListPage = () => {
     <Layout
       children={
         <>
-          <h1>Progress Monitoring List</h1>
+          <div className="page-header">
+            <div>
+              <h1 className="page-title">Progress Monitoring List</h1>
+            </div>
+          </div>
 
           <SemesterStatsCard semesterName={semester_id} setFilters={setExtraFilter} />
 

@@ -34,14 +34,11 @@
     outline: none;
 }
 
-/* Modal title */
+/* Modal title. Type comes from styles/ui.css; this adds the dialog chrome. */
 .modal-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #1f2937;
     padding: 2px 30px 12px 4px;
     margin-bottom: 6px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 /* Modal body content */

@@ -585,7 +585,7 @@ const CreateProject = () => {
           <i className="fa fa-arrow-left"></i> BACK TO PROJECTS
         </button>
         <div className="cp-wizard-header">
-          <h1>{isEditMode ? 'Edit Project' : 'Create New Project Proposal'}</h1>
+          <h1 className="page-title">{isEditMode ? 'Edit Project' : 'Create New Project Proposal'}</h1>
           <span className="cp-draft-badge">{isEditMode ? 'EDITING' : 'DRAFT'}</span>
         </div>
         {/* Stepper */}

@@ -507,12 +507,6 @@ const OutsideExperts = () => {
           margin-bottom: 2rem;
         }
 
-        .page-title {
-          font-size: 2rem;
-          font-weight: 600;
-          color: #1f2937;
-        }
-
         .modal-form {
           display: flex;
           flex-direction: column;

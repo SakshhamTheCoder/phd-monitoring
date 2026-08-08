@@ -195,7 +195,7 @@ const ResearchProfile = () => {
             <div className="rp-container">
                 <div className="rp-top-nav">
                     <div className="rp-nav-left">
-                        <h1 className="rp-page-title">Research Profile</h1>
+                        <h1 className="page-title">Research Profile</h1>
                     </div>
                     <div className="rp-search-bar">
                         <i className="fa fa-search"></i>
@@ -314,9 +314,9 @@ const ResearchProfile = () => {
                     </div>
                 </div>
 
-                <div className="rp-tabs">
-                    <button className={activeTab === 'phd' ? 'active' : ''} onClick={() => setActiveTab('phd')}>PhD Student Publications</button>
-                    <button className={isOwnTab ? 'active' : ''} onClick={() => setActiveTab('faculty')}>Faculty Publications</button>
+                <div className="tabs">
+                    <button className={`tab ${activeTab === 'phd' ? 'active' : ''}`} onClick={() => setActiveTab('phd')}>PhD Student Publications</button>
+                    <button className={`tab ${isOwnTab ? 'active' : ''}`} onClick={() => setActiveTab('faculty')}>Faculty Publications</button>
                 </div>
 
                 <div className="rp-filter-bar">
@@ -411,7 +411,7 @@ const ResearchProfile = () => {
                         </>))}
 
                     {Object.values(filtered).every(list => !list || !list.length) && (
-                        <div className="rp-empty">
+                        <div className="empty-state">
                             {isOwnTab
                                 ? 'No publications recorded yet. Add one, or sync from ORCID or Scopus.'
                                 : 'No publications from supervised students match these filters.'}

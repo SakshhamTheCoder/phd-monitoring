@@ -36,12 +36,8 @@
     letter-spacing: 0.5px;
 }
 
-.rp-page-title {
-    color: var(--primary-color);
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 0;
-}
+/* Title comes from styles/ui.css; it sits inline with the search bar here. */
+.rp-nav-left .page-title { margin: 0; }
 
 .rp-search-bar {
     display: flex;
@@ -299,38 +295,7 @@
     cursor: pointer;
 }
 
-/* Tabs */
-.rp-tabs {
-    display: flex;
-    border-bottom: 1px solid #CCC;
-    margin-bottom: 2rem;
-}
-
-.rp-tabs button {
-    background: none;
-    border: none;
-    padding: 1rem 2rem;
-    font-size: 1rem;
-    font-weight: 500;
-    color: #777;
-    cursor: pointer;
-    position: relative;
-}
-
-.rp-tabs button.active {
-    color: var(--primary-color);
-    font-weight: 600;
-}
-
-.rp-tabs button.active::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    width: 100%;
-    height: 3px;
-    background: var(--primary-color);
-}
+/* Tabs come from styles/ui.css */
 
 /* Filter Bar */
 .rp-filter-bar {
@@ -549,7 +514,6 @@
 .rp-row-actions button { background: none; border: none; cursor: pointer; color: #777; padding: 0.2rem 0.35rem; }
 .rp-row-actions button:hover { color: var(--primary-color); }
 
-.rp-empty { padding: 3rem 1rem; text-align: center; color: #888; font-size: 0.9rem; }
 
 .rp-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
 .rp-modal { background: #FFF; border-radius: 12px; padding: 1.5rem; width: 100%; max-width: 900px; max-height: 90vh; overflow-y: auto; position: relative; }
