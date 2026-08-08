@@ -42,8 +42,8 @@
   .filter-operator:focus,
   .filter-combinator:focus,
   .filter-input:focus {
-    border-color: #900;
-    box-shadow: 0 0 0 3px rgba(153,0,0,0.06);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-tint);
   }
   .filter-input-container {
     min-width: 200px;

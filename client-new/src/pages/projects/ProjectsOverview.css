@@ -14,7 +14,7 @@
 }
 
 .po-page-title {
-  color: #900;
+  color: var(--primary-color);
   font-size: 1.6rem;
   font-weight: 700;
   margin: 0 0 0.25rem;
@@ -28,7 +28,7 @@
 }
 
 .po-create-btn {
-  background: #900;
+  background: var(--primary-color);
   color: #FFF;
   border: none;
   padding: 0.7rem 1.5rem;
@@ -43,7 +43,7 @@
 }
 
 .po-create-btn:hover {
-  background: #700;
+  background: var(--hover-color);
 }
 
 /* Stats Grid */
@@ -94,7 +94,7 @@
   justify-content: center;
   font-size: 0.85rem;
   background: #f7ebeb;
-  color: #900;
+  color: var(--primary-color);
 }
 
 .po-stat-icon.active,
@@ -103,7 +103,7 @@
 .po-stat-icon.consultancy,
 .po-stat-icon.international {
   background: #f7ebeb;
-  color: #900;
+  color: var(--primary-color);
 }
 
 .po-stat-value {
@@ -119,7 +119,7 @@
 
 .po-stat-value.large {
   font-size: 1.8rem;
-  color: #900;
+  color: var(--primary-color);
 }
 
 .po-stat-trend {
@@ -152,7 +152,7 @@
 }
 
 .po-dot.internal {
-  background: #900;
+  background: var(--primary-color);
 }
 
 .po-dot.external {
@@ -204,20 +204,20 @@
 }
 
 .po-filter-pill:hover {
-  border-color: #900;
-  color: #900;
+  border-color: var(--primary-color);
+  color: var(--primary-color);
 }
 
 .po-filter-pill.active {
-  background: #900;
+  background: var(--primary-color);
   color: #FFF;
-  border-color: #900;
+  border-color: var(--primary-color);
 }
 
 .po-export-btn {
   background: none;
   border: none;
-  color: #900;
+  color: var(--primary-color);
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
@@ -227,7 +227,7 @@
 }
 
 .po-export-btn:hover {
-  color: #700;
+  color: var(--hover-color);
 }
 
 /* Table */

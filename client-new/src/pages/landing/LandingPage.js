@@ -186,7 +186,7 @@ const LandingPage = () => {
                         refY="3"
                         orient="auto"
                       >
-                        <polygon points="0 0, 10 3, 0 6" fill="#932f2f" />
+                        <polygon points="0 0, 10 3, 0 6" fill="var(--primary-color)" />
                       </marker>
                     </defs>
                     {workflow.map((_, index) => {
@@ -206,7 +206,7 @@ const LandingPage = () => {
                           y1={y1}
                           x2={x2}
                           y2={y2}
-                          stroke="#932f2f"
+                          stroke="var(--primary-color)"
                           strokeWidth="2"
                           markerEnd="url(#arrowhead)"
                           opacity="0.6"

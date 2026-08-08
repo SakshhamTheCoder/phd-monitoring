@@ -110,7 +110,7 @@ const ForgotPasswordPage = () => {
 
                 <button
                     type="submit"
-                    className="tw-w-full tw-bg-[#932f2f] tw-text-white tw-py-2 tw-rounded hover:tw-bg-[#7a2626]"
+                    className="tw-w-full tw-bg-brand tw-text-white tw-py-2 tw-rounded hover:tw-bg-brand-hover"
                     disabled={loading}
                 >
                     {loading ? 'Sending...' : 'Send Reset Link'}

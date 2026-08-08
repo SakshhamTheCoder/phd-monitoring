@@ -34,15 +34,15 @@ const Support = () => {
           </p>
 
           <section className="tw-mb-8">
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-4 tw-border-l-4 tw-border-l-[#932f2f] tw-pl-4">
+            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-4 tw-border-l-4 tw-border-l-brand tw-pl-4">
               Contact Information
             </h2>
-            <div className="tw-bg-gray-50 tw-p-6 tw-rounded-r-lg tw-border-l-4 tw-border-l-[#932f2f] tw-shadow-sm tw-space-y-4">
+            <div className="tw-bg-gray-50 tw-p-6 tw-rounded-r-lg tw-border-l-4 tw-border-l-brand tw-shadow-sm tw-space-y-4">
               <div>
                 <h3 className="tw-font-bold tw-text-gray-900 tw-mb-2">Email Support</h3>
                 <p className="tw-text-gray-700">
                   For technical support and general inquiries: <br/>
-                  <a href="mailto:sbhagat_be23@thapar.edu" className="tw-text-[#932f2f] hover:tw-underline tw-font-semibold">
+                  <a href="mailto:sbhagat_be23@thapar.edu" className="tw-text-brand hover:tw-underline tw-font-semibold">
                     sbhagat_be23@thapar.edu
                   </a>
                 </p>
@@ -60,12 +60,12 @@ const Support = () => {
           </section>
 
           <section className="tw-mb-8">
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-4 tw-border-l-4 tw-border-l-[#932f2f] tw-pl-4">
+            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-4 tw-border-l-4 tw-border-l-brand tw-pl-4">
               Frequently Asked Questions
             </h2>
             
             <div className="tw-space-y-4">
-              <div className="tw-border-l-4 tw-border-[#932f2f] tw-pl-4">
+              <div className="tw-border-l-4 tw-border-brand tw-pl-4">
                 <h3 className="tw-font-bold tw-text-gray-900 tw-mb-2">
                   How do I login to the portal?
                 </h3>
@@ -75,7 +75,7 @@ const Support = () => {
                 </p>
               </div>
 
-              <div className="tw-border-l-4 tw-border-[#932f2f] tw-pl-4">
+              <div className="tw-border-l-4 tw-border-brand tw-pl-4">
                 <h3 className="tw-font-bold tw-text-gray-900 tw-mb-2">
                   I forgot my password. What should I do?
                 </h3>
@@ -85,7 +85,7 @@ const Support = () => {
                 </p>
               </div>
 
-              <div className="tw-border-l-4 tw-border-[#932f2f] tw-pl-4">
+              <div className="tw-border-l-4 tw-border-brand tw-pl-4">
                 <h3 className="tw-font-bold tw-text-gray-900 tw-mb-2">
                   Can I login with Google if I don't have a portal account?
                 </h3>
@@ -95,19 +95,19 @@ const Support = () => {
                 </p>
               </div>
 
-              <div className="tw-border-l-4 tw-border-[#932f2f] tw-pl-4">
+              <div className="tw-border-l-4 tw-border-brand tw-pl-4">
                 <h3 className="tw-font-bold tw-text-gray-900 tw-mb-2">
                   Who can I contact for account-related issues?
                 </h3>
                 <p className="tw-text-gray-700">
                   For account creation, access issues, or role-related queries, please email 
-                  <a href="mailto:sbhagat_be23@thapar.edu" className="tw-text-[#932f2f] hover:tw-underline tw-font-semibold tw-ml-1">
+                  <a href="mailto:sbhagat_be23@thapar.edu" className="tw-text-brand hover:tw-underline tw-font-semibold tw-ml-1">
                     sbhagat_be23@thapar.edu
                   </a>
                 </p>
               </div>
 
-              <div className="tw-border-l-4 tw-border-[#932f2f] tw-pl-4">
+              <div className="tw-border-l-4 tw-border-brand tw-pl-4">
                 <h3 className="tw-font-bold tw-text-gray-900 tw-mb-2">
                   How do I submit my research progress reports?
                 </h3>
@@ -121,7 +121,7 @@ const Support = () => {
           </section>
 
           <section className="tw-mb-8">
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-4 tw-border-l-4 tw-border-l-[#932f2f] tw-pl-4">
+            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-4 tw-border-l-4 tw-border-l-brand tw-pl-4">
               Technical Issues
             </h2>
             <div className="tw-bg-blue-50 tw-border-l-4 tw-border-blue-500 tw-p-4 tw-rounded-r-lg tw-shadow-sm">
@@ -138,10 +138,10 @@ const Support = () => {
           </section>
 
           <section className="tw-mb-8">
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-4 tw-border-l-4 tw-border-l-[#932f2f] tw-pl-4">
+            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-4 tw-border-l-4 tw-border-l-brand tw-pl-4">
               Office Hours
             </h2>
-            <div className="tw-bg-gray-50 tw-p-6 tw-rounded-r-lg tw-border-l-4 tw-border-l-[#932f2f] tw-shadow-sm">
+            <div className="tw-bg-gray-50 tw-p-6 tw-rounded-r-lg tw-border-l-4 tw-border-l-brand tw-shadow-sm">
               <p className="tw-text-gray-700">
                 <strong>Monday - Friday:</strong> 9:00 AM - 5:00 PM<br/>
                 <strong>Saturday - Sunday:</strong> Closed

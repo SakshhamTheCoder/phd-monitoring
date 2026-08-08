@@ -5,7 +5,7 @@
 
 .page-header {
   margin-bottom: 30px;
-  border-bottom: 3px solid #932f2f;
+  border-bottom: 3px solid var(--primary-color);
   padding-bottom: 15px;
 }
 
@@ -40,7 +40,7 @@
 .section-divider h3 {
   font-size: 16px;
   font-weight: 700;
-  color: #932f2f;
+  color: var(--primary-color);
   margin: 0;
 }
 
@@ -52,7 +52,7 @@
   background: #f8f4f1;
   padding: 20px;
   border-radius: 8px;
-  border-left: 4px solid #932f2f;
+  border-left: 4px solid var(--primary-color);
   margin-bottom: 25px;
 }
 
@@ -73,6 +73,6 @@
 }
 
 .upload-info .note strong {
-  color: #932f2f;
+  color: var(--primary-color);
   font-weight: 700;
 }

@@ -33,7 +33,7 @@
 .xr-pdf-link {
   display: inline-block;
   margin-top: 8px;
-  color: var(--primary-color, #b22626);
+  color: var(--primary-color, var(--primary-color));
   font-size: 14px;
   text-decoration: underline;
 }

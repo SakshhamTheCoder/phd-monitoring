@@ -274,7 +274,7 @@ const LoginPage = () => {
                 <div className="tw-flex tw-items-center tw-justify-between">
                   <Link
                     to="/forgot-password"
-                    className="tw-text-[#932f2f] hover:tw-underline"
+                    className="tw-text-brand hover:tw-underline"
                   >
                     Forgot Password?
                   </Link>
@@ -285,7 +285,7 @@ const LoginPage = () => {
 
                 <button
                   type="submit"
-                  className="tw-bg-[#932f2f] tw-w-4/5 tw-mx-auto tw-block tw-text-center tw-text-white tw-py-2 tw-rounded-md tw-font-bold hover:tw-bg-[#7a2626] tw-duration-200"
+                  className="tw-bg-brand tw-w-4/5 tw-mx-auto tw-block tw-text-center tw-text-white tw-py-2 tw-rounded-md tw-font-bold hover:tw-bg-brand-hover tw-duration-200"
                 >
                   Login
                 </button>
@@ -297,21 +297,21 @@ const LoginPage = () => {
           <div className="tw-mt-6 tw-pt-4 tw-border-t tw-border-gray-200 tw-flex tw-flex-wrap tw-justify-center tw-gap-4 tw-text-sm">
             <Link
               to="/privacy"
-              className="tw-text-gray-600 hover:tw-text-[#932f2f] hover:tw-underline"
+              className="tw-text-gray-600 hover:tw-text-brand hover:tw-underline"
             >
               Privacy Policy
             </Link>
             <span className="tw-text-gray-400">|</span>
             <Link
               to="/support"
-              className="tw-text-gray-600 hover:tw-text-[#932f2f] hover:tw-underline"
+              className="tw-text-gray-600 hover:tw-text-brand hover:tw-underline"
             >
               Support
             </Link>
             <span className="tw-text-gray-400">|</span>
             <Link
               to="/team"
-              className="tw-text-gray-600 hover:tw-text-[#932f2f] hover:tw-underline"
+              className="tw-text-gray-600 hover:tw-text-brand hover:tw-underline"
             >
               Team
             </Link>

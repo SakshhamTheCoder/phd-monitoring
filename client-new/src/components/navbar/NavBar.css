@@ -68,9 +68,9 @@
 }
 
 .menu-button.active {
-  background-color: #b22626;
+  background-color: var(--primary-color);
   color: white;
-  box-shadow: 0 4px 12px rgba(178, 38, 38, 0.3);
+  box-shadow: 0 4px 12px var(--primary-tint);
 }
 
 /* Icon Styling */

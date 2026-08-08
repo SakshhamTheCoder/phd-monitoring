@@ -73,7 +73,7 @@
 
 .form-card:hover {
     border-color: #f0d3d3;
-    box-shadow: 0 6px 18px -6px rgba(178, 38, 38, 0.28);
+    box-shadow: 0 6px 18px -6px var(--primary-tint);
     transform: translateY(-1px);
 }
 
@@ -116,7 +116,7 @@
 }
 
 .form-card:hover .form-card-arrow {
-    color: var(--primary-color, #b22626);
+    color: var(--primary-color, var(--primary-color));
     transform: translateX(2px);
 }
 
