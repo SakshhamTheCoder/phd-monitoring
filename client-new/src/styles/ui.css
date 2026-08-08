@@ -139,16 +139,27 @@
 
 /* --- Modal footer --------------------------------------------------------
    .custom-button is width:100% because most of its callers sit in a grid
-   cell. In a footer row that has to relax, or two buttons split the width. */
+   cell. Inside a dialog that is wrong: a lone Save became a full-width red
+   bar across the panel. Buttons in a modal size to their label. */
+.modal-content .custom-button {
+    width: auto;
+}
+
 .modal-actions {
     display: flex;
     justify-content: flex-end;
     gap: 0.6rem;
     margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-subtle);
 }
 
-.modal-actions .custom-button {
-    width: auto;
+/* A modal's fields should share one width rather than each sizing itself. */
+.modal-content .input-field,
+.modal-content select,
+.modal-content .react-datepicker-wrapper {
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* --- Data table ----------------------------------------------------------

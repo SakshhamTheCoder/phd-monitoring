@@ -168,8 +168,8 @@ const StudentCourses = () => {
 
         .course-code {
           display: inline-block;
-          background: #eff6ff;
-          color: #3b82f6;
+          background: var(--primary-wash);
+          color: var(--primary-color);
           padding: 0.25rem 0.75rem;
           border-radius: 0.25rem;
           font-size: 0.875rem;
@@ -213,10 +213,6 @@ const StudentCourses = () => {
         .empty-state p { margin: 0; }
 
         @media (max-width: 768px) {
-          .student-courses-container {
-            padding: 1rem;
-          }
-
           .courses-grid {
             grid-template-columns: 1fr;
           }

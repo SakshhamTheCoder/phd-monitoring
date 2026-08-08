@@ -323,13 +323,13 @@ const OutsideExperts = () => {
                 setShowAddModal(false);
                 resetForm();
               }}
-              className="secondary-button"
+              className="custom-button custom-button--secondary"
             >
               Cancel
             </button>
             <button
               onClick={handleAddExpert}
-              className="primary-button"
+              className="custom-button"
               disabled={submitting}
             >
               {submitting ? 'Adding...' : 'Add Expert'}
@@ -367,13 +367,13 @@ const OutsideExperts = () => {
                 setShowBulkImportModal(false);
                 setCsvFile(null);
               }}
-              className="secondary-button"
+              className="custom-button custom-button--secondary"
             >
               Cancel
             </button>
             <button
               onClick={handleBulkImport}
-              className="primary-button"
+              className="custom-button"
               disabled={submitting || !csvFile}
             >
               {submitting ? 'Importing...' : 'Import'}
@@ -480,13 +480,13 @@ const OutsideExperts = () => {
                 setShowEditModal(false);
                 resetForm();
               }}
-              className="secondary-button"
+              className="custom-button custom-button--secondary"
             >
               Cancel
             </button>
             <button
               onClick={handleEditExpert}
-              className="primary-button"
+              className="custom-button"
               disabled={submitting}
             >
               {submitting ? 'Updating...' : 'Update Expert'}
@@ -517,44 +517,6 @@ const OutsideExperts = () => {
           justify-content: flex-end;
           gap: 1rem;
           margin-top: 1rem;
-        }
-
-        .primary-button {
-          padding: 0.75rem 1.5rem;
-          background: #3b82f6;
-          color: white;
-          border: none;
-          border-radius: 0.5rem;
-          font-size: 1rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.3s;
-        }
-
-        .primary-button:hover {
-          background: #2563eb;
-        }
-
-        .primary-button:disabled {
-          background: #9ca3af;
-          cursor: not-allowed;
-        }
-
-        .secondary-button {
-          padding: 0.75rem 1.5rem;
-          background: white;
-          color: #6b7280;
-          border: 1px solid #d1d5db;
-          border-radius: 0.5rem;
-          font-size: 1rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.3s;
-        }
-
-        .secondary-button:hover {
-          background: #f9fafb;
-          border-color: #9ca3af;
         }
 
         .info-box {

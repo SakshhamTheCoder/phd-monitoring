@@ -506,7 +506,7 @@ Jane,,jane.smith@example.com,9876543210,Associate Professor,external,,CHED,Exter
                   disabled={submitting || !csvFile}
                   style={{
                     padding: '0.75rem 1.5rem',
-                    background: submitting || !csvFile ? '#9ca3af' : '#3b82f6',
+                    background: submitting || !csvFile ? '#9ca3af' : 'var(--primary-color)',
                     color: 'white',
                     border: 'none',
                     borderRadius: '0.5rem',

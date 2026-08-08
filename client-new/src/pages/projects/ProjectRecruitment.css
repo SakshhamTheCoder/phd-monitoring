@@ -46,8 +46,8 @@ a.pr-field-hint { color: var(--primary-color); }
 .pr-pos-deadline { font-size: 0.78rem; color: #999; }
 .pr-pos-top-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.6rem; }
 .pr-pos-actions { display: flex; gap: 0.3rem; }
-.pr-pos-edit { background: none; border: 1px solid #E5E5E5; color: #2563eb; width: 30px; height: 30px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; display: inline-flex; align-items: center; justify-content: center; }
-.pr-pos-edit:hover { background: #eff6ff; border-color: #3b82f6; }
+.pr-pos-edit { background: none; border: 1px solid #E5E5E5; color: var(--text-subtle); width: 30px; height: 30px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; display: inline-flex; align-items: center; justify-content: center; }
+.pr-pos-edit:hover { background: var(--primary-wash); border-color: var(--primary-color); color: var(--primary-color); }
 .pr-pos-delete { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; width: 30px; height: 30px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; display: inline-flex; align-items: center; justify-content: center; }
 .pr-pos-delete:hover { background: #dc2626; border-color: #dc2626; color: #FFF; }
 .pr-pos-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }

@@ -256,7 +256,7 @@ const [userRole, setUserRole] = useState('');
                 text={`${overall_progress}%`}
                 styles={buildStyles({
                   textColor: "#111827",
-                  pathColor: "#2563eb",
+                  pathColor: "var(--primary-color)",
                   trailColor: "#e5e7eb",
                 })}
               />
@@ -292,7 +292,7 @@ const [userRole, setUserRole] = useState('');
             text={`${overall_progress}%`}
             styles={buildStyles({
               textColor: '#111827',
-              pathColor: '#2563eb',
+              pathColor: 'var(--primary-color)',
               trailColor: '#e5e7eb',
             })}
           />

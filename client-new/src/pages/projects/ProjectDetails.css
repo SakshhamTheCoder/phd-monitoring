@@ -93,8 +93,8 @@
 .pd-budget-sub-cell { color: #BBB; }
 .pd-budget-wrap { overflow-x: auto; }
 /* Co-PI edit / remove */
-.pd-copi-edit { background: none; border: none; color: #2563eb; font-size: 0.85rem; cursor: pointer; padding: 0.4rem; margin-left: 0.5rem; border-radius: 6px; }
-.pd-copi-edit:hover { background: #eff6ff; }
+.pd-copi-edit { background: none; border: none; color: var(--text-subtle); font-size: 0.85rem; cursor: pointer; padding: 0.4rem; margin-left: 0.5rem; border-radius: 6px; }
+.pd-copi-edit:hover { background: var(--primary-wash); color: var(--primary-color); }
 .pd-copi-remove { background: none; border: none; color: #dc2626; font-size: 0.85rem; cursor: pointer; padding: 0.4rem; margin-left: 0.25rem; border-radius: 6px; }
 .pd-copi-remove:hover { background: #fef2f2; }
 /* Sanction letter edit/view */
@@ -165,8 +165,8 @@
 .pd-doc-dl { background: none; border: none; color: var(--primary-color); cursor: pointer; font-size: 1rem; display: inline-flex; align-items: center; text-decoration: none; padding: 0.35rem; border-radius: 6px; }
 .pd-doc-dl:hover { background: #fef2f2; }
 .pd-doc-actions { display: flex; align-items: center; gap: 0.15rem; }
-.pd-doc-edit { background: none; border: none; color: #2563eb; cursor: pointer; font-size: 0.9rem; padding: 0.35rem; border-radius: 6px; }
-.pd-doc-edit:hover { background: #eff6ff; }
+.pd-doc-edit { background: none; border: none; color: var(--text-subtle); cursor: pointer; font-size: 0.9rem; padding: 0.35rem; border-radius: 6px; }
+.pd-doc-edit:hover { background: var(--primary-wash); color: var(--primary-color); }
 .pd-doc-remove { background: none; border: none; color: #dc2626; cursor: pointer; font-size: 0.9rem; padding: 0.35rem; border-radius: 6px; }
 .pd-doc-remove:hover { background: #fef2f2; }
 

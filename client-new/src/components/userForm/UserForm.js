@@ -349,7 +349,7 @@ const UserForm = ({ edit, userData, onClose }) => {
                   borderRadius: '0.25rem',
                   background: formData.available_roles.includes(roleName) ? '#dbeafe' : 'white',
                   border: '1px solid',
-                  borderColor: formData.available_roles.includes(roleName) ? '#3b82f6' : '#d1d5db',
+                  borderColor: formData.available_roles.includes(roleName) ? 'var(--primary-color)' : '#d1d5db',
                   transition: 'all 0.2s'
                 }}
               >
@@ -440,7 +440,7 @@ const UserForm = ({ edit, userData, onClose }) => {
                 disabled={loading}
                 style={{
                   padding: '0.75rem 1.5rem',
-                  background: '#3b82f6',
+                  background: 'var(--primary-color)',
                   color: 'white',
                   border: 'none',
                   borderRadius: '0.5rem',

@@ -29,7 +29,7 @@
     color: #555;
     background-color: #eef1f5;
     padding: 6px 12px;
-    border-radius: 4px;
+    border-radius: var(--radius);
 }
 
 /* Style for the button on the right side */
@@ -37,16 +37,16 @@
     padding: 6px 12px;
     font-size: 0.9rem;
     color: #fff;
-    background-color: #007bff; /* Primary blue color */
+    background-color: var(--primary-color);
     border: none;
-    border-radius: 4px;
+    border-radius: var(--radius);
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
 
 /* Hover effect for the button */
 .form-title-bar-right-button:hover {
-    background-color: #0056b3; /* Darker blue on hover */
+    background-color: var(--hover-color);
 }
 
 /* Ensure consistent spacing on smaller devices */

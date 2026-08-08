@@ -123,20 +123,8 @@
   gap: 0.5rem;
 }
 
-.po-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  display: inline-block;
-}
 
-.po-dot.internal {
-  background: var(--primary-color);
-}
 
-.po-dot.external {
-  background: #3b82f6;
-}
 
 /* Filter Bar */
 .po-filter-bar {
@@ -320,9 +308,9 @@
 }
 
 .po-icon-btn.edit:hover {
-  background: #eff6ff;
-  border-color: #3b82f6;
-  color: #2563eb;
+  background: var(--primary-wash);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
 }
 
 /* Delete is a destructive action — red by default */
