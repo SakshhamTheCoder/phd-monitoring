@@ -31,8 +31,8 @@ const CustomModal = ({
     return (
         <div className="modal-overlay" onClick={handleOverlayClick}>
             <div className="modal-content" style={sizeStyle}>
-                <button className="modal-close-button" onClick={onClose}>
-                    ✖
+                <button className="modal-close-button" onClick={onClose} aria-label="Close">
+                    <i className="fa fa-times" aria-hidden="true"></i>
                 </button>
                 {title && <div className="modal-title">{title}</div>}
                 <div className="modal-body">

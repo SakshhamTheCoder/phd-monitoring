@@ -4,6 +4,8 @@ import Layout from '../../components/dashboard/layout';
 import { formatCurrency, getMilestoneProgress, milestoneStatusOptions, budgetHeadTemplate, formatDate, subVal, subSum, cellMismatch, budgetMismatches, setSubCell } from '../../data/projectsData';
 import { apiGetProject, apiUpdateProject, apiAddMilestone, apiUpdateMilestone, apiAddDocument, apiUpdateDocument, apiDeleteDocument, fileUrl, mapMilestone, mapDocument } from '../../api/projects';
 import InputSuggestions from '../../components/forms/fields/InputSuggestions';
+import CustomModal from '../../components/forms/modal/CustomModal';
+import CustomButton from '../../components/forms/fields/CustomButton';
 import { baseURL } from '../../api/urls';
 import { toast } from 'react-toastify';
 import './ProjectDetails.css';
@@ -708,9 +710,14 @@ const ProjectDetails = () => {
 
         {/* Add / Edit Document Modal */}
         {showDocModal && (
-          <div className="pd-modal-overlay" onClick={() => setShowDocModal(false)}>
-            <div className="pd-modal" onClick={e => e.stopPropagation()}>
-              <h3 className="modal-title">{editingDocIdx !== null ? 'Edit Document' : 'Add Document'}</h3>
+          <CustomModal
+            isOpen={showDocModal}
+            onClose={() => setShowDocModal(false)}
+            title={editingDocIdx !== null ? 'Edit Document' : 'Add Document'}
+            maxWidth="520px"
+            minHeight="auto"
+          >
+            <>
               <div className="pd-modal-field">
                 <label>Document Name <span className="req">*</span></label>
                 <input
@@ -737,19 +744,24 @@ const ProjectDetails = () => {
                 />
                 {docForm.fileName && <span className="pd-upload-selected"><i className="fa fa-check-circle"></i> {docForm.fileName}</span>}
               </div>
-              <div className="pd-modal-actions">
-                <button className="pd-ms-cancel" onClick={() => setShowDocModal(false)}>Cancel</button>
-                <button className="pd-ms-save" onClick={saveDoc}><i className="fa fa-check"></i> {editingDocIdx !== null ? 'Save Changes' : 'Add Document'}</button>
+              <div className="modal-actions">
+                <CustomButton text="Cancel" variant="secondary" onClick={() => setShowDocModal(false)} />
+                <CustomButton text={editingDocIdx !== null ? 'Save Changes' : 'Add Document'} onClick={saveDoc} />
               </div>
-            </div>
-          </div>
+            </>
+          </CustomModal>
         )}
 
         {/* Sanction Letter Modal (file or link) */}
         {showSanctionModal && (
-          <div className="pd-modal-overlay" onClick={() => setShowSanctionModal(false)}>
-            <div className="pd-modal" onClick={e => e.stopPropagation()}>
-              <h3 className="modal-title">Sanction Letter</h3>
+          <CustomModal
+            isOpen={showSanctionModal}
+            onClose={() => setShowSanctionModal(false)}
+            title="Sanction Letter"
+            maxWidth="520px"
+            minHeight="auto"
+          >
+            <>
               <div className="pd-sanction-tabs">
                 <button type="button" className={`pd-sanction-tab ${sanctionMode === 'file' ? 'active' : ''}`} onClick={() => setSanctionMode('file')}>
                   <i className="fa fa-upload"></i> Choose File
@@ -779,12 +791,12 @@ const ProjectDetails = () => {
                   <input type="url" value={sanctionLinkInput} onChange={e => setSanctionLinkInput(e.target.value)} placeholder="https://… link to sanction letter" />
                 </div>
               )}
-              <div className="pd-modal-actions">
-                <button className="pd-ms-cancel" onClick={() => setShowSanctionModal(false)}>Cancel</button>
-                <button className="pd-ms-save" onClick={saveSanctionModal}><i className="fa fa-check"></i> Save</button>
+              <div className="modal-actions">
+                <CustomButton text="Cancel" variant="secondary" onClick={() => setShowSanctionModal(false)} />
+                <CustomButton text="Save" onClick={saveSanctionModal} />
               </div>
-            </div>
-          </div>
+            </>
+          </CustomModal>
         )}
       </div>
     </Layout>

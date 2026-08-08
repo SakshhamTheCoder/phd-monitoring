@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
 import { filterProjects, formatCurrency } from '../../data/projectsData';
 import { apiListProjects, apiProjectStats, apiDeleteProject } from '../../api/projects';
+import CustomModal from '../../components/forms/modal/CustomModal';
+import CustomButton from '../../components/forms/fields/CustomButton';
 import './ProjectsOverview.css';
 
 const emptyStats = { active: 0, completed: 0, totalFunding: 0, consultancy: 0, industry: 0, international: 0 };
@@ -217,28 +219,21 @@ const ProjectsOverview = () => {
           )}
         </div>
 
-        {/* Delete Confirmation Modal */}
-        {deleteTarget && (
-          <div className="po-modal-overlay" onClick={() => setDeleteTarget(null)}>
-            <div className="po-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="po-modal-icon">
-                <i className="fa fa-exclamation-triangle"></i>
-              </div>
-              <h3 className="modal-title">Delete Project</h3>
-              <p className="po-modal-text">
-                Are you sure you want to delete <strong>{deleteTarget.title}</strong>? This action cannot be undone.
-              </p>
-              <div className="po-modal-actions">
-                <button className="po-modal-btn cancel" onClick={() => setDeleteTarget(null)}>
-                  Cancel
-                </button>
-                <button className="po-modal-btn confirm" onClick={confirmDelete}>
-                  <i className="fa fa-trash"></i> Delete
-                </button>
-              </div>
-            </div>
+        <CustomModal
+          isOpen={!!deleteTarget}
+          onClose={() => setDeleteTarget(null)}
+          title="Delete Project"
+          maxWidth="420px"
+          minHeight="auto"
+        >
+          <p className="po-modal-text">
+            Are you sure you want to delete <strong>{deleteTarget?.title}</strong>? This action cannot be undone.
+          </p>
+          <div className="modal-actions">
+            <CustomButton text="Cancel" variant="secondary" onClick={() => setDeleteTarget(null)} />
+            <CustomButton text="Delete" variant="danger" onClick={confirmDelete} />
           </div>
-        )}
+        </CustomModal>
       </div>
     </Layout>
   );

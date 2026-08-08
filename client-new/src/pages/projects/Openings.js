@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import Layout from '../../components/dashboard/layout';
 import { formatDate } from '../../data/projectsData';
 import { apiOpenings, apiApply, apiMyApplications, apiApplicantProfile } from '../../api/openings';
+import CustomModal from '../../components/forms/modal/CustomModal';
+import CustomButton from '../../components/forms/fields/CustomButton';
 import { toast } from 'react-toastify';
 import './Openings.css';
 
@@ -174,9 +176,8 @@ const Openings = () => {
 
         {/* Job Description Modal */}
         {viewJob && (
-          <div className="op-modal-overlay" onClick={() => setViewJob(null)}>
-            <div className="op-modal" onClick={e => e.stopPropagation()}>
-              <button className="op-modal-close" onClick={() => setViewJob(null)}><i className="fa fa-times"></i></button>
+          <CustomModal isOpen={!!viewJob} onClose={() => setViewJob(null)} maxWidth="560px" minHeight="auto">
+            <>
               <span className="op-type">{viewJob.type}</span>
               <h2 className="op-jd-title">{viewJob.title}</h2>
               <p className="op-jd-project"><i className="fa fa-flask"></i> {viewJob.projectTitle}</p>
@@ -191,26 +192,30 @@ const Openings = () => {
                 ? (<><div className="op-modal-section">Job Description</div><p className="op-jd-text">{viewJob.description}</p></>)
                 : (<><div className="op-modal-section">Job Description</div><p className="op-jd-text op-jd-muted">No description provided for this opening.</p></>)}
               {skillList(viewJob.skills).length > 0 && (<><div className="op-modal-section">Skills</div><div className="op-skills">{skillList(viewJob.skills).map((s, i) => <span key={i} className="op-skill">{s}</span>)}</div></>)}
-              <div className="op-modal-actions">
-                <button className="op-btn-outline" onClick={() => setViewJob(null)}>Close</button>
+              <div className="modal-actions">
+                <CustomButton text="Close" variant="secondary" onClick={() => setViewJob(null)} />
                 {viewJob.deadline && viewJob.deadline < today ? (
-                  <button className="op-btn-primary" disabled style={{ opacity: 0.6 }}>Applications Closed</button>
+                  <CustomButton text="Applications Closed" disabled />
                 ) : appliedKeys.has(String(viewJob.posKey)) ? (
-                  <button className="op-btn-primary" disabled style={{ background: '#dcfce7', color: '#15803d' }}><i className="fa fa-check"></i> Applied</button>
+                  <CustomButton text="Applied" variant="success" disabled />
                 ) : (
-                  <button className="op-btn-primary" onClick={() => { const p = viewJob; setViewJob(null); openApply(p); }}><i className="fa fa-paper-plane"></i> Apply Now</button>
+                  <CustomButton text="Apply Now" onClick={() => { const p = viewJob; setViewJob(null); openApply(p); }} />
                 )}
               </div>
-            </div>
-          </div>
+            </>
+          </CustomModal>
         )}
 
         {/* Apply Modal */}
         {applyFor && (
-          <div className="op-modal-overlay" onClick={() => setApplyFor(null)}>
-            <div className="op-modal" onClick={e => e.stopPropagation()}>
-              <button className="op-modal-close" onClick={() => setApplyFor(null)}><i className="fa fa-times"></i></button>
-              <h2 className="modal-title">Apply — {applyFor.title}</h2>
+          <CustomModal
+            isOpen={!!applyFor}
+            onClose={() => setApplyFor(null)}
+            title={`Apply: ${applyFor.title}`}
+            maxWidth="560px"
+            minHeight="auto"
+          >
+            <>
               <p className="op-modal-sub">{applyFor.type} &middot; {applyFor.projectTitle}</p>
 
               <div className="op-modal-section">Contact Details</div>
@@ -239,12 +244,12 @@ const Openings = () => {
               </div>
               <div className="op-field full"><label>Cover Note</label><textarea rows="3" value={form.coverNote} onChange={e => setForm({ ...form, coverNote: e.target.value })} placeholder="A short statement of purpose (optional)…" /></div>
 
-              <div className="op-modal-actions">
-                <button className="op-btn-outline" onClick={() => setApplyFor(null)}>Cancel</button>
-                <button className="op-btn-primary" onClick={submitApply}><i className="fa fa-paper-plane"></i> Submit Application</button>
+              <div className="modal-actions">
+                <CustomButton text="Cancel" variant="secondary" onClick={() => setApplyFor(null)} />
+                <CustomButton text="Submit Application" onClick={submitApply} />
               </div>
-            </div>
-          </div>
+            </>
+          </CustomModal>
         )}
       </div>
     </Layout>

@@ -130,6 +130,20 @@
     margin: 0 0 1rem;
 }
 
+/* --- Modal footer --------------------------------------------------------
+   .custom-button is width:100% because most of its callers sit in a grid
+   cell. In a footer row that has to relax, or two buttons split the width. */
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    margin-top: 1.25rem;
+}
+
+.modal-actions .custom-button {
+    width: auto;
+}
+
 /* --- Data table ----------------------------------------------------------
    Matches .custom-table in TableComponent.css, which the form pages use,
    but takes its colours from the tokens. */

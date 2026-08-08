@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
 import { positionTypes, formatDate } from '../../data/projectsData';
 import { apiGetProject, apiListPositions, apiAddPosition, apiUpdatePosition, apiDeletePosition, apiListApplications, apiSetApplicationStatus, fileUrl } from '../../api/projects';
+import CustomModal from '../../components/forms/modal/CustomModal';
 import { toast } from 'react-toastify';
 import './ProjectRecruitment.css';
 
@@ -278,9 +279,13 @@ const ProjectRecruitment = () => {
 
         {/* Applicant Detail Modal */}
         {selectedApplicant && (
-          <div className="pr-modal-overlay" onClick={() => setSelectedApplicant(null)}>
-            <div className="pr-modal" onClick={e => e.stopPropagation()}>
-              <button className="pr-modal-close" onClick={() => setSelectedApplicant(null)}><i className="fa fa-times"></i></button>
+          <CustomModal
+            isOpen={!!selectedApplicant}
+            onClose={() => setSelectedApplicant(null)}
+            maxWidth="520px"
+            minHeight="auto"
+          >
+            <>
               <div className="pr-modal-header">
                 <div className="pr-modal-avatar">{selectedApplicant.name.split(' ').map(n => n[0]).join('')}</div>
                 <div>
@@ -315,8 +320,8 @@ const ProjectRecruitment = () => {
                 <button className="pr-decision-btn select" onClick={() => setAppStatus('Selected')}><i className="fa fa-check"></i> Select</button>
                 <button className="pr-decision-btn reject" onClick={() => setAppStatus('Rejected')}><i className="fa fa-times"></i> Reject</button>
               </div>
-            </div>
-          </div>
+            </>
+          </CustomModal>
         )}
       </div>
     </Layout>

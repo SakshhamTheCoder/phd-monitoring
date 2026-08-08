@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
 import AddPublication from '../../components/publications/AddPublication';
+import CustomModal from '../../components/forms/modal/CustomModal';
 import { generateAvatar } from '../../utils/profileImage';
 import { formatDate } from '../../data/projectsData';
 import {
@@ -419,18 +420,18 @@ const ResearchProfile = () => {
                     )}
                 </div>
 
-                {showPubForm && (
-                    <div className="rp-modal-overlay" onClick={() => { setShowPubForm(false); setEditPub(null); }}>
-                        <div className="rp-modal" onClick={e => e.stopPropagation()}>
-                            <button className="rp-modal-close" onClick={() => { setShowPubForm(false); setEditPub(null); }}><i className="fa fa-times"></i></button>
-                            <AddPublication
-                                close={() => { setShowPubForm(false); setEditPub(null); }}
-                                editData={editPub}
-                                onSave={savePublication}
-                            />
-                        </div>
-                    </div>
-                )}
+                <CustomModal
+                    isOpen={showPubForm}
+                    onClose={() => { setShowPubForm(false); setEditPub(null); }}
+                    maxWidth="900px"
+                    minHeight="auto"
+                >
+                    <AddPublication
+                        close={() => { setShowPubForm(false); setEditPub(null); }}
+                        editData={editPub}
+                        onSave={savePublication}
+                    />
+                </CustomModal>
             </div>
         </Layout>
     );
