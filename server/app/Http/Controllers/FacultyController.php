@@ -213,13 +213,10 @@ class FacultyController extends Controller
         }
         elseif ($role === 'admin'||$role === 'director' || $role === 'dra' || $role === 'dordc') {
           
+        } else {
+            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
-        // Everyone else gets the directory unscoped. The department scoping above
-        // is for the roles that manage a department, not a privacy boundary: a
-        // student looking up who supervises what needs to see all of it, and the
-        // research profile already shows the same details to any signed-in user.
-
-
+    
         if ($filters) {
             $facultyQuery = $this->applyDynamicFilters($facultyQuery, $filters);
         }
