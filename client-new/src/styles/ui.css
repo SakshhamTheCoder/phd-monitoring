@@ -291,3 +291,31 @@
 .data-table a,
 .form-table a,
 .custom-table a { color: var(--primary-color); }
+
+/* A table row that opens something. Pointer alone is invisible until the mouse
+   is already on the row, so the trailing chevron carries the signal at rest and
+   the row takes keyboard focus like any other control. */
+.row-link {
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.row-link:hover { background: var(--primary-wash) !important; }
+
+.row-link:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+}
+
+.row-go {
+    width: 1%;
+    text-align: right !important;
+    color: var(--text-subtle);
+}
+
+.row-go i { transition: transform 0.15s; }
+
+.row-link:hover .row-go,
+.row-link:focus-visible .row-go { color: var(--primary-color); }
+
+.row-link:hover .row-go i { transform: translateX(3px); }

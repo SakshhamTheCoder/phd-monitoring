@@ -153,11 +153,18 @@ const ProjectsOverview = () => {
                 <th>AMOUNT</th>
                 <th>STATUS</th>
                 <th></th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {filteredProjects.map(project => (
-                <tr key={project.id} onClick={() => navigate(`/projects/${project.id}`)} className="po-row-clickable">
+                <tr
+                  key={project.id}
+                  className="row-link"
+                  tabIndex={0}
+                  onClick={() => navigate(`/projects/${project.id}`)}
+                  onKeyDown={(e) => e.key === 'Enter' && navigate(`/projects/${project.id}`)}
+                >
                   <td>
                     <div className="po-project-title">{project.title}</div>
                   </td>
@@ -196,6 +203,7 @@ const ProjectsOverview = () => {
                       )}
                     </div>
                   </td>
+                  <td className="row-go" title="Open project"><i className="fa fa-angle-right"></i></td>
                 </tr>
               ))}
             </tbody>

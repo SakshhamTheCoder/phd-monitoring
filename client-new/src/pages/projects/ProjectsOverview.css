@@ -199,18 +199,6 @@
 
 /* Table */
 
-
-
-
-.po-row-clickable {
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.po-row-clickable:hover {
-  background: var(--primary-wash);
-}
-
 .po-project-title {
   font-weight: 400;
   color: #222;

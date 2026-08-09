@@ -162,6 +162,7 @@ const FormTable = ({ filters }) => {
             {role==='admin' && (
                  <th>Actions</th>
             )}
+            {!selectMode && <th></th>}
          
           </tr>
         </thead>
@@ -171,13 +172,20 @@ const FormTable = ({ filters }) => {
          
             <tr
               key={form.id || form.form_id}
-              className={`form-row ${
+              className={`form-row row-link ${
                 selectedForms.has(form.id || form.form_id) ? "selected-row" : ""
               }`}
+              tabIndex={0}
               onClick={() =>
                 selectMode
                   ? toggleSelectOne(form.id || form.form_id)
                   : openForm(form.id || form.form_id)
+              }
+              onKeyDown={(e) =>
+                e.key === "Enter" &&
+                (selectMode
+                  ? toggleSelectOne(form.id || form.form_id)
+                  : openForm(form.id || form.form_id))
               }
             >
               <td>{index + 1}</td>
@@ -209,6 +217,9 @@ const FormTable = ({ filters }) => {
                     Edit
                   </button>
                   </td>
+              )}
+              {!selectMode && (
+                <td className="row-go" title="Open form"><i className="fa fa-angle-right"></i></td>
               )}
             </tr>
           ))}
