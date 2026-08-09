@@ -9,6 +9,7 @@ import InputSuggestions from '../../components/forms/fields/InputSuggestions';
 import { baseURL } from '../../api/urls';
 import { generateAvatar } from '../../utils/profileImage';
 import { formatDate } from '../../data/projectsData';
+import { badgeClass } from '../../data/badges';
 import {
     apiResearchProfile, apiUpdateResearchProfile, apiSyncPublications,
     apiAddFacultyPublication, apiUpdateFacultyPublication, apiDeleteFacultyPublication,
@@ -192,7 +193,7 @@ const ResearchProfile = () => {
     };
 
     const sourceBadge = (pub) => (
-        <span className={`rp-source-badge ${pub.source || 'manual'}`}>{SOURCE_LABELS[pub.source] || 'Manual'}</span>
+        <span className={badgeClass(pub.source || 'manual')}>{SOURCE_LABELS[pub.source] || 'Manual'}</span>
     );
 
     const rowActions = (pub) => (

@@ -7,11 +7,10 @@
     align-items: center;
     justify-content: center;
     gap: 0.4rem;
-    padding: 10px 18px;
+    padding: 10px 15px;
     border-radius: var(--radius);
     background-color: var(--primary-color);
     color: white;
-    font-weight: 600;
 }
 
 .custom-button--block { width: 100%; }
@@ -116,27 +115,32 @@
     padding: 10px;
 }
 
+/* The gap under this label used to come from the grid cell's own top padding,
+   so it vanished when that padding was removed. It belongs on the label. */
 .grid-label{
     font-size: 18px;
     font-weight: bold;
     margin-top: 15px;
+    margin-bottom: 12px;
     text-align: left;
-    display: flex; 
-    align-items: center; 
+    display: flex;
+    align-items: center;
 }
 
+/* All the spacing lives in the gap. It used to be split between a 10px gap and
+   10px of padding on every cell, which meant the padding had to stay to keep
+   the rhythm even though it also indented every field inside a GridContainer
+   relative to one outside it. Splitting it also made the grid asymmetric once
+   the horizontal half was removed: 30px between rows, 10px between columns. */
 .grid-container {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
+    gap: 2rem;
 }
 
-/* Vertical padding only. The horizontal 10px indented every field inside a
-   GridContainer relative to one outside it; the vertical is the row rhythm and
-   has to stay. Left-aligned, because centring a form field was wrong and
-   needed two override rules to undo. */
+/* Left-aligned, because centring a form field was wrong and needed two
+   override rules to undo. Spacing comes from the grid gap above. */
 .grid-item {
-    padding: 10px 0;
     text-align: left;
 }
 

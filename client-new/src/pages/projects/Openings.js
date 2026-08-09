@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Layout from '../../components/dashboard/layout';
 import { formatDate } from '../../data/projectsData';
+import { badgeClass } from '../../data/badges';
 import { apiOpenings, apiApply, apiMyApplications, apiApplicantProfile } from '../../api/openings';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import Tabs from '../../components/tabs/Tabs';
@@ -9,14 +10,6 @@ import { toast } from 'react-toastify';
 import './Openings.css';
 
 const emptyApply = { name: '', email: '', phone: '', degree: '', institute: '', cgpa: '', skills: '', research: '', resume: '', resumeFile: null, coverNote: '' };
-
-const statusColors = {
-  Applied: { bg: '#e0e7ff', color: '#3730a3' },
-  Shortlisted: { bg: '#fef3c7', color: '#92400e' },
-  'Interview Scheduled': { bg: '#dbeafe', color: '#1e40af' },
-  Selected: { bg: '#dcfce7', color: '#15803d' },
-  Rejected: { bg: '#fee2e2', color: '#b91c1c' },
-};
 
 const Openings = () => {
   const today = new Date().toISOString().split('T')[0];
@@ -163,7 +156,7 @@ const Openings = () => {
                     <h3 className="op-title">{a.positionTitle}</h3>
                     <p className="op-project"><i className="fa fa-flask"></i> {a.projectTitle}</p>
                   </div>
-                  <span className="op-status" style={{ background: statusColors[a.status]?.bg, color: statusColors[a.status]?.color }}>{a.status}</span>
+                  <span className={badgeClass(a.status)}>{a.status}</span>
                 </div>
                 <div className="op-meta">
                   <span><i className="fa fa-calendar"></i> Applied on {formatDate(a.appliedDate)}</span>

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
 import { formatCurrency, getMilestoneProgress, milestoneStatusOptions, budgetHeadTemplate, formatDate, subVal, subSum, cellMismatch, budgetMismatches, setSubCell } from '../../data/projectsData';
+import { badgeClass } from '../../data/badges';
 import { apiGetProject, apiUpdateProject, apiAddMilestone, apiUpdateMilestone, apiAddDocument, apiUpdateDocument, apiDeleteDocument, fileUrl, mapMilestone, mapDocument } from '../../api/projects';
 import InputSuggestions from '../../components/forms/fields/InputSuggestions';
 import CustomModal from '../../components/forms/modal/CustomModal';
@@ -236,8 +237,6 @@ const ProjectDetails = () => {
   }
 
   const progress = getMilestoneProgress(milestones);
-  const categoryColors = { Research: '#b91c1c', Consultancy: '#92400e', International: '#9d174d', 'In-house': '#3730a3', Industry: '#065f46' };
-  const statusColors = { Active: '#15803d', Completed: '#15803d', Pending: '#a16207', 'On Hold': '#b91c1c', 'In Progress': '#c2410c' };
   const msIcons = { Completed: '✔', 'In Progress': '🟡', 'Not Started': '🔴', Delayed: '🔴' };
 
   const activeBudget = editingBudget ? budgetDraft : budgetData;
@@ -273,7 +272,7 @@ const ProjectDetails = () => {
                 <div className="pd-meta-row"><span>Primary Category</span><strong>{project.category}</strong></div>
                 <div className="pd-meta-row"><span>Focus Area</span><strong>{project.focusArea}</strong></div>
                 <div className="pd-meta-row"><span>Grant Type</span><strong>{project.grantType}</strong></div>
-                <div className="pd-meta-row"><span>Project Status</span><strong style={{ color: statusColors[project.status] }}>{project.status}</strong></div>
+                <div className="pd-meta-row"><span>Project Status</span><span className={badgeClass(project.status)}>{project.status}</span></div>
               </div>
             </div>
           </div>
@@ -478,7 +477,7 @@ const ProjectDetails = () => {
                         <div className="pd-tl-top">
                           <h4>{m.name}</h4>
                           <div className="pd-tl-actions">
-                            <span className={`pd-tl-badge ${m.status.toLowerCase().replace(' ', '-')}`}>{m.status}</span>
+                            <span className={badgeClass(m.status)}>{m.status}</span>
                             <button className="pd-tl-edit-btn" onClick={() => startEdit(i)} title="Edit milestone"><i className="fa fa-pencil"></i></button>
                           </div>
                         </div>
@@ -665,8 +664,8 @@ const ProjectDetails = () => {
         <div className="pd-header">
           <div className="pd-header-main">
             <div className="pd-header-top">
-              <span className="pd-header-cat" style={{ color: categoryColors[project.category] || '#555' }}>
-                <i className="fa fa-flask"></i> {project.category.toUpperCase()}
+              <span className={badgeClass(project.category)}>
+                <i className="fa fa-flask"></i> {project.category}
               </span>
             </div>
             <h1 className="page-title">{project.title}</h1>
@@ -683,7 +682,7 @@ const ProjectDetails = () => {
             </div>
           </div>
           <div className="pd-header-side">
-            <span className="pd-header-status" style={{ background: statusColors[project.status], color: '#FFF' }}>{project.status}</span>
+            <span className={badgeClass(project.status)}>{project.status}</span>
             <button className="pd-header-edit-btn" onClick={() => navigate('/projects/create', { state: { editProject: project } })}>
               <i className="fa fa-pencil"></i> Edit Project
             </button>

@@ -502,11 +502,6 @@
 .rp-add-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 0.9rem; background: var(--primary-color); color: #FFF; border: none; border-radius: 8px; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.04em; cursor: pointer; }
 .rp-add-btn:hover { background: var(--hover-color); }
 
-.rp-source-badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.68rem; font-weight: 600; background: #f3f4f6; color: #374151; }
-.rp-source-badge.scopus { background: #e0e7ff; color: #3730a3; }
-.rp-source-badge.orcid { background: #dcfce7; color: #15803d; }
-.rp-source-badge.student { background: #fef3c7; color: #92400e; }
-
 .rp-row-actions { white-space: nowrap; }
 .rp-row-actions button { background: none; border: none; cursor: pointer; color: #777; padding: 0.2rem 0.35rem; }
 .rp-row-actions button:hover { color: var(--primary-color); }

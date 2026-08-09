@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
 import { positionTypes, formatDate } from '../../data/projectsData';
+import { badgeClass } from '../../data/badges';
 import { apiGetProject, apiListPositions, apiAddPosition, apiUpdatePosition, apiDeletePosition, apiListApplications, apiSetApplicationStatus, fileUrl } from '../../api/projects';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import { toast } from 'react-toastify';
@@ -72,14 +73,6 @@ const ProjectRecruitment = () => {
     shortlisted: posApps.filter(a => a.status === 'Shortlisted').length,
     interview: posApps.filter(a => a.status === 'Interview Scheduled').length,
     selected: posApps.filter(a => a.status === 'Selected').length,
-  };
-
-  const appStatusColors = {
-    Applied: { bg: '#e0e7ff', color: '#3730a3' },
-    Shortlisted: { bg: '#fef3c7', color: '#92400e' },
-    'Interview Scheduled': { bg: '#dbeafe', color: '#1e40af' },
-    Selected: { bg: '#dcfce7', color: '#15803d' },
-    Rejected: { bg: '#fee2e2', color: '#b91c1c' },
   };
 
   // ---- Position CRUD ----
@@ -208,7 +201,7 @@ const ProjectRecruitment = () => {
                       <h3 className="pr-pos-title">{pos.title}</h3>
                     </div>
                     <div className="pr-pos-top-right">
-                      <span className={`pr-pos-status ${pos.status === 'Closed' ? 'closed' : 'open'}`}>{pos.status}</span>
+                      <span className={badgeClass(pos.status)}>{pos.status}</span>
                       <span className="pr-pos-deadline"><i className="fa fa-calendar"></i> Deadline: {pos.deadline ? formatDate(pos.deadline) : '—'}</span>
                       <div className="pr-pos-actions">
                         <button className="pr-pos-edit" onClick={(e) => { e.stopPropagation(); togglePositionStatus(i); }} title={pos.status === 'Closed' ? 'Reopen position' : 'Close position'}>
@@ -261,7 +254,7 @@ const ProjectRecruitment = () => {
                         <td>{app.institute}</td>
                         <td>{app.cgpa}</td>
                         <td>
-                          <span className="pr-app-badge" style={{ background: appStatusColors[app.status]?.bg, color: appStatusColors[app.status]?.color }}>{app.status}</span>
+                          <span className={badgeClass(app.status)}>{app.status}</span>
                         </td>
                         <td>
                           <button className="pr-view-btn" onClick={() => setSelectedApplicant(app)}><i className="fa fa-eye"></i> View</button>
@@ -291,7 +284,7 @@ const ProjectRecruitment = () => {
                 <div>
                   <h2>{selectedApplicant.name}</h2>
                   <p>{selectedApplicant.degree} — {selectedApplicant.institute}</p>
-                  <span className="pr-app-badge" style={{ background: appStatusColors[selectedApplicant.status]?.bg, color: appStatusColors[selectedApplicant.status]?.color }}>{selectedApplicant.status}</span>
+                  <span className={badgeClass(selectedApplicant.status)}>{selectedApplicant.status}</span>
                 </div>
               </div>
               <div className="pr-modal-grid">

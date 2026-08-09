@@ -267,7 +267,7 @@ const CreateProject = () => {
                   <p className="cp-pi-dept">{pi.department}</p>
                   <p className="cp-pi-meta">{pi.designation}</p>
                 </div>
-                <span className="cp-role-badge">PI</span>
+                <span className="badge badge--accent">PI</span>
               </div>
             ) : (
               <p className="cp-pi-none">No faculty record is linked to your account, so no PI can be set.</p>

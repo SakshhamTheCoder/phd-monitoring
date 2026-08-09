@@ -68,7 +68,6 @@ a.pr-field-hint { color: var(--primary-color); }
 .pr-app-table th { background: #FAFAFA; padding: 0.85rem 1rem; font-size: 0.72rem; font-weight: 600; color: #777; text-transform: uppercase; text-align: left; border-bottom: 1px solid #EEE; }
 .pr-app-table td { padding: 0.85rem 1rem; font-size: 0.88rem; color: #333; border-bottom: 1px solid #F0F0F0; }
 .pr-app-name { font-weight: 400; color: #222; }
-.pr-app-badge { padding: 0.3rem 0.7rem; border-radius: 6px; font-size: 0.68rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.4px; }
 .pr-view-btn { background: none; border: 1px solid #DDD; padding: 0.35rem 0.75rem; border-radius: 6px; font-size: 0.78rem; color: #555; cursor: pointer; }
 .pr-view-btn:hover { border-color: var(--primary-color); color: var(--primary-color); }
 
@@ -98,6 +97,3 @@ a.pr-field-hint { color: var(--primary-color); }
 .pr-decision-btn.select { background: #dcfce7; color: #15803d; }
 .pr-decision-btn.reject { background: #fee2e2; color: #b91c1c; }
 .pr-decision-btn:hover { opacity: 0.85; }
-.pr-pos-status { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; }
-.pr-pos-status.open { background: #dcfce7; color: #15803d; }
-.pr-pos-status.closed { background: #fee2e2; color: #b91c1c; }

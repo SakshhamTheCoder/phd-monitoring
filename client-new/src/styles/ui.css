@@ -162,6 +162,36 @@
     box-sizing: border-box;
 }
 
+/* --- Badge ---------------------------------------------------------------
+   One pill, eight tones. There were sixteen badge classes and four copies of
+   a status-to-colour map written in JavaScript, each rendering an inline
+   style. The tones are the tint/text pairs those maps already agreed on.
+
+   Semantic first (success / warning / danger / neutral). The remaining tones
+   exist because categories have to be told apart at a glance, not because
+   colour is decoration: pick them from data/badges.js, never by hand. */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.badge--neutral { background: #F3F4F6; color: #374151; }
+.badge--success { background: var(--success-bg); color: var(--success); }
+.badge--warning { background: #FEF3C7; color: #92400E; }
+.badge--danger  { background: var(--danger-bg);  color: var(--danger-text); }
+.badge--info    { background: #E0E7FF; color: #3730A3; }
+.badge--blue    { background: #DBEAFE; color: #1E40AF; }
+.badge--purple  { background: #FCE7F3; color: #9D174D; }
+.badge--accent  { background: var(--primary-wash); color: var(--primary-color); }
+
 /* --- Data table ----------------------------------------------------------
    Matches .custom-table in TableComponent.css, which the form pages use,
    but takes its colours from the tokens. */

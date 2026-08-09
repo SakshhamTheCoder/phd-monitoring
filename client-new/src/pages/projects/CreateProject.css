@@ -44,8 +44,6 @@
 .cp-pi-info h4 { margin: 0; font-size: 1rem; color: #222; }
 .cp-pi-dept { color: var(--primary-color); font-size: 0.85rem; margin: 0.1rem 0; font-weight: 500; }
 .cp-pi-meta { color: #888; font-size: 0.8rem; margin: 0; }
-.cp-role-badge { background: #fee2e2; color: #b91c1c; padding: 0.2rem 0.75rem; border-radius: 4px; font-size: 0.72rem; font-weight: 600; margin-left: auto; }
-
 /* Co-PI */
 .cp-copi-search { margin-bottom: 1rem; }
 .cp-copi-search input { width: 100%; padding: 0.6rem 0.85rem; border: 1px solid #DDD; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box; }

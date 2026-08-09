@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
 import { filterProjects, formatCurrency } from '../../data/projectsData';
+import { badgeClass } from '../../data/badges';
 import { apiListProjects, apiProjectStats, apiDeleteProject } from '../../api/projects';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import CustomButton from '../../components/forms/fields/CustomButton';
@@ -48,22 +49,6 @@ const ProjectsOverview = () => {
   };
 
   const filters = ['All', 'Active', 'Completed', 'In-house', 'Research', 'Consultancy', 'Industry', 'International'];
-
-  const categoryColors = {
-    Research: { bg: '#fee2e2', color: '#b91c1c' },
-    Consultancy: { bg: '#fef3c7', color: '#92400e' },
-    International: { bg: '#fce7f3', color: '#9d174d' },
-    'In-house': { bg: '#e0e7ff', color: '#3730a3' },
-    Industry: { bg: '#d1fae5', color: '#065f46' },
-    Other: { bg: '#f3f4f6', color: '#374151' },
-  };
-
-  const statusColors = {
-    Active: { bg: '#dcfce7', color: '#15803d' },
-    Completed: { bg: '#dcfce7', color: '#15803d' },
-    Pending: { bg: '#fef9c3', color: '#a16207' },
-    'On Hold': { bg: '#fee2e2', color: '#b91c1c' },
-  };
 
   const handleExportCSV = () => {
     const headers = ['Project Title', 'Category', 'Role', 'Funding Agency', 'Amount', 'Status'];
@@ -177,7 +162,7 @@ const ProjectsOverview = () => {
                     <div className="po-project-title">{project.title}</div>
                   </td>
                   <td>
-                    <span className="po-category-badge" style={{ background: categoryColors[project.category]?.bg, color: categoryColors[project.category]?.color }}>
+                    <span className={badgeClass(project.category)}>
                       {project.category}
                     </span>
                   </td>
@@ -185,10 +170,7 @@ const ProjectsOverview = () => {
                   <td>{project.fundingAgency}</td>
                   <td className="po-amount">{formatCurrency(project.amount)}</td>
                   <td>
-                    <span className="po-status-badge" style={{ background: statusColors[project.status]?.bg, color: statusColors[project.status]?.color }}>
-                      <span className="po-status-dot" style={{ background: statusColors[project.status]?.color }}></span>
-                      {project.status}
-                    </span>
+                    <span className={badgeClass(project.status)}>{project.status}</span>
                   </td>
                   <td>
                     <div className="po-action-buttons">
