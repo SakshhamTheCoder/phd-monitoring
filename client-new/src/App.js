@@ -130,10 +130,12 @@ const AppContent = () => {
               )}
             </>
           )}
+          {/* The faculty directory is readable by anyone signed in. Adding,
+              editing and importing are gated inside the page. */}
+          <Route path="/faculty" element={<FacultyPage />} />
           {(
             role === 'hod' || role === 'phd_coordinator' || role === 'doctoral' || role === 'external' || role === 'dordc' || role === 'adordc' || role === 'dra' || role === 'director' || role === 'admin') && (
               <>
-                <Route path="/faculty" element={<FacultyPage />} />
                 <Route path="/departments" element={<DepartmentPage />} />
                 {/* <Route path="/faculty/:roll_no" element={<StudentProfile />} />
               <Route path="/faculty/:roll_no/forms" element={<FormsPage />} />

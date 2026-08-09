@@ -24,6 +24,9 @@ const FacultyPage = () => {
   const { setLoading } = useLoading();
   const location = useLocation();
   const navigate = useNavigate();
+  // The directory is readable by anyone signed in; only these roles change it.
+  const canManage = ['hod', 'phd_coordinator', 'dordc', 'adordc', 'dra', 'director', 'admin']
+    .includes(localStorage.getItem('userRole'));
 
   const handleFilterChange = (newFilter) => {
     setFilter(newFilter);
@@ -282,9 +285,9 @@ Jane,,jane.smith@example.com,9876543210,Associate Professor,external,,CHED,Exter
             endpoint={location.pathname}
             filters={filter}
             enableApproval={false}
-            customOpenForm={openForm}
-            extraTopbarComponents={
-              <div style={{ display: 'flex', gap: '10px' }}>
+            customOpenForm={canManage ? openForm : undefined}
+            extraTopbarComponents={canManage ? (
+              <div className="page-actions">
                 <CustomButton
                   text="Bulk Import CSV"
                   variant="secondary"
@@ -292,14 +295,13 @@ Jane,,jane.smith@example.com,9876543210,Associate Professor,external,,CHED,Exter
                 />
                 <CustomButton text="Add Faculty +" onClick={() => openForm()} />
               </div>
-            }
-            
+            ) : null}
             actions={[
-              {
+              ...(canManage ? [{
                 icon: <i className="fa-solid fa-pen-to-square"></i>,
                 tooltip: 'Edit',
                 onClick: (facultyData) => openForm(facultyData),
-              },
+              }] : []),
               {
                 icon: <i className="fa fa-user-circle"></i>,
                 tooltip: 'Research Profile',
