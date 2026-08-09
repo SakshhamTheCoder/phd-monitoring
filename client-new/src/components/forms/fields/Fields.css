@@ -193,11 +193,28 @@
 }
 
 
-.input-field {
+/* One text input. Nine page-local copies existed, differing only in padding
+   and radius, one of them at 7px. They are listed here rather than repeated,
+   so a field looks the same wherever it is and inherits the readonly and
+   focus treatments below without each page remembering to. */
+.input-field,
+.op-field input,
+.op-field textarea,
+.pr-field input,
+.pr-field select,
+.pr-field textarea,
+.cp-field input,
+.cp-field select,
+.cp-field textarea,
+.pd-ms-field input,
+.pd-ms-field select,
+.pd-modal-field input,
+.rp-id-form input,
+.rp-filters select {
     padding: 0.6rem 0.8rem;
     font-size: 0.9rem;
-    border: 1px solid #DDD;
-    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
     width: 100%;
     box-sizing: border-box;
     outline: none;
@@ -206,7 +223,20 @@
     transition: border 0.2s;
 }
 
-.input-field:focus {
+.input-field:focus,
+.op-field input:focus,
+.op-field textarea:focus,
+.pr-field input:focus,
+.pr-field select:focus,
+.pr-field textarea:focus,
+.cp-field input:focus,
+.cp-field select:focus,
+.cp-field textarea:focus,
+.pd-ms-field input:focus,
+.pd-ms-field select:focus,
+.pd-modal-field input:focus,
+.rp-id-form input:focus,
+.rp-filters select:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px var(--primary-tint);
 }
@@ -329,4 +359,32 @@ label:disabled:hover {
     width: 40px;
     text-align: center;
     font-weight: bold;
+}
+
+
+/* Compact: a cell in an editable grid or an inline edit. Smaller than a form
+   field on purpose, but one size rather than three. */
+.cp-milestone-table input,
+.cp-milestone-table select,
+.cp-budget-input,
+.pd-budget-edit-input,
+.pd-sanction-edit input {
+    width: 100%;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-family: inherit;
+    color: var(--text-color);
+    outline: none;
+    box-sizing: border-box;
+}
+
+.cp-milestone-table input:focus,
+.cp-milestone-table select:focus,
+.cp-budget-input:focus,
+.pd-budget-edit-input:focus,
+.pd-sanction-edit input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-tint);
 }

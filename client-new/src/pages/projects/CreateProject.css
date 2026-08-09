@@ -28,8 +28,6 @@
 .cp-field { display: flex; flex-direction: column; gap: 0.4rem; }
 .cp-field.full { grid-column: 1 / -1; }
 .req { color: #b91c1c; }
-.cp-field input, .cp-field select, .cp-field textarea { padding: 0.65rem 0.85rem; border: 1px solid #DDD; border-radius: 8px; font-size: 0.9rem; outline: none; transition: border 0.2s; font-family: inherit; }
-.cp-field input:focus, .cp-field select:focus, .cp-field textarea:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px var(--primary-tint); }
 .cp-readonly { background: #F5F5F5; color: #888; }
 .cp-char-count { font-size: 0.72rem; color: #aaa; text-align: right; }
 
@@ -46,8 +44,6 @@
 .cp-pi-meta { color: #888; font-size: 0.8rem; margin: 0; }
 /* Co-PI */
 .cp-copi-search { margin-bottom: 1rem; }
-.cp-copi-search input { width: 100%; padding: 0.6rem 0.85rem; border: 1px solid #DDD; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box; }
-.cp-copi-search input:focus { border-color: var(--primary-color); }
 .cp-search-results { background: #FFF; border: 1px solid #DDD; border-radius: 8px; margin-top: 0.25rem; max-height: 150px; overflow-y: auto; }
 .cp-search-item { padding: 0.6rem 0.85rem; cursor: pointer; font-size: 0.85rem; border-bottom: 1px solid #F0F0F0; }
 .cp-search-item:hover { background: #fef2f2; }
@@ -84,8 +80,6 @@
 .cp-budget-head-name { font-weight: 600; color: #333; }
 .cp-budget-sub-row td { background: #FFF; }
 .cp-budget-sub-name { color: #888; padding-left: 1.5rem !important; font-size: 0.8rem; }
-.cp-budget-input { width: 100%; padding: 0.4rem 0.6rem; border: 1px solid #EEE; border-radius: 6px; font-size: 0.85rem; outline: none; }
-.cp-budget-input:focus { border-color: var(--primary-color); }
 .cp-budget-input.sub { background: #FAFAFA; }
 .cp-budget-mismatch { border-color: #b91c1c; background: #fef2f2; }
 .cp-budget-subsum { font-size: 0.78rem; color: #777; }
@@ -105,8 +99,6 @@
 .cp-milestone-table { width: 100%; border-collapse: collapse; }
 .cp-milestone-table th { background: #fef2f2; padding: 0.75rem 1rem; font-size: 0.72rem; font-weight: 600; color: var(--primary-color); text-transform: uppercase; text-align: left; border-bottom: 2px solid #fca5a5; }
 .cp-milestone-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #F0F0F0; }
-.cp-milestone-table input, .cp-milestone-table select { width: 100%; padding: 0.4rem 0.6rem; border: 1px solid #EEE; border-radius: 6px; font-size: 0.85rem; outline: none; }
-.cp-milestone-table input:focus, .cp-milestone-table select:focus { border-color: var(--primary-color); }
 .cp-ms-status { font-weight: 600; font-size: 0.78rem; }
 .cp-add-row-btn { width: 100%; background: #FAFAFA; border: 1px dashed #CCC; padding: 0.75rem; border-radius: 8px; color: #777; font-size: 0.85rem; cursor: pointer; margin-top: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.4rem; }
 .cp-add-row-btn:hover { border-color: var(--primary-color); color: var(--primary-color); background: #fef2f2; }

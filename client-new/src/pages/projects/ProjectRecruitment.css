@@ -22,8 +22,6 @@
 .pr-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .pr-field { display: flex; flex-direction: column; gap: 0.35rem; }
 .pr-field.full { grid-column: 1 / -1; }
-.pr-field input, .pr-field select, .pr-field textarea { padding: 0.6rem 0.8rem; border: 1px solid #DDD; border-radius: 8px; font-size: 0.88rem; outline: none; font-family: inherit; transition: border 0.2s; resize: vertical; }
-.pr-field input:focus, .pr-field select:focus, .pr-field textarea:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px var(--primary-tint); }
 .pr-field-hint { font-size: 0.78rem; color: #15803d; display: inline-flex; align-items: center; gap: 0.35rem; text-decoration: none; }
 a.pr-field-hint { color: var(--primary-color); }
 .pr-form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.25rem; }

@@ -73,8 +73,6 @@
 .pd-fund-item a { color: var(--primary-color); font-weight: 600; font-size: 0.88rem; text-decoration: none; }
 .pd-budget-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; gap: 1rem; flex-wrap: wrap; }
 .pd-budget-actions { display: flex; gap: 0.5rem; }
-.pd-budget-edit-input { width: 100%; max-width: 120px; padding: 0.35rem 0.5rem; border: 1px solid #DDD; border-radius: 6px; font-size: 0.85rem; font-family: inherit; color: #333; }
-.pd-budget-edit-input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px var(--primary-tint); }
 .pd-budget-edit-input.sub { max-width: 110px; background: #FAFAFA; font-size: 0.8rem; color: #555; }
 .pd-budget-mismatch { border-color: #dc2626 !important; background: #fef2f2; color: #b91c1c; }
 .pd-budget-mismatch:focus { box-shadow: 0 0 0 2px rgba(220,38,38,0.15) !important; }
@@ -101,8 +99,6 @@
 .pd-sanction-edit-btn { background: none; border: none; color: var(--primary-color); cursor: pointer; font-size: 0.8rem; padding: 0.2rem 0.35rem; border-radius: 4px; }
 .pd-sanction-edit-btn:hover { background: #fef2f2; }
 .pd-sanction-edit { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
-.pd-sanction-edit input { padding: 0.35rem 0.5rem; border: 1px solid #DDD; border-radius: 6px; font-size: 0.82rem; font-family: inherit; min-width: 200px; }
-.pd-sanction-edit input:focus { outline: none; border-color: var(--primary-color); }
 .pd-budget-table { width: 100%; border-collapse: collapse; }
 .pd-budget-table th { background: #F0F0F0; padding: 0.75rem 1rem; font-size: 0.72rem; font-weight: 600; color: #555; text-transform: uppercase; text-align: left; border-bottom: 1px solid #DDD; }
 .pd-budget-table td { padding: 0.65rem 1rem; border-bottom: 1px solid #F0F0F0; font-size: 0.85rem; color: #444; }
@@ -167,8 +163,6 @@
 .pd-modal-field { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1.1rem; }
 .pd-modal-field .req { color: #dc2626; }
 .pd-modal-hint { font-weight: 400; color: #999; font-size: 0.75rem; }
-.pd-modal-field input[type="text"], .pd-modal-field input[type="url"] { padding: 0.55rem 0.7rem; border: 1px solid #DDD; border-radius: 8px; font-size: 0.88rem; font-family: inherit; color: #333; }
-.pd-modal-field input[type="text"]:focus, .pd-modal-field input[type="url"]:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px var(--primary-tint); }
 .pd-sanction-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.1rem; }
 .pd-sanction-tab { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; background: #F5F5F5; border: 1px solid #E5E5E5; color: #666; padding: 0.55rem; border-radius: 8px; font-size: 0.82rem; font-weight: 600; font-family: inherit; cursor: pointer; }
 .pd-sanction-tab.active { background: var(--primary-color); border-color: var(--primary-color); color: #FFF; }
@@ -183,8 +177,6 @@
 .pd-ms-form-title { font-size: 0.95rem; font-weight: 600; color: var(--primary-color); margin: 0 0 1rem; }
 .pd-ms-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; }
 .pd-ms-field { display: flex; flex-direction: column; gap: 0.3rem; }
-.pd-ms-field input, .pd-ms-field select { padding: 0.55rem 0.75rem; border: 1px solid #DDD; border-radius: 7px; font-size: 0.85rem; outline: none; font-family: inherit; transition: border 0.2s; }
-.pd-ms-field input:focus, .pd-ms-field select:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px var(--primary-tint); }
 .pd-ms-form-actions { display: flex; gap: 0.6rem; justify-content: flex-end; margin-top: 1rem; }
 .pd-ms-cancel { background: #FFF; color: #555; border: 1px solid #DDD; padding: 0.5rem 1rem; border-radius: 7px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
 .pd-ms-cancel:hover { border-color: var(--primary-color); color: var(--primary-color); }
