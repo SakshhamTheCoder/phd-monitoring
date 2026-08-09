@@ -6,6 +6,7 @@ import Layout from '../../components/dashboard/layout';
 import { useLoading } from '../../context/LoadingContext';
 import PagenationTable from '../../components/pagenationTable/PagenationTable';
 import CustomModal from '../../components/forms/modal/CustomModal';
+import PageHeader from '../../components/pageHeader/PageHeader';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import InputField from '../../components/forms/fields/InputField';
 import GridContainer from '../../components/forms/fields/GridContainer';
@@ -181,24 +182,27 @@ const OutsideExperts = () => {
   return (
     <Layout>
       <div className="outside-experts-management">
-        <div className="page-header">
-          <h1 className="page-title">Outside Experts Management</h1>
-        </div>
-         <div className="top-actions" style={{ display: 'flex', gap: '1rem' }}>
-              <CustomButton 
-                text="Bulk Import CSV" 
-                onClick={() => setShowBulkImportModal(true)} 
-              />
-              <CustomButton 
-                text="Add Outside Expert +" 
-                onClick={() => setShowAddModal(true)} 
-              />
-            </div>
+        <PageHeader
+          title="Outside Experts"
+          subtitle="External examiners and experts available to committees."
+        />
         <PagenationTable
           key={refreshKey}
           endpoint="/outside-experts/list"
           enableApproval={false}
-         
+          extraTopbarComponents={
+            <div className="top-actions">
+              <CustomButton
+                text="Bulk Import CSV"
+                variant="secondary"
+                onClick={() => setShowBulkImportModal(true)}
+              />
+              <CustomButton
+                text="Add Outside Expert +"
+                onClick={() => setShowAddModal(true)}
+              />
+            </div>
+          }
           actions={[
             {
               icon: <i className="fa-solid fa-pen-to-square"></i>,

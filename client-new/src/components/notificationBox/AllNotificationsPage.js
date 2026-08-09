@@ -59,9 +59,9 @@ const AllNotificationsPage = () => {
         {loading ? (
           <p className="notification-muted">Loading…</p>
         ) : notifications.length === 0 ? (
-          <div className="notification-empty-page">
-            <p>No notifications yet</p>
-            <span>Anything that needs your attention in this role will show up here.</span>
+          <div className="empty-state">
+            No notifications yet. Anything that needs your attention in this role
+            will show up here.
           </div>
         ) : (
           <div className="notification-list">

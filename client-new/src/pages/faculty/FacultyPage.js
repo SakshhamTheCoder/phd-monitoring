@@ -284,7 +284,7 @@ Jane,,jane.smith@example.com,9876543210,Associate Professor,external,,CHED,Exter
             enableApproval={false}
             customOpenForm={openForm}
             extraTopbarComponents={
-              <div style={{ display: 'flex', gap: '10px' }}>
+              <div className="top-actions">
                 <CustomButton
                   text="Bulk Import CSV"
                   variant="secondary"
