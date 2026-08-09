@@ -5,7 +5,6 @@ import { formatDate } from '../../utils/timeParse';
 import CustomButton from '../forms/fields/CustomButton';
 import AddPublication from './AddPublication';
 import CustomModal from '../forms/modal/CustomModal';
-import './AddPublication.css';
 
 const ShowPublications = ({
     formData,

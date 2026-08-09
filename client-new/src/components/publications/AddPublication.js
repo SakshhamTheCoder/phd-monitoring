@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import "./AddPublication.css";
 import DropdownField from "../forms/fields/DropdownField";
 import SCIJournal from "./SCIJournal";
 import Patents from "./Patents";
@@ -52,7 +51,6 @@ const AddPublication = ({ close, editData = null, onSave = null }) => {
     <>
         {body.label && (<h1 className="modal-title">{body.label}</h1>)}
         {!body.label && (<h1 className="modal-title">{"Choose a Publication Type"}</h1>)}
-      <div className="add-publication-container">
         {!editData && (
           <GridContainer
             elements={[
@@ -120,7 +118,6 @@ const AddPublication = ({ close, editData = null, onSave = null }) => {
             </>
           ) : null}
         </div>
-      </div>
     </>
   );
 };

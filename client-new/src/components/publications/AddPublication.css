@@ -1,9 +1,0 @@
-.add-publication-container{
-    width: 100%;
-    /* padding: 25px; */
-    /* box-shadow: 0 0 10px rgba(0,0,0,0.4); */
-    max-height: 400px;
-    overflow-x: auto;
-    border-radius: 25px;
-    align-self: center;
-}
