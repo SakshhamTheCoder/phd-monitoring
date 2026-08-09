@@ -81,7 +81,7 @@ const ExternalReview = () => {
 
   if (loading) {
     return (
-      <ExternalLayout>
+      <ExternalLayout crumbs={[{ label: "Outside Expert Review" }]}>
         <div className="form-container"><p>Loading…</p></div>
       </ExternalLayout>
     );
@@ -89,7 +89,7 @@ const ExternalReview = () => {
 
   if (error) {
     return (
-      <ExternalLayout>
+      <ExternalLayout crumbs={[{ label: "Outside Expert Review" }]}>
         <TitleBar />
         <div className="form-container"><div className="xr-note xr-note-error">{error}</div></div>
       </ExternalLayout>
@@ -100,7 +100,7 @@ const ExternalReview = () => {
     const dec = done ? decision : data?.decision;
     const cmt = done ? comment.trim() : data?.comment;
     return (
-      <ExternalLayout>
+      <ExternalLayout crumbs={[{ label: "Outside Expert Review" }]}>
         <TitleBar />
         <div className="form-container">
           <div className="xr-note xr-note-success">
@@ -120,7 +120,7 @@ const ExternalReview = () => {
 
   if (data?.state === "closed") {
     return (
-      <ExternalLayout>
+      <ExternalLayout crumbs={[{ label: "Outside Expert Review" }]}>
         <TitleBar />
         <div className="form-container">
           <div className="xr-note">This submission is no longer awaiting your review. No action is needed.</div>
@@ -131,7 +131,7 @@ const ExternalReview = () => {
 
   // pending
   return (
-    <ExternalLayout>
+    <ExternalLayout crumbs={[{ label: "Outside Expert Review" }]}>
       <TitleBar />
       <div className="form-container">
         <GridContainer

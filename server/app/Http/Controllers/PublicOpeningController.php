@@ -40,11 +40,6 @@ class PublicOpeningController extends Controller
         $project = $position->project;
 
         return response()->json(array_merge($this->card($position), [
-            'eligibility' => $position->eligibility,
-            'skills' => $position->skills,
-            'min_cgpa' => $position->min_cgpa,
-            'description' => $position->description,
-            'openings' => $position->openings,
             'advertisement_url' => $position->advertisement_path
                 ? url('/api/public/openings/' . $position->id . '/advertisement')
                 : null,
@@ -169,6 +164,11 @@ class PublicOpeningController extends Controller
             'title' => $position->title,
             'stipend' => $position->stipend,
             'deadline' => $position->deadline,
+            'openings' => $position->openings,
+            'eligibility' => $position->eligibility,
+            'skills' => $position->skills,
+            'min_cgpa' => $position->min_cgpa,
+            'description' => $position->description,
             'project_title' => optional($position->project)->title,
             'project_category' => optional($position->project)->category,
             'pi_name' => $pi ? $pi->user->name() : null,

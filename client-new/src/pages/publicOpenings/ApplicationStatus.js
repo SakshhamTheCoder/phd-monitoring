@@ -31,13 +31,20 @@ const ApplicationStatus = ({ verify = false }) => {
   }, [token, verify]);
 
   return (
-    <ExternalLayout heading="Your application" subheading="The current state of your application">
+    <ExternalLayout crumbs={[{ label: 'Openings', to: '/openings' }, { label: 'Your application' }]}>
       <div className="op-container">
+        <div className="page-header">
+          <div>
+            <h1 className="page-title">Your application</h1>
+            <p className="page-subtitle">Where your application stands right now.</p>
+          </div>
+        </div>
+
         {loading && <p className="empty-state">Loading...</p>}
         {error && (
           <>
             <p className="empty-state">{error}</p>
-            <p className="empty-state"><Link to="/careers">See all open positions</Link></p>
+            <p className="empty-state"><Link to="/openings">See all open positions</Link></p>
           </>
         )}
 

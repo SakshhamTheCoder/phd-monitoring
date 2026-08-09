@@ -16,6 +16,11 @@ const skillList = (skills) =>
     .map((s) => (typeof s === 'string' ? s.trim() : s))
     .filter(Boolean);
 
+const crumbs = (title) => [
+  { label: 'Openings', to: '/openings' },
+  { label: title || 'Opening' },
+];
+
 const PublicOpeningDetail = () => {
   const { id } = useParams();
   const resumeRef = useRef(null);
@@ -89,22 +94,32 @@ const PublicOpeningDetail = () => {
   };
 
   if (loading) {
-    return <ExternalLayout heading="Research Openings" subheading="Loading"><p className="empty-state">Loading...</p></ExternalLayout>;
+    return (
+      <ExternalLayout crumbs={crumbs()}>
+        <p className="empty-state">Loading...</p>
+      </ExternalLayout>
+    );
   }
 
   if (error) {
     return (
-      <ExternalLayout heading="Research Openings" subheading="This opening is not available">
+      <ExternalLayout crumbs={crumbs()}>
         <p className="empty-state">{error}</p>
-        <p className="empty-state"><Link to="/careers">See all open positions</Link></p>
+        <p className="empty-state"><Link to="/openings">See all open positions</Link></p>
       </ExternalLayout>
     );
   }
 
   if (submitted) {
     return (
-      <ExternalLayout heading="Application received" subheading="One more step to confirm it">
+      <ExternalLayout crumbs={crumbs(opening.title)}>
         <div className="op-container">
+          <div className="page-header">
+            <div>
+              <h1 className="page-title">Application received</h1>
+              <p className="page-subtitle">One more step to confirm it.</p>
+            </div>
+          </div>
           <div className="card">
             <h3 className="section-heading">Check your email</h3>
             <p className="op-jd-text">
@@ -124,12 +139,17 @@ const PublicOpeningDetail = () => {
   const project = opening.project || {};
 
   return (
-    <ExternalLayout heading={opening.title} subheading={`${opening.type} position at Thapar Institute`}>
+    <ExternalLayout crumbs={crumbs(opening.title)}>
       <div className="op-container">
+        <div className="page-header">
+          <div>
+            <span className="op-type">{opening.type}</span>
+            <h1 className="page-title">{opening.title}</h1>
+            <p className="page-subtitle"><i className="fa fa-flask"></i> {opening.project_title}</p>
+          </div>
+        </div>
+
         <div className="card">
-          <span className="op-type">{opening.type}</span>
-          <h2 className="op-jd-title">{opening.title}</h2>
-          <p className="op-jd-project"><i className="fa fa-flask"></i> {opening.project_title}</p>
 
           <div className="op-jd-facts">
             {opening.stipend && <div className="op-jd-fact"><span>Stipend</span><strong>{opening.stipend}</strong></div>}

@@ -85,8 +85,10 @@ const AppContent = () => {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/external-review/:token" element={<ExternalReview />} />
-          <Route path="/careers" element={<PublicOpenings />} />
-          <Route path="/careers/:id" element={<PublicOpeningDetail />} />
+          {/* One address for openings. A signed-in student gets their own board,
+              which prefills from their profile; everyone else gets the public one. */}
+          <Route path="/openings" element={role === 'student' ? <Openings /> : <PublicOpenings />} />
+          <Route path="/openings/:id" element={<PublicOpeningDetail />} />
           <Route path="/applications/:token" element={<ApplicationStatus />} />
           <Route path="/applications/:token/verify" element={<ApplicationStatus verify />} />
 
@@ -107,7 +109,6 @@ const AppContent = () => {
 
               <Route path="/publications" element={<Publications />} />
               <Route path="/courses" element={<StudentCourses />} />
-              <Route path="/openings" element={<Openings />} />
 
             </>
           )}
