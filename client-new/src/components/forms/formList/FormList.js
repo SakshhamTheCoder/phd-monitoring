@@ -5,9 +5,8 @@ import { baseURL } from "../../../api/urls";
 import { customFetch } from "../../../api/base";
 import { useLoading } from "../../../context/LoadingContext";
 import { parseDateTime } from "../../../utils/timeParse";
-import CreateNewBar from "./CreateNewBar";
 
-const FormList = ({ showButton = true }) => {
+const FormList = () => {
   const [forms, setForms] = useState([]);
   const { setLoading } = useLoading();
   const location = useLocation();
@@ -43,7 +42,6 @@ const FormList = ({ showButton = true }) => {
 
   return (
     <>
-      {role === "student" && showButton && <CreateNewBar />}
       {forms?.length > 0 ? (
         <div className="form-list-container">
           {forms.map((form) => (

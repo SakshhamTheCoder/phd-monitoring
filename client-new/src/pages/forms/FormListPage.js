@@ -50,6 +50,15 @@ const FormListPage = () => {
       setShowButton(false);
     }
   }, [location]);
+  // One place for the page's primary action, so it sits in the header next to
+  // the title instead of floating in a band of its own.
+  const headerAction =
+    role === "student" ? <CreateNewBar />
+    : role === "faculty" && showButton ? <CreateNewBar rollNumber={rollNumber} />
+    : role === "faculty" && modalButtonShow ? (
+      <CustomButton onClick={() => setIsModalOpen(true)} text="Create New Form +" />
+    ) : null;
+
   const handleSearch = (query) => {
     setFilters((prev) => {
       return JSON.stringify(prev) !== JSON.stringify(query) ? query : prev;
@@ -60,24 +69,7 @@ const FormListPage = () => {
     <Layout
       children={
         <>
-          <PageHeader title={formTypeLabel} />
-          {role === "faculty" && showButton && (
-            <CreateNewBar rollNumber={rollNumber} />
-          )}
-          {role === "faculty" && modalButtonShow && (
-            <GridContainer
-              elements={[
-                <></>,
-                <></>,
-                <>
-                  <CustomButton
-                    onClick={() => setIsModalOpen(true)}
-                    text="Create New Form +"
-                  />
-                </>,
-              ]}
-            />
-          )}
+          <PageHeader title={formTypeLabel} actions={headerAction} />
           {role !== "student" ? (
             <>
               <FilterBar onSearch={handleSearch} />

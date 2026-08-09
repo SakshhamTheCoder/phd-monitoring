@@ -132,6 +132,14 @@
    the rhythm even though it also indented every field inside a GridContainer
    relative to one outside it. Splitting it also made the grid asymmetric once
    the horizontal half was removed: 30px between rows, 10px between columns. */
+/* Stacked field blocks had no separation at all, so a label sat directly on
+   the field above it and the submit button touched the last row. */
+.grid-container-wrapper + .grid-container-wrapper,
+.grid-container-wrapper + .form-section,
+.form-section + .grid-container-wrapper {
+    margin-top: 1.5rem;
+}
+
 .grid-container {
     display: grid;
     grid-template-columns: repeat(3, 1fr);

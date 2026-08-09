@@ -1,11 +1,9 @@
 import React from 'react';
-import './CreateNewBar.css';
 import { useLocation } from 'react-router-dom';
 import { baseURL } from "../../../api/urls";
 import { customFetch } from "../../../api/base";
 import { useLoading } from "../../../context/LoadingContext";
 import CustomButton from '../fields/CustomButton';
-import GridContainer from '../fields/GridContainer';
 
 const CreateNewBar = ({rollNumber=null,label}) => {
     const { setLoading } = useLoading();
@@ -33,17 +31,7 @@ const CreateNewBar = ({rollNumber=null,label}) => {
             })
     };
 
-    return (
-        <GridContainer
-        elements={[
-          <></>,
-          <></>,
-          <>
-            <CustomButton onClick={handleClick} text={label || 'Create New Form +'} />
-        </>
-        ]}
-        />
-    );
+    return <CustomButton onClick={handleClick} text={label || 'Create New Form +'} />;
 };
 
 export default CreateNewBar;
