@@ -17,7 +17,9 @@ class PositionApplicationController extends Controller {
         $user = Auth::user();
         $project = Project::find($projectId);
         if (!$project) return response()->json(['message' => 'Project not found'], 404);
-        if (!$this->canView($user, $project)) return response()->json(['message' => 'Not authorized'], 403);
+        // Applicants hand over a resume, contact details and a cover note to the
+        // PI, not to the department, so this stays narrower than canView.
+        if (!$this->owns($user, $project)) return response()->json(['message' => 'Not authorized'], 403);
         return response()->json(
             PositionApplication::with('position:id,type,title')
                 ->where('project_id', $project->id)->orderByDesc('id')->get()

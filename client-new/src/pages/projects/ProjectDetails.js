@@ -237,6 +237,10 @@ const ProjectDetails = () => {
     return <Layout><div className="pd-empty">Project not found. <button onClick={() => navigate('/projects')}>Go Back</button></div></Layout>;
   }
 
+  // A HOD or coordinator reads every project in their department but writes
+  // only their own, so every write control below is behind this.
+  const canEdit = project.canEdit;
+
   const progress = getMilestoneProgress(milestones);
   const msIcons = { Completed: '✔', 'In Progress': '🟡', 'Not Started': '🔴', Delayed: '🔴' };
 
@@ -296,13 +300,15 @@ const ProjectDetails = () => {
                   ) : (
                     <span className="pd-sanction-none">Not uploaded</span>
                   )}
-                  <button
-                    className="pd-sanction-edit-btn"
-                    onClick={openSanctionModal}
-                    title={sanctionDoc ? 'Edit sanction letter' : 'Add sanction letter'}
-                  >
-                    <i className={`fa ${sanctionDoc ? 'fa-pencil' : 'fa-plus'}`}></i>
-                  </button>
+                  {canEdit && (
+                    <button
+                      className="pd-sanction-edit-btn"
+                      onClick={openSanctionModal}
+                      title={sanctionDoc ? 'Edit sanction letter' : 'Add sanction letter'}
+                    >
+                      <i className={`fa ${sanctionDoc ? 'fa-pencil' : 'fa-plus'}`}></i>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -318,7 +324,7 @@ const ProjectDetails = () => {
                       <button className="pd-ms-save" onClick={saveBudgetEdit}><i className="fa fa-check"></i> Save Changes</button>
                     </>
                   ) : (
-                    <button className="pd-add-ms-btn" onClick={startBudgetEdit}><i className="fa fa-pencil"></i> Edit Budget</button>
+                    canEdit && <button className="pd-add-ms-btn" onClick={startBudgetEdit}><i className="fa fa-pencil"></i> Edit Budget</button>
                   )}
                 </div>
               </div>
@@ -422,9 +428,11 @@ const ProjectDetails = () => {
                   <span className="pd-ms-pct">{progress}%</span>
                   <div className="pd-ms-bar"><div className="pd-ms-fill" style={{ width: `${progress}%` }}></div></div>
                 </div>
-                <button className="pd-add-ms-btn" onClick={() => setShowAddForm(!showAddForm)}>
-                  <i className="fa fa-plus"></i> Add Milestone
-                </button>
+                {canEdit && (
+                  <button className="pd-add-ms-btn" onClick={() => setShowAddForm(!showAddForm)}>
+                    <i className="fa fa-plus"></i> Add Milestone
+                  </button>
+                )}
               </div>
             </div>
 
@@ -479,7 +487,7 @@ const ProjectDetails = () => {
                           <h4>{m.name}</h4>
                           <div className="pd-tl-actions">
                             <span className={badgeClass(m.status)}>{m.status}</span>
-                            <button className="pd-tl-edit-btn" onClick={() => startEdit(i)} title="Edit milestone"><i className="fa fa-pencil"></i></button>
+                            {canEdit && <button className="pd-tl-edit-btn" onClick={() => startEdit(i)} title="Edit milestone"><i className="fa fa-pencil"></i></button>}
                           </div>
                         </div>
                         <p className="pd-tl-deliverable">{m.deliverable}</p>
@@ -515,9 +523,11 @@ const ProjectDetails = () => {
           <div className="pd-card">
             <div className="pd-ms-header">
               <h3 className="pd-card-title"><i className="fa fa-users"></i> Co-PIs</h3>
-              <button className="pd-add-ms-btn" onClick={() => setShowCopiForm(!showCopiForm)}>
-                <i className="fa fa-plus"></i> Add Co-PI
-              </button>
+              {canEdit && (
+                <button className="pd-add-ms-btn" onClick={() => setShowCopiForm(!showCopiForm)}>
+                  <i className="fa fa-plus"></i> Add Co-PI
+                </button>
+              )}
             </div>
 
             {showCopiForm && (
@@ -610,8 +620,12 @@ const ProjectDetails = () => {
                     <p className="pd-team-meta">{c.designation}</p>
                   </div>
                   <span className={`pd-team-role ${c.type}`}>{c.type === 'internal' ? 'Internal' : 'External'}</span>
-                  <button className="pd-copi-edit" onClick={() => startCopiEdit(i)} title="Edit Co-PI"><i className="fa fa-pencil"></i></button>
-                  <button className="pd-copi-remove" onClick={() => removeCopi(i)} title="Remove Co-PI"><i className="fa fa-trash"></i></button>
+                  {canEdit && (
+                    <>
+                      <button className="pd-copi-edit" onClick={() => startCopiEdit(i)} title="Edit Co-PI"><i className="fa fa-pencil"></i></button>
+                      <button className="pd-copi-remove" onClick={() => removeCopi(i)} title="Remove Co-PI"><i className="fa fa-trash"></i></button>
+                    </>
+                  )}
                 </div>
               )
             )) : (
@@ -626,9 +640,11 @@ const ProjectDetails = () => {
           <div className="pd-card">
             <div className="pd-ms-header">
               <h3 className="pd-card-title"><i className="fa fa-folder-open"></i> Project Documents</h3>
-              <button className="pd-add-ms-btn" onClick={openAddDoc}>
-                <i className="fa fa-plus"></i> Add Document
-              </button>
+              {canEdit && (
+                <button className="pd-add-ms-btn" onClick={openAddDoc}>
+                  <i className="fa fa-plus"></i> Add Document
+                </button>
+              )}
             </div>
             {documents.length > 0 ? (
               <div className="pd-doc-list">
@@ -638,8 +654,12 @@ const ProjectDetails = () => {
                     <div className="pd-doc-info"><strong>{d.name}</strong><span>{d.type} &middot; {formatDate(d.date)}</span></div>
                     <div className="pd-doc-actions">
                       {d.url && <a className="pd-doc-dl" href={d.url} target="_blank" rel="noopener noreferrer" title="View document"><i className="fa fa-eye"></i></a>}
-                      <button className="pd-doc-edit" onClick={() => openEditDoc(i)} title="Edit document"><i className="fa fa-pencil"></i></button>
-                      <button className="pd-doc-remove" onClick={() => removeDoc(i)} title="Delete document"><i className="fa fa-trash"></i></button>
+                      {canEdit && (
+                        <>
+                          <button className="pd-doc-edit" onClick={() => openEditDoc(i)} title="Edit document"><i className="fa fa-pencil"></i></button>
+                          <button className="pd-doc-remove" onClick={() => removeDoc(i)} title="Delete document"><i className="fa fa-trash"></i></button>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -677,16 +697,20 @@ const ProjectDetails = () => {
             <div className="pd-header-meta">
               <div className="pd-hm-item"><span>DURATION</span><strong>{project.durationYears * 12 + (project.durationMonths || 0)} Months ({formatDate(project.startDate)} — {formatDate(project.endDate)})</strong></div>
             </div>
-            <div className="pd-header-actions">
-              <button className="pd-hire-btn" onClick={() => navigate(`/projects/${id}/recruit`)}><i className="fa fa-user-plus"></i> Hire JRF</button>
-              <button className="pd-hire-btn secondary" onClick={() => navigate(`/projects/${id}/recruit`)}><i className="fa fa-graduation-cap"></i> Hire Intern</button>
-            </div>
+            {canEdit && (
+              <div className="pd-header-actions">
+                <button className="pd-hire-btn" onClick={() => navigate(`/projects/${id}/recruit`)}><i className="fa fa-user-plus"></i> Hire JRF</button>
+                <button className="pd-hire-btn secondary" onClick={() => navigate(`/projects/${id}/recruit`)}><i className="fa fa-graduation-cap"></i> Hire Intern</button>
+              </div>
+            )}
           </div>
           <div className="pd-header-side">
             <span className={badgeClass(project.status)}>{project.status}</span>
-            <button className="pd-header-edit-btn" onClick={() => navigate('/projects/create', { state: { editProject: project } })}>
-              <i className="fa fa-pencil"></i> Edit Project
-            </button>
+            {canEdit && (
+              <button className="pd-header-edit-btn" onClick={() => navigate('/projects/create', { state: { editProject: project } })}>
+                <i className="fa fa-pencil"></i> Edit Project
+              </button>
+            )}
             <div className="pd-header-progress">
               <span className="pd-progress-label">CURRENT PROGRESS</span>
               <span className="pd-progress-value">{progress}%</span>

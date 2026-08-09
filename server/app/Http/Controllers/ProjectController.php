@@ -14,7 +14,9 @@ class ProjectController extends Controller {
     public function index(Request $request) {
         $user = Auth::user();
         if (!$this->canManage($user)) return response()->json(['message' => 'Not authorized'], 403);
-        return response()->json($this->visibleTo($user)->orderByDesc('id')->get());
+        $projects = $this->visibleTo($user)->orderByDesc('id')->get();
+        $projects->each(fn ($project) => $project->can_edit = $this->owns($user, $project));
+        return response()->json($projects);
     }
 
     public function stats() {
@@ -36,6 +38,7 @@ class ProjectController extends Controller {
         $project = Project::with(['milestones','documents','positions','pi.user','pi.department'])->find($id);
         if (!$project) return response()->json(['message' => 'Project not found'], 404);
         if (!$this->canView($user, $project)) return response()->json(['message' => 'Not authorized'], 403);
+        $project->can_edit = $this->owns($user, $project);
         return response()->json($project);
     }
 
@@ -110,14 +113,17 @@ class ProjectController extends Controller {
 
     private function visibleTo($user) {
         $query = Project::query();
-        if (!in_array(optional($user->current_role)->role, $this->privileged)) {
-            $code = optional($user->faculty)->faculty_code;
-            $query->where(function ($q) use ($code) {
-                $q->where('pi_faculty_code', $code)
-                  ->orWhereHas('coPiFaculty', fn ($f) => $f->where('faculty.faculty_code', $code));
-            });
-        }
-        return $query;
+        if (in_array(optional($user->current_role)->role, $this->privileged)) return $query;
+
+        $code = optional($user->faculty)->faculty_code;
+        $department = $this->departmentScope($user);
+        return $query->where(function ($q) use ($code, $department) {
+            $q->where('pi_faculty_code', $code)
+              ->orWhereHas('coPiFaculty', fn ($f) => $f->where('faculty.faculty_code', $code));
+            if ($department !== null) {
+                $q->orWhereHas('pi', fn ($f) => $f->where('department_id', $department));
+            }
+        });
     }
 
     /**

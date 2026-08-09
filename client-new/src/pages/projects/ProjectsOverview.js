@@ -174,20 +174,26 @@ const ProjectsOverview = () => {
                   </td>
                   <td>
                     <div className="po-action-buttons">
-                      <button
-                        className="po-icon-btn edit"
-                        title="Edit project"
-                        onClick={(e) => handleEdit(e, project)}
-                      >
-                        <i className="fa fa-pencil"></i>
-                      </button>
-                      <button
-                        className="po-icon-btn delete"
-                        title="Delete project"
-                        onClick={(e) => handleDelete(e, project)}
-                      >
-                        <i className="fa fa-trash"></i>
-                      </button>
+                      {project.canEdit ? (
+                        <>
+                          <button
+                            className="po-icon-btn edit"
+                            title="Edit project"
+                            onClick={(e) => handleEdit(e, project)}
+                          >
+                            <i className="fa fa-pencil"></i>
+                          </button>
+                          <button
+                            className="po-icon-btn delete"
+                            title="Delete project"
+                            onClick={(e) => handleDelete(e, project)}
+                          >
+                            <i className="fa fa-trash"></i>
+                          </button>
+                        </>
+                      ) : (
+                        <span className="po-readonly">View only</span>
+                      )}
                     </div>
                   </td>
                 </tr>

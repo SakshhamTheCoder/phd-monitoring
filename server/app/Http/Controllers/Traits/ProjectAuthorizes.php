@@ -17,10 +17,23 @@ trait ProjectAuthorizes {
         return $code !== null && $code == $project->pi_faculty_code;
     }
 
-    /** Read access: anyone who may write, plus an internal Co-PI. */
+    /**
+     * The department a role answers for, or null if it answers for none. A HOD
+     * and a coordinator have to be able to say what research runs in their
+     * department, so they read all of it. They still only write their own.
+     */
+    protected function departmentScope($user) {
+        $role = optional($user->current_role)->role;
+        if (!in_array($role, ['hod', 'phd_coordinator'])) return null;
+        return optional($user->faculty)->department_id;
+    }
+
+    /** Read access: anyone who may write, an internal Co-PI, or the department. */
     protected function canView($user, $project) {
         if ($this->owns($user, $project)) return true;
         $code = optional($user->faculty)->faculty_code;
-        return $code !== null && $project->coPiFaculty()->where('faculty.faculty_code', $code)->exists();
+        if ($code !== null && $project->coPiFaculty()->where('faculty.faculty_code', $code)->exists()) return true;
+        $department = $this->departmentScope($user);
+        return $department !== null && optional($project->pi)->department_id == $department;
     }
 }

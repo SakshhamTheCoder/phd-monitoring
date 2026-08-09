@@ -45,6 +45,7 @@ export const mapProject = (p) => (p ? {
   id: p.id,
   title: p.title, category: p.category, role: p.role, status: p.status,
   amount: p.amount, description: p.description,
+  canEdit: p.can_edit !== false,
   fundingAgency: p.funding_agency, tietShare: p.tiet_share,
   startDate: p.start_date, endDate: p.end_date,
   durationYears: p.duration_years, durationMonths: p.duration_months,

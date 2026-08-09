@@ -285,3 +285,10 @@
   background: #b91c1c;
   border-color: #b91c1c;
 }
+
+/* Shown instead of the edit and delete icons on a project the viewer can only
+   read, so the column never looks like the actions failed to load. */
+.po-readonly {
+  font-size: 0.8rem;
+  color: var(--text-subtle);
+}
