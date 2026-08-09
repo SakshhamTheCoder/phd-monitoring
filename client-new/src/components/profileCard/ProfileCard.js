@@ -3,6 +3,7 @@ import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import "react-circular-progressbar/dist/styles.css";
 import "./ProfileCard.css";
+import { facultyNameCell } from "../facultyLink/FacultyLink";
 
 import { formatDate } from "../../utils/timeParse";
 import { baseURL } from "../../api/urls";
@@ -206,6 +207,7 @@ const [userRole, setUserRole] = useState('');
         };
       }
       return {
+        faculty_code: sup.faculty_code,
         name: sup.name || "—",
         email: sup.email || "—",
         phone: sup.phone || "—",
@@ -214,6 +216,7 @@ const [userRole, setUserRole] = useState('');
     });
 
     const doctoralTableData = (doctoral || []).map((member) => ({
+      faculty_code: member.faculty_code,
       name: member.name || "—",
       email: member.email || "—",
       phone: member.phone || "—",
@@ -338,6 +341,7 @@ const [userRole, setUserRole] = useState('');
                 data={supervisorTableData}
                 keys={["name", "email", "phone", "designation"]}
                 titles={["Name", "Email", "Phone", "Designation"]}
+                components={[facultyNameCell]}
               />,
             ]}
             space={3}
@@ -350,6 +354,7 @@ const [userRole, setUserRole] = useState('');
                 data={doctoralTableData}
                 keys={["name", "email", "phone", "designation"]}
                 titles={["Name", "Email", "Phone", "Designation"]}
+                components={[facultyNameCell]}
               />,
             ]}
             space={3}
@@ -406,6 +411,7 @@ const [userRole, setUserRole] = useState('');
                         "Actions",
                       ]}
                       components={[
+                        facultyNameCell,
                         {
                           key: "actions",
                           component: ({ row }) => (
@@ -443,6 +449,7 @@ const [userRole, setUserRole] = useState('');
                         "Actions",
                       ]}
                       components={[
+                        facultyNameCell,
                         {
                           key: "actions",
                           component: ({ row }) => (

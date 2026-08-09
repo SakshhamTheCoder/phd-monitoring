@@ -1,0 +1,12 @@
+/* Underline on hover only: these appear inside headings and cards where a
+   permanently underlined name would read as emphasis rather than a link. */
+.faculty-link {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px dotted var(--border-color);
+}
+
+.faculty-link:hover {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}

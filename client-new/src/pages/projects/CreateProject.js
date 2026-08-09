@@ -4,6 +4,7 @@ import Layout from '../../components/dashboard/layout';
 import { categoryOptions, roleOptions, budgetHeadTemplate, milestoneStatusOptions, formatDate, subVal, subSum, cellMismatch, budgetMismatches, setSubCell } from '../../data/projectsData';
 import { apiCreateProject, apiUpdateProjectFromForm, apiUpdateProject, apiCurrentFaculty } from '../../api/projects';
 import InputSuggestions from '../../components/forms/fields/InputSuggestions';
+import FacultyLink from '../../components/facultyLink/FacultyLink';
 import { baseURL } from '../../api/urls';
 import { toast } from 'react-toastify';
 import './CreateProject.css';
@@ -263,7 +264,7 @@ const CreateProject = () => {
               <div className="cp-pi-card">
                 <div className="cp-pi-avatar">{pi.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</div>
                 <div className="cp-pi-info">
-                  <h4>{pi.name}</h4>
+                  <h4><FacultyLink code={pi.id} name={pi.name} /></h4>
                   <p className="cp-pi-dept">{pi.department}</p>
                   <p className="cp-pi-meta">{pi.designation}</p>
                 </div>

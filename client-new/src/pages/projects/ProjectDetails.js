@@ -8,6 +8,7 @@ import InputSuggestions from '../../components/forms/fields/InputSuggestions';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import Tabs from '../../components/tabs/Tabs';
 import CustomButton from '../../components/forms/fields/CustomButton';
+import FacultyLink from '../../components/facultyLink/FacultyLink';
 import { baseURL } from '../../api/urls';
 import { toast } from 'react-toastify';
 import './ProjectDetails.css';
@@ -501,7 +502,7 @@ const ProjectDetails = () => {
               <div className="pd-team-card">
                 <div className="pd-team-avatar">{project.pi.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</div>
                 <div className="pd-team-info">
-                  <h4>{project.pi.name}</h4>
+                  <h4><FacultyLink code={project.pi.code} name={project.pi.name} /></h4>
                   <p className="pd-team-dept">{project.pi.department}</p>
                   <p className="pd-team-meta">{project.pi.designation}</p>
                 </div>
@@ -604,7 +605,7 @@ const ProjectDetails = () => {
                 <div key={i} className="pd-team-card">
                   <div className="pd-team-avatar co">{c.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</div>
                   <div className="pd-team-info">
-                    <h4>{c.name}</h4>
+                    <h4><FacultyLink code={c.faculty_code} name={c.name} /></h4>
                     <p className="pd-team-dept">{c.type === 'internal' ? c.department : c.institute}</p>
                     <p className="pd-team-meta">{c.designation}</p>
                   </div>

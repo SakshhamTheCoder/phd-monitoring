@@ -53,6 +53,7 @@ export const mapProject = (p) => (p ? {
   equipmentDetails: p.equipment_details || [],
   sanctionLetterLink: p.sanction_letter_link, sanctionLetterName: p.sanction_letter_name,
   pi: p.pi ? {
+    code: p.pi.faculty_code,
     name: p.pi.user ? `${p.pi.user.first_name || ''} ${p.pi.user.last_name || ''}`.trim() : '',
     department: p.pi.department ? p.pi.department.name : '',
     designation: p.pi.designation || '',

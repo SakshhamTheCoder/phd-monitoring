@@ -31,7 +31,15 @@ class HomeController extends Controller
                     'overall_progress' => $student->overall_progress,
                     'roll_no' => $student->roll_no,
                     'department' => $student->department->name,
-                    'supervisors' => $student->supervisors->map(fn($s) => $s->user->name()),
+                    // Same shape as `doctoral` below. It used to be a bare name,
+                    // which left no way to reach the supervisor's profile.
+                    'supervisors' => $student->supervisors->map(fn($s) => [
+                        'faculty_code' => $s->faculty_code,
+                        'designation' => $s->designation,
+                        'name' => $s->user->name(),
+                        'email' => $s->user->email,
+                        'phone' => $s->user->phone,
+                    ]),
                     'cgpa' => $student->cgpa,
                     'email' => $student->user->email,
                     'phone' => $student->user->phone,

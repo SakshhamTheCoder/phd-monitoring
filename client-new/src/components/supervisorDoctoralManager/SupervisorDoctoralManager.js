@@ -8,6 +8,7 @@ import CustomModal from '../forms/modal/CustomModal';
 import InputSuggestions from '../forms/fields/InputSuggestions';
 import DropdownField from '../forms/fields/DropdownField';
 import TableComponent from '../forms/table/TableComponent';
+import { facultyNameCell } from '../facultyLink/FacultyLink';
 
 
 const SupervisorDoctoralManager = ({ studentId, supervisors = [], doctoralCommittee = [], onClose }) => {
@@ -189,6 +190,7 @@ const SupervisorDoctoralManager = ({ studentId, supervisors = [], doctoralCommit
               keys={['name', 'email', 'phone', 'designation', 'actions']}
               titles={['Name', 'Email', 'Phone', 'Designation', 'Actions']}
               components={[
+                facultyNameCell,
                 {
                   key: 'actions',
                   component: ({ row }) => (
@@ -225,6 +227,7 @@ const SupervisorDoctoralManager = ({ studentId, supervisors = [], doctoralCommit
               keys={['name', 'email', 'phone', 'designation', 'actions']}
               titles={['Name', 'Email', 'Phone', 'Designation', 'Actions']}
               components={[
+                facultyNameCell,
                 {
                   key: 'actions',
                   component: ({ row }) => (

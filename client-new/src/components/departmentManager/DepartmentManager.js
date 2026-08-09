@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
+import { facultyNameCell } from '../facultyLink/FacultyLink';
 import CustomButton from '../forms/fields/CustomButton';
 import CustomModal from '../forms/modal/CustomModal';
 import GridContainer from "../forms/fields/GridContainer";
@@ -19,6 +20,7 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
   const { setLoading } = useLoading();
 
   const hodTableData = currentHod ? [{
+    faculty_code: currentHod.faculty_code,
     name: currentHod.user?.name || 'N/A',
     email: currentHod.user?.email || 'N/A',
     phone: currentHod.user?.phone || 'N/A',
@@ -28,6 +30,7 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
   }] : [];
 
   const adordcTableData = currentAdordc ? [{
+    faculty_code: currentAdordc.faculty_code,
     name: currentAdordc.user?.name || 'N/A',
     email: currentAdordc.user?.email || 'N/A',
     phone: currentAdordc.user?.phone || 'N/A',
@@ -37,6 +40,7 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
   }] : [];
 
   const coordinatorsTableData = currentCoordinators.map(coord => ({
+    faculty_code: coord.faculty?.faculty_code,
     name: coord.faculty?.user?.name || 'N/A',
     email: coord.faculty?.user?.email || 'N/A',
     phone: coord.faculty?.user?.phone || 'N/A',
@@ -186,6 +190,7 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
   const roleColumns = {
     keys: ['name', 'email', 'phone', 'designation', 'department'],
     titles: ['Name', 'Email', 'Phone', 'Designation', 'Department'],
+    components: [facultyNameCell],
   };
 
   return (
@@ -248,6 +253,7 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
           keys={['name', 'email', 'phone', 'designation', 'actions']}
           titles={['Name', 'Email', 'Phone', 'Designation', 'Actions']}
           components={[
+            facultyNameCell,
             {
               key: 'actions',
               component: ({ row }) => (
