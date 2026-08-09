@@ -92,3 +92,5 @@ a.pr-field-hint { color: var(--primary-color); }
 .pr-decision-btn.select { background: #dcfce7; color: #15803d; }
 .pr-decision-btn.reject { background: #fee2e2; color: #b91c1c; }
 .pr-decision-btn:hover { opacity: 0.85; }
+
+.pr-app-flag { margin-left: 0.5rem; vertical-align: middle; }

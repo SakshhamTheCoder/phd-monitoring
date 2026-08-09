@@ -263,6 +263,7 @@ const LandingPage = () => {
               <h4>Quick Links</h4>
               <ul className="footer-links">
                 <li><Link to="/login">Login</Link></li>
+                <li><Link to="/careers">Research Openings</Link></li>
                 <li><Link to="/support">Support</Link></li>
                 <li><Link to="/privacy">Privacy Policy</Link></li>
                 <li><Link to="/team">Our Team</Link></li>

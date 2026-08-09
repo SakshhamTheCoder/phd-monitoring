@@ -249,7 +249,10 @@ const ProjectRecruitment = () => {
                   <tbody>
                     {posApps.map(app => (
                       <tr key={app.id}>
-                        <td className="pr-app-name">{app.name}</td>
+                        <td className="pr-app-name">
+                          {app.name}
+                          {!app.verified && <span className="badge badge--neutral pr-app-flag">Unconfirmed email</span>}
+                        </td>
                         <td>{app.position}</td>
                         <td>{app.institute}</td>
                         <td>{app.cgpa}</td>

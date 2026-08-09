@@ -9,7 +9,11 @@ import "./ExternalReview.css";
 // two-tier topbar (heading + branded right block + breadcrumb strip) a normal user sees, but
 // with NO nav links and no profile/bell — the outside expert must not get any navigation into
 // the rest of the app.
-const ExternalLayout = ({ heading = "Outside Expert Review", children }) => (
+const ExternalLayout = ({
+  heading = "Outside Expert Review",
+  subheading = "Review the submission below and record your recommendation",
+  children,
+}) => (
   <div className="layout">
     <div className="sidebar">
       <div className="side-left-menu">
@@ -31,7 +35,7 @@ const ExternalLayout = ({ heading = "Outside Expert Review", children }) => (
         </div>
         <nav className="route-bar">
           <ul>
-            <li>Review the submission below and record your recommendation</li>
+            <li>{subheading}</li>
           </ul>
         </nav>
       </header>

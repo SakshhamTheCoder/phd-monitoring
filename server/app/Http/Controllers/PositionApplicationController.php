@@ -43,15 +43,27 @@ class PositionApplicationController extends Controller {
     }
 
     private function notifyApplicant(PositionApplication $app, Project $project) {
-        $user = optional($app->student)->user;
-        if (!$user) return;
         $position = optional($app->position)->title ?: 'a position';
-        $this->sendNotification(
-            $user,
-            'Application ' . $app->status,
-            "Your application for {$position} on {$project->title} is now {$app->status}.",
-            '/openings'
-        );
+        $body = "Your application for {$position} on {$project->title} is now {$app->status}.";
+
+        $user = optional($app->student)->user;
+        if ($user) {
+            $this->sendNotification($user, 'Application ' . $app->status, $body, '/openings');
+            return;
+        }
+
+        if (!$app->token || !$app->email) return;
+        $statusUrl = rtrim(config('app.frontend_url'), '/') . '/applications/' . $app->token;
+        try {
+            \Illuminate\Support\Facades\Mail::raw(
+                $body . "
+
+Track your application: " . $statusUrl,
+                fn ($message) => $message->to($app->email)->subject('Application ' . $app->status)
+            );
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Applicant status email failed: ' . $e->getMessage());
+        }
     }
 
     public function openings() {
@@ -91,11 +103,19 @@ class PositionApplicationController extends Controller {
         ]);
         if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 400);
 
+        $email = strtolower(trim($request->input('email')));
+        if (PositionApplication::where('position_id', $position->id)->where('email', $email)->exists()) {
+            return response()->json(['message' => 'An application from this email already exists for this opening.'], 409);
+        }
+
         $app = new PositionApplication();
         $app->position_id = $position->id;
         $app->project_id = $position->project_id;
         $app->student_id = $rollNo;
-        foreach (['name','email','phone','degree','institute','cgpa','research','cover_note'] as $f) {
+        $app->applicant_type = 'internal';
+        $app->email_verified_at = now();
+        $app->email = $email;
+        foreach (['name','phone','degree','institute','cgpa','research','cover_note'] as $f) {
             $app->$f = $request->input($f);
         }
         $skills = $request->input('skills');

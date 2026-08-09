@@ -52,3 +52,7 @@
 .op-upload { display: inline-flex; align-items: center; gap: 0.5rem; align-self: flex-start; background: #FFF; border: 1px dashed var(--primary-color); color: var(--primary-color); padding: 0.55rem 1rem; border-radius: 8px; font-size: 0.82rem; font-family: inherit; cursor: pointer; max-width: 100%; }
 .op-upload:hover { background: #fef2f2; }
 @media (max-width: 600px) { .op-form-grid { grid-template-columns: 1fr; } }
+
+/* Public application form: a validation message, and a field only a bot fills. */
+.op-form-error { color: var(--danger-text); font-size: 0.85rem; margin: 0.75rem 0 0; }
+.op-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }

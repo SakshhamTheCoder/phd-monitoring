@@ -33,6 +33,8 @@ export const mapApplication = (a) => ({
   id: a.id, name: a.name, email: a.email, phone: a.phone, degree: a.degree, institute: a.institute,
   cgpa: a.cgpa, research: a.research, skills: a.skills || [], coverNote: a.cover_note,
   status: a.status, appliedDate: a.applied_date,
+  applicantType: a.applicant_type || 'internal',
+  verified: a.email_verified_at !== null && a.email_verified_at !== undefined,
   resume: a.resume_path ? a.resume_path.split('/').pop() : '',
   resumeUrl: a.resume_path ? fileUrl(a.resume_path) : '',
   position: a.position ? a.position.type : a.position_type,

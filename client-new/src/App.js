@@ -22,6 +22,9 @@ import Presentation from './pages/presentations/PresentationForm';
 import ForgotPasswordPage from './pages/forgot-password/ForgotPasswordPage';
 import ResetPasswordPage from './pages/reset-password/ResetPasswordPage';
 import FacultyPage from './pages/faculty/FacultyPage';
+import PublicOpenings from './pages/publicOpenings/PublicOpenings';
+import PublicOpeningDetail from './pages/publicOpenings/PublicOpeningDetail';
+import ApplicationStatus from './pages/publicOpenings/ApplicationStatus';
 import DepartmentPage from './pages/department/Department';
 import AllNotificationsPage from './components/notificationBox/AllNotificationsPage';
 import PresentationSemester from './pages/presentations/PresentationSemester';
@@ -82,6 +85,10 @@ const AppContent = () => {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/external-review/:token" element={<ExternalReview />} />
+          <Route path="/careers" element={<PublicOpenings />} />
+          <Route path="/careers/:id" element={<PublicOpeningDetail />} />
+          <Route path="/applications/:token" element={<ApplicationStatus />} />
+          <Route path="/applications/:token/verify" element={<ApplicationStatus verify />} />
 
           {/* Dashboard */}
           <Route path="/home" element={<Dashboard />} />

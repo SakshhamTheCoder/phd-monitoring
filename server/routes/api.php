@@ -317,6 +317,19 @@ Route::prefix('approval')->group(function () {
     require base_path('routes/base/approvals.php');
 });
 
+// Openings as an outsider sees them: browse, apply, then track by token.
+Route::prefix('public/openings')->group(function () {
+    Route::get('/', [\App\Http\Controllers\PublicOpeningController::class, 'index']);
+    Route::get('/{id}', [\App\Http\Controllers\PublicOpeningController::class, 'show']);
+    Route::get('/{id}/advertisement', [\App\Http\Controllers\PublicOpeningController::class, 'advertisement']);
+    Route::post('/{id}/apply', [\App\Http\Controllers\PublicOpeningController::class, 'apply'])
+        ->middleware('throttle:5,60');
+});
+Route::prefix('public/applications')->group(function () {
+    Route::get('/{token}', [\App\Http\Controllers\PublicOpeningController::class, 'status']);
+    Route::post('/{token}/verify', [\App\Http\Controllers\PublicOpeningController::class, 'verify']);
+});
+
 // Secure external-expert review (public, token-authenticated, the token is the credential).
 Route::prefix('external-review')->group(function () {
     Route::get('/{token}', [\App\Http\Controllers\ExternalReviewController::class, 'show']);
