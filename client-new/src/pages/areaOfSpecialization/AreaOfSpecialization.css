@@ -1,14 +1,5 @@
-.area-specialization-page {
-  min-height: 100vh;
-}
-
 /* Header comes from styles/ui.css. It used to be redefined here, and because
    the page stylesheets share one bundle, that leaked onto every other page. */
-
-.top-actions {
-  display: flex;
-  gap: 12px;
-}
 
 .form-container {
   padding: 20px;

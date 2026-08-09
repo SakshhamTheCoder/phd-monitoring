@@ -5,7 +5,10 @@
   flex-direction: column;
   background-color: #f4f4f4;
   width: 100%;
-  min-height: 100vh;
+  /* Without this the 48px of padding lands outside the 100vh, so the sidebar
+     overflowed its own frame and showed a second scrollbar on every page. */
+  box-sizing: border-box;
+  min-height: 100%;
   padding: 24px 0;
   box-shadow: 2px 0 12px rgba(0, 0, 0, 0.1);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
