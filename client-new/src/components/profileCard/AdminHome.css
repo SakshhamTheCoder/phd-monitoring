@@ -19,3 +19,10 @@
   color: #6b7280;
   margin-bottom: 1.5rem;
 }
+
+/* Navigation tiles, not form buttons: they fill their cell so the grid reads
+   as a block rather than a ragged row of different-width pills. This is the
+   case .custom-button--block exists for. */
+.adminhome-container .custom-button {
+  width: 100%;
+}
