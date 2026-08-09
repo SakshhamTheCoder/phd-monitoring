@@ -211,8 +211,8 @@ const ResearchProfile = () => {
         filtered[key] && filtered[key].length > 0 && (
             <div className="rp-table-section" key={key}>
                 <h3>{title}</h3>
-                <div className="rp-table-wrapper">
-                    <table>
+                <div className="data-table-wrap">
+                    <table className="data-table">
                         <thead><tr>{columns.map(c => <th key={c}>{c}</th>)}<th>SOURCE</th>{actionHeader}</tr></thead>
                         <tbody>{filtered[key].map(pub => <tr key={`${pub.source}-${pub.id}`}>{renderRow(pub)}<td>{sourceBadge(pub)}</td>{rowActions(pub)}</tr>)}</tbody>
                     </table>

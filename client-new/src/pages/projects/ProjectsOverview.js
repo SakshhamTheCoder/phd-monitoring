@@ -142,8 +142,8 @@ const ProjectsOverview = () => {
         </div>
 
         {/* Projects Table */}
-        <div className="po-table-wrapper">
-          <table className="po-table">
+        <div className="data-table-wrap">
+          <table className="data-table">
             <thead>
               <tr>
                 <th>PROJECT TITLE</th>

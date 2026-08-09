@@ -192,9 +192,11 @@
 .badge--purple  { background: #FCE7F3; color: #9D174D; }
 .badge--accent  { background: var(--primary-wash); color: var(--primary-color); }
 
-/* --- Data table ----------------------------------------------------------
-   Matches .custom-table in TableComponent.css, which the form pages use,
-   but takes its colours from the tokens. */
+/* --- Tables --------------------------------------------------------------
+   Three components render tables with different data contracts, so they keep
+   their own class names, but there is no reason for three different looks.
+   .form-table was defined identically in two separate stylesheets, both
+   global, and only agreed by luck. */
 .data-table-wrap {
     overflow-x: auto;
     border: 1px solid var(--border-subtle);
@@ -202,13 +204,17 @@
     background: var(--surface);
 }
 
-.data-table {
+.data-table,
+.form-table,
+.custom-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.88rem;
 }
 
-.data-table th {
+.data-table th,
+.form-table th,
+.custom-table thead th {
     background: #F5F5F5;
     padding: 0.75rem 1rem;
     text-align: left;
@@ -221,12 +227,23 @@
     white-space: nowrap;
 }
 
-.data-table td {
+.data-table td,
+.form-table td,
+.custom-table tbody td {
     padding: 0.75rem 1rem;
     border-bottom: 1px solid var(--border-subtle);
     color: var(--text-color);
+    text-align: left;
 }
 
-.data-table tbody tr:last-child td { border-bottom: none; }
-.data-table tbody tr:hover { background: #FAFAFA; }
-.data-table a { color: var(--primary-color); }
+.data-table tbody tr:last-child td,
+.form-table tbody tr:last-child td,
+.custom-table tbody tr:last-child td { border-bottom: none; }
+
+.data-table tbody tr:hover,
+.form-table tr:hover,
+.custom-table tr:hover { background: #FAFAFA; }
+
+.data-table a,
+.form-table a,
+.custom-table a { color: var(--primary-color); }

@@ -1,34 +1,10 @@
+/* Table look comes from styles/ui.css. */
 .table-container {
     overflow-x: auto;
     margin: 20px 0;
 }
 
-.custom-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: Arial, sans-serif;
-}
 
-.custom-table thead th {
-    background-color: #f3f4f6;
-    padding: 8px;
-    text-align: left;
-    color: black;
-    border-bottom: 2px solid #e0e0e0;
-}
 
-.custom-table tbody td {
-    padding: 8px;
-    text-align: left;
-    border-bottom: 1px solid #e0e0e0;
-    font-weight: 400;
-}
 
-.custom-table tr:hover {
-    background-color: #f9f9f9;
-}
 
-.custom-table a{
-    color: blue;
-    text-decoration: underline;
-}

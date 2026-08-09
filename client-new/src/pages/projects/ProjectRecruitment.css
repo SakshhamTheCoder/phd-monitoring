@@ -64,9 +64,6 @@ a.pr-field-hint { color: var(--primary-color); }
 .pr-app-stat.selected { border-bottom-color: #22c55e; }
 
 /* Application Table */
-.pr-app-table { width: 100%; border-collapse: collapse; }
-.pr-app-table th { background: #FAFAFA; padding: 0.85rem 1rem; font-size: 0.72rem; font-weight: 600; color: #777; text-transform: uppercase; text-align: left; border-bottom: 1px solid #EEE; }
-.pr-app-table td { padding: 0.85rem 1rem; font-size: 0.88rem; color: #333; border-bottom: 1px solid #F0F0F0; }
 .pr-app-name { font-weight: 400; color: #222; }
 .pr-view-btn { background: none; border: 1px solid #DDD; padding: 0.35rem 0.75rem; border-radius: 6px; font-size: 0.78rem; color: #555; cursor: pointer; }
 .pr-view-btn:hover { border-color: var(--primary-color); color: var(--primary-color); }

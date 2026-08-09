@@ -242,7 +242,7 @@ const ProjectRecruitment = () => {
             </div>
             <div className="pr-card">
               {posApps.length > 0 ? (
-                <table className="pr-app-table">
+                <table className="data-table">
                   <thead>
                     <tr><th>Applicant Name</th><th>Position</th><th>Institute</th><th>CGPA</th><th>Status</th><th>Actions</th></tr>
                   </thead>

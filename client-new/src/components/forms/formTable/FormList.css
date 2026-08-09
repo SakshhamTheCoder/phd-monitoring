@@ -1,3 +1,4 @@
+/* Table look comes from styles/ui.css. */
 .form-list-container {
   padding: 20px;
   border-radius: 8px;
@@ -52,21 +53,8 @@
   cursor: pointer;
 }
 
-.form-table th {
-  background-color: #f1f1f1;
-  font-weight: bold;
-  padding: 12px;
-  text-align: left;
-}
 
-.form-table td {
-  padding: 12px;
-  border-bottom: 1px solid #ddd;
-}
 
-.form-table tr:hover {
-  background-color: #f0f0f0;
-}
 
 .selected-row {
   background-color: #d7ecff;

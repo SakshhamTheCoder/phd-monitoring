@@ -416,37 +416,9 @@
     font-size: 1.1rem;
 }
 
-.rp-table-wrapper {
-    background: #FFF;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-}
 
-.rp-table-wrapper table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
-}
 
-.rp-table-wrapper th {
-    background: #FAFAFA;
-    padding: 1.2rem 1rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #777;
-    border-bottom: 1px solid #EEE;
-    text-transform: uppercase;
-}
 
-.rp-table-wrapper td {
-    padding: 1rem;
-    font-size: 0.9rem;
-    color: #333;
-    border-bottom: 1px solid #EEE;
-    vertical-align: middle;
-    font-weight: 400 !important;
-}
 
 .status-badge {
     padding: 0.25rem 0.75rem;
@@ -478,11 +450,6 @@
     font-style: italic;
 }
 
-.rp-table-wrapper a {
-    color: #0066CC;
-    text-decoration: none;
-    font-weight: 600;
-}
 /* Edit, source and modal additions */
 .rp-card-head-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
 .rp-inline-edit { background: none; border: none; color: var(--primary-color); cursor: pointer; font-size: 0.85rem; padding: 0.2rem 0.4rem; }
