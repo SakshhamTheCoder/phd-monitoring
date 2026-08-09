@@ -80,3 +80,12 @@
   overflow-x: auto;
   font-size: 0.75rem;
 }
+
+.log-boundary {
+  padding: 0.5rem 1rem;
+  color: #6B7280;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid #21242B;
+}
