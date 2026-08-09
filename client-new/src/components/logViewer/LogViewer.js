@@ -10,6 +10,7 @@ const LogViewer = () => {
   const logSize = useRef(0);
   const logContainerRef = useRef(null);
   const isFetching = useRef(false);
+  const pinnedToBottom = useRef(true);
   const scrollBuffer = 100;
 
   const fetchLogs = async (direction = 'forward') => {
@@ -57,9 +58,10 @@ const LogViewer = () => {
           const newScrollHeight = container.scrollHeight;
           container.scrollTop = newScrollHeight - prevScrollHeight + prevScrollTop;
         }, 0);
-      } else if (!isBackward && container) {
-        // optionally scroll to bottom when new logs arrive
-        // container.scrollTop = container.scrollHeight;
+      } else if (!isBackward && container && pinnedToBottom.current) {
+        // The newest line is the last one, so follow it unless the reader has
+        // scrolled up to look at something.
+        setTimeout(() => { container.scrollTop = container.scrollHeight; }, 0);
       }
 
     } catch (err) {
@@ -76,6 +78,8 @@ const LogViewer = () => {
     const nearTop = container.scrollTop <= scrollBuffer;
     const nearBottom =
       container.scrollHeight - container.scrollTop - container.clientHeight <= scrollBuffer;
+
+    pinnedToBottom.current = nearBottom;
 
     if (nearTop) fetchLogs('backward');
     else if (nearBottom) fetchLogs('forward');
@@ -100,6 +104,7 @@ const LogViewer = () => {
 
   return (
     <div className="log-terminal" ref={logContainerRef} onScroll={handleScroll}>
+      {logs.length === 0 && <div className="log-empty">Waiting for log output...</div>}
       {logs.map((line, idx) => {
         const logMatch = line.match(/^\[(.*?)\]\s+(.*?)\.(.*?):\s+(.*)$/);
         if (!logMatch) {
@@ -123,7 +128,7 @@ const LogViewer = () => {
         return (
           <div key={idx} className="log-entry">
             <div className="log-meta">
-              <span className="log-time">🕒 {timestamp}</span>
+              <span className="log-time">{timestamp}</span>
               <span className={`log-level log-${level.toLowerCase()}`}>[{level}]</span>
             </div>
             <div className="log-message">{message}</div>
