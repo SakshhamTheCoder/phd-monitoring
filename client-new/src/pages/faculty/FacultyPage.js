@@ -404,17 +404,13 @@ Jane,,jane.smith@example.com,9876543210,Associate Professor,external,,CHED,Exter
                   }}>
                     Preview: {csvPreview.data.length} row(s) found
                   </div>
-                  <div style={{ overflowX: 'auto' }}>
-                    <table style={{
-                      width: '100%',
-                      borderCollapse: 'collapse',
-                      fontSize: '0.875rem'
-                    }}>
+                  <div className="csv-preview-wrap">
+                    <table className="csv-preview">
                       <thead>
-                        <tr style={{ background: '#f3f4f6' }}>
-                          <th style={{ padding: '0.5rem', border: '1px solid #d1d5db', textAlign: 'left' }}>Row</th>
+                        <tr >
+                          <th>Row</th>
                           {csvPreview.headers.map((header, i) => (
-                            <th key={i} style={{ padding: '0.5rem', border: '1px solid #d1d5db', textAlign: 'left', whiteSpace: 'nowrap' }}>
+                            <th key={i}>
                               {header}
                             </th>
                           ))}
@@ -422,12 +418,12 @@ Jane,,jane.smith@example.com,9876543210,Associate Professor,external,,CHED,Exter
                       </thead>
                       <tbody>
                         {csvPreview.data.map((row, i) => (
-                          <tr key={i} style={{ background: i % 2 === 0 ? 'white' : '#f9fafb' }}>
-                            <td style={{ padding: '0.5rem', border: '1px solid #d1d5db', fontWeight: '500', color: '#6b7280' }}>
+                          <tr key={i}>
+                            <td className="csv-rownum">
                               {row._rowNumber}
                             </td>
                             {csvPreview.headers.map((header, j) => (
-                              <td key={j} style={{ padding: '0.5rem', border: '1px solid #d1d5db' }}>
+                              <td key={j}>
                                 {row[header] || <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>empty</span>}
                               </td>
                             ))}

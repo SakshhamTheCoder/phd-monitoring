@@ -27,7 +27,6 @@
 .cp-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
 .cp-field { display: flex; flex-direction: column; gap: 0.4rem; }
 .cp-field.full { grid-column: 1 / -1; }
-.req { color: #b91c1c; }
 .cp-readonly { background: #F5F5F5; color: #888; }
 .cp-char-count { font-size: 0.72rem; color: #aaa; text-align: right; }
 

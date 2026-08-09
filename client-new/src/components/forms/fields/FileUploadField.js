@@ -42,7 +42,7 @@ const FileUploadField = ({
 
   return (
     <div className='file-upload-container'>
-      {showLabel && <label className='input-label'>{label}{required && <span style={{ color: 'red', marginLeft: '4px' }}>*</span>}</label>}
+      {showLabel && <label className='input-label'>{label}{required && <span className="req">*</span>}</label>}
 
       {initialValue && isLocked ? (
         <a

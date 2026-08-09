@@ -143,6 +143,50 @@
     border-top: 1px solid var(--border-subtle);
 }
 
+/* --- CSV import preview --------------------------------------------------
+   A grid of raw rows before they are committed, so it is ruled rather than
+   striped: you are checking cells, not scanning records. Written twice
+   inline, in the faculty and user bulk imports, with identical numbers. */
+.csv-preview-wrap {
+    overflow-x: auto;
+}
+
+.csv-preview {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.csv-preview th,
+.csv-preview td {
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    text-align: left;
+}
+
+.csv-preview th {
+    background: #F3F4F6;
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.csv-preview tbody tr:nth-child(even) { background: #FAFAFA; }
+
+.csv-rownum {
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+/* Fields stacked in a column, the common shape inside a dialog. */
+.field-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
 /* An explanatory note inside a dialog, above the fields. */
 .modal-note {
     background: var(--primary-wash);
