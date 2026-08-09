@@ -24,8 +24,6 @@
 .pd-header-actions { display: flex; gap: 0.75rem; margin-top: 1rem; }
 .pd-hire-btn { background: var(--primary-color); color: #FFF; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; }
 .pd-hire-btn:hover { background: var(--hover-color); }
-.pd-hire-btn.secondary { background: #FFF; color: var(--primary-color); border: 1px solid var(--primary-color); }
-.pd-hire-btn.secondary:hover { background: #fef2f2; }
 
 /* Tabs */
 /* Sits on a white surface under the header card; type comes from ui.css. */

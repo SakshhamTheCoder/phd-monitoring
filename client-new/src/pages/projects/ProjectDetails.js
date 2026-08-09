@@ -241,6 +241,9 @@ const ProjectDetails = () => {
   // only their own, so every write control below is behind this.
   const canEdit = project.canEdit;
 
+  const openPositions = (project.positions || []).filter((p) => p.status === 'Open');
+  const vacancies = openPositions.reduce((sum, p) => sum + (Number(p.openings) || 0), 0);
+
   const progress = getMilestoneProgress(milestones);
   const msIcons = { Completed: '✔', 'In Progress': '🟡', 'Not Started': '🔴', Delayed: '🔴' };
 
@@ -696,11 +699,21 @@ const ProjectDetails = () => {
             </div>
             <div className="pd-header-meta">
               <div className="pd-hm-item"><span>DURATION</span><strong>{project.durationYears * 12 + (project.durationMonths || 0)} Months ({formatDate(project.startDate)} — {formatDate(project.endDate)})</strong></div>
+              <div className="pd-hm-item">
+                <span>OPEN POSITIONS</span>
+                <strong>
+                  {openPositions.length === 0
+                    ? 'None advertised'
+                    : `${openPositions.length} ${openPositions.length === 1 ? 'role' : 'roles'}, ${vacancies} ${vacancies === 1 ? 'vacancy' : 'vacancies'}`}
+                </strong>
+              </div>
             </div>
             {canEdit && (
               <div className="pd-header-actions">
-                <button className="pd-hire-btn" onClick={() => navigate(`/projects/${id}/recruit`)}><i className="fa fa-user-plus"></i> Hire JRF</button>
-                <button className="pd-hire-btn secondary" onClick={() => navigate(`/projects/${id}/recruit`)}><i className="fa fa-graduation-cap"></i> Hire Intern</button>
+                <button className="pd-hire-btn" onClick={() => navigate(`/projects/${id}/recruit`)}>
+                  <i className="fa fa-user-plus"></i>
+                  {openPositions.length ? 'Manage recruitment' : 'Post an opening'}
+                </button>
               </div>
             )}
           </div>
