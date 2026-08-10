@@ -146,7 +146,15 @@ class SyncFacultyPublications implements ShouldQueue
 
     private function orcidType(string $type): string
     {
-        return match ($type) {
+        // ORCID v3.0 returns lower case, hyphenated values: "journal-article",
+        // "conference-paper", "book-chapter". Matching the constant style
+        // directly never hit, so every work fell through to 'journal' and
+        // conference papers, books and patents were all filed as journal
+        // articles. Normalising first fixes that, and still matches if ORCID
+        // ever hands back the upper case form.
+        $normalised = strtoupper(str_replace('-', '_', trim($type)));
+
+        return match ($normalised) {
             'CONFERENCE_PAPER', 'CONFERENCE_ABSTRACT', 'CONFERENCE_POSTER' => 'conference',
             'BOOK', 'BOOK_CHAPTER', 'EDITED_BOOK' => 'book',
             'PATENT' => 'patent',
