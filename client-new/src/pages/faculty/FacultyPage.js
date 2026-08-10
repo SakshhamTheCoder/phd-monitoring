@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import { useLoading } from '../../context/LoadingContext';
+import { useFeatures } from '../../context/FeaturesContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import FilterBar from '../../components/filterBar/FilterBar';
@@ -24,6 +25,7 @@ const FacultyPage = () => {
   const { setLoading } = useLoading();
   const location = useLocation();
   const navigate = useNavigate();
+  const features = useFeatures();
 
   const handleFilterChange = (newFilter) => {
     setFilter(newFilter);
@@ -300,11 +302,11 @@ Jane,,jane.smith@example.com,9876543210,Associate Professor,external,,CHED,Exter
                 tooltip: 'Edit',
                 onClick: (facultyData) => openForm(facultyData),
               },
-              {
+              ...(features.research_profile ? [{
                 icon: <i className="fa fa-user-circle"></i>,
                 tooltip: 'Research Profile',
                 onClick: (facultyData) => navigate(`/faculty/${facultyData.faculty_code}/profile`),
-              },
+              }] : []),
             ]}
           />
           <CustomModal

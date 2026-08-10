@@ -7,6 +7,7 @@ import GoogleCallback from './pages/login/GoogleCallback';
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { LoadingProvider, useLoading } from './context/LoadingContext'; // Remove useLoading import
+import { FeaturesProvider, useFeatures } from './context/FeaturesContext';
 import Loader from './components/loader/loader';
 import FormsPage from './pages/forms/FormsPage';
 import FormListPage from './pages/forms/FormListPage';
@@ -51,7 +52,9 @@ import Openings from './pages/projects/Openings';
 const App = () => {
   return (
     <LoadingProvider>
-      <AppContent />
+      <FeaturesProvider>
+        <AppContent />
+      </FeaturesProvider>
     </LoadingProvider>
   );
 };
@@ -59,6 +62,9 @@ const App = () => {
 const AppContent = () => {
   const { loading } = useLoading();
   const role = localStorage.getItem('userRole');
+  // A switched-off module leaves no route behind, so its address falls through
+  // to the 404 page rather than rendering against an API that answers 404.
+  const features = useFeatures();
   return (
     <>
       {loading && <Loader />}
@@ -87,14 +93,18 @@ const AppContent = () => {
           <Route path="/external-review/:token" element={<ExternalReview />} />
           {/* One address for openings. A signed-in student gets their own board,
               which prefills from their profile; everyone else gets the public one. */}
-          <Route path="/openings" element={role === 'student' ? <Openings /> : <PublicOpenings />} />
-          <Route path="/openings/:id" element={<PublicOpeningDetail />} />
-          <Route path="/applications/:token" element={<ApplicationStatus />} />
-          <Route path="/applications/:token/verify" element={<ApplicationStatus verify />} />
+          {features.job_openings && (
+            <>
+              <Route path="/openings" element={role === 'student' ? <Openings /> : <PublicOpenings />} />
+              <Route path="/openings/:id" element={<PublicOpeningDetail />} />
+              <Route path="/applications/:token" element={<ApplicationStatus />} />
+              <Route path="/applications/:token/verify" element={<ApplicationStatus verify />} />
+            </>
+          )}
 
           {/* Dashboard */}
           <Route path="/home" element={<Dashboard />} />
-          {(role === 'faculty' || role === 'hod' || role === 'phd_coordinator' || role === 'dordc' || role === 'adordc' || role === 'dra' || role === 'director' || role === 'admin') && (
+          {features.job_openings && (role === 'faculty' || role === 'hod' || role === 'phd_coordinator' || role === 'dordc' || role === 'adordc' || role === 'dra' || role === 'director' || role === 'admin') && (
             <>
               <Route path="/projects" element={<ProjectsOverview />} />
               <Route path="/projects/create" element={<CreateProject />} />
@@ -113,8 +123,12 @@ const AppContent = () => {
             </>
           )}
           <Route path="/notifications" element={<AllNotificationsPage />} />
-          <Route path="/research-profile" element={<ResearchProfile />} />
-          <Route path="/faculty/:facultyCode/profile" element={<ResearchProfile />} />
+          {features.research_profile && (
+            <>
+              <Route path="/research-profile" element={<ResearchProfile />} />
+              <Route path="/faculty/:facultyCode/profile" element={<ResearchProfile />} />
+            </>
+          )}
           <Route path="/presentation" element={<PresentationSemester />} />
           <Route path="/presentation/semester" element={<Navigate to="/presentation" replace />} />
 

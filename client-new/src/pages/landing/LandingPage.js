@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useFeatures } from '../../context/FeaturesContext';
 import './LandingPage.css';
 
 const LandingPage = () => {
+  const featureFlags = useFeatures();
   const features = [
     {
       title: 'Online Form Submission',
@@ -263,7 +265,7 @@ const LandingPage = () => {
               <h4>Quick Links</h4>
               <ul className="footer-links">
                 <li><Link to="/login">Login</Link></li>
-                <li><Link to="/openings">Research Openings</Link></li>
+                {featureFlags.job_openings && <li><Link to="/openings">Research Openings</Link></li>}
                 <li><Link to="/support">Support</Link></li>
                 <li><Link to="/privacy">Privacy Policy</Link></li>
                 <li><Link to="/team">Our Team</Link></li>
