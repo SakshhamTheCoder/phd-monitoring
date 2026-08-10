@@ -84,6 +84,15 @@ class FacultyProfileController extends Controller
         if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 400);
 
         $this->fill($publication, $request);
+
+        // An imported row that someone has corrected is pinned, so the next sync
+        // does not put it back. Neither ORCID nor Scopus can tell SCI from
+        // Scopus indexing, or a national conference from an international one,
+        // so a human correction is the only accurate value on the row.
+        if (in_array($publication->source, ['orcid', 'scopus'], true)) {
+            $publication->manually_edited = true;
+        }
+
         $publication->save();
         return response()->json(['message' => 'Publication updated', 'publication' => $publication]);
     }
@@ -181,15 +190,25 @@ class FacultyProfileController extends Controller
     // The page renders one table per key, so both sets are grouped the same way.
     private function emptyGroups()
     {
-        return ['sci' => [], 'non_sci' => [], 'international' => [], 'national' => [], 'book' => [], 'patents' => []];
+        return ['sci' => [], 'non_sci' => [], 'international' => [], 'national' => [], 'book' => [], 'patents' => [], 'uncategorised' => []];
     }
 
     private function bucket($publicationType, $type)
     {
         if ($publicationType === 'patent') return 'patents';
         if ($publicationType === 'book') return 'book';
-        if ($publicationType === 'journal') return $type === 'sci' ? 'sci' : 'non_sci';
         if ($publicationType === 'conference') return $type === 'national' ? 'national' : 'international';
+
+        if ($publicationType === 'journal') {
+            // A journal article is only listed as Scopus indexed when something
+            // actually said so. ORCID carries no indexing information, so its
+            // articles arrive with no type and are shown as unclassified for
+            // the faculty member to place, rather than being claimed as Scopus.
+            if ($type === 'sci') return 'sci';
+            if ($type === 'non-sci') return 'non_sci';
+            return 'uncategorised';
+        }
+
         return null;
     }
 
