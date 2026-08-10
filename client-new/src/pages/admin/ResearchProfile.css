@@ -459,3 +459,72 @@
 .rp-row-actions button:hover { color: var(--primary-color); }
 
 
+
+/* Bulk reclassification.
+   Imported publications arrive with only the category their source could
+   prove, so the common task is moving a batch of them at once. The bar is
+   hidden until something is ticked. */
+.rp-bulk-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 16px;
+    padding: 10px 16px;
+    background: #eef4ff;
+    border: 1px solid #c7d9f7;
+    border-radius: 6px;
+}
+
+.rp-bulk-count {
+    font-weight: 600;
+    color: #1b3a6b;
+}
+
+.rp-bulk-bar select {
+    padding: 6px 10px;
+    border: 1px solid #c7d9f7;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.rp-bulk-apply,
+.rp-bulk-clear {
+    padding: 6px 14px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+
+.rp-bulk-apply {
+    background: #1b3a6b;
+    color: #fff;
+}
+
+.rp-bulk-apply:disabled {
+    background: #9bb0cd;
+    cursor: not-allowed;
+}
+
+.rp-bulk-clear {
+    background: #fff;
+    border-color: #c7d9f7;
+    color: #1b3a6b;
+}
+
+/* Narrow, so the checkbox does not push the real columns around. */
+.rp-select-col {
+    width: 34px;
+    text-align: center;
+}
+
+.rp-select-all {
+    margin-left: 12px;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 400;
+    background: none;
+    border: 1px solid #c7d9f7;
+    border-radius: 4px;
+    color: #1b3a6b;
+    cursor: pointer;
+}

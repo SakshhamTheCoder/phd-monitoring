@@ -25,9 +25,27 @@ const TYPE_OPTIONS = [
     { value: 'national', label: 'Papers in National Conferences' },
     { value: 'book', label: 'Book/Book Chapters' },
     { value: 'patents', label: 'Patents' },
+    { value: 'uncategorised', label: 'Unclassified (needs a category)' },
 ];
 
 const SOURCE_LABELS = { scopus: 'Scopus', orcid: 'ORCID', manual: 'Manual', student: 'Student' };
+
+/**
+ * The table a publication appears in is derived on the server from
+ * publication_type plus type, so moving a row between tables means setting both.
+ * This is the inverse of that mapping.
+ *
+ * Note `patents` is the table key while the stored publication_type is the
+ * singular `patent`, which is what the API validates against.
+ */
+const CATEGORY_TO_FIELDS = {
+    sci: { publication_type: 'journal', type: 'sci' },
+    non_sci: { publication_type: 'journal', type: 'non-sci' },
+    international: { publication_type: 'conference', type: 'international' },
+    national: { publication_type: 'conference', type: 'national' },
+    book: { publication_type: 'book', type: null },
+    patents: { publication_type: 'patent', type: null },
+};
 
 const emptyIdentifiers = {
     orcid_id: '', scopus_id: '', google_scholar_id: '', joined_on: '', citations: '', h_index: '',
@@ -48,6 +66,12 @@ const ResearchProfile = () => {
     const [identifiers, setIdentifiers] = useState(emptyIdentifiers);
     const [showPubForm, setShowPubForm] = useState(false);
     const [editPub, setEditPub] = useState(null);
+    // Ids ticked for bulk reclassification. Imported publications arrive with
+    // only the category their source could prove, so moving a batch at once is
+    // the difference between a short chore and twenty trips through the modal.
+    const [selected, setSelected] = useState([]);
+    const [bulkTarget, setBulkTarget] = useState('');
+    const [bulkBusy, setBulkBusy] = useState(false);
     // An admin has no faculty record, so "my own profile" does not exist for
     // them. Without this the page waited on a code that was never coming.
     const [resolving, setResolving] = useState(!routeCode);
@@ -196,6 +220,65 @@ const ResearchProfile = () => {
         <span className={badgeClass(pub.source || 'manual')}>{SOURCE_LABELS[pub.source] || 'Manual'}</span>
     );
 
+    const toggleSelected = (id) => {
+        setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+    };
+
+    const toggleGroup = (key) => {
+        const ids = (filtered[key] || []).map(p => p.id);
+        const allChosen = ids.length > 0 && ids.every(id => selected.includes(id));
+        setSelected(prev => allChosen
+            ? prev.filter(id => !ids.includes(id))
+            : [...new Set([...prev, ...ids])]);
+    };
+
+    /**
+     * Reclassifies every ticked publication.
+     *
+     * One request per publication against the existing endpoint, which also
+     * pins each row so the next sync leaves the new category alone. A failure on
+     * one row does not abandon the rest; the count of what actually moved is
+     * reported.
+     */
+    const applyBulkCategory = async () => {
+        if (!bulkTarget || selected.length === 0) return;
+
+        const fields = CATEGORY_TO_FIELDS[bulkTarget];
+        if (!fields) return;
+
+        setBulkBusy(true);
+        let moved = 0;
+        let failed = 0;
+
+        for (const id of selected) {
+            const res = await apiUpdateFacultyPublication(facultyCode, id, fields);
+            if (res.success) moved++; else failed++;
+        }
+
+        setBulkBusy(false);
+        setSelected([]);
+        setBulkTarget('');
+
+        if (moved) toast.success(`Moved ${moved} publication${moved === 1 ? '' : 's'}.`);
+        if (failed) toast.error(`${failed} could not be moved.`);
+        load();
+    };
+
+    const selectHeader = canEdit && isOwnTab ? <th className="rp-select-col"></th> : null;
+
+    const selectCell = (pub) => (
+        canEdit && isOwnTab && (
+            <td className="rp-select-col">
+                <input
+                    type="checkbox"
+                    checked={selected.includes(pub.id)}
+                    onChange={() => toggleSelected(pub.id)}
+                    aria-label={`Select ${pub.title || 'publication'}`}
+                />
+            </td>
+        )
+    );
+
     const rowActions = (pub) => (
         canEdit && isOwnTab && (
             <td className="rp-row-actions">
@@ -210,11 +293,18 @@ const ResearchProfile = () => {
     const table = (key, title, columns, renderRow) => (
         filtered[key] && filtered[key].length > 0 && (
             <div className="rp-table-section" key={key}>
-                <h3>{title}</h3>
+                <h3>
+                    {title}
+                    {canEdit && isOwnTab && (
+                        <button type="button" className="rp-select-all" onClick={() => toggleGroup(key)}>
+                            select all
+                        </button>
+                    )}
+                </h3>
                 <div className="data-table-wrap">
                     <table className="data-table">
-                        <thead><tr>{columns.map(c => <th key={c}>{c}</th>)}<th>SOURCE</th>{actionHeader}</tr></thead>
-                        <tbody>{filtered[key].map(pub => <tr key={`${pub.source}-${pub.id}`}>{renderRow(pub)}<td>{sourceBadge(pub)}</td>{rowActions(pub)}</tr>)}</tbody>
+                        <thead><tr>{selectHeader}{columns.map(c => <th key={c}>{c}</th>)}<th>SOURCE</th>{actionHeader}</tr></thead>
+                        <tbody>{filtered[key].map(pub => <tr key={`${pub.source}-${pub.id}`}>{selectCell(pub)}{renderRow(pub)}<td>{sourceBadge(pub)}</td>{rowActions(pub)}</tr>)}</tbody>
                     </table>
                 </div>
             </div>
@@ -406,7 +496,49 @@ const ResearchProfile = () => {
                     </div>
                 </div>
 
+                {/* Appears only once something is ticked, so it stays out of the
+                    way until it is needed. */}
+                {canEdit && isOwnTab && selected.length > 0 && (
+                    <div className="rp-bulk-bar">
+                        <span className="rp-bulk-count">
+                            {selected.length} selected
+                        </span>
+                        <select
+                            value={bulkTarget}
+                            onChange={e => setBulkTarget(e.target.value)}
+                            disabled={bulkBusy}
+                        >
+                            <option value="">Move to…</option>
+                            {TYPE_OPTIONS
+                                .filter(t => CATEGORY_TO_FIELDS[t.value])
+                                .map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                        </select>
+                        <button
+                            className="rp-bulk-apply"
+                            onClick={applyBulkCategory}
+                            disabled={!bulkTarget || bulkBusy}
+                        >
+                            {bulkBusy ? 'Moving…' : 'Apply'}
+                        </button>
+                        <button className="rp-bulk-clear" onClick={() => setSelected([])} disabled={bulkBusy}>
+                            Clear
+                        </button>
+                    </div>
+                )}
+
                 <div className="rp-tables">
+                    {/* Imported works whose category could not be established, chiefly ORCID
+                        journal articles, since ORCID records no indexing. Shown so they are
+                        visible and can be classified rather than silently filed as Scopus. */}
+                    {/* No SOURCE column here: table() already appends one with the
+                        source badge, so listing it again showed it twice. */}
+                    {table('uncategorised', 'Unclassified (needs a category)',
+                        ['AUTHOR(S)', 'YEAR OF PUBLICATION', 'TITLE OF PAPER', 'PUBLISHED IN', 'DOI'],
+                        pub => (<>
+                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || '—'}</td><td>{pub.title}</td>
+                            <td>{pub.name || '—'}</td>{doiCell(pub)}
+                        </>))}
+
                     {table('sci', 'SCI/SCIE/SSCI/ABDC/AHCI Journal',
                         ['AUTHOR(S)', 'YEAR OF PUBLICATION', 'TITLE OF PAPER', 'NAME OF THE JOURNAL', 'IMPACT FACTOR', 'DOI'],
                         pub => (<>
