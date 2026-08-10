@@ -33,11 +33,28 @@
 .xr-pdf-link {
   display: inline-block;
   margin-top: 8px;
-  color: var(--primary-color, #b22626);
+  color: var(--primary-color, var(--primary-color));
   font-size: 14px;
   text-decoration: underline;
 }
 
 @media (max-width: 560px) {
   .xr-pdf-frame { height: 340px; }
+}
+
+/* The public sidebar has no nav, so this is the one way back into the portal
+   for someone who does have an account. */
+.xr-sidebar-foot {
+  margin-top: auto;
+  padding: 1.5rem 1rem;
+  text-align: center;
+}
+.xr-sidebar-foot a {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.xr-sidebar-foot a:hover {
+  color: var(--primary-color);
+  text-decoration: underline;
 }

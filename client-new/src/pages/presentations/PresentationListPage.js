@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../../components/dashboard/layout";
+import Tabs from "../../components/tabs/Tabs";
 import FormList from "../../components/forms/formList/FormList";
 import CustomModal from "../../components/forms/modal/CustomModal";
 import CustomButton from "../../components/forms/fields/CustomButton";
 import GridContainer from "../../components/forms/fields/GridContainer";
-import { Tabs, Tab } from "@mui/material";
 import BulkSchedulePresentation from "../../components/forms/presentations/BulkSchedulePresentation";
 import SchedulePresentation from "../../components/forms/presentations/SchedulePresentation";
 import FormTable from "../../components/forms/formTable/FormTable";
@@ -116,26 +116,28 @@ const PresentationListPage = () => {
     <Layout
       children={
         <>
-          <h1>Progress Monitoring List</h1>
+          <div className="page-header">
+            <div>
+              <h1 className="page-title">Progress Monitoring List</h1>
+            </div>
+          </div>
 
           <SemesterStatsCard semesterName={semester_id} setFilters={setExtraFilter} />
 
           {role !== "student" && (
             <Tabs
               value={presentationTab}
-              onChange={(e, newVal) => setPresentationTab(newVal)}
-              sx={{ marginBottom: "16px" }}
-            >
-              <Tab label="Action Required" />
-              <Tab label="Upcoming Progress Monitoring" />
-              <Tab label="Completed" />
-              <Tab label="Not Scheduled" />
-
-              <Tab label="Semester Off" />
-              <Tab label="Not Submitted" />
-
-              <Tab label="All Progress Monitoring" />
-            </Tabs>
+              onChange={setPresentationTab}
+              items={[
+                'Action Required',
+                'Upcoming Progress Monitoring',
+                'Completed',
+                'Not Scheduled',
+                'Semester Off',
+                'Not Submitted',
+                'All Progress Monitoring',
+              ].map((label, i) => ({ value: i, label }))}
+            />
           )}
           {extraFilter && <FilterBar onSearch={handleSearch} />}
           <PagenationTable

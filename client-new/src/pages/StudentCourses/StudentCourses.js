@@ -4,6 +4,8 @@ import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
 import Loader from '../../components/loader/loader';
 import Layout from '../../components/dashboard/layout';
+import PageHeader from '../../components/pageHeader/PageHeader';
+import Tabs from '../../components/tabs/Tabs';
 
 const StudentCourses = () => {
   const [activeTab, setActiveTab] = useState('ongoing'); // 'ongoing' or 'past'
@@ -82,22 +84,16 @@ const StudentCourses = () => {
   return (
     <Layout> 
     <div className="student-courses-container">
-      <h1 className="page-title">My Courses</h1>
-      
-      <div className="tabs-container">
-        <button
-          className={`tab-button ${activeTab === 'ongoing' ? 'active' : ''}`}
-          onClick={() => setActiveTab('ongoing')}
-        >
-          Ongoing Courses ({ongoingCourses.length})
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'past' ? 'active' : ''}`}
-          onClick={() => setActiveTab('past')}
-        >
-          Past Courses ({pastCourses.length})
-        </button>
-      </div>
+      <PageHeader title="My Courses" />
+
+      <Tabs
+        value={activeTab}
+        onChange={setActiveTab}
+        items={[
+          { value: 'ongoing', label: `Ongoing Courses (${ongoingCourses.length})` },
+          { value: 'past', label: `Past Courses (${pastCourses.length})` },
+        ]}
+      />
 
       <div className="courses-content">
         {activeTab === 'ongoing' && (
@@ -127,47 +123,11 @@ const StudentCourses = () => {
 
       <style jsx>{`
         .student-courses-container {
-          padding: 2rem;
           max-width: 1400px;
           margin: 0 auto;
         }
 
-        .page-title {
-          font-size: 2rem;
-          font-weight: 600;
-          color: #1f2937;
-          margin-bottom: 2rem;
-        }
-
-        .tabs-container {
-          display: flex;
-          gap: 1rem;
-          margin-bottom: 2rem;
-          border-bottom: 2px solid #e5e7eb;
-        }
-
-        .tab-button {
-          padding: 0.75rem 1.5rem;
-          font-size: 1rem;
-          font-weight: 500;
-          background: none;
-          border: none;
-          color: #6b7280;
-          cursor: pointer;
-          border-bottom: 3px solid transparent;
-          transition: all 0.3s;
-          position: relative;
-          bottom: -2px;
-        }
-
-        .tab-button:hover {
-          color: #3b82f6;
-        }
-
-        .tab-button.active {
-          color: #3b82f6;
-          border-bottom-color: #3b82f6;
-        }
+        /* Header, tabs and empty state come from styles/ui.css */
 
         .courses-content {
           margin-top: 2rem;
@@ -208,8 +168,8 @@ const StudentCourses = () => {
 
         .course-code {
           display: inline-block;
-          background: #eff6ff;
-          color: #3b82f6;
+          background: var(--primary-wash);
+          color: var(--primary-color);
           padding: 0.25rem 0.75rem;
           border-radius: 0.25rem;
           font-size: 0.875rem;
@@ -248,28 +208,13 @@ const StudentCourses = () => {
           font-size: 1rem;
         }
 
-        .empty-state {
-          grid-column: 1 / -1;
-          text-align: center;
-          padding: 3rem;
-          color: #6b7280;
-        }
-
-        .empty-state p {
-          font-size: 1.125rem;
-        }
+        /* Spans the grid; the rest comes from styles/ui.css */
+        .empty-state { grid-column: 1 / -1; }
+        .empty-state p { margin: 0; }
 
         @media (max-width: 768px) {
-          .student-courses-container {
-            padding: 1rem;
-          }
-
           .courses-grid {
             grid-template-columns: 1fr;
-          }
-
-          .page-title {
-            font-size: 1.5rem;
           }
         }
       `}</style>

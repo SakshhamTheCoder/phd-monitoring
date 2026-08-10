@@ -1,31 +1,5 @@
-.area-specialization-page {
-  padding: 20px;
-  min-height: 100vh;
-}
-
-.page-header {
-  margin-bottom: 30px;
-  border-bottom: 3px solid #932f2f;
-  padding-bottom: 15px;
-}
-
-.page-header h1 {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin: 0 0 8px 0;
-}
-
-.page-header p {
-  font-size: 14px;
-  color: #6c757d;
-  margin: 0;
-}
-
-.top-actions {
-  display: flex;
-  gap: 12px;
-}
+/* Header comes from styles/ui.css. It used to be redefined here, and because
+   the page stylesheets share one bundle, that leaked onto every other page. */
 
 .form-container {
   padding: 20px;
@@ -40,7 +14,7 @@
 .section-divider h3 {
   font-size: 16px;
   font-weight: 700;
-  color: #932f2f;
+  color: var(--primary-color);
   margin: 0;
 }
 
@@ -52,7 +26,7 @@
   background: #f8f4f1;
   padding: 20px;
   border-radius: 8px;
-  border-left: 4px solid #932f2f;
+  border-left: 4px solid var(--primary-color);
   margin-bottom: 25px;
 }
 
@@ -73,6 +47,6 @@
 }
 
 .upload-info .note strong {
-  color: #932f2f;
+  color: var(--primary-color);
   font-weight: 700;
 }

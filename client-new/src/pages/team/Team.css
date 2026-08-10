@@ -65,7 +65,7 @@
   transform: translateX(-50%);
   width: 40px;
   height: 3px;
-  background: linear-gradient(90deg, #932f2f, #c44040);
+  background: linear-gradient(90deg, var(--primary-color), #c44040);
   border-radius: 2px;
 }
 
@@ -110,19 +110,19 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: #932f2f;
+  background: var(--primary-color);
   border-radius: 16px 16px 0 0;
   transition: background-color 0.3s ease;
 }
 
 .person-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 20px 30px rgba(147, 47, 47, 0.08), 0 4px 12px rgba(0, 0, 0, 0.03);
-  border-color: rgba(147, 47, 47, 0.1);
+  box-shadow: 0 20px 30px var(--primary-wash), 0 4px 12px rgba(0, 0, 0, 0.03);
+  border-color: var(--primary-tint);
 }
 
 .person-card:hover::before {
-  background: #7a2626;
+  background: var(--hover-color);
 }
 
 /* Avatar Container and Image Sizes */
@@ -145,7 +145,7 @@
   bottom: 0;
   border-radius: 50%;
   padding: 3px;
-  background: linear-gradient(135deg, #932f2f 0%, #c44040 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, #c44040 100%);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -176,8 +176,8 @@
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(147, 47, 47, 0.04) 0%, rgba(147, 47, 47, 0.1) 100%);
-  color: #932f2f;
+  background: linear-gradient(135deg, var(--primary-wash) 0%, var(--primary-tint) 100%);
+  color: var(--primary-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -212,8 +212,8 @@
 .card-content .title {
   font-size: 0.68rem;
   font-weight: 600;
-  color: #932f2f;
-  background: rgba(147, 47, 47, 0.06);
+  color: var(--primary-color);
+  background: var(--primary-wash);
   padding: 4px 10px;
   border-radius: 12px;
   display: inline-flex;
@@ -254,10 +254,10 @@
 
 .social-icons a:hover {
   color: #fff;
-  background: #932f2f;
+  background: var(--primary-color);
   transform: translateY(-3px);
   box-shadow: 0 5px 12px rgba(147, 47, 47, 0.25);
-  border-color: #932f2f;
+  border-color: var(--primary-color);
 }
 
 /* ==========================================================================
@@ -268,7 +268,7 @@
   width: 100%;
   padding: 35px 24px;
   border-top-width: 6px;
-  box-shadow: 0 10px 25px rgba(147, 47, 47, 0.06), 0 3px 6px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 10px 25px var(--primary-wash), 0 3px 6px rgba(0, 0, 0, 0.03);
 }
 
 .mentor-card::before {
@@ -309,7 +309,7 @@
   font-weight: 600;
   padding: 5px 14px;
   margin: 10px 0 20px 0;
-  background: rgba(147, 47, 47, 0.08);
+  background: var(--primary-wash);
   height: auto;
 }
 
@@ -343,7 +343,7 @@
 }
 
 .contact a {
-  color: #932f2f;
+  color: var(--primary-color);
   font-weight: 600;
   text-decoration: none;
   border-bottom: 2px solid rgba(147, 47, 47, 0.3);
@@ -352,8 +352,8 @@
 }
 
 .contact a:hover {
-  color: #7a2626;
-  border-bottom-color: #7a2626;
+  color: var(--hover-color);
+  border-bottom-color: var(--hover-color);
   text-decoration: none;
 }
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../../components/dashboard/layout";
+import PageHeader from '../../components/pageHeader/PageHeader';
 import FormList from "../../components/forms/formList/FormList";
-import { Tabs, Tab } from "@mui/material";
 import CustomModal from "../../components/forms/modal/CustomModal";
 import CustomButton from "../../components/forms/fields/CustomButton";
 import GridContainer from "../../components/forms/fields/GridContainer";
@@ -93,6 +93,7 @@ const PresentationSemester = () => {
     <Layout
       children={
         <>
+          <PageHeader title="Progress Monitoring" subtitle="Evaluation semesters and their deadlines." />
          <SemesterStatsCard />
          <PagenationTable
             endpoint={location}
@@ -130,22 +131,22 @@ const PresentationSemester = () => {
                 space={2}
               />
 
-              <label>Evaluation Start Date:</label>
+              <label className="input-label">Evaluation Start Date</label>
               <DatePicker
                 selected={editForm.start_date}
                 readOnly
                 disabled
-                className="field-readonly"
+                className="input-field field-readonly"
               />
 
-              <label>Evaluation End Date:</label>
+              <label className="input-label">Evaluation End Date</label>
               <DatePicker
                 selected={editForm.end_date}
                 onChange={(date) => setEditForm({ ...editForm, end_date: date })}
-                className="field-editable"
+                className="input-field"
               />
 
-              <label>Notification:</label>
+              <label className="input-label">Notification</label>
               <ToggleSwitch
                 isOn={editForm.notification}
                 onToggle={() =>

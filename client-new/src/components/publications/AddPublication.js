@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import "./AddPublication.css";
 import DropdownField from "../forms/fields/DropdownField";
 import SCIJournal from "./SCIJournal";
 import Patents from "./Patents";
@@ -8,7 +7,9 @@ import Book from "./Book";
 import GridContainer from "../forms/fields/GridContainer";
 import { APIaddPublication, APIupdatePublication } from "../../api/publication";
 
-const AddPublication = ({ close, editData = null }) => {
+// onSave lets a caller send the record somewhere other than the student
+// publication endpoints; the field forms below stay the same either way.
+const AddPublication = ({ close, editData = null, onSave = null }) => {
   const [body, setBody] = useState(editData || {});
 
   const handleSelect = (value) => {
@@ -20,6 +21,10 @@ const AddPublication = ({ close, editData = null }) => {
   };
 
   const callback = async (newData) => {
+    if (onSave) {
+      await onSave(body);
+      return;
+    }
     if (editData && editData.id) {
         if (body.publication_type === "patents") {
             await APIupdatePublication(editData.id, body, close, "/patents");
@@ -44,9 +49,8 @@ const AddPublication = ({ close, editData = null }) => {
 
   return (
     <>
-        {body.label && (<h1 className="add-publication-container-h1">{body.label}</h1>)}
-        {!body.label && (<h1 className="add-publication-container-h1">{"Choose a Publication Type"}</h1>)}
-      <div className="add-publication-container">
+        {body.label && (<h1 className="modal-title">{body.label}</h1>)}
+        {!body.label && (<h1 className="modal-title">{"Choose a Publication Type"}</h1>)}
         {!editData && (
           <GridContainer
             elements={[
@@ -114,7 +118,6 @@ const AddPublication = ({ close, editData = null }) => {
             </>
           ) : null}
         </div>
-      </div>
     </>
   );
 };

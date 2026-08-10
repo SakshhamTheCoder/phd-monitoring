@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useFeatures } from '../../context/FeaturesContext';
 import './LandingPage.css';
 
 const LandingPage = () => {
+  const featureFlags = useFeatures();
   const features = [
     {
       title: 'Online Form Submission',
@@ -186,7 +188,7 @@ const LandingPage = () => {
                         refY="3"
                         orient="auto"
                       >
-                        <polygon points="0 0, 10 3, 0 6" fill="#932f2f" />
+                        <polygon points="0 0, 10 3, 0 6" fill="var(--primary-color)" />
                       </marker>
                     </defs>
                     {workflow.map((_, index) => {
@@ -206,7 +208,7 @@ const LandingPage = () => {
                           y1={y1}
                           x2={x2}
                           y2={y2}
-                          stroke="#932f2f"
+                          stroke="var(--primary-color)"
                           strokeWidth="2"
                           markerEnd="url(#arrowhead)"
                           opacity="0.6"
@@ -263,6 +265,7 @@ const LandingPage = () => {
               <h4>Quick Links</h4>
               <ul className="footer-links">
                 <li><Link to="/login">Login</Link></li>
+                {featureFlags.job_openings && <li><Link to="/openings">Research Openings</Link></li>}
                 <li><Link to="/support">Support</Link></li>
                 <li><Link to="/privacy">Privacy Policy</Link></li>
                 <li><Link to="/team">Our Team</Link></li>

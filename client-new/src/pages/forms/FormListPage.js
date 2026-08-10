@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../../components/dashboard/layout";
+import PageHeader from "../../components/pageHeader/PageHeader";
 import FormList from "../../components/forms/formList/FormList";
 import { useLocation } from "react-router-dom";
 import CreateNewBar from "../../components/forms/formList/CreateNewBar";
@@ -13,6 +14,10 @@ import BulkAllocateSupervisors from "../../components/bulkAllocateSupervisors/Bu
 
 const FormListPage = () => {
   const location = useLocation();
+  // The form type is the last path segment: /forms/synopsis-submission
+  const formTypeLabel = (location.pathname.split('/').filter(Boolean).pop() || 'Forms')
+    .replace(/[-_]/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
   const [role, setRole] = useState();
   const [showBar, setShowBar] = useState(false);
   const [showButton, setShowButton] = useState(false);
@@ -45,6 +50,15 @@ const FormListPage = () => {
       setShowButton(false);
     }
   }, [location]);
+  // One place for the page's primary action, so it sits in the header next to
+  // the title instead of floating in a band of its own.
+  const headerAction =
+    role === "student" ? <CreateNewBar />
+    : role === "faculty" && showButton ? <CreateNewBar rollNumber={rollNumber} />
+    : role === "faculty" && modalButtonShow ? (
+      <CustomButton onClick={() => setIsModalOpen(true)} text="Create New Form +" />
+    ) : null;
+
   const handleSearch = (query) => {
     setFilters((prev) => {
       return JSON.stringify(prev) !== JSON.stringify(query) ? query : prev;
@@ -55,23 +69,7 @@ const FormListPage = () => {
     <Layout
       children={
         <>
-          {role === "faculty" && showButton && (
-            <CreateNewBar rollNumber={rollNumber} />
-          )}
-          {role === "faculty" && modalButtonShow && (
-            <GridContainer
-              elements={[
-                <></>,
-                <></>,
-                <>
-                  <CustomButton
-                    onClick={() => setIsModalOpen(true)}
-                    text="Create New Form +"
-                  />
-                </>,
-              ]}
-            />
-          )}
+          <PageHeader title={formTypeLabel} actions={headerAction} />
           {role !== "student" ? (
             <>
               <FilterBar onSearch={handleSearch} />

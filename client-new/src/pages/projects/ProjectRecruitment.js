@@ -1,23 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
 import { positionTypes, formatDate } from '../../data/projectsData';
-import { apiGetProject, apiListPositions, apiAddPosition, apiUpdatePosition, apiDeletePosition, apiListApplications, apiSetApplicationStatus } from '../../api/projects';
+import { badgeClass } from '../../data/badges';
+import { apiGetProject, apiListPositions, apiAddPosition, apiUpdatePosition, apiDeletePosition, apiListApplications, apiSetApplicationStatus, fileUrl } from '../../api/projects';
+import CustomModal from '../../components/forms/modal/CustomModal';
 import { toast } from 'react-toastify';
 import './ProjectRecruitment.css';
 
 const emptyPos = {
-  type: '', title: '', openings: 1, eligibility: '', skills: '',
-  cgpa: '', experience: '', stipend: '', startDate: '', endDate: '', deadline: '', description: '',
+  type: '', title: '', openings: 1, status: 'Open', eligibility: '', skills: '',
+  cgpa: '', stipend: '', deadline: '', description: '',
+  advertisementFile: null, advertisementName: '',
 };
 
 // Map the post-opening form to the backend position body.
 const toPositionBody = (f) => ({
   type: f.type, title: f.title, openings: Number(f.openings) || 1,
+  status: f.status || 'Open',
   stipend: f.stipend || '', deadline: f.deadline || null,
   eligibility: f.eligibility || '', skills: f.skills || '',
   min_cgpa: f.cgpa || '', description: f.description || '',
 });
+
+// The advertisement is a file, so the whole body has to go up as multipart.
+const toPositionForm = (f) => {
+  const fd = new FormData();
+  Object.entries(toPositionBody(f)).forEach(([key, value]) => {
+    if (value !== null && value !== '') fd.append(key, value);
+  });
+  fd.append('advertisement', f.advertisementFile);
+  return fd;
+};
 
 const ProjectRecruitment = () => {
   const { id } = useParams();
@@ -31,6 +45,12 @@ const ProjectRecruitment = () => {
   const [posForm, setPosForm] = useState(emptyPos);
   const [positions, setPositions] = useState([]);
   const [applications, setApplications] = useState([]);
+  const adRef = useRef(null);
+
+  const handleAdvertisement = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) setPosForm(prev => ({ ...prev, advertisementFile: file, advertisementName: file.name }));
+  };
 
   const loadAll = async () => {
     const [p, pos, apps] = await Promise.all([apiGetProject(id), apiListPositions(id), apiListApplications(id)]);
@@ -55,26 +75,20 @@ const ProjectRecruitment = () => {
     selected: posApps.filter(a => a.status === 'Selected').length,
   };
 
-  const appStatusColors = {
-    Applied: { bg: '#e0e7ff', color: '#3730a3' },
-    Shortlisted: { bg: '#fef3c7', color: '#92400e' },
-    'Interview Scheduled': { bg: '#dbeafe', color: '#1e40af' },
-    Selected: { bg: '#dcfce7', color: '#15803d' },
-    Rejected: { bg: '#fee2e2', color: '#b91c1c' },
-  };
-
   // ---- Position CRUD ----
-  const openAddPos = () => { setSelectedPosition(null); setEditingPosIdx(null); setPosForm(emptyPos); setShowPostForm(true); };
+  const clearAdInput = () => { if (adRef.current) adRef.current.value = ''; };
+  const openAddPos = () => { setSelectedPosition(null); setEditingPosIdx(null); setPosForm(emptyPos); clearAdInput(); setShowPostForm(true); };
   const openEditPos = (i) => {
     setEditingPosIdx(i);
     setPosForm({ ...emptyPos, ...positions[i] });
+    clearAdInput();
     setShowPostForm(true);
   };
-  const closePostForm = () => { setShowPostForm(false); setEditingPosIdx(null); setPosForm(emptyPos); };
+  const closePostForm = () => { setShowPostForm(false); setEditingPosIdx(null); setPosForm(emptyPos); clearAdInput(); };
   const publishPosition = async () => {
     if (!posForm.type) { toast.error('Please select a position type.'); return; }
     if (!posForm.title.trim()) { toast.error('Position title is required.'); return; }
-    const body = toPositionBody(posForm);
+    const body = posForm.advertisementFile ? toPositionForm(posForm) : toPositionBody(posForm);
     const res = editingPosIdx !== null
       ? await apiUpdatePosition(project.id, positions[editingPosIdx].id, body)
       : await apiAddPosition(project.id, body);
@@ -84,6 +98,16 @@ const ProjectRecruitment = () => {
       closePostForm();
     }
   };
+  const togglePositionStatus = async (i) => {
+    const pos = positions[i];
+    const status = pos.status === 'Closed' ? 'Open' : 'Closed';
+    const res = await apiUpdatePosition(project.id, pos.id, { status });
+    if (res.success) {
+      setPositions(prev => prev.map((p, idx) => (idx === i ? { ...p, status } : p)));
+      toast.success(status === 'Closed' ? 'Position closed to new applications.' : 'Position reopened.');
+    }
+  };
+
   const deletePosition = async (i) => {
     const res = await apiDeletePosition(project.id, positions[i].id);
     if (res.success) { setPositions(prev => prev.filter((_, idx) => idx !== i)); toast.success('Position deleted.'); }
@@ -105,14 +129,16 @@ const ProjectRecruitment = () => {
         <button className="pr-back-link" onClick={() => navigate(`/projects/${id}`)}>
           <i className="fa fa-arrow-left"></i> BACK TO PROJECT
         </button>
-        <div className="pr-header">
+        <div className="page-header">
           <div>
-            <h1 className="pr-title">Recruitment — {project.title.length > 50 ? project.title.slice(0, 50) + '...' : project.title}</h1>
-            <p className="pr-subtitle">Manage positions and applications for this project.</p>
+            <h1 className="page-title">Recruitment: {project.title.length > 50 ? project.title.slice(0, 50) + '...' : project.title}</h1>
+            <p className="page-subtitle">Manage positions and applications for this project.</p>
           </div>
-          <button className="pr-post-btn" onClick={() => (showPostForm ? closePostForm() : openAddPos())}>
-            <i className="fa fa-plus"></i> Post Opening
-          </button>
+          <div className="page-actions">
+            <button className="pr-post-btn" onClick={() => (showPostForm ? closePostForm() : openAddPos())}>
+              <i className="fa fa-plus"></i> Post Opening
+            </button>
+          </div>
         </div>
 
         {/* Post / Edit Opening Form */}
@@ -132,12 +158,25 @@ const ProjectRecruitment = () => {
                 <input type="text" value={posForm.title} onChange={e => setPosForm({...posForm, title: e.target.value})} placeholder="e.g. Junior Research Fellow — NAS Project" />
               </div>
               <div className="pr-field"><label>Number of Openings</label><input type="number" min="1" value={posForm.openings} onChange={e => setPosForm({...posForm, openings: e.target.value})} /></div>
+              <div className="pr-field">
+                <label>Status</label>
+                <select value={posForm.status} onChange={e => setPosForm({...posForm, status: e.target.value})}>
+                  <option value="Open">Open</option>
+                  <option value="Closed">Closed</option>
+                </select>
+              </div>
               <div className="pr-field"><label>Eligibility</label><input type="text" value={posForm.eligibility} onChange={e => setPosForm({...posForm, eligibility: e.target.value})} placeholder="e.g. M.Tech in CS/ECE" /></div>
               <div className="pr-field"><label>Required Skills</label><input type="text" value={posForm.skills} onChange={e => setPosForm({...posForm, skills: e.target.value})} placeholder="e.g. Python, PyTorch, ML" /></div>
               <div className="pr-field"><label>Min CGPA</label><input type="text" value={posForm.cgpa} onChange={e => setPosForm({...posForm, cgpa: e.target.value})} placeholder="e.g. 7.5" /></div>
               <div className="pr-field"><label>Stipend</label><input type="text" value={posForm.stipend} onChange={e => setPosForm({...posForm, stipend: e.target.value})} placeholder="e.g. ₹31,000/month" /></div>
               <div className="pr-field"><label>Application Deadline</label><input type="date" value={posForm.deadline} onChange={e => setPosForm({...posForm, deadline: e.target.value})} /></div>
-              <div className="pr-field"><label>Advertisement PDF</label><input type="file" accept=".pdf" /></div>
+              <div className="pr-field">
+                <label>Advertisement PDF</label>
+                <input type="file" accept=".pdf" ref={adRef} onChange={handleAdvertisement} />
+                {posForm.advertisementName
+                  ? <span className="pr-field-hint"><i className="fa fa-check-circle"></i> {posForm.advertisementName}</span>
+                  : posForm.advertisementPath && <a className="pr-field-hint" href={fileUrl(posForm.advertisementPath)} target="_blank" rel="noopener noreferrer"><i className="fa fa-file-pdf-o"></i> Current advertisement</a>}
+              </div>
               <div className="pr-field full"><label>Job Description</label><textarea rows="4" value={posForm.description} onChange={e => setPosForm({...posForm, description: e.target.value})} placeholder="Describe the role, responsibilities, and what the candidate will work on — this is shown to students on the Openings portal." /></div>
             </div>
             <div className="pr-form-actions">
@@ -162,15 +201,19 @@ const ProjectRecruitment = () => {
                       <h3 className="pr-pos-title">{pos.title}</h3>
                     </div>
                     <div className="pr-pos-top-right">
+                      <span className={badgeClass(pos.status)}>{pos.status}</span>
                       <span className="pr-pos-deadline"><i className="fa fa-calendar"></i> Deadline: {pos.deadline ? formatDate(pos.deadline) : '—'}</span>
                       <div className="pr-pos-actions">
+                        <button className="pr-pos-edit" onClick={(e) => { e.stopPropagation(); togglePositionStatus(i); }} title={pos.status === 'Closed' ? 'Reopen position' : 'Close position'}>
+                          <i className={`fa ${pos.status === 'Closed' ? 'fa-unlock' : 'fa-lock'}`}></i>
+                        </button>
                         <button className="pr-pos-edit" onClick={(e) => { e.stopPropagation(); openEditPos(i); }} title="Edit position"><i className="fa fa-pencil"></i></button>
                         <button className="pr-pos-delete" onClick={(e) => { e.stopPropagation(); deletePosition(i); }} title="Delete position"><i className="fa fa-trash"></i></button>
                       </div>
                     </div>
                   </div>
                   <div className="pr-pos-stats">
-                    <div className="pr-pos-stat"><span>Openings</span><strong>{pos.openings}</strong></div>
+                    <div className="pr-pos-stat"><span>Filled</span><strong>{pos.selected ?? 0} / {pos.openings}</strong></div>
                     <div className="pr-pos-stat"><span>Stipend</span><strong>{pos.stipend || '—'}</strong></div>
                     <div className="pr-pos-stat"><span>Applicants</span><strong>{pos.applicants ?? 0}</strong></div>
                     <div className="pr-pos-stat"><span>Shortlisted</span><strong>{pos.shortlisted ?? 0}</strong></div>
@@ -179,7 +222,7 @@ const ProjectRecruitment = () => {
                 </div>
               ))
             ) : (
-              <div className="pr-card pr-empty">No positions posted yet. Click "Post Opening" to create one.</div>
+              <div className="empty-state">No positions posted yet. Click "Post Opening" to create one.</div>
             )}
           </>
         )}
@@ -199,19 +242,22 @@ const ProjectRecruitment = () => {
             </div>
             <div className="pr-card">
               {posApps.length > 0 ? (
-                <table className="pr-app-table">
+                <table className="data-table">
                   <thead>
                     <tr><th>Applicant Name</th><th>Position</th><th>Institute</th><th>CGPA</th><th>Status</th><th>Actions</th></tr>
                   </thead>
                   <tbody>
                     {posApps.map(app => (
                       <tr key={app.id}>
-                        <td className="pr-app-name">{app.name}</td>
+                        <td className="pr-app-name">
+                          {app.name}
+                          {!app.verified && <span className="badge badge--neutral pr-app-flag">Unconfirmed email</span>}
+                        </td>
                         <td>{app.position}</td>
                         <td>{app.institute}</td>
                         <td>{app.cgpa}</td>
                         <td>
-                          <span className="pr-app-badge" style={{ background: appStatusColors[app.status]?.bg, color: appStatusColors[app.status]?.color }}>{app.status}</span>
+                          <span className={badgeClass(app.status)}>{app.status}</span>
                         </td>
                         <td>
                           <button className="pr-view-btn" onClick={() => setSelectedApplicant(app)}><i className="fa fa-eye"></i> View</button>
@@ -221,7 +267,7 @@ const ProjectRecruitment = () => {
                   </tbody>
                 </table>
               ) : (
-                <div className="pr-empty" style={{ padding: '2rem', textAlign: 'center', color: '#999' }}>No applications for this position yet.</div>
+                <div className="empty-state" style={{ padding: '2rem', textAlign: 'center', color: '#999' }}>No applications for this position yet.</div>
               )}
             </div>
           </>
@@ -229,15 +275,19 @@ const ProjectRecruitment = () => {
 
         {/* Applicant Detail Modal */}
         {selectedApplicant && (
-          <div className="pr-modal-overlay" onClick={() => setSelectedApplicant(null)}>
-            <div className="pr-modal" onClick={e => e.stopPropagation()}>
-              <button className="pr-modal-close" onClick={() => setSelectedApplicant(null)}><i className="fa fa-times"></i></button>
+          <CustomModal
+            isOpen={!!selectedApplicant}
+            onClose={() => setSelectedApplicant(null)}
+            maxWidth="520px"
+            minHeight="auto"
+          >
+            <>
               <div className="pr-modal-header">
                 <div className="pr-modal-avatar">{selectedApplicant.name.split(' ').map(n => n[0]).join('')}</div>
                 <div>
                   <h2>{selectedApplicant.name}</h2>
                   <p>{selectedApplicant.degree} — {selectedApplicant.institute}</p>
-                  <span className="pr-app-badge" style={{ background: appStatusColors[selectedApplicant.status]?.bg, color: appStatusColors[selectedApplicant.status]?.color }}>{selectedApplicant.status}</span>
+                  <span className={badgeClass(selectedApplicant.status)}>{selectedApplicant.status}</span>
                 </div>
               </div>
               <div className="pr-modal-grid">
@@ -247,7 +297,6 @@ const ProjectRecruitment = () => {
                 <div className="pr-modal-item"><span>CGPA</span><strong>{selectedApplicant.cgpa}</strong></div>
                 <div className="pr-modal-item"><span>Degree</span><strong>{selectedApplicant.degree}</strong></div>
                 <div className="pr-modal-item"><span>Institute</span><strong>{selectedApplicant.institute}</strong></div>
-                <div className="pr-modal-item"><span>Experience</span><strong>{selectedApplicant.experience || '—'}</strong></div>
                 <div className="pr-modal-item"><span>Applied On</span><strong>{selectedApplicant.appliedDate ? formatDate(selectedApplicant.appliedDate) : '—'}</strong></div>
                 <div className="pr-modal-item full"><span>Research Interest</span><strong>{selectedApplicant.research}</strong></div>
                 <div className="pr-modal-item full"><span>Skills</span><strong>{(selectedApplicant.skills || []).join(', ')}</strong></div>
@@ -267,8 +316,8 @@ const ProjectRecruitment = () => {
                 <button className="pr-decision-btn select" onClick={() => setAppStatus('Selected')}><i className="fa fa-check"></i> Select</button>
                 <button className="pr-decision-btn reject" onClick={() => setAppStatus('Rejected')}><i className="fa fa-times"></i> Reject</button>
               </div>
-            </div>
-          </div>
+            </>
+          </CustomModal>
         )}
       </div>
     </Layout>

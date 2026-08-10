@@ -1,0 +1,389 @@
+<?php
+namespace App\Jobs;
+
+use App\Models\Faculty;
+use App\Models\FacultyPublication;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+
+class SyncFacultyPublications implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    // A sync makes one request per Scopus page plus one per ORCID work to read
+    // its authors, so a well published faculty member runs well past the 60
+    // second default and would be killed halfway through the import.
+    public $timeout = 300;
+
+    // store() writes with updateOrCreate keyed on the external id and leaves
+    // manually edited rows alone, so re-running after a failed attempt repeats
+    // the same result rather than duplicating anything.
+    public $tries = 3;
+
+    public function __construct(public int $facultyCode) {}
+
+    public function handle(): void
+    {
+        $faculty = Faculty::find($this->facultyCode);
+        if (!$faculty) return;
+
+        // Scopus runs first on purpose. It is the only source that can say a
+        // paper is in a Scopus journal, so anything it returns is categorised
+        // from real data. ORCID then skips whatever Scopus already has, and its
+        // remaining works are imported without an index claim.
+        //
+        // The recorded source is the one that actually contributed records, not
+        // merely the last call that did not error. An ORCID record with nothing
+        // public on it answers 200 and imports nothing, and reporting that as
+        // "last synced from ORCID" reads as though ORCID supplied the list.
+        $imported = [];
+
+        if ($faculty->scopus_id && config('services.scopus.key')) {
+            if ($this->syncScopus($faculty)) $imported[] = 'scopus';
+        }
+        if ($faculty->orcid_id) {
+            if ($this->syncOrcid($faculty)) $imported[] = 'orcid';
+        }
+
+        if ($imported) {
+            // Scopus wins when both contributed, since it is the source whose
+            // categories are verified.
+            $faculty->last_synced_at = now();
+            $faculty->last_sync_source = in_array('scopus', $imported, true) ? 'scopus' : 'orcid';
+            $faculty->save();
+        }
+    }
+
+    /**
+     * ORCID's public record needs no credentials, only the iD.
+     */
+    private function syncOrcid(Faculty $faculty): bool
+    {
+        try {
+            $response = Http::withHeaders(['Accept' => 'application/json'])
+                ->timeout(30)
+                ->get("https://pub.orcid.org/v3.0/{$faculty->orcid_id}/works");
+            if (!$response->successful()) {
+                Log::warning("ORCID sync failed for {$faculty->faculty_code}: HTTP " . $response->status());
+                return false;
+            }
+            // DOIs already imported from Scopus, so the same paper is not listed
+            // twice under two sources. Scopus knows the journal is indexed; the
+            // ORCID copy of the same work does not, so the Scopus one wins.
+            $seenDois = FacultyPublication::where('faculty_code', $faculty->faculty_code)
+                ->where('source', 'scopus')
+                ->pluck('doi_link')
+                ->filter()
+                ->map(fn ($doi) => strtolower(trim($doi)))
+                ->all();
+
+            $imported = 0;
+
+            foreach ($response->json('group', []) as $group) {
+                $summary = $group['work-summary'][0] ?? null;
+                if (!$summary) continue;
+
+                $doi = $this->orcidDoi($summary);
+                if ($doi && in_array(strtolower(trim($doi)), $seenDois, true)) {
+                    continue;
+                }
+
+                $type = $this->orcidType($summary['type'] ?? '');
+                $venue = data_get($summary, 'journal-title.value');
+
+                $this->store($faculty, [
+                    'external_id' => 'orcid:' . ($summary['put-code'] ?? ''),
+                    'source' => 'orcid',
+                    'title' => data_get($summary, 'title.title.value'),
+                    'name' => $venue,
+                    'authors' => $this->orcidAuthors($faculty, $summary['put-code'] ?? null),
+                    'year' => data_get($summary, 'publication-date.year.value'),
+                    'doi_link' => $doi,
+                    'publication_type' => $type,
+                    // ORCID carries no indexing information, so a journal article
+                    // is left unclassified rather than claimed as Scopus indexed.
+                    // A conference is placed by venue name, which is a guess and
+                    // is meant to be corrected by hand.
+                    'type' => $type === 'conference' ? $this->conferenceScope($venue) : null,
+                ]);
+                $imported++;
+            }
+
+            // An ORCID record with nothing public on it answers 200 and imports
+            // nothing; that is not a source worth reporting.
+            return $imported > 0;
+        } catch (\Throwable $e) {
+            Log::warning("ORCID sync error for {$faculty->faculty_code}: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    private function syncScopus(Faculty $faculty): bool
+    {
+        $headers = array_filter([
+            'X-ELS-APIKey' => config('services.scopus.key'),
+            'X-ELS-Insttoken' => config('services.scopus.inst_token'),
+            'Accept' => 'application/json',
+        ]);
+        try {
+            // view=COMPLETE returns the whole author list; the default view
+            // carries only dc:creator, the first author, which is why every
+            // paper was credited to one person.
+            //
+            // COMPLETE caps count at 25, where the default view allows 200, so
+            // asking for more is a 400 and the whole sync fails. Hence paging.
+            $perPage = 25;
+            $start = 0;
+            $entries = [];
+
+            do {
+                $search = Http::withHeaders($headers)->timeout(30)->get(
+                    'https://api.elsevier.com/content/search/scopus',
+                    [
+                        'query' => "AU-ID({$faculty->scopus_id})",
+                        'count' => $perPage,
+                        'start' => $start,
+                        'view' => 'COMPLETE',
+                    ]
+                );
+
+                if (!$search->successful()) {
+                    Log::warning("Scopus sync failed for {$faculty->faculty_code}: HTTP " . $search->status());
+                    return false;
+                }
+
+                $page = $search->json('search-results.entry', []);
+                $entries = array_merge($entries, $page);
+
+                $total = (int) $search->json('search-results.opensearch:totalResults', 0);
+                $start += $perPage;
+
+                // Guard against a malformed page that would otherwise loop.
+            } while (count($page) === $perPage && $start < $total && $start < 2000);
+
+            $imported = 0;
+
+            foreach ($entries as $entry) {
+                if (isset($entry['error'])) continue;
+
+                $publicationType = $this->scopusType(
+                    $entry['subtype'] ?? '',
+                    $entry['prism:aggregationType'] ?? ''
+                );
+                $venue = $entry['prism:publicationName'] ?? null;
+
+                $this->store($faculty, [
+                    'external_id' => 'scopus:' . ($entry['eid'] ?? ''),
+                    'source' => 'scopus',
+                    'title' => $entry['dc:title'] ?? null,
+                    'name' => $venue,
+                    'authors' => $this->scopusAuthors($entry),
+                    'year' => substr($entry['prism:coverDate'] ?? '', 0, 4) ?: null,
+                    'doi_link' => isset($entry['prism:doi']) ? 'https://doi.org/' . $entry['prism:doi'] : null,
+                    'volume' => $entry['prism:volume'] ?? null,
+                    'issn' => isset($entry['prism:issn']) ? (int) preg_replace('/\D/', '', $entry['prism:issn']) : null,
+                    'publication_type' => $publicationType,
+                    // Scopus is the one source that can confirm a journal is
+                    // Scopus indexed, which is what 'non-sci' means on this
+                    // page. It says nothing about SCI, SSCI, ABDC or AHCI, so
+                    // that category is never set automatically.
+                    'type' => match ($publicationType) {
+                        'journal' => 'non-sci',
+                        'conference' => $this->conferenceScope($venue),
+                        default => null,
+                    },
+                ]);
+                $imported++;
+            }
+
+            // Metrics are fetched regardless: citations and h-index are worth
+            // having even when no new publication rows were written.
+            $this->syncScopusMetrics($faculty, $headers);
+            return $imported > 0;
+        } catch (\Throwable $e) {
+            Log::warning("Scopus sync error for {$faculty->faculty_code}: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    private function syncScopusMetrics(Faculty $faculty, array $headers): void
+    {
+        $metrics = Http::withHeaders($headers)->timeout(30)->get(
+            "https://api.elsevier.com/content/author/author_id/{$faculty->scopus_id}",
+            ['view' => 'METRICS']
+        );
+        if (!$metrics->successful()) return;
+        $profile = $metrics->json('author-retrieval-response.0', []);
+        $faculty->citations = data_get($profile, 'coredata.citation-count') ?? $faculty->citations;
+        $faculty->h_index = data_get($profile, 'h-index') ?? $faculty->h_index;
+    }
+
+    /**
+     * A synced record is matched on external_id, so re-running never duplicates.
+     * Anything typed in by hand keeps its own row and is never overwritten.
+     *
+     * A row someone has corrected is left exactly as they left it. Neither
+     * source can tell SCI from Scopus, or a national conference from an
+     * international one, so those corrections are the only accurate data on the
+     * row and rewriting them on every sync made the classification pointless.
+     * Clearing `manually_edited` puts the row back under the sync's control.
+     */
+    private function store(Faculty $faculty, array $fields): void
+    {
+        if (empty($fields['external_id']) || empty($fields['title'])) return;
+
+        $existing = FacultyPublication::where('faculty_code', $faculty->faculty_code)
+            ->where('external_id', $fields['external_id'])
+            ->first();
+
+        if ($existing && $existing->manually_edited) {
+            return;
+        }
+
+        FacultyPublication::updateOrCreate(
+            ['faculty_code' => $faculty->faculty_code, 'external_id' => $fields['external_id']],
+            array_merge($fields, ['verified' => true])
+        );
+    }
+
+    private function orcidDoi(array $summary): ?string
+    {
+        foreach (data_get($summary, 'external-ids.external-id', []) as $id) {
+            if (($id['external-id-type'] ?? '') === 'doi') {
+                return 'https://doi.org/' . ($id['external-id-value'] ?? '');
+            }
+        }
+        return null;
+    }
+
+    private function orcidType(string $type): string
+    {
+        // ORCID v3.0 returns lower case, hyphenated values: "journal-article",
+        // "conference-paper", "book-chapter". Matching the constant style
+        // directly never hit, so every work fell through to 'journal' and
+        // conference papers, books and patents were all filed as journal
+        // articles. Normalising first fixes that, and still matches if ORCID
+        // ever hands back the upper case form.
+        $normalised = strtoupper(str_replace('-', '_', trim($type)));
+
+        return match ($normalised) {
+            'CONFERENCE_PAPER', 'CONFERENCE_ABSTRACT', 'CONFERENCE_POSTER' => 'conference',
+            'BOOK', 'BOOK_CHAPTER', 'EDITED_BOOK' => 'book',
+            'PATENT' => 'patent',
+            default => 'journal',
+        };
+    }
+
+    /**
+     * The full author list from a COMPLETE-view entry.
+     *
+     * Falls back to dc:creator, the first author only, if the author array is
+     * absent, which happens when the key is not entitled to the COMPLETE view.
+     */
+    private function scopusAuthors(array $entry): ?string
+    {
+        $authors = collect($entry['author'] ?? [])
+            ->map(fn ($author) => $author['authname'] ?? $author['ce:indexed-name'] ?? null)
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($authors->isNotEmpty()) {
+            return $authors->implode(', ');
+        }
+
+        return $entry['dc:creator'] ?? null;
+    }
+
+    /**
+     * ORCID's works listing carries no contributors, so the full record has to
+     * be fetched per work. One extra request each, which is why a failure here
+     * is swallowed: an author list is worth having but not worth losing the
+     * publication over.
+     */
+    private function orcidAuthors(Faculty $faculty, $putCode): ?string
+    {
+        if (!$putCode) return null;
+
+        try {
+            $response = Http::withHeaders(['Accept' => 'application/json'])
+                ->timeout(15)
+                ->get("https://pub.orcid.org/v3.0/{$faculty->orcid_id}/work/{$putCode}");
+
+            if (!$response->successful()) return null;
+
+            $names = collect($response->json('contributors.contributor', []))
+                ->map(fn ($contributor) => data_get($contributor, 'credit-name.value'))
+                ->filter()
+                ->unique()
+                ->values();
+
+            return $names->isNotEmpty() ? $names->implode(', ') : null;
+        } catch (\Throwable $e) {
+            Log::warning("ORCID contributors failed for work {$putCode}: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Whether a conference looks national or international, from its name.
+     *
+     * Neither ORCID nor Scopus records this, so it is a guess and is wrong in
+     * both directions: an international conference held in India reads as
+     * national, and a national conference that never says so reads as
+     * international. It is here because a bucket has to be chosen, and it is
+     * deliberately the only place that decides, so changing the rule or
+     * dropping it means editing one method.
+     */
+    private function conferenceScope(?string $venue): string
+    {
+        $name = strtolower((string) $venue);
+
+        if ($name === '') return 'international';
+
+        // "International" wins when both words appear, which is common in
+        // titles like "National Conference on ... International Track".
+        if (str_contains($name, 'international') || str_contains($name, ' ieee ')) {
+            return 'international';
+        }
+        if (str_contains($name, 'national')) {
+            return 'national';
+        }
+
+        return 'international';
+    }
+
+    /**
+     * Scopus subtype, cross-checked against the aggregation type.
+     *
+     * The subtype says what the item is (ar, cp, ch, bk, re, ed) and the
+     * aggregation type says what it appeared in (Journal, Conference
+     * Proceeding, Book, Book Series). A review published in a conference
+     * proceeding is a conference paper, so the container is trusted first.
+     */
+    private function scopusType(string $subtype, string $aggregationType = ''): string
+    {
+        // The subtype says what the item is; the aggregation type only says what
+        // it was printed in. Conference proceedings are routinely published as a
+        // book series (Lecture Notes in Computer Science, Advances in
+        // Intelligent Systems and Computing), so trusting the container first
+        // turned genuine conference papers into book chapters.
+        switch ($subtype) {
+            case 'cp': return 'conference';
+            case 'ch':
+            case 'bk': return 'book';
+        }
+
+        // Only when the subtype says nothing useful does the container decide.
+        $container = strtolower($aggregationType);
+        if (str_contains($container, 'conference')) return 'conference';
+        if (str_contains($container, 'book')) return 'book';
+
+        return 'journal';
+    }
+}

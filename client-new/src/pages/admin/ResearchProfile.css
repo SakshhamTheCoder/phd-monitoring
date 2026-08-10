@@ -1,6 +1,4 @@
 .rp-container {
-    padding: 2rem;
-    background-color: #FAFAFA;
     font-family: 'Inter', sans-serif;
 }
 
@@ -36,12 +34,8 @@
     letter-spacing: 0.5px;
 }
 
-.rp-page-title {
-    color: #900;
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 0;
-}
+/* Title comes from styles/ui.css; it sits inline with the search bar here. */
+.rp-nav-left .page-title { margin: 0; }
 
 .rp-search-bar {
     display: flex;
@@ -105,7 +99,7 @@
     right: 5px;
     width: 20px;
     height: 20px;
-    background: #900;
+    background: var(--primary-color);
     border: 3px solid #FFF;
     border-radius: 50%;
 }
@@ -117,7 +111,7 @@
 }
 
 .rp-designation {
-    color: #900;
+    color: var(--primary-color);
     font-size: 1rem;
     font-weight: 600;
     margin: 0.2rem 0;
@@ -168,7 +162,7 @@
 }
 
 .border-red {
-    border-left: 4px solid #900;
+    border-left: 4px solid var(--primary-color);
 }
 
 .rp-contact-list {
@@ -191,7 +185,7 @@
     height: 32px;
     border-radius: 50%;
     background: #FAFAFA;
-    color: #900;
+    color: var(--primary-color);
 }
 
 .rp-contact-item label {
@@ -290,7 +284,7 @@
 }
 
 .rp-sync-btn {
-    background: #900;
+    background: var(--primary-color);
     color: #FFF;
     border: none;
     padding: 0.75rem 1.5rem;
@@ -299,38 +293,7 @@
     cursor: pointer;
 }
 
-/* Tabs */
-.rp-tabs {
-    display: flex;
-    border-bottom: 1px solid #CCC;
-    margin-bottom: 2rem;
-}
-
-.rp-tabs button {
-    background: none;
-    border: none;
-    padding: 1rem 2rem;
-    font-size: 1rem;
-    font-weight: 500;
-    color: #777;
-    cursor: pointer;
-    position: relative;
-}
-
-.rp-tabs button.active {
-    color: #900;
-    font-weight: 600;
-}
-
-.rp-tabs button.active::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    width: 100%;
-    height: 3px;
-    background: #900;
-}
+/* Tabs come from styles/ui.css */
 
 /* Filter Bar */
 .rp-filter-bar {
@@ -372,24 +335,11 @@
 }
 
 .rp-filter-group button.active {
-    background: #900;
+    background: var(--primary-color);
     color: #FFF;
 }
 
-.rp-filters select {
-    padding: 0.6rem 0.8rem;
-    border: 1px solid #DDD;
-    border-radius: 8px;
-    font-size: 0.88rem;
-    outline: none;
-    font-family: inherit;
-    transition: border 0.2s;
-}
 
-.rp-filters select:focus {
-    border-color: #900;
-    box-shadow: 0 0 0 3px rgba(153,0,0,0.06);
-}
 
 .rp-year-filter {
     display: flex;
@@ -404,7 +354,7 @@
 }
 
 .rp-year-tag {
-    background: #900;
+    background: var(--primary-color);
     color: #FFF;
     padding: 0.2rem 0.5rem;
     border-radius: 4px;
@@ -436,7 +386,7 @@
 .rp-export-btn {
     background: none;
     border: none;
-    color: #900;
+    color: var(--primary-color);
     font-weight: 600;
     font-size: 0.9rem;
     cursor: pointer;
@@ -453,37 +403,9 @@
     font-size: 1.1rem;
 }
 
-.rp-table-wrapper {
-    background: #FFF;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-}
 
-.rp-table-wrapper table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
-}
 
-.rp-table-wrapper th {
-    background: #FAFAFA;
-    padding: 1.2rem 1rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #777;
-    border-bottom: 1px solid #EEE;
-    text-transform: uppercase;
-}
 
-.rp-table-wrapper td {
-    padding: 1rem;
-    font-size: 0.9rem;
-    color: #333;
-    border-bottom: 1px solid #EEE;
-    vertical-align: middle;
-    font-weight: 400 !important;
-}
 
 .status-badge {
     padding: 0.25rem 0.75rem;
@@ -515,8 +437,94 @@
     font-style: italic;
 }
 
-.rp-table-wrapper a {
-    color: #0066CC;
-    text-decoration: none;
+/* Edit, source and modal additions */
+.rp-card-head-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.rp-inline-edit { background: none; border: none; color: var(--primary-color); cursor: pointer; font-size: 0.85rem; padding: 0.2rem 0.4rem; }
+.rp-inline-edit:hover { color: var(--hover-color); }
+
+.rp-id-form { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.5rem; }
+.rp-id-form-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.6rem; }
+
+.rp-btn-outline, .rp-btn-primary { padding: 0.45rem 0.9rem; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+.rp-btn-outline { background: #FFF; border: 1px solid #DDD; color: #444; }
+.rp-btn-primary { background: var(--primary-color); border: 1px solid var(--primary-color); color: #FFF; }
+.rp-btn-primary:hover { background: var(--hover-color); }
+
+.rp-filter-actions { display: flex; align-items: center; gap: 0.6rem; }
+.rp-add-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 0.9rem; background: var(--primary-color); color: #FFF; border: none; border-radius: 8px; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.04em; cursor: pointer; }
+.rp-add-btn:hover { background: var(--hover-color); }
+
+.rp-row-actions { white-space: nowrap; }
+.rp-row-actions button { background: none; border: none; cursor: pointer; color: #777; padding: 0.2rem 0.35rem; }
+.rp-row-actions button:hover { color: var(--primary-color); }
+
+
+
+/* Bulk reclassification.
+   Imported publications arrive with only the category their source could
+   prove, so the common task is moving a batch of them at once. The bar is
+   hidden until something is ticked. */
+.rp-bulk-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 16px;
+    padding: 10px 16px;
+    background: #eef4ff;
+    border: 1px solid #c7d9f7;
+    border-radius: 6px;
+}
+
+.rp-bulk-count {
     font-weight: 600;
+    color: #1b3a6b;
+}
+
+.rp-bulk-bar select {
+    padding: 6px 10px;
+    border: 1px solid #c7d9f7;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.rp-bulk-apply,
+.rp-bulk-clear {
+    padding: 6px 14px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+
+.rp-bulk-apply {
+    background: #1b3a6b;
+    color: #fff;
+}
+
+.rp-bulk-apply:disabled {
+    background: #9bb0cd;
+    cursor: not-allowed;
+}
+
+.rp-bulk-clear {
+    background: #fff;
+    border-color: #c7d9f7;
+    color: #1b3a6b;
+}
+
+/* Narrow, so the checkbox does not push the real columns around. */
+.rp-select-col {
+    width: 34px;
+    text-align: center;
+}
+
+.rp-select-all {
+    margin-left: 12px;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 400;
+    background: none;
+    border: 1px solid #c7d9f7;
+    border-radius: 4px;
+    color: #1b3a6b;
+    cursor: pointer;
 }

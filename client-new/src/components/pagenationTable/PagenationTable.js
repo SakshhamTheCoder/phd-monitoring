@@ -151,13 +151,14 @@ const PagenationTable = ({
             <th>S.No</th>
             {fieldsTitle.map((title, index) => <th key={index}>{title}</th>)}
             {actions.length > 0 && <th>Actions</th>}
+            {!selectMode && <th></th>}
           </tr>
         </thead>
 
         <tbody>
         {forms.length === 0 && (
   <tr className="no-data-row">
-    <td colSpan={fields.length + 2} className="no-data-cell">
+    <td colSpan={fields.length + 3} className="no-data-cell">
       No Data to Display
     </td>
   </tr>
@@ -167,8 +168,10 @@ const PagenationTable = ({
             return (
               <tr
                 key={formId}
-                className={`form-row ${selectMode && selectedForms.has(formId) ? "selected-row" : ""}`}
+                className={`form-row row-link ${selectMode && selectedForms.has(formId) ? "selected-row" : ""}`}
+                tabIndex={0}
                 onClick={() => selectMode ? toggleSelectOne(formId) : openForm(form)}
+                onKeyDown={(e) => e.key === "Enter" && (selectMode ? toggleSelectOne(formId) : openForm(form))}
               >
                 {selectMode && (
                   <td>
@@ -224,6 +227,9 @@ const PagenationTable = ({
                       )}
                     </div>
                   </td>
+                )}
+                {!selectMode && (
+                  <td className="row-go" title="Open"><i className="fa fa-angle-right"></i></td>
                 )}
               </tr>
             );

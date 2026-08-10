@@ -34,7 +34,7 @@ const PrivacyPolicy = () => {
           </p>
 
           <section className="tw-mb-8">
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-[#932f2f] tw-pl-4">
+            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-brand tw-pl-4">
               Introduction
             </h2>
             <p className="tw-text-gray-700 tw-leading-relaxed">
@@ -46,7 +46,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section className="tw-mb-8">
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-[#932f2f] tw-pl-4">
+            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-brand tw-pl-4">
               Information We Collect
             </h2>
             <p className="tw-text-gray-700 tw-leading-relaxed tw-mb-3">
@@ -60,7 +60,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section className="tw-mb-8">
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-[#932f2f] tw-pl-4">
+            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-brand tw-pl-4">
               How We Use Your Information
             </h2>
             <p className="tw-text-gray-700 tw-leading-relaxed tw-mb-3">
@@ -74,7 +74,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section className="tw-mb-8">
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-[#932f2f] tw-pl-4">
+            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-brand tw-pl-4">
               Data Storage and Security
             </h2>
             <p className="tw-text-gray-700 tw-leading-relaxed tw-mb-3">
@@ -89,7 +89,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section className="tw-mb-8">
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-[#932f2f] tw-pl-4">
+            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-brand tw-pl-4">
               Sharing Your Information
             </h2>
             <p className="tw-text-gray-700 tw-leading-relaxed">
@@ -99,7 +99,7 @@ const PrivacyPolicy = () => {
           </section>
 
           <section className="tw-mb-8">
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-[#932f2f] tw-pl-4">
+            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-brand tw-pl-4">
               Your Rights
             </h2>
             <p className="tw-text-gray-700 tw-leading-relaxed tw-mb-3">
@@ -111,12 +111,12 @@ const PrivacyPolicy = () => {
               <li><strong>Deletion:</strong> You have the right to request the deletion of your personal information, subject to legal and contractual restrictions.</li>
             </ul>
             <p className="tw-text-gray-700 tw-leading-relaxed tw-mt-3">
-              To exercise these rights, please contact us at <a href="mailto:sbhagat_be23@thapar.edu" className="tw-text-[#932f2f] hover:tw-underline tw-font-semibold">sbhagat_be23@thapar.edu</a>.
+              To exercise these rights, please contact us at <a href="mailto:sbhagat_be23@thapar.edu" className="tw-text-brand hover:tw-underline tw-font-semibold">sbhagat_be23@thapar.edu</a>.
             </p>
           </section>
 
           <section className="tw-mb-8">
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-[#932f2f] tw-pl-4">
+            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-brand tw-pl-4">
               Changes to This Privacy Policy
             </h2>
             <p className="tw-text-gray-700 tw-leading-relaxed">
@@ -127,20 +127,20 @@ const PrivacyPolicy = () => {
           </section>
 
           <section className="tw-mb-8">
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-[#932f2f] tw-pl-4">
+            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-brand tw-pl-4">
               Contact Us
             </h2>
             <p className="tw-text-gray-700 tw-leading-relaxed tw-mb-3">
               If you have any questions or concerns about this Privacy Policy or our data practices, please contact us at:
             </p>
-            <div className="tw-bg-gray-50 tw-p-6 tw-rounded-r-lg tw-border-l-4 tw-border-l-[#932f2f] tw-shadow-sm tw-space-y-2">
-              <p><strong>Email:</strong> <a href="mailto:sbhagat_be23@thapar.edu" className="tw-text-[#932f2f] hover:tw-underline tw-font-semibold">sbhagat_be23@thapar.edu</a></p>
+            <div className="tw-bg-gray-50 tw-p-6 tw-rounded-r-lg tw-border-l-4 tw-border-l-brand tw-shadow-sm tw-space-y-2">
+              <p><strong>Email:</strong> <a href="mailto:sbhagat_be23@thapar.edu" className="tw-text-brand hover:tw-underline tw-font-semibold">sbhagat_be23@thapar.edu</a></p>
               <p><strong>Address:</strong> Thapar Institute of Engineering & Technology, Patiala</p>
             </div>
           </section>
 
           <section>
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-[#932f2f] tw-pl-4">
+            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-brand tw-pl-4">
               Links
             </h2>
             <p className="tw-text-gray-700 tw-leading-relaxed">

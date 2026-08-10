@@ -43,26 +43,7 @@
     background-color: var(--hover-color);
     cursor: pointer;
 }
-
-
-
-.field-editable {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-  
-  .field-readonly {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 10px;
-    background-color: #f5f5f5;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    cursor: not-allowed;
-  }
+  /* .input-field and its readonly state come from Fields.css */
   
 
   .semester-header {
@@ -78,3 +59,11 @@
     font-size: 14px;
   }
   
+/* Actions sit inline. They used to be wrapped in flex:1 boxes. */
+.semester-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+

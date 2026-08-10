@@ -3,6 +3,7 @@ import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import "react-circular-progressbar/dist/styles.css";
 import "./ProfileCard.css";
+import { facultyNameCell } from "../facultyLink/FacultyLink";
 
 import { formatDate } from "../../utils/timeParse";
 import { baseURL } from "../../api/urls";
@@ -206,6 +207,7 @@ const [userRole, setUserRole] = useState('');
         };
       }
       return {
+        faculty_code: sup.faculty_code,
         name: sup.name || "—",
         email: sup.email || "—",
         phone: sup.phone || "—",
@@ -214,6 +216,7 @@ const [userRole, setUserRole] = useState('');
     });
 
     const doctoralTableData = (doctoral || []).map((member) => ({
+      faculty_code: member.faculty_code,
       name: member.name || "—",
       email: member.email || "—",
       phone: member.phone || "—",
@@ -256,7 +259,7 @@ const [userRole, setUserRole] = useState('');
                 text={`${overall_progress}%`}
                 styles={buildStyles({
                   textColor: "#111827",
-                  pathColor: "#2563eb",
+                  pathColor: "var(--primary-color)",
                   trailColor: "#e5e7eb",
                 })}
               />
@@ -292,7 +295,7 @@ const [userRole, setUserRole] = useState('');
             text={`${overall_progress}%`}
             styles={buildStyles({
               textColor: '#111827',
-              pathColor: '#2563eb',
+              pathColor: 'var(--primary-color)',
               trailColor: '#e5e7eb',
             })}
           />
@@ -338,6 +341,7 @@ const [userRole, setUserRole] = useState('');
                 data={supervisorTableData}
                 keys={["name", "email", "phone", "designation"]}
                 titles={["Name", "Email", "Phone", "Designation"]}
+                components={[facultyNameCell]}
               />,
             ]}
             space={3}
@@ -350,6 +354,7 @@ const [userRole, setUserRole] = useState('');
                 data={doctoralTableData}
                 keys={["name", "email", "phone", "designation"]}
                 titles={["Name", "Email", "Phone", "Designation"]}
+                components={[facultyNameCell]}
               />,
             ]}
             space={3}
@@ -406,6 +411,7 @@ const [userRole, setUserRole] = useState('');
                         "Actions",
                       ]}
                       components={[
+                        facultyNameCell,
                         {
                           key: "actions",
                           component: ({ row }) => (
@@ -443,6 +449,7 @@ const [userRole, setUserRole] = useState('');
                         "Actions",
                       ]}
                       components={[
+                        facultyNameCell,
                         {
                           key: "actions",
                           component: ({ row }) => (
@@ -470,15 +477,15 @@ const [userRole, setUserRole] = useState('');
           isOpen={isTagModalOpen}
           onClose={() => setIsTagModalOpen(false)}
         >
-          <div style={{ padding: '1rem' }}>
+          <div>
             <h3>Tag Student with Course</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+            <div className="field-stack">
               <div>
                 <label>Course</label>
                 <select
                   value={tagData.course_id}
                   onChange={(e) => setTagData({ ...tagData, course_id: e.target.value })}
-                  style={{ width: '100%', padding: '0.5rem', borderRadius: '0.25rem', border: '1px solid #d1d5db' }}
+                  className="input-field"
                 >
                   <option value="">Select Course</option>
                   {allCourses.map(course => (
@@ -496,7 +503,7 @@ const [userRole, setUserRole] = useState('');
                   value={tagData.semester}
                   onChange={(e) => setTagData({ ...tagData, semester: e.target.value })}
                   placeholder="e.g., Fall 2024"
-                  style={{ width: '100%', padding: '0.5rem', borderRadius: '0.25rem', border: '1px solid #d1d5db' }}
+                  className="input-field"
                 />
               </div>
               
@@ -505,7 +512,7 @@ const [userRole, setUserRole] = useState('');
                 <select
                   value={tagData.status}
                   onChange={(e) => setTagData({ ...tagData, status: e.target.value })}
-                  style={{ width: '100%', padding: '0.5rem', borderRadius: '0.25rem', border: '1px solid #d1d5db' }}
+                  className="input-field"
                 >
                   <option value="enrolled">Enrolled</option>
                   <option value="completed">Completed</option>
@@ -520,12 +527,12 @@ const [userRole, setUserRole] = useState('');
                     value={tagData.grade}
                     onChange={(e) => setTagData({ ...tagData, grade: e.target.value })}
                     placeholder="e.g., A+"
-                    style={{ width: '100%', padding: '0.5rem', borderRadius: '0.25rem', border: '1px solid #d1d5db' }}
+                  className="input-field"
                   />
                 </div>
               )}
               
-              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1rem' }}>
+              <div className="modal-actions">
                 <CustomButton text="Cancel" onClick={() => setIsTagModalOpen(false)} />
                 <CustomButton text="Tag Course" onClick={handleTagCourse} />
               </div>

@@ -1,30 +1,43 @@
-/* RouteBar.css */
+/* Breadcrumb. Navigation, not a heading, so it stays quiet: the page's own
+   title is the heading. It used to shout the route in bold brand red directly
+   under a second copy of the same word. */
 .route-bar {
-    padding: 12px 20px;
-    background-color: var(--background-color); /* Light background for contrast */
-    color: var(--primary-color);
-    font-size: 14px;
-    font-weight: 600;
+    padding: 0;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-subtle);
 }
 
-.route-bar ul {
-    list-style: none; /* Remove default list styling */
-    display: flex; /* Display items in a row */
-    margin: 0; /* Remove default margin */
+.route-bar ol {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
 }
 
 .route-bar li {
-    margin: 0 2px; /* Spacing between items */
+    display: flex;
+    align-items: center;
+}
+
+.route-sep {
+    margin: 0 0.4rem;
+    color: #CCC;
 }
 
 .route-bar a {
-    text-decoration: underline;
+    color: var(--text-muted);
+    text-decoration: none;
+}
+
+.route-bar a:hover {
     color: var(--primary-color);
-    transition: color 0.1 ease; /* Smooth color transition */
-  }
-  
-  .route-bar a:hover {
-    text-decoration: underline; /* Underline on hover */
-    color: var(--hover-color); /* Change color on hover */
-  }
-  
+    text-decoration: underline;
+}
+
+.route-bar [aria-current="page"] {
+    color: var(--text-color);
+    font-weight: 600;
+}

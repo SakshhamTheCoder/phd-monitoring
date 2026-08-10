@@ -1,19 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Layout from '../../components/dashboard/layout';
 import { formatDate } from '../../data/projectsData';
+import { badgeClass } from '../../data/badges';
 import { apiOpenings, apiApply, apiMyApplications, apiApplicantProfile } from '../../api/openings';
+import CustomModal from '../../components/forms/modal/CustomModal';
+import Tabs from '../../components/tabs/Tabs';
+import CustomButton from '../../components/forms/fields/CustomButton';
 import { toast } from 'react-toastify';
 import './Openings.css';
 
 const emptyApply = { name: '', email: '', phone: '', degree: '', institute: '', cgpa: '', skills: '', research: '', resume: '', resumeFile: null, coverNote: '' };
-
-const statusColors = {
-  Applied: { bg: '#e0e7ff', color: '#3730a3' },
-  Shortlisted: { bg: '#fef3c7', color: '#92400e' },
-  'Interview Scheduled': { bg: '#dbeafe', color: '#1e40af' },
-  Selected: { bg: '#dcfce7', color: '#15803d' },
-  Rejected: { bg: '#fee2e2', color: '#b91c1c' },
-};
 
 const Openings = () => {
   const today = new Date().toISOString().split('T')[0];
@@ -125,24 +121,30 @@ const Openings = () => {
   return (
     <Layout>
       <div className="op-container">
-        <div className="op-header">
-          <h1 className="op-page-title">Openings</h1>
-          <p className="op-subtitle">Browse research positions and internships, and apply directly through the portal.</p>
+        <div className="page-header">
+          <div>
+            <h1 className="page-title">Openings</h1>
+            <p className="page-subtitle">Browse research positions and internships, and apply directly through the portal.</p>
+          </div>
         </div>
 
-        <div className="op-tabs">
-          <button className={`op-tab ${tab === 'All' ? 'active' : ''}`} onClick={() => setTab('All')}>All ({openPositions.length})</button>
-          <button className={`op-tab ${tab === 'Applied' ? 'active' : ''}`} onClick={() => setTab('Applied')}>Applied ({myApps.length})</button>
-          <button className={`op-tab ${tab === 'Closed' ? 'active' : ''}`} onClick={() => setTab('Closed')}>Closed ({closedPositions.length})</button>
-        </div>
+        <Tabs
+          value={tab}
+          onChange={setTab}
+          items={[
+            { value: 'All', label: `All (${openPositions.length})` },
+            { value: 'Applied', label: `Applied (${myApps.length})` },
+            { value: 'Closed', label: `Closed (${closedPositions.length})` },
+          ]}
+        />
 
         {tab === 'All' && (openPositions.length ? (
           <div className="op-grid">{openPositions.map(p => renderPosCard(p, false))}</div>
-        ) : <div className="op-empty">No open positions right now. Check back soon.</div>)}
+        ) : <div className="empty-state">No open positions right now. Check back soon.</div>)}
 
         {tab === 'Closed' && (closedPositions.length ? (
           <div className="op-grid">{closedPositions.map(p => renderPosCard(p, true))}</div>
-        ) : <div className="op-empty">No closed positions.</div>)}
+        ) : <div className="empty-state">No closed positions.</div>)}
 
         {tab === 'Applied' && (myApps.length ? (
           <div className="op-grid">
@@ -154,7 +156,7 @@ const Openings = () => {
                     <h3 className="op-title">{a.positionTitle}</h3>
                     <p className="op-project"><i className="fa fa-flask"></i> {a.projectTitle}</p>
                   </div>
-                  <span className="op-status" style={{ background: statusColors[a.status]?.bg, color: statusColors[a.status]?.color }}>{a.status}</span>
+                  <span className={badgeClass(a.status)}>{a.status}</span>
                 </div>
                 <div className="op-meta">
                   <span><i className="fa fa-calendar"></i> Applied on {formatDate(a.appliedDate)}</span>
@@ -168,13 +170,12 @@ const Openings = () => {
               </div>
             ))}
           </div>
-        ) : <div className="op-empty">You haven't applied to any openings yet.</div>)}
+        ) : <div className="empty-state">You haven't applied to any openings yet.</div>)}
 
         {/* Job Description Modal */}
         {viewJob && (
-          <div className="op-modal-overlay" onClick={() => setViewJob(null)}>
-            <div className="op-modal" onClick={e => e.stopPropagation()}>
-              <button className="op-modal-close" onClick={() => setViewJob(null)}><i className="fa fa-times"></i></button>
+          <CustomModal isOpen={!!viewJob} onClose={() => setViewJob(null)} maxWidth="560px" minHeight="auto">
+            <>
               <span className="op-type">{viewJob.type}</span>
               <h2 className="op-jd-title">{viewJob.title}</h2>
               <p className="op-jd-project"><i className="fa fa-flask"></i> {viewJob.projectTitle}</p>
@@ -189,26 +190,30 @@ const Openings = () => {
                 ? (<><div className="op-modal-section">Job Description</div><p className="op-jd-text">{viewJob.description}</p></>)
                 : (<><div className="op-modal-section">Job Description</div><p className="op-jd-text op-jd-muted">No description provided for this opening.</p></>)}
               {skillList(viewJob.skills).length > 0 && (<><div className="op-modal-section">Skills</div><div className="op-skills">{skillList(viewJob.skills).map((s, i) => <span key={i} className="op-skill">{s}</span>)}</div></>)}
-              <div className="op-modal-actions">
-                <button className="op-btn-outline" onClick={() => setViewJob(null)}>Close</button>
+              <div className="modal-actions">
+                <CustomButton text="Close" variant="secondary" onClick={() => setViewJob(null)} />
                 {viewJob.deadline && viewJob.deadline < today ? (
-                  <button className="op-btn-primary" disabled style={{ opacity: 0.6 }}>Applications Closed</button>
+                  <CustomButton text="Applications Closed" disabled />
                 ) : appliedKeys.has(String(viewJob.posKey)) ? (
-                  <button className="op-btn-primary" disabled style={{ background: '#dcfce7', color: '#15803d' }}><i className="fa fa-check"></i> Applied</button>
+                  <CustomButton text="Applied" variant="success" disabled />
                 ) : (
-                  <button className="op-btn-primary" onClick={() => { const p = viewJob; setViewJob(null); openApply(p); }}><i className="fa fa-paper-plane"></i> Apply Now</button>
+                  <CustomButton text="Apply Now" onClick={() => { const p = viewJob; setViewJob(null); openApply(p); }} />
                 )}
               </div>
-            </div>
-          </div>
+            </>
+          </CustomModal>
         )}
 
         {/* Apply Modal */}
         {applyFor && (
-          <div className="op-modal-overlay" onClick={() => setApplyFor(null)}>
-            <div className="op-modal" onClick={e => e.stopPropagation()}>
-              <button className="op-modal-close" onClick={() => setApplyFor(null)}><i className="fa fa-times"></i></button>
-              <h2 className="op-modal-title">Apply — {applyFor.title}</h2>
+          <CustomModal
+            isOpen={!!applyFor}
+            onClose={() => setApplyFor(null)}
+            title={`Apply: ${applyFor.title}`}
+            maxWidth="560px"
+            minHeight="auto"
+          >
+            <>
               <p className="op-modal-sub">{applyFor.type} &middot; {applyFor.projectTitle}</p>
 
               <div className="op-modal-section">Contact Details</div>
@@ -237,12 +242,12 @@ const Openings = () => {
               </div>
               <div className="op-field full"><label>Cover Note</label><textarea rows="3" value={form.coverNote} onChange={e => setForm({ ...form, coverNote: e.target.value })} placeholder="A short statement of purpose (optional)…" /></div>
 
-              <div className="op-modal-actions">
-                <button className="op-btn-outline" onClick={() => setApplyFor(null)}>Cancel</button>
-                <button className="op-btn-primary" onClick={submitApply}><i className="fa fa-paper-plane"></i> Submit Application</button>
+              <div className="modal-actions">
+                <CustomButton text="Cancel" variant="secondary" onClick={() => setApplyFor(null)} />
+                <CustomButton text="Submit Application" onClick={submitApply} />
               </div>
-            </div>
-          </div>
+            </>
+          </CustomModal>
         )}
       </div>
     </Layout>

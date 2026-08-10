@@ -5,7 +5,6 @@ import { formatDate } from '../../utils/timeParse';
 import CustomButton from '../forms/fields/CustomButton';
 import AddPublication from './AddPublication';
 import CustomModal from '../forms/modal/CustomModal';
-import './AddPublication.css';
 
 const ShowPublications = ({
     formData,
@@ -104,7 +103,7 @@ const ShowPublications = ({
                     <GridContainer elements={[]} space={3} />
                     {enableSubmit && (
                         <GridContainer elements={[
-                            <h1 className='title-modal'>{enableSubmit && ("Link ")}Publications</h1>,
+                            <h1 className='modal-title'>{enableSubmit && ("Link ")}Publications</h1>,
                             <CustomButton text="Add New" onClick={openModal} />
                         ]}
                          space={2}

@@ -1,3 +1,4 @@
+/* Table look comes from styles/ui.css. */
 
     .form-list-container {
       padding: 20px;
@@ -11,24 +12,8 @@
       margin-bottom: 20px;
       background-color: #f8f9fa;
     }
-  .form-row{
-    cursor: pointer;
-  }
-  .form-table th {
-    background-color: #f1f1f1;
-    font-weight: bold;
-    padding: 12px;
-    text-align: left;
-  }
   
-  .form-table td {
-    padding: 12px;
-    border-bottom: 1px solid #ddd;
-  }
   
-  .form-table tr:hover {
-    background-color: #f0f0f0;
-  }
   
   .selected-row {
     background-color: #d7ecff;
@@ -43,7 +28,7 @@
   .pagination button {
     padding: 5px 10px;
     margin: 0 5px;
-    background-color: #007bff;
+    background-color: var(--primary-color);
     color: white;
     border: none;
     border-radius: 4px;

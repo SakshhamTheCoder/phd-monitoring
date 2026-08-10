@@ -4,9 +4,11 @@ import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
 import GridContainer from '../forms/fields/GridContainer';
 import CustomButton from '../forms/fields/CustomButton';
+import CustomModal from '../forms/modal/CustomModal';
 import InputSuggestions from '../forms/fields/InputSuggestions';
 import DropdownField from '../forms/fields/DropdownField';
 import TableComponent from '../forms/table/TableComponent';
+import { facultyNameCell } from '../facultyLink/FacultyLink';
 
 
 const SupervisorDoctoralManager = ({ studentId, supervisors = [], doctoralCommittee = [], onClose }) => {
@@ -188,6 +190,7 @@ const SupervisorDoctoralManager = ({ studentId, supervisors = [], doctoralCommit
               keys={['name', 'email', 'phone', 'designation', 'actions']}
               titles={['Name', 'Email', 'Phone', 'Designation', 'Actions']}
               components={[
+                facultyNameCell,
                 {
                   key: 'actions',
                   component: ({ row }) => (
@@ -224,6 +227,7 @@ const SupervisorDoctoralManager = ({ studentId, supervisors = [], doctoralCommit
               keys={['name', 'email', 'phone', 'designation', 'actions']}
               titles={['Name', 'Email', 'Phone', 'Designation', 'Actions']}
               components={[
+                facultyNameCell,
                 {
                   key: 'actions',
                   component: ({ row }) => (
@@ -247,35 +251,13 @@ const SupervisorDoctoralManager = ({ studentId, supervisors = [], doctoralCommit
         space={3}
       />
 
-      {showAddModal && (
-        <div className="modal-overlay" style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            background: 'white',
-            padding: '2rem',
-            borderRadius: '0.5rem',
-            maxWidth: '600px',
-            width: '90%',
-            maxHeight: '80vh',
-            overflow: 'auto'
-          }}>
-            <h3>
-              {operationType === 'add' && 'Add'} 
-              {operationType === 'remove' && 'Remove'} 
-              {operationType === 'replace' && 'Replace'} 
-              {' '}
-              {changeType === 'supervisor' ? 'Supervisor' : 'Doctoral Committee Member'}
-            </h3>
+      <CustomModal
+        isOpen={showAddModal}
+        onClose={() => { setShowAddModal(false); resetForm(); }}
+        title={`${operationType === 'add' ? 'Add' : operationType === 'remove' ? 'Remove' : 'Replace'} ${changeType === 'supervisor' ? 'Supervisor' : 'Doctoral Committee Member'}`}
+        maxWidth="600px"
+        minHeight="auto"
+      >
             
             {operationType !== 'remove' && (
               <>
@@ -335,29 +317,19 @@ const SupervisorDoctoralManager = ({ studentId, supervisors = [], doctoralCommit
                 />
               ]}
             />
-
-            <div style={{ 
-              display: 'flex', 
-              gap: '1rem', 
-              justifyContent: 'flex-end',
-              marginTop: '1rem'
-            }}>
-              <CustomButton
-                text="Cancel"
-                onClick={() => {
-                  setShowAddModal(false);
-                  resetForm();
-                }}
-              />
-              <CustomButton
-                text={loading ? 'Submitting...' : 'Submit Request'}
-                onClick={handleProposeChange}
-                disabled={loading}
-              />
-            </div>
-          </div>
+        <div className="modal-actions">
+          <CustomButton
+            text="Cancel"
+            variant="secondary"
+            onClick={() => { setShowAddModal(false); resetForm(); }}
+          />
+          <CustomButton
+            text={loading ? 'Submitting...' : 'Submit Request'}
+            onClick={handleProposeChange}
+            disabled={loading}
+          />
         </div>
-      )}
+      </CustomModal>
 
       <div style={{ marginTop: '2rem', textAlign: 'right' }}>
         <CustomButton text="Close" onClick={onClose} />

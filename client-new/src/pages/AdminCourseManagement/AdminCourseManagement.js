@@ -379,13 +379,13 @@ const AdminCourseManagement = () => {
                 setShowAddModal(false);
                 resetForm();
               }}
-              className="secondary-button"
+              className="custom-button custom-button--secondary"
             >
               Cancel
             </button>
             <button
               onClick={handleAddCourse}
-              className="primary-button"
+              className="custom-button"
               disabled={submitting}
             >
               {submitting ? 'Adding...' : 'Add Course'}
@@ -445,13 +445,13 @@ const AdminCourseManagement = () => {
                 setShowEditModal(false);
                 resetForm();
               }}
-              className="secondary-button"
+              className="custom-button custom-button--secondary"
             >
               Cancel
             </button>
             <button
               onClick={handleEditCourse}
-              className="primary-button"
+              className="custom-button"
               disabled={submitting}
             >
               {submitting ? 'Updating...' : 'Update Course'}
@@ -521,13 +521,13 @@ const AdminCourseManagement = () => {
                 setShowTagModal(false);
                 resetTagData();
               }}
-              className="secondary-button"
+              className="custom-button custom-button--secondary"
             >
               Cancel
             </button>
             <button
               onClick={handleTagStudent}
-              className="primary-button"
+              className="custom-button"
               disabled={submitting}
             >
               {submitting ? 'Tagging...' : 'Tag Student'}
@@ -575,7 +575,7 @@ const AdminCourseManagement = () => {
               }}
             />
             {csvFile && (
-              <p style={{ marginTop: '0.5rem', color: '#3b82f6' }}>
+              <p style={{ marginTop: '0.5rem', color: 'var(--primary-color)' }}>
                 Selected: {csvFile.name}
               </p>
             )}
@@ -587,13 +587,13 @@ const AdminCourseManagement = () => {
                 setShowBulkImportModal(false);
                 setCsvFile(null);
               }}
-              className="secondary-button"
+              className="custom-button custom-button--secondary"
             >
               Cancel
             </button>
             <button
               onClick={handleBulkImport}
-              className="primary-button"
+              className="custom-button"
               disabled={submitting || !csvFile}
             >
               {submitting ? 'Importing...' : 'Import CSV'}
@@ -604,7 +604,6 @@ const AdminCourseManagement = () => {
 
       <style jsx>{`
         .admin-course-management {
-          padding: 2rem;
         }
 
         .page-header {
@@ -614,56 +613,9 @@ const AdminCourseManagement = () => {
           margin-bottom: 2rem;
         }
 
-        .page-title {
-          font-size: 2rem;
-          font-weight: 600;
-          color: #1f2937;
-        }
-
         .header-actions {
           display: flex;
           gap: 1rem;
-        }
-
-        .primary-button {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.75rem 1.5rem;
-          background: #3b82f6;
-          color: white;
-          border: none;
-          border-radius: 0.5rem;
-          font-size: 1rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.3s;
-        }
-
-        .primary-button:hover {
-          background: #2563eb;
-        }
-
-        .primary-button:disabled {
-          background: #9ca3af;
-          cursor: not-allowed;
-        }
-
-        .secondary-button {
-          padding: 0.75rem 1.5rem;
-          background: white;
-          color: #6b7280;
-          border: 1px solid #d1d5db;
-          border-radius: 0.5rem;
-          font-size: 1rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.3s;
-        }
-
-        .secondary-button:hover {
-          background: #f9fafb;
-          border-color: #9ca3af;
         }
 
         .action-button {
@@ -676,8 +628,8 @@ const AdminCourseManagement = () => {
         }
 
         .edit-button {
-          background: #eff6ff;
-          color: #3b82f6;
+          background: var(--primary-wash);
+          color: var(--primary-color);
         }
 
         .edit-button:hover {
@@ -716,11 +668,6 @@ const AdminCourseManagement = () => {
           .header-actions {
             width: 100%;
             flex-direction: column;
-          }
-
-          .primary-button {
-            width: 100%;
-            justify-content: center;
           }
         }
       `}</style>

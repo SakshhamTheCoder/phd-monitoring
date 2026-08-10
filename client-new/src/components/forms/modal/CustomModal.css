@@ -1,50 +1,56 @@
-/* Full-screen overlay */
+/* The shared dialog. The treatment here is the one the projects module worked
+   out: an inset overlay with breathing room so the panel never touches the
+   viewport edge, a softer radius matching the app's cards, and a shadow deep
+   enough to actually read as elevated. It replaced a flatter version, and the
+   five hand-rolled copies in the projects pages now point at this. */
+
 .modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5); /* semi-transparent background */
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000; /* Ensure it is on top */
+    z-index: 1000;
+    padding: 1rem;
 }
 
-/* Modal content container */
 .modal-content {
-    background: white;
-    border-radius: 8px;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
     position: relative;
-    padding: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    overflow: auto;
+    padding: 1.75rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-sizing: border-box;
 }
 
-/* Close button */
 .modal-close-button {
     position: absolute;
-    top: 10px;
-    right: 10px;
+    top: 1rem;
+    right: 1rem;
     background: transparent;
     border: none;
-    font-size: 18px;
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--text-subtle);
     cursor: pointer;
-    outline: none;
+    padding: 0.25rem;
 }
 
-/* Modal title */
+.modal-close-button:hover {
+    color: var(--primary-color);
+}
+
+/* Title type comes from styles/ui.css; this adds the dialog's divider. */
 .modal-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #1f2937;
-    padding: 2px 30px 12px 4px;
-    margin-bottom: 6px;
-    border-bottom: 1px solid #eee;
+    padding-right: 2rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-subtle);
 }
 
-/* Modal body content */
 .modal-body {
-    padding: 10px;
+    padding-top: 0.25rem;
 }

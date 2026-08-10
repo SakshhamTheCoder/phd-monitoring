@@ -3,26 +3,60 @@ name: Trigger Jenkins on Push
 on:
   push:
     branches:
-      - main  # or change to your deployment branch
+      - main
+  # Lets a deploy be re-run from the Actions tab when a trigger fails, instead
+  # of having to push an empty commit to main.
+  workflow_dispatch:
 
 jobs:
   trigger-jenkins:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      JENKINS_URL: https://phdportal.thapar.edu/admin/jenkins
+      JENKINS_AUTH: ${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}
 
     steps:
-      - name: Fetch Jenkins Crumb
+      - name: Fetch Jenkins crumb
         id: get-crumb
         run: |
-          echo "🔐 Getting Jenkins Crumb..."
-          CRUMB_JSON=$(curl -s -u "${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}" \
-            https://phdportal.thapar.edu/admin/jenkins/crumbIssuer/api/json)
+          set -euo pipefail
+
+          # The campus network sometimes drops packets from GitHub runners. With
+          # no timeout curl sat through the kernel's SYN retries for two minutes
+          # before giving up, so cap the attempt and retry instead of waiting.
+          CRUMB_JSON=$(curl --silent --show-error --fail \
+            --connect-timeout 15 --max-time 60 \
+            --retry 5 --retry-delay 10 --retry-all-errors \
+            --user "$JENKINS_AUTH" \
+            "$JENKINS_URL/crumbIssuer/api/json")
 
           CRUMB=$(echo "$CRUMB_JSON" | jq -r '.crumb')
-          echo "crumb=$CRUMB" >> $GITHUB_OUTPUT
 
-      - name: Trigger Jenkins Job
+          # An expired token answers with an HTML login page rather than JSON,
+          # which jq reports as the string "null". Stopping here matters: the
+          # build below would otherwise be posted with an invalid crumb and the
+          # job would still finish green while nothing was ever deployed.
+          if [ -z "$CRUMB" ] || [ "$CRUMB" = "null" ]; then
+            echo "Jenkins returned no crumb. Check the JENKINS_USER and JENKINS_API_TOKEN secrets."
+            exit 1
+          fi
+
+          echo "::add-mask::$CRUMB"
+          echo "crumb=$CRUMB" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger Jenkins job
         run: |
-          echo "🚀 Triggering Jenkins job..."
-          curl -X POST https://phdportal.thapar.edu/admin/jenkins/job/cicd/build \
-            -H "Jenkins-Crumb: ${{ steps.get-crumb.outputs.crumb }}" \
-            --user "${{ secrets.JENKINS_USER }}:${{ secrets.JENKINS_API_TOKEN }}"
+          set -euo pipefail
+
+          # Retries here cover connection failures only. Retrying on an HTTP
+          # error could queue the same build twice.
+          curl --silent --show-error --fail \
+            --connect-timeout 15 --max-time 60 \
+            --retry 3 --retry-delay 10 \
+            --user "$JENKINS_AUTH" \
+            -X POST "$JENKINS_URL/job/cicd/build" \
+            -H "Jenkins-Crumb: ${{ steps.get-crumb.outputs.crumb }}"
+
+          echo "Jenkins build queued."

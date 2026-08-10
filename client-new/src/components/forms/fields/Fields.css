@@ -1,10 +1,19 @@
+/* Sizes to its label. It used to be width:100%, which is why a lone Save
+   became a full-width bar in a dialog, on a stats card and in a section
+   header, each needing its own override. Use --block where a button really
+   should fill its container. */
 .custom-button{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
     padding: 10px 15px;
-    width: 100%;
-    border-radius: 10px;
+    border-radius: var(--radius);
     background-color: var(--primary-color);
     color: white;
 }
+
+.custom-button--block { width: 100%; }
 .custom-button:hover{
     background-color: var(--hover-color);
     cursor: pointer;
@@ -106,31 +115,44 @@
     padding: 10px;
 }
 
+/* The gap under this label used to come from the grid cell's own top padding,
+   so it vanished when that padding was removed. It belongs on the label. */
 .grid-label{
     font-size: 18px;
     font-weight: bold;
     margin-top: 15px;
+    margin-bottom: 12px;
     text-align: left;
-    display: flex; 
-    align-items: center; 
+    display: flex;
+    align-items: center;
+}
+
+/* All the spacing lives in the gap. It used to be split between a 10px gap and
+   10px of padding on every cell, which meant the padding had to stay to keep
+   the rhythm even though it also indented every field inside a GridContainer
+   relative to one outside it. Splitting it also made the grid asymmetric once
+   the horizontal half was removed: 30px between rows, 10px between columns. */
+/* Stacked field blocks had no separation at all, so a label sat directly on
+   the field above it and the submit button touched the last row. */
+.grid-container-wrapper + .grid-container-wrapper,
+.grid-container-wrapper + .form-section,
+.form-section + .grid-container-wrapper {
+    margin-top: 1.5rem;
 }
 
 .grid-container {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
+    gap: 2rem;
 }
 
+/* Left-aligned, because centring a form field was wrong and needed two
+   override rules to undo. Spacing comes from the grid gap above. */
 .grid-item {
-    padding: 10px 10px;
-    border-radius: 5px;
-    text-align: center;
+    text-align: left;
 }
 
-/* Section headings placed inside a GridContainer element must read as headings:
-   left-aligned and bold (fixes headings that were being centred by .grid-item). */
 .grid-item p {
-    text-align: left;
     font-weight: bold;
     margin: 6px 0;
 }
@@ -151,28 +173,64 @@
     text-align: left !important;
 }
 
+/* The required marker. Six shared field components each rendered this as an
+   inline style, while a .req class sat in a page stylesheet where none of
+   them could reach it. */
+.req {
+    color: var(--danger-text);
+    margin-left: 0.25rem;
+}
+
 .input-field-container {
     display: flex;
     flex-direction: column;
     margin: 0px 0;
 }
 
-.input-label {
-    font-weight: bold;
-    margin-bottom: 1px; 
-    font-size: 14px;
-    min-height: 20px; 
+/* The one form label. The projects pages each had their own at 0.78rem and
+   0.8rem, and raw <label> elements fell back to the browser default, so three
+   fields stacked in one dialog could carry three different labels. */
+.input-label,
+.op-field label,
+.pr-field label,
+.cp-field label,
+.pd-ms-field label,
+.pd-modal-field label,
+.rp-id-form label {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #444;
+    margin-bottom: 0.35rem;
+    min-height: 20px;
     text-align: left;
-    display: flex; 
-    align-items: center; 
 }
 
 
-.input-field {
+/* One text input. Nine page-local copies existed, differing only in padding
+   and radius, one of them at 7px. They are listed here rather than repeated,
+   so a field looks the same wherever it is and inherits the readonly and
+   focus treatments below without each page remembering to. */
+.input-field,
+.op-field input,
+.op-field textarea,
+.pr-field input,
+.pr-field select,
+.pr-field textarea,
+.cp-field input,
+.cp-field select,
+.cp-field textarea,
+.pd-ms-field input,
+.pd-ms-field select,
+.pd-modal-field input,
+.rp-id-form input,
+.rp-filters select {
     padding: 0.6rem 0.8rem;
     font-size: 0.9rem;
-    border: 1px solid #DDD;
-    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
     width: 100%;
     box-sizing: border-box;
     outline: none;
@@ -181,24 +239,45 @@
     transition: border 0.2s;
 }
 
-.input-field:focus {
-    border-color: #900;
-    box-shadow: 0 0 0 3px rgba(153,0,0,0.06);
+.input-field:focus,
+.op-field input:focus,
+.op-field textarea:focus,
+.pr-field input:focus,
+.pr-field select:focus,
+.pr-field textarea:focus,
+.cp-field input:focus,
+.cp-field select:focus,
+.cp-field textarea:focus,
+.pd-ms-field input:focus,
+.pd-ms-field select:focus,
+.pd-modal-field input:focus,
+.rp-id-form input:focus,
+.rp-filters select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-tint);
 }
 
-.input-field[readonly] {
-    background-color: #f9f9f9;
-}
-
-/* Disabled fields (e.g. a locked <select>) should match the readonly look
-   instead of the browser's washed-out default, and keep their text legible. */
-.input-field:disabled {
-    background-color: #f9f9f9;
-    color: #333;
-    -webkit-text-fill-color: #333;
+/* A field you cannot edit has to look like one. #f9f9f9 on white was almost
+   invisible, so a completed form read as an editable one. Grey enough to
+   register at a glance, dark enough to stay readable. */
+.input-field[readonly],
+.input-field:disabled,
+.field-readonly {
+    background-color: #F1F2F4;
+    border-color: #E2E4E8;
+    color: #5A5F66;
+    -webkit-text-fill-color: #5A5F66;
     opacity: 1;
     cursor: not-allowed;
 }
+
+/* No focus ring on something that cannot take input. */
+.input-field[readonly]:focus,
+.input-field:disabled:focus {
+    border-color: #E2E4E8;
+    box-shadow: none;
+}
+
 .recommendation-field {
     display: flex;
     align-items: center;
@@ -296,4 +375,32 @@ label:disabled:hover {
     width: 40px;
     text-align: center;
     font-weight: bold;
+}
+
+
+/* Compact: a cell in an editable grid or an inline edit. Smaller than a form
+   field on purpose, but one size rather than three. */
+.cp-milestone-table input,
+.cp-milestone-table select,
+.cp-budget-input,
+.pd-budget-edit-input,
+.pd-sanction-edit input {
+    width: 100%;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-family: inherit;
+    color: var(--text-color);
+    outline: none;
+    box-sizing: border-box;
+}
+
+.cp-milestone-table input:focus,
+.cp-milestone-table select:focus,
+.cp-budget-input:focus,
+.pd-budget-edit-input:focus,
+.pd-sanction-edit input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px var(--primary-tint);
 }

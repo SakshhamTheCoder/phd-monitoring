@@ -7,6 +7,7 @@ import GoogleCallback from './pages/login/GoogleCallback';
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { LoadingProvider, useLoading } from './context/LoadingContext'; // Remove useLoading import
+import { FeaturesProvider, useFeatures } from './context/FeaturesContext';
 import Loader from './components/loader/loader';
 import FormsPage from './pages/forms/FormsPage';
 import FormListPage from './pages/forms/FormListPage';
@@ -22,6 +23,9 @@ import Presentation from './pages/presentations/PresentationForm';
 import ForgotPasswordPage from './pages/forgot-password/ForgotPasswordPage';
 import ResetPasswordPage from './pages/reset-password/ResetPasswordPage';
 import FacultyPage from './pages/faculty/FacultyPage';
+import PublicOpenings from './pages/publicOpenings/PublicOpenings';
+import PublicOpeningDetail from './pages/publicOpenings/PublicOpeningDetail';
+import ApplicationStatus from './pages/publicOpenings/ApplicationStatus';
 import DepartmentPage from './pages/department/Department';
 import AllNotificationsPage from './components/notificationBox/AllNotificationsPage';
 import PresentationSemester from './pages/presentations/PresentationSemester';
@@ -48,7 +52,9 @@ import Openings from './pages/projects/Openings';
 const App = () => {
   return (
     <LoadingProvider>
-      <AppContent />
+      <FeaturesProvider>
+        <AppContent />
+      </FeaturesProvider>
     </LoadingProvider>
   );
 };
@@ -56,6 +62,9 @@ const App = () => {
 const AppContent = () => {
   const { loading } = useLoading();
   const role = localStorage.getItem('userRole');
+  // A switched-off module leaves no route behind, so its address falls through
+  // to the 404 page rather than rendering against an API that answers 404.
+  const features = useFeatures();
   return (
     <>
       {loading && <Loader />}
@@ -82,13 +91,27 @@ const AppContent = () => {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/external-review/:token" element={<ExternalReview />} />
+          {/* One address for openings. A signed-in student gets their own board,
+              which prefills from their profile; everyone else gets the public one. */}
+          {features.job_openings && (
+            <>
+              <Route path="/openings" element={role === 'student' ? <Openings /> : <PublicOpenings />} />
+              <Route path="/openings/:id" element={<PublicOpeningDetail />} />
+              <Route path="/applications/:token" element={<ApplicationStatus />} />
+              <Route path="/applications/:token/verify" element={<ApplicationStatus verify />} />
+            </>
+          )}
 
           {/* Dashboard */}
           <Route path="/home" element={<Dashboard />} />
-          <Route path="/projects" element={<ProjectsOverview />} />
-          <Route path="/projects/create" element={<CreateProject />} />
-          <Route path="/projects/:id" element={<ProjectDetails />} />
-          <Route path="/projects/:id/recruit" element={<ProjectRecruitment />} />
+          {features.job_openings && (role === 'faculty' || role === 'hod' || role === 'phd_coordinator' || role === 'dordc' || role === 'adordc' || role === 'dra' || role === 'director' || role === 'admin') && (
+            <>
+              <Route path="/projects" element={<ProjectsOverview />} />
+              <Route path="/projects/create" element={<CreateProject />} />
+              <Route path="/projects/:id" element={<ProjectDetails />} />
+              <Route path="/projects/:id/recruit" element={<ProjectRecruitment />} />
+            </>
+          )}
           {/* <Route path="/team" element={<Team/>} /> */}
           {role === 'student' && (
             <>
@@ -96,11 +119,16 @@ const AppContent = () => {
 
               <Route path="/publications" element={<Publications />} />
               <Route path="/courses" element={<StudentCourses />} />
-              <Route path="/openings" element={<Openings />} />
 
             </>
           )}
           <Route path="/notifications" element={<AllNotificationsPage />} />
+          {features.research_profile && (
+            <>
+              <Route path="/research-profile" element={<ResearchProfile />} />
+              <Route path="/faculty/:facultyCode/profile" element={<ResearchProfile />} />
+            </>
+          )}
           <Route path="/presentation" element={<PresentationSemester />} />
           <Route path="/presentation/semester" element={<Navigate to="/presentation" replace />} />
 
@@ -147,7 +175,6 @@ const AppContent = () => {
                 <Route path="/outside-experts" element={<OutsideExperts />} />
                 <Route path="/logs" element={<Logs />} />
                 <Route path="/users" element={<UsersPage />} />
-                <Route path="/research-profile" element={<ResearchProfile />} />
 
                 {/* <Route path="/faculty/:roll_no" element={<StudentProfile />} />
               <Route path="/faculty/:roll_no/forms" element={<FormsPage />} />

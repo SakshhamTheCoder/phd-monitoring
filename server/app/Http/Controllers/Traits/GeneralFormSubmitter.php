@@ -14,6 +14,9 @@ use Illuminate\Validation\ValidationException;
 trait GeneralFormSubmitter
 {
     use NotificationManager;
+    // Uploads swapped in by an extraSteps callback queue their superseded file
+    // here, and submitForm decides whether that queue is committed or dropped.
+    use SaveFile;
     private function submitForm($user, Request $request, $form_id, $model, $role, $previousLevel, $nextLevel, callable $extraSteps = null)
     {
         Log::info('Submitting form with ID: ' . $form_id);
@@ -73,11 +76,14 @@ trait GeneralFormSubmitter
 
             $formInstance->addHistoryEntry($this->getSubmissionMessage($user->current_role, $user->name()), $user->name());
             $formInstance->save();
+            // The new paths are persisted, so the files they replaced can go.
+            $this->commitFileDeletions();
             return response()->json([
                 'message' => 'Form submitted successfully',
                 'completed' => $formInstance->completion === 'complete',
             ]);
         } catch (ValidationException $e) {
+            $this->discardFileDeletions();
             Log::error('Validation error in form submission: ' . $e->getMessage());
             return response()->json(['errors' => $e->errors()], 422);
         } catch (QueryException $e) {
@@ -86,11 +92,13 @@ trait GeneralFormSubmitter
             // browser — so it would be shown to the user verbatim. Log the detail and
             // hand back something safe. The deliberate domain exceptions below are
             // written for users and still pass through unchanged.
+            $this->discardFileDeletions();
             Log::error('Database error in form submission: ' . $e->getMessage());
             return response()->json([
                 'message' => 'This could not be saved. Please check the details and try again.',
             ], 403);
         } catch (\Exception $e) {
+            $this->discardFileDeletions();
             Log::error('Error in form submission: ' . $e->getMessage());
             if ($e->getCode() == 201) {
                 return response()->json(['message' => $e->getMessage()], 201);
@@ -164,6 +172,7 @@ trait GeneralFormSubmitter
             case 'adordc':
                 $formInstance->adordc_comments=$request->comments;
                 $formInstance->adordc_lock = true;
+                break;
             case 'dordc':
                 $formInstance->dordc_comments = $request->comments;
                 $formInstance->dordc_lock = true;
@@ -312,7 +321,7 @@ trait GeneralFormSubmitter
                 break;
             case 'adordc':
                 if (!$user->faculty->adordcDepartments->pluck('id')->contains($formInstance->student->department_id)) {
-                    return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                    throw new \Exception('You are not authorized to access this resource');
                 }
                 break;
 

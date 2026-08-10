@@ -1,17 +1,6 @@
-.publication-top-bar{
-    height: 100px;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    padding:  0px 30px;
-}
+/* Layout comes from .page-header in styles/ui.css; the gutter from the shell. */
 .publication-top-bar-right{
     width: 200px;
-}
-.publication-top-bar-left h1{
-    font-size: 24px;
-    font-weight: 700;
-    color: #333;
 }
 .delete-confirm {
   padding: 8px 4px;

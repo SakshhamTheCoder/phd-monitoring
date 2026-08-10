@@ -94,17 +94,25 @@ function StudentTable({ students }) {
             <th onClick={() => handleSort("department")}>Department</th>
             <th onClick={() => handleSort("supervisors")}>Supervisors</th>
             <th onClick={() => handleSort("current_status")}>Current Status</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
           {currentStudents.map((student) => (
-            <tr key={student.roll_no} onClick={() => handleRowClick(student)} className="form-row">
+            <tr
+              key={student.roll_no}
+              className="form-row row-link"
+              tabIndex={0}
+              onClick={() => handleRowClick(student)}
+              onKeyDown={(e) => e.key === "Enter" && handleRowClick(student)}
+            >
               <td>{student.roll_no}</td>
               <td>{student.name}</td>
               <td>{student.email}</td>
               <td>{student.department}</td>
               <td>{student.supervisors?.join(", ")}</td>
               <td>{student.current_status}</td>
+              <td className="row-go" title="Open student"><i className="fa fa-angle-right"></i></td>
             </tr>
           ))}
         </tbody>

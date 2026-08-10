@@ -472,9 +472,11 @@ const AdminFormManagement = () => {
   return (
     <Layout>
     <div className="admin-form-management">
-      <div className="management-header">
-        <h1>Admin Form Management</h1>
-        <p>Manage form stages, locks, and availability per student</p>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Admin Form Management</h1>
+          <p className="page-subtitle">Manage form stages, locks, and availability per student</p>
+        </div>
       </div>
 
       <div className="student-selector-section">

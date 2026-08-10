@@ -7,11 +7,9 @@
     margin-bottom: 6px;
 }
 
-.form-grid-heading {
-    font-size: 1.25rem;
-    color: #1f2937;
-    margin: 0;
-}
+/* The grid heading is the page's title on the forms pages, so it comes from
+   styles/ui.css. It sits inline with the legend, hence no bottom margin. */
+.forms-list-header .page-title { margin: 0; }
 
 .form-legend {
     display: flex;
@@ -73,7 +71,7 @@
 
 .form-card:hover {
     border-color: #f0d3d3;
-    box-shadow: 0 6px 18px -6px rgba(178, 38, 38, 0.28);
+    box-shadow: 0 6px 18px -6px var(--primary-tint);
     transform: translateY(-1px);
 }
 
@@ -116,7 +114,7 @@
 }
 
 .form-card:hover .form-card-arrow {
-    color: var(--primary-color, #b22626);
+    color: var(--primary-color, var(--primary-color));
     transform: translateX(2px);
 }
 

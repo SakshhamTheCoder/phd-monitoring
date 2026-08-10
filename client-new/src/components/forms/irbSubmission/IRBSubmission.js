@@ -51,7 +51,7 @@ const IRBSubmission = ({ formData }) => {
             This submission is awaiting the outside expert's review.
           </span>
           <button onClick={resend} disabled={resending} style={{
-            padding: "8px 14px", background: "#B22626", color: "#fff", border: "none",
+            padding: "8px 14px", background: "var(--primary-color)", color: "#fff", border: "none",
             borderRadius: 6, cursor: resending ? "not-allowed" : "pointer",
             opacity: resending ? 0.6 : 1, fontWeight: 600,
           }}>

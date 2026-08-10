@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import Layout from '../../components/dashboard/layout';
+import PageHeader from '../../components/pageHeader/PageHeader';
 import { useLoading } from '../../context/LoadingContext';
-import { useLocation } from 'react-router-dom';
+import { useFeatures } from '../../context/FeaturesContext';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import FilterBar from '../../components/filterBar/FilterBar';
 import PagenationTable from '../../components/pagenationTable/PagenationTable';
@@ -22,6 +24,8 @@ const FacultyPage = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const { setLoading } = useLoading();
   const location = useLocation();
+  const navigate = useNavigate();
+  const features = useFeatures();
 
   const handleFilterChange = (newFilter) => {
     setFilter(newFilter);
@@ -273,6 +277,7 @@ Jane,,jane.smith@example.com,9876543210,Associate Professor,external,,CHED,Exter
     <Layout
       children={
         <>
+          <PageHeader title="Faculty" subtitle="Directory of internal and external faculty." />
           <FilterBar onSearch={handleFilterChange} />
           <PagenationTable
             key={refreshKey}
@@ -281,7 +286,7 @@ Jane,,jane.smith@example.com,9876543210,Associate Professor,external,,CHED,Exter
             enableApproval={false}
             customOpenForm={openForm}
             extraTopbarComponents={
-              <div style={{ display: 'flex', gap: '10px' }}>
+              <div className="top-actions">
                 <CustomButton
                   text="Bulk Import CSV"
                   variant="secondary"
@@ -297,6 +302,11 @@ Jane,,jane.smith@example.com,9876543210,Associate Professor,external,,CHED,Exter
                 tooltip: 'Edit',
                 onClick: (facultyData) => openForm(facultyData),
               },
+              ...(features.research_profile ? [{
+                icon: <i className="fa fa-user-circle"></i>,
+                tooltip: 'Research Profile',
+                onClick: (facultyData) => navigate(`/faculty/${facultyData.faculty_code}/profile`),
+              }] : []),
             ]}
           />
           <CustomModal
@@ -396,17 +406,13 @@ Jane,,jane.smith@example.com,9876543210,Associate Professor,external,,CHED,Exter
                   }}>
                     Preview: {csvPreview.data.length} row(s) found
                   </div>
-                  <div style={{ overflowX: 'auto' }}>
-                    <table style={{
-                      width: '100%',
-                      borderCollapse: 'collapse',
-                      fontSize: '0.875rem'
-                    }}>
+                  <div className="csv-preview-wrap">
+                    <table className="csv-preview">
                       <thead>
-                        <tr style={{ background: '#f3f4f6' }}>
-                          <th style={{ padding: '0.5rem', border: '1px solid #d1d5db', textAlign: 'left' }}>Row</th>
+                        <tr >
+                          <th>Row</th>
                           {csvPreview.headers.map((header, i) => (
-                            <th key={i} style={{ padding: '0.5rem', border: '1px solid #d1d5db', textAlign: 'left', whiteSpace: 'nowrap' }}>
+                            <th key={i}>
                               {header}
                             </th>
                           ))}
@@ -414,12 +420,12 @@ Jane,,jane.smith@example.com,9876543210,Associate Professor,external,,CHED,Exter
                       </thead>
                       <tbody>
                         {csvPreview.data.map((row, i) => (
-                          <tr key={i} style={{ background: i % 2 === 0 ? 'white' : '#f9fafb' }}>
-                            <td style={{ padding: '0.5rem', border: '1px solid #d1d5db', fontWeight: '500', color: '#6b7280' }}>
+                          <tr key={i}>
+                            <td className="csv-rownum">
                               {row._rowNumber}
                             </td>
                             {csvPreview.headers.map((header, j) => (
-                              <td key={j} style={{ padding: '0.5rem', border: '1px solid #d1d5db' }}>
+                              <td key={j}>
                                 {row[header] || <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>empty</span>}
                               </td>
                             ))}
@@ -498,7 +504,7 @@ Jane,,jane.smith@example.com,9876543210,Associate Professor,external,,CHED,Exter
                   disabled={submitting || !csvFile}
                   style={{
                     padding: '0.75rem 1.5rem',
-                    background: submitting || !csvFile ? '#9ca3af' : '#3b82f6',
+                    background: submitting || !csvFile ? '#9ca3af' : 'var(--primary-color)',
                     color: 'white',
                     border: 'none',
                     borderRadius: '0.5rem',

@@ -3,13 +3,7 @@
 }
 
 /* globals.css */
-:root {
-  --primary-color: #B22626; /* Example primary color */
-  --hover-color: #790c0c;
-  --secondary-color: #deacac; /* Example secondary color */
-  --background-color: #EBEBEB; /* Background color */
-  --text-color: #333; /* Text color */
-}
+/* Tokens live in index.css, which loads first. */
 
 /* Optional: General body styling */
 body {

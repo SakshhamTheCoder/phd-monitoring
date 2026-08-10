@@ -27,7 +27,7 @@
 
 .form-card-list:hover {
     border-color: #f0d3d3;
-    box-shadow: 0 6px 18px -6px rgba(178, 38, 38, 0.28);
+    box-shadow: 0 6px 18px -6px var(--primary-tint);
     transform: translateY(-1px);
 }
 

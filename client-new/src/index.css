@@ -3,6 +3,54 @@
 @tailwind utilities;
 
 /* ==========================================================================
+   Design tokens
+
+   One source of truth for colour, radius and field shape. Loaded before
+   every other stylesheet, so any rule can use these.
+
+   Reach for a token instead of a literal. The codebase drifted into four
+   maroons (#B22626, #932f2f, #900, #700) because there was nowhere obvious
+   to look up the right one.
+
+   Brand red and danger red are deliberately separate. A destructive button
+   and a page heading must not share a colour, or neither reads as intended.
+   ========================================================================== */
+:root {
+    /* Brand */
+    --primary-color: #B22626;
+    --hover-color: #8E1E1E;
+    --primary-tint: rgba(178, 38, 38, 0.06);  /* focus ring */
+    --primary-wash: rgba(178, 38, 38, 0.05);  /* hover background */
+    --secondary-color: #deacac;
+
+    /* Surface and text */
+    --background-color: #EBEBEB;
+    --surface: #FFFFFF;
+    --text-color: #1a1a1a;
+    --text-muted: #666666;
+    --text-subtle: #888888;
+    --border-color: #DDDDDD;
+    --border-subtle: #EEEEEE;
+
+    /* Semantic. Never use these for branding. */
+    --danger: #dc2626;
+    --danger-text: #b91c1c;
+    --danger-bg: #fee2e2;
+    --success: #15803d;
+    --success-bg: #dcfce7;
+    --warning: #a16207;
+    --warning-bg: #fef9c3;
+
+    /* Shape, taken from the form field in Fields.css */
+    --radius-sm: 6px;
+    --radius: 8px;
+    --radius-lg: 12px;
+    --field-padding: 0.6rem 0.8rem;
+    --field-font-size: 0.9rem;
+    --transition: 0.2s;
+}
+
+/* ==========================================================================
    Unified Standalone Page Navbar Styles (Team, Support, Privacy Policy)
    ========================================================================== */
 .page-navbar {

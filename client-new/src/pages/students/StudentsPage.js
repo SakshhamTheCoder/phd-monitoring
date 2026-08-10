@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Layout from "../../components/dashboard/layout";
+import PageHeader from '../../components/pageHeader/PageHeader';
 import { useLocation, useNavigate } from "react-router-dom";
 import FilterBar from "../../components/filterBar/FilterBar";
 import PagenationTable from "../../components/pagenationTable/PagenationTable";
@@ -50,6 +51,7 @@ const StudentsPage = () => {
     <Layout
       children={
         <>
+          <PageHeader title="Students" subtitle="All PhD scholars and their current stage." />
           <FilterBar onSearch={handleFilterChange} />
 
           {role === "admin" ? (

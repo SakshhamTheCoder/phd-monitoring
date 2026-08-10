@@ -1,32 +1,22 @@
+/* Left padding matches .content, so the breadcrumb sits directly above the
+   page title rather than a few pixels off it. */
 .topbar_sub {
-  z-index: 1; /* Ensures the navbar is above other content but below the sidebar */
   display: flex;
   align-items: center;
   justify-content: space-between;
-  /* background-color: var(--primary-color);  */
-  min-height: 50px;
-  padding: 15px 2%;
-  padding-right: 5px;
+  gap: 1rem;
+  padding: 0.7rem 2rem;
 }
 
 .topbar_right {
-  width: 35%;
-  min-width: 80px;
-  max-width: 300px;
   display: flex;
   align-items: center;
-  gap: 20px; /* Set a maximum gap between items */
-  justify-content: center;
+  gap: 20px;
+  flex-shrink: 0;
   cursor: pointer;
 }
 
 
-.topbar_sub h2 {
-  color: black; 
-  margin: 0;
-  margin-left: 20px;
-  font-size: 32px;
-}
 .user_section{
   display: flex;
   align-items: center;

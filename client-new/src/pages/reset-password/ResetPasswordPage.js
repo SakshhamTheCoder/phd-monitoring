@@ -95,7 +95,7 @@ const ResetPasswordPage = () => {
               </button>
             </div>
 
-            <button type="submit" className="tw-bg-[#932f2f] tw-text-white tw-py-2 tw-rounded tw-w-full hover:tw-bg-[#7a2626]">
+            <button type="submit" className="tw-bg-brand tw-text-white tw-py-2 tw-rounded tw-w-full hover:tw-bg-brand-hover">
               Reset Password
             </button>
           </form>

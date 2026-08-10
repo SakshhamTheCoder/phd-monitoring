@@ -1,0 +1,321 @@
+/* ==========================================================================
+   Shared page patterns
+
+   Six things every list page re-implemented: header, tabs, empty state,
+   card, section heading, table. Each page had its own prefixed copy, so
+   the same element drifted apart page by page. The tabs were maroon on
+   Openings and blue on Courses; the page title was four different sizes.
+
+   Buttons and inputs are NOT here. They already exist as .custom-button
+   and .input-field in components/forms/fields/Fields.css. Use those.
+
+   Loaded globally from index.js, after the tokens.
+   ========================================================================== */
+
+/* --- Page header ---------------------------------------------------------
+   Title, optional subtitle, optional right-aligned actions. The topbar
+   already carries a large "Dashboard" heading, so the page title sits below
+   it in scale rather than competing with it. */
+.page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+.page-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-color);
+    margin: 0 0 0.25rem;
+}
+
+.page-subtitle {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin: 0;
+    max-width: 70ch;
+}
+
+.page-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-shrink: 0;
+}
+
+/* --- Tabs ----------------------------------------------------------------
+   Underline style, brand indicator. Scrolls rather than wraps or clips:
+   Progress Monitoring has seven, and the last used to run off the edge. */
+.tabs {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.tab {
+    background: none;
+    border: none;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--text-subtle);
+    cursor: pointer;
+    position: relative;
+    white-space: nowrap;
+}
+
+.tab:hover { color: var(--text-color); }
+
+.tab.active {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.tab.active::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    background: var(--primary-color);
+}
+
+.tab:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+}
+
+/* --- Empty state ---------------------------------------------------------
+   A solid subtle panel. A dashed border reads as a drop target, which is
+   the wrong signal for "there is nothing here yet". */
+.empty-state {
+    background: #FAFAFA;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    padding: 3rem 1.5rem;
+    text-align: center;
+    color: var(--text-subtle);
+    font-size: 0.9rem;
+}
+
+/* --- Card ---------------------------------------------------------------- */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+}
+
+/* --- Section heading, for a titled block inside a page ------------------- */
+.section-heading {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0 0 0.75rem;
+}
+
+/* --- Modal / dialog title ------------------------------------------------
+   Promoted from CustomModal.css, which had the only sensible version. Six
+   near-identical copies existed at 1.15rem, 1.2rem, 22px and 24px.
+   CustomModal keeps its own chrome (the divider) on top of this. */
+.modal-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0 0 1rem;
+}
+
+/* --- Modal footer -------------------------------------------------------- */
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-subtle);
+}
+
+/* --- CSV import preview --------------------------------------------------
+   A grid of raw rows before they are committed, so it is ruled rather than
+   striped: you are checking cells, not scanning records. Written twice
+   inline, in the faculty and user bulk imports, with identical numbers. */
+.csv-preview-wrap {
+    overflow-x: auto;
+}
+
+.csv-preview {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.csv-preview th,
+.csv-preview td {
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    text-align: left;
+}
+
+.csv-preview th {
+    background: #F3F4F6;
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.csv-preview tbody tr:nth-child(even) { background: #FAFAFA; }
+
+.csv-rownum {
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+/* Fields stacked in a column, the common shape inside a dialog. */
+.field-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+/* An explanatory note inside a dialog, above the fields. */
+.modal-note {
+    background: var(--primary-wash);
+    border: 1px solid #F0DADA;
+    border-radius: var(--radius);
+    padding: 0.85rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+/* A modal's fields should share one width rather than each sizing itself. */
+.modal-content .input-field,
+.modal-content select,
+.modal-content .react-datepicker-wrapper {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* --- Badge ---------------------------------------------------------------
+   One pill, eight tones. There were sixteen badge classes and four copies of
+   a status-to-colour map written in JavaScript, each rendering an inline
+   style. The tones are the tint/text pairs those maps already agreed on.
+
+   Semantic first (success / warning / danger / neutral). The remaining tones
+   exist because categories have to be told apart at a glance, not because
+   colour is decoration: pick them from data/badges.js, never by hand. */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.badge--neutral { background: #F3F4F6; color: #374151; }
+.badge--success { background: var(--success-bg); color: var(--success); }
+.badge--warning { background: #FEF3C7; color: #92400E; }
+.badge--danger  { background: var(--danger-bg);  color: var(--danger-text); }
+.badge--info    { background: #E0E7FF; color: #3730A3; }
+.badge--blue    { background: #DBEAFE; color: #1E40AF; }
+.badge--purple  { background: #FCE7F3; color: #9D174D; }
+.badge--accent  { background: var(--primary-wash); color: var(--primary-color); }
+
+/* --- Tables --------------------------------------------------------------
+   Three components render tables with different data contracts, so they keep
+   their own class names, but there is no reason for three different looks.
+   .form-table was defined identically in two separate stylesheets, both
+   global, and only agreed by luck. */
+.data-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    background: var(--surface);
+}
+
+.data-table,
+.form-table,
+.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.data-table th,
+.form-table th,
+.custom-table thead th {
+    background: #F5F5F5;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.data-table td,
+.form-table td,
+.custom-table tbody td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-color);
+    text-align: left;
+}
+
+.data-table tbody tr:last-child td,
+.form-table tbody tr:last-child td,
+.custom-table tbody tr:last-child td { border-bottom: none; }
+
+.data-table tbody tr:hover,
+.form-table tr:hover,
+.custom-table tr:hover { background: #FAFAFA; }
+
+.data-table a,
+.form-table a,
+.custom-table a { color: var(--primary-color); }
+
+/* A table row that opens something. Pointer alone is invisible until the mouse
+   is already on the row, so the trailing chevron carries the signal at rest and
+   the row takes keyboard focus like any other control. */
+.row-link {
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.row-link:hover { background: var(--primary-wash) !important; }
+
+.row-link:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+}
+
+.row-go {
+    width: 1%;
+    text-align: right !important;
+    color: var(--text-subtle);
+}
+
+.row-go i { transition: transform 0.15s; }
+
+.row-link:hover .row-go,
+.row-link:focus-visible .row-go { color: var(--primary-color); }
+
+.row-link:hover .row-go i { transform: translateX(3px); }

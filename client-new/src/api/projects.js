@@ -20,10 +20,12 @@ export const mapDocument = (d) => ({
 });
 export const mapPosition = (p) => ({
   id: p.id, type: p.type, title: p.title, openings: p.openings, stipend: p.stipend,
+  status: p.status || 'Open',
   deadline: p.deadline, eligibility: p.eligibility, skills: p.skills, cgpa: p.min_cgpa,
   description: p.description, advertisementPath: p.advertisement_path,
   applicants: p.applications_count ?? p.applicants ?? 0,
   shortlisted: p.shortlisted_count ?? p.shortlisted ?? 0,
+  selected: p.selected_count ?? p.selected ?? 0,
   projectId: p.project_id, projectTitle: p.project ? p.project.title : p.project_title,
   posKey: p.id,
 });
@@ -31,6 +33,8 @@ export const mapApplication = (a) => ({
   id: a.id, name: a.name, email: a.email, phone: a.phone, degree: a.degree, institute: a.institute,
   cgpa: a.cgpa, research: a.research, skills: a.skills || [], coverNote: a.cover_note,
   status: a.status, appliedDate: a.applied_date,
+  applicantType: a.applicant_type || 'internal',
+  verified: a.email_verified_at !== null && a.email_verified_at !== undefined,
   resume: a.resume_path ? a.resume_path.split('/').pop() : '',
   resumeUrl: a.resume_path ? fileUrl(a.resume_path) : '',
   position: a.position ? a.position.type : a.position_type,
@@ -43,6 +47,7 @@ export const mapProject = (p) => (p ? {
   id: p.id,
   title: p.title, category: p.category, role: p.role, status: p.status,
   amount: p.amount, description: p.description,
+  canEdit: p.can_edit !== false,
   fundingAgency: p.funding_agency, tietShare: p.tiet_share,
   startDate: p.start_date, endDate: p.end_date,
   durationYears: p.duration_years, durationMonths: p.duration_months,
@@ -50,7 +55,12 @@ export const mapProject = (p) => (p ? {
   coPIs: p.co_pis || [], objectives: p.objectives || [], budget: p.budget || {},
   equipmentDetails: p.equipment_details || [],
   sanctionLetterLink: p.sanction_letter_link, sanctionLetterName: p.sanction_letter_name,
-  pi: p.pi || null,
+  pi: p.pi ? {
+    code: p.pi.faculty_code,
+    name: p.pi.user ? `${p.pi.user.first_name || ''} ${p.pi.user.last_name || ''}`.trim() : '',
+    department: p.pi.department ? p.pi.department.name : '',
+    designation: p.pi.designation || '',
+  } : null,
   milestones: (p.milestones || []).map(mapMilestone),
   documents: (p.documents || []).map(mapDocument),
   positions: (p.positions || []).map(mapPosition),
@@ -60,6 +70,9 @@ export const mapProject = (p) => (p ? {
 export const toProjectBody = (form) => ({
   title: form.title,
   category: form.category,
+  role: form.role || '',
+  focus_area: form.focusArea || '',
+  grant_type: form.grantType || '',
   funding_agency: form.fundingAgency,
   description: form.description,
   start_date: form.startDate || null,
@@ -72,6 +85,11 @@ export const toProjectBody = (form) => ({
   objectives: form.objectives || [],
   budget: form.budget || {},
 });
+
+export const apiCurrentFaculty = async () => {
+  const { success, response } = await customFetch(`${baseURL}/faculty/me`, 'GET', {}, false);
+  return success ? response : null;
+};
 
 // ---- projects CRUD ----
 export const apiListProjects = async () => {
@@ -126,8 +144,9 @@ export const apiListPositions = async (projectId) => {
   const { success, response } = await customFetch(`${baseURL}/projects/${projectId}/positions`, 'GET', {}, false);
   return success ? (response || []).map(mapPosition) : [];
 };
-export const apiAddPosition = (projectId, body) => customFetch(`${baseURL}/projects/${projectId}/positions`, 'POST', body, true);
-export const apiUpdatePosition = (projectId, positionId, body) => customFetch(`${baseURL}/projects/${projectId}/positions/${positionId}`, 'POST', body, true);
+const isForm = (body) => body instanceof FormData;
+export const apiAddPosition = (projectId, body) => customFetch(`${baseURL}/projects/${projectId}/positions`, 'POST', body, true, isForm(body));
+export const apiUpdatePosition = (projectId, positionId, body) => customFetch(`${baseURL}/projects/${projectId}/positions/${positionId}`, 'POST', body, true, isForm(body));
 export const apiDeletePosition = (projectId, positionId) => customFetch(`${baseURL}/projects/${projectId}/positions/${positionId}`, 'DELETE');
 
 // ---- applications (faculty) ----

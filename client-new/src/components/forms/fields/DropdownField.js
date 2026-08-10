@@ -24,7 +24,7 @@ const DropdownField = ({ label, options, initialValue, isLocked, onChange, requi
 
     return (
         <div className="input-field-container">
-            {label && (  <label className="input-label">{label}{required && <span style={{ color: 'red', marginLeft: '4px' }}>*</span>}</label>)}
+            {label && (  <label className="input-label">{label}{required && <span className="req">*</span>}</label>)}
             <select
                 className="input-field"
                 value={value}

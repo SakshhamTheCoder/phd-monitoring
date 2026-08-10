@@ -153,12 +153,14 @@ const SupervisorDoctoralApproval = () => {
 
   return (
     <Layout>
-    <div style={{ padding: '2rem' }}>
-      <div style={{ marginBottom: '2rem' }}>
-        <h2>Supervisor & Doctoral Committee Change Approvals</h2>
-        <p style={{ color: '#6b7280', marginTop: '0.5rem' }}>
-          Review and approve/reject pending change requests from HOD and PhD Coordinators
-        </p>
+    <div>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Supervisor &amp; Doctoral Committee Change Approvals</h1>
+          <p className="page-subtitle">
+            Review and approve/reject pending change requests from HOD and PhD Coordinators
+          </p>
+        </div>
       </div>
 
       <CustomButton
@@ -170,45 +172,35 @@ const SupervisorDoctoralApproval = () => {
       {loading ? (
         <p>Loading pending changes...</p>
       ) : pendingChanges.length === 0 ? (
-        <div style={{
-          padding: '2rem',
-          textAlign: 'center',
-          backgroundColor: '#f9fafb',
-          borderRadius: '0.5rem',
-          border: '1px solid #e5e7eb'
-        }}>
-          <p style={{ fontSize: '1.125rem', color: '#6b7280' }}>
-            No pending changes to review
-          </p>
-        </div>
+        <div className="empty-state">No pending changes to review</div>
       ) : (
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
+        <div className="data-table-wrap">
+          <table className="data-table">
             <thead>
-              <tr style={{ backgroundColor: '#f3f4f6', borderBottom: '2px solid #e5e7eb' }}>
-                <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>S.No</th>
-                <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>Student</th>
-                <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>Roll No</th>
-                <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>Department</th>
-                <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>Change Description</th>
-                <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>Reason</th>
-                <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>Requested By</th>
-                <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>Requested Date</th>
-                <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600' }}>Actions</th>
+              <tr>
+                <th>S.No</th>
+                <th>Student</th>
+                <th>Roll No</th>
+                <th>Department</th>
+                <th>Change Description</th>
+                <th>Reason</th>
+                <th>Requested By</th>
+                <th>Requested Date</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {tableData.map((row, index) => (
-                <tr key={index} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '0.75rem' }}>{index + 1}</td>
-                  <td style={{ padding: '0.75rem' }}>{row.student}</td>
-                  <td style={{ padding: '0.75rem' }}>{row.roll_no}</td>
-                  <td style={{ padding: '0.75rem' }}>{row.department}</td>
-                  <td style={{ padding: '0.75rem' }}>{row.change}</td>
-                  <td style={{ padding: '0.75rem' }}>{row.reason}</td>
-                  <td style={{ padding: '0.75rem' }}>{row.requested_by}</td>
-                  <td style={{ padding: '0.75rem' }}>{row.requested_at}</td>
-                  <td style={{ padding: '0.75rem' }}>{row.actions}</td>
+                <tr key={index}>
+                  <td>{index + 1}</td>
+                  <td>{row.student}</td>
+                  <td>{row.roll_no}</td>
+                  <td>{row.department}</td>
+                  <td>{row.change}</td>
+                  <td>{row.reason}</td>
+                  <td>{row.requested_by}</td>
+                  <td>{row.requested_at}</td>
+                  <td>{row.actions}</td>
                 </tr>
               ))}
             </tbody>
@@ -225,11 +217,11 @@ const SupervisorDoctoralApproval = () => {
           setSelectedChange(null);
         }}
       >
-        <div style={{ padding: '1.5rem' }}>
-          <h3 style={{ marginBottom: '1rem' }}>Reject Change Request</h3>
+        <div>
+          <h3 className="modal-title">Reject Change Request</h3>
           
           {selectedChange && (
-            <div style={{ marginBottom: '1rem', padding: '1rem', backgroundColor: '#fef2f2', borderRadius: '0.5rem' }}>
+            <div className="modal-note">
               <p><strong>Student:</strong> {selectedChange.student_name}</p>
               <p><strong>Change:</strong> {getChangeDescription(selectedChange)}</p>
               <p><strong>Requested By:</strong> {selectedChange.requested_by}</p>

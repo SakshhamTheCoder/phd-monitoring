@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 use App\Models\Project;
+use App\Models\PositionApplication;
 use App\Http\Controllers\Traits\SaveFile;
 use App\Http\Controllers\Traits\ProjectAuthorizes;
 use Illuminate\Http\Request;
@@ -13,30 +14,31 @@ class ProjectController extends Controller {
     public function index(Request $request) {
         $user = Auth::user();
         if (!$this->canManage($user)) return response()->json(['message' => 'Not authorized'], 403);
-        $role = optional($user->current_role)->role;
-        $query = Project::query();
-        if (!in_array($role, $this->privileged)) {
-            $query->where('pi_faculty_code', optional($user->faculty)->faculty_code);
-        }
-        return response()->json($query->orderByDesc('id')->get());
+        $projects = $this->visibleTo($user)->orderByDesc('id')->get();
+        $projects->each(fn ($project) => $project->can_edit = $this->owns($user, $project));
+        return response()->json($projects);
     }
 
     public function stats() {
         $user = Auth::user();
         if (!$this->canManage($user)) return response()->json(['message' => 'Not authorized'], 403);
+        $base = $this->visibleTo($user);
         return response()->json([
-            'active' => Project::where('status','Active')->count(),
-            'completed' => Project::where('status','Completed')->count(),
-            'totalFunding' => (int) Project::sum('amount'),
-            'consultancy' => Project::where('category','Consultancy')->count(),
-            'industry' => Project::where('category','Industry')->count(),
-            'international' => Project::where('category','International')->count(),
+            'active' => (clone $base)->where('status','Active')->count(),
+            'completed' => (clone $base)->where('status','Completed')->count(),
+            'totalFunding' => (int) (clone $base)->sum('amount'),
+            'consultancy' => (clone $base)->where('category','Consultancy')->count(),
+            'industry' => (clone $base)->where('category','Industry')->count(),
+            'international' => (clone $base)->where('category','International')->count(),
         ]);
     }
 
     public function show($id) {
-        $project = Project::with(['milestones','documents','positions'])->find($id);
+        $user = Auth::user();
+        $project = Project::with(['milestones','documents','positions','pi.user','pi.department'])->find($id);
         if (!$project) return response()->json(['message' => 'Project not found'], 404);
+        if (!$this->canView($user, $project)) return response()->json(['message' => 'Not authorized'], 403);
+        $project->can_edit = $this->owns($user, $project);
         return response()->json($project);
     }
 
@@ -62,6 +64,7 @@ class ProjectController extends Controller {
         $project->pi_faculty_code = $piCode;
         $this->fill($project, $request);
         $project->save();
+        $this->syncCoPis($project);
         return response()->json($project, 201);
     }
 
@@ -81,21 +84,56 @@ class ProjectController extends Controller {
             $project->sanction_letter_name = $request->file('sanction_letter')->getClientOriginalName();
         } elseif ($request->filled('sanction_letter_link')) {
             // Switching to an external link supersedes any stored file.
-            $this->deleteStoredFile($project->sanction_letter_link);
+            $this->queueFileDeletion($project->sanction_letter_link);
             $project->sanction_letter_link = $request->sanction_letter_link;
             $project->sanction_letter_name = $request->input('sanction_letter_name', 'Sanction Letter');
         }
         $project->save();
+        if ($request->exists('co_pis')) $this->syncCoPis($project);
+        $this->commitFileDeletions();
         return response()->json(['message' => 'Project updated', 'project' => $project]);
     }
 
     public function destroy($id) {
         $user = Auth::user();
-        $project = Project::find($id);
+        $project = Project::with(['documents','positions'])->find($id);
         if (!$project) return response()->json(['message' => 'Project not found'], 404);
         if (!$this->owns($user, $project)) return response()->json(['message' => 'Not authorized'], 403);
+        // The rows cascade, the files on disk do not.
+        $this->queueFileDeletion($project->sanction_letter_link);
+        foreach ($project->documents as $doc) $this->queueFileDeletion($doc->file_path);
+        foreach ($project->positions as $pos) $this->queueFileDeletion($pos->advertisement_path);
+        foreach (PositionApplication::where('project_id', $project->id)->pluck('resume_path') as $resume) {
+            $this->queueFileDeletion($resume);
+        }
         $project->delete();
+        $this->commitFileDeletions();
         return response()->json(['message' => 'Project deleted']);
+    }
+
+    private function visibleTo($user) {
+        $query = Project::query();
+        if (in_array(optional($user->current_role)->role, $this->privileged)) return $query;
+
+        $code = optional($user->faculty)->faculty_code;
+        $department = $this->departmentScope($user);
+        return $query->where(function ($q) use ($code, $department) {
+            $q->where('pi_faculty_code', $code)
+              ->orWhereHas('coPiFaculty', fn ($f) => $f->where('faculty.faculty_code', $code));
+            if ($department !== null) {
+                $q->orWhereHas('pi', fn ($f) => $f->where('department_id', $department));
+            }
+        });
+    }
+
+    /**
+     * projects.co_pis stays the display record; this keeps the access index in
+     * step with it so an internal Co-PI can reach the project.
+     */
+    private function syncCoPis(Project $project) {
+        $codes = collect($project->co_pis ?: [])
+            ->pluck('faculty_code')->filter()->map(fn ($c) => (int) $c)->unique()->all();
+        $project->coPiFaculty()->sync($codes);
     }
 
     private function fill(Project $project, Request $request) {

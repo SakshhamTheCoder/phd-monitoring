@@ -1,30 +1,9 @@
 .admin-form-management {
-  padding: 30px;
   max-width: 1600px;
   margin: 0 auto;
-  min-height: 100vh;
 }
 
-.management-header {
-  margin-bottom: 35px;
-  border-bottom: 3px solid #932f2f;
-  padding-bottom: 20px;
-}
-
-.management-header h1 {
-  font-size: 32px;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin: 0 0 8px 0;
-  letter-spacing: -0.5px;
-}
-
-.management-header p {
-  font-size: 15px;
-  color: #6c757d;
-  margin: 0;
-  font-weight: 400;
-}
+/* Header comes from styles/ui.css */
 
 .student-selector-section {
   margin-bottom: 35px;
@@ -36,7 +15,7 @@
 }
 
 .student-info-card {
-  background: linear-gradient(135deg, #932f2f 0%, #6d2222 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, #6d2222 100%);
   color: white;
   padding: 30px;
   border-radius: 12px;
@@ -112,12 +91,12 @@
 
 .form-grid-card:not(.form-disabled):hover {
   box-shadow: 0 8px 24px rgba(147, 47, 47, 0.2);
-  border-color: #932f2f;
+  border-color: var(--primary-color);
   transform: translateY(-4px);
 }
 
 .form-grid-header {
-  background: linear-gradient(135deg, #932f2f 0%, #6d2222 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, #6d2222 100%);
   padding: 20px;
   color: white;
 }
@@ -244,7 +223,7 @@
 }
 
 .count-badge-mini {
-  background: #932f2f;
+  background: var(--primary-color);
   color: white;
   padding: 4px 12px;
   border-radius: 4px;
@@ -336,8 +315,8 @@
 }
 
 .availability-item:hover {
-  border-color: #932f2f;
-  box-shadow: 0 2px 6px rgba(147, 47, 47, 0.08);
+  border-color: var(--primary-color);
+  box-shadow: 0 2px 6px var(--primary-wash);
 }
 
 .availability-item span:first-child {
@@ -391,7 +370,7 @@
 }
 
 .availability-item-editable:hover {
-  border-color: #932f2f;
+  border-color: var(--primary-color);
   box-shadow: 0 3px 10px rgba(147, 47, 47, 0.12);
 }
 
@@ -501,7 +480,7 @@
 }
 
 .instance-detail-card:hover {
-  border-color: #932f2f;
+  border-color: var(--primary-color);
   box-shadow: 0 4px 12px rgba(147, 47, 47, 0.12);
 }
 
@@ -522,12 +501,12 @@
 
 .instance-id-badge {
   font-weight: 700;
-  color: #932f2f;
+  color: var(--primary-color);
   font-size: 14px;
   background: white;
   padding: 6px 14px;
   border-radius: 6px;
-  border: 1px solid #932f2f;
+  border: 1px solid var(--primary-color);
 }
 
 .instance-card-body {
@@ -576,8 +555,8 @@
 .control-select:focus,
 .control-input:focus {
   outline: none;
-  border-color: #900;
-  box-shadow: 0 0 0 3px rgba(153,0,0,0.06);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-tint);
 }
 
 .steps-display-modal {
@@ -593,12 +572,12 @@
 }
 
 .steps-display-modal .current-step {
-  color: #932f2f;
+  color: var(--primary-color);
   font-weight: 800;
-  background: rgba(147, 47, 47, 0.1);
+  background: var(--primary-tint);
   padding: 2px 6px;
   border-radius: 4px;
-  border: 1px solid #932f2f;
+  border: 1px solid var(--primary-color);
 }
 
 .steps-display-modal .reached-step {
@@ -645,7 +624,7 @@
 
 .lock-item-modal:hover,
 .approval-item-modal:hover {
-  border-color: #932f2f;
+  border-color: var(--primary-color);
   background: white;
 }
 
@@ -731,7 +710,7 @@
   background: #f8f4f1;
   padding: 16px;
   border-radius: 8px;
-  border-left: 4px solid #932f2f;
+  border-left: 4px solid var(--primary-color);
   font-size: 13px;
   color: #5a4a42;
   margin: 24px 0;

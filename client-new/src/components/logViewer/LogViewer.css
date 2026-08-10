@@ -1,90 +1,91 @@
+/* A log console. Dark and monospaced because that is what log output is, but
+   the neon green frame and glow said nothing and made the panel hard to read. */
 .log-terminal {
-    background-color: #000;
-    color: white;
-    font-family: 'Courier New', Courier, monospace;
-    padding: 1rem;
-    border: 2px solid #39ff14;
-    border-radius: 10px;
-    height: 70vh;
-    width: 100%;
-    max-width: 900px;
-    overflow-y: auto;
-    box-shadow: 0 0 12px rgba(57, 255, 20, 0.6);
-    white-space: pre-wrap;
-    line-height: 1.4;
-    margin: auto;
-  }
-  
-  .log-line {
-    margin-bottom: 4px;
-  }
-  
-  /* Scrollbar styling for Webkit browsers */
-  .log-terminal::-webkit-scrollbar {
-    width: 8px;
-  }
-  
-  .log-terminal::-webkit-scrollbar-track {
-    background: #111;
-  }
-  
-  .log-terminal::-webkit-scrollbar-thumb {
-    background-color: #39ff14;
-    border-radius: 4px;
-  }
-  
-  /* Firefox */
-  .log-terminal {
-    scrollbar-color: #39ff14 #111;
-    scrollbar-width: thin;
-  }
-  
-  .log-entry {
-    padding: 10px;
-    border-bottom: 1px solid #333;
-    font-family: monospace;
-    background: #121212;
-    color: #eee;
-  }
-  
-  .log-meta {
-    font-weight: bold;
-    margin-bottom: 4px;
-  }
-  
-  .log-time {
-    color: #9cdcfe;
-    margin-right: 10px;
-  }
-  
-  .log-level {
-    padding: 2px 6px;
-    border-radius: 4px;
-  }
-  
-  .log-info {
-    color: #3fc1c9;
-  }
-  
-  .log-error {
-    color: #ff6b6b;
-  }
-  
-  .log-warning {
-    color: #ffcb6b;
-  }
-  
-  .log-message {
-    margin-left: 20px;
-    white-space: pre-wrap;
-  }
-  
-  .log-json {
-    background: #1e1e1e;
-    padding: 8px;
-    margin: 6px 0 0 20px;
-    border-radius: 4px;
-    color: #b5cea8;
-    overflow-x: auto;
-  }
-  
+  background-color: #16181D;
+  color: #D7DAE0;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  height: 70vh;
+  width: 100%;
+  overflow-y: auto;
+  border: 1px solid #2A2D35;
+  border-radius: var(--radius);
+  scrollbar-color: #3A3E48 #16181D;
+  scrollbar-width: thin;
+}
+
+.log-terminal::-webkit-scrollbar { width: 10px; }
+.log-terminal::-webkit-scrollbar-track { background: #16181D; }
+.log-terminal::-webkit-scrollbar-thumb {
+  background-color: #3A3E48;
+  border: 3px solid #16181D;
+  border-radius: 5px;
+}
+.log-terminal::-webkit-scrollbar-thumb:hover { background-color: #4E535F; }
+
+.log-empty {
+  padding: 2rem;
+  text-align: center;
+  color: #6B7280;
+}
+
+.log-entry,
+.log-line {
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid #21242B;
+}
+
+.log-terminal > :last-child { border-bottom: none; }
+
+.log-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.log-time {
+  color: #8A9199;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The level is the one thing worth spotting at a glance in a wall of text. */
+.log-level {
+  padding: 0.05rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.log-info { color: #7DD3FC; background: rgba(125, 211, 252, 0.12); }
+.log-error { color: #FCA5A5; background: rgba(252, 165, 165, 0.12); }
+.log-warning { color: #FCD34D; background: rgba(252, 211, 77, 0.12); }
+.log-debug { color: #A5B4FC; background: rgba(165, 180, 252, 0.12); }
+
+.log-message {
+  margin-top: 0.25rem;
+  color: #E5E7EB;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.log-json {
+  background: #0F1115;
+  border: 1px solid #24272F;
+  padding: 0.6rem 0.75rem;
+  margin: 0.5rem 0 0;
+  border-radius: 6px;
+  color: #A6C9A0;
+  overflow-x: auto;
+  font-size: 0.75rem;
+}
+
+.log-boundary {
+  padding: 0.5rem 1rem;
+  color: #6B7280;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid #21242B;
+}

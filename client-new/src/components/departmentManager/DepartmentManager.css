@@ -1,0 +1,33 @@
+/* Each role is one card: who holds it, and the action that changes it.
+   Previously three GridContainers stacked a button directly onto a
+   full-width table, so the three roles ran together as one wall. */
+
+.dm-section {
+    margin-bottom: 1.25rem;
+    padding: 1.25rem 1.5rem;
+}
+
+.dm-section:last-of-type {
+    margin-bottom: 0;
+}
+
+.dm-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+/* The section heading carries the card's own bottom margin, so drop its own. */
+.dm-section-head .section-heading {
+    margin: 0;
+}
+
+.dm-none {
+    margin: 0;
+    padding: 1rem 0;
+    color: var(--text-subtle);
+    font-size: 0.88rem;
+}

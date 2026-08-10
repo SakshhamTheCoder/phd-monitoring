@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
 import { filterProjects, formatCurrency } from '../../data/projectsData';
+import { badgeClass } from '../../data/badges';
 import { apiListProjects, apiProjectStats, apiDeleteProject } from '../../api/projects';
+import CustomModal from '../../components/forms/modal/CustomModal';
+import CustomButton from '../../components/forms/fields/CustomButton';
 import './ProjectsOverview.css';
 
 const emptyStats = { active: 0, completed: 0, totalFunding: 0, consultancy: 0, industry: 0, international: 0 };
@@ -47,22 +50,6 @@ const ProjectsOverview = () => {
 
   const filters = ['All', 'Active', 'Completed', 'In-house', 'Research', 'Consultancy', 'Industry', 'International'];
 
-  const categoryColors = {
-    Research: { bg: '#fee2e2', color: '#b91c1c' },
-    Consultancy: { bg: '#fef3c7', color: '#92400e' },
-    International: { bg: '#fce7f3', color: '#9d174d' },
-    'In-house': { bg: '#e0e7ff', color: '#3730a3' },
-    Industry: { bg: '#d1fae5', color: '#065f46' },
-    Other: { bg: '#f3f4f6', color: '#374151' },
-  };
-
-  const statusColors = {
-    Active: { bg: '#dcfce7', color: '#15803d' },
-    Completed: { bg: '#dcfce7', color: '#15803d' },
-    Pending: { bg: '#fef9c3', color: '#a16207' },
-    'On Hold': { bg: '#fee2e2', color: '#b91c1c' },
-  };
-
   const handleExportCSV = () => {
     const headers = ['Project Title', 'Category', 'Role', 'Funding Agency', 'Amount', 'Status'];
     const rows = filteredProjects.map(p => [p.title, p.category, p.role, p.fundingAgency, p.amount, p.status]);
@@ -80,14 +67,16 @@ const ProjectsOverview = () => {
     <Layout>
       <div className="po-container">
         {/* Page Header */}
-        <div className="po-header">
-          <div className="po-header-left">
-            <h1 className="po-page-title">Projects Overview</h1>
-            <p className="po-subtitle">Monitoring all ongoing research initiatives and funding channels.</p>
+        <div className="page-header">
+          <div>
+            <h1 className="page-title">Projects Overview</h1>
+            <p className="page-subtitle">Monitoring all ongoing research initiatives and funding channels.</p>
           </div>
-          <button className="po-create-btn" onClick={() => navigate('/projects/create')}>
-            <i className="fa fa-plus"></i> Create Project
-          </button>
+          <div className="page-actions">
+            <button className="po-create-btn" onClick={() => navigate('/projects/create')}>
+              <i className="fa fa-plus"></i> Create Project
+            </button>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -98,7 +87,6 @@ const ProjectsOverview = () => {
               <span className="po-stat-icon active"><i className="fa fa-rocket"></i></span>
             </div>
             <span className="po-stat-value">{String(stats.active).padStart(2, '0')}</span>
-            <span className="po-stat-trend up"><i className="fa fa-arrow-up"></i> +12% this quarter</span>
           </div>
           <div className="po-stat-card">
             <div className="po-stat-header">
@@ -106,7 +94,6 @@ const ProjectsOverview = () => {
               <span className="po-stat-icon completed"><i className="fa fa-check-circle"></i></span>
             </div>
             <span className="po-stat-value accent">{String(stats.completed).padStart(2, '0')}</span>
-            <span className="po-stat-meta">Cumulative 2015–2026</span>
           </div>
           <div className="po-stat-card wide">
             <div className="po-stat-header">
@@ -114,10 +101,6 @@ const ProjectsOverview = () => {
               <span className="po-stat-icon funding"><i className="fa fa-inr"></i></span>
             </div>
             <span className="po-stat-value large">{formatCurrency(stats.totalFunding)}</span>
-            <div className="po-funding-split">
-              <span className="po-dot internal"></span> Internal: {formatCurrency(stats.totalFunding * 0.6)}
-              <span className="po-dot external"></span> External: {formatCurrency(stats.totalFunding * 0.4)}
-            </div>
           </div>
           <div className="po-stat-card">
             <div className="po-stat-header">
@@ -159,8 +142,8 @@ const ProjectsOverview = () => {
         </div>
 
         {/* Projects Table */}
-        <div className="po-table-wrapper">
-          <table className="po-table">
+        <div className="data-table-wrap">
+          <table className="data-table">
             <thead>
               <tr>
                 <th>PROJECT TITLE</th>
@@ -170,16 +153,23 @@ const ProjectsOverview = () => {
                 <th>AMOUNT</th>
                 <th>STATUS</th>
                 <th></th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {filteredProjects.map(project => (
-                <tr key={project.id} onClick={() => navigate(`/projects/${project.id}`)} className="po-row-clickable">
+                <tr
+                  key={project.id}
+                  className="row-link"
+                  tabIndex={0}
+                  onClick={() => navigate(`/projects/${project.id}`)}
+                  onKeyDown={(e) => e.key === 'Enter' && navigate(`/projects/${project.id}`)}
+                >
                   <td>
                     <div className="po-project-title">{project.title}</div>
                   </td>
                   <td>
-                    <span className="po-category-badge" style={{ background: categoryColors[project.category]?.bg, color: categoryColors[project.category]?.color }}>
+                    <span className={badgeClass(project.category)}>
                       {project.category}
                     </span>
                   </td>
@@ -187,62 +177,59 @@ const ProjectsOverview = () => {
                   <td>{project.fundingAgency}</td>
                   <td className="po-amount">{formatCurrency(project.amount)}</td>
                   <td>
-                    <span className="po-status-badge" style={{ background: statusColors[project.status]?.bg, color: statusColors[project.status]?.color }}>
-                      <span className="po-status-dot" style={{ background: statusColors[project.status]?.color }}></span>
-                      {project.status}
-                    </span>
+                    <span className={badgeClass(project.status)}>{project.status}</span>
                   </td>
                   <td>
                     <div className="po-action-buttons">
-                      <button
-                        className="po-icon-btn edit"
-                        title="Edit project"
-                        onClick={(e) => handleEdit(e, project)}
-                      >
-                        <i className="fa fa-pencil"></i>
-                      </button>
-                      <button
-                        className="po-icon-btn delete"
-                        title="Delete project"
-                        onClick={(e) => handleDelete(e, project)}
-                      >
-                        <i className="fa fa-trash"></i>
-                      </button>
+                      {project.canEdit ? (
+                        <>
+                          <button
+                            className="po-icon-btn edit"
+                            title="Edit project"
+                            onClick={(e) => handleEdit(e, project)}
+                          >
+                            <i className="fa fa-pencil"></i>
+                          </button>
+                          <button
+                            className="po-icon-btn delete"
+                            title="Delete project"
+                            onClick={(e) => handleDelete(e, project)}
+                          >
+                            <i className="fa fa-trash"></i>
+                          </button>
+                        </>
+                      ) : (
+                        <span className="po-readonly">View only</span>
+                      )}
                     </div>
                   </td>
+                  <td className="row-go" title="Open project"><i className="fa fa-angle-right"></i></td>
                 </tr>
               ))}
             </tbody>
           </table>
           {loading ? (
-            <div className="po-empty">Loading projects…</div>
+            <div className="empty-state">Loading projects…</div>
           ) : filteredProjects.length === 0 && (
-            <div className="po-empty">No projects found for the selected filter.</div>
+            <div className="empty-state">No projects found for the selected filter.</div>
           )}
         </div>
 
-        {/* Delete Confirmation Modal */}
-        {deleteTarget && (
-          <div className="po-modal-overlay" onClick={() => setDeleteTarget(null)}>
-            <div className="po-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="po-modal-icon">
-                <i className="fa fa-exclamation-triangle"></i>
-              </div>
-              <h3 className="po-modal-title">Delete Project</h3>
-              <p className="po-modal-text">
-                Are you sure you want to delete <strong>{deleteTarget.title}</strong>? This action cannot be undone.
-              </p>
-              <div className="po-modal-actions">
-                <button className="po-modal-btn cancel" onClick={() => setDeleteTarget(null)}>
-                  Cancel
-                </button>
-                <button className="po-modal-btn confirm" onClick={confirmDelete}>
-                  <i className="fa fa-trash"></i> Delete
-                </button>
-              </div>
-            </div>
+        <CustomModal
+          isOpen={!!deleteTarget}
+          onClose={() => setDeleteTarget(null)}
+          title="Delete Project"
+          maxWidth="420px"
+          minHeight="auto"
+        >
+          <p className="po-modal-text">
+            Are you sure you want to delete <strong>{deleteTarget?.title}</strong>? This action cannot be undone.
+          </p>
+          <div className="modal-actions">
+            <CustomButton text="Cancel" variant="secondary" onClick={() => setDeleteTarget(null)} />
+            <CustomButton text="Delete" variant="danger" onClick={confirmDelete} />
           </div>
-        )}
+        </CustomModal>
       </div>
     </Layout>
   );

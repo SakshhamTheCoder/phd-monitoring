@@ -6,6 +6,7 @@ import Layout from '../../components/dashboard/layout';
 import { useLoading } from '../../context/LoadingContext';
 import PagenationTable from '../../components/pagenationTable/PagenationTable';
 import CustomModal from '../../components/forms/modal/CustomModal';
+import PageHeader from '../../components/pageHeader/PageHeader';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import InputField from '../../components/forms/fields/InputField';
 import GridContainer from '../../components/forms/fields/GridContainer';
@@ -181,24 +182,27 @@ const OutsideExperts = () => {
   return (
     <Layout>
       <div className="outside-experts-management">
-        <div className="page-header">
-          <h1 className="page-title">Outside Experts Management</h1>
-        </div>
-         <div className="top-actions" style={{ display: 'flex', gap: '1rem' }}>
-              <CustomButton 
-                text="Bulk Import CSV" 
-                onClick={() => setShowBulkImportModal(true)} 
-              />
-              <CustomButton 
-                text="Add Outside Expert +" 
-                onClick={() => setShowAddModal(true)} 
-              />
-            </div>
+        <PageHeader
+          title="Outside Experts"
+          subtitle="External examiners and experts available to committees."
+        />
         <PagenationTable
           key={refreshKey}
           endpoint="/outside-experts/list"
           enableApproval={false}
-         
+          extraTopbarComponents={
+            <div className="top-actions">
+              <CustomButton
+                text="Bulk Import CSV"
+                variant="secondary"
+                onClick={() => setShowBulkImportModal(true)}
+              />
+              <CustomButton
+                text="Add Outside Expert +"
+                onClick={() => setShowAddModal(true)}
+              />
+            </div>
+          }
           actions={[
             {
               icon: <i className="fa-solid fa-pen-to-square"></i>,
@@ -323,13 +327,13 @@ const OutsideExperts = () => {
                 setShowAddModal(false);
                 resetForm();
               }}
-              className="secondary-button"
+              className="custom-button custom-button--secondary"
             >
               Cancel
             </button>
             <button
               onClick={handleAddExpert}
-              className="primary-button"
+              className="custom-button"
               disabled={submitting}
             >
               {submitting ? 'Adding...' : 'Add Expert'}
@@ -367,13 +371,13 @@ const OutsideExperts = () => {
                 setShowBulkImportModal(false);
                 setCsvFile(null);
               }}
-              className="secondary-button"
+              className="custom-button custom-button--secondary"
             >
               Cancel
             </button>
             <button
               onClick={handleBulkImport}
-              className="primary-button"
+              className="custom-button"
               disabled={submitting || !csvFile}
             >
               {submitting ? 'Importing...' : 'Import'}
@@ -480,13 +484,13 @@ const OutsideExperts = () => {
                 setShowEditModal(false);
                 resetForm();
               }}
-              className="secondary-button"
+              className="custom-button custom-button--secondary"
             >
               Cancel
             </button>
             <button
               onClick={handleEditExpert}
-              className="primary-button"
+              className="custom-button"
               disabled={submitting}
             >
               {submitting ? 'Updating...' : 'Update Expert'}
@@ -497,7 +501,6 @@ const OutsideExperts = () => {
 
       <style jsx>{`
         .outside-experts-management {
-          padding: 2rem;
         }
 
         .page-header {
@@ -505,12 +508,6 @@ const OutsideExperts = () => {
           justify-content: space-between;
           align-items: center;
           margin-bottom: 2rem;
-        }
-
-        .page-title {
-          font-size: 2rem;
-          font-weight: 600;
-          color: #1f2937;
         }
 
         .modal-form {
@@ -524,44 +521,6 @@ const OutsideExperts = () => {
           justify-content: flex-end;
           gap: 1rem;
           margin-top: 1rem;
-        }
-
-        .primary-button {
-          padding: 0.75rem 1.5rem;
-          background: #3b82f6;
-          color: white;
-          border: none;
-          border-radius: 0.5rem;
-          font-size: 1rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.3s;
-        }
-
-        .primary-button:hover {
-          background: #2563eb;
-        }
-
-        .primary-button:disabled {
-          background: #9ca3af;
-          cursor: not-allowed;
-        }
-
-        .secondary-button {
-          padding: 0.75rem 1.5rem;
-          background: white;
-          color: #6b7280;
-          border: 1px solid #d1d5db;
-          border-radius: 0.5rem;
-          font-size: 1rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.3s;
-        }
-
-        .secondary-button:hover {
-          background: #f9fafb;
-          border-color: #9ca3af;
         }
 
         .info-box {

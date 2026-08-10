@@ -249,6 +249,7 @@ class PublicationController extends Controller
         }
 
         $publication->save();
+        $this->commitFileDeletions();
 
         return response()->json([
             'message' => 'Publication updated successfully',

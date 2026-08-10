@@ -166,7 +166,7 @@
   gap: 0.25rem;
 }
 .check {
-  accent-color: #932f2f;
+  accent-color: var(--primary-color);
   margin: 0;
   height: 20px;
   width: 20px;
@@ -193,7 +193,7 @@
   font-size: 16px;
   font-weight: 600;
   font-family: "Nunito Sans";
-  color: #932f2f;
+  color: var(--primary-color);
   text-align: left;
   display: inline-block;
   min-width: 6.188rem;
@@ -235,7 +235,7 @@
   cursor: pointer;
   border: 0;
   padding: 0.813rem 1.25rem 0.75rem;
-  background-color: #932f2f;
+  background-color: var(--primary-color);
   align-self: stretch;
   border-radius: 6px;
   display: flex;

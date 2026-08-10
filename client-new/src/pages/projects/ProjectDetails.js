@@ -1,8 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
-import { formatCurrency, getMilestoneProgress, milestoneStatusOptions, budgetHeadTemplate, formatDate } from '../../data/projectsData';
+import { formatCurrency, getMilestoneProgress, milestoneStatusOptions, budgetHeadTemplate, formatDate, subVal, subSum, cellMismatch, budgetMismatches, setSubCell } from '../../data/projectsData';
+import { badgeClass } from '../../data/badges';
 import { apiGetProject, apiUpdateProject, apiAddMilestone, apiUpdateMilestone, apiAddDocument, apiUpdateDocument, apiDeleteDocument, fileUrl, mapMilestone, mapDocument } from '../../api/projects';
+import InputSuggestions from '../../components/forms/fields/InputSuggestions';
+import CustomModal from '../../components/forms/modal/CustomModal';
+import Tabs from '../../components/tabs/Tabs';
+import CustomButton from '../../components/forms/fields/CustomButton';
+import FacultyLink from '../../components/facultyLink/FacultyLink';
+import { baseURL } from '../../api/urls';
 import { toast } from 'react-toastify';
 import './ProjectDetails.css';
 
@@ -66,32 +73,7 @@ const ProjectDetails = () => {
     setBudgetDraft(prev => ({ ...prev, [year]: { ...prev[year], [head]: value === '' ? 0 : Number(value) } }));
   };
   const updateSubCell = (year, head, sub, value) => {
-    setBudgetDraft(prev => {
-      const subs = { ...(prev.__subitems || {}) };
-      const ys = { ...(subs[year] || {}) };
-      const hs = { ...(ys[head] || {}) };
-      hs[sub] = value === '' ? 0 : Number(value);
-      ys[head] = hs; subs[year] = ys;
-      return { ...prev, __subitems: subs };
-    });
-  };
-  const subVal = (b, year, head, sub) => Number(b && b.__subitems && b.__subitems[year] && b.__subitems[year][head] ? (b.__subitems[year][head][sub] || 0) : 0);
-  const subSum = (b, year, head) => {
-    const tmpl = budgetHeadTemplate.find(t => t.head === head);
-    if (!tmpl || !tmpl.subItems.length) return 0;
-    return tmpl.subItems.reduce((s, sub) => s + subVal(b, year, head, sub), 0);
-  };
-  // A head "mismatches" when it has sub-items entered whose sum ≠ the head amount.
-  const cellMismatch = (b, year, head) => {
-    const ss = subSum(b, year, head);
-    return ss > 0 && ss !== Number(b[year] ? (b[year][head] || 0) : 0);
-  };
-  const budgetMismatches = (b) => {
-    const out = [];
-    Object.keys(b || {}).filter(k => k !== '__subitems').forEach(year => {
-      budgetHeadTemplate.forEach(t => { if (t.subItems.length && cellMismatch(b, year, t.head)) out.push(t.head); });
-    });
-    return [...new Set(out)];
+    setBudgetDraft(prev => setSubCell(prev, year, head, sub, value));
   };
   const saveBudgetEdit = async () => {
     const mism = budgetMismatches(budgetDraft);
@@ -103,13 +85,26 @@ const ProjectDetails = () => {
     if (res.success) { setBudgetData(budgetDraft); setEditingBudget(false); toast.success('Budget updated successfully!'); }
   };
 
-  // Co-PI management
-  const emptyCopi = { name: '', type: 'internal', department: '', institute: '', designation: '' };
+  // Co-PI management. An internal Co-PI must carry a faculty_code, since that is
+  // what grants them access to the project.
+  const emptyCopi = { name: '', type: 'internal', faculty_code: null, department: '', institute: '', designation: '' };
+  const pickInternal = (setter) => (fac) => {
+    if (!fac || !fac.id) return;
+    setter(prev => ({
+      ...prev, type: 'internal', faculty_code: fac.id,
+      name: fac.name, department: fac.department, designation: fac.designation,
+    }));
+  };
   const [coPIs, setCoPIs] = useState([]);
   const [showCopiForm, setShowCopiForm] = useState(false);
   const [newCopi, setNewCopi] = useState(emptyCopi);
+  const invalidCopi = (c) => {
+    if (c.type === 'internal' && !c.faculty_code) { toast.error('Pick a faculty member from the suggestions.'); return true; }
+    if (!c.name.trim()) { toast.error('A name is required.'); return true; }
+    return false;
+  };
   const addCopi = async () => {
-    if (!newCopi.name.trim()) return;
+    if (invalidCopi(newCopi)) return;
     const updated = [...coPIs, { ...newCopi }];
     const res = await apiUpdateProject(project.id, { co_pis: updated });
     if (res.success) { setCoPIs(updated); setNewCopi(emptyCopi); setShowCopiForm(false); toast.success('Co-PI added successfully!'); }
@@ -124,7 +119,7 @@ const ProjectDetails = () => {
   const startCopiEdit = (i) => { setEditingCopiIdx(i); setCopiEditForm({ ...emptyCopi, ...coPIs[i] }); };
   const cancelCopiEdit = () => setEditingCopiIdx(null);
   const saveCopiEdit = async () => {
-    if (!copiEditForm.name.trim()) return;
+    if (invalidCopi(copiEditForm)) return;
     const updated = coPIs.map((c, idx) => (idx === editingCopiIdx ? { ...copiEditForm } : c));
     const res = await apiUpdateProject(project.id, { co_pis: updated });
     if (res.success) { setCoPIs(updated); setEditingCopiIdx(null); toast.success('Co-PI updated successfully!'); }
@@ -242,9 +237,14 @@ const ProjectDetails = () => {
     return <Layout><div className="pd-empty">Project not found. <button onClick={() => navigate('/projects')}>Go Back</button></div></Layout>;
   }
 
+  // A HOD or coordinator reads every project in their department but writes
+  // only their own, so every write control below is behind this.
+  const canEdit = project.canEdit;
+
+  const openPositions = (project.positions || []).filter((p) => p.status === 'Open');
+  const vacancies = openPositions.reduce((sum, p) => sum + (Number(p.openings) || 0), 0);
+
   const progress = getMilestoneProgress(milestones);
-  const categoryColors = { Research: '#b91c1c', Consultancy: '#92400e', International: '#9d174d', 'In-house': '#3730a3', Industry: '#065f46' };
-  const statusColors = { Active: '#15803d', Completed: '#15803d', Pending: '#a16207', 'On Hold': '#b91c1c', 'In Progress': '#c2410c' };
   const msIcons = { Completed: '✔', 'In Progress': '🟡', 'Not Started': '🔴', Delayed: '🔴' };
 
   const activeBudget = editingBudget ? budgetDraft : budgetData;
@@ -280,7 +280,7 @@ const ProjectDetails = () => {
                 <div className="pd-meta-row"><span>Primary Category</span><strong>{project.category}</strong></div>
                 <div className="pd-meta-row"><span>Focus Area</span><strong>{project.focusArea}</strong></div>
                 <div className="pd-meta-row"><span>Grant Type</span><strong>{project.grantType}</strong></div>
-                <div className="pd-meta-row"><span>Project Status</span><strong style={{ color: statusColors[project.status] }}>{project.status}</strong></div>
+                <div className="pd-meta-row"><span>Project Status</span><span className={badgeClass(project.status)}>{project.status}</span></div>
               </div>
             </div>
           </div>
@@ -303,13 +303,15 @@ const ProjectDetails = () => {
                   ) : (
                     <span className="pd-sanction-none">Not uploaded</span>
                   )}
-                  <button
-                    className="pd-sanction-edit-btn"
-                    onClick={openSanctionModal}
-                    title={sanctionDoc ? 'Edit sanction letter' : 'Add sanction letter'}
-                  >
-                    <i className={`fa ${sanctionDoc ? 'fa-pencil' : 'fa-plus'}`}></i>
-                  </button>
+                  {canEdit && (
+                    <button
+                      className="pd-sanction-edit-btn"
+                      onClick={openSanctionModal}
+                      title={sanctionDoc ? 'Edit sanction letter' : 'Add sanction letter'}
+                    >
+                      <i className={`fa ${sanctionDoc ? 'fa-pencil' : 'fa-plus'}`}></i>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -325,7 +327,7 @@ const ProjectDetails = () => {
                       <button className="pd-ms-save" onClick={saveBudgetEdit}><i className="fa fa-check"></i> Save Changes</button>
                     </>
                   ) : (
-                    <button className="pd-add-ms-btn" onClick={startBudgetEdit}><i className="fa fa-pencil"></i> Edit Budget</button>
+                    canEdit && <button className="pd-add-ms-btn" onClick={startBudgetEdit}><i className="fa fa-pencil"></i> Edit Budget</button>
                   )}
                 </div>
               </div>
@@ -429,9 +431,11 @@ const ProjectDetails = () => {
                   <span className="pd-ms-pct">{progress}%</span>
                   <div className="pd-ms-bar"><div className="pd-ms-fill" style={{ width: `${progress}%` }}></div></div>
                 </div>
-                <button className="pd-add-ms-btn" onClick={() => setShowAddForm(!showAddForm)}>
-                  <i className="fa fa-plus"></i> Add Milestone
-                </button>
+                {canEdit && (
+                  <button className="pd-add-ms-btn" onClick={() => setShowAddForm(!showAddForm)}>
+                    <i className="fa fa-plus"></i> Add Milestone
+                  </button>
+                )}
               </div>
             </div>
 
@@ -485,8 +489,8 @@ const ProjectDetails = () => {
                         <div className="pd-tl-top">
                           <h4>{m.name}</h4>
                           <div className="pd-tl-actions">
-                            <span className={`pd-tl-badge ${m.status.toLowerCase().replace(' ', '-')}`}>{m.status}</span>
-                            <button className="pd-tl-edit-btn" onClick={() => startEdit(i)} title="Edit milestone"><i className="fa fa-pencil"></i></button>
+                            <span className={badgeClass(m.status)}>{m.status}</span>
+                            {canEdit && <button className="pd-tl-edit-btn" onClick={() => startEdit(i)} title="Edit milestone"><i className="fa fa-pencil"></i></button>}
                           </div>
                         </div>
                         <p className="pd-tl-deliverable">{m.deliverable}</p>
@@ -505,44 +509,63 @@ const ProjectDetails = () => {
         <div className="pd-tab-content">
           <div className="pd-card">
             <h3 className="pd-card-title"><i className="fa fa-user"></i> Principal Investigator</h3>
-            <div className="pd-team-card">
-              <div className="pd-team-avatar">{project.pi.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</div>
-              <div className="pd-team-info">
-                <h4>{project.pi.name}</h4>
-                <p className="pd-team-dept">{project.pi.department}</p>
-                <p className="pd-team-meta">{project.pi.designation}</p>
+            {project.pi ? (
+              <div className="pd-team-card">
+                <div className="pd-team-avatar">{project.pi.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</div>
+                <div className="pd-team-info">
+                  <h4><FacultyLink code={project.pi.code} name={project.pi.name} /></h4>
+                  <p className="pd-team-dept">{project.pi.department}</p>
+                  <p className="pd-team-meta">{project.pi.designation}</p>
+                </div>
+                <span className="pd-team-role pi">PI</span>
               </div>
-              <span className="pd-team-role pi">PI</span>
-            </div>
+            ) : (
+              <p className="empty-state">No principal investigator on record for this project.</p>
+            )}
           </div>
           <div className="pd-card">
             <div className="pd-ms-header">
               <h3 className="pd-card-title"><i className="fa fa-users"></i> Co-PIs</h3>
-              <button className="pd-add-ms-btn" onClick={() => setShowCopiForm(!showCopiForm)}>
-                <i className="fa fa-plus"></i> Add Co-PI
-              </button>
+              {canEdit && (
+                <button className="pd-add-ms-btn" onClick={() => setShowCopiForm(!showCopiForm)}>
+                  <i className="fa fa-plus"></i> Add Co-PI
+                </button>
+              )}
             </div>
 
             {showCopiForm && (
               <div className="pd-ms-add-form">
                 <h4 className="pd-ms-form-title">New Co-PI</h4>
                 <div className="pd-ms-form-grid">
-                  <div className="pd-ms-field"><label>Full Name *</label><input type="text" value={newCopi.name} onChange={e => setNewCopi({ ...newCopi, name: e.target.value })} placeholder="e.g. Dr. Robert Chen" /></div>
                   <div className="pd-ms-field"><label>Type</label>
-                    <select value={newCopi.type} onChange={e => setNewCopi({ ...newCopi, type: e.target.value })}>
+                    <select value={newCopi.type} onChange={e => setNewCopi({ ...emptyCopi, type: e.target.value })}>
                       <option value="internal">Internal</option>
                       <option value="external">External</option>
                     </select>
                   </div>
+                  {newCopi.type === 'internal' ? (
+                    <div className="pd-ms-field">
+                      <InputSuggestions
+                        apiUrl={`${baseURL}/suggestions/faculty`}
+                        label="Faculty *"
+                        hint="Type faculty name, code or email..."
+                        fields={['name', 'department']}
+                        onSelect={pickInternal(setNewCopi)}
+                      />
+                    </div>
+                  ) : (
+                    <div className="pd-ms-field"><label>Full Name *</label><input type="text" value={newCopi.name} onChange={e => setNewCopi({ ...newCopi, name: e.target.value })} placeholder="e.g. Dr. Robert Chen" /></div>
+                  )}
                   <div className="pd-ms-field"><label>{newCopi.type === 'internal' ? 'Department' : 'Institute'}</label>
                     <input
                       type="text"
+                      readOnly={newCopi.type === 'internal'}
                       value={newCopi.type === 'internal' ? newCopi.department : newCopi.institute}
                       onChange={e => setNewCopi(newCopi.type === 'internal' ? { ...newCopi, department: e.target.value } : { ...newCopi, institute: e.target.value })}
-                      placeholder={newCopi.type === 'internal' ? 'e.g. Computer Science & Engineering' : 'e.g. MIT CSAIL'}
+                      placeholder={newCopi.type === 'internal' ? 'Filled from the selected faculty' : 'e.g. MIT CSAIL'}
                     />
                   </div>
-                  <div className="pd-ms-field"><label>Designation</label><input type="text" value={newCopi.designation} onChange={e => setNewCopi({ ...newCopi, designation: e.target.value })} placeholder="e.g. Professor" /></div>
+                  <div className="pd-ms-field"><label>Designation</label><input type="text" readOnly={newCopi.type === 'internal'} value={newCopi.designation} onChange={e => setNewCopi({ ...newCopi, designation: e.target.value })} placeholder="e.g. Professor" /></div>
                 </div>
                 <div className="pd-ms-form-actions">
                   <button className="pd-ms-cancel" onClick={() => { setShowCopiForm(false); setNewCopi(emptyCopi); }}>Cancel</button>
@@ -556,21 +579,35 @@ const ProjectDetails = () => {
                 <div key={i} className="pd-ms-add-form">
                   <h4 className="pd-ms-form-title">Edit Co-PI</h4>
                   <div className="pd-ms-form-grid">
-                    <div className="pd-ms-field"><label>Full Name *</label><input type="text" value={copiEditForm.name} onChange={e => setCopiEditForm({ ...copiEditForm, name: e.target.value })} /></div>
                     <div className="pd-ms-field"><label>Type</label>
-                      <select value={copiEditForm.type} onChange={e => setCopiEditForm({ ...copiEditForm, type: e.target.value })}>
+                      <select value={copiEditForm.type} onChange={e => setCopiEditForm({ ...emptyCopi, type: e.target.value })}>
                         <option value="internal">Internal</option>
                         <option value="external">External</option>
                       </select>
                     </div>
+                    {copiEditForm.type === 'internal' ? (
+                      <div className="pd-ms-field">
+                        <InputSuggestions
+                          apiUrl={`${baseURL}/suggestions/faculty`}
+                          label="Faculty *"
+                          hint="Type faculty name, code or email..."
+                          initialValue={copiEditForm.name}
+                          fields={['name', 'department']}
+                          onSelect={pickInternal(setCopiEditForm)}
+                        />
+                      </div>
+                    ) : (
+                      <div className="pd-ms-field"><label>Full Name *</label><input type="text" value={copiEditForm.name} onChange={e => setCopiEditForm({ ...copiEditForm, name: e.target.value })} /></div>
+                    )}
                     <div className="pd-ms-field"><label>{copiEditForm.type === 'internal' ? 'Department' : 'Institute'}</label>
                       <input
                         type="text"
+                        readOnly={copiEditForm.type === 'internal'}
                         value={copiEditForm.type === 'internal' ? (copiEditForm.department || '') : (copiEditForm.institute || '')}
                         onChange={e => setCopiEditForm(copiEditForm.type === 'internal' ? { ...copiEditForm, department: e.target.value } : { ...copiEditForm, institute: e.target.value })}
                       />
                     </div>
-                    <div className="pd-ms-field"><label>Designation</label><input type="text" value={copiEditForm.designation || ''} onChange={e => setCopiEditForm({ ...copiEditForm, designation: e.target.value })} /></div>
+                    <div className="pd-ms-field"><label>Designation</label><input type="text" readOnly={copiEditForm.type === 'internal'} value={copiEditForm.designation || ''} onChange={e => setCopiEditForm({ ...copiEditForm, designation: e.target.value })} /></div>
                   </div>
                   <div className="pd-ms-form-actions">
                     <button className="pd-ms-cancel" onClick={cancelCopiEdit}>Cancel</button>
@@ -581,17 +618,21 @@ const ProjectDetails = () => {
                 <div key={i} className="pd-team-card">
                   <div className="pd-team-avatar co">{c.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</div>
                   <div className="pd-team-info">
-                    <h4>{c.name}</h4>
+                    <h4><FacultyLink code={c.faculty_code} name={c.name} /></h4>
                     <p className="pd-team-dept">{c.type === 'internal' ? c.department : c.institute}</p>
                     <p className="pd-team-meta">{c.designation}</p>
                   </div>
                   <span className={`pd-team-role ${c.type}`}>{c.type === 'internal' ? 'Internal' : 'External'}</span>
-                  <button className="pd-copi-edit" onClick={() => startCopiEdit(i)} title="Edit Co-PI"><i className="fa fa-pencil"></i></button>
-                  <button className="pd-copi-remove" onClick={() => removeCopi(i)} title="Remove Co-PI"><i className="fa fa-trash"></i></button>
+                  {canEdit && (
+                    <>
+                      <button className="pd-copi-edit" onClick={() => startCopiEdit(i)} title="Edit Co-PI"><i className="fa fa-pencil"></i></button>
+                      <button className="pd-copi-remove" onClick={() => removeCopi(i)} title="Remove Co-PI"><i className="fa fa-trash"></i></button>
+                    </>
+                  )}
                 </div>
               )
             )) : (
-              <p className="pd-doc-empty">No Co-PIs added yet.</p>
+              <p className="empty-state">No Co-PIs added yet.</p>
             )}
           </div>
         </div>
@@ -602,9 +643,11 @@ const ProjectDetails = () => {
           <div className="pd-card">
             <div className="pd-ms-header">
               <h3 className="pd-card-title"><i className="fa fa-folder-open"></i> Project Documents</h3>
-              <button className="pd-add-ms-btn" onClick={openAddDoc}>
-                <i className="fa fa-plus"></i> Add Document
-              </button>
+              {canEdit && (
+                <button className="pd-add-ms-btn" onClick={openAddDoc}>
+                  <i className="fa fa-plus"></i> Add Document
+                </button>
+              )}
             </div>
             {documents.length > 0 ? (
               <div className="pd-doc-list">
@@ -614,14 +657,18 @@ const ProjectDetails = () => {
                     <div className="pd-doc-info"><strong>{d.name}</strong><span>{d.type} &middot; {formatDate(d.date)}</span></div>
                     <div className="pd-doc-actions">
                       {d.url && <a className="pd-doc-dl" href={d.url} target="_blank" rel="noopener noreferrer" title="View document"><i className="fa fa-eye"></i></a>}
-                      <button className="pd-doc-edit" onClick={() => openEditDoc(i)} title="Edit document"><i className="fa fa-pencil"></i></button>
-                      <button className="pd-doc-remove" onClick={() => removeDoc(i)} title="Delete document"><i className="fa fa-trash"></i></button>
+                      {canEdit && (
+                        <>
+                          <button className="pd-doc-edit" onClick={() => openEditDoc(i)} title="Edit document"><i className="fa fa-pencil"></i></button>
+                          <button className="pd-doc-remove" onClick={() => removeDoc(i)} title="Delete document"><i className="fa fa-trash"></i></button>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="pd-doc-empty">No documents uploaded yet.</p>
+              <p className="empty-state">No documents uploaded yet.</p>
             )}
           </div>
         </div>
@@ -641,28 +688,42 @@ const ProjectDetails = () => {
         <div className="pd-header">
           <div className="pd-header-main">
             <div className="pd-header-top">
-              <span className="pd-header-cat" style={{ color: categoryColors[project.category] || '#555' }}>
-                <i className="fa fa-flask"></i> {project.category.toUpperCase()}
+              <span className={badgeClass(project.category)}>
+                <i className="fa fa-flask"></i> {project.category}
               </span>
             </div>
-            <h1 className="pd-header-title">{project.title}</h1>
+            <h1 className="page-title">{project.title}</h1>
             <div className="pd-header-meta">
               <div className="pd-hm-item"><span>FUNDING AGENCY</span><strong>{project.fundingAgency}</strong></div>
               <div className="pd-hm-item"><span>SANCTIONED AMOUNT</span><strong>₹ {project.amount.toLocaleString('en-IN')}</strong></div>
             </div>
             <div className="pd-header-meta">
               <div className="pd-hm-item"><span>DURATION</span><strong>{project.durationYears * 12 + (project.durationMonths || 0)} Months ({formatDate(project.startDate)} — {formatDate(project.endDate)})</strong></div>
+              <div className="pd-hm-item">
+                <span>OPEN POSITIONS</span>
+                <strong>
+                  {openPositions.length === 0
+                    ? 'None advertised'
+                    : `${openPositions.length} ${openPositions.length === 1 ? 'role' : 'roles'}, ${vacancies} ${vacancies === 1 ? 'vacancy' : 'vacancies'}`}
+                </strong>
+              </div>
             </div>
-            <div className="pd-header-actions">
-              <button className="pd-hire-btn" onClick={() => navigate(`/projects/${id}/recruit`)}><i className="fa fa-user-plus"></i> Hire JRF</button>
-              <button className="pd-hire-btn secondary" onClick={() => navigate(`/projects/${id}/recruit`)}><i className="fa fa-graduation-cap"></i> Hire Intern</button>
-            </div>
+            {canEdit && (
+              <div className="pd-header-actions">
+                <button className="pd-hire-btn" onClick={() => navigate(`/projects/${id}/recruit`)}>
+                  <i className="fa fa-user-plus"></i>
+                  {openPositions.length ? 'Manage recruitment' : 'Post an opening'}
+                </button>
+              </div>
+            )}
           </div>
           <div className="pd-header-side">
-            <span className="pd-header-status" style={{ background: statusColors[project.status], color: '#FFF' }}>{project.status}</span>
-            <button className="pd-header-edit-btn" onClick={() => navigate('/projects/create', { state: { editProject: project } })}>
-              <i className="fa fa-pencil"></i> Edit Project
-            </button>
+            <span className={badgeClass(project.status)}>{project.status}</span>
+            {canEdit && (
+              <button className="pd-header-edit-btn" onClick={() => navigate('/projects/create', { state: { editProject: project } })}>
+                <i className="fa fa-pencil"></i> Edit Project
+              </button>
+            )}
             <div className="pd-header-progress">
               <span className="pd-progress-label">CURRENT PROGRESS</span>
               <span className="pd-progress-value">{progress}%</span>
@@ -677,19 +738,20 @@ const ProjectDetails = () => {
         </div>
 
         {/* Tabs */}
-        <div className="pd-tabs">
-          {TABS.map(tab => (
-            <button key={tab} className={`pd-tab ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab)}>{tab}</button>
-          ))}
-        </div>
+        <Tabs items={TABS} value={activeTab} onChange={setActiveTab} className="pd-tabs" />
 
         {renderTab()}
 
         {/* Add / Edit Document Modal */}
         {showDocModal && (
-          <div className="pd-modal-overlay" onClick={() => setShowDocModal(false)}>
-            <div className="pd-modal" onClick={e => e.stopPropagation()}>
-              <h3 className="pd-modal-title">{editingDocIdx !== null ? 'Edit Document' : 'Add Document'}</h3>
+          <CustomModal
+            isOpen={showDocModal}
+            onClose={() => setShowDocModal(false)}
+            title={editingDocIdx !== null ? 'Edit Document' : 'Add Document'}
+            maxWidth="520px"
+            minHeight="auto"
+          >
+            <>
               <div className="pd-modal-field">
                 <label>Document Name <span className="req">*</span></label>
                 <input
@@ -716,19 +778,24 @@ const ProjectDetails = () => {
                 />
                 {docForm.fileName && <span className="pd-upload-selected"><i className="fa fa-check-circle"></i> {docForm.fileName}</span>}
               </div>
-              <div className="pd-modal-actions">
-                <button className="pd-ms-cancel" onClick={() => setShowDocModal(false)}>Cancel</button>
-                <button className="pd-ms-save" onClick={saveDoc}><i className="fa fa-check"></i> {editingDocIdx !== null ? 'Save Changes' : 'Add Document'}</button>
+              <div className="modal-actions">
+                <CustomButton text="Cancel" variant="secondary" onClick={() => setShowDocModal(false)} />
+                <CustomButton text={editingDocIdx !== null ? 'Save Changes' : 'Add Document'} onClick={saveDoc} />
               </div>
-            </div>
-          </div>
+            </>
+          </CustomModal>
         )}
 
         {/* Sanction Letter Modal (file or link) */}
         {showSanctionModal && (
-          <div className="pd-modal-overlay" onClick={() => setShowSanctionModal(false)}>
-            <div className="pd-modal" onClick={e => e.stopPropagation()}>
-              <h3 className="pd-modal-title">Sanction Letter</h3>
+          <CustomModal
+            isOpen={showSanctionModal}
+            onClose={() => setShowSanctionModal(false)}
+            title="Sanction Letter"
+            maxWidth="520px"
+            minHeight="auto"
+          >
+            <>
               <div className="pd-sanction-tabs">
                 <button type="button" className={`pd-sanction-tab ${sanctionMode === 'file' ? 'active' : ''}`} onClick={() => setSanctionMode('file')}>
                   <i className="fa fa-upload"></i> Choose File
@@ -758,12 +825,12 @@ const ProjectDetails = () => {
                   <input type="url" value={sanctionLinkInput} onChange={e => setSanctionLinkInput(e.target.value)} placeholder="https://… link to sanction letter" />
                 </div>
               )}
-              <div className="pd-modal-actions">
-                <button className="pd-ms-cancel" onClick={() => setShowSanctionModal(false)}>Cancel</button>
-                <button className="pd-ms-save" onClick={saveSanctionModal}><i className="fa fa-check"></i> Save</button>
+              <div className="modal-actions">
+                <CustomButton text="Cancel" variant="secondary" onClick={() => setShowSanctionModal(false)} />
+                <CustomButton text="Save" onClick={saveSanctionModal} />
               </div>
-            </div>
-          </div>
+            </>
+          </CustomModal>
         )}
       </div>
     </Layout>

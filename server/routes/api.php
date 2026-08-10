@@ -18,6 +18,11 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use App\Helpers\CloudflareHelper;
+use App\Models\FeatureFlag;
+
+// Read by the client before it draws the nav, so a disabled module leaves no
+// dead links behind. Public, because the landing page links to the openings.
+Route::get('/features', fn () => response()->json(FeatureFlag::map()));
 
 Route::post('/login', function (Request $request) {
     $request->validate([
@@ -271,18 +276,23 @@ Route::prefix('patents')->group(function () {
     require base_path('routes/base/patents.php');
 });
 
-Route::prefix('projects')->group(function () {
-    require base_path('routes/base/projects.php');
-});
+// Projects, the positions they advertise and the applications to them are one
+// module behind one switch. See FeatureFlag.
+Route::middleware('feature:job_openings')->group(function () {
+    Route::prefix('projects')->group(function () {
+        require base_path('routes/base/projects.php');
+    });
 
-Route::prefix('applications')->group(function () {
-    require base_path('routes/base/applications.php');
-});
+    Route::prefix('applications')->group(function () {
+        require base_path('routes/base/applications.php');
+    });
 
-Route::prefix('openings')->group(function () {
-    require base_path('routes/base/openings.php');
+    Route::prefix('openings')->group(function () {
+        require base_path('routes/base/openings.php');
+    });
+
+    Route::get('/my-applications', [PositionApplicationController::class, 'myApplications'])->middleware('auth:sanctum');
 });
-Route::get('/my-applications', [PositionApplicationController::class, 'myApplications'])->middleware('auth:sanctum');
 
 Route::prefix('faculty')->group(function () {
     require base_path('routes/base/faculties.php');
@@ -315,6 +325,21 @@ Route::prefix('semester')->group(function () {
 
 Route::prefix('approval')->group(function () {
     require base_path('routes/base/approvals.php');
+});
+
+// Openings as an outsider sees them: browse, apply, then track by token.
+Route::middleware('feature:job_openings')->group(function () {
+    Route::prefix('public/openings')->group(function () {
+        Route::get('/', [\App\Http\Controllers\PublicOpeningController::class, 'index']);
+        Route::get('/{id}', [\App\Http\Controllers\PublicOpeningController::class, 'show']);
+        Route::get('/{id}/advertisement', [\App\Http\Controllers\PublicOpeningController::class, 'advertisement']);
+        Route::post('/{id}/apply', [\App\Http\Controllers\PublicOpeningController::class, 'apply'])
+            ->middleware('throttle:5,60');
+    });
+    Route::prefix('public/applications')->group(function () {
+        Route::get('/{token}', [\App\Http\Controllers\PublicOpeningController::class, 'status']);
+        Route::post('/{token}/verify', [\App\Http\Controllers\PublicOpeningController::class, 'verify']);
+    });
 });
 
 // Secure external-expert review (public, token-authenticated, the token is the credential).

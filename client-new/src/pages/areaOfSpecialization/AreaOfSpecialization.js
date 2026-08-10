@@ -5,6 +5,7 @@ import { useLocation } from 'react-router-dom';
 import FilterBar from '../../components/filterBar/FilterBar';
 import PagenationTable from '../../components/pagenationTable/PagenationTable';
 import CustomModal from '../../components/forms/modal/CustomModal';
+import PageHeader from '../../components/pageHeader/PageHeader';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import GridContainer from '../../components/forms/fields/GridContainer';
 import InputField from '../../components/forms/fields/InputField';
@@ -201,10 +202,10 @@ const AreaOfSpecialization = () => {
   return (
     <Layout>
       <div className="area-specialization-page">
-        <div className="page-header">
-          <h1>Area of Specialization Management</h1>
-          <p>Manage research areas and associated experts for each department</p>
-        </div>
+        <PageHeader
+          title="Areas of Specialization"
+          subtitle="Research areas and the experts associated with each department."
+        />
 
         {/* <FilterBar onSearch={handleFilterChange} /> */}
         
@@ -216,9 +217,10 @@ const AreaOfSpecialization = () => {
           customOpenForm={openForm}
           extraTopbarComponents={
             <div className="top-actions">
-              <CustomButton 
-                text="Upload CSV" 
-                onClick={() => setIsUploadModalOpen(true)} 
+              <CustomButton
+                text="Upload CSV"
+                variant="secondary"
+                onClick={() => setIsUploadModalOpen(true)}
               />
               <CustomButton 
                 text="Add Area +" 
