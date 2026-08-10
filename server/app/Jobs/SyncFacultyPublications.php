@@ -15,6 +15,16 @@ class SyncFacultyPublications implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    // A sync makes one request per Scopus page plus one per ORCID work to read
+    // its authors, so a well published faculty member runs well past the 60
+    // second default and would be killed halfway through the import.
+    public $timeout = 300;
+
+    // store() writes with updateOrCreate keyed on the external id and leaves
+    // manually edited rows alone, so re-running after a failed attempt repeats
+    // the same result rather than duplicating anything.
+    public $tries = 3;
+
     public function __construct(public int $facultyCode) {}
 
     public function handle(): void
