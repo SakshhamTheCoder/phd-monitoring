@@ -12,9 +12,13 @@ class FacultyPublication extends Model
         'faculty_code', 'title', 'authors', 'doi_link', 'year', 'name', 'publisher',
         'volume', 'page_no', 'issn', 'country', 'state', 'city', 'impact_factor',
         'publication_type', 'type', 'source', 'external_id', 'verified',
+        'manually_edited',
     ];
     protected $casts = [
         'verified' => 'boolean',
+        // Set when someone corrects an imported row, which pins it against the
+        // next sync. See SyncFacultyPublications::store.
+        'manually_edited' => 'boolean',
         'impact_factor' => 'float',
     ];
     protected $hidden = ['created_at', 'updated_at'];
