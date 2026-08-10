@@ -33,6 +33,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'add.approval' => \App\Http\Middleware\AddApprovalFlag::class,
+            // Used as feature:research_profile / feature:job_openings on the
+            // route groups those modules own.
+            'feature' => \App\Http\Middleware\EnsureFeatureEnabled::class,
         ]);
 
         // The auth middleware resolves its guest redirect eagerly, and the
