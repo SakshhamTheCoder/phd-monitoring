@@ -52,12 +52,23 @@ const Supervisor = ({ formData }) => {
       comments: value.comments,
     }));
   };
+  // Both of these come off the form as strings, so they have to be read as
+  // numbers before they can be added. Added as they arrive, "55" and 15 make
+  // "5515", which is over 100 for any figure anyone could type: the warning
+  // fired on every keystroke and the entry was rewritten every time.
   useEffect(() => {
-    if(body.current_progress + formData.previous_progress > 100){
-      body.current_progress = 100 - formData.previous_progress;
-      toast.error("Total progress cannot exceed 100%");
+    const increase = parseFloat(body.current_progress);
+    const previous = parseFloat(formData.previous_progress) || 0;
+
+    if (!Number.isFinite(increase) || increase + previous <= 100) {
+      return;
     }
-  }, [body]);
+
+    // Clamped through state rather than by assignment, so the box shows the
+    // figure that will actually be submitted.
+    setBody((prev) => ({ ...prev, current_progress: 100 - previous }));
+    toast.error("Total progress cannot exceed 100%");
+  }, [body.current_progress, formData.previous_progress]);
 
   return (
     <>
