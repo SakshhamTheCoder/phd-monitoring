@@ -31,7 +31,7 @@ const FormListPage = () => {
   // Only the PhD Coordinator allocates supervisors, and only from the
   // department-wide allocation list (not a single student's form list).
   const showBulkAllocate =
-    role === "phd_coordinator" &&
+    (role === "phd_coordinator" || role === "admin") &&
     location.pathname === "/forms/supervisor-allocation";
 
   useEffect(() => {

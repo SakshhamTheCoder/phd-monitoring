@@ -23,27 +23,31 @@ class SupervisorAllocationController extends Controller
     use GeneralFormList;
     use GeneralFormCreate;
     use FilterLogicTrait;
-    public function listFilters(Request $request){
+    public function listFilters(Request $request)
+    {
         return response()->json($this->getAvailableFilters("forms"));
     }
     public function listForm(Request $request, $student_id = null)
     {
         $user = Auth::user();
-        if($student_id)
-        return $this->listFormsStudent($user, SupervisorAllocation::class, $student_id);
-        return $this->listForms($user, SupervisorAllocation::class,$request,null,false,[
+        if ($student_id)
+            return $this->listFormsStudent($user, SupervisorAllocation::class, $student_id);
+        return $this->listForms($user, SupervisorAllocation::class, $request, null, false, [
             'fields' => [
-                "name","roll_no", "progress","email"
+                "name",
+                "roll_no",
+                "progress",
+                "email"
             ],
             'extra_fields' => [
-               "progress" => function ($form) {
+                "progress" => function ($form) {
                     return $form->student->overall_progress;
                 },
                 "email" => function ($form) {
                     return $form->student->user->email;
                 },
             ],
-            'titles' => [ "Name", "Roll No", "Progress", "Email",],
+            'titles' => ["Name", "Roll No", "Progress", "Email",],
         ]);
     }
 
@@ -57,14 +61,14 @@ class SupervisorAllocationController extends Controller
             'hod',
             'complete'
         ];
-        if($role->role != 'student'){
+        if ($role->role != 'student') {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
-        $data=[
-            'roll_no'=>$user->student->roll_no,
-            'steps'=>$steps,
-            'role'=>$role->role,
-            'name'=>$user->first_name.' '.$user->last_name
+        $data = [
+            'roll_no' => $user->student->roll_no,
+            'steps' => $steps,
+            'role' => $role->role,
+            'name' => $user->first_name . ' ' . $user->last_name
         ];
         return $this->createForms(SupervisorAllocation::class, $data);
     }
@@ -87,8 +91,8 @@ class SupervisorAllocationController extends Controller
             case 'phd_coordinator':
                 return $this->handleCoordinatorForm($user, $form_id, $model);
             case 'admin':
-                 return $this->handleAdminForm($user, $form_id, $model,true);
-           
+                return $this->handleAdminForm($user, $form_id, $model, true);
+
             default:
                 return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
@@ -141,7 +145,7 @@ class SupervisorAllocationController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
 
-        if ($role->role != 'phd_coordinator') {
+        if ($role->role != 'phd_coordinator' && $role->role != 'admin') {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
 
@@ -161,8 +165,8 @@ class SupervisorAllocationController extends Controller
 
             try {
                 $supervisors = collect($row['supervisors'])
-                    ->map(fn ($code) => trim((string) $code))
-                    ->filter(fn ($code) => $code !== '')
+                    ->map(fn($code) => trim((string) $code))
+                    ->filter(fn($code) => $code !== '')
                     ->values()
                     ->all();
 
@@ -177,7 +181,7 @@ class SupervisorAllocationController extends Controller
                     if (!str_contains($identifier, '@')) {
                         return $identifier;
                     }
-                    $faculty = Faculty::whereHas('user', fn ($q) => $q->where('email', $identifier))->first();
+                    $faculty = Faculty::whereHas('user', fn($q) => $q->where('email', $identifier))->first();
                     if (!$faculty) {
                         throw new \Exception("No faculty found with email {$identifier}");
                     }
@@ -257,10 +261,10 @@ class SupervisorAllocationController extends Controller
                 $formInstance->prefrences = $prefrences;
                 $areas = $request->broad_area_of_research;
                 $formInstance->student->broad_area_specialization()->delete(); // Remove existing associations
-
+    
                 foreach ($areas as $area) {
-                    if(!is_numeric($area)) {
-                        $area=BroadAreaSpecialization::create([
+                    if (!is_numeric($area)) {
+                        $area = BroadAreaSpecialization::create([
                             'broad_area' => $area,
                             'department_id' => $formInstance->student->department_id,
                         ]);
@@ -268,15 +272,15 @@ class SupervisorAllocationController extends Controller
                             'specialization_id' => $area->id,
                             'student_id' => $formInstance->student_id,
                         ]);
+                    } else {
+                        if (!BroadAreaSpecialization::find($area)) {
+                            throw new \Exception("Invalid broad area selected");
+                        }
+                        $formInstance->student->broad_area_specialization()->create([
+                            'specialization_id' => $area,
+                            'student_id' => $formInstance->student_id,
+                        ]);
                     }
-                    else{
-                    if (!BroadAreaSpecialization::find($area)) {
-                        throw new \Exception("Invalid broad area selected");
-                    }
-                    $formInstance->student->broad_area_specialization()->create([
-                        'specialization_id' => $area,
-                        'student_id' => $formInstance->student_id,
-                    ]);}
                 }
             }
         );
@@ -284,7 +288,7 @@ class SupervisorAllocationController extends Controller
     private function coordinatorSubmit($user, $request, $form_id)
     {
         $model = SupervisorAllocation::class;
-      
+
         return $this->submitForm(
             $user,
             $request,
@@ -323,11 +327,11 @@ class SupervisorAllocationController extends Controller
             'phd_coordinator',
             'complete',
             function ($formInstance) use ($request, $user) {
-             
+
                 if ($request->approval) {
-                   
-                    $formInstance->status='approved';
-                    
+
+                    $formInstance->status = 'approved';
+
                     $supervisors = $formInstance->supervisors;
                     foreach ($supervisors as $supervisor) {
                         Supervisor::create([
@@ -349,13 +353,13 @@ class SupervisorAllocationController extends Controller
                             'max_count' => 1,
                             'stage' => 'student',
                         ],
-                       
+
                         [
                             'form_type' => 'status-change',
                             'form_name' => 'Change of Status',
                             'max_count' => 2,
                             'stage' => 'student',
-                        ],              
+                        ],
                         [
                             'form_type' => 'list-of-examiners',
                             'form_name' => 'List of Examiners',
@@ -363,7 +367,8 @@ class SupervisorAllocationController extends Controller
                             'supervisor_available' => true,
                             'max_count' => 1,
                             'stage' => 'supervisor',
-                        ], [
+                        ],
+                        [
                             'form_type' => 'semester-off',
                             'form_name' => 'Semester Off',
                             'max_count' => 10,
@@ -383,7 +388,7 @@ class SupervisorAllocationController extends Controller
                                 $student->roll_no,
                                 $student->department_id
                             );
-                            
+
                             if ($formData) {
                                 Forms::create($formData);
                             }
