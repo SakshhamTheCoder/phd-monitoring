@@ -5,7 +5,7 @@ import { customFetch } from '../api/base';
 // Everything defaults to on, and a failed request leaves it that way. The
 // switch exists to take a module out deliberately, so a slow or unreachable
 // API must never be the thing that hides one.
-const DEFAULTS = { research_profile: true, job_openings: true };
+const DEFAULTS = { research_profile: true, project_management: true, job_openings: true };
 
 const FeaturesContext = createContext(DEFAULTS);
 

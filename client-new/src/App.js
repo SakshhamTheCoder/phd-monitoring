@@ -104,7 +104,7 @@ const AppContent = () => {
 
           {/* Dashboard */}
           <Route path="/home" element={<Dashboard />} />
-          {features.job_openings && (role === 'faculty' || role === 'hod' || role === 'phd_coordinator' || role === 'dordc' || role === 'adordc' || role === 'dra' || role === 'director' || role === 'admin') && (
+          {features.project_management && (role === 'faculty' || role === 'hod' || role === 'phd_coordinator' || role === 'dordc' || role === 'adordc' || role === 'dra' || role === 'director' || role === 'admin') && (
             <>
               <Route path="/projects" element={<ProjectsOverview />} />
               <Route path="/projects/create" element={<CreateProject />} />
