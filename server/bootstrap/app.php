@@ -33,8 +33,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'add.approval' => \App\Http\Middleware\AddApprovalFlag::class,
-            // Used as feature:research_profile / feature:job_openings on the
-            // route groups those modules own.
+            // Used as feature:research_profile / feature:project_management /
+            // feature:job_openings on the route groups those modules own.
             'feature' => \App\Http\Middleware\EnsureFeatureEnabled::class,
         ]);
 
@@ -44,7 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // request without an Accept: application/json header came back as a 500.
         // No redirect for the API; the exception renderer answers with a 401.
         $middleware->redirectGuestsTo(
-            fn ($request) => $request->is('api/*') ? null : '/login'
+            fn($request) => $request->is('api/*') ? null : '/login'
         );
     })
     ->withExceptions(function (Exceptions $exceptions) {

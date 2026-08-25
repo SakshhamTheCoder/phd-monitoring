@@ -22,7 +22,7 @@ use App\Models\FeatureFlag;
 
 // Read by the client before it draws the nav, so a disabled module leaves no
 // dead links behind. Public, because the landing page links to the openings.
-Route::get('/features', fn () => response()->json(FeatureFlag::map()));
+Route::get('/features', fn() => response()->json(FeatureFlag::map()));
 
 Route::post('/login', function (Request $request) {
     $request->validate([
@@ -200,9 +200,7 @@ Route::post('/switch-role', function (Request $request) {
                     'error' => "You cannot switch to this role because your account {$unmet}.",
                 ], 403);
             }
-        }
-
-        {
+        } {
             $user->current_role_id = $role->id;
             $user->save();
             $user->refresh();
@@ -276,13 +274,16 @@ Route::prefix('patents')->group(function () {
     require base_path('routes/base/patents.php');
 });
 
-// Projects, the positions they advertise and the applications to them are one
-// module behind one switch. See FeatureFlag.
-Route::middleware('feature:job_openings')->group(function () {
+// Project management (create/manage projects, milestones, documents) lives
+// behind its own switch so it can stay up while job openings are off.
+Route::middleware('feature:project_management')->group(function () {
     Route::prefix('projects')->group(function () {
         require base_path('routes/base/projects.php');
     });
+});
 
+// Job openings, applications and the student-facing board. See FeatureFlag.
+Route::middleware('feature:job_openings')->group(function () {
     Route::prefix('applications')->group(function () {
         require base_path('routes/base/applications.php');
     });
@@ -381,7 +382,7 @@ Route::get('/send-welcome', [EmailNotificationController::class, 'sendWelcomeEma
 
 // Route::post('/schedule-reminder', [, 'scheduleReminder']);
 // Route::get('/init',function (){
-    
+
 //     User::factory()->count(10)->create();
 //     Department::factory()->count(3)->create();
 //     Role::factory()->count(5)->create();

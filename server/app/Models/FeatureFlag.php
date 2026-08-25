@@ -19,7 +19,7 @@ class FeatureFlag extends Model
 
     // The whole list lives here, so the command, the API and the middleware
     // cannot drift apart on what a valid flag is.
-    public const FLAGS = ['research_profile', 'job_openings'];
+    public const FLAGS = ['research_profile', 'project_management', 'job_openings'];
 
     /**
      * Every flag and its state. An unknown or missing key reads as enabled,

@@ -15,7 +15,7 @@ use Illuminate\Console\Command;
  */
 class SetFeatureFlag extends Command
 {
-    protected $signature = 'feature:set {key : research_profile or job_openings} {state : on or off}';
+    protected $signature = 'feature:set {key : research_profile, project_management or job_openings} {state : on or off}';
 
     protected $description = 'Enable or disable a feature';
 
