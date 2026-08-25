@@ -196,8 +196,8 @@ class SupervisorAllocationController extends Controller
                     throw new \Exception("No open supervisor allocation form found for roll number {$row['roll_no']}");
                 }
 
-                if ($formInstance->stage != 'phd_coordinator') {
-                    throw new \Exception("Form for roll number {$row['roll_no']} is awaiting the '{$formInstance->stage}' stage, not the PhD coordinator");
+                if (!in_array($formInstance->stage, ['student', 'phd_coordinator'])) {
+                    throw new \Exception("Form for roll number {$row['roll_no']} is awaiting the '{$formInstance->stage}' stage and cannot be bulk allocated");
                 }
 
                 $rowRequest = new Request([
