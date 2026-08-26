@@ -8,7 +8,10 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/my-departments', [ClerkController::class, 'myDepartments']);
     Route::get('/attendance', [ClerkController::class, 'roster']);
+    Route::get('/attendance/template', [ClerkController::class, 'template']);
+    Route::get('/attendance/export', [ClerkController::class, 'export']);
     Route::post('/attendance', [ClerkController::class, 'save']);
+    Route::post('/attendance/csv', [ClerkController::class, 'csvImport']);
 });
 
 // Admin-side clerk management (tagging clerks with departments).

@@ -69,9 +69,15 @@ class ClerkController extends Controller
         $request->validate([
             'date' => 'nullable|date',
             'department_id' => 'nullable|integer',
+            'lecture_id' => 'nullable|integer|min:0',
         ]);
 
-        $departmentIds = $this->clerkDepartmentIds($user->id);
+        // Admin bypasses department scoping for oversight
+        if ($user->current_role->role === 'admin') {
+            $departmentIds = Department::pluck('id')->all();
+        } else {
+            $departmentIds = $this->clerkDepartmentIds($user->id);
+        }
         if ($request->filled('department_id')) {
             $departmentIds = array_values(array_intersect(
                 $departmentIds,
@@ -87,6 +93,7 @@ class ClerkController extends Controller
         }
 
         $date = $request->input('date', now()->toDateString());
+        $lectureId = (int) ($request->input('lecture_id', 0));
 
         $students = Student::with(['user:id,first_name,last_name', 'department:id,name,code'])
             ->whereIn('department_id', $departmentIds)
@@ -94,6 +101,7 @@ class ClerkController extends Controller
             ->get();
 
         $saved = Attendance::where('date', $date)
+            ->where('lecture_id', $lectureId)
             ->whereIn('roll_no', $students->pluck('roll_no'))
             ->get()
             ->keyBy('roll_no');
@@ -127,50 +135,118 @@ class ClerkController extends Controller
      * Save one day's attendance. Absentees are stored as absent rows; students
      * still marked present get an explicit row too, so "present" survives a
      * later edit even though absence is the only thing reports care about.
+     *
+     * Constraints: roll_no+date+lecture_id unique, not before date_of_registration,
+     * only clerk's departments, and clerk edit window (config attendance.edit_window_days).
+     * Admin bypasses the window.
      */
     public function save(Request $request)
     {
         $user = Auth::user();
-        if ($user->current_role->role !== 'clerk') {
+        $role = $user->current_role->role;
+        if (!in_array($role, ['clerk', 'admin'], true)) {
             return response()->json(['message' => 'You are not authorized to mark attendance'], 403);
         }
 
         $request->validate([
             'date' => 'required|date|before_or_equal:today',
+            'lecture_id' => 'nullable|integer|min:0',
             'records' => 'required|array|min:1',
             'records.*.roll_no' => 'required|integer',
             'records.*.status' => 'required|in:present,absent',
         ]);
 
-        $allowedDepartmentIds = $this->clerkDepartmentIds($user->id);
-        if ($allowedDepartmentIds === []) {
+        $lectureId = (int) ($request->input('lecture_id', 0));
+
+        // Edit window: clerk can only edit within N days, admin unlimited
+        if ($role === 'clerk') {
+            $window = (int) config('attendance.edit_window_days', 7);
+            $date = \Carbon\Carbon::parse($request->input('date'));
+            $daysAgo = now()->startOfDay()->diffInDays($date->copy()->startOfDay(), false);
+            // daysAgo negative means date is in past
+            if ($daysAgo < -$window) {
+                return response()->json([
+                    'message' => "You can only edit attendance for the last {$window} days. Contact an admin for older records.",
+                ], 403);
+            }
+        }
+
+        // Clerks are department-scoped, admins are not
+        $allowedDepartmentIds = $role === 'admin' ? null : $this->clerkDepartmentIds($user->id);
+        if ($role !== 'admin' && $allowedDepartmentIds === []) {
             return response()->json(['message' => 'No departments are assigned to you yet. Contact an administrator.'], 403);
         }
 
-        // Reject any roll number outside the clerk's departments outright rather
-        // than silently skipping it: a skipped row would look saved on screen.
         $requestedRollNos = array_column($request->input('records'), 'roll_no');
-        $validRollNos = Student::whereIn('roll_no', $requestedRollNos)
-            ->whereIn('department_id', $allowedDepartmentIds)
-            ->pluck('roll_no')
-            ->all();
-        $invalid = array_diff($requestedRollNos, $validRollNos);
+        $students = Student::whereIn('roll_no', $requestedRollNos)
+            ->when($allowedDepartmentIds !== null, fn ($q) => $q->whereIn('department_id', $allowedDepartmentIds))
+            ->get()
+            ->keyBy('roll_no');
+
+        $invalid = array_diff($requestedRollNos, $students->keys()->all());
         if ($invalid !== []) {
             return response()->json([
                 'message' => 'These roll numbers are not in your departments: ' . implode(', ', $invalid),
             ], 403);
         }
 
+        // Not before date_of_registration
+        $dateStr = $request->input('date');
+        $dateCarbon = \Carbon\Carbon::parse($dateStr)->startOfDay();
+        $beforeRegistration = [];
+        foreach ($students as $roll => $stu) {
+            if ($stu->date_of_registration) {
+                $reg = \Carbon\Carbon::parse($stu->date_of_registration)->startOfDay();
+                if ($dateCarbon->lt($reg)) {
+                    $beforeRegistration[] = $roll;
+                }
+            }
+        }
+        if ($beforeRegistration !== []) {
+            return response()->json([
+                'message' => 'Date is before registration for: ' . implode(', ', $beforeRegistration),
+            ], 422);
+        }
+
         $date = $request->input('date');
         $savedCount = 0;
 
-        DB::transaction(function () use ($request, $user, $date, &$savedCount) {
+        DB::transaction(function () use ($request, $user, $date, $lectureId, &$savedCount) {
             foreach ($request->input('records') as $record) {
-                Attendance::updateOrCreate(
-                    ['roll_no' => $record['roll_no'], 'date' => $date],
+                $existing = Attendance::where('roll_no', $record['roll_no'])
+                    ->where('date', $date)
+                    ->where('lecture_id', $lectureId)
+                    ->first();
+                $oldStatus = $existing?->status;
+
+                $attendance = Attendance::updateOrCreate(
+                    ['roll_no' => $record['roll_no'], 'date' => $date, 'lecture_id' => $lectureId],
                     ['status' => $record['status'], 'marked_by' => $user->id]
                 );
                 $savedCount++;
+
+                // History for diff/audit
+                if ($oldStatus !== null && $oldStatus !== $record['status']) {
+                    \App\Models\AttendanceHistory::create([
+                        'attendance_id' => $attendance->id,
+                        'roll_no' => $record['roll_no'],
+                        'date' => $date,
+                        'lecture_id' => $lectureId,
+                        'old_status' => $oldStatus,
+                        'new_status' => $record['status'],
+                        'changed_by' => $user->id,
+                    ]);
+                } elseif ($oldStatus === null) {
+                    \App\Models\AttendanceHistory::create([
+                        'attendance_id' => $attendance->id,
+                        'roll_no' => $record['roll_no'],
+                        'date' => $date,
+                        'lecture_id' => $lectureId,
+                        'old_status' => null,
+                        'new_status' => $record['status'],
+                        'changed_by' => $user->id,
+                    ]);
+                }
             }
         });
 
@@ -179,6 +255,209 @@ class ClerkController extends Controller
             'saved' => $savedCount,
             'date' => $date,
         ], 200);
+    }
+
+    /**
+     * CSV template for attendance upload.
+     */
+    public function template(Request $request)
+    {
+        $user = Auth::user();
+        if (!in_array($user->current_role->role, ['clerk', 'admin'], true)) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+        $csv = "roll_no,date,status\n123,2026-08-26,present\n124,2026-08-26,absent\n";
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="attendance_template.csv"',
+        ]);
+    }
+
+    /**
+     * Bulk CSV import: columns roll_no,date,status (lecture_id optional).
+     * Validates dept scope, date range, edit window, returns created/updated/skipped/errors.
+     */
+    public function csvImport(Request $request)
+    {
+        $user = Auth::user();
+        $role = $user->current_role->role;
+        if (!in_array($role, ['clerk', 'admin'], true)) {
+            return response()->json(['message' => 'You are not authorized to import attendance'], 403);
+        }
+
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt|max:2048',
+            'lecture_id' => 'nullable|integer|min:0',
+        ]);
+
+        $lectureId = (int) ($request->input('lecture_id', 0));
+        $allowedDepartmentIds = $role === 'admin' ? null : $this->clerkDepartmentIds($user->id);
+        if ($role !== 'admin' && $allowedDepartmentIds === []) {
+            return response()->json(['message' => 'No departments are assigned to you yet.'], 403);
+        }
+
+        $file = $request->file('file');
+        $content = file_get_contents($file->getRealPath());
+        $lines = array_filter(array_map('trim', explode("\n", $content)));
+        if (count($lines) < 2) {
+            return response()->json(['message' => 'CSV is empty or missing header'], 422);
+        }
+
+        $header = array_map('trim', str_getcsv(array_shift($lines)));
+        $header = array_map('strtolower', $header);
+        $required = ['roll_no', 'date', 'status'];
+        foreach ($required as $col) {
+            if (!in_array($col, $header, true)) {
+                return response()->json(['message' => "Missing required column: {$col}"], 422);
+            }
+        }
+
+        $idxRoll = array_search('roll_no', $header, true);
+        $idxDate = array_search('date', $header, true);
+        $idxStatus = array_search('status', $header, true);
+        $idxLecture = array_search('lecture_id', $header, true);
+
+        $created = 0; $updated = 0; $skipped = 0;
+        $errors = [];
+        $window = (int) config('attendance.edit_window_days', 7);
+
+        DB::beginTransaction();
+        try {
+            foreach ($lines as $lineNo => $line) {
+                $rowNum = $lineNo + 2;
+                $cols = str_getcsv($line);
+                $rollRaw = trim($cols[$idxRoll] ?? '');
+                $dateRaw = trim($cols[$idxDate] ?? '');
+                $statusRaw = strtolower(trim($cols[$idxStatus] ?? ''));
+                $lecRaw = $idxLecture !== false ? trim($cols[$idxLecture] ?? '') : '';
+
+                if ($rollRaw === '' || $dateRaw === '' || $statusRaw === '') {
+                    $errors[] = "Row {$rowNum}: missing roll_no/date/status";
+                    continue;
+                }
+                if (!ctype_digit($rollRaw)) {
+                    $errors[] = "Row {$rowNum}: roll_no must be integer";
+                    continue;
+                }
+                $roll = (int) $rollRaw;
+                if (!in_array($statusRaw, ['present', 'absent'], true)) {
+                    $errors[] = "Row {$rowNum}: status must be present/absent";
+                    continue;
+                }
+                try { $date = \Carbon\Carbon::parse($dateRaw)->toDateString(); } catch (\Throwable $e) {
+                    $errors[] = "Row {$rowNum}: invalid date";
+                    continue;
+                }
+                if (\Carbon\Carbon::parse($date)->isAfter(now()->startOfDay())) {
+                    $errors[] = "Row {$rowNum}: date cannot be in future";
+                    continue;
+                }
+                if ($role === 'clerk' && \Carbon\Carbon::parse($date)->lt(now()->startOfDay()->subDays($window))) {
+                    $errors[] = "Row {$rowNum}: beyond {$window}-day edit window";
+                    continue;
+                }
+                $lec = $lecRaw !== '' ? (int) $lecRaw : $lectureId;
+
+                $student = Student::where('roll_no', $roll)
+                    ->when($allowedDepartmentIds !== null, fn ($q) => $q->whereIn('department_id', $allowedDepartmentIds))
+                    ->first();
+                if (!$student) {
+                    $errors[] = "Row {$rowNum}: roll {$roll} not in your departments";
+                    continue;
+                }
+                if ($student->date_of_registration && \Carbon\Carbon::parse($date)->lt(\Carbon\Carbon::parse($student->date_of_registration)->startOfDay())) {
+                    $errors[] = "Row {$rowNum}: date before registration for {$roll}";
+                    continue;
+                }
+
+                $existing = Attendance::where('roll_no', $roll)->where('date', $date)->where('lecture_id', $lec)->first();
+                if ($existing && $existing->status === $statusRaw) {
+                    $skipped++;
+                    continue;
+                }
+                $oldStatus = $existing?->status;
+                $attendance = Attendance::updateOrCreate(
+                    ['roll_no' => $roll, 'date' => $date, 'lecture_id' => $lec],
+                    ['status' => $statusRaw, 'marked_by' => $user->id]
+                );
+                if ($existing) $updated++; else $created++;
+
+                \App\Models\AttendanceHistory::create([
+                    'attendance_id' => $attendance->id,
+                    'roll_no' => $roll,
+                    'date' => $date,
+                    'lecture_id' => $lec,
+                    'old_status' => $oldStatus,
+                    'new_status' => $statusRaw,
+                    'changed_by' => $user->id,
+                ]);
+            }
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Import failed: ' . $e->getMessage()], 500);
+        }
+
+        return response()->json([
+            'message' => "Import done: {$created} created, {$updated} updated, {$skipped} skipped, " . count($errors) . " errors",
+            'data' => [
+                'created' => $created,
+                'updated' => $updated,
+                'skipped' => $skipped,
+                'error_count' => count($errors),
+                'errors' => $errors,
+            ],
+        ], 200);
+    }
+
+    /**
+     * Export attendance as CSV for a date range (and optional department/lecture).
+     */
+    public function export(Request $request)
+    {
+        $user = Auth::user();
+        if (!in_array($user->current_role->role, ['clerk', 'admin'], true)) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'from' => 'nullable|date',
+            'to' => 'nullable|date|after_or_equal:from',
+            'department_id' => 'nullable|integer|exists:departments,id',
+            'lecture_id' => 'nullable|integer|min:0',
+        ]);
+
+        $allowedDepartmentIds = $user->current_role->role === 'admin' ? null : $this->clerkDepartmentIds($user->id);
+        $deptIds = $allowedDepartmentIds;
+        if ($request->filled('department_id')) {
+            $deptIds = $allowedDepartmentIds === null
+                ? [(int) $request->input('department_id')]
+                : array_values(array_intersect($allowedDepartmentIds, [(int) $request->input('department_id')]));
+        }
+        if ($deptIds !== null && $deptIds === []) {
+            return response()->json(['message' => 'No departments in scope'], 403);
+        }
+
+        $query = Attendance::query()->orderBy('date')->orderBy('roll_no');
+        if ($request->filled('from')) $query->where('date', '>=', $request->input('from'));
+        if ($request->filled('to')) $query->where('date', '<=', $request->input('to'));
+        if ($request->filled('lecture_id')) $query->where('lecture_id', (int) $request->input('lecture_id'));
+        if ($deptIds !== null) {
+            $rolls = Student::whereIn('department_id', $deptIds)->pluck('roll_no');
+            $query->whereIn('roll_no', $rolls);
+        }
+
+        $rows = $query->get(['roll_no', 'date', 'lecture_id', 'status', 'marked_by']);
+        $csv = "roll_no,date,lecture_id,status\n";
+        foreach ($rows as $r) {
+            $csv .= "{$r->roll_no},{$r->date},{$r->lecture_id},{$r->status}\n";
+        }
+
+        $filename = 'attendance_export_' . now()->toDateString() . '.csv';
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
     }
 
     // -----------------------------------------------------------------------
