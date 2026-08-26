@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Layout from '../../components/dashboard/layout';
+import PageHeader from '../../components/pageHeader/PageHeader';
 import { toast } from 'react-toastify';
 import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
 import CustomButton from '../../components/forms/fields/CustomButton';
-import './AttendancePage.css';
 
 const todayString = () => {
   const now = new Date();
@@ -21,8 +21,6 @@ const AttendancePage = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Departments the clerk covers, shown once so the page is not a bare table
-  // when no departments have been tagged yet.
   useEffect(() => {
     customFetch(baseURL + '/clerks/my-departments', 'GET', {}, false)
       .then((res) => {
@@ -41,7 +39,6 @@ const AttendancePage = () => {
 
     const list = res.response.students || [];
     setStudents(list);
-    // Every student starts present; saved attendance for the day overrides.
     const next = {};
     list.forEach((s) => { next[s.roll_no] = s.status || 'present'; });
     setStatuses(next);
@@ -72,12 +69,26 @@ const AttendancePage = () => {
 
   return (
     <Layout>
-      <div className="attendance-page">
-        <div className="attendance-controls">
-          <div className="control-group">
-            <label htmlFor="attendance-date">Date</label>
+      <PageHeader
+        title="Attendance"
+        subtitle={departments.length > 0 ? `${departments.map((d) => d.name).join(', ')} — select Absent scholars and save.` : 'Your departments will appear here once an admin tags you.'}
+        actions={
+          students.length > 0 && (
+            <CustomButton
+              text={saving ? 'Saving…' : 'Save Attendance'}
+              onClick={handleSave}
+              disabled={saving || loading}
+            />
+          )
+        }
+      />
+
+      <div className="filter-bar" style={{ marginBottom: '1rem' }}>
+        <div className="filter-row" style={{ alignItems: 'flex-end' }}>
+          <div className="input-field-container" style={{ minWidth: '180px' }}>
+            <label className="input-label">Date</label>
             <input
-              id="attendance-date"
+              className="input-field"
               type="date"
               value={date}
               max={todayString()}
@@ -85,10 +96,10 @@ const AttendancePage = () => {
             />
           </div>
           {departments.length > 1 && (
-            <div className="control-group">
-              <label htmlFor="attendance-dept">Department</label>
+            <div className="input-field-container" style={{ minWidth: '220px' }}>
+              <label className="input-label">Department</label>
               <select
-                id="attendance-dept"
+                className="input-field"
                 value={departmentFilter}
                 onChange={(e) => setDepartmentFilter(e.target.value)}
               >
@@ -99,73 +110,75 @@ const AttendancePage = () => {
               </select>
             </div>
           )}
-          <div className="attendance-summary">
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: '1rem', alignItems: 'center', fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 600 }}>
             <span>{students.length} scholar(s)</span>
-            <span className="absent-count">{absentCount} absent</span>
+            <span className="badge badge--danger">{absentCount} absent</span>
           </div>
         </div>
+      </div>
 
-        {departments.length === 0 && !loading ? (
-          <div className="attendance-empty">
-            No departments are assigned to you yet. Please contact an administrator.
-          </div>
-        ) : (
-          <>
-            <div className="attendance-table-wrap">
-              <table className="attendance-table">
-                <thead>
-                  <tr>
-                    <th>Roll No</th>
-                    <th>Name</th>
-                    <th>Status</th>
+      {departments.length === 0 && !loading ? (
+        <div className="empty-state">
+          No departments are assigned to you yet. Please contact an administrator.
+        </div>
+      ) : (
+        <div className="form-list-container">
+          <table className="form-table">
+            <thead>
+              <tr>
+                <th>Roll No</th>
+                <th>Name</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={3} className="no-data-cell">Loading…</td></tr>
+              ) : students.length === 0 ? (
+                <tr><td colSpan={3} className="no-data-cell">No PhD scholars found for this selection.</td></tr>
+              ) : (
+                students.map((s) => (
+                  <tr key={s.roll_no}>
+                    <td>{s.roll_no}</td>
+                    <td>{s.name}</td>
+                    <td>
+                      <span style={{ display: 'inline-flex', gap: '1rem' }}>
+                        <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer' }}>
+                          <input
+                            type="radio"
+                            name={`status-${s.roll_no}`}
+                            checked={(statuses[s.roll_no] || 'present') === 'present'}
+                            onChange={() => setStatus(s.roll_no, 'present')}
+                          />
+                          Present
+                        </label>
+                        <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', color: statuses[s.roll_no] === 'absent' ? 'var(--danger-text)' : undefined, fontWeight: statuses[s.roll_no] === 'absent' ? 600 : 400 }}>
+                          <input
+                            type="radio"
+                            name={`status-${s.roll_no}`}
+                            checked={statuses[s.roll_no] === 'absent'}
+                            onChange={() => setStatus(s.roll_no, 'absent')}
+                          />
+                          Absent
+                        </label>
+                      </span>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr><td colSpan={3} className="attendance-loading">Loading…</td></tr>
-                  ) : students.length === 0 ? (
-                    <tr><td colSpan={3} className="attendance-loading">No PhD scholars found for this date&apos;s selection.</td></tr>
-                  ) : (
-                    students.map((s) => (
-                      <tr key={s.roll_no} className={statuses[s.roll_no] === 'absent' ? 'row-absent' : ''}>
-                        <td>{s.roll_no}</td>
-                        <td>{s.name}</td>
-                        <td>
-                          <label className="radio-option">
-                            <input
-                              type="radio"
-                              name={`status-${s.roll_no}`}
-                              checked={(statuses[s.roll_no] || 'present') === 'present'}
-                              onChange={() => setStatus(s.roll_no, 'present')}
-                            />
-                            Present
-                          </label>
-                          <label className="radio-option radio-absent">
-                            <input
-                              type="radio"
-                              name={`status-${s.roll_no}`}
-                              checked={statuses[s.roll_no] === 'absent'}
-                              onChange={() => setStatus(s.roll_no, 'absent')}
-                            />
-                            Absent
-                          </label>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-            <div className="attendance-actions">
+                ))
+              )}
+            </tbody>
+          </table>
+          {students.length > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
               <CustomButton
                 text={saving ? 'Saving…' : 'Save Attendance'}
                 onClick={handleSave}
-                disabled={saving || loading || students.length === 0}
+                disabled={saving || loading}
               />
             </div>
-          </>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </Layout>
   );
 };
