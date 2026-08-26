@@ -14,6 +14,7 @@ class Attendance extends Model
     protected $fillable = [
         'roll_no',
         'date',
+        'lecture_id',
         'status',
         'marked_by',
     ];
