@@ -164,8 +164,7 @@ const AttendancePage = () => {
         title="Attendance"
         subtitle={departments.length > 0 ? `${departments.map((d) => d.name).join(', ')} — select Absent scholars and save.` : 'Your departments will appear here once an admin tags you.'}
         actions={
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-            <CustomButton text="Template" variant="secondary" onClick={downloadTemplate} />
+          <div style={{ display: 'flex', gap: '10px' }}>
             <CustomButton text="Upload CSV" variant="secondary" onClick={() => setShowCsvModal(true)} />
             <CustomButton text="Export" variant="secondary" onClick={handleExport} />
             {students.length > 0 && (
@@ -285,22 +284,28 @@ const AttendancePage = () => {
       )}
 
       <CustomModal isOpen={showCsvModal} onClose={() => { setShowCsvModal(false); setCsvFile(null); setCsvPreview(null); }} title="Upload Attendance CSV" width="90vw">
-        <div className="modal-note" style={{ marginTop: 0 }}>
-          Columns: <code>roll_no,date,status</code> (status <code>present</code>/<code>absent</code>, date <code>YYYY-MM-DD</code> ≤ today, ≥ registration, inside your departments, within {EDIT_WINDOW}-day window for clerks). Lecture CSV may add <code>lecture_id</code>.
-        </div>
-        <div style={{ marginBottom: '1rem' }}>
-          <CustomButton text="Download Template" variant="secondary" onClick={downloadTemplate} />
-        </div>
-        <input type="file" accept=".csv" onChange={handleFileChange} style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', width: '100%' }} />
-        {csvPreview && (
-          <div style={{ marginTop: '1rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', overflow: 'hidden' }}>
-            <div style={{ padding: '0.75rem', background: '#f9fafb', fontWeight: 600 }}>Preview: {csvPreview.total} row(s), showing 5</div>
-            <div className="csv-preview-wrap"><table className="csv-preview"><thead><tr><th>Row</th>{csvPreview.headers.map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>{csvPreview.data.map(r => <tr key={r._row}><td className="csv-rownum">{r._row}</td>{csvPreview.headers.map(h => <td key={h}>{r[h] || <span style={{ color:'#9ca3af', fontStyle:'italic' }}>empty</span>}</td>)}</tr>)}</tbody></table></div>
+        <div className="modal-form">
+          <div className="info-box" style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '0.5rem', padding: '1rem', marginBottom: '1rem' }}>
+            <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}><strong>CSV Format:</strong></p>
+            <p style={{ margin: '0.25rem 0', fontSize: '0.875rem', fontFamily: 'monospace', background: '#e0f2fe', padding: '0.5rem', borderRadius: '0.25rem' }}>roll_no,date,status</p>
+            <p style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '0.875rem' }}><strong>Required:</strong> roll_no, date (YYYY-MM-DD ≤ today, ≥ registration), status (present/absent)</p>
+            <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}><strong>Optional:</strong> lecture_id — leave empty for daily attendance</p>
+            <p style={{ margin: '0.25rem 0', fontSize: '0.875rem', color: '#92400e' }}>Only roll numbers in your tagged departments are accepted. Clerks can edit only within {EDIT_WINDOW} days.</p>
           </div>
-        )}
-        <div className="modal-actions">
-          <CustomButton text="Cancel" variant="secondary" onClick={() => { setShowCsvModal(false); setCsvFile(null); setCsvPreview(null); }} />
-          <CustomButton text={uploading ? 'Uploading…' : 'Upload'} onClick={handleCsvUpload} disabled={uploading || !csvFile} />
+          <div style={{ marginBottom: '1rem' }}>
+            <CustomButton text="Download Template" onClick={downloadTemplate} style={{ backgroundColor: '#FF9800', color: 'white', padding: '10px 20px', borderRadius: '6px', fontWeight: '500', marginBottom: '1rem' }} />
+          </div>
+          <input type="file" accept=".csv" onChange={handleFileChange} style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '1rem', cursor: 'pointer', marginBottom: '1rem', width: '100%', boxSizing: 'border-box' }} />
+          {csvPreview && (
+            <div style={{ marginTop: '1rem', marginBottom: '1rem', maxHeight: '400px', overflowY: 'auto', border: '1px solid #d1d5db', borderRadius: '0.5rem' }}>
+              <div style={{ padding: '0.75rem', background: '#f9fafb', borderBottom: '1px solid #d1d5db', fontWeight: '600' }}>Preview: {csvPreview.total} row(s) found — showing 5</div>
+              <div className="csv-preview-wrap"><table className="csv-preview"><thead><tr><th>Row</th>{csvPreview.headers.map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>{csvPreview.data.map(r => <tr key={r._row}><td className="csv-rownum">{r._row}</td>{csvPreview.headers.map(h => <td key={h}>{r[h] || <span style={{ color:'#9ca3af', fontStyle:'italic' }}>empty</span>}</td>)}</tr>)}</tbody></table></div>
+            </div>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+            <button onClick={() => { setShowCsvModal(false); setCsvFile(null); setCsvPreview(null); }} style={{ padding: '0.75rem 1.5rem', background: 'white', color: '#6b7280', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '1rem', fontWeight: '500', cursor: 'pointer' }}>Cancel</button>
+            <button onClick={handleCsvUpload} disabled={uploading || !csvFile} style={{ padding: '0.75rem 1.5rem', background: uploading || !csvFile ? '#9ca3af' : 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '0.5rem', fontSize: '1rem', fontWeight: '500', cursor: uploading || !csvFile ? 'not-allowed' : 'pointer' }}>{uploading ? 'Uploading...' : 'Upload'}</button>
+          </div>
         </div>
       </CustomModal>
     </Layout>
