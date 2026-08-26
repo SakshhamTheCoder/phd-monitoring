@@ -6,11 +6,11 @@ import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import CustomModal from '../../components/forms/modal/CustomModal';
+import ClerkForm from '../../components/clerkForm/ClerkForm';
 
 /**
- * Admin-side clerk management. A clerk is just a user account holding the
- * 'clerk' role (created from Manage Users as Office/Admin -> Clerk); this page
- * only handles the department tagging that makes the role usable.
+ * Admin-side clerk management. Uses the same ClerkForm as Manage Users
+ * (StudentForm/FacultyForm pattern) so adding a clerk works from either place.
  */
 const ClerkManagement = () => {
   const [clerks, setClerks] = useState([]);
@@ -19,6 +19,7 @@ const ClerkManagement = () => {
   const [editing, setEditing] = useState(null);
   const [selectedDeptIds, setSelectedDeptIds] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const loadClerks = async () => {
     setLoading(true);
@@ -68,7 +69,8 @@ const ClerkManagement = () => {
     <Layout>
       <PageHeader
         title="Clerk Management"
-        subtitle="Create clerk logins from Manage Users (Office / Admin → Clerk), then tag them with the departments whose PhD attendance they mark."
+        subtitle="Create clerk logins and tag them with the departments whose PhD attendance they mark."
+        actions={<CustomButton text="Add Clerk +" onClick={() => setIsCreateOpen(true)} />}
       />
 
       {loading ? (
@@ -119,6 +121,23 @@ const ClerkManagement = () => {
           </table>
         </div>
       )}
+
+      <CustomModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        width="80vw"
+      >
+        <ClerkForm
+          onSuccess={() => {
+            setIsCreateOpen(false);
+            loadClerks();
+          }}
+          onClose={() => {
+            setIsCreateOpen(false);
+            loadClerks();
+          }}
+        />
+      </CustomModal>
 
       <CustomModal
         isOpen={!!editing}

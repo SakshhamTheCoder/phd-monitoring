@@ -11,6 +11,7 @@ import UserForm from '../../components/userForm/UserForm';
 import NewUserKindPicker from '../../components/userForm/NewUserKindPicker';
 import StudentForm from '../../components/studentForm/StudentForm';
 import FacultyForm from '../../components/facultyForm/FacultyForm';
+import ClerkForm from '../../components/clerkForm/ClerkForm';
 import { baseURL } from '../../api/urls';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import { customFetch } from '../../api/base';
@@ -359,6 +360,8 @@ Jane,Smith,jane.smith@example.com,9876543210,female,faculty,"faculty,doctoral",a
             ) : createKind === 'faculty' ? (
               // Creates the User and Faculty record in one call.
               <FacultyForm onSuccess={() => closeUserModal(true)} onClose={() => closeUserModal(true)} />
+            ) : createKind === 'clerk' ? (
+              <ClerkForm onSuccess={() => closeUserModal(true)} onClose={() => closeUserModal(true)} />
             ) : (
               <UserForm edit={false} userData={null} onClose={() => closeUserModal(true)} />
             )}
