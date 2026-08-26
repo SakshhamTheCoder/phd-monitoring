@@ -95,6 +95,21 @@ class User extends Authenticatable
         return $this->hasOne(Faculty::class, 'user_id');
     }
 
+    /**
+     * Departments this clerk has been tagged with. The linkage lives in its own
+     * table (not a column) because a clerk can cover several departments, and it
+     * is what authorizes every attendance action the role can take.
+     */
+    public function clerkDepartments()
+    {
+        return $this->hasMany(ClerkDepartment::class, 'user_id');
+    }
+
+    public function clerkDepartmentsList()
+    {
+        return $this->belongsToMany(Department::class, 'clerk_departments', 'user_id', 'department_id');
+    }
+
     public function notifications()
     {
         return $this->hasMany(Notifications::class);
@@ -131,6 +146,9 @@ class User extends Authenticatable
              array_push($roles, 'doctoral');
             array_push($roles, 'faculty');
             array_push($roles, 'dra');
+        }
+        if ($this->role->role == 'clerk') {
+            array_push($roles, 'clerk');
         }
         if ($this->role->role == 'dordc') {
              array_push($roles, 'doctoral');

@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\ClerkDepartment;
 use App\Models\Department;
 use App\Models\PhdCoordinator;
 use App\Models\User;
@@ -34,7 +35,7 @@ class RoleRequirements
      * Every role the system knows about, so callers can audit exhaustively.
      */
     public const ALL = [
-        'admin', 'adordc', 'director', 'doctoral', 'dordc', 'dra',
+        'admin', 'adordc', 'clerk', 'director', 'doctoral', 'dordc', 'dra',
         'external', 'faculty', 'hod', 'phd_coordinator', 'student',
     ];
 
@@ -54,6 +55,12 @@ class RoleRequirements
             return $user->student
                 ? null
                 : 'has no student record';
+        }
+
+        if ($role === 'clerk') {
+            return ClerkDepartment::where('user_id', $user->id)->exists()
+                ? null
+                : 'is not assigned to any department as clerk (assign from Clerk Management)';
         }
 
         // Everything remaining is a faculty-shaped role, so the Faculty record
