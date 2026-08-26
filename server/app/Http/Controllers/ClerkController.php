@@ -88,7 +88,7 @@ class ClerkController extends Controller
 
         $date = $request->input('date', now()->toDateString());
 
-        $students = Student::with('user:id,first_name,last_name')
+        $students = Student::with(['user:id,first_name,last_name', 'department:id,name,code'])
             ->whereIn('department_id', $departmentIds)
             ->orderBy('roll_no')
             ->get();
@@ -105,6 +105,8 @@ class ClerkController extends Controller
                 'roll_no' => $student->roll_no,
                 'name' => optional($student->user)->name(),
                 'department_id' => $student->department_id,
+                'department_name' => optional($student->department)->name,
+                'department_code' => optional($student->department)->code,
                 'current_status' => $student->current_status,
                 // Saved status wins; everyone else presents as present by default.
                 'status' => $record?->status ?? 'present',

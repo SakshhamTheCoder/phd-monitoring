@@ -128,19 +128,21 @@ const AttendancePage = () => {
               <tr>
                 <th>Roll No</th>
                 <th>Name</th>
+                <th>Department</th>
                 <th>Status</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={3} className="no-data-cell">Loading…</td></tr>
+                <tr><td colSpan={4} className="no-data-cell">Loading…</td></tr>
               ) : students.length === 0 ? (
-                <tr><td colSpan={3} className="no-data-cell">No PhD scholars found for this selection.</td></tr>
+                <tr><td colSpan={4} className="no-data-cell">No PhD scholars found for this selection.</td></tr>
               ) : (
                 students.map((s) => (
                   <tr key={s.roll_no}>
                     <td>{s.roll_no}</td>
                     <td>{s.name}</td>
+                    <td><span className="badge badge--neutral">{s.department_name || s.department_code || '-'}</span></td>
                     <td>
                       <span style={{ display: 'inline-flex', gap: '1rem' }}>
                         <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer' }}>
