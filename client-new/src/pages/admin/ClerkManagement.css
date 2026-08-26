@@ -1,0 +1,105 @@
+.clerk-management {
+    padding: 1rem;
+}
+
+.clerk-header h2 {
+    margin: 0 0 0.25rem;
+}
+
+.clerk-hint {
+    color: #64748b;
+    font-size: 0.85rem;
+    margin: 0 0 1rem;
+}
+
+.clerk-hint code {
+    background: #f1f5f9;
+    padding: 0.1rem 0.3rem;
+    border-radius: 0.25rem;
+}
+
+.clerk-table-wrap {
+    overflow-x: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    background: #fff;
+}
+
+.clerk-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.clerk-table th,
+.clerk-table td {
+    padding: 0.6rem 0.9rem;
+    text-align: left;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: top;
+}
+
+.clerk-table thead th {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+}
+
+.dept-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.dept-chip {
+    background: #e0f2fe;
+    color: #0369a1;
+    border-radius: 999px;
+    padding: 0.15rem 0.6rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.dept-none {
+    color: #94a3b8;
+    font-style: italic;
+}
+
+.clerk-loading {
+    text-align: center;
+    color: #94a3b8;
+    padding: 2rem !important;
+}
+
+.dept-picker p {
+    margin: 0 0 0.75rem;
+    color: #334155;
+}
+
+.dept-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 50vh;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+}
+
+.dept-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    padding: 0.4rem 0.5rem;
+    border-radius: 0.375rem;
+}
+
+.dept-option:hover {
+    background: #f8fafc;
+}
+
+.dept-picker-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}

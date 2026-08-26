@@ -39,6 +39,8 @@ import OutsideExperts from './pages/OutsideExperts/OutsideExperts';
 import ExternalReview from './pages/externalReview/ExternalReview';
 import SupervisorDoctoralApproval from './pages/SupervisorDoctoralApproval/SupervisorDoctoralApproval';
 import UsersPage from './pages/users/UsersPage';
+import AttendancePage from './pages/attendance/AttendancePage';
+import ClerkManagement from './pages/admin/ClerkManagement';
 import PrivacyPolicy from './pages/privacy/PrivacyPolicy';
 import Support from './pages/support/Support';
 import ResearchProfile from './pages/admin/ResearchProfile';
@@ -166,17 +168,21 @@ const AppContent = () => {
           {role === 'dordc' && (
             <Route path="/supervisor-doctoral-approvals" element={<SupervisorDoctoralApproval />} />
           )}
+          {role==='clerk' && (
+            <Route path="/attendance" element={<AttendancePage />} />
+          )}
           {(
-            role === 'admin') && (
-              <>
+            role==='admin') && (
+                <>
                 <Route path="/forms/manage" element={<AdminFormManagement />} />
                 <Route path='/areasOfSpecialization' element={<AreaOfSpecialization />} />
                 <Route path="/courses/manage" element={<AdminCourseManagement />} />
                 <Route path="/outside-experts" element={<OutsideExperts />} />
                 <Route path="/logs" element={<Logs />} />
                 <Route path="/users" element={<UsersPage />} />
+                <Route path="/clerk-management" element={<ClerkManagement />} />
 
-                {/* <Route path="/faculty/:roll_no" element={<StudentProfile />} />
+              {/* <Route path="/faculty/:roll_no" element={<StudentProfile />} />
               <Route path="/faculty/:roll_no/forms" element={<FormsPage />} />
               <Route path="/faculty/:roll_no/forms/:form_type" element={<FormListPage />} />
               <Route path="/faculty/:roll_no/forms/:form_type/:id" element={<MainFormPage />} /> */}

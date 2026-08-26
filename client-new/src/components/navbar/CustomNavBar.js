@@ -17,12 +17,14 @@ export const buttonConfig = [
     { path: '/faculty', icon: <i class="fa-solid fa-person-chalkboard"></i>, text: 'Faculty', roles: ['hod', 'phd_coordinator', 'dordc', 'adordc', 'dra', 'director', 'admin'] },
     { path: '/departments', icon: <i class="fa-solid fa-building"></i>, text: 'Departments', roles: ['dordc', 'adordc', 'dra', 'director', 'admin'] },
     { path: '/supervisor-doctoral-approvals', icon: <i class="fa-solid fa-check-circle"></i>, text: 'Supervisor Approvals', roles: ['dordc', 'admin'] },
+    { path: '/attendance', icon: <i class="fa fa-calendar-check-o" aria-hidden="true"></i>, text: 'Attendance', roles: ['clerk'] },
     { path: '/logs', icon: <i class="fa-solid fa-history"></i>, text: 'Logs', roles: ['admin'] },
     { path: '/users', icon: <i class="fa-solid fa-users-cog"></i>, text: 'Manage Users', roles: ['admin'] },
     { path: '/notifications', icon: <i class="fa-solid fa-bell"></i>, text: 'Notifications', roles: ['student', 'hod', 'phd_coordinator', 'faculty', 'dordc', 'adordc', 'dra', 'director', 'doctoral', 'external', 'admin'] },
     { path: '/areasOfSpecialization', icon: <i class="fa fa-list" aria-hidden="true"></i>, text: 'Areas of Specialization', roles: ['admin'] },
     { path: '/outside-experts', icon: <i class="fa fa-user-tie" aria-hidden="true"></i>, text: 'Outside Experts', roles: ['admin'] },
     { path: '/research-profile', icon: <i class="fa fa-user-circle" aria-hidden="true"></i>, text: 'Research Profile', roles: ['faculty', 'hod', 'phd_coordinator', 'dordc', 'adordc', 'dra', 'director', 'admin'], feature: 'research_profile' },
+    { path: '/clerk-management', icon: <i class="fa fa-id-card-o" aria-hidden="true"></i>, text: 'Clerk Management', roles: ['admin'] },
 ];
 
 const CustomNavBar = () => {
