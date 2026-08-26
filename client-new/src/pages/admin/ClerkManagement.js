@@ -30,7 +30,7 @@ const ClerkManagement = () => {
 
   useEffect(() => {
     loadClerks();
-    customFetch(baseURL + '/departments', 'GET', {}, false).then((res) => {
+    customFetch(baseURL + '/departments?rows=200', 'GET', {}, false).then((res) => {
       if (res.success) setDepartments(res.response.data || []);
     });
   }, []);
