@@ -371,6 +371,10 @@ Route::prefix('users')->group(function () {
     require base_path('routes/base/users.php');
 });
 
+Route::prefix('clerks')->group(function () {
+    require base_path('routes/base/clerks.php');
+});
+
 Route::prefix('google')->group(function () {
     require base_path('routes/base/google_auth.php');
 });
