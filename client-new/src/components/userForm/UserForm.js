@@ -323,10 +323,10 @@ const UserForm = ({ edit, userData, onClose }) => {
                       border: '1px solid #fcd34d', borderRadius: '0.375rem',
                       padding: '0.5rem 0.75rem', marginTop: 0, marginBottom: '0.5rem' }}>
             Ticking a role here grants it, but does not create the record it depends on.
-            <strong> Hod</strong>, <strong>Phd_coordinator</strong> and <strong>Adordc</strong> are
-            assigned from the Departments page. <strong>Faculty</strong>-type roles need a faculty
-            record and <strong>Student</strong> needs a student record. Until those exist the user
-            cannot switch into the role.
+            <strong>Hod</strong>, <strong>Phd_coordinator</strong> and <strong>Adordc</strong> are
+            assigned from the Departments page, <strong>Clerk</strong> from Clerk Management.
+            <strong>Faculty</strong>-type roles need a faculty record and <strong>Student</strong>
+            needs a student record. Until those exist the user cannot switch into the role.
           </p>
           <div style={{
             display: 'grid',

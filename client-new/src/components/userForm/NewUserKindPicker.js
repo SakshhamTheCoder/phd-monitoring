@@ -25,6 +25,13 @@ const KINDS = [
       'Creates the login and the faculty record together, internal or external. HOD, PhD Coordinator and ADORDC are assigned later from the Departments page.',
   },
   {
+    key: 'clerk',
+    icon: 'fa-id-card',
+    title: 'Clerk',
+    description:
+      'Creates a login for marking PhD attendance. Departments are tagged afterwards from Clerk Management.',
+  },
+  {
     key: 'other',
     icon: 'fa-user-shield',
     title: 'Office / Admin',
