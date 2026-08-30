@@ -16,13 +16,15 @@ class Semester extends Model
         'end_date',
         'year',
         'semester',
-        'ppt_file'
+        'ppt_file',
+        'notification',
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
         'year' => 'integer',
+        'notification' => 'boolean',
     ];
 
     /**

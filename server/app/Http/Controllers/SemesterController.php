@@ -91,13 +91,25 @@ class SemesterController extends Controller
 
         $semester = Semester::createOrUpdateFromCode($request->semester_name, $request->start_date, $request->end_date);
 
+        if (!$semester) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid semester code.',
+            ], 422);
+        }
+
+        if ($request->exists('notification')) {
+            $semester->notification = $request->boolean('notification');
+        }
+
         // Handle PPT file upload
         if ($request->hasFile('ppt_file')) {
             $link = $this->replaceUploadedFile($semester->ppt_file, $request->file('ppt_file'), 'semester_ppt', $request->semester_name);
             $semester->ppt_file = $link;
-            $semester->save();
             $this->commitFileDeletions();
         }
+
+        $semester->save();
 
         return response()->json([
             'status' => 'success',

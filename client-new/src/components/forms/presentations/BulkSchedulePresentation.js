@@ -24,14 +24,14 @@ const BulkSchedulePresentation = ({semester_name}) => {
       title: period,
     }));
     setReportPeriods(formattedPeriods);
-    body.period_of_report = semester_name;
-  }, []);
+    setBody((prev) => ({ ...prev, period_of_report: semester_name }));
+  }, [semester_name]);
 
   const formatDate = (date) => {
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
+    return `${year}-${month}-${day}`;
   };
 
   const handleFileUpload = (e) => {
@@ -133,8 +133,11 @@ const BulkSchedulePresentation = ({semester_name}) => {
       guest_emails: entry['Additional Guest Email'] || [],
     }));
 
-    const currentPath = window.location.pathname;
-    customFetch(baseURL + currentPath + '/bulk-schedule/', 'POST', { students })
+    customFetch(
+      baseURL + `/forms/presentation/semester/${semester_name}/bulk-schedule`,
+      'POST',
+      { semester: semester_name, students }
+    )
       .then((data) => {
         if (data && data.success) {
           toast.success('Bulk Presentations Scheduled');

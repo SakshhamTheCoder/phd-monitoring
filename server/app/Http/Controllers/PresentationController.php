@@ -423,9 +423,12 @@ class PresentationController extends Controller
             'semester' => 'required|string',
             'students' => 'required|array',
             'students.*.student_id' => 'required|integer',
-            'students.*.date' => 'required|string',
+            'students.*.date' => 'required|date_format:Y-m-d',
             'students.*.time' => 'required|string',
+            'students.*.period_of_report' => 'required|string',
             'students.*.guest_emails' => 'nullable|array',
+            'students.*.guest_emails.*' => 'email',
+            'students.*.venue' => 'nullable|string',
         ]);
         $validator = $this->validateSemesterCode($request->semester);
         if (!$validator['valid']) {
@@ -441,7 +444,6 @@ class PresentationController extends Controller
         foreach ($request->students as $studentData) {
             $student = Student::where('roll_no', $studentData['student_id'])->first();
         
-            $formattedDate =  Carbon::createFromFormat('Y-m-d',$studentData['date'])->format('Y-m-d');
             if (!$student) {
                 $errors[] = ['student_id' => $studentData['student_id'], 'message' => 'Student not found'];
                 continue;
@@ -463,17 +465,21 @@ class PresentationController extends Controller
 
             $form = Presentation::create([
                 'student_id' => $studentData['student_id'],
+                'date' => Carbon::createFromFormat('Y-m-d', $studentData['date'])->format('Y-m-d'),
+                'time' => $studentData['time'],
                 'semester_id' => $validator['semester_id'],
                 'period_of_report' => $studentData['period_of_report'],
                 'leave' => $studentData['leave'] ?? false,
                 'status' => 'pending',
                 'ppt_file' => $validator['ppt_file'],
+                'total_progress' => $student->overall_progress,
                 'completion' => 'incomplete',
                 'steps' => ['student', 'faculty', 'doctoral', 'hod','adordc', 'dordc', 'complete'],
             ]);
 
             $emails = $this->emailList($student, $request);
             $form->venue = $studentData['venue'] ?? 'TBD';
+            $form->save();
             $form->addHistoryEntry("Presentation Scheduled by Supervisor", $user->first_name);
             $createdForms[] = $form;
         }

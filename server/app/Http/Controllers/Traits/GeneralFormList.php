@@ -320,6 +320,8 @@ trait GeneralFormList
             'semester_name' => $semesters->semester_name,
             'start_date' => $semesters->start_date,
             'end_date' => $semesters->end_date,
+            'ppt_file' => $semesters->ppt_file,
+            'notification' => (bool) $semesters->notification,
             'year' => $semesters->year,
             'semester_off' => $semesters->studentsOnSemesterOff()
                 ->where('students.department_id', $dep_id)
@@ -354,6 +356,8 @@ trait GeneralFormList
             'semester_name' => $semesters->semester_name,
             'start_date' => $semesters->start_date,
             'end_date' => $semesters->end_date,
+            'ppt_file' => $semesters->ppt_file,
+            'notification' => (bool) $semesters->notification,
             'year' => $semesters->year,
             'semester_off' => $semesters->studentsOnSemesterOff()->count(),
             'leave' => $semesters->presentationsLeave()->count(),

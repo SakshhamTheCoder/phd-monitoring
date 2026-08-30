@@ -16,21 +16,28 @@ const FilterBar = ({ onSearch, default_filter,mandatory_filter }) => {
   const [activeFilters, setActiveFilters] = useState([]);
 
   useEffect(() => {
-    try{
     const fetchFilters = async () => {
-      let location = window.location;
-      let data = await customFetch(
-        baseURL + location.pathname + "/filters",
-        "GET",
-        null,
-        false
-      );
-      setFiltersMeta(data?.response);
+      try {
+        let location = window.location;
+        let data = await customFetch(
+          baseURL + location.pathname + "/filters",
+          "GET",
+          null,
+          false
+        );
+        const raw = data?.response;
+        // Guard: /filters may 404, return object, or non-array on pages without a
+        // dedicated filter definition (e.g. /clerk-management). Never store
+        // a non-array otherwise .map/.find crashes the whole page.
+        if (Array.isArray(raw)) setFiltersMeta(raw);
+        else if (Array.isArray(raw?.data)) setFiltersMeta(raw.data);
+        else setFiltersMeta([]);
+      } catch (error) {
+        console.error("Error fetching filters:", error);
+        setFiltersMeta([]);
+      }
     };
     fetchFilters();
-  }catch(error){
-    console.error("Error fetching filters:", error);
-  }
   }, []);
 
   useEffect(() => {
@@ -80,20 +87,18 @@ const FilterBar = ({ onSearch, default_filter,mandatory_filter }) => {
           className="filter-select"
           value={selectedFilter?.key_name || ""}
           onChange={(e) => {
-            const meta = filtersMeta?.find(
-              (f) => f.key_name === e.target.value
-            );
+            const list = Array.isArray(filtersMeta) ? filtersMeta : [];
+            const meta = list.find((f) => f.key_name === e.target.value);
             setSelectedFilter(meta || null);
             setValue("");
           }}
         >
           <option value="">Select Filter</option>
-          {filtersMeta &&
-            filtersMeta?.map((f) => (
-              <option key={f.key_name} value={f.key_name}>
-                {f.label}
-              </option>
-            ))}
+          {(Array.isArray(filtersMeta) ? filtersMeta : []).map((f) => (
+            <option key={f.key_name} value={f.key_name}>
+              {f.label}
+            </option>
+          ))}
         </select>
 
         <select
