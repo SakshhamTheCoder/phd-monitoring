@@ -116,8 +116,8 @@ class ClerkController extends Controller
                 'department_name' => optional($student->department)->name,
                 'department_code' => optional($student->department)->code,
                 'current_status' => $student->current_status,
-                // Saved status wins; everyone else presents as present by default.
-                'status' => $record?->status ?? 'present',
+                // null when not yet taken — lets the client distinguish "not recorded" from explicit present
+                'status' => $record?->status,
                 'recorded' => $record !== null,
                 'marked_by_name' => $record ? optional($record->markedBy)->name() : null,
             ];
@@ -128,6 +128,7 @@ class ClerkController extends Controller
             'students' => $roster,
             'absent_count' => $roster->where('status', 'absent')->count(),
             'total' => $roster->count(),
+            'recorded_count' => $roster->where('recorded', true)->count(),
         ], 200);
     }
 
