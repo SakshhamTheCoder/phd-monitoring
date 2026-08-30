@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import { toast } from 'react-toastify';
@@ -6,6 +6,11 @@ import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import CustomModal from '../../components/forms/modal/CustomModal';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import './AttendancePage.css';
+
+const EDIT_WINDOW = 7;
 
 const todayString = () => {
   const now = new Date();
@@ -13,7 +18,16 @@ const todayString = () => {
   return new Date(now.getTime() - offset * 60 * 1000).toISOString().slice(0, 10);
 };
 
-const EDIT_WINDOW = 7;
+const formatDate = (d) => {
+  if (!d) return '';
+  const offset = d.getTimezoneOffset();
+  return new Date(d.getTime() - offset * 60 * 1000).toISOString().slice(0, 10);
+};
+
+const parseDate = (str) => {
+  if (!str) return null;
+  return new Date(str + 'T00:00:00');
+};
 
 const AttendancePage = () => {
   const [date, setDate] = useState(todayString());
@@ -27,16 +41,41 @@ const AttendancePage = () => {
   const [csvFile, setCsvFile] = useState(null);
   const [csvPreview, setCsvPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportFrom, setExportFrom] = useState(todayString());
+  const [exportTo, setExportTo] = useState(todayString());
+
+  const role = localStorage.getItem('userRole');
+  const isAdmin = role === 'admin';
 
   useEffect(() => {
-    customFetch(baseURL + '/clerks/my-departments', 'GET', {}, false)
-      .then((res) => {
-        if (res.success) setDepartments(res.response.departments || []);
-      })
-      .catch(() => {});
-  }, []);
+    if (isAdmin) {
+      customFetch(baseURL + '/departments', 'GET', {}, false)
+        .then((res) => {
+          const deps = res.response?.data || res.response?.departments || res.response || [];
+          const list = Array.isArray(deps) ? deps : [];
+          // department list shape varies: {data:[{id,name}]} or [{id,name}]
+          const normalized = list.map((d) => ({ id: d.id, name: d.name, code: d.code }));
+          if (normalized.length > 0) {
+            setDepartments(normalized);
+            setDepartmentFilter(String(normalized[0].id));
+          }
+        })
+        .catch(() => {});
+    } else {
+      customFetch(baseURL + '/clerks/my-departments', 'GET', {}, false)
+        .then((res) => {
+          if (res.success) {
+            const deps = res.response.departments || [];
+            setDepartments(deps);
+            if (deps.length > 0) setDepartmentFilter(String(deps[0].id));
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isAdmin]);
 
-  const loadRoster = async () => {
+  const loadRoster = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams({ date });
     if (departmentFilter) params.set('department_id', departmentFilter);
@@ -47,14 +86,24 @@ const AttendancePage = () => {
     const list = res.response.students || [];
     setStudents(list);
     const next = {};
-    list.forEach((s) => { next[s.roll_no] = s.status || 'present'; });
+    const isToday = date === todayString();
+    list.forEach((s) => {
+      if (s.status != null) next[s.roll_no] = s.status;
+      else next[s.roll_no] = isToday ? 'present' : null;
+    });
     setStatuses(next);
-  };
+  }, [date, departmentFilter]);
 
-  useEffect(() => { loadRoster(); /* eslint-disable-next-line */ }, [date, departmentFilter]);
+  useEffect(() => { loadRoster(); }, [loadRoster]);
 
   const setStatus = (rollNo, status) => {
     setStatuses((prev) => ({ ...prev, [rollNo]: status }));
+  };
+
+  const markAll = (status) => {
+    const next = {};
+    students.forEach((s) => { next[s.roll_no] = status; });
+    setStatuses(next);
   };
 
   const absentCount = useMemo(
@@ -62,17 +111,24 @@ const AttendancePage = () => {
     [students, statuses]
   );
 
-  const isPastWindow = useMemo(() => {
-    const d = new Date(date);
-    const today = new Date(todayString());
-    const diff = (today - d) / (1000*60*60*24);
-    return diff > EDIT_WINDOW;
-  }, [date]);
-
   const handleSave = async () => {
     if (students.length === 0) return;
+    if (!departmentFilter) {
+      toast.error('Select a department first');
+      return;
+    }
+    const records = students
+      .filter((s) => statuses[s.roll_no] === 'present' || statuses[s.roll_no] === 'absent')
+      .map((s) => ({ roll_no: s.roll_no, status: statuses[s.roll_no] }));
+    if (records.length === 0) {
+      toast.info('No attendance marked — treated as no session (nothing saved)');
+      return;
+    }
+    if (records.length < students.length) {
+      const skipped = students.length - records.length;
+      toast.info(`${skipped} unmarked scholar(s) will be left as no session`);
+    }
     setSaving(true);
-    const records = students.map((s) => ({ roll_no: s.roll_no, status: statuses[s.roll_no] || 'present' }));
     const res = await customFetch(baseURL + '/clerks/attendance', 'POST', { date, records }, true);
     setSaving(false);
     if (res.success) {
@@ -93,9 +149,19 @@ const AttendancePage = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleExport = async () => {
+  const handleExportClick = () => {
+    setExportFrom(date);
+    setExportTo(date);
+    setShowExportModal(true);
+  };
+
+  const confirmExport = async () => {
+    if (exportFrom > exportTo) {
+      toast.error('From date cannot be after To date');
+      return;
+    }
     const token = localStorage.getItem('token');
-    const params = new URLSearchParams({ from: date, to: date });
+    const params = new URLSearchParams({ from: exportFrom, to: exportTo });
     if (departmentFilter) params.set('department_id', departmentFilter);
     const res = await fetch(baseURL + `/clerks/attendance/export?${params.toString()}`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -104,8 +170,9 @@ const AttendancePage = () => {
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = `attendance_${date}.csv`; a.click();
+    a.href = url; a.download = `attendance_${exportFrom}_to_${exportTo}.csv`; a.click();
     URL.revokeObjectURL(url);
+    setShowExportModal(false);
   };
 
   const handleFileChange = (e) => {
@@ -158,6 +225,15 @@ const AttendancePage = () => {
     } finally { setUploading(false); }
   };
 
+  const todayDate = useMemo(() => { const d = new Date(); d.setHours(0,0,0,0); return d; }, []);
+  const minSelectableDate = useMemo(() => {
+    if (isAdmin) return null;
+    const d = new Date();
+    d.setHours(0,0,0,0);
+    d.setDate(d.getDate() - EDIT_WINDOW);
+    return d;
+  }, [isAdmin]);
+
   return (
     <Layout>
       <PageHeader
@@ -166,37 +242,31 @@ const AttendancePage = () => {
         actions={
           <div style={{ display: 'flex', gap: '10px' }}>
             <CustomButton text="Upload CSV" variant="secondary" onClick={() => setShowCsvModal(true)} />
-            <CustomButton text="Export" variant="secondary" onClick={handleExport} />
-            {students.length > 0 && (
-              <CustomButton
-                text={saving ? 'Saving…' : 'Save Attendance'}
-                onClick={handleSave}
-                disabled={saving || loading}
-              />
-            )}
+            <CustomButton text="Export" variant="secondary" onClick={handleExportClick} />
           </div>
         }
       />
 
-      {isPastWindow && (
-        <div className="modal-note" style={{ marginBottom: '1rem' }}>
-          This date is older than {EDIT_WINDOW} days. Clerks cannot edit beyond the window — contact an admin for older records. Edits keep <code>updated_at</code>/<code>marked_by</code> and are logged to history.
-        </div>
-      )}
+
 
       <div className="filter-bar" style={{ marginBottom: '1rem' }}>
         <div className="filter-row" style={{ alignItems: 'flex-end' }}>
           <div className="input-field-container" style={{ minWidth: '180px' }}>
-            <label className="input-label">Date</label>
-            <input
+            <label className="input-label">
+              Date
+              {date === todayString() && <span className="badge badge--success" style={{ marginLeft: '0.5rem', fontSize: '0.65rem' }}>Today</span>}
+            </label>
+            <DatePicker
+              selected={parseDate(date)}
+              onChange={(d) => d && setDate(formatDate(d))}
+              dateFormat="yyyy-MM-dd"
               className="input-field"
-              type="date"
-              value={date}
-              max={todayString()}
-              onChange={(e) => setDate(e.target.value)}
+              placeholderText="YYYY-MM-DD"
+              minDate={minSelectableDate}
+              maxDate={todayDate}
             />
           </div>
-          {departments.length > 1 && (
+          {departments.length > 0 && (
             <div className="input-field-container" style={{ minWidth: '220px' }}>
               <label className="input-label">Department</label>
               <select
@@ -204,7 +274,6 @@ const AttendancePage = () => {
                 value={departmentFilter}
                 onChange={(e) => setDepartmentFilter(e.target.value)}
               >
-                <option value="">All my departments</option>
                 {departments.map((d) => (
                   <option key={d.id} value={d.id}>{d.name}</option>
                 ))}
@@ -217,6 +286,15 @@ const AttendancePage = () => {
           </div>
         </div>
       </div>
+
+      {students.length > 0 && !loading && (
+        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+          <CustomButton text="Mark all Present" variant="secondary" onClick={() => markAll('present')} />
+          <CustomButton text="Mark all Absent" variant="secondary" onClick={() => markAll('absent')} />
+          <span style={{ width: '1px', height: '24px', background: 'var(--border-subtle)', margin: '0 0.25rem' }} />
+          <CustomButton text={saving ? 'Saving…' : 'Save Attendance'} onClick={handleSave} disabled={saving || loading} />
+        </div>
+      )}
 
       {departments.length === 0 && !loading ? (
         <div className="empty-state">
@@ -231,43 +309,54 @@ const AttendancePage = () => {
                 <th>Name</th>
                 <th>Department</th>
                 <th>Status</th>
+                <th>Record</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={4} className="no-data-cell">Loading…</td></tr>
+                <tr><td colSpan={5} className="no-data-cell">Loading…</td></tr>
               ) : students.length === 0 ? (
-                <tr><td colSpan={4} className="no-data-cell">No PhD scholars found for this selection.</td></tr>
+                <tr><td colSpan={5} className="no-data-cell">No PhD scholars found for this selection.</td></tr>
               ) : (
-                students.map((s) => (
+                students.map((s) => {
+                  const cur = statuses[s.roll_no];
+                  return (
                   <tr key={s.roll_no}>
                     <td>{s.roll_no}</td>
                     <td>{s.name}</td>
-                    <td><span className="badge badge--neutral">{s.department_name || s.department_code || '-'}</span></td>
+                    <td>{s.department_name || s.department_code || '-'}</td>
                     <td>
-                      <span style={{ display: 'inline-flex', gap: '1rem' }}>
-                        <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer' }}>
+                      <span style={{ display: 'inline-flex', gap: '1rem', alignItems: 'center' }}>
+                        <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', fontWeight: cur === 'present' ? 600 : 400 }}>
                           <input
                             type="radio"
                             name={`status-${s.roll_no}`}
-                            checked={(statuses[s.roll_no] || 'present') === 'present'}
+                            checked={cur === 'present'}
                             onChange={() => setStatus(s.roll_no, 'present')}
                           />
                           Present
                         </label>
-                        <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', color: statuses[s.roll_no] === 'absent' ? 'var(--danger-text)' : undefined, fontWeight: statuses[s.roll_no] === 'absent' ? 600 : 400 }}>
+                        <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', color: cur === 'absent' ? 'var(--danger-text)' : undefined, fontWeight: cur === 'absent' ? 600 : 400 }}>
                           <input
                             type="radio"
                             name={`status-${s.roll_no}`}
-                            checked={statuses[s.roll_no] === 'absent'}
+                            checked={cur === 'absent'}
                             onChange={() => setStatus(s.roll_no, 'absent')}
                           />
                           Absent
                         </label>
                       </span>
                     </td>
+                    <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                      {s.recorded ? (
+                        s.marked_by_name ? <span title={`Marked by ${s.marked_by_name}`}>by {s.marked_by_name}</span> : <span style={{ color: 'var(--text-subtle)', fontStyle: 'italic' }}>Recorded</span>
+                      ) : (
+                        <span style={{ color: 'var(--text-subtle)', fontStyle: 'italic' }} title="No record — treated as no session">No session</span>
+                      )}
+                    </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -283,6 +372,45 @@ const AttendancePage = () => {
         </div>
       )}
 
+      <CustomModal isOpen={showExportModal} onClose={() => setShowExportModal(false)} title="Export Attendance" width="600px" minHeight="420px">
+        <div className="modal-form">
+          <div className="field-stack">
+            <div className="input-field-container">
+              <label className="input-label">From</label>
+              <DatePicker
+                selected={parseDate(exportFrom)}
+                onChange={(d) => d && setExportFrom(formatDate(d))}
+                dateFormat="yyyy-MM-dd"
+                className="input-field"
+                placeholderText="YYYY-MM-DD"
+                maxDate={todayDate}
+              />
+            </div>
+            <div className="input-field-container">
+              <label className="input-label">To</label>
+              <DatePicker
+                selected={parseDate(exportTo)}
+                onChange={(d) => d && setExportTo(formatDate(d))}
+                dateFormat="yyyy-MM-dd"
+                className="input-field"
+                placeholderText="YYYY-MM-DD"
+                minDate={parseDate(exportFrom)}
+                maxDate={todayDate}
+              />
+            </div>
+          </div>
+          {exportFrom > exportTo && (
+            <div className="modal-note" style={{ marginTop: '1rem', background: '#FFF1F2', borderColor: '#FECDD3', color: '#9F1239' }}>
+              From date cannot be after To date.
+            </div>
+          )}
+          <div className="modal-actions">
+            <CustomButton text="Cancel" variant="secondary" onClick={() => setShowExportModal(false)} />
+            <CustomButton text="Export" onClick={confirmExport} disabled={exportFrom > exportTo} />
+          </div>
+        </div>
+      </CustomModal>
+
       <CustomModal isOpen={showCsvModal} onClose={() => { setShowCsvModal(false); setCsvFile(null); setCsvPreview(null); }} title="Upload Attendance CSV" width="90vw">
         <div className="modal-form">
           <div className="info-box" style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '0.5rem', padding: '1rem', marginBottom: '1rem' }}>
@@ -295,16 +423,16 @@ const AttendancePage = () => {
           <div style={{ marginBottom: '1rem' }}>
             <CustomButton text="Download Template" onClick={downloadTemplate} style={{ backgroundColor: '#FF9800', color: 'white', padding: '10px 20px', borderRadius: '6px', fontWeight: '500', marginBottom: '1rem' }} />
           </div>
-          <input type="file" accept=".csv" onChange={handleFileChange} style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '1rem', cursor: 'pointer', marginBottom: '1rem', width: '100%', boxSizing: 'border-box' }} />
+          <input type="file" accept=".csv" onChange={handleFileChange} style={{ padding: '0.5rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius)', fontSize: '1rem', cursor: 'pointer', marginBottom: '1rem', width: '100%', boxSizing: 'border-box' }} />
           {csvPreview && (
-            <div style={{ marginTop: '1rem', marginBottom: '1rem', maxHeight: '400px', overflowY: 'auto', border: '1px solid #d1d5db', borderRadius: '0.5rem' }}>
-              <div style={{ padding: '0.75rem', background: '#f9fafb', borderBottom: '1px solid #d1d5db', fontWeight: '600' }}>Preview: {csvPreview.total} row(s) found — showing 5</div>
-              <div className="csv-preview-wrap"><table className="csv-preview"><thead><tr><th>Row</th>{csvPreview.headers.map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>{csvPreview.data.map(r => <tr key={r._row}><td className="csv-rownum">{r._row}</td>{csvPreview.headers.map(h => <td key={h}>{r[h] || <span style={{ color:'#9ca3af', fontStyle:'italic' }}>empty</span>}</td>)}</tr>)}</tbody></table></div>
+            <div style={{ marginTop: '1rem', marginBottom: '1rem', maxHeight: '400px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: 'var(--radius)' }}>
+              <div style={{ padding: '0.75rem', background: '#f9fafb', borderBottom: '1px solid var(--border-color)', fontWeight: '600' }}>Preview: {csvPreview.total} row(s) found — showing 5</div>
+              <div className="csv-preview-wrap"><table className="csv-preview"><thead><tr><th>Row</th>{csvPreview.headers.map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>{csvPreview.data.map(r => <tr key={r._row}><td className="csv-rownum">{r._row}</td>{csvPreview.headers.map(h => <td key={h}>{r[h] || <span style={{ color:'var(--text-subtle)', fontStyle:'italic' }}>empty</span>}</td>)}</tr>)}</tbody></table></div>
             </div>
           )}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
-            <button onClick={() => { setShowCsvModal(false); setCsvFile(null); setCsvPreview(null); }} style={{ padding: '0.75rem 1.5rem', background: 'white', color: '#6b7280', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '1rem', fontWeight: '500', cursor: 'pointer' }}>Cancel</button>
-            <button onClick={handleCsvUpload} disabled={uploading || !csvFile} style={{ padding: '0.75rem 1.5rem', background: uploading || !csvFile ? '#9ca3af' : 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '0.5rem', fontSize: '1rem', fontWeight: '500', cursor: uploading || !csvFile ? 'not-allowed' : 'pointer' }}>{uploading ? 'Uploading...' : 'Upload'}</button>
+            <button onClick={() => { setShowCsvModal(false); setCsvFile(null); setCsvPreview(null); }} style={{ padding: '0.75rem 1.5rem', background: 'white', color: 'var(--text-muted)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius)', fontSize: '1rem', fontWeight: '500', cursor: 'pointer' }}>Cancel</button>
+            <button onClick={handleCsvUpload} disabled={uploading || !csvFile} style={{ padding: '0.75rem 1.5rem', background: uploading || !csvFile ? 'var(--text-subtle)' : 'var(--primary-color)', color: 'white', border: 'none', borderRadius: 'var(--radius)', fontSize: '1rem', fontWeight: '500', cursor: uploading || !csvFile ? 'not-allowed' : 'pointer' }}>{uploading ? 'Uploading...' : 'Upload'}</button>
           </div>
         </div>
       </CustomModal>
