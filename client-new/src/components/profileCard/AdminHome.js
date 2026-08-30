@@ -30,6 +30,8 @@ const LINKS = [
     roles: ["admin"] },
   { path: "/logs", label: "Activity Logs",
     roles: ["admin"] },
+  { path: "/attendance", label: "Mark Attendance",
+    roles: ["clerk"] },
 ];
 
 const storedName = () => {

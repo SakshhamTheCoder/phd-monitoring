@@ -16,10 +16,10 @@ const Dashboard = () => {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    // Admin accounts have no personal (student/faculty) profile, and /home 404s for
+    // Admin / clerk accounts have no personal (student/faculty) profile, and /home 404s for
     // them — which surfaces an error toast. Skip the call entirely and show the
-    // admin overview built from what we already have in localStorage.
-    if (userRole === 'admin') {
+    // overview built from what we already have in localStorage.
+    if (userRole === 'admin' || userRole === 'clerk') {
       setView('admin');
       setIsLoaded(true);
       return;
