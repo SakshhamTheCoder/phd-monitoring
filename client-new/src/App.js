@@ -168,7 +168,7 @@ const AppContent = () => {
           {role === 'dordc' && (
             <Route path="/supervisor-doctoral-approvals" element={<SupervisorDoctoralApproval />} />
           )}
-          {role==='clerk' && (
+          {(role==='clerk' || role==='admin') && (
             <Route path="/attendance" element={<AttendancePage />} />
           )}
           {(
@@ -181,6 +181,7 @@ const AppContent = () => {
                 <Route path="/logs" element={<Logs />} />
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/clerk-management" element={<ClerkManagement />} />
+                <Route path="/clerks" element={<ClerkManagement />} />
 
               {/* <Route path="/faculty/:roll_no" element={<StudentProfile />} />
               <Route path="/faculty/:roll_no/forms" element={<FormsPage />} />
