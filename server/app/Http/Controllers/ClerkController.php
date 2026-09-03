@@ -412,7 +412,117 @@ class ClerkController extends Controller
     }
 
     /**
+     * History: past sessions grouped by date, scoped to clerk's departments.
+     */
+    public function history(Request $request)
+    {
+        $user = Auth::user();
+        if (!in_array($user->current_role->role, ['clerk', 'admin'], true)) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+        $request->validate([
+            'from' => 'nullable|date',
+            'to' => 'nullable|date|after_or_equal:from',
+            'department_id' => 'nullable|integer|exists:departments,id',
+            'lecture_id' => 'nullable|integer|min:0',
+            'page' => 'nullable|integer|min:1',
+            'per_page' => 'nullable|integer|min:1|max:100',
+        ]);
+        $allowedDepartmentIds = $user->current_role->role === 'admin' ? null : $this->clerkDepartmentIds($user->id);
+        $deptIds = $allowedDepartmentIds;
+        if ($request->filled('department_id')) {
+            $deptIds = $allowedDepartmentIds === null
+                ? [(int) $request->input('department_id')]
+                : array_values(array_intersect($allowedDepartmentIds, [(int) $request->input('department_id')]));
+        }
+        if ($deptIds !== null && $deptIds === []) {
+            return response()->json(['message' => 'No departments in scope'], 403);
+        }
+        $q = Attendance::query();
+        if ($request->filled('from')) $q->where('date', '>=', $request->input('from'));
+        if ($request->filled('to')) $q->where('date', '<=', $request->input('to'));
+        if ($request->filled('lecture_id')) $q->where('lecture_id', (int) $request->input('lecture_id'));
+        if ($deptIds !== null) {
+            $rolls = Student::whereIn('department_id', $deptIds)->pluck('roll_no');
+            $q->whereIn('roll_no', $rolls);
+        }
+        $sessions = $q->select('date', 'lecture_id', DB::raw('count(*) as total'), DB::raw("sum(case when status='present' then 1 else 0 end) as present_count"), DB::raw("sum(case when status='absent' then 1 else 0 end) as absent_count"))
+            ->groupBy('date', 'lecture_id')
+            ->orderBy('date', 'desc')
+            ->paginate($request->input('per_page', 15));
+        return response()->json($sessions, 200);
+    }
+
+    /**
+     * Attendance for a single student — permission mirrors StudentController::get.
+     * If you can view the student, you can view their attendance.
+     */
+    public function studentAttendance(Request $request, $roll_no)
+    {
+        $user = Auth::user();
+        $role = $user->current_role->role;
+        $student = null;
+        switch ($role) {
+            case 'admin':
+            case 'director':
+            case 'dra':
+            case 'dordc':
+            case 'clerk':
+                // clerk allowed if student in their departments
+                if ($role === 'clerk') {
+                    $deptIds = $this->clerkDepartmentIds($user->id);
+                    $student = Student::where('roll_no', $roll_no)->whereIn('department_id', $deptIds)->first();
+                    if (!$student) return response()->json(['message' => 'You do not have permission to view student'], 403);
+                } else {
+                    $student = Student::find($roll_no);
+                }
+                break;
+            case 'adordc':
+                $departments = $user->faculty->adordcDepartments->pluck('id');
+                $student = Student::whereIn('department_id', $departments)->where('roll_no', $roll_no)->first();
+                break;
+            case 'hod':
+            case 'phd_coordinator':
+                $student = Student::where('department_id', $user->faculty->department_id)->where('roll_no', $roll_no)->first();
+                break;
+            case 'faculty':
+                $student = Student::find($roll_no);
+                if (!$student || !$student->checkSupervises($user->faculty->faculty_code)) return response()->json(['message' => 'You do not have permission to view student'], 403);
+                break;
+            case 'doctoral':
+            case 'external':
+                $student = Student::find($roll_no);
+                if (!$student || !$student->doctoralCommittee->contains('faculty_code', $user->faculty->faculty_code)) return response()->json(['message' => 'You do not have permission to view student'], 403);
+                break;
+            case 'student':
+                $student = Student::where('user_id', $user->id)->where('roll_no', $roll_no)->first();
+                break;
+            default:
+                return response()->json(['message' => 'You do not have permission to view student'], 403);
+        }
+        if (!$student) return response()->json(['message' => 'Student not found'], 404);
+        $request->validate([
+            'from' => 'nullable|date',
+            'to' => 'nullable|date|after_or_equal:from',
+        ]);
+        $q = Attendance::where('roll_no', $roll_no)->orderBy('date', 'desc');
+        if ($request->filled('from')) $q->where('date', '>=', $request->input('from'));
+        if ($request->filled('to')) $q->where('date', '<=', $request->input('to'));
+        $records = $q->get(['date', 'lecture_id', 'status', 'marked_by']);
+        $total = $records->count();
+        $present = $records->where('status', 'present')->count();
+        $absent = $records->where('status', 'absent')->count();
+        $percent = $total ? round($present / $total * 100, 1) : null;
+        return response()->json([
+            'student' => ['roll_no' => $student->roll_no, 'name' => optional($student->user)->name()],
+            'summary' => ['total' => $total, 'present' => $present, 'absent' => $absent, 'percent' => $percent],
+            'records' => $records,
+        ], 200);
+    }
+
+    /**
      * Export attendance as CSV for a date range (and optional department/lecture).
+     * Supports selective roll_nos and summary counts (name: total presents).
      */
     public function export(Request $request)
     {
@@ -426,6 +536,10 @@ class ClerkController extends Controller
             'to' => 'nullable|date|after_or_equal:from',
             'department_id' => 'nullable|integer|exists:departments,id',
             'lecture_id' => 'nullable|integer|min:0',
+            'roll_nos' => 'nullable|array',
+            'roll_nos.*' => 'integer',
+            'roll_no' => 'nullable|integer',
+            'summary' => 'nullable|boolean',
         ]);
 
         $allowedDepartmentIds = $user->current_role->role === 'admin' ? null : $this->clerkDepartmentIds($user->id);
@@ -447,11 +561,33 @@ class ClerkController extends Controller
             $rolls = Student::whereIn('department_id', $deptIds)->pluck('roll_no');
             $query->whereIn('roll_no', $rolls);
         }
+        // selective students
+        $selectRolls = null;
+        if ($request->filled('roll_no')) $selectRolls = [(int) $request->input('roll_no')];
+        if ($request->filled('roll_nos')) $selectRolls = array_map('intval', $request->input('roll_nos'));
+        if ($selectRolls !== null) $query->whereIn('roll_no', $selectRolls);
 
         $rows = $query->get(['roll_no', 'date', 'lecture_id', 'status', 'marked_by']);
-        $csv = "roll_no,date,lecture_id,status\n";
-        foreach ($rows as $r) {
-            $csv .= "{$r->roll_no},{$r->date},{$r->lecture_id},{$r->status}\n";
+        // department scope check for selective export
+        if ($selectRolls !== null && $deptIds !== null) {
+            $allowedRolls = Student::whereIn('department_id', $deptIds)->pluck('roll_no')->all();
+            $invalid = array_diff($selectRolls, $allowedRolls);
+            if ($invalid !== []) return response()->json(['message' => 'These roll numbers are not in your departments: ' . implode(', ', $invalid)], 403);
+        }
+
+        $wantSummary = $request->boolean('summary');
+        if ($wantSummary) {
+            $summary = $rows->groupBy('roll_no')->map(function ($g, $roll) {
+                $name = optional(Student::with('user')->where('roll_no', $roll)->first()?->user)->name() ?? (string) $roll;
+                return ['roll_no' => $roll, 'name' => $name, 'present' => $g->where('status', 'present')->count(), 'absent' => $g->where('status', 'absent')->count(), 'total' => $g->count()];
+            })->values();
+            $csv = "roll_no,date,status\n";
+            foreach ($rows as $r) $csv .= "{$r->roll_no},{$r->date},{$r->status}\n";
+            $csv .= "\nsummary_roll_no,name,present,absent,total\n";
+            foreach ($summary as $s) $csv .= "{$s['roll_no']},\"{$s['name']}\",{$s['present']},{$s['absent']},{$s['total']}\n";
+        } else {
+            $csv = "roll_no,date,status\n";
+            foreach ($rows as $r) $csv .= "{$r->roll_no},{$r->date},{$r->status}\n";
         }
 
         $filename = 'attendance_export_' . now()->toDateString() . '.csv';
@@ -581,5 +717,81 @@ class ClerkController extends Controller
         }
 
         return response()->json(['message' => 'Department removed from clerk'], 200);
+    }
+
+    public function bulkUpdate(Request $request)
+    {
+        if ($response = $this->authorizeAdmin()) return $response;
+        $request->validate([
+            'clerks' => 'required|array',
+            'clerks.*.email' => 'required|email',
+            'clerks.*.department_codes' => 'nullable|string',
+            'clerks.*.phone' => 'nullable|string',
+            'clerks.*.first_name' => 'nullable|string',
+            'clerks.*.last_name' => 'nullable|string',
+        ]);
+        $updated = 0; $failed = 0; $errors = [];
+        $created = 0;
+        DB::beginTransaction();
+        try {
+            foreach ($request->clerks as $idx => $row) {
+                try {
+                    $user = \App\Models\User::where('email', $row['email'])->first();
+                    if (!$user) {
+                        // Unified create-or-update: create clerk if missing (consistent with faculty/student)
+                        $role = \App\Models\Role::where('role','clerk')->first();
+                        if (!$role) throw new \Exception('Clerk role not found');
+                        $user = new \App\Models\User();
+                        $user->first_name = !empty($row['first_name']) ? $row['first_name'] : explode('@',$row['email'])[0];
+                        $user->last_name = $row['last_name'] ?? ' ';
+                        $user->email = $row['email'];
+                        $user->phone = $row['phone'] ?? null;
+                        $user->password = bcrypt(\Illuminate\Support\Str::password(8, true, true, true, false));
+                        $user->role_id = $role->id;
+                        $user->current_role_id = $role->id;
+                        $user->save();
+                        $created++;
+                    } else {
+                        if (!empty($row['phone'])) { $user->phone = $row['phone']; $user->save(); }
+                        // ensure clerk role is available for existing non-clerk users
+                        $clerkRole = \App\Models\Role::where('role','clerk')->first();
+                        if ($clerkRole && $user->role_id !== $clerkRole->id) {
+                            $avail = $user->available_roles ?? [];
+                            if (!in_array('clerk', $avail, true)) {
+                                $avail[] = 'clerk';
+                                $user->available_roles = $avail;
+                                $user->save();
+                            }
+                        }
+                    }
+                    if (array_key_exists('department_codes', $row) && $row['department_codes'] !== null && $row['department_codes'] !== '') {
+                        $codes = array_filter(array_map('trim', explode(',', $row['department_codes'])));
+                        $deptIds = [];
+                        foreach ($codes as $code) {
+                            $dept = \App\Support\DepartmentCodes::resolve($code);
+                            if (!$dept) { throw new \Exception("Department code {$code} not found"); }
+                            $deptIds[] = $dept->id;
+                        }
+                        ClerkDepartment::where('user_id', $user->id)->whereNotIn('department_id', $deptIds)->delete();
+                        foreach ($deptIds as $did) ClerkDepartment::firstOrCreate(['user_id'=>$user->id,'department_id'=>$did]);
+                    }
+                    $updated++;
+                } catch (\Exception $e) { $errors[] = "Row ".($idx+1).": ".$e->getMessage(); $failed++; }
+            }
+            DB::commit();
+            return response()->json([
+                'success' => true,
+                'message' => "Import completed: {$created} created, " . ($updated - $created) . " updated, {$failed} errors",
+                'data' => [
+                    'success_count' => $created,
+                    'update_count' => $updated - $created,
+                    'error_count' => $failed,
+                    'errors' => $errors,
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message'=>'Bulk update failed','error'=>$e->getMessage()],500);
+        }
     }
 }
