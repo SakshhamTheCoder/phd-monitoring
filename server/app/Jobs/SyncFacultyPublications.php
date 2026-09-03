@@ -160,13 +160,14 @@ class SyncFacultyPublications implements ShouldQueue
             'Accept' => 'application/json',
         ]);
         try {
-            // view=COMPLETE returns the whole author list; the default view
-            // carries only dc:creator, the first author, which is why every
-            // paper was credited to one person.
+            // STANDARD view: COMPLETE needs an entitlement most keys lack
+            // (401). Every field we store lives in STANDARD; only the full
+            // author array is COMPLETE-only, and scopusAuthors() already falls
+            // back to dc:creator (first author) when it is absent.
             //
-            // COMPLETE caps count at 25, where the default view allows 200, so
-            // asking for more is a 400 and the whole sync fails. Hence paging.
-            $perPage = 25;
+            // STANDARD allows count up to 200, so one page usually covers the
+            // whole profile — fewer round trips against the worker timeout.
+            $perPage = 100;
             $start = 0;
             $entries = [];
 
@@ -177,7 +178,7 @@ class SyncFacultyPublications implements ShouldQueue
                         'query' => "AU-ID({$faculty->scopus_id})",
                         'count' => $perPage,
                         'start' => $start,
-                        'view' => 'COMPLETE',
+                        'view' => 'STANDARD',
                     ]
                 );
 
