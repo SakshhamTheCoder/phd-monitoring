@@ -197,9 +197,16 @@ class SyncFacultyPublications implements ShouldQueue
                 // Guard against a malformed page that would otherwise loop.
             } while (count($page) === $perPage && $start < $total && $start < 2000);
 
+            // Full author lists live in the COMPLETE view, which needs an
+            // entitlement this key may lack (401 from unregistered IPs). The
+            // bypass: Crossref resolves authors by DOI for free, no key, no IP
+            // gating. Entries that already carry an author array (entitled
+            // key) or have no DOI skip the lookup and use the Scopus fields.
+            $crossrefAuthors = $this->crossrefAuthors($faculty, $entries);
+
             $imported = 0;
 
-            foreach ($entries as $entry) {
+            foreach ($entries as $idx => $entry) {
                 if (isset($entry['error'])) continue;
 
                 $publicationType = $this->scopusType(
@@ -213,7 +220,7 @@ class SyncFacultyPublications implements ShouldQueue
                     'source' => 'scopus',
                     'title' => $entry['dc:title'] ?? null,
                     'name' => $venue,
-                    'authors' => $this->scopusAuthors($entry),
+                    'authors' => $crossrefAuthors[$idx] ?? $this->scopusAuthors($entry),
                     'year' => substr($entry['prism:coverDate'] ?? '', 0, 4) ?: null,
                     'doi_link' => isset($entry['prism:doi']) ? 'https://doi.org/' . $entry['prism:doi'] : null,
                     'volume' => $entry['prism:volume'] ?? null,
@@ -320,6 +327,62 @@ class SyncFacultyPublications implements ShouldQueue
             'PATENT' => 'patent',
             default => 'journal',
         };
+    }
+
+    /**
+     * Author lists via Crossref, keyed by the entry index in $entries.
+     *
+     * Free, keyless and IP-independent, so it works wherever the COMPLETE
+     * view 401s. Chunked pools of 10 keep it fast without tripping Crossref's
+     * politeness limits; anything without a DOI, or any failed lookup, is
+     * simply absent from the map and the caller falls back to dc:creator.
+     *
+     * @return array<int, string>
+     */
+    private function crossrefAuthors(Faculty $faculty, array $entries): array
+    {
+        $targets = [];
+        foreach ($entries as $idx => $entry) {
+            if (isset($entry['error']) || !empty($entry['author'])) continue;
+            if (!empty($entry['prism:doi'])) $targets[$idx] = $entry['prism:doi'];
+        }
+        if (!$targets) return [];
+
+        $resolved = [];
+        $missing = 0;
+        foreach (array_chunk($targets, 10, true) as $chunk) {
+            $responses = \Illuminate\Support\Facades\Http::pool(function ($pool) use ($chunk) {
+                $reqs = [];
+                foreach ($chunk as $idx => $doi) {
+                    $reqs[$idx] = $pool->as("i{$idx}")->timeout(15)->get('https://api.crossref.org/works/' . $doi);
+                }
+                return $reqs;
+            });
+            foreach ($chunk as $idx => $doi) {
+                $authors = $this->crossrefAuthorString($responses["i{$idx}"] ?? null);
+                if ($authors) $resolved[$idx] = $authors;
+                else $missing++;
+            }
+        }
+        Log::info("Sync crossref authors for faculty {$faculty->faculty_code}: enriched ".count($resolved)."/".count($targets).($missing ? " ({$missing} without record)" : ""));
+        return $resolved;
+    }
+
+    private function crossrefAuthorString($response): ?string
+    {
+        if (!$response || !$response->successful()) return null;
+        $names = collect($response->json('message.author', []))
+            ->map(function ($author) {
+                $family = trim((string) ($author['family'] ?? $author['name'] ?? ''));
+                $given = trim((string) ($author['given'] ?? ''));
+                if ($family === '') return null;
+                // "Bhatia T." — matches the Scopus authname style.
+                return $family . ($given !== '' ? ' ' . mb_substr($given, 0, 1) . '.' : '');
+            })
+            ->filter()
+            ->unique()
+            ->values();
+        return $names->isNotEmpty() ? $names->implode(', ') : null;
     }
 
     /**
