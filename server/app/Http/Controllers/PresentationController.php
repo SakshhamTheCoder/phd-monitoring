@@ -106,23 +106,31 @@ class PresentationController extends Controller
                 'value' => 0
             ];
 
-            $presentationIds = \App\Models\PresentationReview::where('faculty_id', $user->faculty->faculty_code)
-                ->where('review_status', 'pending')
-                ->pluck('presentation_id')
-                ->toArray();
-
-            if (!empty($presentationIds)) {
-                $mandatoryFilters[] = [
-                    'key' => 'id',
-                    'op' => 'in',
-                    'value' => $presentationIds
-                ];
-            } else {
+            if (!optional($user->faculty)->faculty_code) {
                 $mandatoryFilters[] = [
                     'key' => 'id',
                     'op' => '=',
                     'value' => -1
                 ];
+            } else {
+                $presentationIds = \App\Models\PresentationReview::where('faculty_id', $user->faculty->faculty_code)
+                    ->where('review_status', 'pending')
+                    ->pluck('presentation_id')
+                    ->toArray();
+
+                if (!empty($presentationIds)) {
+                    $mandatoryFilters[] = [
+                        'key' => 'id',
+                        'op' => 'in',
+                        'value' => $presentationIds
+                    ];
+                } else {
+                    $mandatoryFilters[] = [
+                        'key' => 'id',
+                        'op' => '=',
+                        'value' => -1
+                    ];
+                }
             }
         }
 
