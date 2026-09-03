@@ -50,6 +50,7 @@ const Student = ({ formData }) => {
     if ((formData.broad_area_of_research_id || []).filter(Boolean).length) {
       setTimeout(() => fetchRecs(formData.broad_area_of_research_id), 400);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData]);
 
   const handlePrefrenceSelect = (value, index) => {

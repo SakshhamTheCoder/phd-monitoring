@@ -25,7 +25,6 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
   const [courses, setCourses] = useState([]);
   const [allCourses, setAllCourses] = useState([]);
   const [attendance, setAttendance] = useState(null);
-  const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [tagData, setTagData] = useState({
     course_id: '',
     semester: '',
@@ -80,7 +79,6 @@ const [userRole, setUserRole] = useState('');
       const res = await customFetch(`${baseURL}/clerks/attendance/student/${roll}`, 'GET', {}, false, false);
       if (res?.success) {
         setAttendance(res.response.summary);
-        setAttendanceRecords(res.response.records || []);
       } else if (res?.response?.message?.includes?.('permission')) {
         setAttendance(null);
       }
