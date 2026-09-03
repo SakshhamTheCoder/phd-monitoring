@@ -240,9 +240,11 @@ class SyncFacultyPublications implements ShouldQueue
                 $imported++;
             }
 
-            // Metrics are fetched regardless: citations and h-index are worth
-            // having even when no new publication rows were written.
-            $this->syncScopusMetrics($faculty, $headers);
+            try {
+                $this->syncScopusMetrics($faculty, $headers);
+            } catch (\Throwable $e) {
+                Log::warning("Scopus metrics error for faculty {$faculty->faculty_code}: " . $e->getMessage());
+            }
             return $imported;
         } catch (\Throwable $e) {
             Log::warning("Scopus sync error for {$faculty->faculty_code}: " . $e->getMessage());
