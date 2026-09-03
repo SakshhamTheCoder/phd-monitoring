@@ -117,14 +117,14 @@ class StudentController extends Controller {
 
         $request->validate([
             'students' => 'required|array',
-            'students.*.first_name' => 'required|string',
+            'students.*.first_name' => 'nullable|string',
             'students.*.last_name' => 'nullable|string',
-            'students.*.phone' => 'required|string',
+            'students.*.phone' => 'nullable|string',
             'students.*.email' => 'required|email',
-            'students.*.roll_no' => 'required|string',
-            'students.*.department_code' => 'required|string',
-            'students.*.date_of_registration' => 'required|date',
-            'students.*.current_status' => 'required|in:part-time,full-time,executive',
+            'students.*.roll_no' => 'nullable|string',
+            'students.*.department_code' => 'nullable|string',
+            'students.*.date_of_registration' => 'nullable|date',
+            'students.*.current_status' => 'nullable|in:part-time,full-time,executive',
             'students.*.date_of_irb' => 'nullable|date',
             'students.*.phd_title' => 'nullable|string',
             'students.*.fathers_name' => 'nullable|string',
@@ -134,7 +134,8 @@ class StudentController extends Controller {
         ]);
 
         $role_id = Role::where('role', 'student')->first()->id;
-        $successful = 0;
+        $createCount = 0;
+        $updateCount = 0;
         $failed = 0;
         $errors = [];
 
@@ -145,42 +146,60 @@ class StudentController extends Controller {
                 try {
                     // Find department by code, accepting superseded codes so
                     // spreadsheets saved before the codes were corrected still
-                    // import cleanly.
-                    $department = \App\Support\DepartmentCodes::resolve($studentData['department_code']);
-
-                    if (!$department) {
+                    // import cleanly. Only validate if code was provided — partial updates may omit it.
+                    $department = !empty($studentData['department_code']) ? \App\Support\DepartmentCodes::resolve($studentData['department_code']) : null;
+                    if (!empty($studentData['department_code']) && !$department) {
                         $errors[] = "Row " . ($index + 1) . ": Department code '{$studentData['department_code']}' not found";
                         $failed++;
                         continue;
                     }
 
-                    // Check if email already exists
+                    // Unified: if email or roll exists, update existing (partial) else create
                     $existingUser = \App\Models\User::where('email', $studentData['email'])->first();
-                    if ($existingUser) {
-                        $errors[] = "Row " . ($index + 1) . ": Email '{$studentData['email']}' already exists";
-                        $failed++;
+                    $existingStudent = null;
+                    if (!empty($studentData['roll_no'])) $existingStudent = Student::where('roll_no', $studentData['roll_no'])->first();
+                    if (!$existingStudent && $existingUser) $existingStudent = Student::where('user_id', $existingUser->id)->first();
+
+                    if ($existingUser && $existingStudent) {
+                        // Partial update: only overwrite provided non-empty fields
+                        // Address lives on Student only (ListStudentProfile uses student.address)
+                        if (!empty($studentData['first_name'])) $existingUser->first_name = $studentData['first_name'];
+                        if (array_key_exists('last_name', $studentData) && $studentData['last_name'] !== null && $studentData['last_name'] !== '') $existingUser->last_name = $studentData['last_name'];
+                        if (!empty($studentData['phone'])) $existingUser->phone = $studentData['phone'];
+                        $existingUser->save();
+                        if (!empty($studentData['department_code']) && $department) $existingStudent->department_id = $department->id;
+                        if (array_key_exists('phd_title', $studentData)) $existingStudent->phd_title = $studentData['phd_title'];
+                        if (array_key_exists('fathers_name', $studentData)) $existingStudent->fathers_name = $studentData['fathers_name'];
+                        if (array_key_exists('address', $studentData)) $existingStudent->address = $studentData['address'];
+                        if (array_key_exists('cgpa', $studentData)) $existingStudent->cgpa = $studentData['cgpa'];
+                        if (array_key_exists('overall_progress', $studentData)) $existingStudent->overall_progress = $studentData['overall_progress'];
+                        if (!empty($studentData['current_status'])) $existingStudent->current_status = $studentData['current_status'];
+                        if (!empty($studentData['date_of_registration'])) $existingStudent->date_of_registration = $studentData['date_of_registration'];
+                        if (array_key_exists('date_of_irb', $studentData)) $existingStudent->date_of_irb = $studentData['date_of_irb'];
+                        $existingStudent->save();
+                        $updateCount++;
                         continue;
                     }
-
-                    // Check if roll number already exists
-                    $existingStudent = Student::where('roll_no', $studentData['roll_no'])->first();
-                    if ($existingStudent) {
-                        $errors[] = "Row " . ($index + 1) . ": Roll number '{$studentData['roll_no']}' already exists";
-                        $failed++;
-                        continue;
+                    if ($existingUser || $existingStudent) {
+                        $errors[] = "Row " . ($index + 1) . ": email/roll mismatch for existing student";
+                        $failed++; continue;
                     }
 
+                    // Create new - require minimal fields
+                    if (empty($studentData['first_name']) || empty($studentData['phone']) || empty($studentData['roll_no']) || empty($studentData['department_code']) || empty($studentData['date_of_registration']) || empty($studentData['current_status'])) {
+                        $errors[] = "Row " . ($index + 1) . ": missing required fields for new student (first_name, phone, roll_no, department_code, date_of_registration, current_status)";
+                        $failed++; continue;
+                    }
                     // Generate random password
                     $password = Str::password(8, true, true, true, false);
 
-                    // Create user
+                    // Create user (address lives on Student only)
                     $user = new \App\Models\User();
                     $user->first_name = $studentData['first_name'];
                     $user->last_name = $studentData['last_name'] ?? ' ';
                     $user->phone = $studentData['phone'];
                     $user->email = $studentData['email'];
                     $user->password = bcrypt($password);
-                    $user->address = $studentData['address'] ?? null;
                     $user->role_id = $role_id;
                     $user->current_role_id = $role_id;
                     $user->save();
@@ -212,7 +231,7 @@ class StudentController extends Controller {
                         Forms::create($formData);
                     }
 
-                    $successful++;
+                    $createCount++;
 
                 } catch (\Exception $e) {
                     $errors[] = "Row " . ($index + 1) . ": " . $e->getMessage();
@@ -223,9 +242,14 @@ class StudentController extends Controller {
             DB::commit();
 
             return response()->json([
-                'successful' => $successful,
-                'failed' => $failed,
-                'errors' => $errors
+                'success' => true,
+                'message' => "Import completed: {$createCount} created, {$updateCount} updated, {$failed} errors",
+                'data' => [
+                    'success_count' => $createCount,
+                    'update_count' => $updateCount,
+                    'error_count' => $failed,
+                    'errors' => $errors,
+                ]
             ], 200);
 
         } catch (\Exception $e) {
@@ -234,6 +258,79 @@ class StudentController extends Controller {
                 'message' => 'Bulk upload failed',
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    public function bulkUpdate(Request $request)
+    {
+        $loggedInUser = Auth::user();
+        if($loggedInUser->current_role->can_add_student == 'false'){
+            return response()->json(['message' => 'You do not have permission to update students'], 403);
+        }
+        $request->validate([
+            'students' => 'required|array',
+            'students.*.email' => 'required|email',
+            'students.*.roll_no' => 'nullable|string',
+            'students.*.first_name' => 'nullable|string',
+            'students.*.last_name' => 'nullable|string',
+            'students.*.phone' => 'nullable|string',
+            'students.*.department_code' => 'nullable|string',
+            'students.*.date_of_registration' => 'nullable|date',
+            'students.*.current_status' => 'nullable|in:part-time,full-time,executive',
+            'students.*.phd_title' => 'nullable|string',
+            'students.*.fathers_name' => 'nullable|string',
+            'students.*.address' => 'nullable|string',
+            'students.*.cgpa' => 'nullable|numeric',
+            'students.*.overall_progress' => 'nullable|numeric',
+        ]);
+        $updated = 0; $failed = 0; $errors = [];
+        DB::beginTransaction();
+        try {
+            foreach ($request->students as $index => $data) {
+                try {
+                    $user = \App\Models\User::where('email', $data['email'])->first();
+                    $student = null;
+                    if (!empty($data['roll_no'])) $student = Student::where('roll_no', $data['roll_no'])->first();
+                    if (!$user && !$student) { $errors[] = "Row ".($index+1).": no matching student for email {$data['email']} or roll {$data['roll_no']}"; $failed++; continue; }
+                    if ($user) {
+                        if (!empty($data['first_name'])) $user->first_name = $data['first_name'];
+                        if (!empty($data['last_name'])) $user->last_name = $data['last_name'];
+                        if (!empty($data['phone'])) $user->phone = $data['phone'];
+                        $user->save();
+                    }
+                    $target = $student ?? Student::where('user_id', $user->id)->first();
+                    if (!$target) { $errors[] = "Row ".($index+1).": student record not found"; $failed++; continue; }
+                    if (!empty($data['department_code'])) {
+                        $dept = \App\Support\DepartmentCodes::resolve($data['department_code']);
+                        if (!$dept) { $errors[] = "Row ".($index+1).": department code '{$data['department_code']}' not found"; $failed++; continue; }
+                        $target->department_id = $dept->id;
+                    }
+                    if (isset($data['phd_title'])) $target->phd_title = $data['phd_title'];
+                    if (isset($data['fathers_name'])) $target->fathers_name = $data['fathers_name'];
+                    if (isset($data['address'])) $target->address = $data['address'];
+                    if (isset($data['cgpa'])) $target->cgpa = $data['cgpa'];
+                    if (isset($data['overall_progress'])) $target->overall_progress = $data['overall_progress'];
+                    if (!empty($data['current_status'])) $target->current_status = $data['current_status'];
+                    if (!empty($data['date_of_registration'])) $target->date_of_registration = $data['date_of_registration'];
+                    if (array_key_exists('date_of_irb', $data)) $target->date_of_irb = $data['date_of_irb'];
+                    $target->save();
+                    $updated++;
+                } catch (\Exception $e) { $errors[] = "Row ".($index+1).": ".$e->getMessage(); $failed++; }
+            }
+            DB::commit();
+            return response()->json([
+                'success' => true,
+                'message' => "Import completed: 0 created, {$updated} updated, {$failed} errors",
+                'data' => [
+                    'success_count' => 0,
+                    'update_count' => $updated,
+                    'error_count' => $failed,
+                    'errors' => $errors,
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Bulk update failed','error' => $e->getMessage()], 500);
         }
     }
 
@@ -439,11 +536,13 @@ class StudentController extends Controller {
         }
 
         $request->validate([
-            'phone'       => 'nullable|string',
-            'address'     => 'nullable|string',
-            'fathers_name'=> 'nullable|string',
-            'phd_title'   => 'nullable|string',
-            'cgpa'        => 'nullable|numeric',
+            'phone'                => 'nullable|string',
+            'address'              => 'nullable|string',
+            'fathers_name'         => 'nullable|string',
+            'phd_title'            => 'nullable|string|max:1000',
+            'tentative_desc'       => 'nullable|string|max:5000',
+            'tentative_broad_area' => 'nullable|string|max:1000',
+            'cgpa'                 => 'nullable|numeric',
         ]);
 
         $user->phone = $request->phone ?? $user->phone;
@@ -453,10 +552,11 @@ class StudentController extends Controller {
         if ($student) {
             if ($request->has('address'))      $student->address      = $request->address;
             if ($request->has('fathers_name')) $student->fathers_name = $request->fathers_name;
-            // The PhD title can only be edited from the profile until the IRB
-            // constitution form is submitted; after that it is owned by that form.
-            if ($request->has('phd_title') && !$student->phdTitleLocked()) {
-                $student->phd_title = $request->phd_title;
+            // PhD title and tentative fields can be edited until IRB is constituted/locked
+            if (!$student->phdTitleLocked()) {
+                if ($request->has('phd_title'))            $student->phd_title            = $request->phd_title;
+                if ($request->has('tentative_desc'))       $student->tentative_desc       = $request->tentative_desc;
+                if ($request->has('tentative_broad_area')) $student->tentative_broad_area = $request->tentative_broad_area;
             }
             if ($request->has('cgpa'))         $student->cgpa         = $request->cgpa;
             $student->save();

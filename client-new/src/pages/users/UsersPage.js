@@ -15,14 +15,13 @@ import ClerkForm from '../../components/clerkForm/ClerkForm';
 import { baseURL } from '../../api/urls';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import { customFetch } from '../../api/base';
+import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
 
 const UsersPage = () => {
   const [filter, setFilter] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [showBulkImportModal, setShowBulkImportModal] = useState(false);
   const [editData, setEditData] = useState(null);
-  const [csvFile, setCsvFile] = useState(null);
-  const [csvPreview, setCsvPreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -37,62 +36,9 @@ const UsersPage = () => {
     setFilter(newFilter);
   };
 
-  const downloadSampleCSV = () => {
-    const csvContent = `first_name,last_name,email,phone,gender,role,available_roles,status
+  const usersSampleCsv = `first_name,last_name,email,phone,gender,role,available_roles,status
 John,Doe,john.doe@example.com,1234567890,male,student,,active
 Jane,Smith,jane.smith@example.com,9876543210,female,faculty,"faculty,doctoral",active`;
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.href = url;
-    link.download = 'users_bulk_import_sample.csv';
-    link.click();
-    URL.revokeObjectURL(url);
-    
-    toast.success('Sample CSV downloaded successfully');
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) {
-      setCsvFile(null);
-      setCsvPreview(null);
-      return;
-    }
-
-    setCsvFile(file);
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const text = event.target.result;
-        const rows = text.split('\n').filter(row => row.trim());
-        
-        if (rows.length === 0) {
-          toast.error('CSV file is empty');
-          setCsvPreview(null);
-          return;
-        }
-
-        const headers = rows[0].split(',').map(h => h.trim());
-        const data = rows.slice(1).map((row, index) => {
-          const values = row.split(',').map(v => v.trim());
-          const rowData = { _rowNumber: index + 2 };
-          headers.forEach((header, i) => {
-            rowData[header] = values[i] || '';
-          });
-          return rowData;
-        });
-
-        setCsvPreview({ headers, data });
-      } catch (error) {
-        toast.error('Failed to parse CSV file');
-        setCsvPreview(null);
-      }
-    };
-    reader.readAsText(file);
-  };
 
   const openForm = async (data) => {
     if (data) {
@@ -156,12 +102,7 @@ Jane,Smith,jane.smith@example.com,9876543210,female,faculty,"faculty,doctoral",a
     );
   };
 
-  const handleBulkImport = async () => {
-    if (!csvFile || !csvPreview) {
-      toast.error('Please select a CSV file');
-      return;
-    }
-
+  const handleBulkImport = async (csvPreview, resetState) => {
     try {
       setSubmitting(true);
       setLoading(true);
@@ -285,8 +226,7 @@ Jane,Smith,jane.smith@example.com,9876543210,female,faculty,"faculty,doctoral",a
       }
 
       setShowBulkImportModal(false);
-      setCsvFile(null);
-      setCsvPreview(null);
+      resetState?.();
       setUploadProgress(null);
       setRefreshKey(prev => prev + 1);
       
@@ -368,196 +308,30 @@ Jane,Smith,jane.smith@example.com,9876543210,female,faculty,"faculty,doctoral",a
           </CustomModal>
 
           {/* Bulk Import Modal */}
-          <CustomModal
+          <UnifiedBulkImportModal
             isOpen={showBulkImportModal}
-            onClose={() => {
-              setShowBulkImportModal(false);
-              setCsvFile(null);
-              setCsvPreview(null);
-            }}
+            onClose={() => setShowBulkImportModal(false)}
             title="Bulk Import Users"
-            width="90vw"
-          >
-            <div className="modal-form">
-              <div className="info-box" style={{
-                background: '#f0f9ff',
-                border: '1px solid #bae6fd',
-                borderRadius: '0.5rem',
-                padding: '1rem',
-                marginBottom: '1rem'
-              }}>
-                <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
-                  <strong>CSV Format:</strong>
-                </p>
-                <p style={{ margin: '0.25rem 0', fontSize: '0.875rem', fontFamily: 'monospace', background: '#e0f2fe', padding: '0.5rem', borderRadius: '0.25rem' }}>
-                  first_name,last_name,email,phone,gender,role,available_roles,status
-                </p>
+            formatString="first_name,last_name,email,phone,gender,role,available_roles,status"
+            infoNodes={
+              <>
                 <p style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '0.875rem' }}>
-                  <strong>Required:</strong> first_name, email, phone, role
+                  <strong>Required for new users:</strong> first_name, email, role
                 </p>
                 <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
-                  <strong>Optional:</strong> last_name, gender (male/female/other), available_roles (comma-separated), status (active/inactive/suspended)
+                  <strong>Optional:</strong> last_name, phone, gender (male/female/other), available_roles (comma-separated), status (active/inactive/suspended)
                 </p>
-              </div>
-
-              <div style={{ marginBottom: '1rem' }}>
-                <CustomButton
-                  text="Download Sample CSV"
-                  onClick={downloadSampleCSV}
-                  style={{
-                    backgroundColor: '#FF9800',
-                    color: 'white',
-                    padding: '10px 20px',
-                    borderRadius: '6px',
-                    fontWeight: '500',
-                    marginBottom: '1rem'
-                  }}
-                />
-              </div>
-              
-              <input
-                type="file"
-                accept=".csv"
-                onChange={handleFileChange}
-                style={{
-                  padding: '0.5rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '0.5rem',
-                  fontSize: '1rem',
-                  cursor: 'pointer',
-                  marginBottom: '1rem'
-                }}
-              />
-
-              {csvPreview && (
-                <div style={{
-                  marginTop: '1rem',
-                  marginBottom: '1rem',
-                  maxHeight: '400px',
-                  overflowY: 'auto',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '0.5rem'
-                }}>
-                  <div style={{
-                    padding: '0.75rem',
-                    background: '#f9fafb',
-                    borderBottom: '1px solid #d1d5db',
-                    fontWeight: '600'
-                  }}>
-                    Preview: {csvPreview.data.length} row(s) found
-                  </div>
-                  <div className="csv-preview-wrap">
-                    <table className="csv-preview">
-                      <thead>
-                        <tr >
-                          <th>Row</th>
-                          {csvPreview.headers.map((header, i) => (
-                            <th key={i}>
-                              {header}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {csvPreview.data.map((row, i) => (
-                          <tr key={i}>
-                            <td className="csv-rownum">
-                              {row._rowNumber}
-                            </td>
-                            {csvPreview.headers.map((header, j) => (
-                              <td key={j}>
-                                {row[header] || <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>empty</span>}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {uploadProgress && (
-                <div style={{
-                  marginTop: '1rem',
-                  marginBottom: '1rem',
-                  padding: '1rem',
-                  background: '#f0f9ff',
-                  border: '1px solid #bae6fd',
-                  borderRadius: '0.5rem'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    marginBottom: '0.5rem',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    color: '#0369a1'
-                  }}>
-                    <span>Processing...</span>
-                    <span>{uploadProgress.current} / {uploadProgress.total} rows ({uploadProgress.percentage}%)</span>
-                  </div>
-                  <div style={{
-                    width: '100%',
-                    height: '8px',
-                    background: '#e0f2fe',
-                    borderRadius: '4px',
-                    overflow: 'hidden'
-                  }}>
-                    <div style={{
-                      width: `${uploadProgress.percentage}%`,
-                      height: '100%',
-                      background: 'linear-gradient(90deg, #0ea5e9 0%, #0284c7 100%)',
-                      transition: 'width 0.3s ease'
-                    }} />
-                  </div>
-                </div>
-              )}
-              
-              <div style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                gap: '1rem',
-                marginTop: '1rem'
-              }}>
-                <button
-                  onClick={() => {
-                    setShowBulkImportModal(false);
-                    setCsvFile(null);
-                    setCsvPreview(null);
-                  }}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    background: 'white',
-                    color: '#6b7280',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '0.5rem',
-                    fontSize: '1rem',
-                    fontWeight: '500',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleBulkImport}
-                  disabled={submitting || !csvFile}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    background: submitting || !csvFile ? '#9ca3af' : 'var(--primary-color)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '0.5rem',
-                    fontSize: '1rem',
-                    fontWeight: '500',
-                    cursor: submitting || !csvFile ? 'not-allowed' : 'pointer'
-                  }}
-                >
-                  {submitting ? 'Importing...' : 'Import'}
-                </button>
-              </div>
-            </div>
-          </CustomModal>
+                <p style={{ color: '#6b7280', fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                  Existing users matched by email will be updated with provided non-empty fields.
+                </p>
+              </>
+            }
+            sampleFileName="users_bulk_import_sample.csv"
+            sampleCsvContent={usersSampleCsv}
+            onImport={handleBulkImport}
+            submitting={submitting}
+            uploadProgress={uploadProgress}
+          />
         </>
       }
     />

@@ -286,12 +286,12 @@ class UserManagementController extends Controller
 
         $request->validate([
             'batch_data' => 'required|array',
-            'batch_data.*.first_name' => 'required|string',
+            'batch_data.*.first_name' => 'nullable|string',
             'batch_data.*.last_name' => 'nullable|string',
             'batch_data.*.email' => 'required|email',
-            'batch_data.*.phone' => 'required|string',
+            'batch_data.*.phone' => 'nullable|string',
             'batch_data.*.gender' => 'nullable|string',
-            'batch_data.*.role' => 'required|string',
+            'batch_data.*.role' => 'nullable|string',
             'batch_data.*.available_roles' => 'nullable|string',
             'batch_data.*.status' => 'nullable|string',
             'batch_data.*.row_number' => 'required|integer',
@@ -308,49 +308,60 @@ class UserManagementController extends Controller
                 $rowNumber = $data['row_number'];
                 $email = trim($data['email']);
 
-                // Find role
-                $role = Role::where('role', strtolower(trim($data['role'])))->first();
-                if (!$role) {
-                    $errors[] = "Row {$rowNumber}: Role '{$data['role']}' not found";
+                $existingUser = User::where('email', $email)->first();
+
+                // Role lookup: required for new user, optional for update
+                $role = null;
+                if (!empty($data['role'])) {
+                    $role = Role::where('role', strtolower(trim($data['role'])))->first();
+                    if (!$role) {
+                        $errors[] = "Row {$rowNumber}: Role '{$data['role']}' not found";
+                        $errorCount++;
+                        continue;
+                    }
+                } elseif (!$existingUser) {
+                    $errors[] = "Row {$rowNumber}: Role is required for new users";
                     $errorCount++;
                     continue;
                 }
 
                 // Parse available_roles
-                $availableRoles = [];
-                if (!empty($data['available_roles'])) {
-                    $availableRoles = array_map('trim', explode(',', $data['available_roles']));
+                $availableRoles = null;
+                if (isset($data['available_roles']) && $data['available_roles'] !== '') {
+                    $availableRoles = array_values(array_filter(array_map('trim', explode(',', $data['available_roles']))));
                 }
 
-                $existingUser = User::where('email', $email)->first();
-
                 if ($existingUser) {
-                    // Update existing user
-                    $existingUser->first_name = trim($data['first_name']);
-                    $existingUser->last_name = isset($data['last_name']) ? trim($data['last_name']) : ' ';
-                    $existingUser->phone = trim($data['phone']);
-                    $existingUser->gender = isset($data['gender']) ? $data['gender']  : null;
-                    $existingUser->role_id = $role->id;
-                    $existingUser->available_roles = $availableRoles;
-                    $existingUser->status = isset($data['status']) ? strtolower(trim($data['status'])) : 'active';
+                    // Partial update: only overwrite provided non-empty fields
+                    if (!empty($data['first_name'])) $existingUser->first_name = trim($data['first_name']);
+                    if (isset($data['last_name']) && $data['last_name'] !== '') $existingUser->last_name = trim($data['last_name']);
+                    if (!empty($data['phone'])) $existingUser->phone = trim($data['phone']);
+                    if (!empty($data['gender'])) $existingUser->gender = $data['gender'];
+                    if ($role) $existingUser->role_id = $role->id;
+                    if ($availableRoles !== null) $existingUser->available_roles = $availableRoles;
+                    if (!empty($data['status'])) $existingUser->status = strtolower(trim($data['status']));
                     $existingUser->save();
                     $updateCount++;
                 } else {
-                    // Create new user
+                    if (empty($data['first_name'])) {
+                        $errors[] = "Row {$rowNumber}: First name required for new user";
+                        $errorCount++;
+                        continue;
+                    }
                     $password = Str::password(8, true, true, true, false);
                     
                     User::create([
                         'first_name' => trim($data['first_name']),
-                        'last_name' => isset($data['last_name']) ? trim($data['last_name']) : ' ',
+                        'last_name' => isset($data['last_name']) && $data['last_name'] !== '' ? trim($data['last_name']) : ' ',
                         'email' => $email,
-                        'phone' => trim($data['phone']),
-                        'gender' => isset($data['gender']) ? $data['gender'] : null,
+                        'phone' => !empty($data['phone']) ? trim($data['phone']) : '',
+                        'gender' => !empty($data['gender']) ? $data['gender'] : null,
                         'password' => Hash::make($password),
                         'role_id' => $role->id,
                         'current_role_id' => $role->id,
                         'default_role_id' => $role->id,
-                        'available_roles' => $availableRoles,
-                        'status' => isset($data['status']) ? strtolower(trim($data['status'])) : 'active',
+                        'available_roles' => $availableRoles ?? [],
+                        'status' => !empty($data['status']) ? strtolower(trim($data['status'])) : 'active',
                     ]);
                     $successCount++;
                 }

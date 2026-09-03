@@ -169,23 +169,10 @@ const BulkUploadStudents = ({ onSuccess }) => {
           return;
         }
 
-        // Validate required fields with specific error messages (Last Name removed from required)
-        const requiredFields = [
-          'First Name', 
-          'Email',
-          'Phone',
-          'Roll Number', 
-          'Department Code', 
-          'Date of Registration (YYYY-MM-DD)', 
-          'Current Status'
-        ];
-        
-        const missingFields = requiredFields.filter(field => !rowObj[field] || rowObj[field].trim() === '');
-        
-        if (missingFields.length > 0) {
+        // For unified create-or-update, only Email is mandatory; other fields optional for updates
+        if (!rowObj['Email'] || rowObj['Email'].trim() === '') {
           invalidRows++;
-          console.warn(`Missing required fields in row ${index + 1}:`, missingFields);
-          toast.error(`Row ${index + 1}: Missing ${missingFields.join(', ')}`);
+          toast.error(`Row ${index + 1}: Missing Email`);
           return;
         }
 
@@ -242,15 +229,18 @@ const BulkUploadStudents = ({ onSuccess }) => {
       overall_progress: entry['Overall Progress'] || 0
     }));
 
-    customFetch(baseURL + '/students/bulk-upload', 'POST', { students })
+    const endpoint = '/students/bulk-upload';
+    customFetch(baseURL + endpoint, 'POST', { students })
       .then((data) => {
         if (data && data.success) {
-          toast.success(`Successfully uploaded ${data.response.successful} student(s)`);
-          if (data.response.failed > 0) {
-            toast.warn(`${data.response.failed} student(s) failed to upload`);
-            if (data.response.errors) {
-              console.error('Upload errors:', data.response.errors);
-            }
+          const d = data.response.data || {};
+          const sc = d.success_count ?? data.response.successful ?? 0;
+          const uc = d.update_count ?? 0;
+          const ec = d.error_count ?? data.response.failed ?? 0;
+          toast.success(`Successfully uploaded ${sc + uc} student(s) (${sc} created, ${uc} updated) — creates or updates by email/roll`);
+          if (ec > 0) {
+            toast.warn(`${ec} student(s) failed`);
+            if (d.errors || data.response.errors) console.error('Upload errors:', d.errors || data.response.errors);
           }
           setCsvData([]);
           if (onSuccess) onSuccess();
@@ -265,8 +255,8 @@ const BulkUploadStudents = ({ onSuccess }) => {
 
   return (
     <div style={{ padding: '20px' }}>
-      <h3>Bulk Upload Students</h3>
-      <p style={{ marginBottom: '10px' }}>Upload a CSV file to add multiple students at once. Download the sample CSV to see the required format.</p>
+      <h3>Bulk Import Students</h3>
+      <p style={{ marginBottom: '10px' }}>Upload a CSV to add or update students (matched by email or roll number). Only provided columns are updated for existing records.</p>
       <div style={{ 
         backgroundColor: '#f0f7ff', 
         border: '1px solid #2196F3', 
@@ -381,7 +371,7 @@ const BulkUploadStudents = ({ onSuccess }) => {
 
           <div style={{ marginTop: '16px', textAlign: 'right' }}>
             <CustomButton
-              text='Confirm Bulk Upload'
+              text="Confirm Bulk Import"
               onClick={confirmBulkUpload}
               style={{
                 backgroundColor: '#4CAF50',
