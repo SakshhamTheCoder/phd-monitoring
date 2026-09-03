@@ -254,25 +254,27 @@ class SyncFacultyPublications implements ShouldQueue
 
     private function syncScopusMetrics(Faculty $faculty, array $headers): void
     {
-        $metrics = Http::withHeaders($headers)->timeout(30)->get(
-            "https://api.elsevier.com/content/author/author_id/{$faculty->scopus_id}",
-            ['view' => 'METRICS']
-        );
-        if (!$metrics->successful()) {
-            Log::warning("Scopus metrics failed for faculty {$faculty->faculty_code}: HTTP " . $metrics->status());
-            return;
-        }
-        $profile = $metrics->json('author-retrieval-response.0', []);
-        $citations = data_get($profile, 'coredata.citation-count');
-        $hIndex = data_get($profile, 'h-index');
-        // Saved here, not in handle(): metrics must persist even when no new
-        // publication rows were written (handle only saves on new imports).
-        if (($citations !== null && $citations != $faculty->citations)
-            || ($hIndex !== null && $hIndex != $faculty->h_index)) {
-            if ($citations !== null) $faculty->citations = $citations;
-            if ($hIndex !== null) $faculty->h_index = $hIndex;
-            $faculty->save();
-            Log::info("Sync scopus metrics for faculty {$faculty->faculty_code}: citations={$faculty->citations}, h_index={$faculty->h_index}");
+        try {
+            $metrics = Http::withHeaders($headers)->timeout(30)->get(
+                "https://api.elsevier.com/content/author/author_id/{$faculty->scopus_id}",
+                ['view' => 'METRICS']
+            );
+            if (!method_exists($metrics, 'successful') || !$metrics->successful()) {
+                Log::warning("Scopus metrics failed for faculty {$faculty->faculty_code}: non-response object");
+                return;
+            }
+            $profile = $metrics->json('author-retrieval-response.0', []);
+            $citations = data_get($profile, 'coredata.citation-count');
+            $hIndex = data_get($profile, 'h-index');
+            if (($citations !== null && $citations != $faculty->citations)
+                || ($hIndex !== null && $hIndex != $faculty->h_index)) {
+                if ($citations !== null) $faculty->citations = $citations;
+                if ($hIndex !== null) $faculty->h_index = $hIndex;
+                $faculty->save();
+                Log::info("Sync scopus metrics for faculty {$faculty->faculty_code}: citations={$faculty->citations}, h_index={$faculty->h_index}");
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Scopus metrics error for faculty {$faculty->faculty_code}: " . $e->getMessage());
         }
     }
 
