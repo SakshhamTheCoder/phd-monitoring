@@ -203,7 +203,12 @@ class SyncFacultyPublications implements ShouldQueue
             // bypass: Crossref resolves authors by DOI for free, no key, no IP
             // gating. Entries that already carry an author array (entitled
             // key) or have no DOI skip the lookup and use the Scopus fields.
-            $crossrefAuthors = $this->crossrefAuthors($faculty, $entries);
+            try {
+                $crossrefAuthors = $this->crossrefAuthors($faculty, $entries);
+            } catch (\Throwable $e) {
+                Log::warning("Crossref enrichment error for faculty {$faculty->faculty_code}: " . $e->getMessage());
+                $crossrefAuthors = [];
+            }
 
             $imported = 0;
 
@@ -375,7 +380,7 @@ class SyncFacultyPublications implements ShouldQueue
 
     private function crossrefAuthorString($response): ?string
     {
-        if (!$response || !$response->successful()) return null;
+        if (!$response || !method_exists($response, 'successful') || !$response->successful()) return null;
         $names = collect($response->json('message.author', []))
             ->map(function ($author) {
                 $family = trim((string) ($author['family'] ?? $author['name'] ?? ''));
