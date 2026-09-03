@@ -20,6 +20,7 @@ const FacultyForm = ({ edit = false, facultyData = {}, onSuccess, onClose }) => 
     type: "internal",
     institution: "Thapar Institute of Engineering and Technology",
     website_link: "",
+    expertise: "",
   });
   // Display name for the department field (InputSuggestions shows the name,
   // while formData.department_id holds the id sent to the backend).
@@ -28,6 +29,7 @@ const FacultyForm = ({ edit = false, facultyData = {}, onSuccess, onClose }) => 
 
   useEffect(() => {
     if (edit && facultyData) {
+      const exp = Array.isArray(facultyData.expertise) ? facultyData.expertise.join(', ') : facultyData.expertise || "";
       setFormData({
         first_name: facultyData.first_name || "",
         last_name: facultyData.last_name || "",
@@ -39,6 +41,7 @@ const FacultyForm = ({ edit = false, facultyData = {}, onSuccess, onClose }) => 
         type: facultyData.type || "internal",
         institution: facultyData.institution || "Thapar Institute of Engineering and Technology",
         website_link: facultyData.website_link || "",
+        expertise: exp,
       });
       setDepartmentName(facultyData.department || "");
     }
@@ -205,6 +208,16 @@ const FacultyForm = ({ edit = false, facultyData = {}, onSuccess, onClose }) => 
           />
         </>
       )}
+      <GridContainer
+        elements={[
+          <InputField
+            label="Areas of Expertise (comma separated)"
+            initialValue={formData.expertise}
+            onChange={(val) => handleChange("expertise", val)}
+            placeholder="e.g., Machine Learning, Data Mining, Cyber Security"
+          />,
+        ]}
+      />
       <GridContainer
         elements={[
           <CustomButton

@@ -29,6 +29,7 @@ const FacultyProfile = ({ faculty }) => {
         <div><strong>Faculty Code:</strong> {faculty.faculty_code}</div>
         <div><strong>Supervised (Within TIET):</strong> {faculty.supervised_campus ?? 0}</div>
         <div><strong>Supervised (Outside TIET):</strong> {faculty.supervised_outside ?? 0}</div>
+        <div style={{ gridColumn: '1 / -1' }}><strong>Expertise:</strong> {Array.isArray(faculty.expertise) && faculty.expertise.length ? faculty.expertise.join(', ') : faculty.expertise || "—"}</div>
       </div>
 
       {/* Supervising Students */}

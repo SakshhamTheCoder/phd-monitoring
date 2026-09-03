@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 
 Route::get('',[FacultyController::class, 'list'])->middleware('auth:sanctum');
 Route::get('/me', [FacultyController::class, 'me'])->middleware('auth:sanctum');
+Route::post('/recommend', [FacultyController::class, 'recommend'])->middleware('auth:sanctum');
 
 Route::post('/add', [FacultyController::class, 'add'])->middleware('auth:sanctum');
 Route::put('/update/{id}', [FacultyController::class, 'update'])->middleware('auth:sanctum');

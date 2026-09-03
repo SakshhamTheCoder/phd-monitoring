@@ -121,6 +121,7 @@ class HomeController extends Controller
                 'department' => $faculty->department->name,
                 'supervised_outside' => $faculty->supervised_outside,
                 'supervised_campus' => $faculty->supervised_campus,
+                'expertise' => $faculty->expertise ?? [],
             ]
         ]);
     }

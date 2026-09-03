@@ -34,6 +34,7 @@ class Faculty extends Model
         'joined_on',
         'last_synced_at',
         'last_sync_source',
+        'expertise',
     ];
 
     /**
@@ -44,6 +45,7 @@ class Faculty extends Model
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'expertise' => 'array',
     ];
 
     /**
@@ -261,5 +263,37 @@ class Faculty extends Model
     public function irbCommittees()
     {
         return $this->morphMany(IRBCommittee::class, 'member');
+    }
+
+    public static function normalizeExpertise($value): ?array
+    {
+        if ($value === null || $value === '') return null;
+        if (is_array($value)) return array_values(array_filter(array_map('trim', $value)));
+        return array_values(array_filter(array_map('trim', preg_split('/[,;]+/', (string)$value))));
+    }
+
+    public function toProfilePayload($own): array
+    {
+        return [
+            'faculty_code' => $this->faculty_code,
+            'name' => $this->user ? $this->user->name() : '',
+            'designation' => $this->designation,
+            'department' => $this->department->name ?? '',
+            'email' => $this->user->email ?? '',
+            'phone' => $this->user->phone ?? '',
+            'website' => $this->website_link,
+            'joined' => $this->joined_on,
+            'orcid_id' => $this->orcid_id,
+            'scopus_id' => $this->scopus_id,
+            'google_scholar_id' => $this->google_scholar_id,
+            'citations' => $this->citations,
+            'h_index' => $this->h_index,
+            'expertise' => $this->expertise ?? [],
+            'last_sync' => $this->last_synced_at,
+            'last_sync_source' => $this->last_sync_source,
+            'total_publications' => $own->count(),
+            'synced' => $own->whereIn('source', ['scopus', 'orcid'])->count(),
+            'self_reported' => $own->where('source', 'manual')->count(),
+        ];
     }
 }

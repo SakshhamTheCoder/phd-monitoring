@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Models\Department;
 use App\Models\Faculty;
+use App\Services\FacultyRecommendationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\Role;
@@ -29,6 +30,8 @@ class FacultyController extends Controller
             'email' => $faculty->user->email,
             'designation' => $faculty->designation,
             'department' => $faculty->department->name ?? 'N/A',
+            'expertise' => $faculty->expertise ?? [],
+            'expertise_raw' => $faculty->expertise_raw,
         ]);
     }
 
@@ -55,6 +58,7 @@ class FacultyController extends Controller
             'department_id' => 'nullable|integer',
             'designation' => 'required|string',
             'type' => 'required|in:internal,external',
+            'expertise' => 'nullable',
         ];
 
         // Only require faculty_code for internal faculty
@@ -114,6 +118,7 @@ class FacultyController extends Controller
         $faculty->type = $request->type;
         $faculty->institution = $request->institution ?? 'Thapar Institute of Engineering and Technology';
         $faculty->website_link = $request->website_link;
+        $faculty->expertise = Faculty::normalizeExpertise($request->input('expertise'));
         $faculty->save();
 
         return response()->json([
@@ -149,6 +154,7 @@ class FacultyController extends Controller
             'department_id' => 'nullable|integer',
             'designation' => 'required|string',
             'type' => 'required|in:internal,external',
+            'expertise' => 'nullable',
         ];
 
         // Only validate faculty_code for internal faculty
@@ -181,6 +187,9 @@ class FacultyController extends Controller
         $faculty->type = $request->type;
         $faculty->institution = $request->institution ?? 'Thapar Institute of Engineering and Technology';
         $faculty->website_link = $request->website_link;
+        if ($request->has('expertise')) {
+            $faculty->expertise = Faculty::normalizeExpertise($request->input('expertise'));
+        }
         $faculty->save();
 
         return response()->json([
@@ -286,16 +295,17 @@ class FacultyController extends Controller
 
         $request->validate([
             'batch_data' => 'required|array',
-            'batch_data.*.first_name' => 'required|string',
+            'batch_data.*.first_name' => 'nullable|string',
             'batch_data.*.last_name' => 'nullable|string',
             'batch_data.*.email' => 'required|email',
-            'batch_data.*.phone' => 'required|string',
-            'batch_data.*.designation' => 'required|string',
-            'batch_data.*.type' => 'required|in:internal,external',
+            'batch_data.*.phone' => 'nullable|string',
+            'batch_data.*.designation' => 'nullable|string',
+            'batch_data.*.type' => 'nullable|in:internal,external',
             'batch_data.*.faculty_code' => 'nullable|string',
             'batch_data.*.department_code' => 'nullable|string',
             'batch_data.*.institution' => 'nullable|string',
             'batch_data.*.website_link' => 'nullable|string',
+            'batch_data.*.expertise' => 'nullable',
             'batch_data.*.row_number' => 'required|integer',
         ]);
 
@@ -311,79 +321,63 @@ class FacultyController extends Controller
         foreach ($batchData as $data) {
             try {
                 $rowNumber = $data['row_number'];
-                $firstName = trim($data['first_name']);
-                $lastName = isset($data['last_name']) ? trim($data['last_name']) : '';
-                $email = trim($data['email']);
-                $phone = trim($data['phone']);
-                $designation = trim($data['designation']);
-                $type = strtolower(trim($data['type']));
-                $facultyCode = isset($data['faculty_code']) ? trim($data['faculty_code']) : null;
-                $departmentCode = isset($data['department_code']) ? trim($data['department_code']) : null;
-                $institution = isset($data['institution']) ? trim($data['institution']) : null;
-                $websiteLink = isset($data['website_link']) ? trim($data['website_link']) : null;
+                $firstName = trim((string)($data['first_name'] ?? ''));
+                $lastName = trim((string)($data['last_name'] ?? ''));
+                $email = trim((string)($data['email'] ?? ''));
+                $phone = trim((string)($data['phone'] ?? ''));
+                $designation = trim((string)($data['designation'] ?? ''));
+                $type = strtolower(trim((string)($data['type'] ?? '')));
+                $facultyCode = isset($data['faculty_code']) && $data['faculty_code'] !== '' ? trim((string)$data['faculty_code']) : null;
+                $departmentCode = isset($data['department_code']) && $data['department_code'] !== '' ? trim((string)$data['department_code']) : null;
+                $institution = isset($data['institution']) && $data['institution'] !== '' ? trim((string)$data['institution']) : null;
+                $websiteLink = isset($data['website_link']) && $data['website_link'] !== '' ? trim((string)$data['website_link']) : null;
+                // Expertise may arrive as a JSON array (validation allows it) — only trim strings
+                $expertiseRaw = $data['expertise'] ?? null;
+                if (is_string($expertiseRaw)) $expertiseRaw = trim($expertiseRaw);
                 
-                // Validate type
-                if (!in_array($type, ['internal', 'external'])) {
-                    $errors[] = "Row " . $rowNumber . ": Invalid type (must be 'internal' or 'external')";
-                    $errorCount++;
-                    continue;
-                }
+                // Determine if this is an update (existing faculty by email)
+                $existingUserCheck = User::where('email', $email)->first();
+                $existingFacultyCheck = $existingUserCheck ? Faculty::where('user_id', $existingUserCheck->id)->first() : null;
+                $isUpdate = $existingFacultyCheck !== null;
 
-                // Validate required fields based on type
-                if ($type === 'internal') {
-                    if (empty($facultyCode)) {
-                        $errors[] = "Row " . $rowNumber . ": Faculty code required for internal faculty";
-                        $errorCount++;
-                        continue;
+                // For updates, only email is required — other fields are optional and only updated if provided
+                // For creates, enforce full validation
+                if (!$isUpdate) {
+                    if (!in_array($type, ['internal', 'external'])) {
+                        $errors[] = "Row " . $rowNumber . ": Invalid type (must be 'internal' or 'external')";
+                        $errorCount++; continue;
                     }
-                    if (empty($departmentCode)) {
-                        $errors[] = "Row " . $rowNumber . ": Department code required for internal faculty";
-                        $errorCount++;
-                        continue;
+                    if ($type === 'internal') {
+                        if (empty($facultyCode)) { $errors[] = "Row " . $rowNumber . ": Faculty code required for internal faculty"; $errorCount++; continue; }
+                        if (empty($departmentCode)) { $errors[] = "Row " . $rowNumber . ": Department code required for internal faculty"; $errorCount++; continue; }
+                        if (empty($institution)) $institution = 'Thapar Institute of Engineering and Technology';
+                    } else {
+                        if (empty($institution)) { $errors[] = "Row " . $rowNumber . ": Institution required for external faculty"; $errorCount++; continue; }
+                        $facultyCode = null;
                     }
-                    // Set default institution for internal if empty
-                    if (empty($institution)) {
-                        $institution = 'Thapar Institute of Engineering and Technology';
+                    if (empty($firstName) || empty($email) || empty($designation)) {
+                        $errors[] = "Row " . $rowNumber . ": Missing required fields (first_name, email, designation) for new faculty";
+                        $errorCount++; continue;
                     }
                 } else {
-                    // External faculty
-                    if (empty($institution)) {
-                        $errors[] = "Row " . $rowNumber . ": Institution required for external faculty";
-                        $errorCount++;
-                        continue;
+                    // Update: type may be empty, keep existing
+                    if ($type && !in_array($type, ['internal','external'])) {
+                        $errors[] = "Row " . $rowNumber . ": Invalid type"; $errorCount++; continue;
                     }
-                    // Faculty code will be auto-generated for external
-                    $facultyCode = null;
+                    if ($type === 'internal' && $facultyCode === '') $facultyCode = null;
                 }
 
-                // Validate required fields
-                if (empty($firstName) || empty($email) || empty($designation)) {
-                    $errors[] = "Row " . $rowNumber . ": Missing required fields (first_name, email, designation)";
-                    $errorCount++;
-                    continue;
-                }
-
-                // Validate email
                 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                    $errors[] = "Row " . $rowNumber . ": Invalid email format";
-                    $errorCount++;
-                    continue;
+                    $errors[] = "Row " . $rowNumber . ": Invalid email format"; $errorCount++; continue;
                 }
 
-                // Resolve the department. This used to create one when the code
-                // did not match, which meant a single typo in a spreadsheet
-                // silently added a department with no HOD, no coordinator and a
-                // name generated from the typo, and quietly filed faculty under
-                // it. Departments are now only ever created deliberately, so an
-                // unknown code rejects the row and says so.
                 $department = null;
                 if ($departmentCode) {
                     $department = \App\Support\DepartmentCodes::resolve($departmentCode);
                     if (!$department) {
                         $errors[] = "Row " . $rowNumber . ": Department code '{$departmentCode}' not found. "
                             . "Create the department first, or correct the code.";
-                        $errorCount++;
-                        continue;
+                        $errorCount++; continue;
                     }
                 }
 
@@ -391,26 +385,26 @@ class FacultyController extends Controller
                 $existingUser = User::where('email', $email)->first();
                 
                 if ($existingUser) {
-                    // Check if faculty already exists
                     $existingFaculty = Faculty::where('user_id', $existingUser->id)->first();
                     
                     if ($existingFaculty) {
-                        // Update existing faculty
-                        $existingUser->first_name = $firstName;
-                        $existingUser->last_name = $lastName ?: ' ';
-                        $existingUser->phone = $phone;
+                        // Partial update: only overwrite provided non-empty fields
+                        if ($firstName !== '') $existingUser->first_name = $firstName;
+                        if ($lastName !== '') $existingUser->last_name = $lastName ?: ' ';
+                        if ($phone !== '') $existingUser->phone = $phone;
                         $existingUser->save();
 
                         if ($type === 'internal' && $facultyCode) {
                             $existingFaculty->faculty_code = $facultyCode;
                         }
-                        // External faculty code remains unchanged
-
-                        $existingFaculty->department_id = $department?->id;
-                        $existingFaculty->designation = $designation;
-                        $existingFaculty->type = $type;
-                        $existingFaculty->institution = $institution;
-                        $existingFaculty->website_link = $websiteLink;
+                        if ($department) $existingFaculty->department_id = $department->id;
+                        if ($designation !== '') $existingFaculty->designation = $designation;
+                        if ($type !== '') $existingFaculty->type = $type;
+                        if ($institution !== null && $institution !== '') $existingFaculty->institution = $institution;
+                        if ($websiteLink !== null && $websiteLink !== '') $existingFaculty->website_link = $websiteLink;
+                        if ($expertiseRaw !== null && $expertiseRaw !== '') {
+                            $existingFaculty->expertise = Faculty::normalizeExpertise($expertiseRaw);
+                        }
                         $existingFaculty->save();
 
                         $updateCount++;
@@ -428,6 +422,7 @@ class FacultyController extends Controller
                             'type' => $type,
                             'institution' => $institution,
                             'website_link' => $websiteLink,
+                            'expertise' => Faculty::normalizeExpertise($expertiseRaw),
                         ]);
 
                         $successCount++;
@@ -461,6 +456,7 @@ class FacultyController extends Controller
                         'type' => $type,
                         'institution' => $institution,
                         'website_link' => $websiteLink,
+                        'expertise' => Faculty::normalizeExpertise($expertiseRaw),
                     ]);
 
                     $successCount++;
@@ -483,4 +479,22 @@ class FacultyController extends Controller
             ]
         ], 200);
     }
+
+    public function recommend(Request $request)
+    {
+        $request->validate([
+            'areas' => 'required|array|min:1',
+            'areas.*' => 'string',
+            'department_id' => 'nullable|integer|exists:departments,id',
+            'limit' => 'nullable|integer|min:1|max:20',
+        ]);
+        $service = app(FacultyRecommendationService::class);
+        $result = $service->recommend(
+            $request->input('areas'),
+            $request->input('department_id'),
+            (int) $request->input('limit', 8)
+        );
+        return response()->json(['data' => $result], 200);
+    }
+
 }
