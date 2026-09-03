@@ -98,7 +98,7 @@ class SyncFacultyPublications implements ShouldQueue
                 ->timeout(30)
                 ->get("https://pub.orcid.org/v3.0/{$faculty->orcid_id}/works");
             if (!$response->successful()) {
-                Log::warning("ORCID sync failed for {$faculty->faculty_code}: HTTP " . $response->status());
+                Log::warning("ORCID sync failed for {$faculty->faculty_code}: HTTP " . $response->status() . " body=" . substr($response->body(), 0, 300));
                 return -1;
             }
             // DOIs already imported from Scopus, so the same paper is not listed
@@ -182,7 +182,7 @@ class SyncFacultyPublications implements ShouldQueue
                 );
 
                 if (!$search->successful()) {
-                    Log::warning("Scopus sync failed for {$faculty->faculty_code}: HTTP " . $search->status());
+                    Log::warning("Scopus sync failed for {$faculty->faculty_code}: HTTP " . $search->status() . " body=" . substr($search->body(), 0, 300));
                     return -1;
                 }
 
@@ -247,7 +247,10 @@ class SyncFacultyPublications implements ShouldQueue
             "https://api.elsevier.com/content/author/author_id/{$faculty->scopus_id}",
             ['view' => 'METRICS']
         );
-        if (!$metrics->successful()) return;
+        if (!$metrics->successful()) {
+            Log::warning("Scopus metrics failed for faculty {$faculty->faculty_code}: HTTP " . $metrics->status());
+            return;
+        }
         $profile = $metrics->json('author-retrieval-response.0', []);
         $citations = data_get($profile, 'coredata.citation-count');
         $hIndex = data_get($profile, 'h-index');
