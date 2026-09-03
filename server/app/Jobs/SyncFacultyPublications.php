@@ -165,9 +165,10 @@ class SyncFacultyPublications implements ShouldQueue
             // author array is COMPLETE-only, and scopusAuthors() already falls
             // back to dc:creator (first author) when it is absent.
             //
-            // STANDARD allows count up to 200, so one page usually covers the
-            // whole profile — fewer round trips against the worker timeout.
-            $perPage = 100;
+            // Keep count at 25: higher values 400 on keys whose service level
+            // caps page size below the documented 200 max ("Exceeds the
+            // maximum number allowed for the service level").
+            $perPage = 25;
             $start = 0;
             $entries = [];
 
