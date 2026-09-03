@@ -130,33 +130,20 @@ class FacultyProfileController extends Controller
         }
 
         $requester = optional(Auth::user())->email ?? 'unknown';
-        Log::info("Sync requested for faculty {$faculty->faculty_code} by {$requester} (orcid=".($faculty->orcid_id ?: 'null').", scopus=".($faculty->scopus_id ?: 'null').")");
+        Log::info("Sync queued for faculty {$faculty->faculty_code} by {$requester} (orcid=".($faculty->orcid_id ?: 'null').", scopus=".($faculty->scopus_id ?: 'null').")");
 
-        // Run inline so prod works even without a queue worker (QUEUE_CONNECTION=database needs `php artisan queue:work`).
-        // Job has $timeout 300 and $tries 3; dispatchSync runs it now and propagates errors to the response.
-        $beforeCount = \App\Models\FacultyPublication::where('faculty_code', $faculty->faculty_code)->count();
-        $beforeSync = $faculty->last_synced_at;
-        try {
-            SyncFacultyPublications::dispatchSync($faculty->faculty_code);
-        } catch (\Throwable $e) {
-            Log::error("Sync failed for faculty {$faculty->faculty_code}: ".$e->getMessage(), ['exception' => $e]);
-            return response()->json(['message' => 'Sync failed: '.$e->getMessage()], 500);
-        }
-        $faculty->refresh();
-        $afterCount = \App\Models\FacultyPublication::where('faculty_code', $faculty->faculty_code)->count();
-        $imported = $afterCount - $beforeCount;
-        $didSync = $faculty->last_synced_at && (!$beforeSync || $faculty->last_synced_at->gt($beforeSync));
-        if ($didSync) {
-            Log::info("Sync finished for faculty {$faculty->faculty_code}: imported {$imported} new, source={$faculty->last_sync_source}, last_sync={$faculty->last_synced_at}");
-        } else {
-            Log::warning("Sync finished for faculty {$faculty->faculty_code} but no new records: imported {$imported}, beforeSync=".($beforeSync ?: 'never').", source=".($faculty->last_sync_source ?: 'null'));
-        }
+        // Async: prod runs `queue:work` (QUEUE_CONNECTION=database), so the job
+        // runs off-request and the HTTP call returns immediately no matter how
+        // large the profile is. The job is idempotent (matched on external_id,
+        // hand edits pinned), so a timeout retry repeats the same result.
+        SyncFacultyPublications::dispatch($faculty->faculty_code);
+
         return response()->json([
-            'message' => $didSync ? 'Sync finished. '.$faculty->last_synced_at->diffForHumans().' from '.($faculty->last_sync_source ?? 'unknown')." ({$imported} new)." : 'Sync finished, but no new records were imported.',
+            'message' => 'Sync queued — new publications will appear here shortly.',
+            'queued' => true,
             'last_sync' => $faculty->last_synced_at,
             'last_sync_source' => $faculty->last_sync_source,
-            'imported' => $imported,
-        ]);
+        ], 202);
     }
 
     // ORCID reads from the public record, so it needs an iD only. Scopus also

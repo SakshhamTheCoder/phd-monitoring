@@ -179,8 +179,32 @@ const ResearchProfile = () => {
         setSyncing(true);
         try {
             const res = await apiSyncPublications(facultyCode);
-            if (res.success) toast.success(res.response?.message || 'Sync finished.');
-            else toast.error(res.response?.message || 'Sync failed.');
+            if (!res.success) {
+                toast.error(res.response?.message || 'Sync failed.');
+                setSyncing(false);
+                return;
+            }
+            // Queued: the worker runs it off-request. Poll until last_sync or
+            // the publication count moves, up to ~5 minutes, spinner stays on.
+            const prevSync = profile.last_sync || null;
+            const prevTotal = profile.total_publications ?? 0;
+            const started = Date.now();
+            let done = false;
+            while (!done && Date.now() - started < 5 * 60 * 1000) {
+                await new Promise(r => setTimeout(r, 5000));
+                const cur = await apiResearchProfile(facultyCode);
+                if (!cur) continue;
+                setData(cur);
+                const p = cur.profile || {};
+                if ((p.last_sync || null) !== prevSync || (p.total_publications ?? 0) !== prevTotal) {
+                    toast.success('Sync finished — profile updated.');
+                    done = true;
+                }
+            }
+            if (!done) {
+                await load();
+                toast.info('Sync is taking longer than expected — refresh in a bit.');
+            }
         } catch (e) {
             toast.error('Sync failed: ' + (e.message || 'unknown'));
         } finally {
