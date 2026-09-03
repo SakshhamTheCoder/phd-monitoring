@@ -48,7 +48,7 @@ const CATEGORY_TO_FIELDS = {
 };
 
 const emptyIdentifiers = {
-    orcid_id: '', scopus_id: '', google_scholar_id: '', joined_on: '', citations: '', h_index: '',
+    orcid_id: '', scopus_id: '', google_scholar_id: '', joined_on: '', citations: '', h_index: '', expertise: '',
 };
 
 const ResearchProfile = () => {
@@ -72,6 +72,7 @@ const ResearchProfile = () => {
     const [selected, setSelected] = useState([]);
     const [bulkTarget, setBulkTarget] = useState('');
     const [bulkBusy, setBulkBusy] = useState(false);
+    const [syncing, setSyncing] = useState(false);
     // An admin has no faculty record, so "my own profile" does not exist for
     // them. Without this the page waited on a code that was never coming.
     const [resolving, setResolving] = useState(!routeCode);
@@ -164,6 +165,7 @@ const ResearchProfile = () => {
             joined_on: profile.joined || '',
             citations: profile.citations ?? '',
             h_index: profile.h_index ?? '',
+            expertise: Array.isArray(profile.expertise) ? profile.expertise.join(', ') : profile.expertise || '',
         });
         setEditing(true);
     };
@@ -174,8 +176,17 @@ const ResearchProfile = () => {
     };
 
     const runSync = async () => {
-        const res = await apiSyncPublications(facultyCode);
-        if (res.success) toast.success(res.response?.message || 'Sync started.');
+        setSyncing(true);
+        try {
+            const res = await apiSyncPublications(facultyCode);
+            if (res.success) toast.success(res.response?.message || 'Sync finished.');
+            else toast.error(res.response?.message || 'Sync failed.');
+        } catch (e) {
+            toast.error('Sync failed: ' + (e.message || 'unknown'));
+        } finally {
+            setSyncing(false);
+            load();
+        }
     };
 
     const savePublication = async (body) => {
@@ -398,6 +409,8 @@ const ResearchProfile = () => {
                                     <input type="number" value={identifiers.citations} onChange={e => setIdentifiers({ ...identifiers, citations: e.target.value })} />
                                     <label>h-index</label>
                                     <input type="number" value={identifiers.h_index} onChange={e => setIdentifiers({ ...identifiers, h_index: e.target.value })} />
+                                    <label>Areas of Expertise (comma separated)</label>
+                                    <input value={identifiers.expertise} onChange={e => setIdentifiers({ ...identifiers, expertise: e.target.value })} placeholder="e.g., Machine Learning, Data Mining, Cyber Security" />
                                     <div className="rp-id-form-actions">
                                         <button className="rp-btn-outline" onClick={() => setEditing(false)}>Cancel</button>
                                         <button className="rp-btn-primary" onClick={saveIdentifiers}>Save</button>
@@ -422,6 +435,10 @@ const ResearchProfile = () => {
                                                 : '—'}</p>
                                         </div>
                                     </div>
+                                    <div className="rp-contact-item">
+                                        <i className="fa fa-lightbulb border-icon"></i>
+                                        <div><label>AREAS OF EXPERTISE</label><p>{Array.isArray(profile.expertise) && profile.expertise.length ? profile.expertise.join(', ') : '—'}</p></div>
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -433,7 +450,9 @@ const ResearchProfile = () => {
                                 <p>Last synced: <strong>{profile.last_sync ? formatDate(profile.last_sync) : 'Never'}</strong></p>
                             </div>
                             {canEdit && canSync && (
-                                <button className="rp-sync-btn" onClick={runSync}><i className="fa fa-refresh"></i> Sync Publications</button>
+                                <button className="rp-sync-btn" onClick={runSync} disabled={syncing} title={syncing ? 'Syncing...' : 'Sync from ORCID/Scopus'}>
+                                    <i className={`fa ${syncing ? 'fa-spinner fa-spin' : 'fa-refresh'}`}></i> {syncing ? 'Syncing...' : 'Sync Publications'}
+                                </button>
                             )}
                         </div>
                     </div>

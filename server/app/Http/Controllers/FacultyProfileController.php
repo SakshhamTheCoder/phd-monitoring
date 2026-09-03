@@ -8,6 +8,7 @@ use App\Models\Publication;
 use App\Jobs\SyncFacultyPublications;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class FacultyProfileController extends Controller
@@ -41,11 +42,17 @@ class FacultyProfileController extends Controller
             'joined_on' => 'nullable|date',
             'citations' => 'nullable|integer|min:0',
             'h_index' => 'nullable|integer|min:0',
+            'expertise' => 'nullable',
         ]);
         if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 400);
 
         foreach ($this->identifierFields as $field) {
             if ($request->exists($field)) $faculty->$field = $request->input($field) ?: null;
+        }
+        if ($request->has('expertise')) {
+            $val = $request->input('expertise');
+            if (is_string($val)) $val = array_values(array_filter(array_map('trim', preg_split('/[,;]+/', $val))));
+            $faculty->expertise = $val;
         }
         $faculty->save();
         return response()->json(['message' => 'Profile updated']);
@@ -122,8 +129,34 @@ class FacultyProfileController extends Controller
             ], 422);
         }
 
-        SyncFacultyPublications::dispatch($faculty->faculty_code);
-        return response()->json(['message' => 'Sync started. New records appear once it finishes.']);
+        $requester = optional(Auth::user())->email ?? 'unknown';
+        Log::info("Sync requested for faculty {$faculty->faculty_code} by {$requester} (orcid=".($faculty->orcid_id ?: 'null').", scopus=".($faculty->scopus_id ?: 'null').")");
+
+        // Run inline so prod works even without a queue worker (QUEUE_CONNECTION=database needs `php artisan queue:work`).
+        // Job has $timeout 300 and $tries 3; dispatchSync runs it now and propagates errors to the response.
+        $beforeCount = \App\Models\FacultyPublication::where('faculty_code', $faculty->faculty_code)->count();
+        $beforeSync = $faculty->last_synced_at;
+        try {
+            SyncFacultyPublications::dispatchSync($faculty->faculty_code);
+        } catch (\Throwable $e) {
+            Log::error("Sync failed for faculty {$faculty->faculty_code}: ".$e->getMessage(), ['exception' => $e]);
+            return response()->json(['message' => 'Sync failed: '.$e->getMessage()], 500);
+        }
+        $faculty->refresh();
+        $afterCount = \App\Models\FacultyPublication::where('faculty_code', $faculty->faculty_code)->count();
+        $imported = $afterCount - $beforeCount;
+        $didSync = $faculty->last_synced_at && (!$beforeSync || $faculty->last_synced_at->gt($beforeSync));
+        if ($didSync) {
+            Log::info("Sync finished for faculty {$faculty->faculty_code}: imported {$imported} new, source={$faculty->last_sync_source}, last_sync={$faculty->last_synced_at}");
+        } else {
+            Log::warning("Sync finished for faculty {$faculty->faculty_code} but no new records: imported {$imported}, beforeSync=".($beforeSync ?: 'never').", source=".($faculty->last_sync_source ?: 'null'));
+        }
+        return response()->json([
+            'message' => $didSync ? 'Sync finished. '.$faculty->last_synced_at->diffForHumans().' from '.($faculty->last_sync_source ?? 'unknown')." ({$imported} new)." : 'Sync finished, but no new records were imported.',
+            'last_sync' => $faculty->last_synced_at,
+            'last_sync_source' => $faculty->last_sync_source,
+            'imported' => $imported,
+        ]);
     }
 
     // ORCID reads from the public record, so it needs an iD only. Scopus also
@@ -165,26 +198,7 @@ class FacultyProfileController extends Controller
 
     private function profilePayload(Faculty $faculty, $own)
     {
-        return [
-            'faculty_code' => $faculty->faculty_code,
-            'name' => $faculty->user ? $faculty->user->name() : '',
-            'designation' => $faculty->designation,
-            'department' => $faculty->department->name ?? '',
-            'email' => $faculty->user->email ?? '',
-            'phone' => $faculty->user->phone ?? '',
-            'website' => $faculty->website_link,
-            'joined' => $faculty->joined_on,
-            'orcid_id' => $faculty->orcid_id,
-            'scopus_id' => $faculty->scopus_id,
-            'google_scholar_id' => $faculty->google_scholar_id,
-            'citations' => $faculty->citations,
-            'h_index' => $faculty->h_index,
-            'last_sync' => $faculty->last_synced_at,
-            'last_sync_source' => $faculty->last_sync_source,
-            'total_publications' => $own->count(),
-            'synced' => $own->whereIn('source', ['scopus', 'orcid'])->count(),
-            'self_reported' => $own->where('source', 'manual')->count(),
-        ];
+        return $faculty->toProfilePayload($own);
     }
 
     // The page renders one table per key, so both sets are grouped the same way.

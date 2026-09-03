@@ -30,7 +30,11 @@ class SyncFacultyPublications implements ShouldQueue
     public function handle(): void
     {
         $faculty = Faculty::find($this->facultyCode);
-        if (!$faculty) return;
+        if (!$faculty) {
+            Log::warning("Sync aborted: faculty {$this->facultyCode} not found");
+            return;
+        }
+        Log::info("Sync job started for faculty {$faculty->faculty_code} (orcid=".($faculty->orcid_id ?: 'null').", scopus=".($faculty->scopus_id ?: 'null').")");
 
         // Scopus runs first on purpose. It is the only source that can say a
         // paper is in a Scopus journal, so anything it returns is categorised
@@ -56,6 +60,9 @@ class SyncFacultyPublications implements ShouldQueue
             $faculty->last_synced_at = now();
             $faculty->last_sync_source = in_array('scopus', $imported, true) ? 'scopus' : 'orcid';
             $faculty->save();
+            Log::info("Sync job finished for faculty {$faculty->faculty_code}: imported from ".implode(',', $imported)." (now={$faculty->last_synced_at})");
+        } else {
+            Log::info("Sync job finished for faculty {$faculty->faculty_code}: no new records (scopus_key=". (config('services.scopus.key') ? 'set' : 'missing').")");
         }
     }
 
