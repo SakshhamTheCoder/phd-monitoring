@@ -46,12 +46,32 @@ class SyncFacultyPublications implements ShouldQueue
         // public on it answers 200 and imports nothing, and reporting that as
         // "last synced from ORCID" reads as though ORCID supplied the list.
         $imported = [];
+        $counts = [];
+        $attempted = [];
 
         if ($faculty->scopus_id && config('services.scopus.key')) {
-            if ($this->syncScopus($faculty)) $imported[] = 'scopus';
+            $attempted[] = 'scopus';
+            Log::info("Sync scopus started for faculty {$faculty->faculty_code} (author_id={$faculty->scopus_id})");
+            $n = $this->syncScopus($faculty);
+            if ($n >= 0) {
+                $counts['scopus'] = $n;
+                if ($n > 0) $imported[] = 'scopus';
+                Log::info("Sync scopus finished for faculty {$faculty->faculty_code}: {$n} publications stored");
+            } else {
+                Log::error("Sync scopus failed for faculty {$faculty->faculty_code}");
+            }
         }
         if ($faculty->orcid_id) {
-            if ($this->syncOrcid($faculty)) $imported[] = 'orcid';
+            $attempted[] = 'orcid';
+            Log::info("Sync orcid started for faculty {$faculty->faculty_code} (orcid={$faculty->orcid_id})");
+            $n = $this->syncOrcid($faculty);
+            if ($n >= 0) {
+                $counts['orcid'] = $n;
+                if ($n > 0) $imported[] = 'orcid';
+                Log::info("Sync orcid finished for faculty {$faculty->faculty_code}: {$n} publications stored");
+            } else {
+                Log::error("Sync orcid failed for faculty {$faculty->faculty_code}");
+            }
         }
 
         if ($imported) {
@@ -60,16 +80,18 @@ class SyncFacultyPublications implements ShouldQueue
             $faculty->last_synced_at = now();
             $faculty->last_sync_source = in_array('scopus', $imported, true) ? 'scopus' : 'orcid';
             $faculty->save();
-            Log::info("Sync job finished for faculty {$faculty->faculty_code}: imported from ".implode(',', $imported)." (now={$faculty->last_synced_at})");
+            Log::info("Sync job finished for faculty {$faculty->faculty_code}: scopus=".($counts['scopus'] ?? 0).", orcid=".($counts['orcid'] ?? 0)." (now={$faculty->last_synced_at})");
+        } elseif ($attempted) {
+            Log::error("Sync job finished for faculty {$faculty->faculty_code} with no records stored (attempted=".implode(',', $attempted).", scopus_key=".(config('services.scopus.key') ? 'set' : 'missing').")");
         } else {
-            Log::info("Sync job finished for faculty {$faculty->faculty_code}: no new records (scopus_key=". (config('services.scopus.key') ? 'set' : 'missing').")");
+            Log::info("Sync job finished for faculty {$faculty->faculty_code}: nothing to sync (no ids/key)");
         }
     }
 
     /**
      * ORCID's public record needs no credentials, only the iD.
      */
-    private function syncOrcid(Faculty $faculty): bool
+    private function syncOrcid(Faculty $faculty): int
     {
         try {
             $response = Http::withHeaders(['Accept' => 'application/json'])
@@ -77,7 +99,7 @@ class SyncFacultyPublications implements ShouldQueue
                 ->get("https://pub.orcid.org/v3.0/{$faculty->orcid_id}/works");
             if (!$response->successful()) {
                 Log::warning("ORCID sync failed for {$faculty->faculty_code}: HTTP " . $response->status());
-                return false;
+                return -1;
             }
             // DOIs already imported from Scopus, so the same paper is not listed
             // twice under two sources. Scopus knows the journal is indexed; the
@@ -89,9 +111,11 @@ class SyncFacultyPublications implements ShouldQueue
                 ->map(fn ($doi) => strtolower(trim($doi)))
                 ->all();
 
+            $groups = $response->json('group', []);
+            Log::info("Sync orcid works for faculty {$faculty->faculty_code}: ".count($groups)." groups to process");
             $imported = 0;
 
-            foreach ($response->json('group', []) as $group) {
+            foreach ($groups as $group) {
                 $summary = $group['work-summary'][0] ?? null;
                 if (!$summary) continue;
 
@@ -121,16 +145,14 @@ class SyncFacultyPublications implements ShouldQueue
                 $imported++;
             }
 
-            // An ORCID record with nothing public on it answers 200 and imports
-            // nothing; that is not a source worth reporting.
-            return $imported > 0;
+            return $imported;
         } catch (\Throwable $e) {
             Log::warning("ORCID sync error for {$faculty->faculty_code}: " . $e->getMessage());
-            return false;
+            return -1;
         }
     }
 
-    private function syncScopus(Faculty $faculty): bool
+    private function syncScopus(Faculty $faculty): int
     {
         $headers = array_filter([
             'X-ELS-APIKey' => config('services.scopus.key'),
@@ -161,13 +183,14 @@ class SyncFacultyPublications implements ShouldQueue
 
                 if (!$search->successful()) {
                     Log::warning("Scopus sync failed for {$faculty->faculty_code}: HTTP " . $search->status());
-                    return false;
+                    return -1;
                 }
 
                 $page = $search->json('search-results.entry', []);
                 $entries = array_merge($entries, $page);
 
                 $total = (int) $search->json('search-results.opensearch:totalResults', 0);
+                Log::info("Sync scopus page for faculty {$faculty->faculty_code}: start={$start}, page=".count($page).", collected=".count($entries).", total={$total}");
                 $start += $perPage;
 
                 // Guard against a malformed page that would otherwise loop.
@@ -211,10 +234,10 @@ class SyncFacultyPublications implements ShouldQueue
             // Metrics are fetched regardless: citations and h-index are worth
             // having even when no new publication rows were written.
             $this->syncScopusMetrics($faculty, $headers);
-            return $imported > 0;
+            return $imported;
         } catch (\Throwable $e) {
             Log::warning("Scopus sync error for {$faculty->faculty_code}: " . $e->getMessage());
-            return false;
+            return -1;
         }
     }
 
@@ -226,8 +249,17 @@ class SyncFacultyPublications implements ShouldQueue
         );
         if (!$metrics->successful()) return;
         $profile = $metrics->json('author-retrieval-response.0', []);
-        $faculty->citations = data_get($profile, 'coredata.citation-count') ?? $faculty->citations;
-        $faculty->h_index = data_get($profile, 'h-index') ?? $faculty->h_index;
+        $citations = data_get($profile, 'coredata.citation-count');
+        $hIndex = data_get($profile, 'h-index');
+        // Saved here, not in handle(): metrics must persist even when no new
+        // publication rows were written (handle only saves on new imports).
+        if (($citations !== null && $citations != $faculty->citations)
+            || ($hIndex !== null && $hIndex != $faculty->h_index)) {
+            if ($citations !== null) $faculty->citations = $citations;
+            if ($hIndex !== null) $faculty->h_index = $hIndex;
+            $faculty->save();
+            Log::info("Sync scopus metrics for faculty {$faculty->faculty_code}: citations={$faculty->citations}, h_index={$faculty->h_index}");
+        }
     }
 
     /**
