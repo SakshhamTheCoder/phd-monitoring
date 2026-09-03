@@ -48,10 +48,10 @@ class ConstituteOfIRB extends Model
             'subdomains' => $this->student->subdomains->pluck('keyword')->values(),
             'irb_pdf' => $this->irb_pdf,
             // Stored value may be a legacy AreaOfSpecialization id (numeric) or, for
-            // newer forms, free text the student typed. Resolve id -> name, else pass through.
+            // newer forms, free text the student typed. If not yet set on form, prefill from tentative_broad_area.
             'broad_area_of_research' => is_numeric($this->broad_area_of_research)
                 ? (AreaOfSpecialization::find($this->broad_area_of_research)?->name ?? $this->broad_area_of_research)
-                : $this->broad_area_of_research,
+                : ($this->broad_area_of_research ?: $this->student->tentative_broad_area),
             'area_of_specialization' => $this->student->areaOfSpecialization ? [
                 'id' => $this->student->areaOfSpecialization->id,
                 'name' => $this->student->areaOfSpecialization->name,

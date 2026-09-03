@@ -24,6 +24,8 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
   const [showSupervisorDoctoralModal, setShowSupervisorDoctoralModal] = useState(false);
   const [courses, setCourses] = useState([]);
   const [allCourses, setAllCourses] = useState([]);
+  const [attendance, setAttendance] = useState(null);
+  const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [tagData, setTagData] = useState({
     course_id: '',
     semester: '',
@@ -71,13 +73,28 @@ const [userRole, setUserRole] = useState('');
     }
   };
   
+  const fetchAttendance = async () => {
+    const roll = profile?.roll_no;
+    if (!roll) return;
+    try {
+      const res = await customFetch(`${baseURL}/clerks/attendance/student/${roll}`, 'GET', {}, false, false);
+      if (res?.success) {
+        setAttendance(res.response.summary);
+        setAttendanceRecords(res.response.records || []);
+      } else if (res?.response?.message?.includes?.('permission')) {
+        setAttendance(null);
+      }
+    } catch (e) { /* 403 means viewer lacks permission — hide silently */ }
+  };
+
   useEffect(() => {
     const studentId = profile?.database_id || profile?.id;
     if (studentId) {
       fetchCourses();
     }
+    if (profile?.roll_no) fetchAttendance();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.database_id, profile?.id]);
+  }, [profile?.database_id, profile?.id, profile?.roll_no]);
 
   const fetchAllCourses = async () => {
     try {
@@ -136,6 +153,8 @@ const [userRole, setUserRole] = useState('');
       address: profile?.address || '',
       fathers_name: profile?.fathers_name || '',
       phd_title: profile?.phd_title || '',
+      tentative_broad_area: profile?.tentative_broad_area || '',
+      tentative_desc: profile?.tentative_desc || '',
       cgpa: profile?.cgpa || '',
     });
     setIsEditingInline(true);
@@ -146,10 +165,13 @@ const [userRole, setUserRole] = useState('');
   };
 
   const handleInlineSave = async () => {
-    // The PhD title is frozen once the IRB constitution form has been submitted;
-    // never send it in that case (the backend also enforces this).
+    // The PhD title and tentative fields are frozen once IRB is constituted/locked
     const payload = { ...editForm };
-    if (profile?.phd_title_locked) delete payload.phd_title;
+    if (profile?.phd_title_locked) {
+      delete payload.phd_title;
+      delete payload.tentative_broad_area;
+      delete payload.tentative_desc;
+    }
     const response = await customFetch(`${baseURL}/students/update-profile`, 'POST', payload);
     if (response?.success) {
       toast.success('Profile updated successfully');
@@ -194,6 +216,7 @@ const [userRole, setUserRole] = useState('');
       { label: "Date of Admission", value: formatDate(date_of_registration) },
       { label: "Date of IRB", value: formatDate(date_of_irb) },
       { label: "Date of Synopsis", value: formatDate(date_of_synopsis) },
+      ...(attendance ? [{ label: "Attendance", value: `${attendance.present} present / ${attendance.total} sessions${attendance.percent != null ? ` (${attendance.percent}%)` : ''}` }] : []),
     ];
 
     const supervisorTableData = (supervisors || []).map((sup, index) => {
@@ -252,6 +275,48 @@ const [userRole, setUserRole] = useState('');
                   {phd_title || "Ph.D. Title Not Available"}
                 </p>
               )}
+              {isEditingInline && profile.is_supervisor_allocated && (
+                <div style={{ marginTop: '0.4rem', display: 'flex', flexDirection: 'column', gap: '0.4rem', maxWidth: '520px' }}>
+                  <input
+                    className="profile-inline-input"
+                    type="text"
+                    placeholder="Domain / Broad Area (e.g., AI, CyberSecurity)"
+                    value={editForm.tentative_broad_area ?? ""}
+                    disabled={profile.phd_title_locked}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({ ...prev, tentative_broad_area: e.target.value }))
+                    }
+                  />
+                  <textarea
+                    className="profile-inline-input"
+                    placeholder="Brief description of proposed work"
+                    value={editForm.tentative_desc ?? ""}
+                    disabled={profile.phd_title_locked}
+                    maxLength={5000}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({ ...prev, tentative_desc: e.target.value }))
+                    }
+                    style={{ minHeight: '60px' }}
+                  />
+                  <small style={{ alignSelf: 'flex-end', fontSize: '0.72rem', color: '#6b7280' }}>
+                    {(editForm.tentative_desc || "").length}/5000
+                  </small>
+                </div>
+              )}
+              {/* Tentative domain/brief — compact, same line style as title */}
+              {profile.is_supervisor_allocated && !isEditingInline && (
+                <div style={{ marginTop: '0.35rem', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                  <span>Domain: {profile.tentative_broad_area || '—'}</span>
+                  {profile.tentative_desc && <span> · {profile.tentative_desc}</span>}
+                  {profile.phd_title_locked && <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', color: '#9f1239' }}>Locked — IRB constituted</span>}
+                </div>
+              )}
+              {profile.is_supervisor_allocated && userRole === 'student' && profile.can_edit_tentative && !profile.tentative_broad_area && !profile.tentative_desc && !isEditingInline && (
+                <div style={{ marginTop: '0.4rem', background: '#fffbeb', border: '1px solid #fcd34d', padding: '0.3rem 0.6rem', borderRadius: '0.4rem', fontSize: '0.78rem', color: '#92400e', maxWidth: '520px' }}>
+                  Add your tentative domain and brief description before IRB.
+                  <button onClick={startInlineEdit} style={{ fontWeight: 600, background: 'none', border: 'none', color: '#92400e', cursor: 'pointer', textDecoration: 'underline', marginLeft: '0.3rem' }}>Add now</button>
+                </div>
+              )}
             </div>
             <div className="student-progress">
               <CircularProgressbar
@@ -286,6 +351,8 @@ const [userRole, setUserRole] = useState('');
               </div>
             ))}
           </div>
+
+
 
           {/* <div className='student-table-section'>
         <h3>Overall Progress</h3>
@@ -383,6 +450,9 @@ const [userRole, setUserRole] = useState('');
             ]}
             space={3}
           />
+
+          {/* Attendance — visible only if viewer can view student (API enforces same as StudentController::get) */}
+
         </div>
         {
           <CustomModal

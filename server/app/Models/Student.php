@@ -22,6 +22,8 @@ class Student extends Model
         'date_of_irb',
         'date_of_synopsis',
         'phd_title',
+        'tentative_desc',
+        'tentative_broad_area',
         'fathers_name',
         'address',
         'current_status',
@@ -57,6 +59,16 @@ class Student extends Model
         return ConstituteOfIRB::where('student_id', $this->roll_no)
             ->where('student_lock', true)
             ->exists();
+    }
+
+    public function isSupervisorAllocated(): bool
+    {
+        return $this->supervisors()->exists();
+    }
+
+    public function canEditTentative(): bool
+    {
+        return $this->isSupervisorAllocated() && !$this->phdTitleLocked();
     }
     public function getStudent()
     {
