@@ -7,6 +7,7 @@ use App\Models\ClerkDepartment;
 use App\Models\Department;
 use App\Models\Role;
 use App\Models\Student;
+use App\Support\AttendanceSummary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -509,13 +510,20 @@ class ClerkController extends Controller
         if ($request->filled('from')) $q->where('date', '>=', $request->input('from'));
         if ($request->filled('to')) $q->where('date', '<=', $request->input('to'));
         $records = $q->get(['date', 'lecture_id', 'status', 'marked_by']);
-        $total = $records->count();
-        $present = $records->where('status', 'present')->count();
-        $absent = $records->where('status', 'absent')->count();
-        $percent = $total ? round($present / $total * 100, 1) : null;
+
+        // The hover on the profile wants this month specifically, which is a
+        // different number from the all-time figure beside it. Re-query rather
+        // than reuse $records, since any from/to filter above must not narrow
+        // what "this month" means.
+        $monthStart = now()->startOfMonth();
+        $monthRecords = Attendance::where('roll_no', $roll_no)
+            ->whereBetween('date', [$monthStart->toDateString(), now()->endOfMonth()->toDateString()])
+            ->get(['status']);
+
         return response()->json([
             'student' => ['roll_no' => $student->roll_no, 'name' => optional($student->user)->name()],
-            'summary' => ['total' => $total, 'present' => $present, 'absent' => $absent, 'percent' => $percent],
+            'summary' => AttendanceSummary::of($records),
+            'current_month' => AttendanceSummary::of($monthRecords) + ['label' => $monthStart->format('F Y')],
             'records' => $records,
         ], 200);
     }
