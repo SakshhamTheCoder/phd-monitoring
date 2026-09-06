@@ -54,12 +54,13 @@ const FacultyForm = ({ edit = false, facultyData = {}, onSuccess, onClose }) => 
   };
 
   const validate = () => {
+    const isExternalEdit = edit && facultyData.type === 'external';
     if (!formData.full_name.trim()) return "Full Name is required.";
     if (!formData.email.trim()) return "Email is required.";
     if (!formData.phone.trim()) return "Phone is required.";
     if (!formData.designation.trim()) return "Designation is required.";
-    if (!formData.department_id) return "Department is required.";
-    if (!formData.faculty_code.trim()) return "Faculty Code is required.";
+    if (!isExternalEdit && !formData.department_id) return "Department is required.";
+    if (!isExternalEdit && !formData.faculty_code.trim()) return "Faculty Code is required.";
     return null;
   };
 
