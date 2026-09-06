@@ -451,6 +451,121 @@ class ClerkController extends Controller
     }
 
     /**
+     * One day's attendance as whole numbers, for the department in scope.
+     *
+     * The CSV export already carries this, but nobody should have to download a
+     * file to learn that 142 scholars were present. not_recorded is the gap
+     * between the roster and the rows actually saved, which is what makes a
+     * half-taken session visible rather than looking like mass absence.
+     */
+    public function daySummary(Request $request)
+    {
+        $user = Auth::user();
+        $role = $user->current_role->role;
+        if (!in_array($role, ['clerk', 'admin'], true)) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'date' => 'required|date',
+            'department_id' => 'nullable|integer|exists:departments,id',
+            'lecture_id' => 'nullable|integer|min:0',
+        ]);
+
+        $departmentIds = $this->resolveDepartmentScope($request, $role);
+        if ($departmentIds instanceof \Illuminate\Http\JsonResponse) return $departmentIds;
+
+        $date = $request->input('date');
+        $lectureId = (int) $request->input('lecture_id', 0);
+
+        $rolls = Student::when($departmentIds !== null, fn ($q) => $q->whereIn('department_id', $departmentIds))
+            ->pluck('roll_no');
+
+        $records = Attendance::where('date', $date)
+            ->where('lecture_id', $lectureId)
+            ->whereIn('roll_no', $rolls)
+            ->get(['status']);
+
+        $summary = AttendanceSummary::of($records);
+
+        return response()->json([
+            'date' => $date,
+            'department_id' => $request->input('department_id'),
+            'scholars' => $rolls->count(),
+            'total' => $summary['total'],
+            'present' => $summary['present'],
+            'absent' => $summary['absent'],
+            'not_recorded' => max(0, $rolls->count() - $summary['total']),
+            'percent' => $summary['percent'],
+        ], 200);
+    }
+
+    /**
+     * A month of attendance, per scholar and in total.
+     *
+     * Deliberately a different shape from daySummary: the monthly view answers
+     * "how has each scholar done this month", which is a per-person question,
+     * where the daily view answers "who was here today".
+     */
+    public function monthSummary(Request $request)
+    {
+        $user = Auth::user();
+        $role = $user->current_role->role;
+        if (!in_array($role, ['clerk', 'admin'], true)) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'month' => 'required|date_format:Y-m',
+            'department_id' => 'nullable|integer|exists:departments,id',
+        ]);
+
+        $departmentIds = $this->resolveDepartmentScope($request, $role);
+        if ($departmentIds instanceof \Illuminate\Http\JsonResponse) return $departmentIds;
+
+        $start = \Carbon\Carbon::createFromFormat('Y-m', $request->input('month'))->startOfMonth();
+        $end = $start->copy()->endOfMonth();
+
+        $students = Student::with(['user:id,first_name,last_name', 'department:id,name,code'])
+            ->when($departmentIds !== null, fn ($q) => $q->whereIn('department_id', $departmentIds))
+            ->orderBy('roll_no')
+            ->get();
+
+        $byRoll = Attendance::whereBetween('date', [$start->toDateString(), $end->toDateString()])
+            ->whereIn('roll_no', $students->pluck('roll_no'))
+            ->get(['roll_no', 'status'])
+            ->groupBy('roll_no');
+
+        $rows = $students->map(function ($student) use ($byRoll) {
+            $summary = AttendanceSummary::of($byRoll->get($student->roll_no, collect()));
+
+            return [
+                'roll_no' => $student->roll_no,
+                'name' => optional($student->user)->name(),
+                'department_name' => optional($student->department)->name,
+                'present' => $summary['present'],
+                'absent' => $summary['absent'],
+                'total' => $summary['total'],
+                'percent' => $summary['percent'],
+            ];
+        })->values();
+
+        return response()->json([
+            'month' => $start->format('Y-m'),
+            'label' => $start->format('F Y'),
+            'days_with_sessions' => Attendance::whereBetween('date', [$start->toDateString(), $end->toDateString()])
+                ->whereIn('roll_no', $students->pluck('roll_no'))
+                ->distinct()->count('date'),
+            'students' => $rows,
+            'totals' => [
+                'present' => $rows->sum('present'),
+                'absent' => $rows->sum('absent'),
+                'total' => $rows->sum('total'),
+            ],
+        ], 200);
+    }
+
+    /**
      * Attendance for a single student — permission mirrors StudentController::get.
      * If you can view the student, you can view their attendance.
      */
