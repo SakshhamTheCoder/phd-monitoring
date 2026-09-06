@@ -1,8 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
-import { categoryOptions, roleOptions, budgetHeadTemplate, milestoneStatusOptions, formatDate, subVal, subSum, cellMismatch, budgetMismatches, setSubCell } from '../../data/projectsData';
-import { apiCreateProject, apiUpdateProjectFromForm, apiUpdateProject, apiCurrentFaculty } from '../../api/projects';
+import {
+  categoryOptions, roleOptions, milestoneStatusOptions, formatDate, formatDuration,
+  subVal, setSubCell, headTotal, yearTotal, grandTotal, emptyBudget,
+  addLine, removeLine, setLineField, blankManpower, blankEquipment, blankOther,
+  manpowerLines, equipmentLines, otherLines,
+  KEY_MANPOWER, KEY_EQUIPMENT, KEY_OTHER, HEAD_MANPOWER, HEAD_EQUIPMENT, HEAD_OTHER,
+} from '../../data/projectsData';
+import { apiCreateProject, apiUpdateProjectFromForm, apiUpdateProject, apiCurrentFaculty, apiProjectMeta, apiUploadGanttChart } from '../../api/projects';
 import InputSuggestions from '../../components/forms/fields/InputSuggestions';
 import FacultyLink from '../../components/facultyLink/FacultyLink';
 import { baseURL } from '../../api/urls';
@@ -14,12 +20,14 @@ const STEPS = ['Basic Info', 'Team', 'Budget', 'Objectives', 'Milestones', 'Revi
 const emptyForm = {
   title: '', category: '', role: 'PI', focusArea: '', grantType: '',
   fundingAgency: '', description: '',
-  startDate: '', durationYears: 0, durationMonths: 0, endDate: '',
+  startDate: '', durationYears: 1, durationMonths: 0, endDate: '',
+  sdgs: [],
   coPIs: [],
   sanctionAmount: '', tietShare: '', sanctionLetterLink: '',
   sanctionLetterFile: null, sanctionLetterFileName: '',
-  budget: { year1: {}, year2: {}, year3: {}, __subitems: {} },
-  objectives: [{ title: '', description: '' }],
+  ganttFile: null, ganttFileName: '',
+  budget: emptyBudget(),
+  objectives: [''],
   milestones: [{ name: '', deliverable: '', dueDate: '', status: 'Not Started' }],
 };
 
@@ -33,9 +41,10 @@ const buildFormFromProject = (p) => ({
   fundingAgency: p.fundingAgency || '',
   description: p.description || '',
   startDate: p.startDate || '',
-  durationYears: p.durationYears || 0,
+  durationYears: p.durationYears || 1,
   durationMonths: p.durationMonths || 0,
   endDate: p.endDate || '',
+  sdgs: p.sdgs || [],
   coPIs: p.coPIs ? p.coPIs.map(c => ({ ...c })) : [],
   sanctionAmount: p.amount != null ? String(p.amount) : '',
   tietShare: p.tietShare != null ? String(p.tietShare) : '',
@@ -43,13 +52,10 @@ const buildFormFromProject = (p) => ({
   sanctionLetterLink: /^https?:\/\//i.test(p.sanctionLetterLink || '') ? p.sanctionLetterLink : '',
   sanctionLetterFile: null,
   sanctionLetterFileName: '',
-  budget: {
-    year1: p.budget?.year1 || {},
-    year2: p.budget?.year2 || {},
-    year3: p.budget?.year3 || {},
-    __subitems: p.budget?.__subitems || {},
-  },
-  objectives: p.objectives?.length ? p.objectives.map(o => ({ ...o })) : [{ title: '', description: '' }],
+  ganttFile: null,
+  ganttFileName: p.ganttChartName || '',
+  budget: p.budget && Object.keys(p.budget).length ? p.budget : emptyBudget(),
+  objectives: (p.objectives && p.objectives.length ? p.objectives : ['']).map((o) => (typeof o === 'string' ? o : [o.title, o.description].filter(Boolean).join(': '))),
   milestones: p.milestones?.length ? p.milestones.map(m => ({ ...m })) : [{ name: '', deliverable: '', dueDate: '', status: 'Not Started' }],
 });
 
@@ -64,9 +70,12 @@ const CreateProject = () => {
   const [extCopi, setExtCopi] = useState({ name: '', designation: '', institute: '', email: '', mobile: '', website: '' });
   const [pi, setPi] = useState(editProject?.pi || null);
   const sanctionRef = useRef(null);
+  const ganttRef = useRef(null);
+  const [meta, setMeta] = useState({ sdgs: [], manpowerCategories: [], budgetHeads: [], duration: { years: [1,2,3,4,5], maxMonths: 11 } });
 
   useEffect(() => {
     if (!pi) apiCurrentFaculty().then(f => f && setPi(f));
+    apiProjectMeta().then(setMeta);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -121,14 +130,6 @@ const CreateProject = () => {
     if (file) setForm(prev => ({ ...prev, sanctionLetterFile: file, sanctionLetterFileName: file.name }));
   };
 
-  const addObjective = () => setForm({ ...form, objectives: [...form.objectives, { title: '', description: '' }] });
-  const removeObjective = (i) => setForm({ ...form, objectives: form.objectives.filter((_, idx) => idx !== i) });
-  const updateObjective = (i, field, val) => {
-    const objs = [...form.objectives];
-    objs[i] = { ...objs[i], [field]: val };
-    setForm({ ...form, objectives: objs });
-  };
-
   const addMilestone = () => setForm({ ...form, milestones: [...form.milestones, { name: '', deliverable: '', dueDate: '', status: 'Not Started' }] });
   const removeMilestone = (i) => setForm({ ...form, milestones: form.milestones.filter((_, idx) => idx !== i) });
   const updateMilestone = (i, field, val) => {
@@ -166,17 +167,17 @@ const CreateProject = () => {
 
   const handleSubmit = async () => {
     if (submitting) return;
-    const mismatched = budgetMismatches(form.budget);
-    if (mismatched.length) {
-      toast.error(`Sub-item totals don't match the head amount for: ${mismatched.join(', ')}.`);
-      setCurrentStep(2);
-      return;
-    }
     setSubmitting(true);
     const res = isEditMode
       ? await apiUpdateProjectFromForm(editProject.id, form)
       : await apiCreateProject(form);
-    if (res.success) await saveSanctionLetter(isEditMode ? editProject.id : res.project.id);
+    if (res.success) {
+      const projectId = isEditMode ? editProject.id : res.project.id;
+      await saveSanctionLetter(projectId);
+      if (form.ganttFile && (res.project?.id || projectId)) {
+        await apiUploadGanttChart(res.project?.id || projectId, form.ganttFile);
+      }
+    }
     setSubmitting(false);
     if (res.success) {
       toast.success(isEditMode ? 'Project updated successfully!' : 'Project created successfully!');
@@ -185,8 +186,70 @@ const CreateProject = () => {
   };
 
   const budgetYears = ['year1', 'year2', 'year3'];
-  const budgetTotal = (year) => Object.values(form.budget[year] || {}).reduce((s, v) => s + (v || 0), 0);
-  const grandTotal = budgetYears.reduce((s, y) => s + budgetTotal(y), 0);
+  const simpleHeads = (meta.budgetHeads || []).filter(h => h.kind !== 'lines');
+  const yTotal = (y) => yearTotal(form.budget, y, meta.budgetHeads);
+  const gTotal = grandTotal(form.budget, meta.budgetHeads);
+
+  const editLine = (key, year, index, field, value) =>
+    setForm(prev => ({ ...prev, budget: setLineField(prev.budget, key, year, index, field, field === 'count' || field === 'amount' ? (value === '' ? 0 : Number(value)) : value) }));
+  const pushLine = (key, year, blank) =>
+    setForm(prev => ({ ...prev, budget: addLine(prev.budget, key, year, blank()) }));
+  const dropLine = (key, year, index) =>
+    setForm(prev => ({ ...prev, budget: removeLine(prev.budget, key, year, index) }));
+
+  const LineListCard = ({ title, hint, storeKey, blank, columns }) => (
+    <div className="cp-section-card">
+      <div className="cp-section-header-row">
+        <h3 className="cp-section-title">{title}</h3>
+        <span className="cp-derived-note">{hint}</span>
+      </div>
+      {budgetYears.map((y, i) => (
+        <div key={y} className="cp-lines-year">
+          <div className="cp-lines-year-head">
+            <span>Year {i + 1}</span>
+            <div className="cp-lines-year-right">
+              <strong>₹{headTotal(form.budget, y, title).toLocaleString('en-IN')}</strong>
+              <button type="button" className="cp-add-btn" onClick={() => pushLine(storeKey, y, blank)}>
+                <i className="fa fa-plus"></i> Add {columns[0].addLabel}
+              </button>
+            </div>
+          </div>
+          {(form.budget[storeKey]?.[y] || []).length === 0 ? (
+            <p className="cp-lines-empty">Nothing budgeted for year {i + 1}.</p>
+          ) : (
+            <div className="cp-lines-table">
+              <div className="cp-lines-row cp-lines-head" style={{ gridTemplateColumns: columns.map(c => c.width).join(' ') + ' auto' }}>
+                {columns.map(c => <span key={c.field}>{c.label}</span>)}
+                <span></span>
+              </div>
+              {(form.budget[storeKey][y] || []).map((line, idx) => (
+                <div key={idx} className="cp-lines-row" style={{ gridTemplateColumns: columns.map(c => c.width).join(' ') + ' auto' }}>
+                  {columns.map(c => (
+                    c.type === 'select' ? (
+                      <select key={c.field} value={line[c.field] ?? ''} onChange={e => editLine(storeKey, y, idx, c.field, e.target.value)}>
+                        <option value="">Select {c.label.toLowerCase()}</option>
+                        {(line[c.field] && !meta.manpowerCategories.includes(line[c.field])) && (
+                          <option value={line[c.field]}>{line[c.field]} (no longer offered)</option>
+                        )}
+                        {meta.manpowerCategories.map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    ) : (
+                      <input key={c.field} type={c.type} min={c.type === 'number' ? '0' : undefined}
+                        value={line[c.field] ?? ''} placeholder={c.placeholder}
+                        onChange={e => editLine(storeKey, y, idx, c.field, e.target.value)} />
+                    )
+                  ))}
+                  <button type="button" className="cp-remove-btn" title="Remove" onClick={() => dropLine(storeKey, y, idx)}>
+                    <i className="fa fa-trash"></i>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
 
   const renderStep = () => {
     switch (currentStep) {
@@ -230,16 +293,18 @@ const CreateProject = () => {
               <input type="date" value={form.startDate} onChange={e => updateField('startDate', e.target.value)} />
             </div>
             <div className="cp-field">
-              <label>Duration (Years)</label>
-              <select value={form.durationYears} onChange={e => updateField('durationYears', e.target.value)}>
-                {[0,1,2,3,4,5,6,7,8,9,10].map(y => <option key={y} value={y}>{y} Years</option>)}
-              </select>
-            </div>
-            <div className="cp-field">
-              <label>Duration (Months)</label>
-              <select value={form.durationMonths} onChange={e => updateField('durationMonths', e.target.value)}>
-                {[0,1,2,3,4,5,6,7,8,9,10,11].map(m => <option key={m} value={m}>{m} Months</option>)}
-              </select>
+              <label>Duration <span className="req">*</span></label>
+              <div className="cp-duration-pair">
+                <select value={form.durationYears} onChange={e => updateField('durationYears', e.target.value)} aria-label="Duration in years">
+                  {meta.duration.years.map(y => <option key={y} value={y}>{y} {y === 1 ? 'Year' : 'Years'}</option>)}
+                </select>
+                <select value={form.durationMonths} onChange={e => updateField('durationMonths', e.target.value)} aria-label="Additional months">
+                  {Array.from({ length: meta.duration.maxMonths + 1 }, (_, m) => (
+                    <option key={m} value={m}>{m === 0 ? 'No extra months' : `${m} ${m === 1 ? 'Month' : 'Months'}`}</option>
+                  ))}
+                </select>
+              </div>
+              <span className="cp-duration-preview">{formatDuration(form.durationYears, form.durationMonths)}</span>
             </div>
             {form.endDate && (
               <div className="cp-field">
@@ -247,6 +312,27 @@ const CreateProject = () => {
                 <input type="date" value={form.endDate} readOnly className="cp-readonly" />
               </div>
             )}
+          </div>
+          <div className="cp-section-card">
+            <div className="cp-section-header-row">
+              <h3 className="cp-section-title">Sustainable Development Goals</h3>
+              <span className="cp-sdg-count">{form.sdgs.length} selected</span>
+            </div>
+            <div className="cp-sdg-grid">
+              {meta.sdgs.map(g => (
+                <label key={g.id} className={`cp-sdg-item${form.sdgs.includes(g.id) ? ' selected' : ''}`}>
+                  <input
+                    type="checkbox"
+                    checked={form.sdgs.includes(g.id)}
+                    onChange={() => updateField('sdgs', form.sdgs.includes(g.id)
+                      ? form.sdgs.filter(id => id !== g.id)
+                      : [...form.sdgs, g.id].sort((a, b) => a - b))}
+                  />
+                  <span className="cp-sdg-num">{g.id}</span>
+                  <span className="cp-sdg-label">{g.label}</span>
+                </label>
+              ))}
+            </div>
           </div>
         </div>
       );
@@ -365,62 +451,75 @@ const CreateProject = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {budgetHeadTemplate.map(bh => (
+                  {simpleHeads.map(bh => (
                     <React.Fragment key={bh.head}>
                       <tr className="cp-budget-head-row">
                         <td className="cp-budget-head-name">{bh.head}</td>
                         {budgetYears.map(y => (
                           <td key={y}>
-                            <input
-                              type="number"
-                              className={`cp-budget-input${bh.subItems.length && cellMismatch(form.budget, y, bh.head) ? ' cp-budget-mismatch' : ''}`}
+                            <input type="number" min="0" className="cp-budget-input"
                               value={form.budget[y]?.[bh.head] || ''}
-                              onChange={e => updateBudget(y, bh.head, e.target.value)}
-                              placeholder="0"
-                            />
+                              onChange={e => updateBudget(y, bh.head, e.target.value)} placeholder="0" />
                           </td>
                         ))}
-                        <td className="cp-budget-total">₹{budgetYears.reduce((s, y) => s + (form.budget[y]?.[bh.head] || 0), 0).toLocaleString('en-IN')}</td>
+                        <td className="cp-budget-total">₹{budgetYears.reduce((s, y) => s + headTotal(form.budget, y, bh.head), 0).toLocaleString('en-IN')}</td>
                       </tr>
                       {bh.subItems.map(sub => (
                         <tr key={sub} className="cp-budget-sub-row">
                           <td className="cp-budget-sub-name">↳ {sub}</td>
                           {budgetYears.map(y => (
                             <td key={y}>
-                              <input
-                                type="number"
-                                className="cp-budget-input sub"
+                              <input type="number" min="0" className="cp-budget-input sub"
                                 value={subVal(form.budget, y, bh.head, sub) || ''}
-                                onChange={e => updateSubBudget(y, bh.head, sub, e.target.value)}
-                                placeholder="0"
-                              />
+                                onChange={e => updateSubBudget(y, bh.head, sub, e.target.value)} placeholder="0" />
                             </td>
                           ))}
                           <td className="cp-budget-total">₹{budgetYears.reduce((s, y) => s + subVal(form.budget, y, bh.head, sub), 0).toLocaleString('en-IN')}</td>
                         </tr>
                       ))}
-                      {bh.subItems.length > 0 && (
-                        <tr className="cp-budget-sub-row">
-                          <td className="cp-budget-sub-name">↳ sub-items total</td>
-                          {budgetYears.map(y => {
-                            const ss = subSum(form.budget, y, bh.head);
-                            const bad = cellMismatch(form.budget, y, bh.head);
-                            return <td key={y} className={`cp-budget-subsum${bad ? ' bad' : (ss > 0 ? ' ok' : '')}`}>₹{ss.toLocaleString('en-IN')}{bad ? ' ⚠' : (ss > 0 ? ' ✓' : '')}</td>;
-                          })}
-                          <td></td>
-                        </tr>
-                      )}
                     </React.Fragment>
+                  ))}
+                  {[HEAD_MANPOWER, HEAD_EQUIPMENT, HEAD_OTHER].map(h => (
+                    <tr key={h} className="cp-budget-head-row cp-budget-derived">
+                      <td className="cp-budget-head-name">{h} <span className="cp-derived-note">from the entries below</span></td>
+                      {budgetYears.map(y => <td key={y} className="cp-budget-total">₹{headTotal(form.budget, y, h).toLocaleString('en-IN')}</td>)}
+                      <td className="cp-budget-total">₹{budgetYears.reduce((s, y) => s + headTotal(form.budget, y, h), 0).toLocaleString('en-IN')}</td>
+                    </tr>
                   ))}
                   <tr className="cp-budget-grand-row">
                     <td><strong>Grand Total</strong></td>
-                    {budgetYears.map(y => <td key={y} className="cp-budget-total">₹{budgetTotal(y).toLocaleString('en-IN')}</td>)}
-                    <td className="cp-budget-grand">₹{grandTotal.toLocaleString('en-IN')}</td>
+                    {budgetYears.map(y => <td key={y} className="cp-budget-total">₹{yTotal(y).toLocaleString('en-IN')}</td>)}
+                    <td className="cp-budget-grand">₹{gTotal.toLocaleString('en-IN')}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
           </div>
+          <LineListCard
+            title={HEAD_MANPOWER} storeKey={KEY_MANPOWER} blank={blankManpower}
+            hint="Each line costs count × amount"
+            columns={[
+              { field: 'category', label: 'Category', type: 'select', width: '2fr', addLabel: 'Manpower' },
+              { field: 'count', label: 'Count', type: 'number', width: '0.8fr', placeholder: '1' },
+              { field: 'amount', label: 'Amount (₹)', type: 'number', width: '1.2fr', placeholder: '0' },
+            ]}
+          />
+          <LineListCard
+            title={HEAD_EQUIPMENT} storeKey={KEY_EQUIPMENT} blank={blankEquipment}
+            hint="Add whatever the project needs"
+            columns={[
+              { field: 'item', label: 'Item', type: 'text', width: '3fr', placeholder: 'e.g. GPU Workstation', addLabel: 'Equipment' },
+              { field: 'amount', label: 'Amount (₹)', type: 'number', width: '1.2fr', placeholder: '0' },
+            ]}
+          />
+          <LineListCard
+            title={HEAD_OTHER} storeKey={KEY_OTHER} blank={blankOther}
+            hint="Anything the heads above do not cover"
+            columns={[
+              { field: 'label', label: 'Expense', type: 'text', width: '3fr', placeholder: 'e.g. Publication charges', addLabel: 'Expense' },
+              { field: 'amount', label: 'Amount (₹)', type: 'number', width: '1.2fr', placeholder: '0' },
+            ]}
+          />
         </div>
       );
 
@@ -433,25 +532,30 @@ const CreateProject = () => {
           <div className="cp-section-card">
             <div className="cp-section-header-row">
               <h3 className="cp-section-title">Objectives</h3>
-              <button className="cp-add-btn" onClick={addObjective}><i className="fa fa-plus"></i> Add Objective</button>
+              <button className="cp-add-btn" onClick={() => setForm(p => ({ ...p, objectives: [...p.objectives, ''] }))}>
+                <i className="fa fa-plus"></i> Add Objective
+              </button>
             </div>
-            {form.objectives.map((obj, i) => (
-              <div key={i} className="cp-objective-card">
-                <div className="cp-form-grid">
-                  <div className="cp-field">
-                    <label>Objective Title</label>
-                    <input type="text" value={obj.title} onChange={e => updateObjective(i, 'title', e.target.value)} placeholder="e.g. Quantum Neural Optimization" />
-                  </div>
-                  <div className="cp-field" style={{flex: 2}}>
-                    <label>Description</label>
-                    <textarea rows="3" value={obj.description} onChange={e => updateObjective(i, 'description', e.target.value)} placeholder="Describe the objective..." />
-                  </div>
+            <p className="cp-derived-note">One line each, e.g. "To develop ABC so as to improve XYZ."</p>
+            <div className="cp-obj-list">
+              {form.objectives.map((obj, i) => (
+                <div key={i} className="cp-obj-row">
+                  <span className="cp-obj-num">{i + 1}</span>
+                  <input
+                    type="text" value={obj} maxLength={500}
+                    placeholder="To develop ABC so as to improve XYZ."
+                    onChange={e => setForm(p => ({ ...p, objectives: p.objectives.map((o, j) => (j === i ? e.target.value : o)) }))}
+                  />
+                  <button
+                    type="button" className="cp-remove-btn" title="Remove objective"
+                    disabled={form.objectives.length === 1}
+                    onClick={() => setForm(p => ({ ...p, objectives: p.objectives.filter((_, j) => j !== i) }))}
+                  >
+                    <i className="fa fa-trash"></i>
+                  </button>
                 </div>
-                {form.objectives.length > 1 && (
-                  <button className="cp-remove-btn obj" onClick={() => removeObjective(i)}><i className="fa fa-trash"></i></button>
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       );
@@ -469,6 +573,20 @@ const CreateProject = () => {
                 <div className="cp-progress-fill-mini" style={{width: `${milestoneProgress()}%`}}></div>
               </div>
               <span className="cp-progress-pct">{milestoneProgress()}% Structured</span>
+            </div>
+          </div>
+          <div className="cp-section-card">
+            <h3 className="cp-section-title">Gantt Chart</h3>
+            <p className="cp-derived-note">The schedule behind the milestones below. PDF, image, spreadsheet or document, up to 10 MB.</p>
+            <div className="cp-field">
+              <input
+                type="file" accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls,.doc,.docx" ref={ganttRef}
+                onChange={e => {
+                  const file = e.target.files[0];
+                  if (file) setForm(p => ({ ...p, ganttFile: file, ganttFileName: file.name }));
+                }}
+              />
+              {form.ganttFileName && <span className="cp-file-hint"><i className="fa fa-check-circle"></i> {form.ganttFileName}</span>}
             </div>
           </div>
           <div className="cp-section-card">
@@ -511,7 +629,8 @@ const CreateProject = () => {
               <div className="cp-review-row"><span>Title</span><strong>{form.title || '—'}</strong></div>
               <div className="cp-review-row"><span>Category</span><strong>{form.category || '—'}</strong></div>
               <div className="cp-review-row"><span>Funding Agency</span><strong>{form.fundingAgency || '—'}</strong></div>
-              <div className="cp-review-row"><span>Duration</span><strong>{form.startDate ? formatDate(form.startDate) : '—'} to {form.endDate ? formatDate(form.endDate) : '—'} ({form.durationYears}Y {form.durationMonths}M)</strong></div>
+              <div className="cp-review-row"><span>Duration</span><strong>{formatDuration(form.durationYears, form.durationMonths)}{form.startDate ? ` · ${formatDate(form.startDate)} to ${form.endDate ? formatDate(form.endDate) : '—'}` : ''}</strong></div>
+              <div className="cp-review-row"><span>SDGs</span><strong>{form.sdgs.length ? form.sdgs.map(id => (meta.sdgs.find(g => g.id === id) || {}).label).filter(Boolean).join(', ') : '—'}</strong></div>
               <div className="cp-review-row"><span>Description</span><strong style={{ textAlign: 'right', maxWidth: '75%', fontWeight: '500', fontSize: '0.8rem', lineHeight: '1.4' }}>{form.description ? (form.description.length > 150 ? form.description.substring(0, 150) + '...' : form.description) : '—'}</strong></div>
             </div>
             <div className="cp-review-card">
@@ -533,26 +652,14 @@ const CreateProject = () => {
               <h4>Funding</h4>
               <div className="cp-review-row"><span>Sanctioned</span><strong>₹{parseInt(form.sanctionAmount || 0).toLocaleString('en-IN')}</strong></div>
               <div className="cp-review-row"><span>TIET Share</span><strong>₹{parseInt(form.tietShare || 0).toLocaleString('en-IN')}</strong></div>
-              <div className="cp-review-row"><span>Budget Total</span><strong>₹{grandTotal.toLocaleString('en-IN')}</strong></div>
-              {budgetYears.map((y, i) => {
-                const yTotal = budgetTotal(y);
-                return yTotal > 0 ? (
-                  <div key={y} className="cp-review-row"><span>Year {i + 1} Budget</span><strong>₹{yTotal.toLocaleString('en-IN')}</strong></div>
-                ) : null;
-              })}
+              {budgetYears.map((y, i) => (
+                <div key={y} className="cp-review-row"><span>Year {i + 1} Budget</span><strong>₹{yTotal(y).toLocaleString('en-IN')}</strong></div>
+              ))}
+              <div className="cp-review-row"><span>Total Budget</span><strong>₹{gTotal.toLocaleString('en-IN')}</strong></div>
             </div>
             <div className="cp-review-card">
               <h4>Objectives</h4>
-              {form.objectives.filter(o => o.title).length > 0 ? (
-                form.objectives.filter(o => o.title).map((obj, idx) => (
-                  <div key={idx} className="cp-review-row">
-                    <span>Obj {idx + 1}</span>
-                    <strong style={{ maxWidth: '65%', textAlign: 'right', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{obj.title}</strong>
-                  </div>
-                ))
-              ) : (
-                <div className="cp-review-row"><span>Objectives</span><strong>None</strong></div>
-              )}
+              <div className="cp-review-row"><span>Objectives</span><strong>{form.objectives.filter(o => o.trim()).length} listed</strong></div>
             </div>
             <div className="cp-review-card">
               <h4>Milestones</h4>
