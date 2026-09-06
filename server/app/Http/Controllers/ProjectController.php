@@ -4,12 +4,15 @@ use App\Models\Project;
 use App\Models\PositionApplication;
 use App\Http\Controllers\Traits\SaveFile;
 use App\Http\Controllers\Traits\ProjectAuthorizes;
+use App\Http\Controllers\Traits\FilterLogicTrait;
+use App\Support\ProjectBudget;
+use App\Support\ProjectDuration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class ProjectController extends Controller {
-    use SaveFile, ProjectAuthorizes;
+    use SaveFile, ProjectAuthorizes, FilterLogicTrait;
 
     public function index(Request $request) {
         $user = Auth::user();
@@ -31,6 +34,31 @@ class ProjectController extends Controller {
             'industry' => (clone $base)->where('category','Industry')->count(),
             'international' => (clone $base)->where('category','International')->count(),
         ]);
+    }
+
+    /**
+     * The option lists the create wizard and the details page draw from.
+     *
+     * These live here rather than in the client so that adding an SDG or
+     * renaming a budget head is a backend change, and so the validation in
+     * store()/update() and the menus the user sees can never drift apart.
+     */
+    public function meta() {
+        $user = Auth::user();
+        if (!$this->canManage($user)) return response()->json(['message' => 'Not authorized'], 403);
+        return response()->json([
+            'sdgs' => config('sdgs.goals'),
+            'manpowerCategories' => ProjectBudget::MANPOWER_CATEGORIES,
+            'budgetHeads' => ProjectBudget::heads(),
+            'duration' => [
+                'years' => ProjectDuration::yearOptions(),
+                'maxMonths' => ProjectDuration::MAX_MONTHS,
+            ],
+        ]);
+    }
+
+    public function listFilters(Request $request) {
+        return response()->json($this->getAvailableFilters('projects'));
     }
 
     public function show($id) {
