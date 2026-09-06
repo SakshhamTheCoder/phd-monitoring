@@ -7,6 +7,7 @@ use App\Http\Controllers\Traits\ProjectAuthorizes;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Support\ProjectBudget;
 use App\Support\ProjectDuration;
+use App\Support\ProjectRequestRules;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -73,12 +74,7 @@ class ProjectController extends Controller {
     public function store(Request $request) {
         $user = Auth::user();
         if (!$this->canManage($user)) return response()->json(['message' => 'Not authorized'], 403);
-        $validator = Validator::make($request->all(), [
-            'title' => 'required|string',
-            'category' => 'required|in:In-house,Research,Consultancy,Industry,International,Other',
-            'status' => 'nullable|in:Active,Completed,Pending,On Hold',
-            'pi_faculty_code' => 'sometimes|integer|exists:faculty,faculty_code',
-        ]);
+        $validator = Validator::make($request->all(), ProjectRequestRules::forStore());
         if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 400);
 
         $project = new Project();
@@ -101,10 +97,7 @@ class ProjectController extends Controller {
         $project = Project::find($id);
         if (!$project) return response()->json(['message' => 'Project not found'], 404);
         if (!$this->owns($user, $project)) return response()->json(['message' => 'Not authorized'], 403);
-        $validator = Validator::make($request->all(), [
-            'category' => 'sometimes|in:In-house,Research,Consultancy,Industry,International,Other',
-            'status' => 'sometimes|in:Active,Completed,Pending,On Hold',
-        ]);
+        $validator = Validator::make($request->all(), ProjectRequestRules::forUpdate());
         if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 400);
         $this->fill($project, $request);
         if ($request->hasFile('sanction_letter')) {
@@ -115,6 +108,14 @@ class ProjectController extends Controller {
             $this->queueFileDeletion($project->sanction_letter_link);
             $project->sanction_letter_link = $request->sanction_letter_link;
             $project->sanction_letter_name = $request->input('sanction_letter_name', 'Sanction Letter');
+        }
+        if ($request->hasFile('gantt_chart')) {
+            $project->gantt_chart_path = $this->replaceUploadedFile($project->gantt_chart_path, $request->file('gantt_chart'), 'project_gantt', $project->id);
+            $project->gantt_chart_name = $request->file('gantt_chart')->getClientOriginalName();
+        } elseif ($request->boolean('remove_gantt_chart')) {
+            $this->queueFileDeletion($project->gantt_chart_path);
+            $project->gantt_chart_path = null;
+            $project->gantt_chart_name = null;
         }
         $project->save();
         if ($request->exists('co_pis')) $this->syncCoPis($project);
@@ -129,6 +130,7 @@ class ProjectController extends Controller {
         if (!$this->owns($user, $project)) return response()->json(['message' => 'Not authorized'], 403);
         // The rows cascade, the files on disk do not.
         $this->queueFileDeletion($project->sanction_letter_link);
+        $this->queueFileDeletion($project->gantt_chart_path);
         foreach ($project->documents as $doc) $this->queueFileDeletion($doc->file_path);
         foreach ($project->positions as $pos) $this->queueFileDeletion($pos->advertisement_path);
         foreach (PositionApplication::where('project_id', $project->id)->pluck('resume_path') as $resume) {
@@ -172,7 +174,7 @@ class ProjectController extends Controller {
         foreach (['amount','tiet_share','duration_years','duration_months'] as $f) {
             if ($request->exists($f)) $project->$f = (int) $request->input($f);
         }
-        foreach (['co_pis','objectives','budget','equipment_details'] as $f) {
+        foreach (['co_pis','objectives','budget','equipment_details','sdgs'] as $f) {
             if ($request->exists($f)) {
                 $val = $request->input($f);
                 $project->$f = is_string($val) ? json_decode($val, true) : $val;
