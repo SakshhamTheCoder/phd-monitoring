@@ -3,20 +3,52 @@
   padding: 2rem;
   border-radius: 16px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
-  max-width: 1000px;
+  max-width: 1100px;
   margin: auto;
 }
 
 .student-container h2 {
   margin-bottom: 0.3rem;
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   color: #111827;
+  line-height: 1.25;
+  font-weight: 600;
 }
 
 .student-sub {
-  font-size: 1rem;
+  font-size: 1.15rem;
   color: #6b7280;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.2rem;
+  line-height: 1.25;
+  font-weight: 500;
+}
+
+.student-sub-meta {
+  font-size: 1.15rem;
+  color: #6b7280;
+  margin: 0 0 0.2rem 0;
+  line-height: 1.25;
+  font-weight: 500;
+}
+
+.student-sub-meta .meta-label {
+  color: #6b7280;
+}
+
+.student-sub-meta .meta-value {
+  color: #6b7280;
+}
+
+.student-sub-meta .meta-value.empty {
+  color: #9ca3af;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.student-sub-meta-locked {
+  font-size: 0.78rem;
+  color: #991b1b;
+  margin: 0.4rem 0 0 0;
 }
 
 .student-info-grid {
@@ -24,6 +56,7 @@
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1rem;
   margin-bottom: 2rem;
+  margin-top: 1.5rem;
   font-size: 0.95rem;
   color: #374151;
 }
@@ -44,16 +77,6 @@
   margin: 1.5rem 0;
 }
 
-.student-table-section {
-  margin-top: 2.5rem;
-}
-
-.student-table-section h3 {
-  font-size: 1.2rem;
-  margin-bottom: 1rem;
-  color: #1f2937;
-}
-
 .student-header {
   display: flex;
   justify-content: space-between;
@@ -64,6 +87,7 @@
 
 .student-header-text {
   max-width: 70%;
+  min-width: 300px;
 }
 
 .student-progress {
@@ -78,7 +102,7 @@
   display: block;
 }
 
-/* Inline profile editing */
+/* Inline profile editing (for personal info grid) */
 .profile-inline-input {
   width: 100%;
   padding: 0.35rem 0.5rem;
@@ -94,9 +118,13 @@
   cursor: not-allowed;
 }
 
+/* Title + proposal edit block */
 .student-sub-edit {
   margin-top: 0.35rem;
-  max-width: 520px;
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
 .profile-lock-note {
@@ -106,6 +134,71 @@
   font-size: 0.75rem;
 }
 
+/* Inline edit field item */
+.inline-field-item label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.inline-field-item input,
+.inline-field-item select,
+.inline-field-item textarea {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.35rem;
+  font-size: 0.9rem;
+  color: #111827;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  font-family: inherit;
+  background: #fff;
+}
+
+.inline-field-item input:focus,
+.inline-field-item select:focus,
+.inline-field-item textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+.inline-field-item select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236b7280' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  padding-right: 2rem;
+}
+
+.inline-field-item textarea {
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.5;
+}
+
+.inline-field-item input:disabled,
+.inline-field-item select:disabled,
+.inline-field-item textarea:disabled {
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.inline-char-count {
+  font-size: 0.7rem;
+  color: #9ca3af;
+  text-align: right;
+  margin-top: 0.15rem;
+}
+
+/* Edit button */
 .profile-edit-small {
   display: inline-flex;
   align-items: center;
