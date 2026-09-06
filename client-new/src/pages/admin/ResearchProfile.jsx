@@ -471,7 +471,7 @@ const ResearchProfile = () => {
                             <div className="rp-sync-info">
                                 <h4>External Sync Status</h4>
                                 <p>Source: <strong>{profile.last_sync_source ? SOURCE_LABELS[profile.last_sync_source] : 'Not synced'}</strong></p>
-                                <p>Last synced: <strong>{profile.last_sync ? formatDate(profile.last_sync) : 'Never'}</strong></p>
+                                <p>Last synced: <strong>{formatDate(profile.last_sync, 'Never')}</strong></p>
                             </div>
                             {canEdit && canSync && (
                                 <button className="rp-sync-btn" onClick={runSync} disabled={syncing} title={syncing ? 'Syncing...' : 'Sync from ORCID/Scopus'}>
