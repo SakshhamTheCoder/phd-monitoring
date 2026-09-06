@@ -18,7 +18,20 @@ class ProjectController extends Controller {
     public function index(Request $request) {
         $user = Auth::user();
         if (!$this->canManage($user)) return response()->json(['message' => 'Not authorized'], 403);
-        $projects = $this->visibleTo($user)->orderByDesc('id')->get();
+
+        $query = $this->visibleTo($user)->with(['pi.user', 'pi.department']);
+
+        // Filters arrive as a urlencoded JSON query param, the same way the
+        // faculty and student listings receive them.
+        $filters = $request->input('filters', []);
+        if ($json = $request->query('filters')) {
+            $filters = json_decode(urldecode($json), true);
+        }
+        if ($filters) {
+            $query = $this->applyDynamicFilters($query, $filters);
+        }
+
+        $projects = $query->orderByDesc('id')->get();
         $projects->each(fn ($project) => $project->can_edit = $this->owns($user, $project));
         return response()->json($projects);
     }

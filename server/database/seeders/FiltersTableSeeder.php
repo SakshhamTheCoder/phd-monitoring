@@ -183,5 +183,116 @@ class FiltersTableSeeder extends Seeder
         }
 
         DB::table('filters')->insert($filters);
+
+        // Projects page filters. Written with updateOrInsert (keyed on the
+        // unique key_name) rather than the plain insert above, so re-running
+        // this seeder never duplicates these rows.
+        $projectFilters = [
+            [
+                'key_name' => 'title',
+                'label' => 'Project Title',
+                'data_type' => 'string',
+                'function_name' => 'text',
+                'applicable_pages' => ['projects'],
+                'options' => null,
+                'api_url' => null,
+            ],
+            [
+                'key_name' => 'category',
+                'label' => 'Category',
+                'data_type' => 'select',
+                'function_name' => 'select',
+                'applicable_pages' => ['projects'],
+                'options' => [
+                    ['title' => 'In-house', 'value' => 'In-house'],
+                    ['title' => 'Research', 'value' => 'Research'],
+                    ['title' => 'Consultancy', 'value' => 'Consultancy'],
+                    ['title' => 'Industry', 'value' => 'Industry'],
+                    ['title' => 'International', 'value' => 'International'],
+                    ['title' => 'Other', 'value' => 'Other'],
+                ],
+                'api_url' => null,
+            ],
+            [
+                'key_name' => 'status',
+                'label' => 'Project Status',
+                'data_type' => 'select',
+                'function_name' => 'select',
+                'applicable_pages' => ['projects'],
+                'options' => [
+                    ['title' => 'Active', 'value' => 'Active'],
+                    ['title' => 'Completed', 'value' => 'Completed'],
+                    ['title' => 'Pending', 'value' => 'Pending'],
+                    ['title' => 'On Hold', 'value' => 'On Hold'],
+                ],
+                'api_url' => null,
+            ],
+            [
+                'key_name' => 'funding_agency',
+                'label' => 'Funding Agency',
+                'data_type' => 'string',
+                'function_name' => 'text',
+                'applicable_pages' => ['projects'],
+                'options' => null,
+                'api_url' => null,
+            ],
+            [
+                'key_name' => 'amount',
+                'label' => 'Sanctioned Amount',
+                'data_type' => 'number',
+                'function_name' => 'number',
+                'applicable_pages' => ['projects'],
+                'options' => null,
+                'api_url' => null,
+            ],
+            [
+                'key_name' => 'duration_years',
+                'label' => 'Duration (Years)',
+                'data_type' => 'number',
+                'function_name' => 'number',
+                'applicable_pages' => ['projects'],
+                'options' => null,
+                'api_url' => null,
+            ],
+            [
+                'key_name' => 'start_date',
+                'label' => 'Start Date',
+                'data_type' => 'date',
+                'function_name' => 'date',
+                'applicable_pages' => ['projects'],
+                'options' => null,
+                'api_url' => null,
+            ],
+            [
+                'key_name' => 'pi.user.first_name',
+                'label' => 'Principal Investigator',
+                'data_type' => 'string',
+                'function_name' => 'text',
+                'applicable_pages' => ['projects'],
+                'options' => null,
+                'api_url' => '/suggestions/faculty',
+            ],
+            [
+                'key_name' => 'pi.department.name',
+                'label' => 'PI Department',
+                'data_type' => 'string',
+                'function_name' => 'text',
+                'applicable_pages' => ['projects'],
+                'options' => null,
+                'api_url' => '/suggestions/department',
+            ],
+        ];
+
+        foreach ($projectFilters as $filter) {
+            $keyName = $filter['key_name'];
+            unset($filter['key_name']);
+            if (isset($filter['applicable_pages']) && is_array($filter['applicable_pages'])) {
+                $filter['applicable_pages'] = json_encode($filter['applicable_pages']);
+            }
+            if (isset($filter['options']) && is_array($filter['options'])) {
+                $filter['options'] = json_encode($filter['options']);
+            }
+            DB::table('filters')->updateOrInsert(['key_name' => $keyName], $filter);
+        }
     }
 }

@@ -96,8 +96,9 @@ export const apiCurrentFaculty = async () => {
 };
 
 // ---- projects CRUD ----
-export const apiListProjects = async () => {
-  const { success, response } = await customFetch(`${baseURL}/projects`, 'GET', {}, false);
+export const apiListProjects = async (filters) => {
+  const qs = filters ? `?filters=${encodeURIComponent(JSON.stringify(filters))}` : '';
+  const { success, response } = await customFetch(`${baseURL}/projects${qs}`, 'GET', {}, false);
   return success ? (response || []).map(mapProject) : [];
 };
 export const apiProjectStats = async () => {

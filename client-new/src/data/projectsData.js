@@ -12,12 +12,6 @@ export const positionTypes = [
   'JRF', 'SRF', 'Research Associate', 'Research Intern', 'UG Intern', 'PG Intern'
 ];
 
-export const filterProjects = (projects, filter) => {
-  if (filter === 'All') return projects;
-  if (['Active', 'Completed', 'Pending'].includes(filter)) return projects.filter(p => p.status === filter);
-  return projects.filter(p => p.category === filter);
-};
-
 export const formatCurrency = (amount) => {
   const value = Number(amount) || 0;
   if (value >= 10000000) return `₹${(value / 10000000).toFixed(2)} Cr`;
