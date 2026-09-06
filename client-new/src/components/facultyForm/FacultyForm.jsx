@@ -185,7 +185,7 @@ const FacultyForm = ({ edit = false, facultyData = {}, onSuccess, onClose }) => 
       <GridContainer
         elements={[
           <InputField
-            label="Areas of Expertise (comma separated)"
+            label="Area of Expertise (comma separated)"
             initialValue={formData.expertise}
             onChange={(val) => handleChange("expertise", val)}
             placeholder="e.g., Machine Learning, Data Mining, Cyber Security"

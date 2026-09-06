@@ -433,7 +433,7 @@ const ResearchProfile = () => {
                                     <input type="number" value={identifiers.citations} onChange={e => setIdentifiers({ ...identifiers, citations: e.target.value })} />
                                     <label>h-index</label>
                                     <input type="number" value={identifiers.h_index} onChange={e => setIdentifiers({ ...identifiers, h_index: e.target.value })} />
-                                    <label>Areas of Expertise (comma separated)</label>
+                                    <label>Area of Expertise (comma separated)</label>
                                     <input value={identifiers.expertise} onChange={e => setIdentifiers({ ...identifiers, expertise: e.target.value })} placeholder="e.g., Machine Learning, Data Mining, Cyber Security" />
                                     <div className="rp-id-form-actions">
                                         <button className="rp-btn-outline" onClick={() => setEditing(false)}>Cancel</button>
@@ -461,7 +461,7 @@ const ResearchProfile = () => {
                                     </div>
                                     <div className="rp-contact-item">
                                         <i className="fa fa-lightbulb border-icon"></i>
-                                        <div><label>AREAS OF EXPERTISE</label><p>{Array.isArray(profile.expertise) && profile.expertise.length ? profile.expertise.join(', ') : '—'}</p></div>
+                                        <div><label>AREA OF EXPERTISE</label><p>{Array.isArray(profile.expertise) && profile.expertise.length ? profile.expertise.join(', ') : '—'}</p></div>
                                     </div>
                                 </div>
                             )}

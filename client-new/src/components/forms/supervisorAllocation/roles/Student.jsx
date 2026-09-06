@@ -190,7 +190,7 @@ const Student = ({ formData }) => {
               <TableComponent
                 data={recs}
                 keys={["name","department","expertise","select"]}
-                titles={["Name","Department","Expertise","Action"]}
+                titles={["Name","Department","Area of Expertise","Action"]}
                 components={[
                   {
                     key: "expertise",
