@@ -22,6 +22,7 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
     department_id: "",
     date_of_registration: "",
     date_of_irb: "",
+    date_of_thesis: "",
     phd_title: "",
     fathers_name: "",
     address: "",
@@ -42,6 +43,7 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
         department_id: studentData.department_id || "",
         date_of_registration: studentData.date_of_registration || "",
         date_of_irb: studentData.date_of_irb || "",
+        date_of_thesis: studentData.date_of_thesis || "",
         phd_title: studentData.phd_title || "",
         fathers_name: studentData.fathers_name || "",
         address: studentData.address || "",
@@ -182,6 +184,15 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
               { title: "Male", value: "Male" },
               { title: "Female", value: "Female" },
             ]}
+          />,
+        ]}
+      />
+      <GridContainer
+        elements={[
+          <DateField
+            label="Date of Thesis"
+            initialValue={formData.date_of_thesis}
+            onChange={(val) => handleChange("date_of_thesis", val)}
           />,
         ]}
       />

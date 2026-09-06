@@ -44,6 +44,7 @@ class StudentController extends Controller {
                 'current_status' => 'required|in:part-time,full-time,executive',
                 'gender' => 'required|in:Male,Female',
                 'date_of_irb' => 'nullable|date',
+                'date_of_thesis' => 'nullable|date',
                 'phd_title' => 'nullable|string',
                 'fathers_name' => 'nullable|string',
                 'address' => 'nullable|string',
@@ -77,6 +78,7 @@ class StudentController extends Controller {
         $student->department_id = $request->department_id;
         $student->date_of_registration = $request->date_of_registration;
         $student->date_of_irb = $request->date_of_irb;
+        $student->date_of_thesis = $request->date_of_thesis;
         $student->phd_title = $request->phd_title;
         $student->fathers_name = $request->fathers_name;
         $student->current_status = $request->current_status;
@@ -499,6 +501,7 @@ class StudentController extends Controller {
             'current_status' => 'required|in:part-time,full-time,executive',
             'gender' => 'required|in:Male,Female',
             'date_of_irb' => 'nullable|date',
+            'date_of_thesis' => 'nullable|date',
             'phd_title' => 'nullable|string',
             'fathers_name' => 'nullable|string',
             'address' => 'nullable|string',
@@ -517,6 +520,7 @@ class StudentController extends Controller {
         $student->department_id = $request->department_id;
         $student->date_of_registration = $request->date_of_registration;
         $student->date_of_irb = $request->date_of_irb;
+        $student->date_of_thesis = $request->date_of_thesis;
         $student->phd_title = $request->phd_title;
         $student->fathers_name = $request->fathers_name;
         $student->current_status = $request->current_status;
