@@ -29,7 +29,7 @@ class FacultyRecommendationService
         $trimmed = array_map(fn($a) => trim((string)$a), $queryAreas);
         $numericIds = array_values(array_filter(array_map(fn($a) => $a !== '' && ctype_digit($a) ? (int)$a : null, $trimmed)));
         if ($numericIds) {
-            $map = \App\Models\AreaOfSpecialization::whereIn('id', $numericIds)->pluck('broad_area', 'id');
+            $map = \App\Models\AreaOfSpecialization::whereIn('id', $numericIds)->pluck('name', 'id');
             $trimmed = array_map(function ($a) use ($map) {
                 $t = trim((string)$a);
                 return $t !== '' && ctype_digit($t) && isset($map[(int)$t]) ? $map[(int)$t] : $a;
