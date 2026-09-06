@@ -8,6 +8,7 @@ use App\Models\Department;
 use App\Models\Role;
 use App\Models\Student;
 use App\Support\AttendanceSummary;
+use App\Support\DepartmentScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -30,6 +31,31 @@ class ClerkController extends Controller
     private function clerkDepartmentIds(int $userId): array
     {
         return ClerkDepartment::where('user_id', $userId)->pluck('department_id')->all();
+    }
+
+    /**
+     * The department ids this request may touch, or the 403 to return.
+     *
+     * Every attendance endpoint goes through here so the rule is stated once
+     * and cannot drift between read and write paths.
+     *
+     * @return array<int, int>|null|\Illuminate\Http\JsonResponse
+     */
+    private function resolveDepartmentScope(Request $request, string $role)
+    {
+        $user = Auth::user();
+        $allowed = $role === 'admin' ? null : $this->clerkDepartmentIds($user->id);
+        $scope = DepartmentScope::resolve($allowed, $request->input('department_id'));
+
+        if ($scope['denied']) {
+            return response()->json([
+                'message' => $allowed === []
+                    ? 'No departments are assigned to you yet. Contact an administrator.'
+                    : 'That department is not one of yours.',
+            ], 403);
+        }
+
+        return $scope['ids'];
     }
 
     /**
@@ -73,31 +99,14 @@ class ClerkController extends Controller
             'lecture_id' => 'nullable|integer|min:0',
         ]);
 
-        // Admin bypasses department scoping for oversight
-        if ($user->current_role->role === 'admin') {
-            $departmentIds = Department::pluck('id')->all();
-        } else {
-            $departmentIds = $this->clerkDepartmentIds($user->id);
-        }
-        if ($request->filled('department_id')) {
-            $departmentIds = array_values(array_intersect(
-                $departmentIds,
-                [(int) $request->input('department_id')]
-            ));
-        }
-        if ($departmentIds === []) {
-            return response()->json([
-                'date' => $request->input('date', now()->toDateString()),
-                'students' => [],
-                'message' => 'No departments are assigned to you yet. Contact an administrator.',
-            ], 200);
-        }
+        $departmentIds = $this->resolveDepartmentScope($request, $user->current_role->role);
+        if ($departmentIds instanceof \Illuminate\Http\JsonResponse) return $departmentIds;
 
         $date = $request->input('date', now()->toDateString());
         $lectureId = (int) ($request->input('lecture_id', 0));
 
         $students = Student::with(['user:id,first_name,last_name', 'department:id,name,code'])
-            ->whereIn('department_id', $departmentIds)
+            ->when($departmentIds !== null, fn ($q) => $q->whereIn('department_id', $departmentIds))
             ->orderBy('roll_no')
             ->get();
 
@@ -173,15 +182,12 @@ class ClerkController extends Controller
             }
         }
 
-        // Clerks are department-scoped, admins are not
-        $allowedDepartmentIds = $role === 'admin' ? null : $this->clerkDepartmentIds($user->id);
-        if ($role !== 'admin' && $allowedDepartmentIds === []) {
-            return response()->json(['message' => 'No departments are assigned to you yet. Contact an administrator.'], 403);
-        }
+        $departmentIds = $this->resolveDepartmentScope($request, $role);
+        if ($departmentIds instanceof \Illuminate\Http\JsonResponse) return $departmentIds;
 
         $requestedRollNos = array_column($request->input('records'), 'roll_no');
         $students = Student::whereIn('roll_no', $requestedRollNos)
-            ->when($allowedDepartmentIds !== null, fn ($q) => $q->whereIn('department_id', $allowedDepartmentIds))
+            ->when($departmentIds !== null, fn ($q) => $q->whereIn('department_id', $departmentIds))
             ->get()
             ->keyBy('roll_no');
 
@@ -293,10 +299,8 @@ class ClerkController extends Controller
         ]);
 
         $lectureId = (int) ($request->input('lecture_id', 0));
-        $allowedDepartmentIds = $role === 'admin' ? null : $this->clerkDepartmentIds($user->id);
-        if ($role !== 'admin' && $allowedDepartmentIds === []) {
-            return response()->json(['message' => 'No departments are assigned to you yet.'], 403);
-        }
+        $allowedDepartmentIds = $this->resolveDepartmentScope($request, $role);
+        if ($allowedDepartmentIds instanceof \Illuminate\Http\JsonResponse) return $allowedDepartmentIds;
 
         $file = $request->file('file');
         $content = file_get_contents($file->getRealPath());
@@ -429,16 +433,8 @@ class ClerkController extends Controller
             'page' => 'nullable|integer|min:1',
             'per_page' => 'nullable|integer|min:1|max:100',
         ]);
-        $allowedDepartmentIds = $user->current_role->role === 'admin' ? null : $this->clerkDepartmentIds($user->id);
-        $deptIds = $allowedDepartmentIds;
-        if ($request->filled('department_id')) {
-            $deptIds = $allowedDepartmentIds === null
-                ? [(int) $request->input('department_id')]
-                : array_values(array_intersect($allowedDepartmentIds, [(int) $request->input('department_id')]));
-        }
-        if ($deptIds !== null && $deptIds === []) {
-            return response()->json(['message' => 'No departments in scope'], 403);
-        }
+        $deptIds = $this->resolveDepartmentScope($request, $user->current_role->role);
+        if ($deptIds instanceof \Illuminate\Http\JsonResponse) return $deptIds;
         $q = Attendance::query();
         if ($request->filled('from')) $q->where('date', '>=', $request->input('from'));
         if ($request->filled('to')) $q->where('date', '<=', $request->input('to'));
@@ -550,16 +546,8 @@ class ClerkController extends Controller
             'summary' => 'nullable|boolean',
         ]);
 
-        $allowedDepartmentIds = $user->current_role->role === 'admin' ? null : $this->clerkDepartmentIds($user->id);
-        $deptIds = $allowedDepartmentIds;
-        if ($request->filled('department_id')) {
-            $deptIds = $allowedDepartmentIds === null
-                ? [(int) $request->input('department_id')]
-                : array_values(array_intersect($allowedDepartmentIds, [(int) $request->input('department_id')]));
-        }
-        if ($deptIds !== null && $deptIds === []) {
-            return response()->json(['message' => 'No departments in scope'], 403);
-        }
+        $deptIds = $this->resolveDepartmentScope($request, $user->current_role->role);
+        if ($deptIds instanceof \Illuminate\Http\JsonResponse) return $deptIds;
 
         $query = Attendance::query()->orderBy('date')->orderBy('roll_no');
         if ($request->filled('from')) $query->where('date', '>=', $request->input('from'));
