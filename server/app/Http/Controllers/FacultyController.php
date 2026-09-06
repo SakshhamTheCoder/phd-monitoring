@@ -419,7 +419,10 @@ class FacultyController extends Controller
                         if ($phone !== '') $existingUser->phone = $phone;
                         $existingUser->save();
 
-                        if ($facultyCode) {
+                        // faculty_code is an app-wide join key. An external
+                        // faculty's code is auto-generated (777xxxxxx); never
+                        // let a CSV row rewrite it.
+                        if ($facultyCode && $existingFaculty->type === 'internal') {
                             $existingFaculty->faculty_code = $facultyCode;
                         }
                         if ($department) $existingFaculty->department_id = $department->id;

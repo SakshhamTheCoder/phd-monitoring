@@ -232,6 +232,13 @@ class OutsideExpertController extends Controller
 
             foreach ($csvData as $index => $row) {
                 try {
+                    // A blank line (trailing newline, stray gap) parses to
+                    // [null] or [''] via str_getcsv — skip it rather than
+                    // reporting a spurious "full_name is required" row.
+                    if (count($row) === 0 || (count($row) === 1 && trim((string) ($row[0] ?? '')) === '')) {
+                        continue;
+                    }
+
                     if (count($row) < 1) {
                         $errors[] = "Row " . ($index + 2) . ": Insufficient columns";
                         $errorCount++;
@@ -241,7 +248,11 @@ class OutsideExpertController extends Controller
                     // Keyed by header rather than a fixed position, so a CSV
                     // saved with the legacy first_name/last_name pair still
                     // reads correctly through PersonName::fromRow below.
-                    $data = array_combine($header, array_pad($row, count($header), null));
+                    // Pad short rows and truncate long ones so a row with a
+                    // different cell count than the header never reaches
+                    // array_combine (which throws a ValueError on mismatch).
+                    $row = array_slice(array_pad($row, count($header), null), 0, count($header));
+                    $data = array_combine($header, $row);
 
                     $name = PersonName::fromRow($data);
                     $email = trim((string) ($data['email'] ?? ''));
