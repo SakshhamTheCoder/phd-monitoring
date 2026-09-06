@@ -113,8 +113,13 @@ export const headTotal = (b, year, head) => {
 export const yearTotal = (b, year, heads) =>
   (heads || []).reduce((s, h) => s + headTotal(b, year, h.head), 0);
 
-export const grandTotal = (b, heads) =>
-  budgetYears(b).reduce((s, y) => s + yearTotal(b, y, heads), 0);
+// `years` lets a caller sum over the exact year list it renders (e.g. the
+// wizard's duration-derived columns), so the Grand Total agrees with the
+// columns actually shown. Falls back to the data's own keys — the right
+// behaviour for ProjectDetails, which shows whatever the project has rather
+// than a duration-derived window.
+export const grandTotal = (b, heads, years) =>
+  (years || budgetYears(b)).reduce((s, y) => s + yearTotal(b, y, heads), 0);
 
 export const emptyBudget = (years = ['year1', 'year2', 'year3']) => {
   const b = { [KEY_SUBITEMS]: {}, [KEY_MANPOWER]: {}, [KEY_EQUIPMENT]: {}, [KEY_OTHER]: {} };

@@ -196,7 +196,7 @@ const CreateProject = () => {
   );
   const simpleHeads = (meta.budgetHeads || []).filter(h => h.kind !== 'lines');
   const yTotal = (y) => yearTotal(form.budget, y, meta.budgetHeads);
-  const gTotal = grandTotal(form.budget, meta.budgetHeads);
+  const gTotal = grandTotal(form.budget, meta.budgetHeads, budgetYears);
 
   const editLine = (key, year, index, field, value) =>
     setForm(prev => ({ ...prev, budget: setLineField(prev.budget, key, year, index, field, field === 'count' || field === 'amount' ? (value === '' ? 0 : Number(value)) : value) }));
