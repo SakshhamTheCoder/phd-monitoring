@@ -54,6 +54,9 @@ export const mapProject = (p) => (p ? {
   focusArea: p.focus_area, grantType: p.grant_type,
   coPIs: p.co_pis || [], objectives: p.objectives || [], budget: p.budget || {},
   equipmentDetails: p.equipment_details || [],
+  sdgs: p.sdgs || [],
+  ganttChartName: p.gantt_chart_name || '',
+  ganttChartUrl: p.gantt_chart_path ? fileUrl(p.gantt_chart_path) : '',
   sanctionLetterLink: p.sanction_letter_link, sanctionLetterName: p.sanction_letter_name,
   pi: p.pi ? {
     code: p.pi.faculty_code,
@@ -82,7 +85,8 @@ export const toProjectBody = (form) => ({
   amount: parseInt(form.sanctionAmount) || 0,
   tiet_share: parseInt(form.tietShare) || 0,
   co_pis: form.coPIs || [],
-  objectives: form.objectives || [],
+  sdgs: form.sdgs || [],
+  objectives: (form.objectives || []).map((o) => (typeof o === 'string' ? o : (o && o.title) || '')).filter((s) => s.trim()),
   budget: form.budget || {},
 });
 
@@ -99,6 +103,19 @@ export const apiListProjects = async () => {
 export const apiProjectStats = async () => {
   const { success, response } = await customFetch(`${baseURL}/projects/stats`, 'GET', {}, false);
   return success ? response : { active: 0, completed: 0, totalFunding: 0, consultancy: 0, industry: 0, international: 0 };
+};
+
+// Option lists come from the backend so the wizard cannot drift from the
+// validation. Cached for the life of the page — these change with a deploy,
+// not with a click.
+let metaCache = null;
+export const apiProjectMeta = async () => {
+  if (metaCache) return metaCache;
+  const { success, response } = await customFetch(`${baseURL}/projects/meta`, 'GET', {}, false);
+  metaCache = success
+    ? response
+    : { sdgs: [], manpowerCategories: [], budgetHeads: [], duration: { years: [1, 2, 3, 4, 5], maxMonths: 11 } };
+  return metaCache;
 };
 export const apiGetProject = async (id) => {
   const { success, response } = await customFetch(`${baseURL}/projects/${id}`, 'GET', {}, false);
@@ -133,6 +150,15 @@ export const apiAddMilestone = (projectId, m) => customFetch(`${baseURL}/project
 export const apiUpdateMilestone = (projectId, milestoneId, m) => customFetch(`${baseURL}/projects/${projectId}/milestones/${milestoneId}`, 'POST',
   { name: m.name, deliverable: m.deliverable, due_date: m.dueDate || null, status: m.status }, true);
 export const apiDeleteMilestone = (projectId, milestoneId) => customFetch(`${baseURL}/projects/${projectId}/milestones/${milestoneId}`, 'DELETE');
+
+// ---- Gantt chart ----
+export const apiUploadGanttChart = (projectId, file) => {
+  const body = new FormData();
+  body.append('gantt_chart', file);
+  return customFetch(`${baseURL}/projects/${projectId}`, 'POST', body, true, true);
+};
+export const apiRemoveGanttChart = (projectId) =>
+  customFetch(`${baseURL}/projects/${projectId}`, 'POST', { remove_gantt_chart: 1 }, true);
 
 // ---- documents ----
 export const apiAddDocument = (projectId, formData) => customFetch(`${baseURL}/projects/${projectId}/documents`, 'POST', formData, true, true);
