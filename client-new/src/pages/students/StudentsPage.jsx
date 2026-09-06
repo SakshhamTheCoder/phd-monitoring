@@ -30,8 +30,8 @@ const StudentsPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(null);
 
-  const studentsSampleCsv = `First Name,Last Name,Email,Phone,Roll Number,Department Code,Date of Registration (YYYY-MM-DD),Date of IRB (YYYY-MM-DD),PhD Title,Father's Name,Address,Current Status,CGPA,Overall Progress
-John,Doe,john.doe@example.com,+1234567890,PHD2024001,CSED,2024-01-15,2024-03-20,Machine Learning Applications in Healthcare,Michael Doe,"123 Main Street, City",full-time,3.85,25.5`;
+  const studentsSampleCsv = `Full Name,Email,Phone,Roll Number,Department Code,Date of Registration (YYYY-MM-DD),Date of IRB (YYYY-MM-DD),PhD Title,Father's Name,Address,Current Status,CGPA,Overall Progress
+Sakshham Bhagat,sakshham.bhagat@demo.invalid,9800000011,900011,CSED,2024-08-01,,,Rajesh Bhagat,Patiala,full-time,8.4,10`;
 
   const handleBulkImport = async (csvPreview, resetState) => {
     try {
@@ -59,8 +59,7 @@ John,Doe,john.doe@example.com,+1234567890,PHD2024001,CSED,2024-01-15,2024-03-20,
         });
 
         const students = batch.map(r => ({
-          first_name: r['First Name'],
-          last_name: r['Last Name'] || '',
+          full_name: r['Full Name'] || [r['First Name'], r['Last Name']].filter(Boolean).join(' ') || '',
           email: r['Email'],
           phone: r['Phone'],
           roll_no: r['Roll Number'],
@@ -263,14 +262,14 @@ John,Doe,john.doe@example.com,+1234567890,PHD2024001,CSED,2024-01-15,2024-03-20,
             isOpen={isBulkUploadModalOpen}
             onClose={() => { setIsBulkUploadModalOpen(false); }}
             title="Bulk Import Students"
-            formatString="First Name,Last Name,Email,Phone,Roll Number,Department Code,Date of Registration (YYYY-MM-DD),Date of IRB (YYYY-MM-DD),PhD Title,Father's Name,Address,Current Status,CGPA,Overall Progress"
+            formatString="Full Name,Email,Phone,Roll Number,Department Code,Date of Registration (YYYY-MM-DD),Date of IRB (YYYY-MM-DD),PhD Title,Father's Name,Address,Current Status,CGPA,Overall Progress"
             infoNodes={
               <>
                 <p style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '0.875rem' }}>
-                  <strong>Required for new students:</strong> First Name, Email, Phone, Roll Number, Department Code, Date of Registration, Current Status
+                  <strong>Required for new students:</strong> Full Name, Email, Phone, Roll Number, Department Code, Date of Registration, Current Status
                 </p>
                 <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
-                  <strong>Optional:</strong> Last Name, Date of IRB, PhD Title, Father's Name, Address, CGPA, Overall Progress
+                  <strong>Optional:</strong> Date of IRB, PhD Title, Father's Name, Address, CGPA, Overall Progress
                 </p>
                 <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
                   <strong>Current Status:</strong> part-time, full-time, executive

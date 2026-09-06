@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\PagenationTrait;
 use App\Models\OutsideExpert;
+use App\Support\PersonName;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -79,8 +80,9 @@ class OutsideExpertController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'first_name' => 'required|string|max:255',
-                'last_name' => 'required|string|max:255',
+                'full_name' => 'required_without:first_name|string',
+                'first_name' => 'required_without:full_name|string|max:255',
+                'last_name' => 'nullable|string|max:255',
                 'designation' => 'required|string|max:255',
                 'department' => 'required|string|max:255',
                 'institution' => 'required|string|max:255',
@@ -97,7 +99,14 @@ class OutsideExpertController extends Controller
                 ], 422);
             }
 
-            $expert = OutsideExpert::create($request->all());
+            $name = $request->filled('full_name')
+                ? PersonName::split($request->input('full_name'))
+                : ['first' => $request->input('first_name'), 'last' => $request->input('last_name') ?: PersonName::NO_SURNAME];
+
+            $expert = OutsideExpert::create(array_merge(
+                $request->except(['full_name', 'first_name', 'last_name']),
+                ['first_name' => $name['first'], 'last_name' => $name['last']]
+            ));
 
             return response()->json([
                 'success' => true,
@@ -126,8 +135,9 @@ class OutsideExpertController extends Controller
             }
 
             $validator = Validator::make($request->all(), [
-                'first_name' => 'required|string|max:255',
-                'last_name' => 'required|string|max:255',
+                'full_name' => 'required_without:first_name|string',
+                'first_name' => 'required_without:full_name|string|max:255',
+                'last_name' => 'nullable|string|max:255',
                 'designation' => 'required|string|max:255',
                 'department' => 'required|string|max:255',
                 'institution' => 'required|string|max:255',
@@ -144,7 +154,14 @@ class OutsideExpertController extends Controller
                 ], 422);
             }
 
-            $expert->update($request->all());
+            $name = $request->filled('full_name')
+                ? PersonName::split($request->input('full_name'))
+                : ['first' => $request->input('first_name'), 'last' => $request->input('last_name') ?: PersonName::NO_SURNAME];
+
+            $expert->update(array_merge(
+                $request->except(['full_name', 'first_name', 'last_name']),
+                ['first_name' => $name['first'], 'last_name' => $name['last']]
+            ));
 
             return response()->json([
                 'success' => true,
@@ -196,7 +213,7 @@ class OutsideExpertController extends Controller
 
     /**
      * Bulk import outside experts from CSV
-     * CSV Format: first_name,last_name,email,phone,designation,department,institution,area_of_expertise,website
+     * CSV Format: full_name,email,phone,designation,department,institution,area_of_expertise,website
      */
     public function bulkImportFromCSV(Request $request)
     {
@@ -207,7 +224,7 @@ class OutsideExpertController extends Controller
 
             $file = $request->file('file');
             $csvData = array_map('str_getcsv', file($file->getRealPath()));
-            $header = array_shift($csvData);
+            $header = array_map(fn ($h) => trim((string) $h), array_shift($csvData));
 
             $successCount = 0;
             $errorCount = 0;
@@ -215,24 +232,50 @@ class OutsideExpertController extends Controller
 
             foreach ($csvData as $index => $row) {
                 try {
-                    if (count($row) < 7) {
+                    // A blank line (trailing newline, stray gap) parses to
+                    // [null] or [''] via str_getcsv — skip it rather than
+                    // reporting a spurious "full_name is required" row.
+                    if (count($row) === 0 || (count($row) === 1 && trim((string) ($row[0] ?? '')) === '')) {
+                        continue;
+                    }
+
+                    if (count($row) < 1) {
                         $errors[] = "Row " . ($index + 2) . ": Insufficient columns";
                         $errorCount++;
                         continue;
                     }
 
-                    $firstName = trim($row[0]);
-                    $lastName = trim($row[1]);
-                    $email = trim($row[2]);
-                    $phone = isset($row[3]) ? trim($row[3]) : null;
-                    $designation = trim($row[4]);
-                    $department = trim($row[5]);
-                    $institution = trim($row[6]);
-                    $areaOfExpertise = isset($row[7]) ? trim($row[7]) : null;
-                    $website = isset($row[8]) ? trim($row[8]) : null;
+                    // Keyed by header rather than a fixed position, so a CSV
+                    // saved with the legacy first_name/last_name pair still
+                    // reads correctly through PersonName::fromRow below.
+                    // Pad short rows and truncate long ones so a row with a
+                    // different cell count than the header never reaches
+                    // array_combine (which throws a ValueError on mismatch).
+                    $row = array_slice(array_pad($row, count($header), null), 0, count($header));
+                    $data = array_combine($header, $row);
+
+                    $name = PersonName::fromRow($data);
+                    $email = trim((string) ($data['email'] ?? ''));
+                    $phone = isset($data['phone']) && trim((string) $data['phone']) !== '' ? trim((string) $data['phone']) : null;
+                    $designation = trim((string) ($data['designation'] ?? ''));
+                    $department = trim((string) ($data['department'] ?? ''));
+                    $institution = trim((string) ($data['institution'] ?? ''));
+                    $areaOfExpertise = isset($data['area_of_expertise']) && trim((string) $data['area_of_expertise']) !== '' ? trim((string) $data['area_of_expertise']) : null;
+                    $website = isset($data['website']) && trim((string) $data['website']) !== '' ? trim((string) $data['website']) : null;
+
+                    // outside_experts.first_name/last_name are NOT NULL, so a
+                    // row with no name at all must be rejected rather than
+                    // written with an empty string.
+                    if ($name === null) {
+                        $errors[] = "Row " . ($index + 2) . ": full_name is required";
+                        $errorCount++;
+                        continue;
+                    }
+                    $firstName = $name['first'];
+                    $lastName = $name['last'];
 
                     // Validate required fields
-                    if (empty($firstName) || empty($lastName) || empty($email) || empty($designation) || empty($department) || empty($institution)) {
+                    if (empty($email) || empty($designation) || empty($department) || empty($institution)) {
                         $errors[] = "Row " . ($index + 2) . ": Missing required fields";
                         $errorCount++;
                         continue;

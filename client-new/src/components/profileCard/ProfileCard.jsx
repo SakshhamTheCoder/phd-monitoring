@@ -79,7 +79,7 @@ const [userRole, setUserRole] = useState('');
     try {
       const res = await customFetch(`${baseURL}/clerks/attendance/student/${roll}`, 'GET', {}, false, false);
       if (res?.success) {
-        setAttendance(res.response.summary);
+        setAttendance({ ...res.response.summary, currentMonth: res.response.current_month });
       } else if (res?.response?.message?.includes?.('permission')) {
         setAttendance(null);
       }
@@ -198,9 +198,14 @@ const [userRole, setUserRole] = useState('');
       date_of_registration,
       date_of_irb,
       date_of_synopsis,
+      date_of_thesis,
       cgpa,
       doctoral,
     } = profile;
+
+    // Tentative until the IRB is actually approved. The backend decides; the
+    // profile only reports, so no screen can disagree with another about it.
+    const titleLabel = profile.irb_completed ? 'PhD Title' : 'Tentative PhD Title';
 
     const personalInfo = [
       { label: "Roll Number", value: profile.roll_no },
@@ -215,7 +220,30 @@ const [userRole, setUserRole] = useState('');
       { label: "Date of Admission", value: formatDate(date_of_registration) },
       { label: "Date of IRB", value: formatDate(date_of_irb) },
       { label: "Date of Synopsis", value: formatDate(date_of_synopsis) },
-      ...(attendance ? [{ label: "Attendance", value: `${attendance.present} present / ${attendance.total} sessions${attendance.percent != null ? ` (${attendance.percent}%)` : ''}` }] : []),
+      { label: "Date of Thesis", value: formatDate(date_of_thesis) },
+      ...(attendance ? [{
+        label: 'Attendance',
+        node: (
+          <span className="profile-attendance" tabIndex={0}>
+            <span className="profile-attendance-value">
+              {attendance.total > 0
+                ? `${attendance.present}/${attendance.total} (${attendance.percent}%)`
+                : '—'}
+            </span>
+            <span className="profile-attendance-pop" role="tooltip">
+              <strong>{attendance.currentMonth?.label || 'Current Month'} Attendance</strong>
+              {attendance.currentMonth && attendance.currentMonth.total > 0 ? (
+                <>
+                  <span>{attendance.currentMonth.present} Present / {attendance.currentMonth.total} Sessions</span>
+                  <span>{attendance.currentMonth.percent}%</span>
+                </>
+              ) : (
+                <span>No sessions recorded this month.</span>
+              )}
+            </span>
+          </span>
+        ),
+      }] : []),
     ];
 
     const supervisorTableData = (supervisors || []).map((sup, index) => {
@@ -251,10 +279,10 @@ const [userRole, setUserRole] = useState('');
           <div className="student-header">
             <div className="student-header-text">
               <h2>{name}</h2>
-              {isEditingInline ? (
+              {isEditingInline && (
                 <div className="student-sub-edit">
                   <div className="inline-field-item">
-                    <label>Ph.D. Title</label>
+                    <label>{titleLabel}</label>
                     <input
                       type="text"
                       placeholder="Enter your Ph.D. title"
@@ -302,27 +330,6 @@ const [userRole, setUserRole] = useState('');
                     </div>
                   </div>
                 </div>
-              ) : (
-                <>
-                  <p className="student-sub">
-                    {phd_title || "Ph.D. Title Not Available"}
-                  </p>
-                  <p className="student-sub-meta">
-                    <span className="meta-label">Domain:</span>{" "}
-                    <span className={profile.tentative_broad_area ? "meta-value" : "meta-value empty"}>
-                      {profile.tentative_broad_area || "Not added"}
-                    </span>
-                  </p>
-                  <p className="student-sub-meta">
-                    <span className="meta-label">Description:</span>{" "}
-                    <span className={profile.tentative_desc ? "meta-value" : "meta-value empty"}>
-                      {profile.tentative_desc || "Not added"}
-                    </span>
-                  </p>
-                  {profile.phd_title_locked && (
-                    <p className="student-sub-meta-locked">Locked — IRB constituted</p>
-                  )}
-                </>
               )}
             </div>
             <div className="student-progress">
@@ -338,25 +345,53 @@ const [userRole, setUserRole] = useState('');
               <span className="progress-label">Progress</span>
             </div>
           </div>
-          
-          <div className="student-info-grid">
-            {personalInfo.map((item, idx) => (
-              <div key={idx}>
-                <strong>{item.label}:</strong>{" "}
-                {isEditingInline && item.field ? (
-                  <input
-                    className="profile-inline-input"
-                    type="text"
-                    value={editForm[item.field] ?? ""}
-                    onChange={(e) =>
-                      setEditForm((prev) => ({ ...prev, [item.field]: e.target.value }))
-                    }
-                  />
-                ) : (
-                  item.value || "—"
+
+          <div className="student-details">
+            {!isEditingInline && (
+              <div className="student-research">
+                <div className="student-research-item">
+                  <strong>{titleLabel}:</strong>{" "}
+                  <span className={phd_title ? "" : "student-value-empty"}>
+                    {phd_title || "Not added"}
+                  </span>
+                </div>
+                <div className="student-research-item">
+                  <strong>Domain:</strong>{" "}
+                  <span className={profile.tentative_broad_area ? "" : "student-value-empty"}>
+                    {profile.tentative_broad_area || "Not added"}
+                  </span>
+                </div>
+                <div className="student-research-item span-all">
+                  <strong>Description:</strong>{" "}
+                  <span className={profile.tentative_desc ? "" : "student-value-empty"}>
+                    {profile.tentative_desc || "Not added"}
+                  </span>
+                </div>
+                {profile.phd_title_locked && (
+                  <p className="student-sub-meta-locked span-all">Locked — IRB constituted</p>
                 )}
               </div>
-            ))}
+            )}
+
+            <div className="student-info-grid">
+              {personalInfo.map((item, idx) => (
+                <div key={idx}>
+                  <strong>{item.label}:</strong>{" "}
+                  {isEditingInline && item.field ? (
+                    <input
+                      className="profile-inline-input"
+                      type="text"
+                      value={editForm[item.field] ?? ""}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({ ...prev, [item.field]: e.target.value }))
+                      }
+                    />
+                  ) : (
+                    item.node ?? (item.value || "—")
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
 

@@ -23,8 +23,7 @@ const OutsideExperts = () => {
   
   // Form data
   const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
+    full_name: '',
     designation: '',
     department: '',
     institution: '',
@@ -146,9 +145,12 @@ const OutsideExperts = () => {
 
   const openEditModal = (expert) => {
     setEditingExpert(expert);
+    const fullName = [expert.first_name, expert.last_name]
+      .map((p) => (p || '').trim())
+      .filter(Boolean)
+      .join(' ');
     setFormData({
-      first_name: expert.first_name,
-      last_name: expert.last_name,
+      full_name: expert.name || fullName,
       designation: expert.designation,
       department: expert.department,
       institution: expert.institution,
@@ -162,8 +164,7 @@ const OutsideExperts = () => {
 
   const resetForm = () => {
     setFormData({
-      first_name: '',
-      last_name: '',
+      full_name: '',
       designation: '',
       department: '',
       institution: '',
@@ -230,22 +231,15 @@ const OutsideExperts = () => {
           <GridContainer
             elements={[
               <InputField
-                label="First Name"
-                initialValue={formData.first_name}
-                onChange={(value) => handleInputChange('first_name', value)}
-                placeholder="Enter first name"
-                required
-              />,
-              <InputField
-                label="Last Name"
-                initialValue={formData.last_name}
-                onChange={(value) => handleInputChange('last_name', value)}
-                placeholder="Enter last name"
+                label="Full Name"
+                initialValue={formData.full_name}
+                onChange={(value) => handleInputChange('full_name', value)}
+                placeholder="e.g. Dr. Tarunpreet Bhatia"
                 required
               />,
             ]}
           />
-          
+
           <GridContainer
             elements={[
               <InputField
@@ -354,7 +348,7 @@ const OutsideExperts = () => {
         <div className="modal-form">
           <div className="info-box">
             <p><strong>CSV Format:</strong></p>
-            <p>first_name,last_name,email,phone,designation,department,institution,area_of_expertise,website</p>
+            <p>full_name,email,phone,designation,department,institution,area_of_expertise,website</p>
             <p className="note">Note: Phone, area_of_expertise, and website are optional. If an expert with the same email exists, their record will be updated.</p>
           </div>
           
@@ -399,20 +393,14 @@ const OutsideExperts = () => {
           <GridContainer
             elements={[
               <InputField
-                label="First Name"
-                initialValue={formData.first_name}
-                onChange={(value) => handleInputChange('first_name', value)}
-                required
-              />,
-              <InputField
-                label="Last Name"
-                initialValue={formData.last_name}
-                onChange={(value) => handleInputChange('last_name', value)}
+                label="Full Name"
+                initialValue={formData.full_name}
+                onChange={(value) => handleInputChange('full_name', value)}
                 required
               />,
             ]}
           />
-          
+
           <GridContainer
             elements={[
               <InputField

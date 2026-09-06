@@ -15,36 +15,6 @@
   font-weight: 600;
 }
 
-.student-sub {
-  font-size: 1.15rem;
-  color: #6b7280;
-  margin-bottom: 0.2rem;
-  line-height: 1.25;
-  font-weight: 500;
-}
-
-.student-sub-meta {
-  font-size: 1.15rem;
-  color: #6b7280;
-  margin: 0 0 0.2rem 0;
-  line-height: 1.25;
-  font-weight: 500;
-}
-
-.student-sub-meta .meta-label {
-  color: #6b7280;
-}
-
-.student-sub-meta .meta-value {
-  color: #6b7280;
-}
-
-.student-sub-meta .meta-value.empty {
-  color: #9ca3af;
-  font-weight: 400;
-  font-style: italic;
-}
-
 .student-sub-meta-locked {
   font-size: 0.78rem;
   color: #991b1b;
@@ -59,6 +29,78 @@
   margin-top: 1.5rem;
   font-size: 0.95rem;
   color: #374151;
+}
+
+/* Title, domain and description sit with the facts rather than shouting above
+   them, at the same type scale as the matrix so the block reads as one card. */
+.student-details {
+  margin-top: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.25rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fafafa;
+}
+
+.student-research {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 0.95rem;
+  color: #374151;
+}
+
+.student-research .span-all { grid-column: 1 / -1; }
+
+.student-research-item strong { color: #6b7280; font-weight: 600; }
+
+.student-value-empty { color: #9ca3af; font-style: italic; }
+
+/* The matrix keeps its own grid; it just lives inside the card now. */
+.student-details .student-info-grid {
+  margin: 0;
+}
+
+/* Compact attendance with the portal's hover treatment. */
+.profile-attendance { position: relative; display: inline-block; cursor: help; }
+.profile-attendance-value { border-bottom: 1px dotted #9ca3af; }
+.profile-attendance-pop {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  display: none;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 190px;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  background: #111827;
+  color: #f9fafb;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.35;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+}
+.profile-attendance-pop::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 14px;
+  border: 6px solid transparent;
+  border-top-color: #111827;
+}
+.profile-attendance-pop strong { font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: #d1d5db; }
+.profile-attendance:hover .profile-attendance-pop,
+.profile-attendance:focus .profile-attendance-pop,
+.profile-attendance:focus-within .profile-attendance-pop { display: flex; }
+
+@media (max-width: 640px) {
+  .student-header-text { max-width: 100%; }
+  .profile-attendance-pop { left: auto; right: 0; }
 }
 
 .student-table-section {

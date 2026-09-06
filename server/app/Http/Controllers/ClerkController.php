@@ -7,6 +7,8 @@ use App\Models\ClerkDepartment;
 use App\Models\Department;
 use App\Models\Role;
 use App\Models\Student;
+use App\Support\AttendanceSummary;
+use App\Support\DepartmentScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -29,6 +31,31 @@ class ClerkController extends Controller
     private function clerkDepartmentIds(int $userId): array
     {
         return ClerkDepartment::where('user_id', $userId)->pluck('department_id')->all();
+    }
+
+    /**
+     * The department ids this request may touch, or the 403 to return.
+     *
+     * Every attendance endpoint goes through here so the rule is stated once
+     * and cannot drift between read and write paths.
+     *
+     * @return array<int, int>|null|\Illuminate\Http\JsonResponse
+     */
+    private function resolveDepartmentScope(Request $request, string $role)
+    {
+        $user = Auth::user();
+        $allowed = $role === 'admin' ? null : $this->clerkDepartmentIds($user->id);
+        $scope = DepartmentScope::resolve($allowed, $request->input('department_id'));
+
+        if ($scope['denied']) {
+            return response()->json([
+                'message' => $allowed === []
+                    ? 'No departments are assigned to you yet. Contact an administrator.'
+                    : 'That department is not one of yours.',
+            ], 403);
+        }
+
+        return $scope['ids'];
     }
 
     /**
@@ -72,31 +99,14 @@ class ClerkController extends Controller
             'lecture_id' => 'nullable|integer|min:0',
         ]);
 
-        // Admin bypasses department scoping for oversight
-        if ($user->current_role->role === 'admin') {
-            $departmentIds = Department::pluck('id')->all();
-        } else {
-            $departmentIds = $this->clerkDepartmentIds($user->id);
-        }
-        if ($request->filled('department_id')) {
-            $departmentIds = array_values(array_intersect(
-                $departmentIds,
-                [(int) $request->input('department_id')]
-            ));
-        }
-        if ($departmentIds === []) {
-            return response()->json([
-                'date' => $request->input('date', now()->toDateString()),
-                'students' => [],
-                'message' => 'No departments are assigned to you yet. Contact an administrator.',
-            ], 200);
-        }
+        $departmentIds = $this->resolveDepartmentScope($request, $user->current_role->role);
+        if ($departmentIds instanceof \Illuminate\Http\JsonResponse) return $departmentIds;
 
         $date = $request->input('date', now()->toDateString());
         $lectureId = (int) ($request->input('lecture_id', 0));
 
         $students = Student::with(['user:id,first_name,last_name', 'department:id,name,code'])
-            ->whereIn('department_id', $departmentIds)
+            ->when($departmentIds !== null, fn ($q) => $q->whereIn('department_id', $departmentIds))
             ->orderBy('roll_no')
             ->get();
 
@@ -172,15 +182,12 @@ class ClerkController extends Controller
             }
         }
 
-        // Clerks are department-scoped, admins are not
-        $allowedDepartmentIds = $role === 'admin' ? null : $this->clerkDepartmentIds($user->id);
-        if ($role !== 'admin' && $allowedDepartmentIds === []) {
-            return response()->json(['message' => 'No departments are assigned to you yet. Contact an administrator.'], 403);
-        }
+        $departmentIds = $this->resolveDepartmentScope($request, $role);
+        if ($departmentIds instanceof \Illuminate\Http\JsonResponse) return $departmentIds;
 
         $requestedRollNos = array_column($request->input('records'), 'roll_no');
         $students = Student::whereIn('roll_no', $requestedRollNos)
-            ->when($allowedDepartmentIds !== null, fn ($q) => $q->whereIn('department_id', $allowedDepartmentIds))
+            ->when($departmentIds !== null, fn ($q) => $q->whereIn('department_id', $departmentIds))
             ->get()
             ->keyBy('roll_no');
 
@@ -292,10 +299,8 @@ class ClerkController extends Controller
         ]);
 
         $lectureId = (int) ($request->input('lecture_id', 0));
-        $allowedDepartmentIds = $role === 'admin' ? null : $this->clerkDepartmentIds($user->id);
-        if ($role !== 'admin' && $allowedDepartmentIds === []) {
-            return response()->json(['message' => 'No departments are assigned to you yet.'], 403);
-        }
+        $allowedDepartmentIds = $this->resolveDepartmentScope($request, $role);
+        if ($allowedDepartmentIds instanceof \Illuminate\Http\JsonResponse) return $allowedDepartmentIds;
 
         $file = $request->file('file');
         $content = file_get_contents($file->getRealPath());
@@ -428,16 +433,8 @@ class ClerkController extends Controller
             'page' => 'nullable|integer|min:1',
             'per_page' => 'nullable|integer|min:1|max:100',
         ]);
-        $allowedDepartmentIds = $user->current_role->role === 'admin' ? null : $this->clerkDepartmentIds($user->id);
-        $deptIds = $allowedDepartmentIds;
-        if ($request->filled('department_id')) {
-            $deptIds = $allowedDepartmentIds === null
-                ? [(int) $request->input('department_id')]
-                : array_values(array_intersect($allowedDepartmentIds, [(int) $request->input('department_id')]));
-        }
-        if ($deptIds !== null && $deptIds === []) {
-            return response()->json(['message' => 'No departments in scope'], 403);
-        }
+        $deptIds = $this->resolveDepartmentScope($request, $user->current_role->role);
+        if ($deptIds instanceof \Illuminate\Http\JsonResponse) return $deptIds;
         $q = Attendance::query();
         if ($request->filled('from')) $q->where('date', '>=', $request->input('from'));
         if ($request->filled('to')) $q->where('date', '<=', $request->input('to'));
@@ -451,6 +448,121 @@ class ClerkController extends Controller
             ->orderBy('date', 'desc')
             ->paginate($request->input('per_page', 15));
         return response()->json($sessions, 200);
+    }
+
+    /**
+     * One day's attendance as whole numbers, for the department in scope.
+     *
+     * The CSV export already carries this, but nobody should have to download a
+     * file to learn that 142 scholars were present. not_recorded is the gap
+     * between the roster and the rows actually saved, which is what makes a
+     * half-taken session visible rather than looking like mass absence.
+     */
+    public function daySummary(Request $request)
+    {
+        $user = Auth::user();
+        $role = $user->current_role->role;
+        if (!in_array($role, ['clerk', 'admin'], true)) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'date' => 'required|date',
+            'department_id' => 'nullable|integer|exists:departments,id',
+            'lecture_id' => 'nullable|integer|min:0',
+        ]);
+
+        $departmentIds = $this->resolveDepartmentScope($request, $role);
+        if ($departmentIds instanceof \Illuminate\Http\JsonResponse) return $departmentIds;
+
+        $date = $request->input('date');
+        $lectureId = (int) $request->input('lecture_id', 0);
+
+        $rolls = Student::when($departmentIds !== null, fn ($q) => $q->whereIn('department_id', $departmentIds))
+            ->pluck('roll_no');
+
+        $records = Attendance::where('date', $date)
+            ->where('lecture_id', $lectureId)
+            ->whereIn('roll_no', $rolls)
+            ->get(['status']);
+
+        $summary = AttendanceSummary::of($records);
+
+        return response()->json([
+            'date' => $date,
+            'department_id' => $request->input('department_id'),
+            'scholars' => $rolls->count(),
+            'total' => $summary['total'],
+            'present' => $summary['present'],
+            'absent' => $summary['absent'],
+            'not_recorded' => max(0, $rolls->count() - $summary['total']),
+            'percent' => $summary['percent'],
+        ], 200);
+    }
+
+    /**
+     * A month of attendance, per scholar and in total.
+     *
+     * Deliberately a different shape from daySummary: the monthly view answers
+     * "how has each scholar done this month", which is a per-person question,
+     * where the daily view answers "who was here today".
+     */
+    public function monthSummary(Request $request)
+    {
+        $user = Auth::user();
+        $role = $user->current_role->role;
+        if (!in_array($role, ['clerk', 'admin'], true)) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'month' => 'required|date_format:Y-m',
+            'department_id' => 'nullable|integer|exists:departments,id',
+        ]);
+
+        $departmentIds = $this->resolveDepartmentScope($request, $role);
+        if ($departmentIds instanceof \Illuminate\Http\JsonResponse) return $departmentIds;
+
+        $start = \Carbon\Carbon::createFromFormat('Y-m', $request->input('month'))->startOfMonth();
+        $end = $start->copy()->endOfMonth();
+
+        $students = Student::with(['user:id,first_name,last_name', 'department:id,name,code'])
+            ->when($departmentIds !== null, fn ($q) => $q->whereIn('department_id', $departmentIds))
+            ->orderBy('roll_no')
+            ->get();
+
+        $byRoll = Attendance::whereBetween('date', [$start->toDateString(), $end->toDateString()])
+            ->whereIn('roll_no', $students->pluck('roll_no'))
+            ->get(['roll_no', 'status'])
+            ->groupBy('roll_no');
+
+        $rows = $students->map(function ($student) use ($byRoll) {
+            $summary = AttendanceSummary::of($byRoll->get($student->roll_no, collect()));
+
+            return [
+                'roll_no' => $student->roll_no,
+                'name' => optional($student->user)->name(),
+                'department_name' => optional($student->department)->name,
+                'present' => $summary['present'],
+                'absent' => $summary['absent'],
+                'total' => $summary['total'],
+                'percent' => $summary['percent'],
+            ];
+        })->values();
+
+        return response()->json([
+            'month' => $start->format('Y-m'),
+            'label' => $start->format('F Y'),
+            'days_with_sessions' => Attendance::whereBetween('date', [$start->toDateString(), $end->toDateString()])
+                ->whereIn('roll_no', $students->pluck('roll_no'))
+                ->distinct()->count('date'),
+            'students' => $rows,
+            'totals' => [
+                'present' => $rows->sum('present'),
+                'absent' => $rows->sum('absent'),
+                'total' => $rows->sum('total'),
+            ],
+        ], 200);
     }
 
     /**
@@ -509,13 +621,20 @@ class ClerkController extends Controller
         if ($request->filled('from')) $q->where('date', '>=', $request->input('from'));
         if ($request->filled('to')) $q->where('date', '<=', $request->input('to'));
         $records = $q->get(['date', 'lecture_id', 'status', 'marked_by']);
-        $total = $records->count();
-        $present = $records->where('status', 'present')->count();
-        $absent = $records->where('status', 'absent')->count();
-        $percent = $total ? round($present / $total * 100, 1) : null;
+
+        // The hover on the profile wants this month specifically, which is a
+        // different number from the all-time figure beside it. Re-query rather
+        // than reuse $records, since any from/to filter above must not narrow
+        // what "this month" means.
+        $monthStart = now()->startOfMonth();
+        $monthRecords = Attendance::where('roll_no', $roll_no)
+            ->whereBetween('date', [$monthStart->toDateString(), now()->endOfMonth()->toDateString()])
+            ->get(['status']);
+
         return response()->json([
             'student' => ['roll_no' => $student->roll_no, 'name' => optional($student->user)->name()],
-            'summary' => ['total' => $total, 'present' => $present, 'absent' => $absent, 'percent' => $percent],
+            'summary' => AttendanceSummary::of($records),
+            'current_month' => AttendanceSummary::of($monthRecords) + ['label' => $monthStart->format('F Y')],
             'records' => $records,
         ], 200);
     }
@@ -542,16 +661,8 @@ class ClerkController extends Controller
             'summary' => 'nullable|boolean',
         ]);
 
-        $allowedDepartmentIds = $user->current_role->role === 'admin' ? null : $this->clerkDepartmentIds($user->id);
-        $deptIds = $allowedDepartmentIds;
-        if ($request->filled('department_id')) {
-            $deptIds = $allowedDepartmentIds === null
-                ? [(int) $request->input('department_id')]
-                : array_values(array_intersect($allowedDepartmentIds, [(int) $request->input('department_id')]));
-        }
-        if ($deptIds !== null && $deptIds === []) {
-            return response()->json(['message' => 'No departments in scope'], 403);
-        }
+        $deptIds = $this->resolveDepartmentScope($request, $user->current_role->role);
+        if ($deptIds instanceof \Illuminate\Http\JsonResponse) return $deptIds;
 
         $query = Attendance::query()->orderBy('date')->orderBy('roll_no');
         if ($request->filled('from')) $query->where('date', '>=', $request->input('from'));
@@ -727,6 +838,7 @@ class ClerkController extends Controller
             'clerks.*.email' => 'required|email',
             'clerks.*.department_codes' => 'nullable|string',
             'clerks.*.phone' => 'nullable|string',
+            'clerks.*.full_name' => 'nullable|string',
             'clerks.*.first_name' => 'nullable|string',
             'clerks.*.last_name' => 'nullable|string',
         ]);
@@ -741,9 +853,10 @@ class ClerkController extends Controller
                         // Unified create-or-update: create clerk if missing (consistent with faculty/student)
                         $role = \App\Models\Role::where('role','clerk')->first();
                         if (!$role) throw new \Exception('Clerk role not found');
+                        $name = \App\Support\PersonName::fromRow($row);
                         $user = new \App\Models\User();
-                        $user->first_name = !empty($row['first_name']) ? $row['first_name'] : explode('@',$row['email'])[0];
-                        $user->last_name = $row['last_name'] ?? ' ';
+                        $user->first_name = $name['first'] ?? explode('@', $row['email'])[0];
+                        $user->last_name = $name['last'] ?? \App\Support\PersonName::NO_SURNAME;
                         $user->email = $row['email'];
                         $user->phone = $row['phone'] ?? null;
                         $user->password = bcrypt(\Illuminate\Support\Str::password(8, true, true, true, false));

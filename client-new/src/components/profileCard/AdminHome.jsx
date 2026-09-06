@@ -20,8 +20,6 @@ const LINKS = [
     roles: ["hod", "phd_coordinator", "faculty", "dordc", "adordc", "dra", "director", "doctoral", "admin"] },
   { path: "/courses", label: "Courses",
     roles: ["hod", "phd_coordinator", "admin"] },
-  { path: "/supervisor-doctoral-approvals", label: "Supervisor Approvals",
-    roles: ["dordc", "admin"] },
   { path: "/users", label: "Manage Users",
     roles: ["admin"] },
   { path: "/areasOfSpecialization", label: "Areas of Specialization",

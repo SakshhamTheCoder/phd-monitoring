@@ -47,6 +47,10 @@ class FiltersTableSeeder extends Seeder
                 'api_url' => null,
             ],
             [
+                // Same key_name as the projects page's Status filter below,
+                // but a different applicable_pages/label/options — the two
+                // rows coexist (key_name alone is no longer unique; see
+                // 2026_09_07_120000_drop_unique_key_name_from_filters).
                 'key_name' => 'status',
                 'label' => 'Form Status',
                 'data_type' => 'select',
@@ -159,8 +163,8 @@ class FiltersTableSeeder extends Seeder
                 'label' => 'Form Type (Completed)',
                 'data_type' => 'composite',
                 'function_name' => 'form_stage_combo',
-                // Merged: one row served on all three pages (key_name is UNIQUE, so this
-                // filter cannot be duplicated per page-set — applicable_pages is a membership list).
+                // One row served on all three pages — applicable_pages is a
+                // membership list, not a page discriminator.
                 'applicable_pages' => ['student', 'forms', 'presentation'],
                 'options' => [
                     ['title' => 'IRB Submission', 'value' => ['form_type' => 'irb-submission', 'stage' => 'complete']],
@@ -171,17 +175,122 @@ class FiltersTableSeeder extends Seeder
                 ],
                 'api_url' => null,
             ],
+            // Projects page filters.
+            [
+                'key_name' => 'title',
+                'label' => 'Project Title',
+                'data_type' => 'string',
+                'function_name' => 'text',
+                'applicable_pages' => ['projects'],
+                'options' => null,
+                'api_url' => null,
+            ],
+            [
+                'key_name' => 'category',
+                'label' => 'Category',
+                'data_type' => 'select',
+                'function_name' => 'select',
+                'applicable_pages' => ['projects'],
+                'options' => [
+                    ['title' => 'In-house', 'value' => 'In-house'],
+                    ['title' => 'Research', 'value' => 'Research'],
+                    ['title' => 'Consultancy', 'value' => 'Consultancy'],
+                    ['title' => 'Industry', 'value' => 'Industry'],
+                    ['title' => 'International', 'value' => 'International'],
+                    ['title' => 'Other', 'value' => 'Other'],
+                ],
+                'api_url' => null,
+            ],
+            [
+                'key_name' => 'status',
+                'label' => 'Project Status',
+                'data_type' => 'select',
+                'function_name' => 'select',
+                'applicable_pages' => ['projects'],
+                'options' => [
+                    ['title' => 'Active', 'value' => 'Active'],
+                    ['title' => 'Completed', 'value' => 'Completed'],
+                    ['title' => 'Pending', 'value' => 'Pending'],
+                    ['title' => 'On Hold', 'value' => 'On Hold'],
+                ],
+                'api_url' => null,
+            ],
+            [
+                'key_name' => 'funding_agency',
+                'label' => 'Funding Agency',
+                'data_type' => 'string',
+                'function_name' => 'text',
+                'applicable_pages' => ['projects'],
+                'options' => null,
+                'api_url' => null,
+            ],
+            [
+                'key_name' => 'amount',
+                'label' => 'Sanctioned Amount',
+                'data_type' => 'number',
+                'function_name' => 'number',
+                'applicable_pages' => ['projects'],
+                'options' => null,
+                'api_url' => null,
+            ],
+            [
+                'key_name' => 'duration_years',
+                'label' => 'Duration (Years)',
+                'data_type' => 'number',
+                'function_name' => 'number',
+                'applicable_pages' => ['projects'],
+                'options' => null,
+                'api_url' => null,
+            ],
+            [
+                'key_name' => 'start_date',
+                'label' => 'Start Date',
+                'data_type' => 'date',
+                'function_name' => 'date',
+                'applicable_pages' => ['projects'],
+                'options' => null,
+                'api_url' => null,
+            ],
+            [
+                'key_name' => 'pi.user.first_name',
+                'label' => 'Principal Investigator',
+                'data_type' => 'string',
+                'function_name' => 'text',
+                'applicable_pages' => ['projects'],
+                'options' => null,
+                'api_url' => '/suggestions/faculty',
+            ],
+            [
+                'key_name' => 'pi.department.name',
+                'label' => 'PI Department',
+                'data_type' => 'string',
+                'function_name' => 'text',
+                'applicable_pages' => ['projects'],
+                'options' => null,
+                'api_url' => '/suggestions/department',
+            ],
         ];
 
-        foreach ($filters as &$filter) {
-            if (isset($filter['applicable_pages']) && is_array($filter['applicable_pages'])) {
-                $filter['applicable_pages'] = json_encode($filter['applicable_pages']);
-            }
+        foreach ($filters as $filter) {
+            $keyName = $filter['key_name'];
+            unset($filter['key_name']);
+
+            $pages = $filter['applicable_pages'];
+            $filter['applicable_pages'] = json_encode($pages);
             if (isset($filter['options']) && is_array($filter['options'])) {
                 $filter['options'] = json_encode($filter['options']);
             }
-        }
 
-        DB::table('filters')->insert($filters);
+            // key_name is no longer unique on its own — two pages can
+            // legitimately have a filter with the same key_name (e.g.
+            // `status`), so the row identity is (key_name, applicable_pages).
+            // This keeps the whole seeder idempotent: running it twice
+            // updates each row in place rather than duplicating or
+            // colliding with an unrelated page's row of the same key_name.
+            DB::table('filters')->updateOrInsert(
+                ['key_name' => $keyName, 'applicable_pages' => $filter['applicable_pages']],
+                $filter
+            );
+        }
     }
 }

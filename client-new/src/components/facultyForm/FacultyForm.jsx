@@ -4,20 +4,17 @@ import InputField from "../forms/fields/InputField";
 import GridContainer from "../forms/fields/GridContainer";
 import CustomButton from "../forms/fields/CustomButton";
 import InputSuggestions from "../forms/fields/InputSuggestions";
-import DropdownField from "../forms/fields/DropdownField";
 import { customFetch } from "../../api/base";
 import { baseURL } from "../../api/urls";
 
 const FacultyForm = ({ edit = false, facultyData = {}, onSuccess, onClose }) => {
   const [formData, setFormData] = useState({
-    first_name: "",
-    last_name: "",
+    full_name: "",
     email: "",
     phone: "",
     department_id: "",
     designation: "",
     faculty_code: "",
-    type: "internal",
     institution: "Thapar Institute of Engineering and Technology",
     website_link: "",
     expertise: "",
@@ -30,15 +27,17 @@ const FacultyForm = ({ edit = false, facultyData = {}, onSuccess, onClose }) => 
   useEffect(() => {
     if (edit && facultyData) {
       const exp = Array.isArray(facultyData.expertise) ? facultyData.expertise.join(', ') : facultyData.expertise || "";
+      const fullName = [facultyData.first_name, facultyData.last_name]
+        .map((p) => (p || '').trim())
+        .filter(Boolean)
+        .join(' ');
       setFormData({
-        first_name: facultyData.first_name || "",
-        last_name: facultyData.last_name || "",
+        full_name: facultyData.name || fullName,
         email: facultyData.email || "",
         phone: facultyData.phone || "",
         department_id: facultyData.department_id || "",
         designation: facultyData.designation || "",
         faculty_code: facultyData.faculty_code || "",
-        type: facultyData.type || "internal",
         institution: facultyData.institution || "Thapar Institute of Engineering and Technology",
         website_link: facultyData.website_link || "",
         expertise: exp,
@@ -55,18 +54,13 @@ const FacultyForm = ({ edit = false, facultyData = {}, onSuccess, onClose }) => 
   };
 
   const validate = () => {
-    if (!formData.first_name.trim()) return "First Name is required.";
+    const isExternalEdit = edit && facultyData.type === 'external';
+    if (!formData.full_name.trim()) return "Full Name is required.";
     if (!formData.email.trim()) return "Email is required.";
     if (!formData.phone.trim()) return "Phone is required.";
     if (!formData.designation.trim()) return "Designation is required.";
-    if (!formData.type) return "Faculty Type is required.";
-    if (formData.type === "internal") {
-      if (!formData.department_id) return "Department is required.";
-      if (!formData.faculty_code.trim()) return "Faculty Code is required.";
-    }
-    if (formData.type === "external" && !formData.institution.trim()) {
-      return "Institution is required.";
-    }
+    if (!isExternalEdit && !formData.department_id) return "Department is required.";
+    if (!isExternalEdit && !formData.faculty_code.trim()) return "Faculty Code is required.";
     return null;
   };
 
@@ -115,14 +109,10 @@ const FacultyForm = ({ edit = false, facultyData = {}, onSuccess, onClose }) => 
       <GridContainer
         elements={[
           <InputField
-            label="First Name*"
-            initialValue={formData.first_name}
-            onChange={(val) => handleChange("first_name", val)}
-          />,
-          <InputField
-            label="Last Name"
-            initialValue={formData.last_name}
-            onChange={(val) => handleChange("last_name", val)}
+            label="Full Name*"
+            initialValue={formData.full_name}
+            onChange={(val) => handleChange("full_name", val)}
+            placeholder="e.g. Dr. Tarunpreet Bhatia"
           />,
         ]}
       />
@@ -144,21 +134,8 @@ const FacultyForm = ({ edit = false, facultyData = {}, onSuccess, onClose }) => 
       />
       <GridContainer
         elements={[
-          <DropdownField
-            label="Faculty Type*"
-            initialValue={formData.type}
-            options={[
-              { value: "internal", title: "Internal" },
-              { value: "external", title: "External" },
-            ]}
-            onChange={(val) => handleChange("type", val)}
-          />,
-        ]}
-      />
-      <GridContainer
-        elements={[
           <InputSuggestions
-            label={formData.type === "internal" ? "Department*" : "Department"}
+            label="Department*"
             initialValue={departmentName}
             onSelect={(val) => {
               handleChange("department_id", val.id);
@@ -170,22 +147,20 @@ const FacultyForm = ({ edit = false, facultyData = {}, onSuccess, onClose }) => 
             label="Designation*"
             initialValue={formData.designation}
             onChange={(val) => {console.log(val);handleChange("designation", val)}}
-     
+
           />,
         ]}
       />
-      {formData.type === "internal" && (
-        <GridContainer
-          elements={[
-            <InputField
-              label="Faculty Code*"
-              initialValue={formData.faculty_code}
-              onChange={(val) => handleChange("faculty_code", val)}
-            />,
-          ]}
-        />
-      )}
-      {formData.type === "external" && (
+      <GridContainer
+        elements={[
+          <InputField
+            label="Faculty Code*"
+            initialValue={formData.faculty_code}
+            onChange={(val) => handleChange("faculty_code", val)}
+          />,
+        ]}
+      />
+      {edit && facultyData.type === 'external' && (
         <>
           <GridContainer
             elements={[
@@ -211,7 +186,7 @@ const FacultyForm = ({ edit = false, facultyData = {}, onSuccess, onClose }) => 
       <GridContainer
         elements={[
           <InputField
-            label="Areas of Expertise (comma separated)"
+            label="Area of Expertise (comma separated)"
             initialValue={formData.expertise}
             onChange={(val) => handleChange("expertise", val)}
             placeholder="e.g., Machine Learning, Data Mining, Cyber Security"

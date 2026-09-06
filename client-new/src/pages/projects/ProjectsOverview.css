@@ -128,60 +128,20 @@
 
 /* Filter Bar */
 .po-filter-bar {
-  background: #F0F0F0;
-  border-radius: 10px;
-  padding: 1rem 1.5rem;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.po-filter-row {
-  display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
   flex-wrap: wrap;
+  margin-bottom: 1.5rem;
 }
 
-.po-filter-label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #555;
-}
-
-.po-filter-pills {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.po-filter-pill {
-  background: #FFF;
-  border: 1px solid #DDD;
-  border-radius: 20px;
-  padding: 0.4rem 1rem;
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: #555;
-}
-
-.po-filter-pill:hover {
-  border-color: var(--primary-color);
-  color: var(--primary-color);
-}
-
-.po-filter-pill.active {
-  background: var(--primary-color);
-  color: #FFF;
-  border-color: var(--primary-color);
+.po-filter-bar > .filter-bar {
+  flex: 1;
+  min-width: 320px;
 }
 
 .po-export-btn {
+  flex: none;
   background: none;
   border: none;
   color: var(--primary-color);

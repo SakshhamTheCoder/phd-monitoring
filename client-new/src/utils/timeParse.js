@@ -34,8 +34,24 @@ export function timeAgo(isoString) {
 }
 
 // utils/dateFormatter.js
-export function formatDate(isoString) {
-    const date = new Date(isoString);
+
+// The portal's em dash for "nothing recorded".
+export const EMPTY_VALUE = '—';
+
+// MySQL's zero date, and the epoch a bare `new Date(null)` lands on. Neither is
+// a date anyone entered, so neither is shown as one.
+const NON_DATES = ['0000-00-00', '0000-00-00 00:00:00'];
+
+export function formatDate(value, fallback = EMPTY_VALUE) {
+    if (value === null || value === undefined || value === '') return fallback;
+    if (typeof value === 'string' && (value.trim() === '' || NON_DATES.includes(value.trim()))) return fallback;
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return fallback;
+    // A value that lands on the epoch came from a null, a 0 or a zero date, not
+    // from anyone recording 1 January 1970.
+    if (date.getTime() === 0) return fallback;
+
     return date.toLocaleDateString('en-GB', {
         day: '2-digit',
         month: 'short',

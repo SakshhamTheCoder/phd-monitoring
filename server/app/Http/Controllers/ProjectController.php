@@ -4,17 +4,34 @@ use App\Models\Project;
 use App\Models\PositionApplication;
 use App\Http\Controllers\Traits\SaveFile;
 use App\Http\Controllers\Traits\ProjectAuthorizes;
+use App\Http\Controllers\Traits\FilterLogicTrait;
+use App\Support\ProjectBudget;
+use App\Support\ProjectDuration;
+use App\Support\ProjectRequestRules;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class ProjectController extends Controller {
-    use SaveFile, ProjectAuthorizes;
+    use SaveFile, ProjectAuthorizes, FilterLogicTrait;
 
     public function index(Request $request) {
         $user = Auth::user();
         if (!$this->canManage($user)) return response()->json(['message' => 'Not authorized'], 403);
-        $projects = $this->visibleTo($user)->orderByDesc('id')->get();
+
+        $query = $this->visibleTo($user)->with(['pi.user', 'pi.department']);
+
+        // Filters arrive as a urlencoded JSON query param, the same way the
+        // faculty and student listings receive them.
+        $filters = $request->input('filters', []);
+        if ($json = $request->query('filters')) {
+            $filters = json_decode(urldecode($json), true);
+        }
+        if ($filters) {
+            $query = $this->applyDynamicFilters($query, $filters);
+        }
+
+        $projects = $query->orderByDesc('id')->get();
         $projects->each(fn ($project) => $project->can_edit = $this->owns($user, $project));
         return response()->json($projects);
     }
@@ -33,6 +50,31 @@ class ProjectController extends Controller {
         ]);
     }
 
+    /**
+     * The option lists the create wizard and the details page draw from.
+     *
+     * These live here rather than in the client so that adding an SDG or
+     * renaming a budget head is a backend change, and so the validation in
+     * store()/update() and the menus the user sees can never drift apart.
+     */
+    public function meta() {
+        $user = Auth::user();
+        if (!$this->canManage($user)) return response()->json(['message' => 'Not authorized'], 403);
+        return response()->json([
+            'sdgs' => config('sdgs.goals'),
+            'manpowerCategories' => ProjectBudget::MANPOWER_CATEGORIES,
+            'budgetHeads' => ProjectBudget::heads(),
+            'duration' => [
+                'years' => ProjectDuration::yearOptions(),
+                'maxMonths' => ProjectDuration::MAX_MONTHS,
+            ],
+        ]);
+    }
+
+    public function listFilters(Request $request) {
+        return response()->json($this->getAvailableFilters('projects'));
+    }
+
     public function show($id) {
         $user = Auth::user();
         $project = Project::with(['milestones','documents','positions','pi.user','pi.department'])->find($id);
@@ -45,12 +87,7 @@ class ProjectController extends Controller {
     public function store(Request $request) {
         $user = Auth::user();
         if (!$this->canManage($user)) return response()->json(['message' => 'Not authorized'], 403);
-        $validator = Validator::make($request->all(), [
-            'title' => 'required|string',
-            'category' => 'required|in:In-house,Research,Consultancy,Industry,International,Other',
-            'status' => 'nullable|in:Active,Completed,Pending,On Hold',
-            'pi_faculty_code' => 'sometimes|integer|exists:faculty,faculty_code',
-        ]);
+        $validator = Validator::make($request->all(), ProjectRequestRules::forStore());
         if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 400);
 
         $project = new Project();
@@ -73,10 +110,7 @@ class ProjectController extends Controller {
         $project = Project::find($id);
         if (!$project) return response()->json(['message' => 'Project not found'], 404);
         if (!$this->owns($user, $project)) return response()->json(['message' => 'Not authorized'], 403);
-        $validator = Validator::make($request->all(), [
-            'category' => 'sometimes|in:In-house,Research,Consultancy,Industry,International,Other',
-            'status' => 'sometimes|in:Active,Completed,Pending,On Hold',
-        ]);
+        $validator = Validator::make($request->all(), ProjectRequestRules::forUpdate($project->duration_years));
         if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 400);
         $this->fill($project, $request);
         if ($request->hasFile('sanction_letter')) {
@@ -87,6 +121,14 @@ class ProjectController extends Controller {
             $this->queueFileDeletion($project->sanction_letter_link);
             $project->sanction_letter_link = $request->sanction_letter_link;
             $project->sanction_letter_name = $request->input('sanction_letter_name', 'Sanction Letter');
+        }
+        if ($request->hasFile('gantt_chart')) {
+            $project->gantt_chart_path = $this->replaceUploadedFile($project->gantt_chart_path, $request->file('gantt_chart'), 'project_gantt', $project->id);
+            $project->gantt_chart_name = $request->file('gantt_chart')->getClientOriginalName();
+        } elseif ($request->boolean('remove_gantt_chart')) {
+            $this->queueFileDeletion($project->gantt_chart_path);
+            $project->gantt_chart_path = null;
+            $project->gantt_chart_name = null;
         }
         $project->save();
         if ($request->exists('co_pis')) $this->syncCoPis($project);
@@ -101,6 +143,7 @@ class ProjectController extends Controller {
         if (!$this->owns($user, $project)) return response()->json(['message' => 'Not authorized'], 403);
         // The rows cascade, the files on disk do not.
         $this->queueFileDeletion($project->sanction_letter_link);
+        $this->queueFileDeletion($project->gantt_chart_path);
         foreach ($project->documents as $doc) $this->queueFileDeletion($doc->file_path);
         foreach ($project->positions as $pos) $this->queueFileDeletion($pos->advertisement_path);
         foreach (PositionApplication::where('project_id', $project->id)->pluck('resume_path') as $resume) {
@@ -144,7 +187,7 @@ class ProjectController extends Controller {
         foreach (['amount','tiet_share','duration_years','duration_months'] as $f) {
             if ($request->exists($f)) $project->$f = (int) $request->input($f);
         }
-        foreach (['co_pis','objectives','budget','equipment_details'] as $f) {
+        foreach (['co_pis','objectives','budget','equipment_details','sdgs'] as $f) {
             if ($request->exists($f)) {
                 $val = $request->input($f);
                 $project->$f = is_string($val) ? json_decode($val, true) : $val;

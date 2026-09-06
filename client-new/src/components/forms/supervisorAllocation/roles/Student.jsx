@@ -185,12 +185,12 @@ const Student = ({ formData }) => {
       {isLoaded && (formData.stage === "student" && !lock) ? (
         <>
           <GridContainer
-            label={[<span>Recommended supervisors (top 8) {recLoading && <span style={{ color: 'var(--text-muted)' }}>loading…</span>}</span>]}
+            label={[<span>Recommended supervisors (Top 8) {recLoading && <span style={{ color: 'var(--text-muted)' }}>loading…</span>}</span>]}
             elements={[
               <TableComponent
                 data={recs}
                 keys={["name","department","expertise","select"]}
-                titles={["Name","Department","Expertise","Action"]}
+                titles={["Name","Department","Area of Expertise","Action"]}
                 components={[
                   {
                     key: "expertise",
