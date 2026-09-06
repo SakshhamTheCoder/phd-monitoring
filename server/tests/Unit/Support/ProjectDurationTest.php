@@ -33,8 +33,7 @@ class ProjectDurationTest extends TestCase
     {
         for ($y = 0; $y <= 5; $y++) {
             for ($m = 0; $m <= 11; $m++) {
-                $this->assertStringNotContainsString(' 0 Years', ProjectDuration::format($y, $m));
-                $this->assertStringNotContainsString(' 0 Months', ProjectDuration::format($y, $m));
+                $this->assertDoesNotMatchRegularExpression('/\b0 (Years|Months)\b/', ProjectDuration::format($y, $m));
             }
         }
     }

@@ -23,6 +23,10 @@ final class ProjectObjectives
 
         $out = [];
         foreach ($raw as $entry) {
+            // Cast objects to arrays to preserve their data
+            if (is_object($entry)) {
+                $entry = (array) $entry;
+            }
             $line = is_array($entry) ? self::foldLegacy($entry) : (is_scalar($entry) ? (string) $entry : '');
             $line = trim(preg_replace('/\s+/u', ' ', $line) ?? '');
             if ($line !== '') {
@@ -39,10 +43,25 @@ final class ProjectObjectives
         $title = trim((string) ($entry['title'] ?? ''));
         $description = trim((string) ($entry['description'] ?? ''));
 
-        if ($title !== '' && $description !== '') {
-            return $title . ': ' . $description;
+        // If we have the legacy shape, use that path
+        if ($title !== '' || $description !== '') {
+            if ($title !== '' && $description !== '') {
+                return $title . ': ' . $description;
+            }
+            return $title !== '' ? $title : $description;
         }
 
-        return $title !== '' ? $title : $description;
+        // No title or description keys — fold any scalar values in the array
+        $values = [];
+        foreach ($entry as $value) {
+            if (is_scalar($value)) {
+                $str = trim((string) $value);
+                if ($str !== '') {
+                    $values[] = $str;
+                }
+            }
+        }
+
+        return implode(' ', $values);
     }
 }

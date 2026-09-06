@@ -50,4 +50,34 @@ class ProjectObjectivesTest extends TestCase
     {
         $this->assertSame(['One.', 'Two.'], ProjectObjectives::normalize('["One.","Two."]'));
     }
+
+    public function test_it_folds_scalar_values_from_a_nested_list_array(): void
+    {
+        $this->assertSame(
+            ['a b'],
+            ProjectObjectives::normalize([['a', 'b']])
+        );
+    }
+
+    public function test_it_folds_scalar_values_from_an_array_with_different_keys(): void
+    {
+        $this->assertSame(
+            ['Do the thing.'],
+            ProjectObjectives::normalize([['note' => 'Do the thing.']])
+        );
+    }
+
+    public function test_it_casts_objects_to_arrays_and_folds_their_scalar_values(): void
+    {
+        $obj = (object) ['note' => 'Do the thing.'];
+        $this->assertSame(['Do the thing.'], ProjectObjectives::normalize([$obj]));
+    }
+
+    public function test_genuinely_empty_entries_are_still_dropped(): void
+    {
+        $this->assertSame(
+            [],
+            ProjectObjectives::normalize([[], ['title' => '', 'description' => '']])
+        );
+    }
 }
