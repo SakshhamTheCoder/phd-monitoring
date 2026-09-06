@@ -50,4 +50,69 @@ class ProjectRequestRulesTest extends TestCase
     {
         $this->assertFalse($this->validate(['title' => 'T', 'category' => 'Research'])->errors()->has('gantt_chart'));
     }
+
+    // Regression for I1: ProjectBudget::reconcile legitimately emits a
+    // negative "Unallocated (legacy total)" line when a migrated head
+    // disagrees with its breakdown. That value must round-trip on save.
+    public function test_budget_line_amounts_may_be_negative(): void
+    {
+        $data = [
+            'title' => 'T',
+            'category' => 'Research',
+            'budget' => [
+                '__manpower' => [
+                    'year1' => [
+                        ['category' => 'Unallocated (legacy total)', 'count' => 1, 'amount' => -60000],
+                    ],
+                ],
+                '__equipment' => [
+                    'year1' => [['item' => 'X', 'amount' => -100]],
+                ],
+                '__other' => [
+                    'year1' => [['label' => 'Y', 'amount' => -50]],
+                ],
+            ],
+        ];
+        $errors = $this->validate($data)->errors();
+        $this->assertFalse($errors->has('budget.__manpower.year1.0.amount'));
+        $this->assertFalse($errors->has('budget.__equipment.year1.0.amount'));
+        $this->assertFalse($errors->has('budget.__other.year1.0.amount'));
+    }
+
+    public function test_budget_line_count_must_still_be_non_negative(): void
+    {
+        $data = [
+            'title' => 'T',
+            'category' => 'Research',
+            'budget' => [
+                '__manpower' => [
+                    'year1' => [
+                        ['category' => 'JRF', 'count' => -1, 'amount' => 1000],
+                    ],
+                ],
+            ],
+        ];
+        $this->assertTrue($this->validate($data)->errors()->has('budget.__manpower.year1.0.count'));
+    }
+
+    // Regression for the duration_years minor: a legacy project with
+    // duration_years > 5 must not be blocked from an update that leaves that
+    // field untouched, but a NEW out-of-range value is still rejected.
+    public function test_forUpdate_tolerates_an_unchanged_legacy_duration_years(): void
+    {
+        $rules = ProjectRequestRules::forUpdate(7);
+        $v = Validator::make(['title' => 'New Title', 'duration_years' => 7], $rules);
+        $this->assertFalse($v->errors()->has('duration_years'));
+    }
+
+    public function test_forUpdate_still_rejects_a_new_out_of_range_duration_years(): void
+    {
+        $rules = ProjectRequestRules::forUpdate(7);
+        $v = Validator::make(['title' => 'New Title', 'duration_years' => 8], $rules);
+        $this->assertTrue($v->errors()->has('duration_years'));
+
+        $rulesNoLegacy = ProjectRequestRules::forUpdate(null);
+        $v2 = Validator::make(['title' => 'New Title', 'duration_years' => 6], $rulesNoLegacy);
+        $this->assertTrue($v2->errors()->has('duration_years'));
+    }
 }

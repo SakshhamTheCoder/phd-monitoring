@@ -110,7 +110,7 @@ class ProjectController extends Controller {
         $project = Project::find($id);
         if (!$project) return response()->json(['message' => 'Project not found'], 404);
         if (!$this->owns($user, $project)) return response()->json(['message' => 'Not authorized'], 403);
-        $validator = Validator::make($request->all(), ProjectRequestRules::forUpdate());
+        $validator = Validator::make($request->all(), ProjectRequestRules::forUpdate($project->duration_years));
         if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 400);
         $this->fill($project, $request);
         if ($request->hasFile('sanction_letter')) {

@@ -20,22 +20,42 @@ final class ProjectRequestRules
         ], self::shared());
     }
 
-    /** @return array<string, mixed> */
-    public static function forUpdate(): array
+    /**
+     * @param int|null $currentDurationYears The project's duration_years as
+     *   currently stored, so a legacy out-of-range value that the request
+     *   leaves untouched isn't rejected by a field the user never edited. A
+     *   NEW out-of-range value is still rejected.
+     * @return array<string, mixed>
+     */
+    public static function forUpdate(?int $currentDurationYears = null): array
     {
         return array_merge([
             'title' => 'sometimes|string',
             'category' => 'sometimes|in:In-house,Research,Consultancy,Industry,International,Other',
-        ], self::shared());
+        ], self::shared($currentDurationYears));
     }
 
     /** @return array<string, mixed> */
-    private static function shared(): array
+    private static function shared(?int $currentDurationYears = null): array
     {
         return [
             'status' => 'nullable|in:Active,Completed,Pending,On Hold',
 
-            'duration_years' => 'nullable|integer|min:' . ProjectDuration::MIN_YEARS . '|max:' . ProjectDuration::MAX_YEARS,
+            'duration_years' => [
+                'nullable',
+                'integer',
+                'min:' . ProjectDuration::MIN_YEARS,
+                function ($attribute, $value, $fail) use ($currentDurationYears) {
+                    if ($value === null) return;
+                    if ((int) $value > ProjectDuration::MAX_YEARS && (int) $value === $currentDurationYears) {
+                        // Unchanged legacy value: let it pass through untouched.
+                        return;
+                    }
+                    if ((int) $value > ProjectDuration::MAX_YEARS) {
+                        $fail('The duration years must not be greater than ' . ProjectDuration::MAX_YEARS . '.');
+                    }
+                },
+            ],
             'duration_months' => 'nullable|integer|min:0|max:' . ProjectDuration::MAX_MONTHS,
 
             'sdgs' => 'nullable|array',
@@ -51,13 +71,16 @@ final class ProjectRequestRules
             // constrained to the menu here; the UI offers only the five.
             'budget.__manpower.*.*.category' => 'nullable|string|max:100',
             'budget.__manpower.*.*.count' => 'nullable|integer|min:0|max:999',
-            'budget.__manpower.*.*.amount' => 'nullable|integer|min:0',
+            // Reconciliation can legitimately emit a negative "Unallocated
+            // (legacy total)" line when a migrated head disagrees with its
+            // breakdown; that value must round-trip on save, not be rejected.
+            'budget.__manpower.*.*.amount' => 'nullable|integer',
             'budget.__equipment' => 'nullable|array',
             'budget.__equipment.*.*.item' => 'nullable|string|max:200',
-            'budget.__equipment.*.*.amount' => 'nullable|integer|min:0',
+            'budget.__equipment.*.*.amount' => 'nullable|integer',
             'budget.__other' => 'nullable|array',
             'budget.__other.*.*.label' => 'nullable|string|max:200',
-            'budget.__other.*.*.amount' => 'nullable|integer|min:0',
+            'budget.__other.*.*.amount' => 'nullable|integer',
 
             'gantt_chart' => 'nullable|file|mimes:pdf,png,jpg,jpeg,xlsx,xls,doc,docx|max:10240',
         ];
