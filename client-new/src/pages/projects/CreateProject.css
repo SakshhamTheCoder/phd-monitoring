@@ -78,6 +78,7 @@
 .cp-budget-head-row td { background: #FAFAFA; }
 .cp-budget-head-name { font-weight: 600; color: #333; }
 .cp-budget-sub-row td { background: #FFF; }
+.cp-budget-subsum-row td { background: #FBFBFB; }
 .cp-budget-sub-name { color: #888; padding-left: 1.5rem !important; font-size: 0.8rem; }
 .cp-budget-input.sub { background: #FAFAFA; }
 .cp-budget-mismatch { border-color: #b91c1c; background: #fef2f2; }

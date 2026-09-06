@@ -89,6 +89,20 @@ export const equipmentTotal = (b, year) =>
 export const otherTotal = (b, year) =>
   otherLines(b, year).reduce((s, l) => s + (Number(l.amount) || 0), 0);
 
+// Total of a sub-item head's own sub-items for one year (Travel is the only
+// head with sub-items; Manpower/Equipment/Any Other Expenses are derived
+// totals and have no sub-items of their own).
+export const subItemsTotal = (b, year, head, subItems) =>
+  (subItems || []).reduce((s, sub) => s + subVal(b, year, head, sub), 0);
+
+// A sub-item head "mismatches" when its sub-items are entered but they don't
+// sum to the amount typed directly against the head for that year.
+export const headSubMismatch = (b, year, head, subItems) => {
+  if (!subItems || !subItems.length) return false;
+  const total = subItemsTotal(b, year, head, subItems);
+  return total > 0 && total !== Number((b && b[year] && b[year][head]) || 0);
+};
+
 export const headTotal = (b, year, head) => {
   if (head === HEAD_MANPOWER) return manpowerTotal(b, year);
   if (head === HEAD_EQUIPMENT) return equipmentTotal(b, year);

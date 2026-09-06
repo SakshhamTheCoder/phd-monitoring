@@ -4,6 +4,7 @@ import Layout from '../../components/dashboard/layout';
 import {
   categoryOptions, roleOptions, milestoneStatusOptions, formatDate, formatDuration,
   subVal, setSubCell, headTotal, yearTotal, grandTotal, emptyBudget,
+  subItemsTotal, headSubMismatch,
   addLine, removeLine, setLineField, blankManpower, blankEquipment, blankOther,
   manpowerLines, equipmentLines, otherLines,
   KEY_MANPOWER, KEY_EQUIPMENT, KEY_OTHER, HEAD_MANPOWER, HEAD_EQUIPMENT, HEAD_OTHER,
@@ -185,7 +186,14 @@ const CreateProject = () => {
     }
   };
 
-  const budgetYears = ['year1', 'year2', 'year3'];
+  // Derived from the chosen duration (1-5 years) so the wizard's year columns
+  // match the Grand Total's real year list. Shrinking the duration only
+  // hides the extra columns here — it never deletes the budget data stored
+  // under those years.
+  const budgetYears = Array.from(
+    { length: Math.min(5, Math.max(1, parseInt(form.durationYears, 10) || 1)) },
+    (_, i) => `year${i + 1}`
+  );
   const simpleHeads = (meta.budgetHeads || []).filter(h => h.kind !== 'lines');
   const yTotal = (y) => yearTotal(form.budget, y, meta.budgetHeads);
   const gTotal = grandTotal(form.budget, meta.budgetHeads);
@@ -455,13 +463,17 @@ const CreateProject = () => {
                     <React.Fragment key={bh.head}>
                       <tr className="cp-budget-head-row">
                         <td className="cp-budget-head-name">{bh.head}</td>
-                        {budgetYears.map(y => (
-                          <td key={y}>
-                            <input type="number" min="0" className="cp-budget-input"
-                              value={form.budget[y]?.[bh.head] || ''}
-                              onChange={e => updateBudget(y, bh.head, e.target.value)} placeholder="0" />
-                          </td>
-                        ))}
+                        {budgetYears.map(y => {
+                          const mism = bh.subItems.length > 0 && headSubMismatch(form.budget, y, bh.head, bh.subItems);
+                          return (
+                            <td key={y}>
+                              <input type="number" min="0" className={`cp-budget-input${mism ? ' cp-budget-mismatch' : ''}`}
+                                value={form.budget[y]?.[bh.head] || ''}
+                                onChange={e => updateBudget(y, bh.head, e.target.value)} placeholder="0"
+                                title={mism ? `Sub-items sum to ₹${subItemsTotal(form.budget, y, bh.head, bh.subItems).toLocaleString('en-IN')}` : undefined} />
+                            </td>
+                          );
+                        })}
                         <td className="cp-budget-total">₹{budgetYears.reduce((s, y) => s + headTotal(form.budget, y, bh.head), 0).toLocaleString('en-IN')}</td>
                       </tr>
                       {bh.subItems.map(sub => (
@@ -477,6 +489,21 @@ const CreateProject = () => {
                           <td className="cp-budget-total">₹{budgetYears.reduce((s, y) => s + subVal(form.budget, y, bh.head, sub), 0).toLocaleString('en-IN')}</td>
                         </tr>
                       ))}
+                      {bh.subItems.length > 0 && (
+                        <tr className="cp-budget-subsum-row">
+                          <td className="cp-budget-sub-name">↳ sub-items total</td>
+                          {budgetYears.map(y => {
+                            const total = subItemsTotal(form.budget, y, bh.head, bh.subItems);
+                            const bad = headSubMismatch(form.budget, y, bh.head, bh.subItems);
+                            return (
+                              <td key={y} className={`cp-budget-subsum${bad ? ' bad' : (total > 0 ? ' ok' : '')}`}>
+                                ₹{total.toLocaleString('en-IN')}{bad ? ' ⚠' : (total > 0 ? ' ✓' : '')}
+                              </td>
+                            );
+                          })}
+                          <td></td>
+                        </tr>
+                      )}
                     </React.Fragment>
                   ))}
                   {[HEAD_MANPOWER, HEAD_EQUIPMENT, HEAD_OTHER].map(h => (

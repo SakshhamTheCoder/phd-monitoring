@@ -4,6 +4,7 @@ import Layout from '../../components/dashboard/layout';
 import {
   formatCurrency, getMilestoneProgress, milestoneStatusOptions, formatDate, formatDuration,
   subVal, setSubCell, headTotal, yearTotal, grandTotal, budgetYears as budgetYearsOf,
+  subItemsTotal, headSubMismatch,
   addLine, removeLine, setLineField, blankManpower, blankEquipment, blankOther,
   manpowerLines, equipmentLines, otherLines,
   KEY_MANPOWER, KEY_EQUIPMENT, KEY_OTHER, HEAD_MANPOWER, HEAD_EQUIPMENT, HEAD_OTHER,
@@ -450,20 +451,24 @@ const ProjectDetails = () => {
                       <React.Fragment key={bh.head}>
                         <tr className="pd-budget-head-row">
                           <td className="pd-budget-head-name">{bh.head}</td>
-                          {budgetYears.map(y => (
-                            <td key={y}>
-                              {editingBudget ? (
-                                <input
-                                  type="number" min="0"
-                                  className="pd-budget-edit-input"
-                                  value={budgetDraft[y]?.[bh.head] ?? 0}
-                                  onChange={e => updateBudgetCell(y, bh.head, e.target.value)}
-                                />
-                              ) : (
-                                <>₹{(budgetData[y]?.[bh.head] || 0).toLocaleString('en-IN')}</>
-                              )}
-                            </td>
-                          ))}
+                          {budgetYears.map(y => {
+                            const mism = editingBudget && bh.subItems.length > 0 && headSubMismatch(budgetDraft, y, bh.head, bh.subItems);
+                            return (
+                              <td key={y}>
+                                {editingBudget ? (
+                                  <input
+                                    type="number" min="0"
+                                    className={`pd-budget-edit-input${mism ? ' pd-budget-mismatch' : ''}`}
+                                    value={budgetDraft[y]?.[bh.head] ?? 0}
+                                    onChange={e => updateBudgetCell(y, bh.head, e.target.value)}
+                                    title={mism ? `Sub-items sum to ₹${subItemsTotal(budgetDraft, y, bh.head, bh.subItems).toLocaleString('en-IN')}` : undefined}
+                                  />
+                                ) : (
+                                  <>₹{(budgetData[y]?.[bh.head] || 0).toLocaleString('en-IN')}</>
+                                )}
+                              </td>
+                            );
+                          })}
                           <td className="pd-bh-total">₹{headAllYearsTotal(bh.head).toLocaleString('en-IN')}</td>
                         </tr>
                         {bh.subItems.map(sub => (
@@ -486,6 +491,21 @@ const ProjectDetails = () => {
                             <td className="pd-budget-sub-total">{subYearTotal(bh.head, sub) ? `₹${subYearTotal(bh.head, sub).toLocaleString('en-IN')}` : ''}</td>
                           </tr>
                         ))}
+                        {editingBudget && bh.subItems.length > 0 && (
+                          <tr className="pd-budget-subsum-row">
+                            <td className="pd-budget-sub-name">↳ sub-items total</td>
+                            {budgetYears.map(y => {
+                              const total = subItemsTotal(budgetDraft, y, bh.head, bh.subItems);
+                              const bad = headSubMismatch(budgetDraft, y, bh.head, bh.subItems);
+                              return (
+                                <td key={y} className={`pd-budget-subsum${bad ? ' bad' : (total > 0 ? ' ok' : '')}`}>
+                                  ₹{total.toLocaleString('en-IN')}{bad ? ' ⚠' : (total > 0 ? ' ✓' : '')}
+                                </td>
+                              );
+                            })}
+                            <td></td>
+                          </tr>
+                        )}
                       </React.Fragment>
                     ))}
                     {[HEAD_MANPOWER, HEAD_EQUIPMENT, HEAD_OTHER].map(h => (
