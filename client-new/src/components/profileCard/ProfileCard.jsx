@@ -13,6 +13,7 @@ import TableComponent from "../forms/table/TableComponent";
 import CustomButton from "../forms/fields/CustomButton";
 import CustomModal from "../forms/modal/CustomModal";
 import SupervisorDoctoralManager from "../supervisorDoctoralManager/SupervisorDoctoralManager";
+import InputSuggestions from "../forms/fields/InputSuggestions";
 import { toast } from "react-toastify";
 
 const ProfileCard = ({ dataIP = null, link = false }) => {
@@ -252,68 +253,76 @@ const [userRole, setUserRole] = useState('');
               <h2>{name}</h2>
               {isEditingInline ? (
                 <div className="student-sub-edit">
-                  <input
-                    className="profile-inline-input"
-                    type="text"
-                    placeholder="Ph.D. Title"
-                    value={editForm.phd_title ?? ""}
-                    disabled={profile.phd_title_locked}
-                    onChange={(e) =>
-                      setEditForm((prev) => ({ ...prev, phd_title: e.target.value }))
-                    }
-                  />
-                  {profile.phd_title_locked && (
-                    <small className="profile-lock-note">
-                      Locked — IRB constitution form already submitted.
-                    </small>
-                  )}
+                  <div className="inline-field-item">
+                    <label>Ph.D. Title</label>
+                    <input
+                      type="text"
+                      placeholder="Enter your Ph.D. title"
+                      value={editForm.phd_title ?? ""}
+                      disabled={profile.phd_title_locked}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({ ...prev, phd_title: e.target.value }))
+                      }
+                    />
+                    {profile.phd_title_locked && (
+                      <small className="profile-lock-note">
+                        Locked — IRB constitution form already submitted.
+                      </small>
+                    )}
+                  </div>
+                  <div className="inline-field-item" style={{ marginTop: '0.6rem' }}>
+                    <label>Domain</label>
+                    <InputSuggestions
+                      apiUrl={baseURL + "/suggestions/specialization"}
+                      initialValue={editForm.tentative_broad_area}
+                      onSelect={(value) => {
+                        const name = typeof value === 'object' ? (value.name || value.broad_area) : value;
+                        setEditForm((prev) => ({ ...prev, tentative_broad_area: name }));
+                      }}
+                      lock={profile.phd_title_locked}
+                      showLabel={false}
+                      suggestionManadatory={false}
+                      hint="Type to search broad areas (e.g., AI, Machine Learning)"
+                      fields={["name"]}
+                    />
+                  </div>
+                  <div className="inline-field-item" style={{ marginTop: '0.6rem' }}>
+                    <label>Description</label>
+                    <textarea
+                      placeholder="Briefly describe your proposed research topic, objectives and methodology"
+                      value={editForm.tentative_desc ?? ""}
+                      disabled={profile.phd_title_locked}
+                      maxLength={5000}
+                      onChange={(e) =>
+                        setEditForm((prev) => ({ ...prev, tentative_desc: e.target.value }))
+                      }
+                    />
+                    <div className="inline-char-count">
+                      {(editForm.tentative_desc || "").length} / 5000
+                    </div>
+                  </div>
                 </div>
               ) : (
-                <p className="student-sub">
-                  {phd_title || "Ph.D. Title Not Available"}
-                </p>
-              )}
-              {isEditingInline && profile.is_supervisor_allocated && (
-                <div style={{ marginTop: '0.4rem', display: 'flex', flexDirection: 'column', gap: '0.4rem', maxWidth: '520px' }}>
-                  <input
-                    className="profile-inline-input"
-                    type="text"
-                    placeholder="Domain / Broad Area (e.g., AI, CyberSecurity)"
-                    value={editForm.tentative_broad_area ?? ""}
-                    disabled={profile.phd_title_locked}
-                    onChange={(e) =>
-                      setEditForm((prev) => ({ ...prev, tentative_broad_area: e.target.value }))
-                    }
-                  />
-                  <textarea
-                    className="profile-inline-input"
-                    placeholder="Brief description of proposed work"
-                    value={editForm.tentative_desc ?? ""}
-                    disabled={profile.phd_title_locked}
-                    maxLength={5000}
-                    onChange={(e) =>
-                      setEditForm((prev) => ({ ...prev, tentative_desc: e.target.value }))
-                    }
-                    style={{ minHeight: '60px' }}
-                  />
-                  <small style={{ alignSelf: 'flex-end', fontSize: '0.72rem', color: '#6b7280' }}>
-                    {(editForm.tentative_desc || "").length}/5000
-                  </small>
-                </div>
-              )}
-              {/* Tentative domain/brief — compact, same line style as title */}
-              {profile.is_supervisor_allocated && !isEditingInline && (
-                <div style={{ marginTop: '0.35rem', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                  <span>Domain: {profile.tentative_broad_area || '—'}</span>
-                  {profile.tentative_desc && <span> · {profile.tentative_desc}</span>}
-                  {profile.phd_title_locked && <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', color: '#9f1239' }}>Locked — IRB constituted</span>}
-                </div>
-              )}
-              {profile.is_supervisor_allocated && userRole === 'student' && profile.can_edit_tentative && !profile.tentative_broad_area && !profile.tentative_desc && !isEditingInline && (
-                <div style={{ marginTop: '0.4rem', background: '#fffbeb', border: '1px solid #fcd34d', padding: '0.3rem 0.6rem', borderRadius: '0.4rem', fontSize: '0.78rem', color: '#92400e', maxWidth: '520px' }}>
-                  Add your tentative domain and brief description before IRB.
-                  <button onClick={startInlineEdit} style={{ fontWeight: 600, background: 'none', border: 'none', color: '#92400e', cursor: 'pointer', textDecoration: 'underline', marginLeft: '0.3rem' }}>Add now</button>
-                </div>
+                <>
+                  <p className="student-sub">
+                    {phd_title || "Ph.D. Title Not Available"}
+                  </p>
+                  <p className="student-sub-meta">
+                    <span className="meta-label">Domain:</span>{" "}
+                    <span className={profile.tentative_broad_area ? "meta-value" : "meta-value empty"}>
+                      {profile.tentative_broad_area || "Not added"}
+                    </span>
+                  </p>
+                  <p className="student-sub-meta">
+                    <span className="meta-label">Description:</span>{" "}
+                    <span className={profile.tentative_desc ? "meta-value" : "meta-value empty"}>
+                      {profile.tentative_desc || "Not added"}
+                    </span>
+                  </p>
+                  {profile.phd_title_locked && (
+                    <p className="student-sub-meta-locked">Locked — IRB constituted</p>
+                  )}
+                </>
               )}
             </div>
             <div className="student-progress">
