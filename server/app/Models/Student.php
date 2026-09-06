@@ -21,6 +21,7 @@ class Student extends Model
         'date_of_registration',
         'date_of_irb',
         'date_of_synopsis',
+        'date_of_thesis',
         'phd_title',
         'tentative_desc',
         'tentative_broad_area',
@@ -35,6 +36,7 @@ class Student extends Model
         'date_of_registration' => 'date',
         'date_of_irb' => 'date',
         'date_of_synopsis' => 'date',
+        'date_of_thesis' => 'date',
         'overall_progress' => 'float',
     ];
 
@@ -59,6 +61,30 @@ class Student extends Model
         return ConstituteOfIRB::where('student_id', $this->roll_no)
             ->where('student_lock', true)
             ->exists();
+    }
+
+    /**
+     * Whether the student's IRB information is actually complete.
+     *
+     * This is deliberately a different question from phdTitleLocked(), which
+     * asks whether the title may still be edited and flips the moment the form
+     * is submitted. A title stops being tentative when the IRB is approved, not
+     * when someone has filed the paperwork, and never because a date column
+     * happens to hold a value.
+     */
+    public function irbCompleted(): bool
+    {
+        return self::irbStatusMeansComplete(
+            ConstituteOfIRB::where('student_id', $this->roll_no)
+                ->orderByDesc('id')
+                ->value('status')
+        );
+    }
+
+    /** Split out so the rule itself is testable without a database. */
+    public static function irbStatusMeansComplete(?string $status): bool
+    {
+        return strtolower(trim((string) $status)) === 'approved';
     }
 
     public function isSupervisorAllocated(): bool
