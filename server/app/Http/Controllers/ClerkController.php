@@ -838,6 +838,7 @@ class ClerkController extends Controller
             'clerks.*.email' => 'required|email',
             'clerks.*.department_codes' => 'nullable|string',
             'clerks.*.phone' => 'nullable|string',
+            'clerks.*.full_name' => 'nullable|string',
             'clerks.*.first_name' => 'nullable|string',
             'clerks.*.last_name' => 'nullable|string',
         ]);
@@ -852,9 +853,10 @@ class ClerkController extends Controller
                         // Unified create-or-update: create clerk if missing (consistent with faculty/student)
                         $role = \App\Models\Role::where('role','clerk')->first();
                         if (!$role) throw new \Exception('Clerk role not found');
+                        $name = \App\Support\PersonName::fromRow($row);
                         $user = new \App\Models\User();
-                        $user->first_name = !empty($row['first_name']) ? $row['first_name'] : explode('@',$row['email'])[0];
-                        $user->last_name = $row['last_name'] ?? ' ';
+                        $user->first_name = $name['first'] ?? explode('@', $row['email'])[0];
+                        $user->last_name = $name['last'] ?? \App\Support\PersonName::NO_SURNAME;
                         $user->email = $row['email'];
                         $user->phone = $row['phone'] ?? null;
                         $user->password = bcrypt(\Illuminate\Support\Str::password(8, true, true, true, false));
