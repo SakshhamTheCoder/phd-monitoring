@@ -5,6 +5,7 @@ use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Models\Department;
 use App\Models\Faculty;
 use App\Services\FacultyRecommendationService;
+use App\Support\PersonName;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\Role;
@@ -51,32 +52,41 @@ class FacultyController extends Controller
         }
       
         $validationRules = [
-            'first_name' => 'required|string',
+            'full_name' => 'required_without:first_name|string',
+            'first_name' => 'required_without:full_name|string',
             'last_name' => 'nullable|string',
             'email' => 'required|email|unique:users,email',
             'phone' => 'required|string',
             'department_id' => 'nullable|integer',
             'designation' => 'required|string',
-            'type' => 'required|in:internal,external',
+            // The form no longer asks. Internal is what a new faculty member is
+            // unless another caller says otherwise.
+            'type' => 'nullable|in:internal,external',
             'expertise' => 'nullable',
         ];
 
+        $type = $request->input('type', 'internal');
+
         // Only require faculty_code for internal faculty
-        if ($request->type === 'internal') {
+        if ($type === 'internal') {
             $validationRules['faculty_code'] = 'required|string|unique:faculty,faculty_code';
         }
 
         // Additional fields for external faculty
-        if ($request->type === 'external') {
+        if ($type === 'external') {
             $validationRules['institution'] = 'required|string';
             $validationRules['website_link'] = 'nullable|url';
         }
 
         $request->validate($validationRules);
 
+        $name = $request->filled('full_name')
+            ? PersonName::split($request->input('full_name'))
+            : ['first' => $request->input('first_name'), 'last' => $request->input('last_name') ?: PersonName::NO_SURNAME];
+
         // Check if user already exists
         $existingUser = User::where('email', $request->email)->first();
-        
+
         if ($existingUser) {
             // Check if faculty already exists
             if ($existingUser->faculty) {
@@ -90,8 +100,8 @@ class FacultyController extends Controller
             $password = Str::password(8, true, true, true, false);
 
             $newUser = new \App\Models\User();
-            $newUser->first_name = $request->first_name;
-            $newUser->last_name = $request->last_name ?: ' ';
+            $newUser->first_name = $name['first'];
+            $newUser->last_name = $name['last'];
             $newUser->phone = $request->phone;
             $newUser->email = $request->email;
             $newUser->password = bcrypt($password);
@@ -104,7 +114,7 @@ class FacultyController extends Controller
         }
 
         // Generate faculty code for external faculty
-        if ($request->type === 'external') {
+        if ($type === 'external') {
             $facultyCode = '777' . str_pad($newUser->id, 6, '0', STR_PAD_LEFT);
         } else {
             $facultyCode = $request->faculty_code;
@@ -115,7 +125,7 @@ class FacultyController extends Controller
         $faculty->department_id = $request->department_id;
         $faculty->designation = $request->designation;
         $faculty->faculty_code = $facultyCode;
-        $faculty->type = $request->type;
+        $faculty->type = $type;
         $faculty->institution = $request->institution ?? 'Thapar Institute of Engineering and Technology';
         $faculty->website_link = $request->website_link;
         $faculty->expertise = Faculty::normalizeExpertise($request->input('expertise'));
@@ -147,44 +157,60 @@ class FacultyController extends Controller
         }
 
         $validationRules = [
-            'first_name' => 'required|string',
+            'full_name' => 'nullable|string',
+            'first_name' => 'nullable|string',
             'last_name' => 'nullable|string',
             'email' => 'required|email|unique:users,email,' . $faculty->user_id,
             'phone' => 'required|string',
             'department_id' => 'nullable|integer',
             'designation' => 'required|string',
-            'type' => 'required|in:internal,external',
+            // Never sending a type must not silently flip an existing faculty
+            // member's type — the effective type below falls back to the
+            // record's current one.
+            'type' => 'nullable|in:internal,external',
             'expertise' => 'nullable',
         ];
 
+        $type = $request->input('type', $faculty->type ?? 'internal');
+
         // Only validate faculty_code for internal faculty
-        if ($request->type === 'internal') {
+        if ($type === 'internal') {
             $validationRules['faculty_code'] = 'required|string|unique:faculty,faculty_code,' . $id . ',faculty_code';
         }
 
-        if ($request->type === 'external') {
+        if ($type === 'external') {
             $validationRules['institution'] = 'required|string';
             $validationRules['website_link'] = 'nullable|url';
         }
 
         $request->validate($validationRules);
 
+        // Neither full_name nor first_name is required here, so a caller that
+        // only touches email/phone/department must not blank the stored name.
+        if ($request->filled('full_name')) {
+            $name = PersonName::split($request->input('full_name'));
+        } elseif ($request->filled('first_name')) {
+            $name = ['first' => $request->input('first_name'), 'last' => $request->input('last_name') ?: PersonName::NO_SURNAME];
+        } else {
+            $name = ['first' => $faculty->user->first_name, 'last' => $faculty->user->last_name];
+        }
+
         // Update user
-        $faculty->user->first_name = $request->first_name;
-        $faculty->user->last_name = $request->last_name ?: ' ';
+        $faculty->user->first_name = $name['first'];
+        $faculty->user->last_name = $name['last'];
         $faculty->user->email = $request->email;
         $faculty->user->phone = $request->phone;
         $faculty->user->save();
 
         // Update faculty
-        if ($request->type === 'internal') {
+        if ($type === 'internal') {
             $faculty->faculty_code = $request->faculty_code;
         }
         // External faculty code remains auto-generated, can't be changed
 
         $faculty->department_id = $request->department_id;
         $faculty->designation = $request->designation;
-        $faculty->type = $request->type;
+        $faculty->type = $type;
         $faculty->institution = $request->institution ?? 'Thapar Institute of Engineering and Technology';
         $faculty->website_link = $request->website_link;
         if ($request->has('expertise')) {
