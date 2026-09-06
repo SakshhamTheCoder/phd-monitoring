@@ -68,7 +68,7 @@ class Student extends Model
 
     public function canEditTentative(): bool
     {
-        return $this->isSupervisorAllocated() && !$this->phdTitleLocked();
+        return !$this->phdTitleLocked();
     }
     public function getStudent()
     {
