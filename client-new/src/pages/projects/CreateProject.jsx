@@ -197,8 +197,8 @@ const CreateProject = () => {
   const dropLine = (key, year, index) =>
     setForm(prev => ({ ...prev, budget: removeLine(prev.budget, key, year, index) }));
 
-  const LineListCard = ({ title, hint, storeKey, blank, columns }) => (
-    <div className="cp-section-card">
+  const renderLineListCard = ({ title, hint, storeKey, blank, columns }) => (
+    <div className="cp-section-card" key={storeKey}>
       <div className="cp-section-header-row">
         <h3 className="cp-section-title">{title}</h3>
         <span className="cp-derived-note">{hint}</span>
@@ -495,31 +495,31 @@ const CreateProject = () => {
               </table>
             </div>
           </div>
-          <LineListCard
-            title={HEAD_MANPOWER} storeKey={KEY_MANPOWER} blank={blankManpower}
-            hint="Each line costs count × amount"
-            columns={[
+          {renderLineListCard({
+            title: HEAD_MANPOWER, storeKey: KEY_MANPOWER, blank: blankManpower,
+            hint: 'Each line costs count × amount',
+            columns: [
               { field: 'category', label: 'Category', type: 'select', width: '2fr', addLabel: 'Manpower' },
               { field: 'count', label: 'Count', type: 'number', width: '0.8fr', placeholder: '1' },
               { field: 'amount', label: 'Amount (₹)', type: 'number', width: '1.2fr', placeholder: '0' },
-            ]}
-          />
-          <LineListCard
-            title={HEAD_EQUIPMENT} storeKey={KEY_EQUIPMENT} blank={blankEquipment}
-            hint="Add whatever the project needs"
-            columns={[
+            ],
+          })}
+          {renderLineListCard({
+            title: HEAD_EQUIPMENT, storeKey: KEY_EQUIPMENT, blank: blankEquipment,
+            hint: 'Add whatever the project needs',
+            columns: [
               { field: 'item', label: 'Item', type: 'text', width: '3fr', placeholder: 'e.g. GPU Workstation', addLabel: 'Equipment' },
               { field: 'amount', label: 'Amount (₹)', type: 'number', width: '1.2fr', placeholder: '0' },
-            ]}
-          />
-          <LineListCard
-            title={HEAD_OTHER} storeKey={KEY_OTHER} blank={blankOther}
-            hint="Anything the heads above do not cover"
-            columns={[
+            ],
+          })}
+          {renderLineListCard({
+            title: HEAD_OTHER, storeKey: KEY_OTHER, blank: blankOther,
+            hint: 'Anything the heads above do not cover',
+            columns: [
               { field: 'label', label: 'Expense', type: 'text', width: '3fr', placeholder: 'e.g. Publication charges', addLabel: 'Expense' },
               { field: 'amount', label: 'Amount (₹)', type: 'number', width: '1.2fr', placeholder: '0' },
-            ]}
-          />
+            ],
+          })}
         </div>
       );
 
