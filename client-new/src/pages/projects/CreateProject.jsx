@@ -42,7 +42,7 @@ const buildFormFromProject = (p) => ({
   fundingAgency: p.fundingAgency || '',
   description: p.description || '',
   startDate: p.startDate || '',
-  durationYears: p.durationYears || 1,
+  durationYears: p.durationYears ?? 1,
   durationMonths: p.durationMonths || 0,
   endDate: p.endDate || '',
   sdgs: p.sdgs || [],
@@ -72,7 +72,7 @@ const CreateProject = () => {
   const [pi, setPi] = useState(editProject?.pi || null);
   const sanctionRef = useRef(null);
   const ganttRef = useRef(null);
-  const [meta, setMeta] = useState({ sdgs: [], manpowerCategories: [], budgetHeads: [], duration: { years: [1,2,3,4,5], maxMonths: 11 } });
+  const [meta, setMeta] = useState({ sdgs: [], manpowerCategories: [], budgetHeads: [], duration: { years: [0,1,2,3,4,5], maxMonths: 11 } });
 
   useEffect(() => {
     if (!pi) apiCurrentFaculty().then(f => f && setPi(f));
@@ -683,6 +683,9 @@ const CreateProject = () => {
                 <div key={y} className="cp-review-row"><span>Year {i + 1} Budget</span><strong>₹{yTotal(y).toLocaleString('en-IN')}</strong></div>
               ))}
               <div className="cp-review-row"><span>Total Budget</span><strong>₹{gTotal.toLocaleString('en-IN')}</strong></div>
+              {form.sanctionAmount !== '' && Number(form.sanctionAmount || 0) !== gTotal && (
+                <div className="cp-review-row"><span>Budget check</span><strong>⚠ Total differs from sanctioned</strong></div>
+              )}
             </div>
             <div className="cp-review-card">
               <h4>Objectives</h4>

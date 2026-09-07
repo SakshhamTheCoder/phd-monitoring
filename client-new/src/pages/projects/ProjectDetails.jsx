@@ -852,6 +852,9 @@ const ProjectDetails = () => {
             <div className="pd-header-meta">
               <div className="pd-hm-item"><span>FUNDING AGENCY</span><strong>{project.fundingAgency || '—'}</strong></div>
               <div className="pd-hm-item"><span>SANCTIONED AMOUNT</span><strong>₹ {Number(project.amount || 0).toLocaleString('en-IN')}</strong></div>
+              {Number(project.amount || 0) !== gTotal && (
+                <div className="pd-hm-item"><span>BUDGET CHECK</span><strong>⚠ Total ₹{gTotal.toLocaleString('en-IN')} differs from sanctioned</strong></div>
+              )}
               <div className="pd-hm-item">
                 <span>DURATION</span>
                 <strong>
