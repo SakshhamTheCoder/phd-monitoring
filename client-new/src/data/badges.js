@@ -40,6 +40,13 @@ const TONES = {
   'orcid': 'success',
   'manual': 'neutral',
   'student': 'warning',
+
+  // Student leave application status (StudentLeaveForm.status)
+  'draft': 'neutral',
+  'pending': 'warning',
+  'approved': 'success',
+  'rejected': 'danger',
+  'complete': 'success',
 };
 
 export const badgeTone = (value) => TONES[value] || 'neutral';

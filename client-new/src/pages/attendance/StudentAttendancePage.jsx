@@ -1,11 +1,19 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
 import Tabs from '../../components/tabs/Tabs';
+import CustomButton from '../../components/forms/fields/CustomButton';
+import CustomModal from '../../components/forms/modal/CustomModal';
+import StudentLeave from '../../components/forms/studentLeave/StudentLeave';
+import LeaveBalancePanel from './LeaveBalancePanel';
 import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
+import { apiLeaveCreate, apiLeaveLoad } from '../../api/leave';
+import { badgeClass } from '../../data/badges';
 import { parseAttendanceQuery, localDateString, localMonthKey } from '../../utils/leaveBalance';
 import './AttendancePage.css';
+
+const DAY_PART_LABEL = { full: 'Full day', first_half: 'First half', second_half: 'Second half' };
 
 /**
  * A scholar's own attendance — Monthly and Sessions here, Leaves in Task 11.
@@ -23,6 +31,9 @@ const StudentAttendancePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [rollNo, setRollNo] = useState(null);
+  const [openForm, setOpenForm] = useState(null); // full fullForm() json, or null
+  const [applying, setApplying] = useState(false);
+  const highlightRef = useRef(null);
 
   // localStorage holds no roll_no for a scholar. Read it the same way
   // ProfileCard does — GET /students with no id resolves to the caller's own
@@ -42,7 +53,7 @@ const StudentAttendancePage = () => {
     });
   }, []);
 
-  useEffect(() => {
+  const loadData = useCallback(() => {
     if (!rollNo) return;
     setLoading(true);
     customFetch(`${baseURL}/clerks/attendance/student/${rollNo}`, 'GET', {}, true)
@@ -52,6 +63,35 @@ const StudentAttendancePage = () => {
       })
       .finally(() => setLoading(false));
   }, [rollNo]);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  // Scroll the row a notification link named (?tab=leaves&leave=42) into view
+  // once the leaves have actually loaded — the ref only attaches once that
+  // row exists in the DOM.
+  useEffect(() => {
+    if (opened.leave && highlightRef.current) {
+      highlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [opened.leave, data]);
+
+  const handleApply = async () => {
+    setApplying(true);
+    const created = await apiLeaveCreate();
+    if (created.success) {
+      const loaded = await apiLeaveLoad(created.response.id);
+      if (loaded.success) setOpenForm(loaded.response);
+    }
+    setApplying(false);
+  };
+
+  // Whatever happened inside the modal (submitted or just closed), the
+  // balance/leaves list may now be stale — refresh on close rather than
+  // threading a callback through StudentLeave/Student.
+  const handleCloseForm = () => {
+    setOpenForm(null);
+    loadData();
+  };
 
   // Monthly: group the scholar's own records by local YYYY-MM and count each
   // bucket. Records come back date-cast by Laravel under APP_TIMEZONE=Asia/Kolkata,
@@ -176,10 +216,54 @@ const StudentAttendancePage = () => {
       )}
 
       {activeTab === 'leaves' && (
-        <div className="form-list-container" style={{ marginTop: '1rem' }}>
-          <div className="no-data-cell" style={{ padding: '1.5rem' }}>Leave applications will appear here.</div>
+        <div style={{ marginTop: '1rem' }}>
+          <LeaveBalancePanel balance={data?.balance} />
+
+          <div className="filter-bar" style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <CustomButton
+              text={applying ? 'Opening…' : 'Apply for Leave'}
+              onClick={handleApply}
+              disabled={applying}
+            />
+          </div>
+
+          <div className="form-list-container">
+            <table className="form-table">
+              <thead>
+                <tr><th>Type</th><th>From</th><th>To</th><th>Part</th><th>Status</th><th>HOD comment</th></tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan={6} className="no-data-cell">Loading…</td></tr>
+                ) : error ? (
+                  <tr><td colSpan={6} className="no-data-cell">{error}</td></tr>
+                ) : (data?.leaves || []).length === 0 ? (
+                  <tr><td colSpan={6} className="no-data-cell">No leave applications yet.</td></tr>
+                ) : (data.leaves || []).map((l) => (
+                  <tr
+                    key={l.id}
+                    ref={l.id === opened.leave ? highlightRef : null}
+                    className={l.id === opened.leave ? 'leave-row--highlight' : undefined}
+                  >
+                    <td style={{ textTransform: 'capitalize' }}>{l.leave_type}</td>
+                    {/* l.from_date/to_date are Laravel date-cast timestamps, same as
+                        r.date above — localDateString undoes the UTC-midnight shift. */}
+                    <td>{localDateString(l.from_date)}</td>
+                    <td>{localDateString(l.to_date)}</td>
+                    <td>{DAY_PART_LABEL[l.day_part] || l.day_part}</td>
+                    <td><span className={badgeClass(l.status)}>{l.status}</span></td>
+                    <td>{l.hod_comments || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
+
+      <CustomModal isOpen={!!openForm} onClose={handleCloseForm} width="90vw" minHeight="300px" maxHeight="85vh">
+        {openForm && <StudentLeave formData={openForm} />}
+      </CustomModal>
     </Layout>
   );
 };
