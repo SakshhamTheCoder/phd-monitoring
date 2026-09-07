@@ -438,7 +438,7 @@ const CreateProject = () => {
             <div className="cp-section-header-row">
               <h3 className="cp-section-title">Co-Investigators</h3>
               <button className="cp-add-btn" onClick={() => setShowExtForm(!showExtForm)}>
-                <i className="fa fa-plus"></i> Add Co-PI
+                <i className="fa fa-plus"></i> Add External Co-PI
               </button>
             </div>
             {/* Internal Search */}
