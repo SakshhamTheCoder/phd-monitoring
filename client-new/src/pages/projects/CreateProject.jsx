@@ -378,27 +378,6 @@ const CreateProject = () => {
               </div>
             )}
           </div>
-          <div className="cp-section-card">
-            <div className="cp-section-header-row">
-              <h3 className="cp-section-title">Sustainable Development Goals</h3>
-              <span className="cp-sdg-count">{form.sdgs.length} selected</span>
-            </div>
-            <div className="cp-sdg-grid">
-              {meta.sdgs.map(g => (
-                <label key={g.id} className={`cp-sdg-item${form.sdgs.includes(g.id) ? ' selected' : ''}`}>
-                  <input
-                    type="checkbox"
-                    checked={form.sdgs.includes(g.id)}
-                    onChange={() => updateField('sdgs', form.sdgs.includes(g.id)
-                      ? form.sdgs.filter(id => id !== g.id)
-                      : [...form.sdgs, g.id].sort((a, b) => a - b))}
-                  />
-                  <span className="cp-sdg-num">{g.id}</span>
-                  <span className="cp-sdg-label">{g.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
         </div>
       );
 
@@ -584,7 +563,7 @@ const CreateProject = () => {
         <div className="cp-step-content">
           <div className="cp-step-header">
             <h2><i className="fa fa-bullseye"></i> Step 4: Research Objectives</h2>
-            <p>Define clear, measurable goals for your project proposal.</p>
+            <p>Define clear, measurable goals and the SDGs this project contributes to.</p>
           </div>
           <div className="cp-section-card">
             <div className="cp-section-header-row">
@@ -610,6 +589,27 @@ const CreateProject = () => {
                     <i className="fa fa-trash"></i>
                   </button>
                 </div>
+              ))}
+            </div>
+          </div>
+          <div className="cp-section-card">
+            <div className="cp-section-header-row">
+              <h3 className="cp-section-title">Sustainable Development Goals</h3>
+              <span className="cp-sdg-count">{form.sdgs.length} selected</span>
+            </div>
+            <div className="cp-sdg-grid">
+              {meta.sdgs.map(g => (
+                <label key={g.id} className={`cp-sdg-item${form.sdgs.includes(g.id) ? ' selected' : ''}`}>
+                  <input
+                    type="checkbox"
+                    checked={form.sdgs.includes(g.id)}
+                    onChange={() => updateField('sdgs', form.sdgs.includes(g.id)
+                      ? form.sdgs.filter(id => id !== g.id)
+                      : [...form.sdgs, g.id].sort((a, b) => a - b))}
+                  />
+                  <span className="cp-sdg-num">{g.id}</span>
+                  <span className="cp-sdg-label">{g.label}</span>
+                </label>
               ))}
             </div>
           </div>
