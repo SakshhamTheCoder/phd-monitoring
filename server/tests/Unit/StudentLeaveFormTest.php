@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Models\Student;
 use App\Models\StudentLeaveForm;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
@@ -24,8 +25,25 @@ class StudentLeaveFormTest extends TestCase
 
     public function test_the_approved_scope_excludes_pending_and_rejected(): void
     {
-        $sql = StudentLeaveForm::approved()->toSql();
-        $this->assertStringContainsString('status', $sql);
-        $this->assertSame(['approved'], StudentLeaveForm::approved()->getBindings());
+        $student = Student::query()->firstOrFail();
+
+        $approved = StudentLeaveForm::create([
+            'student_id' => $student->roll_no,
+            'status' => 'approved',
+        ]);
+        $pending = StudentLeaveForm::create([
+            'student_id' => $student->roll_no,
+            'status' => 'pending',
+        ]);
+        $rejected = StudentLeaveForm::create([
+            'student_id' => $student->roll_no,
+            'status' => 'rejected',
+        ]);
+
+        $ids = StudentLeaveForm::approved()->pluck('id');
+
+        $this->assertTrue($ids->contains($approved->id));
+        $this->assertFalse($ids->contains($pending->id));
+        $this->assertFalse($ids->contains($rejected->id));
     }
 }

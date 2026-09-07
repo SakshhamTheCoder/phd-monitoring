@@ -4,32 +4,51 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Traits\ModelCommonFormFields;
 
 class StudentLeaveForm extends Model
 {
-    use HasFactory;
+    use HasFactory, ModelCommonFormFields;
 
     protected $table = 'student_leave_forms';
-
-    protected $fillable = [
-        'student_id', 'leave_type', 'from_date', 'to_date', 'day_part',
-        'reason', 'supporting_document', 'status', 'stage', 'steps',
-        'current_step', 'maximum_step', 'history',
-        'student_comments', 'hod_comments', 'hod_approval',
-        'student_lock', 'hod_lock',
-    ];
+    protected $fillable;
 
     protected $casts = [
         'from_date' => 'date',
         'to_date' => 'date',
-        'steps' => 'array',
         'history' => 'array',
-        'hod_approval' => 'boolean',
+        'steps' => 'array',
     ];
 
-    public function student()
+    public function __construct(array $attributes = [])
     {
-        return $this->belongsTo(Student::class, 'student_id', 'roll_no');
+        $commonFieldKeys = array_keys($this->getCommonFields() ?? []);
+        $this->fillable = array_merge([
+            'leave_type',
+            'from_date',
+            'to_date',
+            'day_part',
+            'reason',
+            'supporting_document',
+        ], $commonFieldKeys);
+
+        parent::__construct($attributes);
+    }
+
+    /**
+     * Get the full form data including common fields.
+     */
+    public function fullForm($user)
+    {
+        $commonJSON = $this->fullCommonForm($user);
+        return array_merge($commonJSON, [
+            'leave_type' => $this->leave_type,
+            'from_date' => $this->from_date,
+            'to_date' => $this->to_date,
+            'day_part' => $this->day_part,
+            'reason' => $this->reason,
+            'supporting_document' => $this->supporting_document,
+        ]);
     }
 
     public function scopeApproved($query)
