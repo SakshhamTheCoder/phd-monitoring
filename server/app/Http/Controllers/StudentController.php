@@ -35,7 +35,8 @@ class StudentController extends Controller {
         $role_id=Role::where('role','student')->first()->id;
         $request->validate(
             [
-                'first_name' => 'required|string',
+                'full_name' => 'required_without:first_name|string',
+                'first_name' => 'required_without:full_name|string',
                 'last_name' => 'nullable|string',
                 'phone' => 'required|string',
                 'email' => 'required|email|unique:users',
@@ -57,8 +58,11 @@ class StudentController extends Controller {
         //generated a random password for the new user he will change it later
 
         $user = new \App\Models\User();
-        $user->first_name = $request->first_name;
-        $user->last_name = $request->last_name ?? ' ';
+        $name = $request->filled('full_name')
+            ? PersonName::split($request->input('full_name'))
+            : ['first' => $request->input('first_name'), 'last' => $request->input('last_name') ?: PersonName::NO_SURNAME];
+        $user->first_name = $name['first'];
+        $user->last_name = $name['last'];
         $user->phone = $request->phone;
         $user->email = $request->email;
         $user->password = bcrypt($password);
@@ -502,7 +506,8 @@ class StudentController extends Controller {
         $user = $student->user;
 
         $request->validate([
-            'first_name' => 'required|string',
+            'full_name' => 'required_without:first_name|string',
+            'first_name' => 'required_without:full_name|string',
             'last_name' => 'nullable|string',
             'phone' => 'required|string',
             'email' => 'required|email|unique:users,email,' . $user->id,
@@ -519,8 +524,11 @@ class StudentController extends Controller {
             'cgpa' => 'nullable|numeric',
         ]);
 
-        $user->first_name = $request->first_name;
-        $user->last_name = $request->last_name ?? $user->last_name;
+        $name = $request->filled('full_name')
+            ? PersonName::split($request->input('full_name'))
+            : ['first' => $request->input('first_name'), 'last' => $request->input('last_name') ?: $user->last_name];
+        $user->first_name = $name['first'];
+        $user->last_name = $name['last'];
         $user->phone = $request->phone;
         $user->email = $request->email;
         if ($request->has('address')) $user->address = $request->address;

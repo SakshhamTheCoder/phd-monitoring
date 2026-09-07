@@ -14,8 +14,7 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
   const [submitting, setSubmitting] = useState(false);
   const [departmentName, setDepartmentName] = useState("");
   const [formData, setFormData] = useState({
-    first_name: "",
-    last_name: "",
+    full_name: "",
     phone: "",
     email: "",
     roll_no: "",
@@ -35,8 +34,7 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
   useEffect(() => {
     if (edit && studentData) {
       setFormData({
-        first_name: studentData.first_name || "",
-        last_name: studentData.last_name || "",
+        full_name: studentData.full_name || [studentData.first_name, studentData.last_name].filter(Boolean).join(' ') || "",
         phone: studentData.phone || "",
         email: studentData.email || "",
         roll_no: studentData.roll_no || "",
@@ -70,7 +68,7 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
 
     // Basic required-field validation
     const required = [
-      ["first_name", "First Name"],
+      ["full_name", "Full Name"],
       ["email", "Email"],
       ["phone", "Phone"],
       ["roll_no", "Roll Number"],
@@ -119,14 +117,9 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
       <GridContainer
         elements={[
           <InputField
-            label="First Name*"
-            initialValue={formData.first_name}
-            onChange={(val) => handleChange("first_name", val)}
-          />,
-          <InputField
-            label="Last Name*"
-            initialValue={formData.last_name}
-            onChange={(val) => handleChange("last_name", val)}
+            label="Full Name*"
+            initialValue={formData.full_name}
+            onChange={(val) => handleChange("full_name", val)}
           />,
         ]}
       />

@@ -130,7 +130,8 @@ class UserManagementController extends Controller
         $isUpdate = $request->has('id') && $request->id;
 
         $validationRules = [
-            'first_name' => 'required|string|max:255',
+            'full_name' => 'required_without:first_name|string|max:255',
+            'first_name' => 'required_without:full_name|string|max:255',
             'last_name' => 'nullable|string|max:255',
             'phone' => 'required|string|max:20',
             'gender' => 'nullable|in:Male,Female',
@@ -174,8 +175,11 @@ class UserManagementController extends Controller
             }
         }
 
-        $user->first_name = $request->first_name;
-        $user->last_name = $request->last_name ?? ' ';
+        $name = $request->filled('full_name')
+            ? PersonName::split($request->input('full_name'))
+            : ['first' => $request->input('first_name'), 'last' => $request->input('last_name') ?: PersonName::NO_SURNAME];
+        $user->first_name = $name['first'];
+        $user->last_name = $name['last'];
         $user->email = $request->email;
         $user->phone = $request->phone;
         $user->gender = $request->gender;
