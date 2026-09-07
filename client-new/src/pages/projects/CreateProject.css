@@ -89,6 +89,12 @@
 .cp-budget-subsum { font-size: 0.78rem; color: #777; }
 .cp-budget-subsum.ok { color: #15803d; }
 .cp-budget-subsum.bad { color: #b91c1c; font-weight: 600; }
+/* A sub-row of an Other Expenses row: one level further in, and visibly
+   subordinate to the row it breaks down. */
+.cp-budget-subsub-row td { background: #FCFCFD; }
+.cp-budget-subsub-row td:first-child { padding-left: 1.5rem; }
+.cp-budget-indent-sum { padding-left: 1.5rem; }
+
 .cp-file-hint { font-size: 0.78rem; color: #15803d; display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.3rem; }
 .cp-pi-none { font-size: 0.85rem; color: #777; margin: 0 0 1rem; }
 .cp-budget-total { font-weight: 600; color: #333; font-size: 0.85rem; }

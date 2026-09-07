@@ -199,3 +199,9 @@
 .cp-add-btn:hover { background: var(--hover-color); }
 .cp-remove-btn { background: none; border: none; color: #ccc; cursor: pointer; font-size: 0.9rem; }
 .cp-remove-btn:hover { color: #b91c1c; }
+
+/* An Other Expenses sub-row: one level in from the row it breaks down. */
+.pd-budget-subsub-row td:first-child { padding-left: 1.5rem; }
+.pd-budget-subsub-row td { background: #FCFCFD; }
+/* A head or parent whose breakdown disagrees with the amount recorded against it. */
+.pd-budget-bad { color: #b91c1c; font-weight: 600; }

@@ -70,6 +70,9 @@ final class ProjectRequestRules
             // A legacy category is still readable, so the category is not
             // constrained to the menu here; the UI offers only the five.
             'budget.__manpower.*.*.category' => 'nullable|string|max:100',
+            // Manpower no longer carries a count. A payload from an older client
+            // may still send one, and normalize() folds it into the amount rather
+            // than dropping the money, so it stays accepted here.
             'budget.__manpower.*.*.count' => 'nullable|integer|min:0|max:999',
             // Reconciliation can legitimately emit a negative "Unallocated
             // (legacy total)" line when a migrated head disagrees with its
@@ -78,9 +81,18 @@ final class ProjectRequestRules
             'budget.__equipment' => 'nullable|array',
             'budget.__equipment.*.*.item' => 'nullable|string|max:200',
             'budget.__equipment.*.*.amount' => 'nullable|integer',
+            // The row's identity, so two unnamed rows stay two rows.
+            'budget.__equipment.*.*.id' => 'nullable|string|max:64',
             'budget.__other' => 'nullable|array',
             'budget.__other.*.*.label' => 'nullable|string|max:200',
             'budget.__other.*.*.amount' => 'nullable|integer',
+            'budget.__other.*.*.id' => 'nullable|string|max:64',
+            // A sub-row names its parent row's id; blank means top level.
+            'budget.__other.*.*.parent' => 'nullable|string|max:200',
+            // A head total typed instead of a breakdown, per year and head.
+            'budget.__headamt' => 'nullable|array',
+            'budget.__headamt.*' => 'nullable|array',
+            'budget.__headamt.*.*' => 'nullable|integer',
 
             'gantt_chart' => 'nullable|file|mimes:pdf,png,jpg,jpeg,xlsx,xls,doc,docx|max:10240',
         ];
