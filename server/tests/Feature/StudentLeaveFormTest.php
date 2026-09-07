@@ -104,4 +104,35 @@ class StudentLeaveFormTest extends TestCase
             'reason' => 'Personal',
         ])->assertStatus(200);
     }
+
+    public function test_a_student_can_create_a_leave_draft(): void
+    {
+        $student = $this->actingAsStudent();
+
+        $this->postJson('/api/forms/student-leave')->assertStatus(200);
+
+        $form = StudentLeaveForm::where('student_id', $student->roll_no)->latest('id')->first();
+        $this->assertNotNull($form);
+        $this->assertSame('draft', $form->status);
+        $this->assertSame('student', $form->stage);
+        $this->assertNotEmpty($form->steps);
+    }
+
+    public function test_a_second_draft_may_be_created_while_the_first_is_still_open(): void
+    {
+        $this->actingAsStudent();
+
+        $this->postJson('/api/forms/student-leave')->assertStatus(200);
+        $this->postJson('/api/forms/student-leave')->assertStatus(200);
+    }
+
+    public function test_a_non_student_cannot_create_a_leave_draft(): void
+    {
+        $user = User::whereHas('current_role', function ($query) {
+            $query->where('role', '!=', 'student');
+        })->firstOrFail();
+        $this->actingAs($user, 'sanctum');
+
+        $this->postJson('/api/forms/student-leave')->assertStatus(403);
+    }
 }

@@ -40,6 +40,14 @@ class StudentLeaveFormController extends Controller
         return $this->listForms($user, StudentLeaveForm::class, $request);
     }
 
+    /**
+     * Deliberately bypasses GeneralFormCreate::createForms(): that helper
+     * looks up a `Forms` row for the form type and refuses when there is
+     * none, but leave has no `Forms` row by design (see the class docblock).
+     * It also refuses a create while an earlier form is incomplete, which is
+     * right for a one-shot form like semester-off but wrong here — a scholar
+     * legitimately has several leave applications open across a year.
+     */
     public function createForm(Request $request)
     {
         $user = Auth::user();
@@ -48,12 +56,17 @@ class StudentLeaveFormController extends Controller
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
 
-        return $this->createForms(StudentLeaveForm::class, [
-            'roll_no' => $user->student->roll_no,
+        $form = StudentLeaveForm::create([
+            'student_id' => $user->student->roll_no,
+            'status' => 'draft',
+            'stage' => 'student',
+            'student_lock' => false,
             'steps' => self::STEPS,
-            'role' => $role->role,
-            'name' => $user->first_name . ' ' . $user->last_name,
         ]);
+        $form->addHistoryEntry('Form has been initiated', $user->first_name . ' ' . $user->last_name);
+        $form->save();
+
+        return response()->json(['message' => 'Form Created', 'id' => $form->id], 200);
     }
 
     public function loadForm(Request $request, $form_id = null)
