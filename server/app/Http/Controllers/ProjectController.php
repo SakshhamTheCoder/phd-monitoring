@@ -72,7 +72,13 @@ class ProjectController extends Controller {
     }
 
     public function listFilters(Request $request) {
-        return response()->json($this->getAvailableFilters('projects'));
+        $rows = $this->getAvailableFilters('projects');
+        // Seeded rows may not exist yet where the seeder was never re-run;
+        // fall back to the same static list so the dropdown never renders empty.
+        if ($rows->isEmpty()) {
+            return response()->json(\Database\Seeders\FiltersTableSeeder::projectFilters());
+        }
+        return response()->json($rows);
     }
 
     public function show($id) {

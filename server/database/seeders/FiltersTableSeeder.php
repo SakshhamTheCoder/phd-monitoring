@@ -175,7 +175,42 @@ class FiltersTableSeeder extends Seeder
                 ],
                 'api_url' => null,
             ],
-            // Projects page filters.
+            ...self::projectFilters(),
+        ];
+
+        foreach ($filters as $filter) {
+            $keyName = $filter['key_name'];
+            unset($filter['key_name']);
+
+            $pages = $filter['applicable_pages'];
+            $filter['applicable_pages'] = json_encode($pages);
+            if (isset($filter['options']) && is_array($filter['options'])) {
+                $filter['options'] = json_encode($filter['options']);
+            }
+
+            // key_name is no longer unique on its own — two pages can
+            // legitimately have a filter with the same key_name (e.g.
+            // `status`), so the row identity is (key_name, applicable_pages).
+            // This keeps the whole seeder idempotent: running it twice
+            // updates each row in place rather than duplicating or
+            // colliding with an unrelated page's row of the same key_name.
+            DB::table('filters')->updateOrInsert(
+                ['key_name' => $keyName, 'applicable_pages' => $filter['applicable_pages']],
+                $filter
+            );
+        }
+    }
+
+    /**
+     * Filter keys for the projects page. Single source for the seeder rows
+     * and for ProjectController::listFilters fallback when the table holds
+     * no projects rows yet, so the dropdown never renders empty.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function projectFilters(): array
+    {
+        return [
             [
                 'key_name' => 'title',
                 'label' => 'Project Title',
@@ -270,27 +305,5 @@ class FiltersTableSeeder extends Seeder
                 'api_url' => '/suggestions/department',
             ],
         ];
-
-        foreach ($filters as $filter) {
-            $keyName = $filter['key_name'];
-            unset($filter['key_name']);
-
-            $pages = $filter['applicable_pages'];
-            $filter['applicable_pages'] = json_encode($pages);
-            if (isset($filter['options']) && is_array($filter['options'])) {
-                $filter['options'] = json_encode($filter['options']);
-            }
-
-            // key_name is no longer unique on its own — two pages can
-            // legitimately have a filter with the same key_name (e.g.
-            // `status`), so the row identity is (key_name, applicable_pages).
-            // This keeps the whole seeder idempotent: running it twice
-            // updates each row in place rather than duplicating or
-            // colliding with an unrelated page's row of the same key_name.
-            DB::table('filters')->updateOrInsert(
-                ['key_name' => $keyName, 'applicable_pages' => $filter['applicable_pages']],
-                $filter
-            );
-        }
     }
 }
