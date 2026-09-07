@@ -122,7 +122,13 @@ function basePlugin() {
         config(_, { mode }) {
             const { PUBLIC_URL } = loadEnv(mode, ".", ["PUBLIC_URL"]);
             return {
-                base: PUBLIC_URL || "",
+                // "" makes Vite emit relative asset URLs ("./assets/..."), which the
+                // browser resolves against the current route's directory. Under the
+                // SPA fallback that turns /forms/supervisor-allocation into a request
+                // for /forms/assets/... and the page loads with no JS or CSS at all.
+                // The app is served from the domain root, so an absolute base is the
+                // only depth-independent one. PUBLIC_URL still wins for subpath deploys.
+                base: PUBLIC_URL || "/",
             };
         },
     };
