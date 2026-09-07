@@ -9,6 +9,7 @@ import CustomButton from '../../components/forms/fields/CustomButton';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { countAbsent, applyMarkAll, buildSaveMessage } from '../../utils/attendanceMark';
 import './AttendancePage.css';
 
 const EDIT_WINDOW = 7;
@@ -138,12 +139,11 @@ const AttendancePage = () => {
   useEffect(() => { if (activeTab === 'monthly') loadMonth(); }, [activeTab, loadMonth]);
 
   const setStatus = (rollNo, status) => setStatuses((prev) => ({ ...prev, [rollNo]: status }));
-  const markAll = (status) => {
-    const next = {};
-    students.forEach((s) => { next[s.roll_no] = status; });
-    setStatuses(next);
-  };
-  const absentCount = useMemo(() => students.filter((s) => statuses[s.roll_no] === 'absent').length, [students, statuses]);
+  // A scholar on approved leave has no radio to bulk-set — the backend
+  // refuses to write their attendance row either way — so bulk actions must
+  // leave their entry alone.
+  const markAll = (status) => setStatuses((prev) => applyMarkAll(students, prev, status));
+  const absentCount = useMemo(() => countAbsent(students, statuses), [students, statuses]);
 
   const handleSave = async () => {
     if (students.length === 0) { toast.info('Nothing to save'); return; }
@@ -153,7 +153,10 @@ const AttendancePage = () => {
     setSaving(true);
     const res = await customFetch(baseURL + '/clerks/attendance', 'POST', { date, records }, true);
     setSaving(false);
-    if (res.success) { toast.success(res.response.message || 'Attendance saved'); loadRoster(); }
+    if (res.success) {
+      toast.success(buildSaveMessage(res.response.message, res.response.skipped_on_leave));
+      loadRoster();
+    }
   };
 
   const downloadTemplate = async () => {
@@ -334,14 +337,18 @@ const AttendancePage = () => {
                         <tr key={s.roll_no}>
                           <td>{s.roll_no}</td><td>{s.name}</td><td>{s.department_name || s.department_code || '-'}</td>
                           <td>
-                            <span style={{ display: 'inline-flex', gap: '1rem', alignItems: 'center' }}>
-                              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', fontWeight: cur === 'present' ? 600 : 400 }}>
-                                <input type="radio" name={`status-${s.roll_no}`} checked={cur === 'present'} onChange={() => setStatus(s.roll_no, 'present')} /> Present
-                              </label>
-                              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', color: cur === 'absent' ? 'var(--danger-text)' : undefined, fontWeight: cur === 'absent' ? 600 : 400 }}>
-                                <input type="radio" name={`status-${s.roll_no}`} checked={cur === 'absent'} onChange={() => setStatus(s.roll_no, 'absent')} /> Absent
-                              </label>
-                            </span>
+                            {s.on_leave ? (
+                              <span className="badge badge--neutral">On leave · {s.leave_type}</span>
+                            ) : (
+                              <span style={{ display: 'inline-flex', gap: '1rem', alignItems: 'center' }}>
+                                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', fontWeight: cur === 'present' ? 600 : 400 }}>
+                                  <input type="radio" name={`status-${s.roll_no}`} checked={cur === 'present'} onChange={() => setStatus(s.roll_no, 'present')} /> Present
+                                </label>
+                                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', color: cur === 'absent' ? 'var(--danger-text)' : undefined, fontWeight: cur === 'absent' ? 600 : 400 }}>
+                                  <input type="radio" name={`status-${s.roll_no}`} checked={cur === 'absent'} onChange={() => setStatus(s.roll_no, 'absent')} /> Absent
+                                </label>
+                              </span>
+                            )}
                           </td>
                           <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                             {s.recorded ? (s.marked_by_name ? <span title={`Marked by ${s.marked_by_name}`}>by {s.marked_by_name}</span> : <span style={{ color: 'var(--text-subtle)', fontStyle: 'italic' }}>Recorded</span>) : <span style={{ color: 'var(--text-subtle)', fontStyle: 'italic' }} title="No record — treated as no session">No session</span>}
