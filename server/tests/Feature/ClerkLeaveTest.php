@@ -54,12 +54,16 @@ class ClerkLeaveTest extends TestCase
 
     public function test_a_scholar_not_on_leave_is_not_flagged(): void
     {
-        $this->studentOnLeave();
+        $student = $this->studentOnLeave();
         $this->actingAsAdmin();
 
         $response = $this->getJson('/api/clerks/attendance?date=2026-09-20')->assertStatus(200);
 
-        $this->assertEmpty(collect($response->json('students'))->where('on_leave', true));
+        $row = collect($response->json('students'))->firstWhere('roll_no', $student->roll_no);
+        $this->assertArrayHasKey('on_leave', $row);
+        $this->assertFalse($row['on_leave']);
+        $this->assertNull($row['leave_type']);
+        $this->assertNull($row['day_part']);
     }
 
     public function test_saving_writes_no_row_for_a_scholar_on_leave(): void
