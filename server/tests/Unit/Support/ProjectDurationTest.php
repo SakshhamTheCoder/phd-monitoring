@@ -38,15 +38,8 @@ class ProjectDurationTest extends TestCase
         }
     }
 
-    public function test_total_months(): void
+    public function test_year_options_are_zero_through_five(): void
     {
-        $this->assertSame(40, ProjectDuration::totalMonths(3, 4));
-        $this->assertSame(8, ProjectDuration::totalMonths(0, 8));
-        $this->assertSame(0, ProjectDuration::totalMonths(null, null));
-    }
-
-    public function test_year_options_are_one_through_five(): void
-    {
-        $this->assertSame([1, 2, 3, 4, 5], ProjectDuration::yearOptions());
+        $this->assertSame([0, 1, 2, 3, 4, 5], ProjectDuration::yearOptions());
     }
 }

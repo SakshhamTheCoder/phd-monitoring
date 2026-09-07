@@ -11,7 +11,7 @@ namespace App\Support;
  */
 final class ProjectDuration
 {
-    public const MIN_YEARS = 1;
+    public const MIN_YEARS = 0;
     public const MAX_YEARS = 5;
     public const MAX_MONTHS = 11;
 
@@ -22,11 +22,6 @@ final class ProjectDuration
     public static function yearOptions(): array
     {
         return range(self::MIN_YEARS, self::MAX_YEARS);
-    }
-
-    public static function totalMonths(?int $years, ?int $months): int
-    {
-        return max(0, (int) $years) * 12 + max(0, (int) $months);
     }
 
     public static function format(?int $years, ?int $months): string

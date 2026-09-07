@@ -115,7 +115,7 @@ export const apiProjectMeta = async () => {
   const { success, response } = await customFetch(`${baseURL}/projects/meta`, 'GET', {}, false);
   metaCache = success
     ? response
-    : { sdgs: [], manpowerCategories: [], budgetHeads: [], duration: { years: [1, 2, 3, 4, 5], maxMonths: 11 } };
+    : { sdgs: [], manpowerCategories: [], budgetHeads: [], duration: { years: [0, 1, 2, 3, 4, 5], maxMonths: 11 } };
   return metaCache;
 };
 export const apiGetProject = async (id) => {

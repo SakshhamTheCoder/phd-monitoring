@@ -21,9 +21,9 @@ class ProjectRequestRulesTest extends TestCase
         }
     }
 
-    public function test_zero_and_six_years_are_rejected(): void
+    public function test_zero_years_pass_for_sub_year_durations_six_years_rejected(): void
     {
-        $this->assertTrue($this->validate(['title' => 'T', 'category' => 'Research', 'duration_years' => 0])->errors()->has('duration_years'));
+        $this->assertFalse($this->validate(['title' => 'T', 'category' => 'Research', 'duration_years' => 0])->errors()->has('duration_years'));
         $this->assertTrue($this->validate(['title' => 'T', 'category' => 'Research', 'duration_years' => 6])->errors()->has('duration_years'));
     }
 
