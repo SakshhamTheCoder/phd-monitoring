@@ -204,10 +204,7 @@ trait GeneralFormSubmitter
     private function handleFallbackToPreviousLevel($user, $formInstance, $previousLevel, $comments, $model)
     {
 
-        $link = '/forms/' . $this->getFormType($model) . '/' . $formInstance->id;
-        if ($this->getFormType($model) == 'presentation') {
-            $link = '/presentation/semester/' . $formInstance->period_of_report . '/' . $formInstance->id;
-        }
+        $link = $this->formLink($formInstance, $model);
         $this->formNotification($formInstance->student, $this->getFormType($model) . ' form for ' . $formInstance->student?->user->name() . ' has been rejected', 'Form has been rejected',  $link, $previousLevel, true);
 
         if ($previousLevel == 'faculty') {
@@ -239,10 +236,7 @@ trait GeneralFormSubmitter
             $formInstance->current_step = $index;
             $formInstance->maximum_step = $index > $formInstance->maximum_step ? $index : $formInstance->maximum_step;
         } else {
-            $link = '/forms/' . $this->getFormType($model) . '/' . $formInstance->id;
-            if ($this->getFormType($model) == 'presentation') {
-                $link = '/presentation/semester/' . $formInstance->period_of_report . '/' . $formInstance->id;
-            }
+            $link = $this->formLink($formInstance, $model);
             $this->formNotification($formInstance->student, $this->getFormType($model) . ' form for ' . $formInstance->student?->user?->name() . ' has pending action', 'Form has pending  action',  $link, $nextLevel, true);
             if ($nextLevel == 'faculty') {
                 $nextLevel = 'supervisor';
@@ -382,6 +376,18 @@ trait GeneralFormSubmitter
         };
     }
 
+    /**
+     * Where a notification about this form should land.
+     *
+     * Most forms live on the Forms page and take the default. A form surfaced
+     * elsewhere overrides this in its own controller — which is why there is a
+     * hook here rather than a growing if-chain in shared code.
+     */
+    protected function formLink($formInstance, $model): string
+    {
+        return '/forms/' . $this->getFormType($model) . '/' . $formInstance->id;
+    }
+
     private function getFormType($model)
     {
         $model = (new \ReflectionClass($model))->getShortName();
@@ -399,12 +405,15 @@ trait GeneralFormSubmitter
             'ListOfExaminersForm' => 'list-of-examiners',
             'SynopsisSubmission' => 'synopsis-submission',
             'Presentation' => 'presentation',
+            'StudentLeaveForm' => 'student-leave',
         };
     }
 
     private function updateForm($model, $student_id, $next)
     {
-        if ($model === Presentation::class)
+        // Neither of these creates a `forms` row: they are surfaced on their own
+        // pages, so there is nothing in the Forms list to advance.
+        if ($model === Presentation::class || $model === \App\Models\StudentLeaveForm::class)
             return;
         $form = Forms::where('form_type', $this->getFormType($model))->where('student_id', $student_id)->first();
         if ($next == 'external') $next = 'doctoral';
