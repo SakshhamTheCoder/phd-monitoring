@@ -136,6 +136,7 @@ const Student = ({ formData }) => {
             dateFormat="yyyy-MM-dd"
             className="input-field"
             placeholderText="YYYY-MM-DD"
+            maxDate={parseDate(toDate)}
             disabled={lock}
             showMonthDropdown
             showYearDropdown
@@ -196,6 +197,7 @@ const Student = ({ formData }) => {
         <FileUploadField
           label="Supporting Document"
           required
+          initialValue={instance?.supporting_document}
           isLocked={lock}
           onChange={setFile}
           acceptedTypes=".pdf"

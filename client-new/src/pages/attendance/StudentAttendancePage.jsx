@@ -75,13 +75,20 @@ const StudentAttendancePage = () => {
     }
   }, [opened.leave, data]);
 
+  // Reuse an already-open draft rather than minting another: apiLeaveCreate
+  // persists a row immediately, and a scholar re-clicking Apply (or clicking
+  // it, cancelling, and clicking it again) must not accumulate blank drafts.
   const handleApply = async () => {
     setApplying(true);
-    const created = await apiLeaveCreate();
-    if (created.success) {
-      const loaded = await apiLeaveLoad(created.response.id);
-      if (loaded.success) setOpenForm(loaded.response);
+    const existingDraft = (data?.leaves || []).find((l) => l.status === 'draft');
+    let formId = existingDraft?.id;
+    if (!formId) {
+      const created = await apiLeaveCreate();
+      if (!created.success) { setApplying(false); return; }
+      formId = created.response.id;
     }
+    const loaded = await apiLeaveLoad(formId);
+    if (loaded.success) setOpenForm(loaded.response);
     setApplying(false);
   };
 
@@ -110,6 +117,10 @@ const StudentAttendancePage = () => {
   }, [data]);
 
   const records = data?.records || [];
+  // An unfilled draft (created but never submitted — see handleApply) has no
+  // from_date. It's an implementation detail, not something a scholar should
+  // see reported back as part of their leave history.
+  const leaveRows = (data?.leaves || []).filter((l) => l.from_date);
 
   return (
     <Layout>
@@ -237,9 +248,9 @@ const StudentAttendancePage = () => {
                   <tr><td colSpan={6} className="no-data-cell">Loading…</td></tr>
                 ) : error ? (
                   <tr><td colSpan={6} className="no-data-cell">{error}</td></tr>
-                ) : (data?.leaves || []).length === 0 ? (
+                ) : leaveRows.length === 0 ? (
                   <tr><td colSpan={6} className="no-data-cell">No leave applications yet.</td></tr>
-                ) : (data.leaves || []).map((l) => (
+                ) : leaveRows.map((l) => (
                   <tr
                     key={l.id}
                     ref={l.id === opened.leave ? highlightRef : null}
