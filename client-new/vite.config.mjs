@@ -18,6 +18,10 @@ export default defineConfig(({ mode }) => {
             importPrefixPlugin(),
             htmlPlugin(mode),
         ],
+        test: {
+            environment: 'node',
+            include: ['src/**/*.test.{js,jsx}'],
+        },
     };
 });
 function setEnv(mode) {

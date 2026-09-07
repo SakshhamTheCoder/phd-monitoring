@@ -7,6 +7,8 @@ use App\Http\Controllers\PositionApplicationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/stats', [ProjectController::class, 'stats'])->middleware('auth:sanctum');
+Route::get('/meta', [ProjectController::class, 'meta'])->middleware('auth:sanctum');
+Route::get('/filters', [ProjectController::class, 'listFilters'])->middleware('auth:sanctum');
 Route::get('/', [ProjectController::class, 'index'])->middleware('auth:sanctum');
 Route::post('/', [ProjectController::class, 'store'])->middleware('auth:sanctum');
 Route::get('/{id}', [ProjectController::class, 'show'])->middleware('auth:sanctum');

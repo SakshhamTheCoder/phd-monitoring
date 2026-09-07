@@ -31,9 +31,9 @@ const FacultyPage = () => {
     setFilter(newFilter);
   };
 
-  const facultySampleCsv = `first_name,last_name,email,phone,designation,type,faculty_code,department_code,institution,website_link,expertise
-John,Doe,john.doe@example.com,1234567890,Professor,internal,FAC001,CSED,Thapar Institute of Engineering and Technology,https://johndoe.com,"Machine Learning, Data Mining, AI"
-Jane,,jane.smith@example.com,9876543210,Associate Professor,external,,CHED,External University Name,https://janesmith.com,"Network Security, Cryptography"`;
+  const facultySampleCsv = `full_name,email,phone,designation,faculty_code,department_code,expertise
+Dr. Tarunpreet Bhatia,tarunpreet.bhatia@demo.invalid,9800000001,Professor,10001,CSED,"Machine Learning, Cyber Security"
+Khalid Bashir,khalid.bashir@demo.invalid,9800000002,Assistant Professor,10002,ECED,"Signal Processing"`;
 
 
   const openForm = async (data) => {
@@ -88,12 +88,10 @@ Jane,,jane.smith@example.com,9876543210,Associate Professor,external,,CHED,Exter
         });
 
         const batchData = batch.map(row => ({
-          first_name: row.first_name || '',
-          last_name: row.last_name || '',
+          full_name: row.full_name || [row.first_name, row.last_name].filter(Boolean).join(' ') || '',
           email: row.email || '',
           phone: row.phone || '',
           designation: row.designation || '',
-          type: row.type || '',
           faculty_code: row.faculty_code || '',
           department_code: row.department_code || '',
           institution: row.institution || '',
@@ -246,18 +244,17 @@ Jane,,jane.smith@example.com,9876543210,Associate Professor,external,,CHED,Exter
             isOpen={showBulkImportModal}
             onClose={() => setShowBulkImportModal(false)}
             title="Bulk Import Faculty"
-            formatString="first_name,last_name,email,phone,designation,type,faculty_code,department_code,institution,website_link,expertise"
+            formatString="full_name,email,phone,designation,faculty_code,department_code,expertise"
             infoNodes={
               <>
                 <p style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '0.875rem' }}>
-                  <strong>Required for new faculty:</strong> first_name, email, designation, type (internal/external)
+                  <strong>Required for new faculty:</strong> full_name, email, designation, faculty_code, department_code
                 </p>
                 <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
-                  <strong>Internal:</strong> faculty_code + department_code required; institution defaults to Thapar.<br/>
-                  <strong>External:</strong> institution required; faculty_code auto-generated.
+                  Imported faculty are added as internal faculty.
                 </p>
                 <p style={{ color: '#6b7280', fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                  Existing faculty matched by email will be updated with provided non-empty fields (including expertise).
+                  Existing faculty matched by email will be updated with provided non-empty fields (including area of expertise).
                 </p>
               </>
             }

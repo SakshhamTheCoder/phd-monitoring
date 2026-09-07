@@ -13,8 +13,7 @@ const BulkUploadStudents = ({ onSuccess }) => {
 
   const downloadSampleCSV = () => {
     const headers = [
-      "First Name",
-      "Last Name",
+      "Full Name",
       "Email",
       "Phone",
       "Roll Number",
@@ -30,8 +29,7 @@ const BulkUploadStudents = ({ onSuccess }) => {
     ];
 
     const sampleRow = [
-      "John",
-      "Doe",
+      "John Doe",
       "john.doe@example.com",
       "+1234567890",
       "PHD2024001",
@@ -79,8 +77,7 @@ const BulkUploadStudents = ({ onSuccess }) => {
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
       const headers = [
-        "First Name",
-        "Last Name",
+        "Full Name",
         "Email",
         "Phone",
         "Roll Number",
@@ -155,11 +152,6 @@ const BulkUploadStudents = ({ onSuccess }) => {
           rowObj[header] = value;
         });
 
-        // Handle Last Name - if empty, set to space
-        if (!rowObj['Last Name'] || rowObj['Last Name'].trim() === '') {
-          rowObj['Last Name'] = ' ';
-        }
-
         // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (rowObj['Email'] && !emailRegex.test(rowObj['Email'])) {
@@ -213,8 +205,7 @@ const BulkUploadStudents = ({ onSuccess }) => {
     setLoading(true);
 
     const students = csvData.map((entry) => ({
-      first_name: entry['First Name'],
-      last_name: entry['Last Name'],
+      full_name: entry['Full Name'],
       email: entry['Email'],
       phone: entry['Phone'],
       roll_no: entry['Roll Number'],
@@ -265,8 +256,8 @@ const BulkUploadStudents = ({ onSuccess }) => {
         marginBottom: '20px',
         fontSize: '14px'
       }}>
-        <strong>Required fields:</strong> First Name, Email, Phone, Roll Number, Department Code, Date of Registration, Current Status<br/>
-        <strong>Optional fields:</strong> Last Name, Date of IRB, PhD Title, Father's Name, Address, CGPA, Overall Progress<br/>
+        <strong>Required fields:</strong> Full Name, Email, Phone, Roll Number, Department Code, Date of Registration, Current Status<br/>
+        <strong>Optional fields:</strong> Date of IRB, PhD Title, Father's Name, Address, CGPA, Overall Progress<br/>
         <strong>Current Status values:</strong> part-time, full-time, executive
       </div>
       

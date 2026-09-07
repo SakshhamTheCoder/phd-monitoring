@@ -280,6 +280,7 @@ trait GeneralFormList
             'last_name' => $student->user->last_name,
             'phd_title' => $student->phd_title,
             'phd_title_locked' => $student->phdTitleLocked(),
+            'irb_completed' => $student->irbCompleted(),
             'tentative_desc' => $student->tentative_desc,
             'tentative_broad_area' => $student->tentative_broad_area,
             'can_edit_tentative' => $student->canEditTentative(),
@@ -307,6 +308,7 @@ trait GeneralFormList
             'date_of_registration' => $student->date_of_registration,
             'date_of_irb' => $student->date_of_irb,
             'date_of_synopsis' => $student->date_of_synopsis,
+            'date_of_thesis' => $student->date_of_thesis,
             'doctoral' => $student->doctoralCommittee->map(function ($faculty) {
                 return [
                     'faculty_code' => $faculty->faculty_code,

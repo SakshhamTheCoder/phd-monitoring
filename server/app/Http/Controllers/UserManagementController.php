@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use App\Support\PersonName;
 
 class UserManagementController extends Controller
 {
@@ -129,7 +130,8 @@ class UserManagementController extends Controller
         $isUpdate = $request->has('id') && $request->id;
 
         $validationRules = [
-            'first_name' => 'required|string|max:255',
+            'full_name' => 'required_without:first_name|string|max:255',
+            'first_name' => 'required_without:full_name|string|max:255',
             'last_name' => 'nullable|string|max:255',
             'phone' => 'required|string|max:20',
             'gender' => 'nullable|in:Male,Female',
@@ -173,8 +175,11 @@ class UserManagementController extends Controller
             }
         }
 
-        $user->first_name = $request->first_name;
-        $user->last_name = $request->last_name ?? ' ';
+        $name = $request->filled('full_name')
+            ? PersonName::split($request->input('full_name'))
+            : ['first' => $request->input('first_name'), 'last' => $request->input('last_name') ?: PersonName::NO_SURNAME];
+        $user->first_name = $name['first'];
+        $user->last_name = $name['last'];
         $user->email = $request->email;
         $user->phone = $request->phone;
         $user->gender = $request->gender;
@@ -286,6 +291,7 @@ class UserManagementController extends Controller
 
         $request->validate([
             'batch_data' => 'required|array',
+            'batch_data.*.full_name' => 'nullable|string',
             'batch_data.*.first_name' => 'nullable|string',
             'batch_data.*.last_name' => 'nullable|string',
             'batch_data.*.email' => 'required|email',
@@ -307,6 +313,7 @@ class UserManagementController extends Controller
             try {
                 $rowNumber = $data['row_number'];
                 $email = trim($data['email']);
+                $name = PersonName::fromRow($data);
 
                 $existingUser = User::where('email', $email)->first();
 
@@ -332,9 +339,13 @@ class UserManagementController extends Controller
                 }
 
                 if ($existingUser) {
-                    // Partial update: only overwrite provided non-empty fields
-                    if (!empty($data['first_name'])) $existingUser->first_name = trim($data['first_name']);
-                    if (isset($data['last_name']) && $data['last_name'] !== '') $existingUser->last_name = trim($data['last_name']);
+                    // Partial update: only overwrite provided non-empty fields.
+                    // $name is null when the row carries no name at all, which
+                    // must leave the stored name untouched rather than blanking it.
+                    if ($name !== null) {
+                        $existingUser->first_name = $name['first'];
+                        $existingUser->last_name = $name['last'];
+                    }
                     if (!empty($data['phone'])) $existingUser->phone = trim($data['phone']);
                     if (!empty($data['gender'])) $existingUser->gender = $data['gender'];
                     if ($role) $existingUser->role_id = $role->id;
@@ -343,16 +354,16 @@ class UserManagementController extends Controller
                     $existingUser->save();
                     $updateCount++;
                 } else {
-                    if (empty($data['first_name'])) {
-                        $errors[] = "Row {$rowNumber}: First name required for new user";
+                    if ($name === null) {
+                        $errors[] = "Row {$rowNumber}: full_name is required for a new user";
                         $errorCount++;
                         continue;
                     }
                     $password = Str::password(8, true, true, true, false);
-                    
+
                     User::create([
-                        'first_name' => trim($data['first_name']),
-                        'last_name' => isset($data['last_name']) && $data['last_name'] !== '' ? trim($data['last_name']) : ' ',
+                        'first_name' => $name['first'],
+                        'last_name' => $name['last'],
                         'email' => $email,
                         'phone' => !empty($data['phone']) ? trim($data['phone']) : '',
                         'gender' => !empty($data['gender']) ? $data['gender'] : null,

@@ -14,14 +14,14 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
   const [submitting, setSubmitting] = useState(false);
   const [departmentName, setDepartmentName] = useState("");
   const [formData, setFormData] = useState({
-    first_name: "",
-    last_name: "",
+    full_name: "",
     phone: "",
     email: "",
     roll_no: "",
     department_id: "",
     date_of_registration: "",
     date_of_irb: "",
+    date_of_thesis: "",
     phd_title: "",
     fathers_name: "",
     address: "",
@@ -34,14 +34,14 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
   useEffect(() => {
     if (edit && studentData) {
       setFormData({
-        first_name: studentData.first_name || "",
-        last_name: studentData.last_name || "",
+        full_name: studentData.full_name || [studentData.first_name, studentData.last_name].filter(Boolean).join(' ') || "",
         phone: studentData.phone || "",
         email: studentData.email || "",
         roll_no: studentData.roll_no || "",
         department_id: studentData.department_id || "",
         date_of_registration: studentData.date_of_registration || "",
         date_of_irb: studentData.date_of_irb || "",
+        date_of_thesis: studentData.date_of_thesis || "",
         phd_title: studentData.phd_title || "",
         fathers_name: studentData.fathers_name || "",
         address: studentData.address || "",
@@ -68,7 +68,7 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
 
     // Basic required-field validation
     const required = [
-      ["first_name", "First Name"],
+      ["full_name", "Full Name"],
       ["email", "Email"],
       ["phone", "Phone"],
       ["roll_no", "Roll Number"],
@@ -117,14 +117,9 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
       <GridContainer
         elements={[
           <InputField
-            label="First Name*"
-            initialValue={formData.first_name}
-            onChange={(val) => handleChange("first_name", val)}
-          />,
-          <InputField
-            label="Last Name*"
-            initialValue={formData.last_name}
-            onChange={(val) => handleChange("last_name", val)}
+            label="Full Name*"
+            initialValue={formData.full_name}
+            onChange={(val) => handleChange("full_name", val)}
           />,
         ]}
       />
@@ -182,6 +177,15 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
               { title: "Male", value: "Male" },
               { title: "Female", value: "Female" },
             ]}
+          />,
+        ]}
+      />
+      <GridContainer
+        elements={[
+          <DateField
+            label="Date of Thesis"
+            initialValue={formData.date_of_thesis}
+            onChange={(val) => handleChange("date_of_thesis", val)}
           />,
         ]}
       />

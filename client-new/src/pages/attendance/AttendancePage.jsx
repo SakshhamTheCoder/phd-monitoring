@@ -31,7 +31,10 @@ const parseDate = (str) => {
 const AttendancePage = () => {
   const [activeTab, setActiveTab] = useState('mark');
   const [date, setDate] = useState(todayString());
+  const [month, setMonth] = useState(todayString().slice(0, 7));
   const [departments, setDepartments] = useState([]);
+  // '' means All Departments for an admin. A clerk with several departments
+  // gets the same choice across their own; a clerk with one is pinned to it.
   const [departmentFilter, setDepartmentFilter] = useState('');
   const [students, setStudents] = useState([]);
   const [statuses, setStatuses] = useState({});
@@ -47,6 +50,10 @@ const AttendancePage = () => {
   const [historyPage, setHistoryPage] = useState(1);
   const [historyTotal, setHistoryTotal] = useState(0);
   const [historyLastPage, setHistoryLastPage] = useState(1);
+  const [daySummary, setDaySummary] = useState(null);
+  // monthly
+  const [monthData, setMonthData] = useState(null);
+  const [monthLoading, setMonthLoading] = useState(false);
   // export (dept-level, no individual student picker)
   const [exportFrom, setExportFrom] = useState(todayString());
   const [exportTo, setExportTo] = useState(todayString());
@@ -56,29 +63,19 @@ const AttendancePage = () => {
   const isAdmin = role === 'admin';
 
   useEffect(() => {
-    if (isAdmin) {
-      customFetch(baseURL + '/departments', 'GET', {}, false)
-        .then((res) => {
-          const deps = res.response?.data || res.response?.departments || res.response || [];
-          const list = Array.isArray(deps) ? deps : [];
-          const normalized = list.map((d) => ({ id: d.id, name: d.name, code: d.code }));
-          if (normalized.length > 0) {
-            setDepartments(normalized);
-            setDepartmentFilter(String(normalized[0].id));
-          }
-        })
-        .catch(() => {});
-    } else {
-      customFetch(baseURL + '/clerks/my-departments', 'GET', {}, false)
-        .then((res) => {
-          if (res.success) {
-            const deps = res.response.departments || [];
-            setDepartments(deps);
-            if (deps.length > 0) setDepartmentFilter(String(deps[0].id));
-          }
-        })
-        .catch(() => {});
-    }
+    const url = isAdmin ? '/departments' : '/clerks/my-departments';
+    customFetch(baseURL + url, 'GET', {}, false)
+      .then((res) => {
+        const raw = isAdmin
+          ? (res.response?.data || res.response?.departments || res.response || [])
+          : (res.response?.departments || []);
+        const list = (Array.isArray(raw) ? raw : []).map((d) => ({ id: d.id, name: d.name, code: d.code }));
+        setDepartments(list);
+        // A clerk tagged with exactly one department has no choice to make, so
+        // pin the filter to it rather than showing a one-item dropdown.
+        if (!isAdmin && list.length === 1) setDepartmentFilter(String(list[0].id));
+      })
+      .catch(() => setDepartments([]));
   }, [isAdmin]);
 
   const loadRoster = useCallback(async () => {
@@ -118,7 +115,27 @@ const AttendancePage = () => {
 
   useEffect(() => { if (activeTab === 'history') loadHistory(); }, [activeTab, loadHistory]);
 
+  const loadDaySummary = useCallback(async () => {
+    setDaySummary(null);
+    const params = new URLSearchParams({ date });
+    if (departmentFilter) params.set('department_id', departmentFilter);
+    const res = await customFetch(baseURL + `/clerks/attendance/summary?${params.toString()}`, 'GET', {}, false);
+    if (res.success) setDaySummary(res.response);
+  }, [date, departmentFilter]);
 
+  useEffect(() => { if (activeTab === 'history') loadDaySummary(); }, [activeTab, loadDaySummary]);
+
+  const loadMonth = useCallback(async () => {
+    setMonthLoading(true);
+    setMonthData(null);
+    const params = new URLSearchParams({ month });
+    if (departmentFilter) params.set('department_id', departmentFilter);
+    const res = await customFetch(baseURL + `/clerks/attendance/month?${params.toString()}`, 'GET', {}, false);
+    setMonthLoading(false);
+    if (res.success) setMonthData(res.response);
+  }, [month, departmentFilter]);
+
+  useEffect(() => { if (activeTab === 'monthly') loadMonth(); }, [activeTab, loadMonth]);
 
   const setStatus = (rollNo, status) => setStatuses((prev) => ({ ...prev, [rollNo]: status }));
   const markAll = (status) => {
@@ -129,8 +146,7 @@ const AttendancePage = () => {
   const absentCount = useMemo(() => students.filter((s) => statuses[s.roll_no] === 'absent').length, [students, statuses]);
 
   const handleSave = async () => {
-    if (students.length === 0) return;
-    if (!departmentFilter) { toast.error('Select a department first'); return; }
+    if (students.length === 0) { toast.info('Nothing to save'); return; }
     const records = students.filter((s) => statuses[s.roll_no] === 'present' || statuses[s.roll_no] === 'absent').map((s) => ({ roll_no: s.roll_no, status: statuses[s.roll_no] }));
     if (records.length === 0) { toast.info('No attendance marked — treated as no session (nothing saved)'); return; }
     if (records.length < students.length) toast.info(`${students.length - records.length} unmarked scholar(s) will be left as no session`);
@@ -225,33 +241,76 @@ const AttendancePage = () => {
         items={[
           { value: 'mark', label: 'Mark Attendance' },
           { value: 'history', label: 'Past Sessions' },
+          { value: 'monthly', label: 'Monthly' },
           { value: 'export', label: 'Export' },
         ]}
       />
 
+      {activeTab !== 'export' && (
+        <div className="filter-bar attendance-filters">
+          <div className="filter-row" style={{ alignItems: 'flex-end' }}>
+            <div className="input-field-container" style={{ minWidth: '220px' }}>
+              <label className="input-label">Department</label>
+              <select
+                className="input-field"
+                value={departmentFilter}
+                onChange={(e) => { setDepartmentFilter(e.target.value); setHistoryPage(1); }}
+                disabled={!isAdmin && departments.length <= 1}
+              >
+                {(isAdmin || departments.length > 1) && <option value="">All Departments</option>}
+                {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
+            </div>
+
+            {activeTab !== 'monthly' && (
+              <div className="input-field-container" style={{ minWidth: '190px' }}>
+                <label className="input-label">
+                  Date {date === todayString() && <span className="badge badge--success attendance-today-pill">Today</span>}
+                </label>
+                <DatePicker
+                  selected={parseDate(date)}
+                  onChange={(d) => d && setDate(formatDate(d))}
+                  dateFormat="yyyy-MM-dd"
+                  className="input-field"
+                  placeholderText="YYYY-MM-DD"
+                  minDate={minSelectableDate}
+                  maxDate={todayDate}
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                />
+              </div>
+            )}
+
+            {activeTab === 'monthly' && (
+              <div className="input-field-container" style={{ minWidth: '190px' }}>
+                <label className="input-label">Month</label>
+                <DatePicker
+                  selected={parseDate(month + '-01')}
+                  onChange={(d) => d && setMonth(formatDate(d).slice(0, 7))}
+                  dateFormat="MMMM yyyy"
+                  showMonthYearPicker
+                  className="input-field"
+                  maxDate={todayDate}
+                />
+              </div>
+            )}
+
+            <div className="attendance-filter-meta">
+              {activeTab === 'mark' && (
+                <>
+                  <span>{students.length} scholar(s)</span>
+                  <span className="badge badge--danger">{absentCount} absent</span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mark tab */}
       {activeTab === 'mark' && (
         <>
-          <div className="filter-bar" style={{ marginBottom: '1rem', marginTop: '1rem' }}>
-            <div className="filter-row" style={{ alignItems: 'flex-end' }}>
-              <div className="input-field-container" style={{ minWidth: '180px' }}>
-                <label className="input-label">Date {date === todayString() && <span className="badge badge--success" style={{ marginLeft: '0.5rem', fontSize: '0.65rem' }}>Today</span>}</label>
-                <DatePicker selected={parseDate(date)} onChange={(d) => d && setDate(formatDate(d))} dateFormat="yyyy-MM-dd" className="input-field" placeholderText="YYYY-MM-DD" minDate={minSelectableDate} maxDate={todayDate} />
-              </div>
-              {departments.length > 0 && (
-                <div className="input-field-container" style={{ minWidth: '220px' }}>
-                  <label className="input-label">Department</label>
-                  <select className="input-field" value={departmentFilter} onChange={(e) => setDepartmentFilter(e.target.value)}>
-                    {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                  </select>
-                </div>
-              )}
-              <div style={{ marginLeft: 'auto', display: 'flex', gap: '1rem', alignItems: 'center', fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                <span>{students.length} scholar(s)</span>
-                <span className="badge badge--danger">{absentCount} absent</span>
-              </div>
-            </div>
-          </div>
           {students.length > 0 && !loading && (
             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
               <CustomButton text="Mark all Present" variant="secondary" onClick={() => markAll('present')} />
@@ -301,22 +360,34 @@ const AttendancePage = () => {
       {/* History tab */}
       {activeTab === 'history' && (
         <div style={{ marginTop: '1rem' }}>
-          {departments.length > 0 && (
-            <div className="filter-bar" style={{ marginBottom: '1rem' }}>
-              <div className="filter-row">
-                <div className="input-field-container" style={{ minWidth: '220px' }}>
-                  <label className="input-label">Department</label>
-                  <select className="input-field" value={departmentFilter} onChange={(e) => { setDepartmentFilter(e.target.value); setHistoryPage(1); }}>
-                    {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                  </select>
-                </div>
-                <div style={{ marginLeft: 'auto' }}><CustomButton text="Refresh" variant="secondary" onClick={loadHistory} /></div>
-              </div>
+          <div className="attendance-summary-cards">
+            <div className="attendance-summary-card">
+              <span className="attendance-summary-label">Present</span>
+              <span className="attendance-summary-value present">{daySummary ? daySummary.present : '—'}</span>
             </div>
-          )}
+            <div className="attendance-summary-card">
+              <span className="attendance-summary-label">Absent</span>
+              <span className="attendance-summary-value absent">{daySummary ? daySummary.absent : '—'}</span>
+            </div>
+            <div className="attendance-summary-card">
+              <span className="attendance-summary-label">Not recorded</span>
+              <span className="attendance-summary-value">{daySummary ? daySummary.not_recorded : '—'}</span>
+            </div>
+            <div className="attendance-summary-card">
+              <span className="attendance-summary-label">Attendance</span>
+              <span className="attendance-summary-value">
+                {daySummary && daySummary.percent != null ? `${daySummary.percent}%` : '—'}
+              </span>
+            </div>
+            <p className="attendance-summary-caption">
+              {daySummary
+                ? `${departmentFilter ? (departments.find((d) => String(d.id) === String(departmentFilter))?.name || 'Selected department') : 'All departments'} · ${date} · ${daySummary.scholars} scholar(s) on the roster`
+                : 'Loading the day’s figures…'}
+            </p>
+          </div>
           <div className="form-list-container">
             <table className="form-table">
-              <thead><tr><th>Date</th><th>Total</th><th>Present</th><th>Absent</th><th>Action</th></tr></thead>
+              <thead><tr><th>Date (not filtered by the date above)</th><th>Total</th><th>Present</th><th>Absent</th><th>Action</th></tr></thead>
               <tbody>
                 {historyLoading ? <tr><td colSpan={5} className="no-data-cell">Loading…</td></tr>
                   : history.length === 0 ? <tr><td colSpan={5} className="no-data-cell">No past sessions yet.</td></tr>
@@ -335,6 +406,54 @@ const AttendancePage = () => {
                 <CustomButton text="Next" variant="secondary" disabled={historyPage >= historyLastPage} onClick={() => setHistoryPage((p) => p+1)} />
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Monthly tab */}
+      {activeTab === 'monthly' && (
+        <div style={{ marginTop: '1rem' }}>
+          <div className="attendance-summary-cards">
+            <div className="attendance-summary-card">
+              <span className="attendance-summary-label">Sessions held</span>
+              <span className="attendance-summary-value">{monthData ? monthData.days_with_sessions : '—'}</span>
+            </div>
+            <div className="attendance-summary-card">
+              <span className="attendance-summary-label">Total present</span>
+              <span className="attendance-summary-value present">{monthData ? monthData.totals.present : '—'}</span>
+            </div>
+            <div className="attendance-summary-card">
+              <span className="attendance-summary-label">Total absent</span>
+              <span className="attendance-summary-value absent">{monthData ? monthData.totals.absent : '—'}</span>
+            </div>
+            <p className="attendance-summary-caption">
+              {monthData ? `${monthData.label} · per-scholar totals for the month` : 'Loading the month…'}
+            </p>
+          </div>
+
+          <div className="form-list-container">
+            <table className="form-table">
+              <thead>
+                <tr><th>Roll No</th><th>Name</th><th>Department</th><th>Present</th><th>Absent</th><th>Sessions</th><th>Attendance</th></tr>
+              </thead>
+              <tbody>
+                {monthLoading ? (
+                  <tr><td colSpan={7} className="no-data-cell">Loading…</td></tr>
+                ) : !monthData || monthData.students.length === 0 ? (
+                  <tr><td colSpan={7} className="no-data-cell">No scholars for this selection.</td></tr>
+                ) : monthData.students.map((s) => (
+                  <tr key={s.roll_no}>
+                    <td>{s.roll_no}</td>
+                    <td>{s.name}</td>
+                    <td>{s.department_name || '—'}</td>
+                    <td style={{ color: 'var(--success-text)' }}>{s.present}</td>
+                    <td style={{ color: 'var(--danger-text)' }}>{s.absent}</td>
+                    <td>{s.total}</td>
+                    <td>{s.percent != null ? `${s.percent}%` : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}

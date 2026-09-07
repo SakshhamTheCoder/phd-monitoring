@@ -16,6 +16,7 @@ const EXTRA_LABELS = {
   '/research-profile': 'Research Profile',
   '/areasOfSpecialization': 'Areas of Specialization',
   '/outside-experts': 'Outside Experts',
+  // Reachable but not in the nav, so this is the only source of its name.
   '/supervisor-doctoral-approvals': 'Supervisor Approvals',
 };
 

@@ -36,9 +36,8 @@ const UsersPage = () => {
     setFilter(newFilter);
   };
 
-  const usersSampleCsv = `first_name,last_name,email,phone,gender,role,available_roles,status
-John,Doe,john.doe@example.com,1234567890,male,student,,active
-Jane,Smith,jane.smith@example.com,9876543210,female,faculty,"faculty,doctoral",active`;
+  const usersSampleCsv = `full_name,email,phone,gender,role,available_roles,status
+Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,doctoral",active`;
 
   const openForm = async (data) => {
     if (data) {
@@ -138,8 +137,7 @@ Jane,Smith,jane.smith@example.com,9876543210,female,faculty,"faculty,doctoral",a
         });
 
         const batchData = batch.map(row => ({
-          first_name: row.first_name || '',
-          last_name: row.last_name || '',
+          full_name: row.full_name || [row.first_name, row.last_name].filter(Boolean).join(' ') || '',
           email: row.email || '',
           phone: row.phone || '',
           gender: row.gender || '',
@@ -312,14 +310,14 @@ Jane,Smith,jane.smith@example.com,9876543210,female,faculty,"faculty,doctoral",a
             isOpen={showBulkImportModal}
             onClose={() => setShowBulkImportModal(false)}
             title="Bulk Import Users"
-            formatString="first_name,last_name,email,phone,gender,role,available_roles,status"
+            formatString="full_name,email,phone,gender,role,available_roles,status"
             infoNodes={
               <>
                 <p style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '0.875rem' }}>
-                  <strong>Required for new users:</strong> first_name, email, role
+                  <strong>Required for new users:</strong> full_name, email, role
                 </p>
                 <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
-                  <strong>Optional:</strong> last_name, phone, gender (male/female/other), available_roles (comma-separated), status (active/inactive/suspended)
+                  <strong>Optional:</strong> phone, gender (male/female/other), available_roles (comma-separated), status (active/inactive/suspended)
                 </p>
                 <p style={{ color: '#6b7280', fontSize: '0.8rem', marginTop: '0.5rem' }}>
                   Existing users matched by email will be updated with provided non-empty fields.

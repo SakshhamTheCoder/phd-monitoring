@@ -19,6 +19,11 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <!-- The local .env's APP_URL carries a doubled /api path for the
+             deployed reverse proxy; without an override here, feature tests
+             that hit routes/api.php (which already prefixes /api) resolve
+             against that path and 404. Tests only need a plain host. -->
+        <env name="APP_URL" value="http://localhost"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_STORE" value="array"/>

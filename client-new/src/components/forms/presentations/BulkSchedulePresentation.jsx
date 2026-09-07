@@ -83,7 +83,7 @@ const BulkSchedulePresentation = ({semester_name}) => {
           rowObj['Date'] = formatDate(date);
         } else {
           const parsed = new Date(rawDate);
-          rowObj['Date'] = !isNaN(parsed) ? formatDate(parsed) : 'Invalid Date';
+          rowObj['Date'] = formatDate(parsed, 'Invalid Date');
         }
 
         const raw = rowObj['Additional Guest Email'] || '';

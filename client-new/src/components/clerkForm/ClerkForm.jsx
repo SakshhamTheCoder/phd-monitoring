@@ -11,8 +11,7 @@ const ClerkForm = ({ onSuccess, onClose }) => {
   const [submitting, setSubmitting] = useState(false);
   const [clerkRoleId, setClerkRoleId] = useState(null);
   const [formData, setFormData] = useState({
-    first_name: "",
-    last_name: "",
+    full_name: "",
     email: "",
     phone: "",
     gender: "",
@@ -34,7 +33,7 @@ const ClerkForm = ({ onSuccess, onClose }) => {
   const handleSubmit = async () => {
     if (submitting) return;
     const missing = [];
-    if (!formData.first_name.trim()) missing.push("First Name");
+    if (!formData.full_name.trim()) missing.push("Full Name");
     if (!formData.email.trim()) missing.push("Email");
     if (!formData.phone.trim()) missing.push("Phone");
     if (missing.length > 0) {
@@ -47,8 +46,7 @@ const ClerkForm = ({ onSuccess, onClose }) => {
     }
 
     const payload = {
-      first_name: formData.first_name,
-      last_name: formData.last_name || " ",
+      full_name: formData.full_name,
       email: formData.email,
       phone: formData.phone,
       gender: formData.gender || null,
@@ -90,14 +88,9 @@ const ClerkForm = ({ onSuccess, onClose }) => {
       <GridContainer
         elements={[
           <InputField
-            label="First Name*"
-            initialValue={formData.first_name}
-            onChange={(val) => handleChange("first_name", val)}
-          />,
-          <InputField
-            label="Last Name"
-            initialValue={formData.last_name}
-            onChange={(val) => handleChange("last_name", val)}
+            label="Full Name*"
+            initialValue={formData.full_name}
+            onChange={(val) => handleChange("full_name", val)}
           />,
         ]}
       />

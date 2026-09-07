@@ -34,9 +34,8 @@ const ClerkManagement = () => {
   const [uploadProgress, setUploadProgress] = useState(null);
   const [openMenu, setOpenMenu] = useState(null);
 
-  const clerkSampleCsv = `email,phone,department_codes,first_name,last_name
-clerk1@thapar.edu,9876543210,"CSED, CHED",John,Doe
-clerk2@thapar.edu,9876543211,MED,Jane,Smith`;
+  const clerkSampleCsv = `email,phone,department_codes,full_name
+clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
 
   const loadClerks = async () => {
     setLoading(true);
@@ -120,8 +119,7 @@ clerk2@thapar.edu,9876543211,MED,Jane,Smith`;
         const clerkRows = batch.map(r => ({
           email: r.email,
           phone: r.phone,
-          first_name: r.first_name,
-          last_name: r.last_name,
+          full_name: r.full_name || [r.first_name, r.last_name].filter(Boolean).join(' ') || '',
           department_codes: r.department_codes,
         }));
 
@@ -354,14 +352,14 @@ clerk2@thapar.edu,9876543211,MED,Jane,Smith`;
         isOpen={isBulkUpdateOpen}
         onClose={() => setIsBulkUpdateOpen(false)}
         title="Bulk Import Clerks"
-        formatString="email,phone,department_codes,first_name,last_name"
+        formatString="email,phone,department_codes,full_name"
         infoNodes={
           <>
             <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
               <strong>Required:</strong> email
             </p>
             <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
-              <strong>Optional:</strong> phone, first_name, last_name, department_codes (comma-separated, e.g., "CSED, CHED")
+              <strong>Optional:</strong> phone, full_name, department_codes (comma-separated, e.g. "CSED, CHED")
             </p>
             <p style={{ margin: '0.25rem 0', fontSize: '0.875rem', color: '#6b7280' }}>
               Matched by email — existing clerk updated, new clerk created if email not found.

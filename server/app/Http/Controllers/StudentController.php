@@ -15,6 +15,7 @@ use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Support\PersonName;
 
 class StudentController extends Controller {
     use FilterLogicTrait;
@@ -34,7 +35,8 @@ class StudentController extends Controller {
         $role_id=Role::where('role','student')->first()->id;
         $request->validate(
             [
-                'first_name' => 'required|string',
+                'full_name' => 'required_without:first_name|string',
+                'first_name' => 'required_without:full_name|string',
                 'last_name' => 'nullable|string',
                 'phone' => 'required|string',
                 'email' => 'required|email|unique:users',
@@ -44,6 +46,7 @@ class StudentController extends Controller {
                 'current_status' => 'required|in:part-time,full-time,executive',
                 'gender' => 'required|in:Male,Female',
                 'date_of_irb' => 'nullable|date',
+                'date_of_thesis' => 'nullable|date',
                 'phd_title' => 'nullable|string',
                 'fathers_name' => 'nullable|string',
                 'address' => 'nullable|string',
@@ -55,8 +58,11 @@ class StudentController extends Controller {
         //generated a random password for the new user he will change it later
 
         $user = new \App\Models\User();
-        $user->first_name = $request->first_name;
-        $user->last_name = $request->last_name ?? ' ';
+        $name = $request->filled('full_name')
+            ? PersonName::split($request->input('full_name'))
+            : ['first' => $request->input('first_name'), 'last' => $request->input('last_name') ?: PersonName::NO_SURNAME];
+        $user->first_name = $name['first'];
+        $user->last_name = $name['last'];
         $user->phone = $request->phone;
         $user->email = $request->email;
         $user->password = bcrypt($password);
@@ -77,6 +83,7 @@ class StudentController extends Controller {
         $student->department_id = $request->department_id;
         $student->date_of_registration = $request->date_of_registration;
         $student->date_of_irb = $request->date_of_irb;
+        $student->date_of_thesis = $request->date_of_thesis;
         $student->phd_title = $request->phd_title;
         $student->fathers_name = $request->fathers_name;
         $student->current_status = $request->current_status;
@@ -117,6 +124,7 @@ class StudentController extends Controller {
 
         $request->validate([
             'students' => 'required|array',
+            'students.*.full_name' => 'nullable|string',
             'students.*.first_name' => 'nullable|string',
             'students.*.last_name' => 'nullable|string',
             'students.*.phone' => 'nullable|string',
@@ -163,8 +171,11 @@ class StudentController extends Controller {
                     if ($existingUser && $existingStudent) {
                         // Partial update: only overwrite provided non-empty fields
                         // Address lives on Student only (ListStudentProfile uses student.address)
-                        if (!empty($studentData['first_name'])) $existingUser->first_name = $studentData['first_name'];
-                        if (array_key_exists('last_name', $studentData) && $studentData['last_name'] !== null && $studentData['last_name'] !== '') $existingUser->last_name = $studentData['last_name'];
+                        $name = PersonName::fromRow($studentData);
+                        if ($name !== null) {
+                            $existingUser->first_name = $name['first'];
+                            $existingUser->last_name = $name['last'];
+                        }
                         if (!empty($studentData['phone'])) $existingUser->phone = $studentData['phone'];
                         $existingUser->save();
                         if (!empty($studentData['department_code']) && $department) $existingStudent->department_id = $department->id;
@@ -186,8 +197,9 @@ class StudentController extends Controller {
                     }
 
                     // Create new - require minimal fields
-                    if (empty($studentData['first_name']) || empty($studentData['phone']) || empty($studentData['roll_no']) || empty($studentData['department_code']) || empty($studentData['date_of_registration']) || empty($studentData['current_status'])) {
-                        $errors[] = "Row " . ($index + 1) . ": missing required fields for new student (first_name, phone, roll_no, department_code, date_of_registration, current_status)";
+                    $name = PersonName::fromRow($studentData);
+                    if ($name === null || empty($studentData['phone']) || empty($studentData['roll_no']) || empty($studentData['department_code']) || empty($studentData['date_of_registration']) || empty($studentData['current_status'])) {
+                        $errors[] = "Row " . ($index + 1) . ": missing required fields for new student (full_name, phone, roll_no, department_code, date_of_registration, current_status)";
                         $failed++; continue;
                     }
                     // Generate random password
@@ -195,8 +207,8 @@ class StudentController extends Controller {
 
                     // Create user (address lives on Student only)
                     $user = new \App\Models\User();
-                    $user->first_name = $studentData['first_name'];
-                    $user->last_name = $studentData['last_name'] ?? ' ';
+                    $user->first_name = $name['first'];
+                    $user->last_name = $name['last'];
                     $user->phone = $studentData['phone'];
                     $user->email = $studentData['email'];
                     $user->password = bcrypt($password);
@@ -271,6 +283,7 @@ class StudentController extends Controller {
             'students' => 'required|array',
             'students.*.email' => 'required|email',
             'students.*.roll_no' => 'nullable|string',
+            'students.*.full_name' => 'nullable|string',
             'students.*.first_name' => 'nullable|string',
             'students.*.last_name' => 'nullable|string',
             'students.*.phone' => 'nullable|string',
@@ -293,8 +306,11 @@ class StudentController extends Controller {
                     if (!empty($data['roll_no'])) $student = Student::where('roll_no', $data['roll_no'])->first();
                     if (!$user && !$student) { $errors[] = "Row ".($index+1).": no matching student for email {$data['email']} or roll {$data['roll_no']}"; $failed++; continue; }
                     if ($user) {
-                        if (!empty($data['first_name'])) $user->first_name = $data['first_name'];
-                        if (!empty($data['last_name'])) $user->last_name = $data['last_name'];
+                        $name = PersonName::fromRow($data);
+                        if ($name !== null) {
+                            $user->first_name = $name['first'];
+                            $user->last_name = $name['last'];
+                        }
                         if (!empty($data['phone'])) $user->phone = $data['phone'];
                         $user->save();
                     }
@@ -490,7 +506,8 @@ class StudentController extends Controller {
         $user = $student->user;
 
         $request->validate([
-            'first_name' => 'required|string',
+            'full_name' => 'required_without:first_name|string',
+            'first_name' => 'required_without:full_name|string',
             'last_name' => 'nullable|string',
             'phone' => 'required|string',
             'email' => 'required|email|unique:users,email,' . $user->id,
@@ -499,6 +516,7 @@ class StudentController extends Controller {
             'current_status' => 'required|in:part-time,full-time,executive',
             'gender' => 'required|in:Male,Female',
             'date_of_irb' => 'nullable|date',
+            'date_of_thesis' => 'nullable|date',
             'phd_title' => 'nullable|string',
             'fathers_name' => 'nullable|string',
             'address' => 'nullable|string',
@@ -506,8 +524,11 @@ class StudentController extends Controller {
             'cgpa' => 'nullable|numeric',
         ]);
 
-        $user->first_name = $request->first_name;
-        $user->last_name = $request->last_name ?? $user->last_name;
+        $name = $request->filled('full_name')
+            ? PersonName::split($request->input('full_name'))
+            : ['first' => $request->input('first_name'), 'last' => $request->input('last_name') ?: $user->last_name];
+        $user->first_name = $name['first'];
+        $user->last_name = $name['last'];
         $user->phone = $request->phone;
         $user->email = $request->email;
         if ($request->has('address')) $user->address = $request->address;
@@ -517,6 +538,7 @@ class StudentController extends Controller {
         $student->department_id = $request->department_id;
         $student->date_of_registration = $request->date_of_registration;
         $student->date_of_irb = $request->date_of_irb;
+        $student->date_of_thesis = $request->date_of_thesis;
         $student->phd_title = $request->phd_title;
         $student->fathers_name = $request->fathers_name;
         $student->current_status = $request->current_status;

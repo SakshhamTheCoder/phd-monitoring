@@ -11,8 +11,7 @@ import './UserForm.css';
 const UserForm = ({ edit, userData, onClose }) => {
   const [formData, setFormData] = useState({
     id: null,
-    first_name: '',
-    last_name: '',
+    full_name: '',
     email: '',
     phone: '',
     gender: '',
@@ -39,8 +38,7 @@ const UserForm = ({ edit, userData, onClose }) => {
     if (edit && userData && rolesLoaded) {
       setFormData({
         id: userData.id,
-        first_name: userData.first_name || '',
-        last_name: userData.last_name || '',
+        full_name: userData.full_name || [userData.first_name, userData.last_name].filter(Boolean).join(' ') || '',
         email: userData.email || '',
         phone: userData.phone || '',
         gender: userData.gender || '',
@@ -55,8 +53,7 @@ const UserForm = ({ edit, userData, onClose }) => {
       // Reset form for new user
       setFormData({
         id: null,
-        first_name: '',
-        last_name: '',
+        full_name: '',
         email: '',
         phone: '',
         gender: '',
@@ -209,18 +206,11 @@ const UserForm = ({ edit, userData, onClose }) => {
         <GridContainer
           elements={[
             <InputField
-              label="First Name *"
-              initialValue={formData.first_name}
+              label="Full Name *"
+              initialValue={formData.full_name}
               isLocked={false}
-              onChange={(value) => setFormData({ ...formData, first_name: value })}
-              key={`first_name_${formData.id || 'new'}`}
-            />,
-            <InputField
-              label="Last Name"
-              initialValue={formData.last_name}
-              isLocked={false}
-              onChange={(value) => setFormData({ ...formData, last_name: value })}
-              key={`last_name_${formData.id || 'new'}`}
+              onChange={(value) => setFormData({ ...formData, full_name: value })}
+              key={`full_name_${formData.id || 'new'}`}
             />
           ]}
           space={2}

@@ -11,6 +11,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/attendance/history', [ClerkController::class, 'history']);
     Route::get('/attendance/template', [ClerkController::class, 'template']);
     Route::get('/attendance/export', [ClerkController::class, 'export']);
+    Route::get('/attendance/summary', [ClerkController::class, 'daySummary']);
+    Route::get('/attendance/month', [ClerkController::class, 'monthSummary']);
     Route::get('/attendance/student/{roll_no}', [ClerkController::class, 'studentAttendance']);
     Route::post('/attendance', [ClerkController::class, 'save']);
     Route::post('/attendance/csv', [ClerkController::class, 'csvImport']);

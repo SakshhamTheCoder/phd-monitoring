@@ -8,8 +8,14 @@ const DateField = ({ label, initialValue, isLocked, onChange, hint = null, showL
     // Format the initial value to "YYYY-MM-DD" if it’s in ISO format
     useEffect(() => {
         if (initialValue) {
-            const formattedDate = new Date(initialValue).toISOString().split('T')[0];
-            updateValue(formattedDate);
+            const parsed = new Date(initialValue);
+            if (!Number.isNaN(parsed.getTime())) {
+                updateValue(parsed.toISOString().split('T')[0]);
+            } else {
+                updateValue('');
+            }
+        } else {
+            updateValue('');
         }
     }, [initialValue]);
 

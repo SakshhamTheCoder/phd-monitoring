@@ -1,32 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
-import { filterProjects, formatCurrency } from '../../data/projectsData';
+import { formatCurrency, formatDuration } from '../../data/projectsData';
 import { badgeClass } from '../../data/badges';
 import { apiListProjects, apiProjectStats, apiDeleteProject } from '../../api/projects';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import CustomButton from '../../components/forms/fields/CustomButton';
+import FilterBar from '../../components/filterBar/FilterBar';
 import './ProjectsOverview.css';
 
 const emptyStats = { active: 0, completed: 0, totalFunding: 0, consultancy: 0, industry: 0, international: 0 };
 
 const ProjectsOverview = () => {
   const navigate = useNavigate();
-  const [activeFilter, setActiveFilter] = useState('All');
+  const [query, setQuery] = useState(null);
   const [projects, setProjects] = useState([]);
   const [stats, setStats] = useState(emptyStats);
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const filteredProjects = filterProjects(projects, activeFilter);
 
-  const loadData = async () => {
-    const [list, s] = await Promise.all([apiListProjects(), apiProjectStats()]);
+  const loadData = async (q) => {
+    const [list, s] = await Promise.all([apiListProjects(q), apiProjectStats()]);
     setProjects(list);
     setStats(s);
     setLoading(false);
   };
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(query); }, [query]);
 
   const handleEdit = (e, project) => {
     e.stopPropagation();
@@ -48,11 +48,9 @@ const ProjectsOverview = () => {
     }
   };
 
-  const filters = ['All', 'Active', 'Completed', 'In-house', 'Research', 'Consultancy', 'Industry', 'International'];
-
   const handleExportCSV = () => {
-    const headers = ['Project Title', 'Category', 'Role', 'Funding Agency', 'Amount', 'Status'];
-    const rows = filteredProjects.map(p => [p.title, p.category, p.role, p.fundingAgency, p.amount, p.status]);
+    const headers = ['Project Title', 'Category', 'Role', 'Funding Agency', 'Amount', 'Duration', 'Status'];
+    const rows = projects.map(p => [p.title, p.category, p.role, p.fundingAgency, p.amount, formatDuration(p.durationYears, p.durationMonths), p.status]);
     const csvContent = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -122,20 +120,7 @@ const ProjectsOverview = () => {
 
         {/* Filter Bar */}
         <div className="po-filter-bar">
-          <div className="po-filter-row">
-            <span className="po-filter-label">FILTERS:</span>
-            <div className="po-filter-pills">
-              {filters.map(f => (
-                <button
-                  key={f}
-                  className={`po-filter-pill ${activeFilter === f ? 'active' : ''}`}
-                  onClick={() => setActiveFilter(f)}
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
-          </div>
+          <FilterBar onSearch={(q) => { setLoading(true); setQuery(q); }} />
           <button className="po-export-btn" onClick={handleExportCSV}>
             <i className="fa fa-download"></i> EXPORT CSV
           </button>
@@ -151,13 +136,14 @@ const ProjectsOverview = () => {
                 <th>ROLE</th>
                 <th>FUNDING AGENCY</th>
                 <th>AMOUNT</th>
+                <th>DURATION</th>
                 <th>STATUS</th>
                 <th></th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              {filteredProjects.map(project => (
+              {projects.map(project => (
                 <tr
                   key={project.id}
                   className="row-link"
@@ -176,6 +162,7 @@ const ProjectsOverview = () => {
                   <td>{project.role}</td>
                   <td>{project.fundingAgency}</td>
                   <td className="po-amount">{formatCurrency(project.amount)}</td>
+                  <td>{formatDuration(project.durationYears, project.durationMonths)}</td>
                   <td>
                     <span className={badgeClass(project.status)}>{project.status}</span>
                   </td>
@@ -210,8 +197,8 @@ const ProjectsOverview = () => {
           </table>
           {loading ? (
             <div className="empty-state">Loading projects…</div>
-          ) : filteredProjects.length === 0 && (
-            <div className="empty-state">No projects found for the selected filter.</div>
+          ) : projects.length === 0 && (
+            <div className="empty-state">{query ? 'No projects match these filters.' : 'No projects yet.'}</div>
           )}
         </div>
 
