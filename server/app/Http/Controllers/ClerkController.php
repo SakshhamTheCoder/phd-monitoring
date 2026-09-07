@@ -8,8 +8,10 @@ use App\Models\Department;
 use App\Models\LeaveSetting;
 use App\Models\Role;
 use App\Models\Student;
+use App\Models\StudentLeaveForm;
 use App\Support\AttendanceSummary;
 use App\Support\DepartmentScope;
+use App\Support\LeaveBalance;
 use App\Support\LeaveWindow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -684,11 +686,18 @@ class ClerkController extends Controller
             ->whereBetween('date', [$monthStart->toDateString(), now()->endOfMonth()->toDateString()])
             ->get(['status']);
 
+        // Same reasoning as current_month above: the leave balance is always
+        // for the quota year containing today, regardless of any from/to
+        // filter applied to $records.
         return response()->json([
             'student' => ['roll_no' => $student->roll_no, 'name' => optional($student->user)->name()],
             'summary' => AttendanceSummary::of($records),
             'current_month' => AttendanceSummary::of($monthRecords) + ['label' => $monthStart->format('F Y')],
             'records' => $records,
+            'balance' => LeaveBalance::for((int) $roll_no, now()->toDateString()),
+            'leaves' => StudentLeaveForm::where('student_id', $roll_no)
+                ->orderByDesc('from_date')
+                ->get(['id', 'leave_type', 'from_date', 'to_date', 'day_part', 'status', 'reason', 'hod_comments']),
         ], 200);
     }
 
