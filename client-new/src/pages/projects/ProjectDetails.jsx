@@ -110,6 +110,123 @@ const ProjectDetails = () => {
   const editOtherAmount = (y, label, value) =>
     setBudgetDraft(prev => setNamedAmount(prev, KEY_OTHER, y, 'label', label, value));
 
+  // One table in budgetHeads order (Manpower, Travel, Equipment,
+  // Contingency, Overhead, Any Other Expenses), mirroring the wizard.
+  const renderManpowerRows = (b) => (
+    <>
+      <tr className="pd-budget-head-row">
+        <td className="pd-budget-head-name">{HEAD_MANPOWER}</td>
+        {budgetYears.map(y => <td key={y}>₹{headTotal(b, y, HEAD_MANPOWER).toLocaleString('en-IN')}</td>)}
+        <td className="pd-bh-total">₹{budgetYears.reduce((s, y) => s + headTotal(b, y, HEAD_MANPOWER), 0).toLocaleString('en-IN')}</td>
+      </tr>
+      {[...manpowerCats, ...extraManpowerCats(b)].map(cat => (
+        <tr key={cat} className="pd-budget-sub-row">
+          <td className="pd-budget-sub-name">↳ {cat}</td>
+          {budgetYears.map(y => {
+            const cell = manpowerCell(b, y, cat);
+            return (
+              <td key={y} className="pd-budget-sub-cell">
+                {editingBudget ? (
+                  <span className="pd-budget-countpair">
+                    <input type="number" min="0" className="pd-budget-edit-input" title="Count"
+                      value={manpowerCell(budgetDraft, y, cat).count || 0}
+                      onChange={e => editManpower(y, cat, 'count', e.target.value)} />
+                    <input type="number" min="0" className="pd-budget-edit-input" title="Amount (₹)"
+                      value={manpowerCell(budgetDraft, y, cat).amount || 0}
+                      onChange={e => editManpower(y, cat, 'amount', e.target.value)} />
+                  </span>
+                ) : (
+                  <>{cell.count ? `${cell.count} × ₹${(Number(cell.amount) || 0).toLocaleString('en-IN')}` : '—'}</>
+                )}
+              </td>
+            );
+          })}
+          <td className="pd-budget-sub-total">₹{budgetYears.reduce((s, y) => {
+            const c = manpowerCell(b, y, cat);
+            return s + (Number(c.count) || 0) * (Number(c.amount) || 0);
+          }, 0).toLocaleString('en-IN')}</td>
+        </tr>
+      ))}
+    </>
+  );
+
+  const renderEquipmentRows = (b) => (
+    <>
+      <tr className="pd-budget-head-row">
+        <td className="pd-budget-head-name">{HEAD_EQUIPMENT}
+          {editingBudget && !equipItems(budgetDraft).includes('') && (
+            <button type="button" className="cp-add-btn cp-add-inline" onClick={addEquip}>
+              <i className="fa fa-plus"></i> Add
+            </button>
+          )}
+        </td>
+        {budgetYears.map(y => <td key={y}>₹{headTotal(b, y, HEAD_EQUIPMENT).toLocaleString('en-IN')}</td>)}
+        <td className="pd-bh-total">₹{budgetYears.reduce((s, y) => s + headTotal(b, y, HEAD_EQUIPMENT), 0).toLocaleString('en-IN')}</td>
+      </tr>
+      {equipItems(b).map((item, idx) => (
+        <tr key={`eq-${idx}`} className="pd-budget-sub-row">
+          <td className="pd-budget-sub-name">
+            {editingBudget ? (
+              <span className="pd-budget-countpair">
+                <input type="text" className="pd-budget-edit-input" value={item}
+                  placeholder="e.g. GPU Workstation"
+                  onChange={e => renameEquip(item, e.target.value)} />
+                <button type="button" className="cp-remove-btn" title="Remove" onClick={() => dropEquip(item)}>
+                  <i className="fa fa-trash"></i>
+                </button>
+              </span>
+            ) : <>↳ {item || '—'}</>}
+          </td>
+          {budgetYears.map(y => {
+            const amt = Number(((namedLine(b, KEY_EQUIPMENT, y, 'item', item) || {}).amount) || 0);
+            return (
+              <td key={y} className="pd-budget-sub-cell">
+                {editingBudget ? (
+                  <input type="number" min="0" className="pd-budget-edit-input"
+                    value={Number(((namedLine(budgetDraft, KEY_EQUIPMENT, y, 'item', item) || {}).amount) || 0)}
+                    onChange={e => editEquipAmount(y, item, e.target.value)} />
+                ) : (
+                  <>{amt ? `₹${amt.toLocaleString('en-IN')}` : '—'}</>
+                )}
+              </td>
+            );
+          })}
+          <td className="pd-budget-sub-total">₹{budgetYears.reduce((s, y) =>
+            s + Number(((namedLine(b, KEY_EQUIPMENT, y, 'item', item) || {}).amount) || 0), 0).toLocaleString('en-IN')}</td>
+        </tr>
+      ))}
+    </>
+  );
+
+  const renderOtherRows = (b) => {
+    const labels = otherLabels(b);
+    return (
+      <>
+        {(labels.length ? labels : ['']).map(label => (
+          <tr key={label || '__other'} className="pd-budget-head-row">
+            <td className="pd-budget-head-name">{label || HEAD_OTHER}</td>
+            {budgetYears.map(y => {
+              const amt = Number(((namedLine(b, KEY_OTHER, y, 'label', label) || {}).amount) || 0);
+              return (
+                <td key={y}>
+                  {editingBudget ? (
+                    <input type="number" min="0" className="pd-budget-edit-input"
+                      value={Number(((namedLine(budgetDraft, KEY_OTHER, y, 'label', label) || {}).amount) || 0)}
+                      onChange={e => editOtherAmount(y, label, e.target.value)} />
+                  ) : (
+                    <>₹{amt.toLocaleString('en-IN')}</>
+                  )}
+                </td>
+              );
+            })}
+            <td className="pd-bh-total">₹{budgetYears.reduce((s, y) =>
+              s + Number(((namedLine(b, KEY_OTHER, y, 'label', label) || {}).amount) || 0), 0).toLocaleString('en-IN')}</td>
+          </tr>
+        ))}
+      </>
+    );
+  };
+
   // Co-PI management. An internal Co-PI must carry a faculty_code, since that is
   // what grants them access to the project.
   const emptyCopi = { name: '', type: 'internal', faculty_code: null, department: '', institute: '', designation: '' };
@@ -276,7 +393,6 @@ const ProjectDetails = () => {
 
   const activeBudget = editingBudget ? budgetDraft : budgetData;
   const budgetYears = budgetYearsOf(budgetData);
-  const simpleHeads = (meta.budgetHeads || []).filter(h => h.kind !== 'lines');
   const yTotal = (y) => yearTotal(activeBudget, y, meta.budgetHeads);
   const gTotal = grandTotal(activeBudget, meta.budgetHeads);
   // Total across all years for a single head (for the head row's Total column).
@@ -387,7 +503,11 @@ const ProjectDetails = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {simpleHeads.map(bh => (
+                    {meta.budgetHeads.map(bh => {
+                      if (bh.head === HEAD_MANPOWER) return <React.Fragment key={bh.head}>{renderManpowerRows(activeBudget)}</React.Fragment>;
+                      if (bh.head === HEAD_EQUIPMENT) return <React.Fragment key={bh.head}>{renderEquipmentRows(activeBudget)}</React.Fragment>;
+                      if (bh.head === HEAD_OTHER) return <React.Fragment key={bh.head}>{renderOtherRows(activeBudget)}</React.Fragment>;
+                      return (
                       <React.Fragment key={bh.head}>
                         <tr className="pd-budget-head-row">
                           <td className="pd-budget-head-name">{bh.head}</td>
@@ -447,104 +567,8 @@ const ProjectDetails = () => {
                           </tr>
                         )}
                       </React.Fragment>
-                    ))}
-                    <tr className="pd-budget-head-row">
-                      <td className="pd-budget-head-name">{HEAD_MANPOWER}</td>
-                      {budgetYears.map(y => <td key={y}>₹{headTotal(activeBudget, y, HEAD_MANPOWER).toLocaleString('en-IN')}</td>)}
-                      <td className="pd-bh-total">₹{headAllYearsTotal(HEAD_MANPOWER).toLocaleString('en-IN')}</td>
-                    </tr>
-                    {[...manpowerCats, ...extraManpowerCats(activeBudget)].map(cat => (
-                      <tr key={cat} className="pd-budget-sub-row">
-                        <td className="pd-budget-sub-name">↳ {cat}</td>
-                        {budgetYears.map(y => {
-                          const cell = manpowerCell(activeBudget, y, cat);
-                          return (
-                            <td key={y} className="pd-budget-sub-cell">
-                              {editingBudget ? (
-                                <span className="pd-budget-countpair">
-                                  <input type="number" min="0" className="pd-budget-edit-input" title="Count"
-                                    value={manpowerCell(budgetDraft, y, cat).count || 0}
-                                    onChange={e => editManpower(y, cat, 'count', e.target.value)} />
-                                  <input type="number" min="0" className="pd-budget-edit-input" title="Amount (₹)"
-                                    value={manpowerCell(budgetDraft, y, cat).amount || 0}
-                                    onChange={e => editManpower(y, cat, 'amount', e.target.value)} />
-                                </span>
-                              ) : (
-                                <>{cell.count ? `${cell.count} × ₹${(Number(cell.amount) || 0).toLocaleString('en-IN')}` : '—'}</>
-                              )}
-                            </td>
-                          );
-                        })}
-                        <td className="pd-budget-sub-total">₹{budgetYears.reduce((s, y) => {
-                          const c = manpowerCell(activeBudget, y, cat);
-                          return s + (Number(c.count) || 0) * (Number(c.amount) || 0);
-                        }, 0).toLocaleString('en-IN')}</td>
-                      </tr>
-                    ))}
-                    <tr className="pd-budget-head-row">
-                      <td className="pd-budget-head-name">{HEAD_EQUIPMENT}
-                        {editingBudget && !equipItems(budgetDraft).includes('') && (
-                          <button type="button" className="cp-add-btn cp-add-inline" onClick={addEquip}>
-                            <i className="fa fa-plus"></i> Add
-                          </button>
-                        )}
-                      </td>
-                      {budgetYears.map(y => <td key={y}>₹{headTotal(activeBudget, y, HEAD_EQUIPMENT).toLocaleString('en-IN')}</td>)}
-                      <td className="pd-bh-total">₹{headAllYearsTotal(HEAD_EQUIPMENT).toLocaleString('en-IN')}</td>
-                    </tr>
-                    {equipItems(activeBudget).map((item, idx) => (
-                      <tr key={`eq-${idx}`} className="pd-budget-sub-row">
-                        <td className="pd-budget-sub-name">
-                          {editingBudget ? (
-                            <span className="pd-budget-countpair">
-                              <input type="text" className="pd-budget-edit-input" value={item}
-                                placeholder="e.g. GPU Workstation"
-                                onChange={e => renameEquip(item, e.target.value)} />
-                              <button type="button" className="cp-remove-btn" title="Remove" onClick={() => dropEquip(item)}>
-                                <i className="fa fa-trash"></i>
-                              </button>
-                            </span>
-                          ) : <>↳ {item || '—'}</>}
-                        </td>
-                        {budgetYears.map(y => {
-                          const amt = Number(((namedLine(activeBudget, KEY_EQUIPMENT, y, 'item', item) || {}).amount) || 0);
-                          return (
-                            <td key={y} className="pd-budget-sub-cell">
-                              {editingBudget ? (
-                                <input type="number" min="0" className="pd-budget-edit-input"
-                                  value={Number(((namedLine(budgetDraft, KEY_EQUIPMENT, y, 'item', item) || {}).amount) || 0)}
-                                  onChange={e => editEquipAmount(y, item, e.target.value)} />
-                              ) : (
-                                <>{amt ? `₹${amt.toLocaleString('en-IN')}` : '—'}</>
-                              )}
-                            </td>
-                          );
-                        })}
-                        <td className="pd-budget-sub-total">₹{budgetYears.reduce((s, y) =>
-                          s + Number(((namedLine(activeBudget, KEY_EQUIPMENT, y, 'item', item) || {}).amount) || 0), 0).toLocaleString('en-IN')}</td>
-                      </tr>
-                    ))}
-                    {(otherLabels(activeBudget).length ? otherLabels(activeBudget) : ['']).map(label => (
-                      <tr key={label || '__other'} className="pd-budget-head-row">
-                        <td className="pd-budget-head-name">{label || HEAD_OTHER}</td>
-                        {budgetYears.map(y => {
-                          const amt = Number(((namedLine(activeBudget, KEY_OTHER, y, 'label', label) || {}).amount) || 0);
-                          return (
-                            <td key={y}>
-                              {editingBudget ? (
-                                <input type="number" min="0" className="pd-budget-edit-input"
-                                  value={Number(((namedLine(budgetDraft, KEY_OTHER, y, 'label', label) || {}).amount) || 0)}
-                                  onChange={e => editOtherAmount(y, label, e.target.value)} />
-                              ) : (
-                                <>₹{amt.toLocaleString('en-IN')}</>
-                              )}
-                            </td>
-                          );
-                        })}
-                        <td className="pd-bh-total">₹{budgetYears.reduce((s, y) =>
-                          s + Number(((namedLine(activeBudget, KEY_OTHER, y, 'label', label) || {}).amount) || 0), 0).toLocaleString('en-IN')}</td>
-                      </tr>
-                    ))}
+                      );
+                    })}
                     <tr className="pd-grand-row">
                       <td><strong>Grand Total</strong></td>
                       {budgetYears.map(y => <td key={y}><strong>₹{yTotal(y).toLocaleString('en-IN')}</strong></td>)}
