@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useLocation, MemoryRouter } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
 import Tabs from '../../components/tabs/Tabs';
 import CustomModal from '../../components/forms/modal/CustomModal';
@@ -50,11 +50,10 @@ const rowPriority = (row) => {
  *
  * Recommendation (rendered inside StudentLeave) submits through
  * client-new/src/api/form.js's submitForm, which posts to
- * `baseURL + useLocation().pathname`. This page lives at /attendance, not
- * /forms/student-leave/:id, so the reviewed form is rendered inside its own
- * MemoryRouter pointed at that path — giving Recommendation the URL it needs
- * to hit POST /forms/student-leave/:id without moving the browser off
- * /attendance or touching StudentLeave/Recommendation themselves.
+ * `baseURL + location.pathname` by default. This page lives at /attendance,
+ * not /forms/student-leave/:id, so StudentLeave is given an explicit
+ * `submitPath` — threaded down to Recommendation's optional `submitPath`
+ * prop — so its Submit button still hits POST /forms/student-leave/:id.
  */
 const HodAttendancePage = () => {
   const location = useLocation();
@@ -207,13 +206,10 @@ const HodAttendancePage = () => {
                 </span>
               </div>
             )}
-            {/* See the file-level comment: Recommendation's submit posts to
-                baseURL + the surrounding route's pathname, so the form is
-                rendered inside its own MemoryRouter pointed at
-                /forms/student-leave/:id rather than the real /attendance URL. */}
-            <MemoryRouter initialEntries={[`/forms/student-leave/${openForm.form_id}`]} key={openForm.form_id}>
-              <StudentLeave formData={openForm} />
-            </MemoryRouter>
+            {/* See the file-level comment: submitPath tells Recommendation's
+                Submit button where to POST since this page isn't mounted at
+                /forms/student-leave/:id. */}
+            <StudentLeave formData={openForm} submitPath={`/forms/student-leave/${openForm.form_id}`} />
           </>
         )}
       </CustomModal>
