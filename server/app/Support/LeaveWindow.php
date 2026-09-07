@@ -43,6 +43,10 @@ final class LeaveWindow
 
         $day = substr($date, 0, 10);
 
+        // A NULL from_date/to_date makes whereDate() evaluate to NULL, which
+        // SQL's WHERE treats as false, so such rows are excluded here without
+        // an explicit guard — the same outcome covers() reaches with its
+        // `!$leave->from_date || !$leave->to_date` check above.
         $leaves = StudentLeaveForm::approved()
             ->whereIn('student_id', $rollNos)
             ->whereDate('from_date', '<=', $day)
