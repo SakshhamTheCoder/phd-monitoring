@@ -51,12 +51,16 @@ final class LeaveWindow
             ->whereIn('student_id', $rollNos)
             ->whereDate('from_date', '<=', $day)
             ->whereDate('to_date', '>=', $day)
+            ->orderBy('id')
             ->get();
 
         $out = [];
         foreach ($leaves as $leave) {
-            // First approved leave wins; overlapping approvals are equivalent
-            // for the only question asked here, which is "excused or not".
+            // Ordered by id above, so the earliest-created approved leave wins
+            // when a scholar holds two overlapping approvals. This is not just
+            // "excused or not": the chosen leave's type and day_part drive the
+            // clerk's display and the quota charge, so which one wins must be
+            // deterministic rather than incidental to scan order.
             $out[$leave->student_id] ??= [
                 'type' => $leave->leave_type,
                 'day_part' => $leave->day_part,
