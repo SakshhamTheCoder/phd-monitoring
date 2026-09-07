@@ -32,11 +32,21 @@ class StudentLeaveFormController extends Controller
         return '/attendance?tab=leaves&leave=' . $formInstance->id;
     }
 
+    /**
+     * mapForm()'s base fields (name, roll_no, status, ...) say nothing about
+     * what was actually applied for, so the HOD's review table needs these
+     * spelled out as extra_fields the same way every other form controller
+     * does (see e.g. StudentSemesterOffFormController::listForm).
+     */
     public function listForm(Request $request, $student_id = null)
     {
         $user = Auth::user();
 
-        return $this->listForms($user, StudentLeaveForm::class, $request);
+        return $this->listForms($user, StudentLeaveForm::class, $request, null, false, [
+            'fields' => ['leave_type', 'from_date', 'to_date', 'day_part'],
+            'extra_fields' => ['leave_type', 'from_date', 'to_date', 'day_part'],
+            'titles' => ['Type', 'From', 'To', 'Part'],
+        ]);
     }
 
     /**
