@@ -865,7 +865,12 @@ class ClerkController extends Controller
                         $user->save();
                         $created++;
                     } else {
-                        if (!empty($row['phone'])) { $user->phone = $row['phone']; $user->save(); }
+                        $name = \App\Support\PersonName::fromRow($row);
+                        if ($name !== null) {
+                            $user->first_name = $name['first'];
+                            $user->last_name = $name['last'];
+                        }
+                        if (!empty($row['phone'])) { $user->phone = $row['phone']; $user->save(); } else { $user->save(); }
                         // ensure clerk role is available for existing non-clerk users
                         $clerkRole = \App\Models\Role::where('role','clerk')->first();
                         if ($clerkRole && $user->role_id !== $clerkRole->id) {

@@ -227,6 +227,7 @@ class OutsideExpertController extends Controller
             $header = array_map(fn ($h) => trim((string) $h), array_shift($csvData));
 
             $successCount = 0;
+            $updateCount = 0;
             $errorCount = 0;
             $errors = [];
 
@@ -303,6 +304,7 @@ class OutsideExpertController extends Controller
                             'area_of_expertise' => $areaOfExpertise,
                             'website' => $website,
                         ]);
+                        $updateCount++;
                     } else {
                         // Create new record
                         OutsideExpert::create([
@@ -330,6 +332,7 @@ class OutsideExpertController extends Controller
                 'message' => "Import completed: {$successCount} successful, {$errorCount} errors",
                 'data' => [
                     'success_count' => $successCount,
+                    'update_count' => $updateCount,
                     'error_count' => $errorCount,
                     'errors' => $errors,
                 ]
