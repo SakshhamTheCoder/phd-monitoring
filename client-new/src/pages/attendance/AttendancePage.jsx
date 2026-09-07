@@ -101,6 +101,12 @@ const AttendancePage = () => {
     const isToday = date === todayString();
     list.forEach((s) => {
       if (s.status != null) next[s.roll_no] = s.status;
+      // Deliberately not excluding s.on_leave here: a same-day scholar on
+      // leave still gets this 'present' default, which rides along into
+      // handleSave's `records` and lets the backend report them in
+      // skipped_on_leave (it always refuses to write their row either way).
+      // Nulling this out for on-leave scholars would silently stop the save
+      // toast's skip notice from ever firing on the common same-day case.
       else next[s.roll_no] = isToday ? 'present' : null;
     });
     setStatuses(next);
@@ -190,6 +196,10 @@ const AttendancePage = () => {
 
   const handleSave = async () => {
     if (students.length === 0) { toast.info('Nothing to save'); return; }
+    // Not filtering out s.on_leave here either: keeping an on-leave scholar's
+    // (possibly default) status in `records` is what lets the server see and
+    // report them in skipped_on_leave below — see the matching note in
+    // loadRoster. Excluding them here would drop that signal just as quietly.
     const records = students.filter((s) => statuses[s.roll_no] === 'present' || statuses[s.roll_no] === 'absent').map((s) => ({ roll_no: s.roll_no, status: statuses[s.roll_no] }));
     if (records.length === 0) { toast.info('No attendance marked — treated as no session (nothing saved)'); return; }
     if (records.length < students.length) toast.info(`${students.length - records.length} unmarked scholar(s) will be left as no session`);
@@ -255,7 +265,11 @@ const AttendancePage = () => {
       const res = await fetch(baseURL + '/clerks/attendance/csv', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form });
       const data = await res.json();
       if (res.ok) {
-        toast.success(data.message || 'CSV imported');
+        // data.data.skipped_on_leave (Task 7) counts rows the import refused
+        // to write because the scholar has an approved leave for that date —
+        // same silent-drop risk the Mark tab's save toast guards against, so
+        // it gets the same treatment here.
+        toast.success(buildSaveMessage(data.message || 'CSV imported', data.data?.skipped_on_leave));
         if (data.data?.errors?.length) toast.warning(`${data.data.error_count} rows had errors — check console`);
         console.log('CSV import errors', data.data?.errors);
         setShowCsvModal(false); setCsvFile(null); setCsvPreview(null); loadRoster();

@@ -61,4 +61,21 @@ describe('buildSaveMessage', () => {
     expect(buildSaveMessage('Attendance saved for 5 student(s).', null)).toBe('Attendance saved for 5 student(s).');
     expect(buildSaveMessage('Attendance saved for 5 student(s).', undefined)).toBe('Attendance saved for 5 student(s).');
   });
+
+  it('does not special-case a single skip — wording stays count-agnostic', () => {
+    expect(buildSaveMessage('Attendance saved for 5 student(s).', 1)).toBe(
+      'Attendance saved for 5 student(s). 1 scholar(s) on approved leave were skipped.'
+    );
+  });
+
+  // POST /clerks/attendance/csv (Task 7) reports its skip count nested under
+  // `data.skipped_on_leave` rather than top-level like the save endpoint, and
+  // its own message already names a count in passing ("N on leave") — the
+  // shape still fits this helper since it only ever takes the two already-
+  // extracted values, regardless of where the caller found them.
+  it('fits the CSV import response shape too, appended after its own message', () => {
+    expect(buildSaveMessage('Import done: 5 created, 2 updated, 1 skipped, 3 on leave, 0 errors', 3)).toBe(
+      'Import done: 5 created, 2 updated, 1 skipped, 3 on leave, 0 errors 3 scholar(s) on approved leave were skipped.'
+    );
+  });
 });
