@@ -5,8 +5,8 @@ import {
   categoryOptions, roleOptions, milestoneStatusOptions, formatDate, formatDuration,
   subVal, setSubCell, headTotal, yearTotal, grandTotal, emptyBudget,
   subItemsTotal, headSubMismatch,
-  addLine, removeLine, setLineField, blankManpower, blankEquipment, blankOther,
-  manpowerLines, equipmentLines, otherLines,
+  manpowerCell, setManpowerCell, unionLabels, namedLine, equipRows,
+  setNamedAmount, renameNamedLines, dropNamedLines, appendBlankLine,
   KEY_MANPOWER, KEY_EQUIPMENT, KEY_OTHER, HEAD_MANPOWER, HEAD_EQUIPMENT, HEAD_OTHER,
 } from '../../data/projectsData';
 import { apiCreateProject, apiUpdateProjectFromForm, apiUpdateProject, apiCurrentFaculty, apiProjectMeta, apiUploadGanttChart } from '../../api/projects';
@@ -198,66 +198,29 @@ const CreateProject = () => {
   const yTotal = (y) => yearTotal(form.budget, y, meta.budgetHeads);
   const gTotal = grandTotal(form.budget, meta.budgetHeads, budgetYears);
 
-  const editLine = (key, year, index, field, value) =>
-    setForm(prev => ({ ...prev, budget: setLineField(prev.budget, key, year, index, field, field === 'count' || field === 'amount' ? (value === '' ? 0 : Number(value)) : value) }));
-  const pushLine = (key, year, blank) =>
-    setForm(prev => ({ ...prev, budget: addLine(prev.budget, key, year, blank()) }));
-  const dropLine = (key, year, index) =>
-    setForm(prev => ({ ...prev, budget: removeLine(prev.budget, key, year, index) }));
+  // In-table editing for the derived heads. Manpower rows are fixed per
+  // category with count × amount cells; equipment rows are self-added by
+  // label; Any Other Expenses is a single amount row. All three persist to
+  // the same __manpower/__equipment/__other line lists as before.
+  const manpowerCats = (meta.manpowerCategories && meta.manpowerCategories.length)
+    ? meta.manpowerCategories : ['Postdoc', 'JRF', 'SRF', 'UG Intern', 'PG Intern'];
+  const extraManpowerCats = unionLabels(form.budget, KEY_MANPOWER, 'category')
+    .filter(c => c && !manpowerCats.includes(c));
+  const equipItems = equipRows(form.budget);
+  const otherLabels = unionLabels(form.budget, KEY_OTHER, 'label');
 
-  const renderLineListCard = ({ title, hint, storeKey, blank, columns }) => (
-    <div className="cp-section-card" key={storeKey}>
-      <div className="cp-section-header-row">
-        <h3 className="cp-section-title">{title}</h3>
-        <span className="cp-derived-note">{hint}</span>
-      </div>
-      {budgetYears.map((y, i) => (
-        <div key={y} className="cp-lines-year">
-          <div className="cp-lines-year-head">
-            <span>Year {i + 1}</span>
-            <div className="cp-lines-year-right">
-              <strong>₹{headTotal(form.budget, y, title).toLocaleString('en-IN')}</strong>
-              <button type="button" className="cp-add-btn" onClick={() => pushLine(storeKey, y, blank)}>
-                <i className="fa fa-plus"></i> Add {columns[0].addLabel}
-              </button>
-            </div>
-          </div>
-          {(form.budget[storeKey]?.[y] || []).length === 0 ? (
-            <p className="cp-lines-empty">Nothing budgeted for year {i + 1}.</p>
-          ) : (
-            <div className="cp-lines-table">
-              <div className="cp-lines-row cp-lines-head" style={{ gridTemplateColumns: columns.map(c => c.width).join(' ') + ' auto' }}>
-                {columns.map(c => <span key={c.field}>{c.label}</span>)}
-                <span></span>
-              </div>
-              {(form.budget[storeKey][y] || []).map((line, idx) => (
-                <div key={idx} className="cp-lines-row" style={{ gridTemplateColumns: columns.map(c => c.width).join(' ') + ' auto' }}>
-                  {columns.map(c => (
-                    c.type === 'select' ? (
-                      <select key={c.field} value={line[c.field] ?? ''} onChange={e => editLine(storeKey, y, idx, c.field, e.target.value)}>
-                        <option value="">Select {c.label.toLowerCase()}</option>
-                        {(line[c.field] && !meta.manpowerCategories.includes(line[c.field])) && (
-                          <option value={line[c.field]}>{line[c.field]} (no longer offered)</option>
-                        )}
-                        {meta.manpowerCategories.map(o => <option key={o} value={o}>{o}</option>)}
-                      </select>
-                    ) : (
-                      <input key={c.field} type={c.type} min={c.type === 'number' ? '0' : undefined}
-                        value={line[c.field] ?? ''} placeholder={c.placeholder}
-                        onChange={e => editLine(storeKey, y, idx, c.field, e.target.value)} />
-                    )
-                  ))}
-                  <button type="button" className="cp-remove-btn" title="Remove" onClick={() => dropLine(storeKey, y, idx)}>
-                    <i className="fa fa-trash"></i>
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
+  const editManpower = (y, cat, field, value) =>
+    setForm(prev => ({ ...prev, budget: setManpowerCell(prev.budget, y, cat, field, value) }));
+  const editEquipAmount = (y, item, value) =>
+    setForm(prev => ({ ...prev, budget: setNamedAmount(prev.budget, KEY_EQUIPMENT, y, 'item', item, value) }));
+  const renameEquip = (oldName, newName) =>
+    setForm(prev => ({ ...prev, budget: renameNamedLines(prev.budget, KEY_EQUIPMENT, 'item', oldName, newName) }));
+  const addEquip = () =>
+    setForm(prev => ({ ...prev, budget: appendBlankLine(prev.budget, KEY_EQUIPMENT, budgetYears, { item: '', amount: 0 }) }));
+  const dropEquip = (item) =>
+    setForm(prev => ({ ...prev, budget: dropNamedLines(prev.budget, KEY_EQUIPMENT, 'item', item) }));
+  const editOtherAmount = (y, label, value) =>
+    setForm(prev => ({ ...prev, budget: setNamedAmount(prev.budget, KEY_OTHER, y, 'label', label, value) }));
 
   const renderStep = () => {
     switch (currentStep) {
@@ -506,11 +469,81 @@ const CreateProject = () => {
                       )}
                     </React.Fragment>
                   ))}
-                  {[HEAD_MANPOWER, HEAD_EQUIPMENT, HEAD_OTHER].map(h => (
-                    <tr key={h} className="cp-budget-head-row cp-budget-derived">
-                      <td className="cp-budget-head-name">{h} <span className="cp-derived-note">from the entries below</span></td>
-                      {budgetYears.map(y => <td key={y} className="cp-budget-total">₹{headTotal(form.budget, y, h).toLocaleString('en-IN')}</td>)}
-                      <td className="cp-budget-total">₹{budgetYears.reduce((s, y) => s + headTotal(form.budget, y, h), 0).toLocaleString('en-IN')}</td>
+                  <tr className="cp-budget-head-row">
+                    <td className="cp-budget-head-name">{HEAD_MANPOWER}</td>
+                    {budgetYears.map(y => <td key={y} className="cp-budget-total">₹{headTotal(form.budget, y, HEAD_MANPOWER).toLocaleString('en-IN')}</td>)}
+                    <td className="cp-budget-total">₹{budgetYears.reduce((s, y) => s + headTotal(form.budget, y, HEAD_MANPOWER), 0).toLocaleString('en-IN')}</td>
+                  </tr>
+                  {[...manpowerCats, ...extraManpowerCats].map(cat => (
+                    <tr key={cat} className="cp-budget-sub-row">
+                      <td className="cp-budget-sub-name">↳ {cat}</td>
+                      {budgetYears.map(y => {
+                        const cell = manpowerCell(form.budget, y, cat);
+                        return (
+                          <td key={y}>
+                            <span className="cp-budget-countpair">
+                              <input type="number" min="0" className="cp-budget-input" title="Count"
+                                value={cell.count || ''} placeholder="Count"
+                                onChange={e => editManpower(y, cat, 'count', e.target.value)} />
+                              <input type="number" min="0" className="cp-budget-input" title="Amount (₹)"
+                                value={cell.amount || ''} placeholder="Amount ₹"
+                                onChange={e => editManpower(y, cat, 'amount', e.target.value)} />
+                            </span>
+                          </td>
+                        );
+                      })}
+                      <td className="cp-budget-total">₹{budgetYears.reduce((s, y) => {
+                        const c = manpowerCell(form.budget, y, cat);
+                        return s + (Number(c.count) || 0) * (Number(c.amount) || 0);
+                      }, 0).toLocaleString('en-IN')}</td>
+                    </tr>
+                  ))}
+                  <tr className="cp-budget-head-row">
+                    <td className="cp-budget-head-name">{HEAD_EQUIPMENT}
+                      {!equipItems.includes('') && (
+                        <button type="button" className="cp-add-btn cp-add-inline" onClick={addEquip}>
+                          <i className="fa fa-plus"></i> Add
+                        </button>
+                      )}
+                    </td>
+                    {budgetYears.map(y => <td key={y} className="cp-budget-total">₹{headTotal(form.budget, y, HEAD_EQUIPMENT).toLocaleString('en-IN')}</td>)}
+                    <td className="cp-budget-total">₹{budgetYears.reduce((s, y) => s + headTotal(form.budget, y, HEAD_EQUIPMENT), 0).toLocaleString('en-IN')}</td>
+                  </tr>
+                  {equipItems.map((item, idx) => (
+                    <tr key={`eq-${idx}`} className="cp-budget-sub-row">
+                      <td>
+                        <span className="cp-budget-countpair">
+                          <input type="text" className="cp-budget-input" value={item}
+                            placeholder="e.g. GPU Workstation"
+                            onChange={e => renameEquip(item, e.target.value)} />
+                          <button type="button" className="cp-remove-btn" title="Remove" onClick={() => dropEquip(item)}>
+                            <i className="fa fa-trash"></i>
+                          </button>
+                        </span>
+                      </td>
+                      {budgetYears.map(y => (
+                        <td key={y}>
+                          <input type="number" min="0" className="cp-budget-input"
+                            value={(namedLine(form.budget, KEY_EQUIPMENT, y, 'item', item) || {}).amount || ''}
+                            placeholder="0" onChange={e => editEquipAmount(y, item, e.target.value)} />
+                        </td>
+                      ))}
+                      <td className="cp-budget-total">₹{budgetYears.reduce((s, y) =>
+                        s + Number(((namedLine(form.budget, KEY_EQUIPMENT, y, 'item', item) || {}).amount) || 0), 0).toLocaleString('en-IN')}</td>
+                    </tr>
+                  ))}
+                  {(otherLabels.length ? otherLabels : ['']).map(label => (
+                    <tr key={label || '__other'} className="cp-budget-head-row">
+                      <td className="cp-budget-head-name">{label || HEAD_OTHER}</td>
+                      {budgetYears.map(y => (
+                        <td key={y}>
+                          <input type="number" min="0" className="cp-budget-input"
+                            value={(namedLine(form.budget, KEY_OTHER, y, 'label', label) || {}).amount || ''}
+                            placeholder="0" onChange={e => editOtherAmount(y, label, e.target.value)} />
+                        </td>
+                      ))}
+                      <td className="cp-budget-total">₹{budgetYears.reduce((s, y) =>
+                        s + Number(((namedLine(form.budget, KEY_OTHER, y, 'label', label) || {}).amount) || 0), 0).toLocaleString('en-IN')}</td>
                     </tr>
                   ))}
                   <tr className="cp-budget-grand-row">
@@ -522,31 +555,6 @@ const CreateProject = () => {
               </table>
             </div>
           </div>
-          {renderLineListCard({
-            title: HEAD_MANPOWER, storeKey: KEY_MANPOWER, blank: blankManpower,
-            hint: 'Each line costs count × amount',
-            columns: [
-              { field: 'category', label: 'Category', type: 'select', width: '2fr', addLabel: 'Manpower' },
-              { field: 'count', label: 'Count', type: 'number', width: '0.8fr', placeholder: '1' },
-              { field: 'amount', label: 'Amount (₹)', type: 'number', width: '1.2fr', placeholder: '0' },
-            ],
-          })}
-          {renderLineListCard({
-            title: HEAD_EQUIPMENT, storeKey: KEY_EQUIPMENT, blank: blankEquipment,
-            hint: 'Add whatever the project needs',
-            columns: [
-              { field: 'item', label: 'Item', type: 'text', width: '3fr', placeholder: 'e.g. GPU Workstation', addLabel: 'Equipment' },
-              { field: 'amount', label: 'Amount (₹)', type: 'number', width: '1.2fr', placeholder: '0' },
-            ],
-          })}
-          {renderLineListCard({
-            title: HEAD_OTHER, storeKey: KEY_OTHER, blank: blankOther,
-            hint: 'Anything the heads above do not cover',
-            columns: [
-              { field: 'label', label: 'Expense', type: 'text', width: '3fr', placeholder: 'e.g. Publication charges', addLabel: 'Expense' },
-              { field: 'amount', label: 'Amount (₹)', type: 'number', width: '1.2fr', placeholder: '0' },
-            ],
-          })}
         </div>
       );
 
@@ -563,7 +571,6 @@ const CreateProject = () => {
                 <i className="fa fa-plus"></i> Add Objective
               </button>
             </div>
-            <p className="cp-derived-note">One line each, e.g. "To develop ABC so as to improve XYZ."</p>
             <div className="cp-obj-list">
               {form.objectives.map((obj, i) => (
                 <div key={i} className="cp-obj-row">
@@ -683,9 +690,6 @@ const CreateProject = () => {
                 <div key={y} className="cp-review-row"><span>Year {i + 1} Budget</span><strong>₹{yTotal(y).toLocaleString('en-IN')}</strong></div>
               ))}
               <div className="cp-review-row"><span>Total Budget</span><strong>₹{gTotal.toLocaleString('en-IN')}</strong></div>
-              {form.sanctionAmount !== '' && Number(form.sanctionAmount || 0) !== gTotal && (
-                <div className="cp-review-row"><span>Budget check</span><strong>⚠ Total differs from sanctioned</strong></div>
-              )}
             </div>
             <div className="cp-review-card">
               <h4>Objectives</h4>

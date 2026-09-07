@@ -5,8 +5,8 @@ import {
   formatCurrency, getMilestoneProgress, milestoneStatusOptions, formatDate, formatDuration,
   subVal, setSubCell, headTotal, yearTotal, grandTotal, budgetYears as budgetYearsOf,
   subItemsTotal, headSubMismatch,
-  addLine, removeLine, setLineField, blankManpower, blankEquipment, blankOther,
-  manpowerLines, equipmentLines, otherLines,
+  manpowerCell, setManpowerCell, unionLabels, namedLine, equipRows,
+  setNamedAmount, renameNamedLines, dropNamedLines, appendBlankLine,
   KEY_MANPOWER, KEY_EQUIPMENT, KEY_OTHER, HEAD_MANPOWER, HEAD_EQUIPMENT, HEAD_OTHER,
 } from '../../data/projectsData';
 import { badgeClass } from '../../data/badges';
@@ -87,14 +87,28 @@ const ProjectDetails = () => {
     if (res.success) { setBudgetData(budgetDraft); setEditingBudget(false); toast.success('Budget updated successfully!'); }
   };
 
-  // Manpower / Equipment / Any Other Expenses are add/remove line lists, shared
-  // in shape with the create wizard so both mutate the budget the same way.
-  const editLine = (key, year, index, field, value) =>
-    setBudgetDraft(prev => setLineField(prev, key, year, index, field, field === 'count' || field === 'amount' ? (value === '' ? 0 : Number(value)) : value));
-  const pushLine = (key, year, blank) =>
-    setBudgetDraft(prev => addLine(prev, key, year, blank()));
-  const dropLine = (key, year, index) =>
-    setBudgetDraft(prev => removeLine(prev, key, year, index));
+  // In-table editing for the derived heads, mirroring the create wizard:
+  // fixed manpower category rows with count × amount cells, self-added
+  // equipment rows, and a single Any Other Expenses amount row.
+  const manpowerCats = (meta.manpowerCategories && meta.manpowerCategories.length)
+    ? meta.manpowerCategories : ['Postdoc', 'JRF', 'SRF', 'UG Intern', 'PG Intern'];
+  const extraManpowerCats = (b) => unionLabels(b, KEY_MANPOWER, 'category')
+    .filter(c => c && !manpowerCats.includes(c));
+  const equipItems = (b) => equipRows(b);
+  const otherLabels = (b) => unionLabels(b, KEY_OTHER, 'label');
+
+  const editManpower = (y, cat, field, value) =>
+    setBudgetDraft(prev => setManpowerCell(prev, y, cat, field, value));
+  const editEquipAmount = (y, item, value) =>
+    setBudgetDraft(prev => setNamedAmount(prev, KEY_EQUIPMENT, y, 'item', item, value));
+  const renameEquip = (oldName, newName) =>
+    setBudgetDraft(prev => renameNamedLines(prev, KEY_EQUIPMENT, 'item', oldName, newName));
+  const addEquip = () =>
+    setBudgetDraft(prev => appendBlankLine(prev, KEY_EQUIPMENT, budgetYears, { item: '', amount: 0 }));
+  const dropEquip = (item) =>
+    setBudgetDraft(prev => dropNamedLines(prev, KEY_EQUIPMENT, 'item', item));
+  const editOtherAmount = (y, label, value) =>
+    setBudgetDraft(prev => setNamedAmount(prev, KEY_OTHER, y, 'label', label, value));
 
   // Co-PI management. An internal Co-PI must carry a faculty_code, since that is
   // what grants them access to the project.
@@ -270,80 +284,6 @@ const ProjectDetails = () => {
   // Total across all years for a single sub-item (for the sub-row Total column).
   const subYearTotal = (head, sub) => budgetYears.reduce((s, y) => s + subVal(activeBudget, y, head, sub), 0);
 
-  // A single Manpower / Equipment / Any Other Expenses card: a plain table of
-  // its lines in read mode, the same add/remove/edit controls the wizard uses
-  // once editingBudget is true.
-  const renderLineList = ({ title, hint, storeKey, blank, columns }) => (
-    <div className="pd-card" key={storeKey}>
-      <div className="pd-budget-header">
-        <h3 className="pd-card-title" style={{ marginBottom: 0 }}>{title}</h3>
-        <span className="cp-derived-note">{hint}</span>
-      </div>
-      {budgetYears.map((y, i) => (
-        <div key={y} className="cp-lines-year">
-          <div className="cp-lines-year-head">
-            <span>Year {i + 1}</span>
-            <div className="cp-lines-year-right">
-              <strong>₹{headTotal(activeBudget, y, title).toLocaleString('en-IN')}</strong>
-              {editingBudget && (
-                <button type="button" className="cp-add-btn" onClick={() => pushLine(storeKey, y, blank)}>
-                  <i className="fa fa-plus"></i> Add {columns[0].addLabel}
-                </button>
-              )}
-            </div>
-          </div>
-          {(activeBudget[storeKey]?.[y] || []).length === 0 ? (
-            <p className="cp-lines-empty">Nothing budgeted for year {i + 1}.</p>
-          ) : editingBudget ? (
-            <div className="cp-lines-table">
-              <div className="cp-lines-row cp-lines-head" style={{ gridTemplateColumns: columns.map(c => c.width).join(' ') + ' auto' }}>
-                {columns.map(c => <span key={c.field}>{c.label}</span>)}
-                <span></span>
-              </div>
-              {(activeBudget[storeKey][y] || []).map((line, idx) => (
-                <div key={idx} className="cp-lines-row" style={{ gridTemplateColumns: columns.map(c => c.width).join(' ') + ' auto' }}>
-                  {columns.map(c => (
-                    c.type === 'select' ? (
-                      <select key={c.field} value={line[c.field] ?? ''} onChange={e => editLine(storeKey, y, idx, c.field, e.target.value)}>
-                        <option value="">Select {c.label.toLowerCase()}</option>
-                        {(line[c.field] && !meta.manpowerCategories.includes(line[c.field])) && (
-                          <option value={line[c.field]}>{line[c.field]} (no longer offered)</option>
-                        )}
-                        {meta.manpowerCategories.map(o => <option key={o} value={o}>{o}</option>)}
-                      </select>
-                    ) : (
-                      <input key={c.field} type={c.type} min={c.type === 'number' ? '0' : undefined}
-                        value={line[c.field] ?? ''} placeholder={c.placeholder}
-                        onChange={e => editLine(storeKey, y, idx, c.field, e.target.value)} />
-                    )
-                  ))}
-                  <button type="button" className="cp-remove-btn" title="Remove" onClick={() => dropLine(storeKey, y, idx)}>
-                    <i className="fa fa-trash"></i>
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <table className="pd-lines-readonly">
-              <thead><tr>{columns.map(c => <th key={c.field}>{c.label}</th>)}</tr></thead>
-              <tbody>
-                {(activeBudget[storeKey][y] || []).map((line, idx) => (
-                  <tr key={idx}>
-                    {columns.map(c => (
-                      <td key={c.field}>
-                        {c.field === 'amount' ? `₹${(Number(line.amount) || 0).toLocaleString('en-IN')}` : (line[c.field] || '—')}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-
   const renderTab = () => {
     switch (activeTab) {
       case 'Overview': return (
@@ -508,11 +448,101 @@ const ProjectDetails = () => {
                         )}
                       </React.Fragment>
                     ))}
-                    {[HEAD_MANPOWER, HEAD_EQUIPMENT, HEAD_OTHER].map(h => (
-                      <tr key={h} className="pd-budget-head-row pd-budget-derived">
-                        <td className="pd-budget-head-name">{h} <span className="cp-derived-note">from the entries below</span></td>
-                        {budgetYears.map(y => <td key={y}>₹{headTotal(activeBudget, y, h).toLocaleString('en-IN')}</td>)}
-                        <td className="pd-bh-total">₹{headAllYearsTotal(h).toLocaleString('en-IN')}</td>
+                    <tr className="pd-budget-head-row">
+                      <td className="pd-budget-head-name">{HEAD_MANPOWER}</td>
+                      {budgetYears.map(y => <td key={y}>₹{headTotal(activeBudget, y, HEAD_MANPOWER).toLocaleString('en-IN')}</td>)}
+                      <td className="pd-bh-total">₹{headAllYearsTotal(HEAD_MANPOWER).toLocaleString('en-IN')}</td>
+                    </tr>
+                    {[...manpowerCats, ...extraManpowerCats(activeBudget)].map(cat => (
+                      <tr key={cat} className="pd-budget-sub-row">
+                        <td className="pd-budget-sub-name">↳ {cat}</td>
+                        {budgetYears.map(y => {
+                          const cell = manpowerCell(activeBudget, y, cat);
+                          return (
+                            <td key={y} className="pd-budget-sub-cell">
+                              {editingBudget ? (
+                                <span className="pd-budget-countpair">
+                                  <input type="number" min="0" className="pd-budget-edit-input" title="Count"
+                                    value={manpowerCell(budgetDraft, y, cat).count || 0}
+                                    onChange={e => editManpower(y, cat, 'count', e.target.value)} />
+                                  <input type="number" min="0" className="pd-budget-edit-input" title="Amount (₹)"
+                                    value={manpowerCell(budgetDraft, y, cat).amount || 0}
+                                    onChange={e => editManpower(y, cat, 'amount', e.target.value)} />
+                                </span>
+                              ) : (
+                                <>{cell.count ? `${cell.count} × ₹${(Number(cell.amount) || 0).toLocaleString('en-IN')}` : '—'}</>
+                              )}
+                            </td>
+                          );
+                        })}
+                        <td className="pd-budget-sub-total">₹{budgetYears.reduce((s, y) => {
+                          const c = manpowerCell(activeBudget, y, cat);
+                          return s + (Number(c.count) || 0) * (Number(c.amount) || 0);
+                        }, 0).toLocaleString('en-IN')}</td>
+                      </tr>
+                    ))}
+                    <tr className="pd-budget-head-row">
+                      <td className="pd-budget-head-name">{HEAD_EQUIPMENT}
+                        {editingBudget && !equipItems(budgetDraft).includes('') && (
+                          <button type="button" className="cp-add-btn cp-add-inline" onClick={addEquip}>
+                            <i className="fa fa-plus"></i> Add
+                          </button>
+                        )}
+                      </td>
+                      {budgetYears.map(y => <td key={y}>₹{headTotal(activeBudget, y, HEAD_EQUIPMENT).toLocaleString('en-IN')}</td>)}
+                      <td className="pd-bh-total">₹{headAllYearsTotal(HEAD_EQUIPMENT).toLocaleString('en-IN')}</td>
+                    </tr>
+                    {equipItems(activeBudget).map((item, idx) => (
+                      <tr key={`eq-${idx}`} className="pd-budget-sub-row">
+                        <td className="pd-budget-sub-name">
+                          {editingBudget ? (
+                            <span className="pd-budget-countpair">
+                              <input type="text" className="pd-budget-edit-input" value={item}
+                                placeholder="e.g. GPU Workstation"
+                                onChange={e => renameEquip(item, e.target.value)} />
+                              <button type="button" className="cp-remove-btn" title="Remove" onClick={() => dropEquip(item)}>
+                                <i className="fa fa-trash"></i>
+                              </button>
+                            </span>
+                          ) : <>↳ {item || '—'}</>}
+                        </td>
+                        {budgetYears.map(y => {
+                          const amt = Number(((namedLine(activeBudget, KEY_EQUIPMENT, y, 'item', item) || {}).amount) || 0);
+                          return (
+                            <td key={y} className="pd-budget-sub-cell">
+                              {editingBudget ? (
+                                <input type="number" min="0" className="pd-budget-edit-input"
+                                  value={Number(((namedLine(budgetDraft, KEY_EQUIPMENT, y, 'item', item) || {}).amount) || 0)}
+                                  onChange={e => editEquipAmount(y, item, e.target.value)} />
+                              ) : (
+                                <>{amt ? `₹${amt.toLocaleString('en-IN')}` : '—'}</>
+                              )}
+                            </td>
+                          );
+                        })}
+                        <td className="pd-budget-sub-total">₹{budgetYears.reduce((s, y) =>
+                          s + Number(((namedLine(activeBudget, KEY_EQUIPMENT, y, 'item', item) || {}).amount) || 0), 0).toLocaleString('en-IN')}</td>
+                      </tr>
+                    ))}
+                    {(otherLabels(activeBudget).length ? otherLabels(activeBudget) : ['']).map(label => (
+                      <tr key={label || '__other'} className="pd-budget-head-row">
+                        <td className="pd-budget-head-name">{label || HEAD_OTHER}</td>
+                        {budgetYears.map(y => {
+                          const amt = Number(((namedLine(activeBudget, KEY_OTHER, y, 'label', label) || {}).amount) || 0);
+                          return (
+                            <td key={y}>
+                              {editingBudget ? (
+                                <input type="number" min="0" className="pd-budget-edit-input"
+                                  value={Number(((namedLine(budgetDraft, KEY_OTHER, y, 'label', label) || {}).amount) || 0)}
+                                  onChange={e => editOtherAmount(y, label, e.target.value)} />
+                              ) : (
+                                <>₹{amt.toLocaleString('en-IN')}</>
+                              )}
+                            </td>
+                          );
+                        })}
+                        <td className="pd-bh-total">₹{budgetYears.reduce((s, y) =>
+                          s + Number(((namedLine(activeBudget, KEY_OTHER, y, 'label', label) || {}).amount) || 0), 0).toLocaleString('en-IN')}</td>
                       </tr>
                     ))}
                     <tr className="pd-grand-row">
@@ -525,31 +555,6 @@ const ProjectDetails = () => {
               </div>
             </div>
           )}
-          {budgetYears.length > 0 && renderLineList({
-            title: HEAD_MANPOWER, storeKey: KEY_MANPOWER, blank: blankManpower,
-            hint: 'Each line costs count × amount',
-            columns: [
-              { field: 'category', label: 'Category', type: 'select', width: '2fr', addLabel: 'Manpower' },
-              { field: 'count', label: 'Count', type: 'number', width: '0.8fr', placeholder: '1' },
-              { field: 'amount', label: 'Amount (₹)', type: 'number', width: '1.2fr', placeholder: '0' },
-            ],
-          })}
-          {budgetYears.length > 0 && renderLineList({
-            title: HEAD_EQUIPMENT, storeKey: KEY_EQUIPMENT, blank: blankEquipment,
-            hint: 'Add whatever the project needs',
-            columns: [
-              { field: 'item', label: 'Item', type: 'text', width: '3fr', placeholder: 'e.g. GPU Workstation', addLabel: 'Equipment' },
-              { field: 'amount', label: 'Amount (₹)', type: 'number', width: '1.2fr', placeholder: '0' },
-            ],
-          })}
-          {budgetYears.length > 0 && renderLineList({
-            title: HEAD_OTHER, storeKey: KEY_OTHER, blank: blankOther,
-            hint: 'Anything the heads above do not cover',
-            columns: [
-              { field: 'label', label: 'Expense', type: 'text', width: '3fr', placeholder: 'e.g. Publication charges', addLabel: 'Expense' },
-              { field: 'amount', label: 'Amount (₹)', type: 'number', width: '1.2fr', placeholder: '0' },
-            ],
-          })}
         </div>
       );
 
@@ -852,9 +857,6 @@ const ProjectDetails = () => {
             <div className="pd-header-meta">
               <div className="pd-hm-item"><span>FUNDING AGENCY</span><strong>{project.fundingAgency || '—'}</strong></div>
               <div className="pd-hm-item"><span>SANCTIONED AMOUNT</span><strong>₹ {Number(project.amount || 0).toLocaleString('en-IN')}</strong></div>
-              {Number(project.amount || 0) !== gTotal && (
-                <div className="pd-hm-item"><span>BUDGET CHECK</span><strong>⚠ Total ₹{gTotal.toLocaleString('en-IN')} differs from sanctioned</strong></div>
-              )}
               <div className="pd-hm-item">
                 <span>DURATION</span>
                 <strong>

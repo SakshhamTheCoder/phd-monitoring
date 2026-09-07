@@ -82,6 +82,10 @@
 .cp-budget-sub-name { color: #888; padding-left: 1.5rem !important; font-size: 0.8rem; }
 .cp-budget-input.sub { background: #FAFAFA; }
 .cp-budget-mismatch { border-color: #b91c1c; background: #fef2f2; }
+.cp-budget-countpair { display: flex; gap: 0.25rem; }
+.cp-budget-countpair .cp-budget-input { min-width: 0; width: 100%; }
+.cp-add-inline { margin-left: 0.5rem; padding: 0.25rem 0.6rem; font-size: 0.75rem; }
+.cp-add-inline:disabled { opacity: 0.4; cursor: default; }
 .cp-budget-subsum { font-size: 0.78rem; color: #777; }
 .cp-budget-subsum.ok { color: #15803d; }
 .cp-budget-subsum.bad { color: #b91c1c; font-weight: 600; }
@@ -142,16 +146,6 @@
 /* Derived budget heads and add/remove line lists */
 .cp-budget-derived td { background: var(--surface-subtle, #fafafa); }
 .cp-derived-note { font-size: 0.72rem; font-weight: 500; color: var(--text-subtle); font-style: italic; }
-.cp-lines-year { border-top: 1px solid var(--border-subtle, #eee); padding-top: 0.75rem; margin-top: 0.75rem; }
-.cp-lines-year:first-of-type { border-top: 0; margin-top: 0; padding-top: 0; }
-.cp-lines-year-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.5rem; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
-.cp-lines-year-right { display: flex; align-items: center; gap: 0.75rem; }
-.cp-lines-empty { margin: 0 0 0.25rem; font-size: 0.82rem; color: var(--text-subtle); font-style: italic; }
-.cp-lines-table { display: flex; flex-direction: column; gap: 0.4rem; }
-.cp-lines-row { display: grid; gap: 0.5rem; align-items: center; }
-.cp-lines-row.cp-lines-head { font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-subtle); font-weight: 700; }
-.cp-lines-row input, .cp-lines-row select { width: 100%; min-width: 0; padding: 0.45rem 0.55rem; border: 1px solid var(--border-color); border-radius: var(--radius); font-size: 0.85rem; }
-@media (max-width: 720px) { .cp-lines-row { grid-template-columns: 1fr !important; } .cp-lines-row.cp-lines-head { display: none; } }
 
 /* Objectives */
 .cp-obj-list { display: flex; flex-direction: column; gap: 0.5rem; }

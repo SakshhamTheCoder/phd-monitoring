@@ -73,6 +73,8 @@
 .pd-budget-actions { display: flex; gap: 0.5rem; }
 .pd-budget-edit-input.sub { max-width: 110px; background: #FAFAFA; font-size: 0.8rem; color: #555; }
 .pd-budget-mismatch { border-color: #dc2626 !important; background: #fef2f2; color: #b91c1c; }
+.pd-budget-countpair { display: flex; gap: 0.25rem; }
+.pd-budget-countpair .pd-budget-edit-input { min-width: 0; width: 100%; }
 .pd-budget-mismatch:focus { box-shadow: 0 0 0 2px rgba(220,38,38,0.15) !important; }
 .pd-budget-sub-total { font-size: 0.78rem; color: #999; }
 .pd-budget-subsum-row td { background: #FBFBFB; }
@@ -193,25 +195,7 @@
 .pd-doc-link { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--primary-color); font-weight: 600; font-size: 0.88rem; text-decoration: none; }
 .pd-doc-link:hover { text-decoration: underline; }
 
-/* Derived budget heads (Manpower / Equipment / Any Other Expenses) */
-.pd-budget-derived td { background: var(--surface-subtle, #fafafa); }
-.cp-derived-note { font-size: 0.72rem; font-weight: 500; color: var(--text-subtle); font-style: italic; }
-
-/* Manpower / Equipment / Any Other Expenses line lists (shared shape with the create wizard) */
-.cp-lines-year { border-top: 1px solid var(--border-subtle, #eee); padding-top: 0.75rem; margin-top: 0.75rem; }
-.cp-lines-year:first-of-type { border-top: 0; margin-top: 0; padding-top: 0; }
-.cp-lines-year-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.5rem; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
-.cp-lines-year-right { display: flex; align-items: center; gap: 0.75rem; }
-.cp-lines-empty { margin: 0 0 0.25rem; font-size: 0.82rem; color: var(--text-subtle); font-style: italic; }
-.cp-lines-table { display: flex; flex-direction: column; gap: 0.4rem; }
-.cp-lines-row { display: grid; gap: 0.5rem; align-items: center; }
-.cp-lines-row.cp-lines-head { font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-subtle); font-weight: 700; }
-.cp-lines-row input, .cp-lines-row select { width: 100%; min-width: 0; padding: 0.45rem 0.55rem; border: 1px solid var(--border-color); border-radius: var(--radius); font-size: 0.85rem; }
 .cp-add-btn { background: var(--primary-color); color: #FFF; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; }
 .cp-add-btn:hover { background: var(--hover-color); }
 .cp-remove-btn { background: none; border: none; color: #ccc; cursor: pointer; font-size: 0.9rem; }
 .cp-remove-btn:hover { color: #b91c1c; }
-.pd-lines-readonly { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-.pd-lines-readonly th { text-align: left; font-size: 0.72rem; text-transform: uppercase; color: var(--text-subtle); font-weight: 700; padding: 0.35rem 0.5rem; border-bottom: 1px solid var(--border-subtle, #eee); }
-.pd-lines-readonly td { padding: 0.5rem; border-bottom: 1px solid var(--border-subtle, #f0f0f0); color: #444; }
-@media (max-width: 720px) { .cp-lines-row { grid-template-columns: 1fr !important; } .cp-lines-row.cp-lines-head { display: none; } }
