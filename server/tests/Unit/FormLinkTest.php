@@ -46,15 +46,14 @@ class FormLinkTest extends TestCase
         );
     }
 
-    // Task 6 enables this: StudentLeaveFormController does not exist until Task 6.
-    // public function test_a_leave_links_into_the_attendance_page(): void
-    // {
-    //     $leave = new StudentLeaveForm();
-    //     $leave->id = 42;
-    //
-    //     $this->assertSame(
-    //         '/attendance?tab=leaves&leave=42',
-    //         $this->link(new \App\Http\Controllers\StudentLeaveFormController(), $leave, StudentLeaveForm::class)
-    //     );
-    // }
+    public function test_a_leave_links_into_the_attendance_page(): void
+    {
+        $leave = new StudentLeaveForm();
+        $leave->id = 42;
+
+        $this->assertSame(
+            '/attendance?tab=leaves&leave=42',
+            $this->link(new \App\Http\Controllers\StudentLeaveFormController(), $leave, StudentLeaveForm::class)
+        );
+    }
 }
