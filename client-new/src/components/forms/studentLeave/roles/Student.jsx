@@ -53,7 +53,14 @@ const Student = ({ formData }) => {
 
   const lock = !!instance?.locks?.student;
 
+  // apiLeaveBalance is student-only (403 for an HOD) — this component is
+  // reused as-is for the HOD's review (see HodAttendancePage), which already
+  // shows the scholar's balance via LeaveBalancePanel, fed from the
+  // clerk-facing endpoint. Fetching it here unconditionally would 403 for the
+  // HOD, and apiLeaveBalance's showToast=true would surface that 403 as a red
+  // error toast for no reason.
   useEffect(() => {
+    if (localStorage.getItem('userRole') !== 'student') return;
     apiLeaveBalance().then((res) => {
       if (res.success) setBalance(res.response);
     });

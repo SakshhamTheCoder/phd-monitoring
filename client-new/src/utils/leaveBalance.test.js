@@ -44,10 +44,10 @@ describe('formatDays', () => {
 // etc, same as the runtime code under test) and are only correct when that timezone is
 // Asia/Kolkata/Calcutta (UTC+5:30) — the same as server/.env's APP_TIMEZONE, which is what
 // produces the "date stored as 2024-05-01 serializes as 2024-04-30T18:30:00.000000Z" shift
-// these helpers exist to undo. vitest is not configured with a fixed TZ, so this suite
-// inherits whatever timezone the machine running it is set to; on a machine in a different
-// timezone these two specific cases would need different expected values (though the
-// null/plain-date cases below are timezone-independent).
+// these helpers exist to undo. vite.config.mjs pins `test.env.TZ` to Asia/Kolkata (see
+// commit 6166ea5), so this suite is deterministic regardless of the machine's own
+// timezone; the two specific cases below rely on that pin (though the null/plain-date
+// cases below are timezone-independent regardless).
 describe('localDateString', () => {
   it('undoes the UTC-midnight shift for a date-cast column serialized under Asia/Kolkata', () => {
     expect(localDateString('2024-04-30T18:30:00.000000Z')).toBe('2024-05-01');
