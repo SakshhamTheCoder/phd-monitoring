@@ -80,4 +80,20 @@ class ClerkLeaveTest extends TestCase
         $this->assertNull(Attendance::where('roll_no', $student->roll_no)
             ->where('date', self::DATE)->first());
     }
+
+    /** FIX 6: spec 4.6 scopes the leave-quota read to admin, clerk, hod, student. */
+    public function test_leave_settings_are_readable_by_an_allowed_role(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->getJson('/api/clerks/leave-settings')->assertStatus(200);
+    }
+
+    public function test_leave_settings_are_not_readable_by_a_role_outside_the_gate(): void
+    {
+        $director = User::whereHas('role', fn ($q) => $q->where('role', 'director'))->firstOrFail();
+        $this->actingAs($director, 'sanctum');
+
+        $this->getJson('/api/clerks/leave-settings')->assertStatus(403);
+    }
 }

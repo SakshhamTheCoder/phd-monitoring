@@ -190,7 +190,7 @@ class StudentLeaveFormController extends Controller
 
     private function hodSubmit($user, $request, $form_id)
     {
-        return $this->submitForm(
+        $response = $this->submitForm(
             $user,
             $request,
             $form_id,
@@ -200,14 +200,57 @@ class StudentLeaveFormController extends Controller
             'complete',
             function ($formInstance) use ($request, $user) {
                 // A rejection is handled by the shared fallback-to-previous-level
-                // machinery in GeneralFormSubmitter, which moves stage back to
-                // 'student' — nothing to do here in that case.
+                // machinery in GeneralFormSubmitter, which returns before this
+                // closure ever runs — see the rejection handling below instead.
                 if ($request->approval) {
                     $formInstance->completion = 'complete';
                     $formInstance->status = 'approved';
                     $formInstance->addHistoryEntry('Leave approved by HOD', $user->name());
+
+                    // GeneralFormSubmitter::handleMoveToNextLevel only calls
+                    // formNotification when $nextLevel is NOT 'complete' (see its
+                    // rejection-path counterpart, handleFallbackToPreviousLevel,
+                    // which does notify). Leave's only approval step *is* that
+                    // terminal transition, so without this the scholar is never
+                    // told their leave was approved. Sent here rather than in the
+                    // shared trait itself: 12 other form controllers depend on
+                    // today's terminal-transition (no notification) behaviour.
+                    $studentUser = $formInstance->student?->user;
+                    if ($studentUser) {
+                        $this->sendNotification(
+                            $studentUser,
+                            'Your leave application has been approved',
+                            'Your ' . $formInstance->leave_type . ' leave application has been approved by the HOD.',
+                            $this->formLink($formInstance, StudentLeaveForm::class),
+                            null,
+                            true
+                        );
+                    }
                 }
             }
         );
+
+        // handleFallbackToPreviousLevel moves stage back to 'student' but never
+        // touches status, so a rejected leave stays 'pending' forever: the
+        // scholar sees a "pending" badge on a dead application and it
+        // permanently inflates the HOD's pending queue. For a multi-stage form
+        // bouncing back for revision that status is right; for leave it is not
+        // — the HOD's decision is terminal and the scholar can simply apply
+        // again (concurrent applications are already allowed). This can't live
+        // in the extraSteps closure above: submitForm returns from
+        // handleFallbackToPreviousLevel on a rejection before extraSteps is
+        // ever invoked. Stage itself is left exactly as the trait set it —
+        // only status/completion are added here.
+        if (!$request->approval && $response->getStatusCode() === 200) {
+            $formInstance = StudentLeaveForm::find($form_id);
+            if ($formInstance) {
+                $formInstance->status = 'rejected';
+                $formInstance->completion = 'complete';
+                $formInstance->addHistoryEntry('Leave rejected by HOD', $user->name());
+                $formInstance->save();
+            }
+        }
+
+        return $response;
     }
 }

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Faculty;
+use App\Models\Notifications;
 use App\Models\Student;
 use App\Models\StudentLeaveForm;
 use App\Models\User;
@@ -226,6 +227,48 @@ class StudentLeaveFormTest extends TestCase
         ])->assertStatus(200);
 
         $this->assertTrue(LeaveWindow::covers($form->fresh(), '2026-09-15'));
+    }
+
+    /** FIX 1: an approval must notify the scholar — the terminal transition
+     * (nextLevel === 'complete') is silent in the shared trait, since leave is
+     * the first form whose only approval step is that terminal transition. */
+    public function test_hod_approval_notifies_the_scholar(): void
+    {
+        $student = Student::query()->firstOrFail();
+        $form = $this->leaveAwaitingHod($student);
+        $studentUserId = $student->user_id;
+
+        $this->actingAsHodFor($student);
+        $this->postJson("/api/forms/student-leave/{$form->id}", [
+            'approval' => true,
+        ])->assertStatus(200);
+
+        $this->assertTrue(
+            Notifications::where('user_id', $studentUserId)
+                ->where('link', "/attendance?tab=leaves&leave={$form->id}")
+                ->exists()
+        );
+    }
+
+    /** FIX 2: a rejected leave is terminal, not a bounced-back draft. */
+    public function test_hod_rejection_marks_the_leave_rejected(): void
+    {
+        $student = Student::query()->firstOrFail();
+        $form = $this->leaveAwaitingHod($student, [
+            'from_date' => '2026-09-17',
+            'to_date' => '2026-09-17',
+        ]);
+
+        $this->actingAsHodFor($student);
+        $this->postJson("/api/forms/student-leave/{$form->id}", [
+            'approval' => false,
+            'comments' => 'Not enough notice',
+        ])->assertStatus(200);
+
+        $fresh = $form->fresh();
+        $this->assertSame('rejected', $fresh->status);
+        $this->assertSame('complete', $fresh->completion);
+        $this->assertFalse(LeaveWindow::covers($fresh, '2026-09-17'));
     }
 
     public function test_an_approved_leave_counts_against_the_quota(): void
