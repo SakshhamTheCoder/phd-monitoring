@@ -54,6 +54,7 @@
 }
 
 .student-research .span-all { grid-column: 1 / -1; }
+.student-research .span-2 { grid-column: span 2; }
 
 .student-research-item strong { color: #6b7280; font-weight: 600; }
 

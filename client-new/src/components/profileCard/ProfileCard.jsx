@@ -349,7 +349,7 @@ const [userRole, setUserRole] = useState('');
           <div className="student-details">
             {!isEditingInline && (
               <div className="student-research">
-                <div className="student-research-item">
+                <div className="student-research-item span-2">
                   <strong>{titleLabel}:</strong>{" "}
                   <span className={phd_title ? "" : "student-value-empty"}>
                     {phd_title || "Not added"}
