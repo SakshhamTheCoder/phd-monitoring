@@ -10,6 +10,7 @@ use App\Models\Role;
 use App\Models\Student;
 use App\Support\AttendanceSummary;
 use App\Support\DepartmentScope;
+use App\Support\LeaveWindow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -117,7 +118,9 @@ class ClerkController extends Controller
             ->get()
             ->keyBy('roll_no');
 
-        $roster = $students->map(function ($student) use ($saved, $date) {
+        $onLeave = LeaveWindow::forDate($students->pluck('roll_no')->all(), $date);
+
+        $roster = $students->map(function ($student) use ($saved, $date, $onLeave) {
             $record = $saved->get($student->roll_no);
 
             return [
@@ -131,13 +134,16 @@ class ClerkController extends Controller
                 'status' => $record?->status,
                 'recorded' => $record !== null,
                 'marked_by_name' => $record ? optional($record->markedBy)->name() : null,
+                'on_leave' => isset($onLeave[$student->roll_no]),
+                'leave_type' => $onLeave[$student->roll_no]['type'] ?? null,
+                'day_part' => $onLeave[$student->roll_no]['day_part'] ?? null,
             ];
         })->values();
 
         return response()->json([
             'date' => $date,
             'students' => $roster,
-            'absent_count' => $roster->where('status', 'absent')->count(),
+            'absent_count' => $roster->where('status', 'absent')->where('on_leave', false)->count(),
             'total' => $roster->count(),
             'recorded_count' => $roster->where('recorded', true)->count(),
         ], 200);
@@ -219,9 +225,22 @@ class ClerkController extends Controller
 
         $date = $request->input('date');
         $savedCount = 0;
+        $skippedOnLeave = 0;
 
-        DB::transaction(function () use ($request, $user, $date, $lectureId, &$savedCount) {
+        DB::transaction(function () use ($request, $user, $date, $lectureId, &$savedCount, &$skippedOnLeave) {
+            $onLeave = LeaveWindow::forDate(
+                collect($request->input('records', []))->pluck('roll_no')->map(fn ($r) => (int) $r)->all(),
+                $date
+            );
+
             foreach ($request->input('records') as $record) {
+                // An approved leave excuses the day outright: writing either
+                // status here would contradict the approval the HOD gave.
+                if (isset($onLeave[(int) $record['roll_no']])) {
+                    $skippedOnLeave++;
+                    continue;
+                }
+
                 $existing = Attendance::where('roll_no', $record['roll_no'])
                     ->where('date', $date)
                     ->where('lecture_id', $lectureId)
@@ -262,6 +281,7 @@ class ClerkController extends Controller
         return response()->json([
             'message' => "Attendance saved for {$savedCount} student(s).",
             'saved' => $savedCount,
+            'skipped_on_leave' => $skippedOnLeave,
             'date' => $date,
         ], 200);
     }
@@ -324,9 +344,33 @@ class ClerkController extends Controller
         $idxStatus = array_search('status', $header, true);
         $idxLecture = array_search('lecture_id', $header, true);
 
-        $created = 0; $updated = 0; $skipped = 0;
+        $created = 0; $updated = 0; $skipped = 0; $skippedOnLeave = 0;
         $errors = [];
         $window = (int) config('attendance.edit_window_days', 7);
+
+        // Resolve every row's roll_no/date pair up front so leave lookup is one
+        // query per distinct date in the file, not one per row. A CSV commonly
+        // spans many dates, so this cannot assume a single date for the batch.
+        $rowsByDate = [];
+        foreach ($lines as $lineNo => $line) {
+            $cols = str_getcsv($line);
+            $rollRaw = trim($cols[$idxRoll] ?? '');
+            $dateRaw = trim($cols[$idxDate] ?? '');
+            if ($rollRaw === '' || $dateRaw === '' || !ctype_digit($rollRaw)) {
+                continue;
+            }
+            try {
+                $normalizedDate = \Carbon\Carbon::parse($dateRaw)->toDateString();
+            } catch (\Throwable $e) {
+                continue;
+            }
+            $rowsByDate[$normalizedDate][] = (int) $rollRaw;
+        }
+
+        $onLeaveByDate = [];
+        foreach ($rowsByDate as $rowDate => $rolls) {
+            $onLeaveByDate[$rowDate] = LeaveWindow::forDate(array_values(array_unique($rolls)), $rowDate);
+        }
 
         DB::beginTransaction();
         try {
@@ -377,6 +421,13 @@ class ClerkController extends Controller
                     continue;
                 }
 
+                // An approved leave excuses the day outright: writing either
+                // status here would contradict the approval the HOD gave.
+                if (isset($onLeaveByDate[$date][$roll])) {
+                    $skippedOnLeave++;
+                    continue;
+                }
+
                 $existing = Attendance::where('roll_no', $roll)->where('date', $date)->where('lecture_id', $lec)->first();
                 if ($existing && $existing->status === $statusRaw) {
                     $skipped++;
@@ -406,11 +457,12 @@ class ClerkController extends Controller
         }
 
         return response()->json([
-            'message' => "Import done: {$created} created, {$updated} updated, {$skipped} skipped, " . count($errors) . " errors",
+            'message' => "Import done: {$created} created, {$updated} updated, {$skipped} skipped, {$skippedOnLeave} on leave, " . count($errors) . " errors",
             'data' => [
                 'created' => $created,
                 'updated' => $updated,
                 'skipped' => $skipped,
+                'skipped_on_leave' => $skippedOnLeave,
                 'error_count' => count($errors),
                 'errors' => $errors,
             ],
