@@ -71,8 +71,17 @@ const HodAttendancePage = () => {
     setLoading(true);
     apiLeaveList()
       .then((res) => {
-        if (res.success) setRows(res.response?.data || []);
-        else setError('Could not load leave applications. Please try again later.');
+        if (res.success) {
+          // listHodForms applies no stage/status filter, so an abandoned draft
+          // (created by "Apply for Leave", never submitted) comes back here
+          // too — with no from_date, no other field, and nothing for the HOD
+          // to act on: handleHodForm 404s on it if opened. A draft is not
+          // reviewable by definition, so it has no business in a review
+          // queue. Mirrors StudentAttendancePage's own leaveRows filter.
+          setRows((res.response?.data || []).filter((r) => r.from_date));
+        } else {
+          setError('Could not load leave applications. Please try again later.');
+        }
       })
       .finally(() => setLoading(false));
   }, []);
