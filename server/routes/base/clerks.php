@@ -16,6 +16,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/attendance/student/{roll_no}', [ClerkController::class, 'studentAttendance']);
     Route::post('/attendance', [ClerkController::class, 'save']);
     Route::post('/attendance/csv', [ClerkController::class, 'csvImport']);
+    Route::get('/leave-settings', [ClerkController::class, 'leaveSettings']);
+    Route::post('/leave-settings', [ClerkController::class, 'saveLeaveSettings']);
 });
 
 // Admin-side clerk management (tagging clerks with departments).
