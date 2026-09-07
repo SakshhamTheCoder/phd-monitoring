@@ -150,6 +150,87 @@ export const setLineField = (b, key, year, index, field, value) =>
     lines(b, key, year).map((l, i) => (i === index ? { ...l, [field]: value } : l))
   );
 
+// Union of free-form line labels across all years, first-appearance order.
+// Powers the single-table budget: one row per label, one amount cell per year.
+// Blank labels are excluded; a fresh unsaved row is rendered separately by
+// the caller (see equipRows below) so it never leaks into read mode.
+export const unionLabels = (b, key, field) => {
+  const out = [];
+  for (const y of Object.keys((b && b[key]) || {})) {
+    for (const l of (((b[key] || {})[y]) || [])) {
+      const v = String((l && l[field]) || '').trim();
+      if (v && !out.includes(v)) out.push(v);
+    }
+  }
+  return out;
+};
+
+// Labels plus at most one blank entry for a fresh unsaved row.
+export const equipRows = (b) => {
+  const rows = unionLabels(b, KEY_EQUIPMENT, 'item');
+  const blank = Object.keys((b && b[KEY_EQUIPMENT]) || {}).some((y) =>
+    (((b[KEY_EQUIPMENT] || {})[y]) || []).some((l) => !String((l && l.item) || '').trim()));
+  return blank ? [...rows, ''] : rows;
+};
+
+export const namedLine = (b, key, year, field, label) =>
+  (((b && b[key] && b[key][year]) || []).find((l) => String((l && l[field]) || '').trim() === label) || null);
+
+export const setNamedAmount = (b, key, year, field, label, amount) => {
+  const val = amount === '' ? 0 : Number(amount);
+  const cur = lines(b, key, year);
+  const i = cur.findIndex((l) => String((l && l[field]) || '').trim() === label);
+  const next = i >= 0
+    ? cur.map((l, j) => (j === i ? { ...l, amount: val } : l))
+    : [...cur, { [field]: label, amount: val }];
+  return withLines(b, key, year, next);
+};
+
+export const renameNamedLines = (b, key, field, oldLabel, newLabel) => {
+  let out = b;
+  for (const y of Object.keys((b && b[key]) || {})) {
+    const cur = lines(out, key, y);
+    if (cur.some((l) => String((l && l[field]) || '').trim() === oldLabel)) {
+      out = withLines(out, key, y, cur.map((l) =>
+        (String((l && l[field]) || '').trim() === oldLabel ? { ...l, [field]: newLabel } : l)));
+    }
+  }
+  return out;
+};
+
+export const dropNamedLines = (b, key, field, label) => {
+  let out = b;
+  for (const y of Object.keys((b && b[key]) || {})) {
+    const cur = lines(out, key, y);
+    if (cur.some((l) => String((l && l[field]) || '').trim() === label)) {
+      out = withLines(out, key, y, cur.filter((l) => String((l && l[field]) || '').trim() !== label));
+    }
+  }
+  return out;
+};
+
+// Append one blank named line to every year so a fresh row renders across
+// all year columns at once.
+export const appendBlankLine = (b, key, years, blank) =>
+  (years || []).reduce((acc, y) => withLines(acc, key, y, [...lines(acc, key, y), { ...blank }]), b);
+
+// One manpower category cell, defaulting to zeros when the year has no line
+// for it yet. Fixed categories never need add/remove: the row always exists.
+export const manpowerCell = (b, year, category) =>
+  (((b && b[KEY_MANPOWER] && b[KEY_MANPOWER][year]) || [])
+    .find((l) => String((l && l.category) || '').trim() === category)
+    || { category, count: 0, amount: 0 });
+
+export const setManpowerCell = (b, year, category, field, value) => {
+  const val = value === '' ? 0 : Number(value);
+  const cur = lines(b, KEY_MANPOWER, year);
+  const i = cur.findIndex((l) => String((l && l.category) || '').trim() === category);
+  const next = i >= 0
+    ? cur.map((l, j) => (j === i ? { ...l, [field]: val } : l))
+    : [...cur, { category, count: 0, amount: 0, [field]: val }];
+  return withLines(b, KEY_MANPOWER, year, next);
+};
+
 export const blankManpower = () => ({ category: '', count: 1, amount: 0 });
 export const blankEquipment = () => ({ item: '', amount: 0 });
 export const blankOther = () => ({ label: '', amount: 0 });
