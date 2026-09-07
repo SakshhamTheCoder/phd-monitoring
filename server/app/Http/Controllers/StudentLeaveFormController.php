@@ -188,6 +188,16 @@ class StudentLeaveFormController extends Controller
             'hod',
             'student',
             'complete',
+            function ($formInstance) use ($request, $user) {
+                // A rejection is handled by the shared fallback-to-previous-level
+                // machinery in GeneralFormSubmitter, which moves stage back to
+                // 'student' — nothing to do here in that case.
+                if ($request->approval) {
+                    $formInstance->completion = 'complete';
+                    $formInstance->status = 'approved';
+                    $formInstance->addHistoryEntry('Leave approved by HOD', $user->name());
+                }
+            }
         );
     }
 }

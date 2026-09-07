@@ -2,9 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\Faculty;
 use App\Models\Student;
 use App\Models\StudentLeaveForm;
 use App\Models\User;
+use App\Support\LeaveBalance;
+use App\Support\LeaveWindow;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
@@ -20,6 +23,34 @@ class StudentLeaveFormTest extends TestCase
         $this->actingAs($user, 'sanctum');
 
         return $student;
+    }
+
+    /** Switches the acting user to the HOD of $student's department. */
+    private function actingAsHodFor(Student $student): void
+    {
+        $hodFaculty = Faculty::where('faculty_code', $student->department->hod_id)->firstOrFail();
+        $hodUser = User::findOrFail($hodFaculty->user_id);
+        $this->actingAs($hodUser, 'sanctum');
+    }
+
+    /** A leave already filled in and waiting at the HOD's desk. */
+    private function leaveAwaitingHod(Student $student, array $attributes = []): StudentLeaveForm
+    {
+        return StudentLeaveForm::create(array_merge([
+            'student_id' => $student->roll_no,
+            'stage' => 'hod',
+            'status' => 'pending',
+            'leave_type' => 'casual',
+            'from_date' => '2026-09-14',
+            'to_date' => '2026-09-14',
+            'day_part' => 'full',
+            'reason' => 'Personal',
+            'steps' => ['student', 'hod', 'complete'],
+            // Mirrors what handleMoveToNextLevel sets when a student really
+            // submits into the hod stage: locked from the student, open to hod.
+            'student_lock' => true,
+            'hod_lock' => false,
+        ], $attributes));
     }
 
     public function test_an_academic_application_without_a_document_is_rejected(): void
@@ -163,5 +194,56 @@ class StudentLeaveFormTest extends TestCase
         $this->actingAs($user, 'sanctum');
 
         $this->postJson('/api/forms/student-leave')->assertStatus(403);
+    }
+
+    public function test_hod_approval_marks_the_leave_approved(): void
+    {
+        $student = Student::query()->firstOrFail();
+        $form = $this->leaveAwaitingHod($student);
+
+        $this->actingAsHodFor($student);
+        $this->postJson("/api/forms/student-leave/{$form->id}", [
+            'approval' => true,
+        ])->assertStatus(200);
+
+        $fresh = $form->fresh();
+        $this->assertSame('approved', $fresh->status);
+        $this->assertSame('complete', $fresh->completion);
+    }
+
+    /** The assertion that ties the whole feature together. */
+    public function test_an_approved_leave_excuses_the_scholar(): void
+    {
+        $student = Student::query()->firstOrFail();
+        $form = $this->leaveAwaitingHod($student, [
+            'from_date' => '2026-09-15',
+            'to_date' => '2026-09-15',
+        ]);
+
+        $this->actingAsHodFor($student);
+        $this->postJson("/api/forms/student-leave/{$form->id}", [
+            'approval' => true,
+        ])->assertStatus(200);
+
+        $this->assertTrue(LeaveWindow::covers($form->fresh(), '2026-09-15'));
+    }
+
+    public function test_an_approved_leave_counts_against_the_quota(): void
+    {
+        $student = Student::query()->firstOrFail();
+        $before = LeaveBalance::for((int) $student->roll_no, '2026-09-16')['casual']['used'];
+
+        $form = $this->leaveAwaitingHod($student, [
+            'from_date' => '2026-09-16',
+            'to_date' => '2026-09-16',
+        ]);
+
+        $this->actingAsHodFor($student);
+        $this->postJson("/api/forms/student-leave/{$form->id}", [
+            'approval' => true,
+        ])->assertStatus(200);
+
+        $after = LeaveBalance::for((int) $student->roll_no, '2026-09-16')['casual']['used'];
+        $this->assertSame($before + 1.0, $after);
     }
 }
