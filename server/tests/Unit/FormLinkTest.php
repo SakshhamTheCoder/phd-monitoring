@@ -2,7 +2,9 @@
 
 namespace Tests\Unit;
 
+use App\Http\Controllers\PresentationController;
 use App\Http\Controllers\StudentSemesterOffFormController;
+use App\Models\Presentation;
 use App\Models\StudentLeaveForm;
 use App\Models\StudentSemesterOffForm;
 use Tests\TestCase;
@@ -29,6 +31,18 @@ class FormLinkTest extends TestCase
         $this->assertSame(
             '/forms/semester-off/7',
             $this->link(new StudentSemesterOffFormController(), $form, StudentSemesterOffForm::class)
+        );
+    }
+
+    public function test_a_presentation_links_into_the_progress_monitoring_page(): void
+    {
+        $presentation = new Presentation();
+        $presentation->period_of_report = 'Jan-Jun 2026';
+        $presentation->id = 7;
+
+        $this->assertSame(
+            '/presentation/semester/Jan-Jun 2026/7',
+            $this->link(new PresentationController(), $presentation, Presentation::class)
         );
     }
 
