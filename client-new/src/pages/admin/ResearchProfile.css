@@ -403,6 +403,44 @@
     font-size: 1.1rem;
 }
 
+/* body sets font-weight 600 app-wide, so every publication cell inherits
+   semi-bold and the rows read as a wall of emphasis. The list is data: give it
+   a normal weight. The column headers keep their own 600 from .data-table th,
+   the section heading keeps the inherited one, and the author highlight stays
+   bold because <strong> resolves relative to this. */
+.rp-table-section .data-table td {
+    font-weight: 400;
+}
+
+/* .data-table th is nowrap app-wide, which made "YEAR OF PUBLICATION" hold open
+   a column far wider than a four-digit year needs. Letting these headings wrap
+   onto two lines returns that space to the title, which is the column that
+   actually has something long to say. */
+.rp-table-section .data-table th {
+    white-space: normal;
+}
+
+.rp-table-section .data-table .rp-col-year {
+    width: 4.5rem;
+    white-space: nowrap;
+}
+
+/* Claimed rather than merely allowed: without a width the freed space is shared
+   out among every remaining column instead of going to the title. */
+.rp-table-section .data-table .rp-col-title {
+    width: 42%;
+}
+
+/* Row number: a narrow, quiet index. Fixed width so the column does not shift
+   when a list crosses from single to double digits. */
+.rp-table-section .data-table .rp-col-num {
+    width: 2.5rem;
+    color: var(--text-muted);
+    text-align: right;
+    padding-right: 0.5rem;
+    white-space: nowrap;
+}
+
 
 
 
