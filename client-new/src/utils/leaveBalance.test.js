@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseAttendanceQuery, overageOf, formatDays, localDateString, localMonthKey } from './leaveBalance';
+import { parseAttendanceQuery, overageOf, formatDays, localDateString, localMonthKey, validateLeaveSettings } from './leaveBalance';
 
 describe('parseAttendanceQuery', () => {
   it('reads the tab and leave id a notification link carries', () => {
@@ -85,5 +85,43 @@ describe('localMonthKey', () => {
 
   it('returns an unparseable value unchanged rather than NaN', () => {
     expect(localMonthKey('not-a-date')).toBe('not-a-date');
+  });
+});
+
+describe('validateLeaveSettings', () => {
+  const valid = { academic_quota: 10, casual_quota: 8, year_start_month: 7 };
+
+  it('accepts values within the backend bounds', () => {
+    expect(validateLeaveSettings(valid)).toBeNull();
+  });
+
+  it('accepts the boundary values (0, 365, 1, 12)', () => {
+    expect(validateLeaveSettings({ academic_quota: 0, casual_quota: 365, year_start_month: 1 })).toBeNull();
+    expect(validateLeaveSettings({ academic_quota: 365, casual_quota: 0, year_start_month: 12 })).toBeNull();
+  });
+
+  it('rejects an academic quota outside 0-365', () => {
+    expect(validateLeaveSettings({ ...valid, academic_quota: -1 })).toMatch(/Academic quota/);
+    expect(validateLeaveSettings({ ...valid, academic_quota: 366 })).toMatch(/Academic quota/);
+  });
+
+  it('rejects a casual quota outside 0-365', () => {
+    expect(validateLeaveSettings({ ...valid, casual_quota: -1 })).toMatch(/Casual quota/);
+    expect(validateLeaveSettings({ ...valid, casual_quota: 366 })).toMatch(/Casual quota/);
+  });
+
+  it('rejects a non-integer quota', () => {
+    expect(validateLeaveSettings({ ...valid, academic_quota: 10.5 })).toMatch(/Academic quota/);
+  });
+
+  it('rejects a year_start_month outside 1-12', () => {
+    expect(validateLeaveSettings({ ...valid, year_start_month: 0 })).toMatch(/start month/);
+    expect(validateLeaveSettings({ ...valid, year_start_month: 13 })).toMatch(/start month/);
+  });
+
+  it('rejects an empty or missing value rather than coercing it to 0', () => {
+    expect(validateLeaveSettings({ ...valid, academic_quota: '' })).toMatch(/Academic quota/);
+    expect(validateLeaveSettings({ ...valid, casual_quota: null })).toMatch(/Casual quota/);
+    expect(validateLeaveSettings({ ...valid, year_start_month: undefined })).toMatch(/start month/);
   });
 });

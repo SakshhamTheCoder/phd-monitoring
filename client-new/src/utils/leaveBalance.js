@@ -53,6 +53,25 @@ export const localDateString = (value) => {
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 };
 
+/**
+ * Client-side mirror of ClerkController::saveLeaveSettings's validation
+ * (academic_quota/casual_quota: integer 0-365, year_start_month: integer
+ * 1-12) so a clearly invalid value is caught before the request rather than
+ * round-tripping to the backend. Returns an error message, or null when the
+ * values are valid.
+ */
+export const validateLeaveSettings = ({ academic_quota, casual_quota, year_start_month }) => {
+  const isIntInRange = (value, min, max) => {
+    if (value === null || value === undefined || value === '') return false;
+    const n = Number(value);
+    return Number.isInteger(n) && n >= min && n <= max;
+  };
+  if (!isIntInRange(academic_quota, 0, 365)) return 'Academic quota must be a whole number between 0 and 365.';
+  if (!isIntInRange(casual_quota, 0, 365)) return 'Casual quota must be a whole number between 0 and 365.';
+  if (!isIntInRange(year_start_month, 1, 12)) return 'Quota year start month must be between January and December.';
+  return null;
+};
+
 /** Same local-time round trip as localDateString, truncated to the month —
  * for bucketing records by month without a UTC-midnight serialization
  * shifting a 1st-of-month record into the prior month. */

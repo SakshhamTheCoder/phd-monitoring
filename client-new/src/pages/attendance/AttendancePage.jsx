@@ -10,9 +10,12 @@ import CustomModal from '../../components/forms/modal/CustomModal';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { countAbsent, applyMarkAll, buildSaveMessage } from '../../utils/attendanceMark';
+import { validateLeaveSettings } from '../../utils/leaveBalance';
+import { apiLeaveSettings, apiSaveLeaveSettings } from '../../api/leave';
 import './AttendancePage.css';
 
 const EDIT_WINDOW = 7;
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 const todayString = () => {
   const now = new Date();
@@ -59,6 +62,10 @@ const AttendancePage = () => {
   const [exportFrom, setExportFrom] = useState(todayString());
   const [exportTo, setExportTo] = useState(todayString());
   const [exportDept, setExportDept] = useState('');
+  // configuration (admin only)
+  const [configForm, setConfigForm] = useState({ academic_quota: '', casual_quota: '', year_start_month: '' });
+  const [configLoading, setConfigLoading] = useState(false);
+  const [configSaving, setConfigSaving] = useState(false);
 
   const role = localStorage.getItem('userRole');
   const isAdmin = role === 'admin';
@@ -137,6 +144,42 @@ const AttendancePage = () => {
   }, [month, departmentFilter]);
 
   useEffect(() => { if (activeTab === 'monthly') loadMonth(); }, [activeTab, loadMonth]);
+
+  const loadConfig = useCallback(async () => {
+    setConfigLoading(true);
+    const res = await apiLeaveSettings();
+    setConfigLoading(false);
+    if (res.success) {
+      setConfigForm({
+        academic_quota: res.response.academic_quota,
+        casual_quota: res.response.casual_quota,
+        year_start_month: res.response.year_start_month,
+      });
+    }
+  }, []);
+
+  useEffect(() => { if (activeTab === 'configuration' && isAdmin) loadConfig(); }, [activeTab, isAdmin, loadConfig]);
+
+  const handleSaveConfig = async () => {
+    const values = {
+      academic_quota: Number(configForm.academic_quota),
+      casual_quota: Number(configForm.casual_quota),
+      year_start_month: Number(configForm.year_start_month),
+    };
+    const error = validateLeaveSettings(values);
+    if (error) { toast.error(error); return; }
+    setConfigSaving(true);
+    const res = await apiSaveLeaveSettings(values);
+    setConfigSaving(false);
+    if (res.success) {
+      toast.success('Leave quota settings saved');
+      setConfigForm({
+        academic_quota: res.response.academic_quota,
+        casual_quota: res.response.casual_quota,
+        year_start_month: res.response.year_start_month,
+      });
+    }
+  };
 
   const setStatus = (rollNo, status) => setStatuses((prev) => ({ ...prev, [rollNo]: status }));
   // A scholar on approved leave has no radio to bulk-set — the backend
@@ -246,10 +289,11 @@ const AttendancePage = () => {
           { value: 'history', label: 'Past Sessions' },
           { value: 'monthly', label: 'Monthly' },
           { value: 'export', label: 'Export' },
+          ...(isAdmin ? [{ value: 'configuration', label: 'Configuration' }] : []),
         ]}
       />
 
-      {activeTab !== 'export' && (
+      {activeTab !== 'export' && activeTab !== 'configuration' && (
         <div className="filter-bar attendance-filters">
           <div className="filter-row" style={{ alignItems: 'flex-end' }}>
             <div className="input-field-container" style={{ minWidth: '220px' }}>
@@ -494,6 +538,60 @@ const AttendancePage = () => {
           <div className="form-list-container">
             <div style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
               {exportDept ? `Exports all scholars in ${departments.find((d) => String(d.id) === String(exportDept))?.name || 'the selected department'} for the chosen range.` : 'Exports all scholars you can access for the chosen range.'} Includes present counts per scholar.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Configuration tab — admin only, leave quotas. Room for later attendance-wide settings. */}
+      {activeTab === 'configuration' && isAdmin && (
+        <div style={{ marginTop: '1rem' }}>
+          <div className="filter-bar">
+            <div className="filter-row" style={{ alignItems: 'flex-end' }}>
+              <div className="input-field-container" style={{ minWidth: '160px' }}>
+                <label className="input-label">Academic quota</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="365"
+                  className="input-field"
+                  value={configForm.academic_quota}
+                  onChange={(e) => setConfigForm((prev) => ({ ...prev, academic_quota: e.target.value }))}
+                  disabled={configLoading}
+                />
+              </div>
+              <div className="input-field-container" style={{ minWidth: '160px' }}>
+                <label className="input-label">Casual quota</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="365"
+                  className="input-field"
+                  value={configForm.casual_quota}
+                  onChange={(e) => setConfigForm((prev) => ({ ...prev, casual_quota: e.target.value }))}
+                  disabled={configLoading}
+                />
+              </div>
+              <div className="input-field-container" style={{ minWidth: '190px' }}>
+                <label className="input-label">Quota year starts in</label>
+                <select
+                  className="input-field"
+                  value={configForm.year_start_month}
+                  onChange={(e) => setConfigForm((prev) => ({ ...prev, year_start_month: e.target.value }))}
+                  disabled={configLoading}
+                >
+                  <option value="" disabled>Select a month</option>
+                  {MONTH_NAMES.map((name, idx) => <option key={name} value={idx + 1}>{name}</option>)}
+                </select>
+              </div>
+              <div style={{ marginLeft: 'auto' }}>
+                <CustomButton text={configSaving ? 'Saving…' : 'Save'} onClick={handleSaveConfig} disabled={configLoading || configSaving} />
+              </div>
+            </div>
+          </div>
+          <div className="form-list-container">
+            <div style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+              {configLoading ? 'Loading current settings…' : 'These quotas apply to every scholar and reset at the start of the chosen month each year.'}
             </div>
           </div>
         </div>
