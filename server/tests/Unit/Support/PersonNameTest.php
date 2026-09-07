@@ -39,13 +39,6 @@ class PersonNameTest extends TestCase
         $this->assertSame(['first' => '', 'last' => ' '], PersonName::split(null));
     }
 
-    public function test_join_is_the_inverse_for_ordinary_names(): void
-    {
-        $this->assertSame('Khalid Bashir', PersonName::join('Khalid', 'Bashir'));
-        $this->assertSame('Prince', PersonName::join('Prince', ' '));
-        $this->assertSame('Prince', PersonName::join('Prince', null));
-    }
-
     public function test_a_row_with_a_full_name_uses_it(): void
     {
         $this->assertSame(

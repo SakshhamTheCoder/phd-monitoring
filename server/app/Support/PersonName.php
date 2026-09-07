@@ -37,11 +37,6 @@ final class PersonName
         return ['first' => implode(' ', $parts), 'last' => $last];
     }
 
-    public static function join(?string $first, ?string $last): string
-    {
-        return trim(trim((string) $first) . ' ' . trim((string) $last));
-    }
-
     /**
      * Pull a name out of an import row.
      *

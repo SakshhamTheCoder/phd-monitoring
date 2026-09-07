@@ -150,20 +150,6 @@ export const setLineField = (b, key, year, index, field, value) =>
     lines(b, key, year).map((l, i) => (i === index ? { ...l, [field]: value } : l))
   );
 
-// Aliases retained for callers that add/remove/set lines by role rather than
-// by reserved key directly.
-export const addManpowerLine = (b, year) => addLine(b, KEY_MANPOWER, year, blankManpower());
-export const removeManpowerLine = (b, year, index) => removeLine(b, KEY_MANPOWER, year, index);
-export const setManpowerLine = (b, year, index, field, value) => setLineField(b, KEY_MANPOWER, year, index, field, value);
-
-export const addEquipmentLine = (b, year) => addLine(b, KEY_EQUIPMENT, year, blankEquipment());
-export const removeEquipmentLine = (b, year, index) => removeLine(b, KEY_EQUIPMENT, year, index);
-export const setEquipmentLine = (b, year, index, field, value) => setLineField(b, KEY_EQUIPMENT, year, index, field, value);
-
-export const addOtherLine = (b, year) => addLine(b, KEY_OTHER, year, blankOther());
-export const removeOtherLine = (b, year, index) => removeLine(b, KEY_OTHER, year, index);
-export const setOtherLine = (b, year, index, field, value) => setLineField(b, KEY_OTHER, year, index, field, value);
-
 export const blankManpower = () => ({ category: '', count: 1, amount: 0 });
 export const blankEquipment = () => ({ item: '', amount: 0 });
 export const blankOther = () => ({ label: '', amount: 0 });

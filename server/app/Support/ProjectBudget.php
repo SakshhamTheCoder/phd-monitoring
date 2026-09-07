@@ -6,33 +6,12 @@ namespace App\Support;
  * A project's budget: what is stored, what is derived, and how an old one is
  * read forward.
  *
- * Three heads are derived rather than typed in. Manpower is a list of lines,
- * each a category with a count and a per-head amount, and it contributes
- * count x amount — a count that did not multiply would be decoration.
- * Equipment and Any Other Expenses are free-form lists, so neither carries a
- * fixed menu of options. Travel, Contingency and Overhead are still typed
- * directly against the year, and Travel keeps its Domestic/International split.
+ * Manpower costs count x amount; Equipment and Any Other Expenses are
+ * free-form lists. Reserved __keys hold the lists; everything else is a year.
  *
- * Reserved top-level keys hold the lists. Everything else in the object is a
- * year, which is why years() filters on the double underscore.
- *
- * The migration invariant. The old portal's total for a year was, and still
- * is, the sum of the plain values sitting in budget[year] — that is what
- * cellMismatch/budgetMismatches in the old UI warns about when a head and its
- * sub-item breakdown disagree. normalize() must reproduce that exact total
- * for any year that already existed under that legacy reading, even when the
- * row is malformed, because a migration that quietly moves money is worse
- * than one that refuses to run. Two consequences follow:
- *
- *  - When a derived head (Manpower/Equipment/Any Other Expenses) has both a
- *    stored head amount and a line/sub-item breakdown that doesn't sum to it,
- *    the stored amount wins — it is what the old total already counted — and
- *    the gap is carried forward as its own visible line rather than silently
- *    dropped or invented.
- *  - A year that only exists via __manpower/__equipment/__other/__subitems
- *    (no legacy row at all, e.g. a year created directly in the new shape) is
- *    not constrained by that old total, so its lines are trusted as-is; there
- *    is nothing on the old side for them to disagree with.
+ * Migration invariant: a legacy year's total is the sum of plain values in
+ * budget[year]. normalize() reproduces that exact total: a stored head amount
+ * wins over its breakdown, the gap carried as a visible reconciling line.
  */
 final class ProjectBudget
 {
