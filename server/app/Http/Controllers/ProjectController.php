@@ -88,7 +88,7 @@ class ProjectController extends Controller {
         $user = Auth::user();
         if (!$this->canManage($user)) return response()->json(['message' => 'Not authorized'], 403);
         $validator = Validator::make($request->all(), ProjectRequestRules::forStore());
-        if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
+        if ($validator->fails()) return response()->json(['message' => 'Validation failed', 'errors' => $validator->errors()], 422);
 
         $project = new Project();
         $piCode = optional($user->faculty)->faculty_code;
@@ -111,7 +111,7 @@ class ProjectController extends Controller {
         if (!$project) return response()->json(['message' => 'Project not found'], 404);
         if (!$this->owns($user, $project)) return response()->json(['message' => 'Not authorized'], 403);
         $validator = Validator::make($request->all(), ProjectRequestRules::forUpdate($project->duration_years));
-        if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 422);
+        if ($validator->fails()) return response()->json(['message' => 'Validation failed', 'errors' => $validator->errors()], 422);
         $this->fill($project, $request);
         if ($request->hasFile('sanction_letter')) {
             $project->sanction_letter_link = $this->replaceUploadedFile($project->sanction_letter_link, $request->file('sanction_letter'), 'project_sanction', $project->id);

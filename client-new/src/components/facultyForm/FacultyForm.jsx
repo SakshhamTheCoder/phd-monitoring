@@ -146,7 +146,7 @@ const FacultyForm = ({ edit = false, facultyData = {}, onSuccess, onClose }) => 
           <InputField
             label="Designation*"
             initialValue={formData.designation}
-            onChange={(val) => {console.log(val);handleChange("designation", val)}}
+            onChange={(val) => handleChange("designation", val)}
 
           />,
         ]}
