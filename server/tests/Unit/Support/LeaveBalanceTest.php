@@ -146,4 +146,50 @@ class LeaveBalanceTest extends TestCase
 
         $this->assertSame(-2.0, LeaveBalance::for($rollNo, '2026-09-14')['casual']['remaining']);
     }
+
+    public function test_an_absence_covered_by_a_leave_that_started_before_the_window_is_not_double_charged(): void
+    {
+        $this->setYearStart(7);
+        $rollNo = (int) \App\Models\Student::query()->value('roll_no');
+
+        StudentLeaveForm::create([
+            'student_id' => $rollNo,
+            'leave_type' => 'casual',
+            'from_date' => '2026-06-28',
+            'to_date' => '2026-07-03',
+            'day_part' => 'full',
+            'status' => 'approved',
+            'stage' => 'complete',
+        ]);
+        \App\Models\Attendance::updateOrCreate(
+            ['roll_no' => $rollNo, 'date' => '2026-07-02', 'lecture_id' => 0],
+            ['status' => 'absent']
+        );
+
+        // The leave is charged wholly to the previous window (it started
+        // there), and the absence it covers must not be counted as
+        // unapproved here even though the leave itself is outside $leaves
+        // for this window.
+        $this->assertSame(0.0, LeaveBalance::for($rollNo, '2026-09-14')['casual']['used']);
+    }
+
+    public function test_a_boundary_spanning_leave_is_still_charged_to_the_window_it_started_in(): void
+    {
+        $this->setYearStart(7);
+        $rollNo = (int) \App\Models\Student::query()->value('roll_no');
+
+        StudentLeaveForm::create([
+            'student_id' => $rollNo,
+            'leave_type' => 'casual',
+            'from_date' => '2026-06-28',
+            'to_date' => '2026-07-03',
+            'day_part' => 'full',
+            'status' => 'approved',
+            'stage' => 'complete',
+        ]);
+
+        // 28 Jun - 3 Jul inclusive is 6 days, charged to the window that
+        // contains its start date (2025-07-01 .. 2026-06-30).
+        $this->assertSame(6.0, LeaveBalance::for($rollNo, '2026-06-29')['casual']['used']);
+    }
 }

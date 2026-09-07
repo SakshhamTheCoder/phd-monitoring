@@ -67,7 +67,20 @@ final class LeaveBalance
             $used[$leave->leave_type] += self::daysFor($leave);
         }
 
-        $used['casual'] += self::unapprovedAbsences($rollNo, $window, $leaves);
+        // Charging follows the leave's start date (above, via $leaves), so a
+        // leave that starts before this window but spans into it is charged
+        // wholly to the earlier window. Coverage, by contrast, must follow the
+        // actual days the leave excuses, so it needs every approved leave that
+        // overlaps this window at all -- not just those starting inside it --
+        // or a boundary-spanning leave's days here would be wrongly counted as
+        // unapproved absences on top of being charged to the earlier window.
+        $overlapping = StudentLeaveForm::approved()
+            ->where('student_id', $rollNo)
+            ->whereDate('to_date', '>=', $window['start'])
+            ->whereDate('from_date', '<=', $window['end'])
+            ->get();
+
+        $used['casual'] += self::unapprovedAbsences($rollNo, $window, $overlapping);
 
         $quota = [
             'academic' => (float) LeaveSetting::value('academic_quota'),
