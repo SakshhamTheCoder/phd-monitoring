@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Traits\FilterLogicTrait;
-use App\Http\Controllers\Traits\GeneralFormCreate;
 use App\Http\Controllers\Traits\GeneralFormHandler;
 use App\Http\Controllers\Traits\GeneralFormList;
 use App\Http\Controllers\Traits\GeneralFormSubmitter;
@@ -22,7 +21,7 @@ use Illuminate\Support\Facades\Auth;
  */
 class StudentLeaveFormController extends Controller
 {
-    use FilterLogicTrait, GeneralFormCreate, GeneralFormHandler, GeneralFormList,
+    use FilterLogicTrait, GeneralFormHandler, GeneralFormList,
         GeneralFormSubmitter, SaveFile;
 
     private const STEPS = ['student', 'hod', 'complete'];

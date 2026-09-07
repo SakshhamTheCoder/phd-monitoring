@@ -29,13 +29,34 @@ class StudentLeaveFormTest extends TestCase
             'student_id' => $student->roll_no, 'stage' => 'student', 'status' => 'draft',
         ]);
 
+        // Confirm this is rejected specifically for the missing document, not
+        // because some other validation rule fired first.
         $this->postJson("/api/forms/student-leave/{$form->id}", [
             'leave_type' => 'academic',
             'from_date' => '2026-09-14',
             'to_date' => '2026-09-14',
             'day_part' => 'full',
             'reason' => 'Conference',
-        ])->assertStatus(422);
+        ])->assertStatus(422)
+            ->assertJson(['message' => 'An academic leave needs a supporting document.']);
+    }
+
+    public function test_a_casual_application_with_a_document_is_rejected(): void
+    {
+        $student = $this->actingAsStudent();
+        $form = StudentLeaveForm::create([
+            'student_id' => $student->roll_no, 'stage' => 'student', 'status' => 'draft',
+        ]);
+
+        $this->postJson("/api/forms/student-leave/{$form->id}", [
+            'leave_type' => 'casual',
+            'from_date' => '2026-09-14',
+            'to_date' => '2026-09-14',
+            'day_part' => 'full',
+            'reason' => 'Personal',
+            'supporting_document' => UploadedFile::fake()->create('proof.pdf', 100, 'application/pdf'),
+        ])->assertStatus(422)
+            ->assertJson(['message' => 'A casual leave takes no supporting document.']);
     }
 
     public function test_a_casual_application_needs_no_document(): void
@@ -120,10 +141,18 @@ class StudentLeaveFormTest extends TestCase
 
     public function test_a_second_draft_may_be_created_while_the_first_is_still_open(): void
     {
-        $this->actingAsStudent();
+        $student = $this->actingAsStudent();
 
-        $this->postJson('/api/forms/student-leave')->assertStatus(200);
-        $this->postJson('/api/forms/student-leave')->assertStatus(200);
+        $first = $this->postJson('/api/forms/student-leave')->assertStatus(200)->json('id');
+        $second = $this->postJson('/api/forms/student-leave')->assertStatus(200)->json('id');
+
+        $this->assertNotNull($first);
+        $this->assertNotNull($second);
+        $this->assertNotSame($first, $second);
+        $this->assertSame(
+            2,
+            StudentLeaveForm::where('student_id', $student->roll_no)->count()
+        );
     }
 
     public function test_a_non_student_cannot_create_a_leave_draft(): void
