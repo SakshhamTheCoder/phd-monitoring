@@ -239,15 +239,15 @@ class FacultyController extends Controller
     
         $facultyQuery = Faculty::with(['user', 'department']);
         
-        if ($role === 'hod'||$role === 'phd_coordinator') {
-            $facultyQuery->where('department_id', $loggedInUser->faculty->department_id);
-        }  
-        else if($role==='adordc'){
-             $departments = $loggedInUser->faculty->adordcDepartments->pluck('id');
-             $facultyQuery->whereIn('department_id', $departments);
-        }
-        elseif ($role === 'admin'||$role === 'director' || $role === 'dra' || $role === 'dordc') {
-          
+        // As in StudentController::list: the capability says whether, the role
+        // says which departments, since an ADORDC answers for several.
+        if ($loggedInUser->may('can_read_all_faculties')) {
+            // No scoping.
+        } elseif ($loggedInUser->may('can_read_department_faculties')) {
+            $departments = $role === 'adordc'
+                ? $loggedInUser->faculty->adordcDepartments->pluck('id')
+                : [$loggedInUser->faculty->department_id];
+            $facultyQuery->whereIn('department_id', $departments);
         } else {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }

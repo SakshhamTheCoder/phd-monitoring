@@ -60,8 +60,7 @@ class StudentLeaveFormController extends Controller
     public function createForm(Request $request)
     {
         $user = Auth::user();
-        $role = $user->current_role;
-        if ($role->role !== 'student') {
+        if (!$user->may('can_apply_for_leave')) {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
 
@@ -113,7 +112,7 @@ class StudentLeaveFormController extends Controller
     public function balance(Request $request)
     {
         $user = Auth::user();
-        if ($user->current_role->role !== 'student') {
+        if (!$user->may('can_read_own_leave_balance')) {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
 

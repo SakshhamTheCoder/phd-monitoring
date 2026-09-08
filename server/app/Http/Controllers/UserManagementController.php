@@ -26,7 +26,7 @@ class UserManagementController extends Controller
     {
         $loggedInUser = Auth::user();
         
-        if ($loggedInUser->current_role->role !== 'admin') {
+        if (!$loggedInUser->may('can_manage_users')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -89,7 +89,7 @@ class UserManagementController extends Controller
     {
         $loggedInUser = Auth::user();
         
-        if ($loggedInUser->current_role->role !== 'admin') {
+        if (!$loggedInUser->may('can_manage_users')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -123,7 +123,7 @@ class UserManagementController extends Controller
     {
         $loggedInUser = Auth::user();
         
-        if ($loggedInUser->current_role->role !== 'admin') {
+        if (!$loggedInUser->may('can_manage_users')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -214,7 +214,7 @@ class UserManagementController extends Controller
     {
         $loggedInUser = Auth::user();
         
-        if ($loggedInUser->current_role->role !== 'admin') {
+        if (!$loggedInUser->may('can_manage_users')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -238,7 +238,7 @@ class UserManagementController extends Controller
     {
         $loggedInUser = Auth::user();
         
-        if ($loggedInUser->current_role->role !== 'admin') {
+        if (!$loggedInUser->may('can_manage_users')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -262,7 +262,7 @@ class UserManagementController extends Controller
     {
         $loggedInUser = Auth::user();
         
-        if ($loggedInUser->current_role->role !== 'admin') {
+        if (!$loggedInUser->may('can_manage_users')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -285,7 +285,7 @@ class UserManagementController extends Controller
     {
         $loggedInUser = Auth::user();
         
-        if ($loggedInUser->current_role->role !== 'admin') {
+        if (!$loggedInUser->may('can_manage_users')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 

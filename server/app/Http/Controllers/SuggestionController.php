@@ -74,7 +74,7 @@ class SuggestionController extends Controller
     public function suggestExaminer(Request $request)
     {
         $loggenInUser = Auth::user();
-        if ($loggenInUser->current_role->role != 'faculty') {
+        if (!$loggenInUser->may('can_suggest_examiners')) {
             return response()->json(["message" => "Only faculty can view examiners"]);
         }
 

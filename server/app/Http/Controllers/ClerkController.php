@@ -67,7 +67,7 @@ class ClerkController extends Controller
     public function myDepartments(Request $request)
     {
         $user = Auth::user();
-        if ($user->current_role->role !== 'clerk') {
+        if (!$user->may('can_read_own_clerk_departments')) {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
 
@@ -92,7 +92,7 @@ class ClerkController extends Controller
         $user = Auth::user();
 
         // Admins get read access for oversight; only clerks can write (save()).
-        if (!in_array($user->current_role->role, ['clerk', 'admin'], true)) {
+        if (!$user->may('can_mark_attendance')) {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
 
@@ -163,7 +163,7 @@ class ClerkController extends Controller
     {
         $user = Auth::user();
         $role = $user->current_role->role;
-        if (!in_array($role, ['clerk', 'admin'], true)) {
+        if (!$user->may('can_mark_attendance')) {
             return response()->json(['message' => 'You are not authorized to mark attendance'], 403);
         }
 
@@ -293,7 +293,7 @@ class ClerkController extends Controller
     public function template(Request $request)
     {
         $user = Auth::user();
-        if (!in_array($user->current_role->role, ['clerk', 'admin'], true)) {
+        if (!$user->may('can_mark_attendance')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
         $csv = "roll_no,date,status\n123,2026-08-26,present\n124,2026-08-26,absent\n";
@@ -311,7 +311,7 @@ class ClerkController extends Controller
     {
         $user = Auth::user();
         $role = $user->current_role->role;
-        if (!in_array($role, ['clerk', 'admin'], true)) {
+        if (!$user->may('can_mark_attendance')) {
             return response()->json(['message' => 'You are not authorized to import attendance'], 403);
         }
 
@@ -476,7 +476,7 @@ class ClerkController extends Controller
     public function history(Request $request)
     {
         $user = Auth::user();
-        if (!in_array($user->current_role->role, ['clerk', 'admin'], true)) {
+        if (!$user->may('can_mark_attendance')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
         $request->validate([
@@ -516,7 +516,7 @@ class ClerkController extends Controller
     {
         $user = Auth::user();
         $role = $user->current_role->role;
-        if (!in_array($role, ['clerk', 'admin'], true)) {
+        if (!$user->may('can_mark_attendance')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -565,7 +565,7 @@ class ClerkController extends Controller
     {
         $user = Auth::user();
         $role = $user->current_role->role;
-        if (!in_array($role, ['clerk', 'admin'], true)) {
+        if (!$user->may('can_mark_attendance')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -714,7 +714,7 @@ class ClerkController extends Controller
         // phd_coordinator, supervising faculty, doctoral committee, external)
         // still sees the leave dates/type/status, just not the content of it.
         $leaveColumns = ['id', 'leave_type', 'from_date', 'to_date', 'day_part', 'status'];
-        if (in_array($role, ['student', 'hod', 'admin'], true)) {
+        if ($user->may('can_read_leave_reason')) {
             $leaveColumns[] = 'reason';
             $leaveColumns[] = 'hod_comments';
         }
@@ -745,7 +745,7 @@ class ClerkController extends Controller
     public function export(Request $request)
     {
         $user = Auth::user();
-        if (!in_array($user->current_role->role, ['clerk', 'admin'], true)) {
+        if (!$user->may('can_mark_attendance')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -816,7 +816,7 @@ class ClerkController extends Controller
      */
     private function authorizeAdmin(): ?\Illuminate\Http\JsonResponse
     {
-        if (Auth::user()->current_role->role !== 'admin') {
+        if (!Auth::user()->may('can_manage_clerks')) {
             return response()->json(['message' => 'You are not authorized to manage clerks'], 403);
         }
         return null;

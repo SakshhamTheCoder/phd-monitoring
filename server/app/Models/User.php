@@ -156,6 +156,19 @@ class User extends Authenticatable
         return array_values(array_unique(array_merge($override, $derived)));
     }
 
+    /**
+     * Whether the role being acted as holds a capability, e.g.
+     * $user->may('can_mark_attendance').
+     *
+     * Reads current_role, not role: a permission follows who you are acting as.
+     * The columns are enum('true','false'), so an unknown or missing value is
+     * not 'true' and the check fails closed.
+     */
+    public function may(string $capability): bool
+    {
+        return ($this->current_role?->{$capability} ?? null) === 'true';
+    }
+
     public function isAuthorized($role)
     {
         $roles = $this->availableRoles();

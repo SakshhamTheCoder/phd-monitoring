@@ -32,7 +32,7 @@ class AppSettingController extends Controller
             return response()->json(['message' => 'Unknown settings group'], 404);
         }
 
-        if (Auth::user()->current_role->role !== 'admin') {
+        if (!Auth::user()->may('can_manage_app_settings')) {
             return response()->json(['message' => 'You are not authorized to change settings'], 403);
         }
 

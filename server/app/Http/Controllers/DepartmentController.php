@@ -32,7 +32,7 @@ class DepartmentController extends Controller
         $perPage = $request->input('rows', 15);
         $page = $request->input('page', 1);
     
-        if (!in_array($role, ['admin', 'director', 'dra', 'dordc'])) {
+        if (!$loggedInUser->may('can_edit_department')) {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
     

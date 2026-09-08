@@ -366,32 +366,27 @@ class StudentController extends Controller {
 
     $studentsQuery = Student::with(['user', 'department', 'supervisors.user', 'doctoralCommittee.user']);
 
-    switch ($role) {
-        case 'hod':
-        case 'phd_coordinator':
-            $studentsQuery->where('department_id', $loggedInUser->faculty->department_id);
-            break;
-        case 'faculty':
-            $studentsQuery = $loggedInUser->faculty->supervisedStudents()->with(['user', 'department', 'supervisors.user', 'doctoralCommittee.user']);
-            break;
-        case 'doctoral':
-        case 'external':
-            $studentsQuery = $loggedInUser->faculty->doctoredStudents()->with(['user', 'department', 'supervisors.user', 'doctoralCommittee.user']);
-            break;
-        case 'student':
-            $studentsQuery->where('user_id', $loggedInUser->id);
-            break;
-        case 'adordc': 
-            $departments = $loggedInUser->faculty->adordcDepartments->pluck('id');
-            $studentsQuery->whereIn('department_id', $departments);
-            break;
-        case 'admin':
-        case 'director':
-        case 'dra':
-        case 'dordc':
-            break;
-        default:
-            return response()->json(['message' => 'You do not have permission to view students'], 403);
+    // The capability decides whether a role may read at all; the role still
+    // decides which records that means, because "their department" is one
+    // department for a HOD and a list of them for an ADORDC.
+    $with = ['user', 'department', 'supervisors.user', 'doctoralCommittee.user'];
+
+    if ($loggedInUser->may('can_read_all_students')) {
+        // No scoping.
+    } elseif ($loggedInUser->may('can_read_department_students')) {
+        $departments = $role === 'adordc'
+            ? $loggedInUser->faculty->adordcDepartments->pluck('id')
+            : [$loggedInUser->faculty->department_id];
+        $studentsQuery->whereIn('department_id', $departments);
+    } elseif ($loggedInUser->may('can_read_supervised_students')) {
+        $studentsQuery = $loggedInUser->faculty->supervisedStudents()->with($with);
+    } elseif ($loggedInUser->may('can_read_committee_students')) {
+        $studentsQuery = $loggedInUser->faculty->doctoredStudents()->with($with);
+    } elseif ($role === 'student') {
+        // Reading your own record is identity, not a capability.
+        $studentsQuery->where('user_id', $loggedInUser->id);
+    } else {
+        return response()->json(['message' => 'You do not have permission to view students'], 403);
     }
 
     if ($filters) {
@@ -553,7 +548,7 @@ class StudentController extends Controller {
     public function updateProfile(Request $request)
     {
         $user = Auth::user();
-        if ($user->current_role->role !== 'student') {
+        if (!$user->may('can_edit_own_student_profile')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 

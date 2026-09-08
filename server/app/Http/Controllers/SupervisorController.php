@@ -12,7 +12,7 @@ class SupervisorController extends Controller
     public function assign(Request $request)
     {
         $loggenInUser = Auth::user();
-        if($loggenInUser->current_role->role != 'admin'){
+        if(!$loggenInUser->may('can_manage_supervisor_records')){
             return response()->json([
                 'message' => 'You do not have permission to create supervisor'
             ], 403);
@@ -48,7 +48,7 @@ class SupervisorController extends Controller
     public function assignDoctoral(Request $request)
     {
         $loggenInUser = Auth::user();
-        if($loggenInUser->current_role->role != 'admin'){
+        if(!$loggenInUser->may('can_manage_supervisor_records')){
             return response()->json([
                 'message' => 'You do not have permission to create supervisor'
             ], 403);

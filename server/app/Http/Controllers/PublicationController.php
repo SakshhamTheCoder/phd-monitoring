@@ -28,8 +28,7 @@ class PublicationController extends Controller
     public function get(Request $request)
     {
         $user = Auth::user();
-        $role = $user->current_role->role;
-        if ($role != 'student') {
+        if (!$user->may('can_manage_own_publications')) {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
         $id = $user->student->roll_no;
@@ -66,8 +65,7 @@ class PublicationController extends Controller
             'name' => 'required|string'
         ]);
         $user = Auth::user();
-        $role = $user->current_role->role;
-        if ($role != 'student') {
+        if (!$user->may('can_manage_own_publications')) {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
         if ($validator->fails()) {
@@ -260,8 +258,7 @@ class PublicationController extends Controller
     public function destroy($id)
     {
         $user = Auth::user();
-        $role = $user->current_role->role;
-        if ($role !== 'student') {
+        if (!$user->may('can_manage_own_publications')) {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
 

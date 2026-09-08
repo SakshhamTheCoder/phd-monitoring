@@ -22,7 +22,7 @@ class FormLevelController extends Controller
 {
     public function updateFormLevel(Request $request){
         $loggenInUser = Auth::user();
-        if($loggenInUser->current_role->role != 'admin'){
+        if(!$loggenInUser->may('can_manage_form_levels')){
             return response()->json([
                 'message' => 'You do not have permission to create supervisor'
             ], 403);
@@ -168,7 +168,7 @@ class FormLevelController extends Controller
     }
     public function listForms(Request $request){
         $loggenInUser = Auth::user();
-        if($loggenInUser->current_role->role != 'admin'){
+        if(!$loggenInUser->may('can_manage_form_levels')){
             return response()->json([
                 'message' => 'You do not have permission to create supervisor'
             ], 403);

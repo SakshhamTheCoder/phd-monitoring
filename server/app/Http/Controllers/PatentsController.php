@@ -39,8 +39,7 @@ class PatentsController extends Controller
             'country'=>'required|in:National,International'
         ]);
         $user = Auth::user();
-        $role = $user->current_role->role;
-        if($role!='student'){
+        if (!$user->may('can_manage_own_publications')) {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
         if ($validator->fails()) {
@@ -84,8 +83,7 @@ class PatentsController extends Controller
                 'country'=>'required|in:National,International'
             ]);
             $user = Auth::user();
-            $role = $user->current_role->role;
-            if($role!='student'){
+            if (!$user->may('can_manage_own_publications')) {
                 return response()->json(['message' => 'You are not authorized to access this resource'], 403);
             }
             if ($validator->fails()) {
@@ -114,8 +112,7 @@ class PatentsController extends Controller
     public function destroy($id)
     {
         $user = Auth::user();
-        $role = $user->current_role->role;
-        if ($role !== 'student') {
+        if (!$user->may('can_manage_own_publications')) {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
 
