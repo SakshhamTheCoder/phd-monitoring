@@ -272,6 +272,57 @@ class Faculty extends Model
         return array_values(array_filter(array_map('trim', preg_split('/[,;]+/', (string)$value))));
     }
 
+    /**
+     * The students this faculty supervises and the committees they sit on.
+     *
+     * One serializer for both consumers: the faculty profile and the faculty
+     * branch of HomeController. Written twice they drifted, which is how the
+     * dashboard and the profile ended up describing a supervised student
+     * differently.
+     */
+    public function supervisionPayload(): array
+    {
+        $supervised = $this->supervisedStudents()->with('user')->get()
+            ->sortBy(fn ($student) => $student->user?->name())
+            ->values()
+            ->map(fn ($student) => [
+                'name' => $student->user?->name(),
+                'roll_no' => $student->roll_no,
+                'email' => $student->user?->email,
+                'phone' => $student->user?->phone,
+                'date_of_admission' => $student->date_of_registration?->format('Y-m-d'),
+                'overall_progress' => $student->overall_progress,
+            ]);
+
+        $doctoral = $this->doctoredStudents()->with(['user', 'department'])->get()
+            ->sortBy(fn ($student) => $student->user?->name())
+            ->values()
+            ->map(fn ($student) => [
+                'name' => $student->user?->name(),
+                'roll_no' => $student->roll_no,
+                'email' => $student->user?->email,
+                'phone' => $student->user?->phone,
+                'department' => $student->department?->name,
+                'date_of_admission' => $student->date_of_registration?->format('Y-m-d'),
+                'overall_progress' => $student->overall_progress,
+            ]);
+
+        return [
+            'supervised_students' => $supervised->all(),
+            'doctoral_committee_students' => $doctoral->all(),
+        ];
+    }
+
+    /** Sizes only, for a viewer who may not see who the students are. */
+    public function supervisionCounts(int $studentPublications): array
+    {
+        return [
+            'supervised_count' => $this->supervisedStudents()->count(),
+            'doctoral_committee_count' => $this->doctoredStudents()->count(),
+            'student_publication_count' => $studentPublications,
+        ];
+    }
+
     public function toProfilePayload($own): array
     {
         return [

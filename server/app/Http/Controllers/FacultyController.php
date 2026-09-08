@@ -241,6 +241,10 @@ class FacultyController extends Controller
         
         // As in StudentController::list: the capability says whether, the role
         // says which departments, since an ADORDC answers for several.
+        //
+        // A viewer with only directory access reads every department: browsing
+        // for a supervisor is not a departmental question. The management
+        // capabilities keep their scoping.
         if ($loggedInUser->may('can_read_all_faculties')) {
             // No scoping.
         } elseif ($loggedInUser->may('can_read_department_faculties')) {
@@ -248,7 +252,7 @@ class FacultyController extends Controller
                 ? $loggedInUser->faculty->adordcDepartments->pluck('id')
                 : [$loggedInUser->faculty->department_id];
             $facultyQuery->whereIn('department_id', $departments);
-        } else {
+        } elseif (!$loggedInUser->may('can_read_faculty_directory')) {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
     

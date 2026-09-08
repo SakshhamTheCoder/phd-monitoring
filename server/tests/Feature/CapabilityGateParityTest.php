@@ -23,7 +23,10 @@ class CapabilityGateParityTest extends TestCase
     /** endpoint => the roles the code admitted before the swap. */
     private const GATES = [
         'GET /api/users' => ['admin'],
-        'GET /api/faculty' => ['admin', 'director', 'dra', 'dordc', 'hod', 'phd_coordinator', 'adordc'],
+        // Deliberately widened when the faculty directory opened: everyone
+        // except clerk may browse it. Was admin, director, dra, dordc, hod,
+        // phd_coordinator, adordc.
+        'GET /api/faculty' => ['admin', 'director', 'dra', 'dordc', 'hod', 'phd_coordinator', 'adordc', 'faculty', 'doctoral', 'external', 'student'],
         'GET /api/students' => ['admin', 'director', 'dra', 'dordc', 'hod', 'phd_coordinator', 'adordc', 'faculty', 'doctoral', 'external', 'student'],
         'GET /api/clerks/my-departments' => ['clerk'],
         'GET /api/clerks/attendance' => ['clerk', 'admin'],

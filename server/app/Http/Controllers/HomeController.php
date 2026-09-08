@@ -79,35 +79,6 @@ class HomeController extends Controller
             ]);
         }
 
-        $supervised = $faculty->supervisedStudents()->with('user')->get()
-            ->sortBy(fn ($student) => $student->user->name())
-            ->values()
-            ->map(function ($student) {
-                return [
-                    'name' => $student->user->name(),
-                    'roll_no' => $student->roll_no,
-                    'email' => $student->user->email,
-                    'phone' => $student->user->phone,
-                    'date_of_admission' => $student->date_of_registration?->format('Y-m-d'),
-                    'overall_progress' => $student->overall_progress,
-                ];
-            });
-
-        $doctoral = $faculty->doctoredStudents()->with(['user', 'department'])->get()
-            ->sortBy(fn ($student) => $student->user->name())
-            ->values()
-            ->map(function ($student) {
-                return [
-                    'name' => $student->user->name(),
-                    'roll_no' => $student->roll_no,
-                    'email' => $student->user->email,
-                    'phone' => $student->user->phone,
-                    'department' => $student->department?->name,
-                    'date_of_admission' => $student->date_of_registration?->format('Y-m-d'),
-                    'overall_progress' => $student->overall_progress,
-                ];
-            });
-
         return response()->json([
             'type' => 'faculty',
             'data' => [
@@ -116,8 +87,9 @@ class HomeController extends Controller
                 'designation' => $faculty->designation,
                 'email' => $user->email,
                 'phone' => $user->phone,
-                'supervised_students' => $supervised,
-                'doctoral_committee_students' => $doctoral,
+                // One serializer, shared with the faculty profile, so the two
+                // cannot describe a supervised student differently.
+                ...$faculty->supervisionPayload(),
                 'department' => $faculty->department->name,
                 'supervised_outside' => $faculty->supervised_outside,
                 'supervised_campus' => $faculty->supervised_campus,

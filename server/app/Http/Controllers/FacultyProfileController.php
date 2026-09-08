@@ -15,21 +15,62 @@ class FacultyProfileController extends Controller
 {
     private $identifierFields = ['orcid_id', 'scopus_id', 'google_scholar_id', 'joined_on', 'citations', 'h_index'];
 
+    /**
+     * One profile, three tiers.
+     *
+     * Everyone with directory access gets the public tier. The supervision tier
+     * (who they supervise, whose committees they sit on, those students'
+     * publications) is added for the roles that hold the capability and for the
+     * faculty member themselves. Phone is its own capability so it can be shown
+     * to students again by flipping one row.
+     *
+     * The restricted keys are absent from the response rather than blanked, so
+     * a viewer who may not see them cannot read them out of the payload.
+     */
     public function show($facultyCode)
     {
+        $user = Auth::user();
+        if (!$user?->may('can_read_faculty_directory')) {
+            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+        }
+
         $faculty = Faculty::with(['user', 'department'])->find($facultyCode);
         if (!$faculty) return response()->json(['message' => 'Faculty not found'], 404);
 
         $own = FacultyPublication::where('faculty_code', $faculty->faculty_code)->orderByDesc('year')->get();
         $rollNumbers = $faculty->supervisedStudents()->pluck('students.roll_no');
+        $studentPublications = $this->groupStudent($rollNumbers);
 
-        return response()->json([
-            'profile' => $this->profilePayload($faculty, $own),
+        $isSelf = optional($user->faculty)->faculty_code === $faculty->faculty_code;
+        $seesSupervision = $isSelf || $user->may('can_read_faculty_supervision');
+
+        $profile = $this->profilePayload($faculty, $own);
+        if (!$isSelf && !$user->may('can_read_faculty_phone')) {
+            unset($profile['phone']);
+        }
+
+        $payload = [
+            'profile' => $profile,
+            'is_self' => $isSelf,
             'can_edit' => $this->canEdit($faculty),
             'can_sync' => $this->canSync($faculty),
+            'can_view_supervision' => $seesSupervision,
             'publications' => $this->groupOwn($own),
-            'student_publications' => $this->groupStudent($rollNumbers),
-        ]);
+            'counts' => $faculty->supervisionCounts($this->countGroups($studentPublications)),
+        ];
+
+        if ($seesSupervision) {
+            $payload['student_publications'] = $studentPublications;
+            $payload += $faculty->supervisionPayload();
+        }
+
+        return response()->json($payload);
+    }
+
+    /** Total rows across the grouped publication buckets. */
+    private function countGroups(array $groups): int
+    {
+        return array_sum(array_map('count', $groups));
     }
 
     public function update(Request $request, $facultyCode)
