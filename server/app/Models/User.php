@@ -115,57 +115,45 @@ class User extends Authenticatable
         return $this->hasMany(Notifications::class);
     }
 
-    public function availableRoles()
+    /**
+     * Roles a base role carries with it. The faculty-shaped roles all keep
+     * 'faculty' and 'doctoral', because holding one does not stop you being
+     * somebody's supervisor or sitting on their committee, and the form chains
+     * have steps for both.
+     */
+    private const ROLE_GRANTS = [
+        'student' => ['student'],
+        'clerk' => ['clerk'],
+        'faculty' => ['doctoral', 'faculty'],
+        'phd_coordinator' => ['doctoral', 'faculty', 'phd_coordinator'],
+        'hod' => ['doctoral', 'faculty', 'hod'],
+        'external' => ['doctoral', 'external'],
+        'dra' => ['doctoral', 'faculty', 'dra'],
+        'dordc' => ['doctoral', 'faculty', 'dordc'],
+        'adordc' => ['doctoral', 'faculty', 'adordc'],
+        'director' => ['director'],
+    ];
+
+    /**
+     * Every role this user may switch into.
+     *
+     * `available_roles` is an admin override, not a cache. It used to be both:
+     * the derived list was written back to the column on first read and then
+     * returned verbatim forever, so changing a user's role_id afterwards left
+     * them unable to switch into the role they had just been given. Deriving
+     * every time and merging the override fixes that, and costs one array
+     * lookup.
+     *
+     * The base role is always included: it is what the account is, so being
+     * unable to switch back to it is never intended.
+     */
+    public function availableRoles(): array
     {
-        $roles = [];
-        if($this->available_roles){
-            return $this->available_roles;
-        }
-        if ($this->role->role == 'student') {
-            array_push($roles, 'student');
-        }
-        if ($this->role->role == 'faculty') {
-            array_push($roles, 'doctoral');
-            array_push($roles, 'faculty');
-        }
-        if ($this->role->role == 'phd_coordinator') {
-            array_push($roles, 'doctoral');
-            array_push($roles, 'faculty');
-            array_push($roles, 'phd_coordinator');
-        }
-        if ($this->role->role == 'hod') {
-            array_push($roles, 'doctoral');
-            array_push($roles, 'faculty');
-            array_push($roles, 'hod');
-        }
-        if ($this->role->role == 'external') {
-            array_push($roles, 'doctoral');
-            array_push($roles, 'external');
-        }
-        if ($this->role->role == 'dra') {
-             array_push($roles, 'doctoral');
-            array_push($roles, 'faculty');
-            array_push($roles, 'dra');
-        }
-        if ($this->role->role == 'clerk') {
-            array_push($roles, 'clerk');
-        }
-        if ($this->role->role == 'dordc') {
-             array_push($roles, 'doctoral');
-            array_push($roles, 'faculty');
-            array_push($roles, 'dordc');
-        }
-        if ($this->role->role == 'adordc') {
-             array_push($roles, 'doctoral');
-            array_push($roles, 'faculty');
-            array_push($roles, 'adordc');
-        }
-        if ($this->role->role == 'director') {
-            array_push($roles, 'director');
-        }
-        $this->available_roles=$roles;
-        $this->save();
-        return $roles;
+        $base = $this->role?->role;
+        $derived = self::ROLE_GRANTS[$base] ?? array_filter([$base]);
+        $override = is_array($this->available_roles) ? $this->available_roles : [];
+
+        return array_values(array_unique(array_merge($override, $derived)));
     }
 
     public function isAuthorized($role)
