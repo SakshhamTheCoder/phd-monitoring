@@ -54,3 +54,7 @@ Route::prefix('list-of-examiners')->group(function () {
     require base_path('routes/base/list-of-examiners.php');
 });
 
+Route::prefix('student-leave')->group(function () {
+    require base_path('routes/base/student_leave.php');
+});
+

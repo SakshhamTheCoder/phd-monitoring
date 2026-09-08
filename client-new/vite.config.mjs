@@ -21,6 +21,12 @@ export default defineConfig(({ mode }) => {
         test: {
             environment: 'node',
             include: ['src/**/*.test.{js,jsx}'],
+            // server/.env pins APP_TIMEZONE=Asia/Kolkata, and the client's
+            // localDateString/localMonthKey helpers (src/utils/leaveBalance.js)
+            // assume the viewer shares that zone. Pin it here too so the suite
+            // is deterministic on every machine instead of inheriting whatever
+            // timezone the developer or CI runner happens to be in.
+            env: { TZ: 'Asia/Kolkata' },
         },
     };
 });

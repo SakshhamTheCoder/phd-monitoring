@@ -9,7 +9,7 @@ import { useLoading } from '../../../context/LoadingContext';
 import { submitForm } from '../../../api/form';
 import TableComponent from '../table/TableComponent';
 
-const Recommendation = ({formData,allowRejection,role,moreFields,handleRecommendationChange,isLocked}) => {
+const Recommendation = ({formData,allowRejection,role,moreFields,handleRecommendationChange,isLocked,submitPath}) => {
     const [roleName, setRoleName] = useState('');
     const [body, setBody] = useState({});
     const [lock, setLock] = useState(false);
@@ -117,7 +117,11 @@ const Recommendation = ({formData,allowRejection,role,moreFields,handleRecommend
             )}
            
             { !lock && moreFields!==true && ( <GridContainer elements={[
-                <CustomButton text='Submit' onClick={()=>{submitForm(body,location,setLoading)}} />
+                // submitForm only reads location.pathname to build its POST URL, so a
+                // caller rendered somewhere other than /forms/:type/:id (its usual home)
+                // can override just that via submitPath. Every existing caller leaves
+                // submitPath unset, so this falls back to the real location unchanged.
+                <CustomButton text='Submit' onClick={()=>{submitForm(body,submitPath?{...location,pathname:submitPath}:location,setLoading)}} />
             ]}/>)}
 
         </>

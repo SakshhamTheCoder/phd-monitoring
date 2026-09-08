@@ -39,7 +39,7 @@ import OutsideExperts from './pages/OutsideExperts/OutsideExperts';
 import ExternalReview from './pages/externalReview/ExternalReview';
 import SupervisorDoctoralApproval from './pages/SupervisorDoctoralApproval/SupervisorDoctoralApproval';
 import UsersPage from './pages/users/UsersPage';
-import AttendancePage from './pages/attendance/AttendancePage';
+import AttendanceRoute from './pages/attendance/AttendanceRoute';
 import ClerkManagement from './pages/admin/ClerkManagement';
 import PrivacyPolicy from './pages/privacy/PrivacyPolicy';
 import Support from './pages/support/Support';
@@ -168,8 +168,8 @@ const AppContent = () => {
           {role === 'dordc' && (
             <Route path="/supervisor-doctoral-approvals" element={<SupervisorDoctoralApproval />} />
           )}
-          {(role==='clerk' || role==='admin') && (
-            <Route path="/attendance" element={<AttendancePage />} />
+          {(role==='clerk' || role==='admin' || role==='student' || role==='hod') && (
+            <Route path="/attendance" element={<AttendanceRoute />} />
           )}
           {(
             role==='admin') && (

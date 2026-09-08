@@ -9,9 +9,13 @@ import CustomButton from '../../components/forms/fields/CustomButton';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { countAbsent, applyMarkAll, buildSaveMessage } from '../../utils/attendanceMark';
+import { validateLeaveSettings } from '../../utils/leaveBalance';
+import { apiLeaveSettings, apiSaveLeaveSettings } from '../../api/leave';
 import './AttendancePage.css';
 
 const EDIT_WINDOW = 7;
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 const todayString = () => {
   const now = new Date();
@@ -58,6 +62,10 @@ const AttendancePage = () => {
   const [exportFrom, setExportFrom] = useState(todayString());
   const [exportTo, setExportTo] = useState(todayString());
   const [exportDept, setExportDept] = useState('');
+  // configuration (admin only)
+  const [configForm, setConfigForm] = useState({ academic_quota: '', casual_quota: '', year_start_month: '' });
+  const [configLoading, setConfigLoading] = useState(false);
+  const [configSaving, setConfigSaving] = useState(false);
 
   const role = localStorage.getItem('userRole');
   const isAdmin = role === 'admin';
@@ -93,6 +101,12 @@ const AttendancePage = () => {
     const isToday = date === todayString();
     list.forEach((s) => {
       if (s.status != null) next[s.roll_no] = s.status;
+      // Deliberately not excluding s.on_leave here: a same-day scholar on
+      // leave still gets this 'present' default, which rides along into
+      // handleSave's `records` and lets the backend report them in
+      // skipped_on_leave (it always refuses to write their row either way).
+      // Nulling this out for on-leave scholars would silently stop the save
+      // toast's skip notice from ever firing on the common same-day case.
       else next[s.roll_no] = isToday ? 'present' : null;
     });
     setStatuses(next);
@@ -137,23 +151,65 @@ const AttendancePage = () => {
 
   useEffect(() => { if (activeTab === 'monthly') loadMonth(); }, [activeTab, loadMonth]);
 
-  const setStatus = (rollNo, status) => setStatuses((prev) => ({ ...prev, [rollNo]: status }));
-  const markAll = (status) => {
-    const next = {};
-    students.forEach((s) => { next[s.roll_no] = status; });
-    setStatuses(next);
+  const loadConfig = useCallback(async () => {
+    setConfigLoading(true);
+    const res = await apiLeaveSettings();
+    setConfigLoading(false);
+    if (res.success) {
+      setConfigForm({
+        academic_quota: res.response.academic_quota,
+        casual_quota: res.response.casual_quota,
+        year_start_month: res.response.year_start_month,
+      });
+    }
+  }, []);
+
+  useEffect(() => { if (activeTab === 'configuration' && isAdmin) loadConfig(); }, [activeTab, isAdmin, loadConfig]);
+
+  const handleSaveConfig = async () => {
+    const values = {
+      academic_quota: Number(configForm.academic_quota),
+      casual_quota: Number(configForm.casual_quota),
+      year_start_month: Number(configForm.year_start_month),
+    };
+    const error = validateLeaveSettings(values);
+    if (error) { toast.error(error); return; }
+    setConfigSaving(true);
+    const res = await apiSaveLeaveSettings(values);
+    setConfigSaving(false);
+    if (res.success) {
+      toast.success('Leave quota settings saved');
+      setConfigForm({
+        academic_quota: res.response.academic_quota,
+        casual_quota: res.response.casual_quota,
+        year_start_month: res.response.year_start_month,
+      });
+    }
   };
-  const absentCount = useMemo(() => students.filter((s) => statuses[s.roll_no] === 'absent').length, [students, statuses]);
+
+  const setStatus = (rollNo, status) => setStatuses((prev) => ({ ...prev, [rollNo]: status }));
+  // A scholar on approved leave has no radio to bulk-set — the backend
+  // refuses to write their attendance row either way — so bulk actions must
+  // leave their entry alone.
+  const markAll = (status) => setStatuses((prev) => applyMarkAll(students, prev, status));
+  const absentCount = useMemo(() => countAbsent(students, statuses), [students, statuses]);
 
   const handleSave = async () => {
     if (students.length === 0) { toast.info('Nothing to save'); return; }
+    // Not filtering out s.on_leave here either: keeping an on-leave scholar's
+    // (possibly default) status in `records` is what lets the server see and
+    // report them in skipped_on_leave below — see the matching note in
+    // loadRoster. Excluding them here would drop that signal just as quietly.
     const records = students.filter((s) => statuses[s.roll_no] === 'present' || statuses[s.roll_no] === 'absent').map((s) => ({ roll_no: s.roll_no, status: statuses[s.roll_no] }));
     if (records.length === 0) { toast.info('No attendance marked — treated as no session (nothing saved)'); return; }
     if (records.length < students.length) toast.info(`${students.length - records.length} unmarked scholar(s) will be left as no session`);
     setSaving(true);
     const res = await customFetch(baseURL + '/clerks/attendance', 'POST', { date, records }, true);
     setSaving(false);
-    if (res.success) { toast.success(res.response.message || 'Attendance saved'); loadRoster(); }
+    if (res.success) {
+      toast.success(buildSaveMessage(res.response.message, res.response.skipped_on_leave));
+      loadRoster();
+    }
   };
 
   const downloadTemplate = async () => {
@@ -209,7 +265,11 @@ const AttendancePage = () => {
       const res = await fetch(baseURL + '/clerks/attendance/csv', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form });
       const data = await res.json();
       if (res.ok) {
-        toast.success(data.message || 'CSV imported');
+        // data.data.skipped_on_leave (Task 7) counts rows the import refused
+        // to write because the scholar has an approved leave for that date —
+        // same silent-drop risk the Mark tab's save toast guards against, so
+        // it gets the same treatment here.
+        toast.success(buildSaveMessage(data.message || 'CSV imported', data.data?.skipped_on_leave));
         if (data.data?.errors?.length) toast.warning(`${data.data.error_count} rows had errors — check console`);
         console.log('CSV import errors', data.data?.errors);
         setShowCsvModal(false); setCsvFile(null); setCsvPreview(null); loadRoster();
@@ -243,10 +303,11 @@ const AttendancePage = () => {
           { value: 'history', label: 'Past Sessions' },
           { value: 'monthly', label: 'Monthly' },
           { value: 'export', label: 'Export' },
+          ...(isAdmin ? [{ value: 'configuration', label: 'Configuration' }] : []),
         ]}
       />
 
-      {activeTab !== 'export' && (
+      {activeTab !== 'export' && activeTab !== 'configuration' && (
         <div className="filter-bar attendance-filters">
           <div className="filter-row" style={{ alignItems: 'flex-end' }}>
             <div className="input-field-container" style={{ minWidth: '220px' }}>
@@ -334,14 +395,18 @@ const AttendancePage = () => {
                         <tr key={s.roll_no}>
                           <td>{s.roll_no}</td><td>{s.name}</td><td>{s.department_name || s.department_code || '-'}</td>
                           <td>
-                            <span style={{ display: 'inline-flex', gap: '1rem', alignItems: 'center' }}>
-                              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', fontWeight: cur === 'present' ? 600 : 400 }}>
-                                <input type="radio" name={`status-${s.roll_no}`} checked={cur === 'present'} onChange={() => setStatus(s.roll_no, 'present')} /> Present
-                              </label>
-                              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', color: cur === 'absent' ? 'var(--danger-text)' : undefined, fontWeight: cur === 'absent' ? 600 : 400 }}>
-                                <input type="radio" name={`status-${s.roll_no}`} checked={cur === 'absent'} onChange={() => setStatus(s.roll_no, 'absent')} /> Absent
-                              </label>
-                            </span>
+                            {s.on_leave ? (
+                              <span className="badge badge--neutral">On leave · {s.leave_type}</span>
+                            ) : (
+                              <span style={{ display: 'inline-flex', gap: '1rem', alignItems: 'center' }}>
+                                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', fontWeight: cur === 'present' ? 600 : 400 }}>
+                                  <input type="radio" name={`status-${s.roll_no}`} checked={cur === 'present'} onChange={() => setStatus(s.roll_no, 'present')} /> Present
+                                </label>
+                                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', color: cur === 'absent' ? 'var(--danger-text)' : undefined, fontWeight: cur === 'absent' ? 600 : 400 }}>
+                                  <input type="radio" name={`status-${s.roll_no}`} checked={cur === 'absent'} onChange={() => setStatus(s.roll_no, 'absent')} /> Absent
+                                </label>
+                              </span>
+                            )}
                           </td>
                           <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                             {s.recorded ? (s.marked_by_name ? <span title={`Marked by ${s.marked_by_name}`}>by {s.marked_by_name}</span> : <span style={{ color: 'var(--text-subtle)', fontStyle: 'italic' }}>Recorded</span>) : <span style={{ color: 'var(--text-subtle)', fontStyle: 'italic' }} title="No record — treated as no session">No session</span>}
@@ -487,6 +552,60 @@ const AttendancePage = () => {
           <div className="form-list-container">
             <div style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
               {exportDept ? `Exports all scholars in ${departments.find((d) => String(d.id) === String(exportDept))?.name || 'the selected department'} for the chosen range.` : 'Exports all scholars you can access for the chosen range.'} Includes present counts per scholar.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Configuration tab — admin only, leave quotas. Room for later attendance-wide settings. */}
+      {activeTab === 'configuration' && isAdmin && (
+        <div style={{ marginTop: '1rem' }}>
+          <div className="filter-bar">
+            <div className="filter-row" style={{ alignItems: 'flex-end' }}>
+              <div className="input-field-container" style={{ minWidth: '160px' }}>
+                <label className="input-label">Academic quota</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="365"
+                  className="input-field"
+                  value={configForm.academic_quota}
+                  onChange={(e) => setConfigForm((prev) => ({ ...prev, academic_quota: e.target.value }))}
+                  disabled={configLoading}
+                />
+              </div>
+              <div className="input-field-container" style={{ minWidth: '160px' }}>
+                <label className="input-label">Casual quota</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="365"
+                  className="input-field"
+                  value={configForm.casual_quota}
+                  onChange={(e) => setConfigForm((prev) => ({ ...prev, casual_quota: e.target.value }))}
+                  disabled={configLoading}
+                />
+              </div>
+              <div className="input-field-container" style={{ minWidth: '190px' }}>
+                <label className="input-label">Quota year starts in</label>
+                <select
+                  className="input-field"
+                  value={configForm.year_start_month}
+                  onChange={(e) => setConfigForm((prev) => ({ ...prev, year_start_month: e.target.value }))}
+                  disabled={configLoading}
+                >
+                  <option value="" disabled>Select a month</option>
+                  {MONTH_NAMES.map((name, idx) => <option key={name} value={idx + 1}>{name}</option>)}
+                </select>
+              </div>
+              <div style={{ marginLeft: 'auto' }}>
+                <CustomButton text={configSaving ? 'Saving…' : 'Save'} onClick={handleSaveConfig} disabled={configLoading || configSaving} />
+              </div>
+            </div>
+          </div>
+          <div className="form-list-container">
+            <div style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+              {configLoading ? 'Loading current settings…' : 'These quotas apply to every scholar and reset at the start of the chosen month each year.'}
             </div>
           </div>
         </div>

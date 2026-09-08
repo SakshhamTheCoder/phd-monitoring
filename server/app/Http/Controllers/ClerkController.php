@@ -5,10 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Attendance;
 use App\Models\ClerkDepartment;
 use App\Models\Department;
+use App\Models\LeaveSetting;
 use App\Models\Role;
 use App\Models\Student;
+use App\Models\StudentLeaveForm;
 use App\Support\AttendanceSummary;
 use App\Support\DepartmentScope;
+use App\Support\LeaveBalance;
+use App\Support\LeaveWindow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -116,7 +120,9 @@ class ClerkController extends Controller
             ->get()
             ->keyBy('roll_no');
 
-        $roster = $students->map(function ($student) use ($saved, $date) {
+        $onLeave = LeaveWindow::forDate($students->pluck('roll_no')->all(), $date);
+
+        $roster = $students->map(function ($student) use ($saved, $date, $onLeave) {
             $record = $saved->get($student->roll_no);
 
             return [
@@ -130,13 +136,16 @@ class ClerkController extends Controller
                 'status' => $record?->status,
                 'recorded' => $record !== null,
                 'marked_by_name' => $record ? optional($record->markedBy)->name() : null,
+                'on_leave' => isset($onLeave[$student->roll_no]),
+                'leave_type' => $onLeave[$student->roll_no]['type'] ?? null,
+                'day_part' => $onLeave[$student->roll_no]['day_part'] ?? null,
             ];
         })->values();
 
         return response()->json([
             'date' => $date,
             'students' => $roster,
-            'absent_count' => $roster->where('status', 'absent')->count(),
+            'absent_count' => $roster->where('status', 'absent')->where('on_leave', false)->count(),
             'total' => $roster->count(),
             'recorded_count' => $roster->where('recorded', true)->count(),
         ], 200);
@@ -218,9 +227,22 @@ class ClerkController extends Controller
 
         $date = $request->input('date');
         $savedCount = 0;
+        $skippedOnLeave = 0;
 
-        DB::transaction(function () use ($request, $user, $date, $lectureId, &$savedCount) {
+        DB::transaction(function () use ($request, $user, $date, $lectureId, &$savedCount, &$skippedOnLeave) {
+            $onLeave = LeaveWindow::forDate(
+                collect($request->input('records', []))->pluck('roll_no')->map(fn ($r) => (int) $r)->all(),
+                $date
+            );
+
             foreach ($request->input('records') as $record) {
+                // An approved leave excuses the day outright: writing either
+                // status here would contradict the approval the HOD gave.
+                if (isset($onLeave[(int) $record['roll_no']])) {
+                    $skippedOnLeave++;
+                    continue;
+                }
+
                 $existing = Attendance::where('roll_no', $record['roll_no'])
                     ->where('date', $date)
                     ->where('lecture_id', $lectureId)
@@ -261,6 +283,7 @@ class ClerkController extends Controller
         return response()->json([
             'message' => "Attendance saved for {$savedCount} student(s).",
             'saved' => $savedCount,
+            'skipped_on_leave' => $skippedOnLeave,
             'date' => $date,
         ], 200);
     }
@@ -323,9 +346,33 @@ class ClerkController extends Controller
         $idxStatus = array_search('status', $header, true);
         $idxLecture = array_search('lecture_id', $header, true);
 
-        $created = 0; $updated = 0; $skipped = 0;
+        $created = 0; $updated = 0; $skipped = 0; $skippedOnLeave = 0;
         $errors = [];
         $window = (int) config('attendance.edit_window_days', 7);
+
+        // Resolve every row's roll_no/date pair up front so leave lookup is one
+        // query per distinct date in the file, not one per row. A CSV commonly
+        // spans many dates, so this cannot assume a single date for the batch.
+        $rowsByDate = [];
+        foreach ($lines as $lineNo => $line) {
+            $cols = str_getcsv($line);
+            $rollRaw = trim($cols[$idxRoll] ?? '');
+            $dateRaw = trim($cols[$idxDate] ?? '');
+            if ($rollRaw === '' || $dateRaw === '' || !ctype_digit($rollRaw)) {
+                continue;
+            }
+            try {
+                $normalizedDate = \Carbon\Carbon::parse($dateRaw)->toDateString();
+            } catch (\Throwable $e) {
+                continue;
+            }
+            $rowsByDate[$normalizedDate][] = (int) $rollRaw;
+        }
+
+        $onLeaveByDate = [];
+        foreach ($rowsByDate as $rowDate => $rolls) {
+            $onLeaveByDate[$rowDate] = LeaveWindow::forDate(array_values(array_unique($rolls)), $rowDate);
+        }
 
         DB::beginTransaction();
         try {
@@ -376,6 +423,13 @@ class ClerkController extends Controller
                     continue;
                 }
 
+                // An approved leave excuses the day outright: writing either
+                // status here would contradict the approval the HOD gave.
+                if (isset($onLeaveByDate[$date][$roll])) {
+                    $skippedOnLeave++;
+                    continue;
+                }
+
                 $existing = Attendance::where('roll_no', $roll)->where('date', $date)->where('lecture_id', $lec)->first();
                 if ($existing && $existing->status === $statusRaw) {
                     $skipped++;
@@ -405,11 +459,12 @@ class ClerkController extends Controller
         }
 
         return response()->json([
-            'message' => "Import done: {$created} created, {$updated} updated, {$skipped} skipped, " . count($errors) . " errors",
+            'message' => "Import done: {$created} created, {$updated} updated, {$skipped} skipped, {$skippedOnLeave} on leave, " . count($errors) . " errors",
             'data' => [
                 'created' => $created,
                 'updated' => $updated,
                 'skipped' => $skipped,
+                'skipped_on_leave' => $skippedOnLeave,
                 'error_count' => count($errors),
                 'errors' => $errors,
             ],
@@ -622,6 +677,26 @@ class ClerkController extends Controller
         if ($request->filled('to')) $q->where('date', '<=', $request->input('to'));
         $records = $q->get(['date', 'lecture_id', 'status', 'marked_by']);
 
+        // An attendance row can exist for a date an approved leave now covers:
+        // the clerk may have marked it (e.g. absent) before the HOD approved a
+        // leave over that same date. Nothing here deletes or mutates that row
+        // — this design deliberately never touches attendance once written
+        // (see ClerkLeaveTest for the write-time skip; this is the read-time
+        // counterpart) — so instead the covered day is derived out of what is
+        // reported: spec 1.1 says an excused day is deliberately outside the
+        // denominator.
+        $approvedLeaves = StudentLeaveForm::where('student_id', $roll_no)->approved()->get();
+        $isExcused = function ($date) use ($approvedLeaves) {
+            $day = $date instanceof \Illuminate\Support\Carbon ? $date->toDateString() : (string) $date;
+            foreach ($approvedLeaves as $leave) {
+                if (LeaveWindow::covers($leave, $day)) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        $records = $records->reject(fn ($r) => $isExcused($r->date))->values();
+
         // The hover on the profile wants this month specifically, which is a
         // different number from the all-time figure beside it. Re-query rather
         // than reuse $records, since any from/to filter above must not narrow
@@ -629,13 +704,38 @@ class ClerkController extends Controller
         $monthStart = now()->startOfMonth();
         $monthRecords = Attendance::where('roll_no', $roll_no)
             ->whereBetween('date', [$monthStart->toDateString(), now()->endOfMonth()->toDateString()])
-            ->get(['status']);
+            ->get(['status', 'date'])
+            ->reject(fn ($r) => $isExcused($r->date))
+            ->values();
 
+        // Leave reasons are often medical or personal (spec 5.3 confines
+        // `reason` to the HOD's review): only the scholar themselves, their
+        // department's HOD, and admin get `reason`/`hod_comments`. Every other
+        // role admitted above (director, dra, dordc, clerk, adordc,
+        // phd_coordinator, supervising faculty, doctoral committee, external)
+        // still sees the leave dates/type/status, just not the content of it.
+        $leaveColumns = ['id', 'leave_type', 'from_date', 'to_date', 'day_part', 'status'];
+        if (in_array($role, ['student', 'hod', 'admin'], true)) {
+            $leaveColumns[] = 'reason';
+            $leaveColumns[] = 'hod_comments';
+        }
+        $leavesQuery = StudentLeaveForm::where('student_id', $roll_no)->orderByDesc('from_date');
+        // "their leaves in the requested range" (spec 4.5): a leave is in
+        // range when its own [from_date, to_date] overlaps the requested one,
+        // not only when it starts inside it.
+        if ($request->filled('from')) $leavesQuery->where('to_date', '>=', $request->input('from'));
+        if ($request->filled('to')) $leavesQuery->where('from_date', '<=', $request->input('to'));
+
+        // Same reasoning as current_month above: the leave balance is always
+        // for the quota year containing today, regardless of any from/to
+        // filter applied to $records.
         return response()->json([
             'student' => ['roll_no' => $student->roll_no, 'name' => optional($student->user)->name()],
             'summary' => AttendanceSummary::of($records),
             'current_month' => AttendanceSummary::of($monthRecords) + ['label' => $monthStart->format('F Y')],
             'records' => $records,
+            'balance' => LeaveBalance::for((int) $roll_no, now()->toDateString()),
+            'leaves' => $leavesQuery->get($leaveColumns),
         ], 200);
     }
 
@@ -911,5 +1011,39 @@ class ClerkController extends Controller
             DB::rollBack();
             return response()->json(['message'=>'Bulk update failed','error'=>$e->getMessage()],500);
         }
+    }
+
+    // -----------------------------------------------------------------------
+    // Leave quota settings
+    // -----------------------------------------------------------------------
+
+    /**
+     * Quotas are read by every role that shows a balance (spec 4.6); only
+     * admin writes (saveLeaveSettings below).
+     */
+    public function leaveSettings(Request $request)
+    {
+        if (!in_array(Auth::user()->current_role->role, ['admin', 'clerk', 'hod', 'student'], true)) {
+            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+        }
+
+        return response()->json(LeaveSetting::map(), 200);
+    }
+
+    public function saveLeaveSettings(Request $request)
+    {
+        if ($denied = $this->authorizeAdmin()) return $denied;
+
+        $data = $request->validate([
+            'academic_quota' => 'required|integer|min:0|max:365',
+            'casual_quota' => 'required|integer|min:0|max:365',
+            'year_start_month' => 'required|integer|min:1|max:12',
+        ]);
+
+        foreach ($data as $key => $value) {
+            LeaveSetting::updateOrCreate(['key' => $key], ['value' => $value]);
+        }
+
+        return response()->json(LeaveSetting::map(), 200);
     }
 }
