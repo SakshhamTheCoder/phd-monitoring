@@ -152,6 +152,17 @@ Route::post('/reset-password', function (Request $request) {
     ], 500);
 });
 
+// available_roles otherwise reaches the client only at login, so a role granted
+// mid-session stays invisible until the user logs out and back in.
+Route::get('/my-roles', function () {
+    $user = Auth::user();
+
+    return response()->json([
+        'available_roles' => $user->availableRoles(),
+        'current_role' => $user->current_role?->role,
+    ]);
+})->middleware('auth:sanctum');
+
 Route::post('/switch-role', function (Request $request) {
     try {
         $request->validate([

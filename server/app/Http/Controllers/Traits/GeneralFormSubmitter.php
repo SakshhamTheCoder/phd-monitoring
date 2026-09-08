@@ -65,7 +65,8 @@ trait GeneralFormSubmitter
             $acting = $role === 'faculty' ? 'supervisor' : $role;
             if ($expected !== null && $expected !== $acting) {
                 return response()->json([
-                    'message' => 'This form is waiting on ' . $this->roleLabel($expected) . ', not you.',
+                    'message' => 'This form is waiting on ' . $this->roleLabel($expected) . ', not you.'
+                        . $this->switchHint($user, $formInstance, $expected),
                 ], 403);
             }
             Log::info('Form instance found: ' . $formInstance->id);
@@ -338,22 +339,13 @@ trait GeneralFormSubmitter
                 }
                 break;
 
+            // Institute-wide, so there is no student or department to scope them
+            // to. They previously re-tested the role against the case that
+            // selected it, which could never fail; the turn check in submitForm
+            // is what actually keeps them from acting out of order.
             case 'dordc':
-                if ($user->current_role->role != 'dordc') {
-                    throw new \Exception('You are not authorized to access this resource');
-                }
-                break;
-
             case 'dra':
-                if ($user->current_role->role != 'dra') {
-                    throw new \Exception('You are not authorized to access this resource');
-                }
-                break;
-
             case 'director':
-                if ($user->current_role->role != 'director') {
-                    throw new \Exception('You are not authorized to access this resource');
-                }
                 break;
 
             default:
@@ -405,6 +397,57 @@ trait GeneralFormSubmitter
     protected function formLink($formInstance, $model): string
     {
         return '/forms/' . $this->getFormType($model) . '/' . $formInstance->id;
+    }
+
+    /**
+     * Tells the user to switch role, but only when switching would actually
+     * work: they hold the role the form is waiting on, and that role has
+     * standing on this particular student. Without the second half it would
+     * tell every supervisor in the institute to switch to Supervisor for a
+     * student who is not theirs.
+     */
+    private function switchHint($user, $formInstance, string $expectedStage): string
+    {
+        $role = $expectedStage === 'supervisor' ? 'faculty' : $expectedStage;
+
+        if (!in_array($role, $user->availableRoles(), true)) {
+            return '';
+        }
+
+        if (!$this->hasStandingAs($user, $formInstance, $role)) {
+            return '';
+        }
+
+        return ' You hold that role for this student, so switch to '
+            . $this->roleLabel($expectedStage) . ' to act on it.';
+    }
+
+    /**
+     * Whether $user is the specific person this role means for this form: the
+     * student's own supervisor, their department's HOD, and so on. Mirrors the
+     * predicates handleRoleSpecificLogic enforces, without throwing.
+     */
+    private function hasStandingAs($user, $formInstance, string $role): bool
+    {
+        $facultyCode = $user->faculty?->faculty_code;
+        $student = $formInstance->student;
+
+        if (!$student) {
+            return false;
+        }
+
+        return match ($role) {
+            'student' => $user->student && $formInstance->student_id == $user->student->roll_no,
+            'faculty' => $facultyCode && $student->checkSupervises($facultyCode),
+            'doctoral' => $facultyCode && $student->checkDoctoralCommittee($facultyCode),
+            'phd_coordinator' => $facultyCode && $student->department?->checkCoordinates($facultyCode),
+            'hod' => $facultyCode && $student->department?->hod_id == $facultyCode,
+            'adordc' => $facultyCode && $user->faculty->adordcDepartments
+                ->pluck('id')->contains($student->department_id),
+            // Institute-wide: no student to be attached to.
+            'dordc', 'dra', 'director' => true,
+            default => false,
+        };
     }
 
     /** Human-readable role name for the out-of-turn message. */

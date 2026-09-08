@@ -11,19 +11,20 @@ const SwitchRole = () => {
     const { setLoading } = useLoading();
     const [roles, setRoles] = useState([]);
 
-    const available_roles= JSON.parse(localStorage.getItem("available_roles")) || [];
-    
+    // localStorage holds whatever the last login returned. A role granted since
+    // then is missing from it, and the user cannot pick a role the dropdown does
+    // not list, so re-read the roles from the server on mount.
     useEffect(() => {
-        const rls=[]
-        available_roles.forEach(rol => {
-            let tt={
-                title:getRoleName( rol),
-                value:rol
-            }
-            rls.push(tt);
+        const toOptions = (list) => (list || []).map((rol) => ({ title: getRoleName(rol), value: rol }));
+
+        setRoles(toOptions(JSON.parse(localStorage.getItem("available_roles")) || []));
+
+        customFetch(`${baseURL}/my-roles`, "GET", {}, true).then((data) => {
+            if (!data?.success) return;
+            const fresh = data.response.available_roles || [];
+            localStorage.setItem("available_roles", JSON.stringify(fresh));
+            setRoles(toOptions(fresh));
         });
-        setRoles(rls);
-        console.log(roles);
     }, [])
 
    const setRole=(role) => {
