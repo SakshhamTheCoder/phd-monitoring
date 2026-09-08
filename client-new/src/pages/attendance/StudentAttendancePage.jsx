@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
+import PageHeader from '../../components/pageHeader/PageHeader';
 import Tabs from '../../components/tabs/Tabs';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import CustomModal from '../../components/forms/modal/CustomModal';
@@ -124,7 +125,16 @@ const StudentAttendancePage = () => {
 
   return (
     <Layout>
-      <h1 className="page-title">My Attendance</h1>
+      <PageHeader
+        title="My Attendance"
+        actions={
+          <CustomButton
+            text={applying ? 'Opening…' : 'Apply for Leave'}
+            onClick={handleApply}
+            disabled={applying}
+          />
+        }
+      />
 
       <Tabs
         value={activeTab}
@@ -229,14 +239,6 @@ const StudentAttendancePage = () => {
       {activeTab === 'leaves' && (
         <div style={{ marginTop: '1rem' }}>
           <LeaveBalancePanel balance={data?.balance} />
-
-          <div className="filter-bar" style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <CustomButton
-              text={applying ? 'Opening…' : 'Apply for Leave'}
-              onClick={handleApply}
-              disabled={applying}
-            />
-          </div>
 
           <div className="form-list-container">
             <table className="form-table">
