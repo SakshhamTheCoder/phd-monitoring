@@ -139,7 +139,6 @@ class ConstituteOfIRBController extends Controller
                 return $this->hodSubmit($user, $request, $form_id);
             case 'adordc':
                 return $this->adordcSubmit($user, $request, $form_id);
-            case 'dra':
                 return $this->draSubmit($user, $request, $form_id);
             case 'dordc':
                 return $this->dordcSubmit($user, $request, $form_id);

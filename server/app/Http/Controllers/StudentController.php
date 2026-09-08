@@ -27,7 +27,7 @@ class StudentController extends Controller {
     public function add(Request $request)
     {
         $loggenInUser = Auth::user();
-        if($loggenInUser->current_role->can_add_student == 'false'){
+        if($loggenInUser->current_role->can_add_students !== 'true'){
             return response()->json([
                 'message' => 'You do not have permission to create student'
             ], 403);
@@ -116,7 +116,7 @@ class StudentController extends Controller {
     public function bulkUpload(Request $request)
     {
         $loggedInUser = Auth::user();
-        if($loggedInUser->current_role->can_add_student == 'false'){
+        if($loggedInUser->current_role->can_add_students !== 'true'){
             return response()->json([
                 'message' => 'You do not have permission to create students'
             ], 403);
@@ -276,7 +276,7 @@ class StudentController extends Controller {
     public function bulkUpdate(Request $request)
     {
         $loggedInUser = Auth::user();
-        if($loggedInUser->current_role->can_add_student == 'false'){
+        if($loggedInUser->current_role->can_add_students !== 'true'){
             return response()->json(['message' => 'You do not have permission to update students'], 403);
         }
         $request->validate([
@@ -493,7 +493,7 @@ class StudentController extends Controller {
     public function adminUpdate(Request $request, $roll_no)
     {
         $loggedInUser = Auth::user();
-        if ($loggedInUser->current_role->can_add_student == 'false') {
+        if ($loggedInUser->current_role->can_add_students !== 'true') {
             return response()->json([
                 'message' => 'You do not have permission to edit student'
             ], 403);

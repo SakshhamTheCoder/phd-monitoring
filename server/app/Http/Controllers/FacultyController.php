@@ -44,7 +44,7 @@ class FacultyController extends Controller
 
         $user = Auth::user();
 
-        if(!$user->role->can_add_faculties)
+        if($user->current_role->can_add_faculties !== 'true')
         {
             return response()->json([
                 'message' => 'You do not have permission to add faculty'
@@ -142,7 +142,7 @@ class FacultyController extends Controller
     {
         $user = Auth::user();
 
-        if(!$user->role->can_add_faculties)
+        if($user->current_role->can_add_faculties !== 'true')
         {
             return response()->json([
                 'message' => 'You do not have permission to update faculty'
@@ -312,7 +312,7 @@ class FacultyController extends Controller
     {
         $user = Auth::user();
 
-        if(!$user->role->can_add_faculties)
+        if($user->current_role->can_add_faculties !== 'true')
         {
             return response()->json([
                 'message' => 'You do not have permission to upload faculty'

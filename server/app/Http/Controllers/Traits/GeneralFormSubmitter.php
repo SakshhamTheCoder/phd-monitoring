@@ -49,6 +49,25 @@ trait GeneralFormSubmitter
             if ($formInstance->{$role . '_lock'} || ($role == 'faculty' && $formInstance->supervisor_lock)) {
                 return response()->json(['message' => 'You are not authorized to access this resource'], 403);
             }
+
+            // The lock above records that a role has already acted; it does not
+            // say whose turn it is. Without this, a role further down the chain
+            // could approve a form still sitting with an earlier one, because
+            // current_step was written on every transition and never read back.
+            //
+            // `stage` is the cursor, not current_step: current_step is written on
+            // every transition but is not maintained everywhere a form is created,
+            // so reading it here rejects legitimate approvals.
+            //
+            // Fails open on an empty stage, so a form written before this check
+            // cannot stall. The faculty step is stored as 'supervisor'.
+            $expected = $formInstance->stage ?: null;
+            $acting = $role === 'faculty' ? 'supervisor' : $role;
+            if ($expected !== null && $expected !== $acting) {
+                return response()->json([
+                    'message' => 'This form is waiting on ' . $this->roleLabel($expected) . ', not you.',
+                ], 403);
+            }
             Log::info('Form instance found: ' . $formInstance->id);
             $this->handleRoleSpecificLogic($user, $formInstance, $role, $extraSteps);
 
@@ -386,6 +405,22 @@ trait GeneralFormSubmitter
     protected function formLink($formInstance, $model): string
     {
         return '/forms/' . $this->getFormType($model) . '/' . $formInstance->id;
+    }
+
+    /** Human-readable role name for the out-of-turn message. */
+    private function roleLabel(string $role): string
+    {
+        return match ($role) {
+            'faculty', 'supervisor' => 'the supervisor',
+            'phd_coordinator' => 'the PhD coordinator',
+            'hod' => 'the HOD',
+            'doctoral' => 'the doctoral committee',
+            'external' => 'the external member',
+            'director' => 'the Vice Chancellor',
+            'student' => 'the student',
+            'complete' => 'nobody, it is complete',
+            default => strtoupper($role),
+        };
     }
 
     private function getFormType($model)
