@@ -18,6 +18,7 @@ export const buttonConfig = [
     { path: '/clerks', icon: <i class="fa fa-id-card-o" aria-hidden="true"></i>, text: 'Clerks', roles: ['admin'] },
     { path: '/departments', icon: <i class="fa-solid fa-building"></i>, text: 'Departments', roles: ['dordc', 'adordc', 'dra', 'director', 'admin'] },
     { path: '/attendance', icon: <i class="fa fa-calendar-check-o" aria-hidden="true"></i>, text: 'Attendance', roles: ['clerk', 'admin', 'student', 'hod'] },
+    { path: '/configuration', icon: <i class="fa-solid fa-sliders"></i>, text: 'Configuration', roles: ['admin'] },
     { path: '/logs', icon: <i class="fa-solid fa-history"></i>, text: 'Logs', roles: ['admin'] },
     { path: '/users', icon: <i class="fa-solid fa-users-cog"></i>, text: 'Manage Users', roles: ['admin'] },
     { path: '/notifications', icon: <i class="fa-solid fa-bell"></i>, text: 'Notifications', roles: ['student', 'hod', 'phd_coordinator', 'faculty', 'dordc', 'adordc', 'dra', 'director', 'doctoral', 'external', 'admin'] },
