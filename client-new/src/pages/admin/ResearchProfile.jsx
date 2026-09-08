@@ -16,6 +16,7 @@ import {
 } from '../../api/researchProfile';
 import { apiCurrentFaculty } from '../../api/projects';
 import { toast } from 'react-toastify';
+import { profileIdentity, isProfileAuthor, splitAuthors } from '../../utils/authorMatch';
 import './ResearchProfile.css';
 
 const TYPE_OPTIONS = [
@@ -150,10 +151,10 @@ const ResearchProfile = () => {
 
     const formatAuthors = (authors) => {
         if (!authors) return '';
-        if (!profile.name) return authors;
-        const parts = String(authors).split(new RegExp(`(${profile.name})`, 'gi'));
-        return parts.map((part, i) =>
-            part.toLowerCase() === profile.name.toLowerCase() ? <strong key={i}>{part}</strong> : part
+        const id = profileIdentity(profile.name);
+        if (!id) return authors;
+        return splitAuthors(authors).map((piece, i) =>
+            isProfileAuthor(piece, id) ? <strong key={i}>{piece}</strong> : piece
         );
     };
 
@@ -325,6 +326,24 @@ const ResearchProfile = () => {
 
     const actionHeader = canEdit && isOwnTab ? <th></th> : null;
 
+    // A column's width comes from its heading, so the classes are picked off the
+    // label rather than the position: the select checkbox shifts every index,
+    // and the year/title columns sit in different places from table to table.
+    const columnClass = (label) => {
+        if (label.startsWith('YEAR OF')) return 'rp-col-year';
+        if (label.startsWith('TITLE OF')) return 'rp-col-title';
+        return undefined;
+    };
+
+    // "YEAR OF PUBLICATION" on one line holds the column open to the width of the
+    // whole phrase. Broken after "OF", the column only has to fit "PUBLICATION",
+    // and the space saved goes to the title.
+    const headingText = (label) => {
+        if (!label.startsWith('YEAR OF')) return label;
+        const cut = label.lastIndexOf(' ');
+        return (<>{label.slice(0, cut)}<br />{label.slice(cut + 1)}</>);
+    };
+
     const table = (key, title, columns, renderRow) => (
         filtered[key] && filtered[key].length > 0 && (
             <div className="rp-table-section" key={key}>
@@ -332,14 +351,14 @@ const ResearchProfile = () => {
                     {title}
                     {canEdit && isOwnTab && (
                         <button type="button" className="rp-select-all" onClick={() => toggleGroup(key)}>
-                            select all
+                            Select all
                         </button>
                     )}
                 </h3>
                 <div className="data-table-wrap">
                     <table className="data-table">
-                        <thead><tr>{selectHeader}{columns.map(c => <th key={c}>{c}</th>)}<th>SOURCE</th>{actionHeader}</tr></thead>
-                        <tbody>{filtered[key].map(pub => <tr key={`${pub.source}-${pub.id}`}>{selectCell(pub)}{renderRow(pub)}<td>{sourceBadge(pub)}</td>{rowActions(pub)}</tr>)}</tbody>
+                        <thead><tr>{selectHeader}<th className="rp-col-num"></th>{columns.map(c => <th key={c} className={columnClass(c)}>{headingText(c)}</th>)}<th>SOURCE</th>{actionHeader}</tr></thead>
+                        <tbody>{filtered[key].map((pub, i) => <tr key={`${pub.source}-${pub.id}`}>{selectCell(pub)}<td className="rp-col-num">{i + 1}</td>{renderRow(pub)}<td>{sourceBadge(pub)}</td>{rowActions(pub)}</tr>)}</tbody>
                     </table>
                 </div>
             </div>
