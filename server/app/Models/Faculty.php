@@ -340,6 +340,10 @@ class Faculty extends Model
             'citations' => $this->citations,
             'h_index' => $this->h_index,
             'expertise' => $this->expertise ?? [],
+            // Head counts the dashboard has always shown. Sizes, not names, so
+            // they sit in the public tier with the other counts.
+            'supervised_campus' => $this->supervised_campus,
+            'supervised_outside' => $this->supervised_outside,
             'last_sync' => $this->last_synced_at,
             'last_sync_source' => $this->last_sync_source,
             'total_publications' => $own->count(),

@@ -58,7 +58,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
     const navigate = useNavigate();
     const [facultyCode, setFacultyCode] = useState(routeCode || codeProp || null);
     const [data, setData] = useState(null);
-    const [activeTab, setActiveTab] = useState('faculty');
+    const [activeTab, setActiveTab] = useState(null);
     const [filterYears, setFilterYears] = useState([]);
     const [filterType, setFilterType] = useState('All');
     const [filterSource, setFilterSource] = useState('All');
@@ -130,8 +130,12 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
         is_self: isSelf = false,
         counts = {},
     } = data;
-    const isOwnTab = activeTab === 'faculty';
-    const isSupervisionTab = activeTab === 'supervision';
+    // Supervision is what a viewer usually opens someone else's profile for, so
+    // it leads when they are allowed it. A public-tier viewer has no such tab
+    // and lands on publications.
+    const tab = activeTab ?? (canViewSupervision ? 'supervision' : 'faculty');
+    const isOwnTab = tab === 'faculty';
+    const isSupervisionTab = tab === 'supervision';
     const groups = isOwnTab ? data.publications : (data.student_publications || {});
 
     const profileImage = profile.name
@@ -415,6 +419,9 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                             <div className="rp-stat-row"><span>h-index</span><strong>{profile.h_index ?? '—'}</strong></div>
                             <div className="rp-stat-row"><span>Supervising</span><strong>{counts.supervised_count ?? '—'}</strong></div>
                             <div className="rp-stat-row"><span>Committees</span><strong>{counts.doctoral_committee_count ?? '—'}</strong></div>
+                            <div className="rp-stat-row"><span>Within TIET</span><strong>{profile.supervised_campus ?? '—'}</strong></div>
+                            <div className="rp-stat-row"><span>Outside TIET</span><strong>{profile.supervised_outside ?? '—'}</strong></div>
+                            <div className="rp-stat-row"><span>Faculty code</span><strong>{profile.faculty_code}</strong></div>
                         </div>
                     </div>
 
@@ -517,8 +524,19 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                     </div>
                 </div>
 
+                {Array.isArray(profile.expertise) && profile.expertise.length > 0 && (
+                    <div className="rp-expertise-band">
+                        <label>AREA OF EXPERTISE</label>
+                        <div className="rp-expertise-tags">
+                            {profile.expertise.map(area => (
+                                <span className="rp-expertise-tag" key={area}>{area}</span>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 <Tabs
-                    value={activeTab}
+                    value={tab}
                     onChange={setActiveTab}
                     items={[
                         { value: 'faculty', label: 'Faculty Publications' },

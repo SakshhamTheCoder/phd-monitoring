@@ -590,3 +590,58 @@
     outline: 2px solid var(--primary, #b91c1c);
     outline-offset: -2px;
 }
+
+/* Expertise, given the full-width row it had on the dashboard card rather than
+   a line buried among the academic identifiers. */
+.rp-expertise-band {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.rp-expertise-band > label {
+    display: block;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: #6b7280;
+    margin-bottom: 0.75rem;
+}
+
+.rp-expertise-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.rp-expertise-tag {
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: #374151;
+}
+
+/* The dashboard card's softer surface, carried onto the profile so the two
+   read as the same product rather than two pages that grew separately. */
+.rp-supervision .rp-table-section,
+.rp-user-card,
+.rp-info-card {
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+.rp-supervision .rp-table-section {
+    background: #ffffff;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.rp-supervision .rp-table-section h3 {
+    font-size: 1.2rem;
+    color: #1f2937;
+    margin-bottom: 0.8rem;
+}

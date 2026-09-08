@@ -128,6 +128,19 @@ class FacultyProfileTierTest extends TestCase
             ->assertJsonStructure(['supervised_students', 'doctoral_committee_students']);
     }
 
+    /** The dashboard card's head counts must survive on the profile. */
+    public function test_the_public_tier_keeps_the_supervision_head_counts(): void
+    {
+        $faculty = $this->faculty();
+        $this->actingAs_('student', $faculty);
+
+        $profile = $this->show($faculty)->assertStatus(200)->json('profile');
+
+        $this->assertArrayHasKey('supervised_campus', $profile);
+        $this->assertArrayHasKey('supervised_outside', $profile);
+        $this->assertArrayHasKey('expertise', $profile);
+    }
+
     public function test_a_clerk_cannot_open_a_faculty_profile(): void
     {
         $faculty = $this->faculty();
