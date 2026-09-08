@@ -440,37 +440,38 @@ class StudentController extends Controller {
     public function get(Request $request, $roll_no)
     {
         $loggenInUser = Auth::user();
-        $role=$loggenInUser->current_role->role;
-        switch($role){
-            case 'admin':
-            case 'director':
-            case 'dra':
-            case 'dordc':
-                $student = Student::find($roll_no);
-                break;
-            case 'adordc': 
-                 $departments = $loggenInUser->faculty->adordcDepartments->pluck('id');
-                $student = Student::whereIn('department_id', $departments)
-                    ->where('roll_no', $roll_no)->first();
-            break;
-            case 'hod':
-            case 'phd_coordinator':
-                $student = Student::where('department_id',$loggenInUser->faculty->department_id)->where('roll_no',$roll_no)->first();
-                break;
-            case 'faculty':
-                $student =  Student::find($roll_no);
-                if(!$student->checkSupervises($loggenInUser->faculty->faculty_code))
-                    return response()->json([
-                        'message' => 'You do not have permission to view student'
-                    ], 403);
-               break;
-            case 'student':
-                $student = Student::where('user_id',$loggenInUser->id)->where('roll_no',$roll_no)->first();
-                break;
-            default:
+        $role = $loggenInUser->current_role->role;
+
+        // Mirrors list(): the capability decides whether, the role still decides
+        // which records. These two had drifted, so a doctoral committee member
+        // saw a student in the listing and was refused when they opened them.
+        if ($loggenInUser->may('can_read_all_students')) {
+            $student = Student::find($roll_no);
+        } elseif ($loggenInUser->may('can_read_department_students')) {
+            $departments = $role === 'adordc'
+                ? $loggenInUser->faculty->adordcDepartments->pluck('id')
+                : [$loggenInUser->faculty->department_id];
+            $student = Student::whereIn('department_id', $departments)
+                ->where('roll_no', $roll_no)->first();
+        } elseif ($loggenInUser->may('can_read_supervised_students')
+            || $loggenInUser->may('can_read_committee_students')) {
+            $student = Student::find($roll_no);
+            $code = $loggenInUser->faculty?->faculty_code;
+            // Supervising them or sitting on their committee both count: the
+            // profile links to committee students, and refusing the link the
+            // page itself offers is not a boundary, it is a dead end.
+            $related = $code && ($student?->checkSupervises($code) || $student?->checkDoctoralCommittee($code));
+            if (!$related) {
                 return response()->json([
                     'message' => 'You do not have permission to view student'
                 ], 403);
+            }
+        } elseif ($role === 'student') {
+            $student = Student::where('user_id', $loggenInUser->id)->where('roll_no', $roll_no)->first();
+        } else {
+            return response()->json([
+                'message' => 'You do not have permission to view student'
+            ], 403);
         }
         if(!$student){
             return response()->json([
