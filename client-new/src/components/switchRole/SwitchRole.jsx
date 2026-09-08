@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
 import {getRoleName} from '../../utils/roleName';
+import { clearCapabilities } from '../../hooks/useCapabilities';
 const SwitchRole = () => {
     const [body, setBody] = useState({});
     const { setLoading } = useLoading();
@@ -39,6 +40,8 @@ const SwitchRole = () => {
             if (data && data.success) {
                 localStorage.setItem("user", JSON.stringify(data.response.user));
                 localStorage.setItem("userRole", data.response.user.role.role);
+                // The new role has its own capabilities; drop the old answer.
+                clearCapabilities();
                 toast.success("Role switched successfully");
                 // Broadcast the change so the header, notifications and any listening
                 // view re-fetch for the newly-active role — no full page reload needed.

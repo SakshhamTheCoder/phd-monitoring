@@ -157,9 +157,18 @@ Route::post('/reset-password', function (Request $request) {
 Route::get('/my-roles', function () {
     $user = Auth::user();
 
+    // Capabilities of the role being acted as, so the client can hide actions
+    // the API would refuse. The API still refuses them; this only stops the UI
+    // offering a button that cannot work.
+    $capabilities = collect((array) ($user->current_role?->getAttributes() ?? []))
+        ->filter(fn ($value, $key) => str_starts_with($key, 'can_'))
+        ->map(fn ($value) => $value === 'true')
+        ->all();
+
     return response()->json([
         'available_roles' => $user->availableRoles(),
         'current_role' => $user->current_role?->role,
+        'capabilities' => $capabilities,
     ]);
 })->middleware('auth:sanctum');
 

@@ -566,3 +566,27 @@
     color: #1b3a6b;
     cursor: pointer;
 }
+
+/* Supervision tab. Sits between the dashboard's plain tables and the
+   publication tables: same surface and type as the rest of the page, with the
+   row affordance the dashboard had, since a row still opens the student. */
+.rp-supervision {
+    margin-top: 1.5rem;
+}
+
+.rp-supervision .rp-table-section:last-child {
+    margin-bottom: 1rem;
+}
+
+.rp-row-link {
+    cursor: pointer;
+}
+
+.rp-row-link:hover td {
+    background: var(--primary-wash, #fdf2f2);
+}
+
+.rp-row-link:focus-visible {
+    outline: 2px solid var(--primary, #b91c1c);
+    outline-offset: -2px;
+}

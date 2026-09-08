@@ -52,11 +52,11 @@ const emptyIdentifiers = {
     orcid_id: '', scopus_id: '', google_scholar_id: '', joined_on: '', citations: '', h_index: '', expertise: '',
 };
 
-const ResearchProfile = () => {
-    // No code in the URL means "my own profile".
+const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => {
+    // No code in the URL and none passed in means "my own profile".
     const { facultyCode: routeCode } = useParams();
     const navigate = useNavigate();
-    const [facultyCode, setFacultyCode] = useState(routeCode || null);
+    const [facultyCode, setFacultyCode] = useState(routeCode || codeProp || null);
     const [data, setData] = useState(null);
     const [activeTab, setActiveTab] = useState('faculty');
     const [filterYears, setFilterYears] = useState([]);
@@ -76,7 +76,10 @@ const ResearchProfile = () => {
     const [syncing, setSyncing] = useState(false);
     // An admin has no faculty record, so "my own profile" does not exist for
     // them. Without this the page waited on a code that was never coming.
-    const [resolving, setResolving] = useState(!routeCode);
+    const [resolving, setResolving] = useState(!routeCode && !codeProp);
+
+    // Embedded on the dashboard, the page chrome is the host's job.
+    const Shell = embedded ? React.Fragment : Layout;
 
     const load = useCallback(async () => {
         if (!facultyCode) return;
@@ -86,21 +89,22 @@ const ResearchProfile = () => {
 
     useEffect(() => {
         if (routeCode) { setFacultyCode(routeCode); setResolving(false); return; }
+        if (codeProp) { setFacultyCode(codeProp); setResolving(false); return; }
         apiCurrentFaculty()
             .then(f => { if (f) setFacultyCode(f.id); })
             .finally(() => setResolving(false));
-    }, [routeCode]);
+    }, [routeCode, codeProp]);
 
     useEffect(() => { load(); }, [load]);
 
-    if (resolving) return <Layout><div className="loading-state">Loading Profile...</div></Layout>;
+    if (resolving) return <Shell><div className="loading-state">Loading Profile...</div></Shell>;
 
     // No code in the URL and no faculty record of our own: pick whose to show.
     if (!facultyCode) {
         return (
-            <Layout>
+            <Shell>
                 <PageHeader
-                    title="Research Profile"
+                    title="Faculty Profile"
                     subtitle="Your account is not linked to a faculty record, so pick whose profile to open."
                 />
                 <div className="card" style={{ maxWidth: '520px' }}>
@@ -112,15 +116,23 @@ const ResearchProfile = () => {
                         onSelect={(f) => f && f.id && navigate(`/faculty/${f.id}/profile`)}
                     />
                 </div>
-            </Layout>
+            </Shell>
         );
     }
 
-    if (!data) return <Layout><div className="loading-state">Loading Profile...</div></Layout>;
+    if (!data) return <Shell><div className="loading-state">Loading Profile...</div></Shell>;
 
-    const { profile, can_edit: canEdit, can_sync: canSync } = data;
+    const {
+        profile,
+        can_edit: canEdit,
+        can_sync: canSync,
+        can_view_supervision: canViewSupervision = false,
+        is_self: isSelf = false,
+        counts = {},
+    } = data;
     const isOwnTab = activeTab === 'faculty';
-    const groups = isOwnTab ? data.publications : data.student_publications;
+    const isSupervisionTab = activeTab === 'supervision';
+    const groups = isOwnTab ? data.publications : (data.student_publications || {});
 
     const profileImage = profile.name
         ? (() => {
@@ -370,7 +382,7 @@ const ResearchProfile = () => {
     );
 
     return (
-        <Layout>
+        <Shell>
             <div className="rp-container">
                 <div className="rp-top-nav">
                     <div className="rp-nav-left">
@@ -401,6 +413,8 @@ const ResearchProfile = () => {
                             <div className="rp-stat-row"><span>Publications</span><strong>{profile.total_publications}</strong></div>
                             <div className="rp-stat-row"><span>Citations</span><strong>{profile.citations ?? '—'}</strong></div>
                             <div className="rp-stat-row"><span>h-index</span><strong>{profile.h_index ?? '—'}</strong></div>
+                            <div className="rp-stat-row"><span>Supervising</span><strong>{counts.supervised_count ?? '—'}</strong></div>
+                            <div className="rp-stat-row"><span>Committees</span><strong>{counts.doctoral_committee_count ?? '—'}</strong></div>
                         </div>
                     </div>
 
@@ -412,10 +426,12 @@ const ResearchProfile = () => {
                                     <i className="fa fa-envelope border-icon"></i>
                                     <div><label>INSTITUTIONAL EMAIL</label><p>{profile.email || '—'}</p></div>
                                 </div>
-                                <div className="rp-contact-item">
-                                    <i className="fa fa-phone border-icon"></i>
-                                    <div><label>PHONE</label><p>{profile.phone || '—'}</p></div>
-                                </div>
+                                {profile.phone !== undefined && (
+                                    <div className="rp-contact-item">
+                                        <i className="fa fa-phone border-icon"></i>
+                                        <div><label>PHONE</label><p>{profile.phone || '—'}</p></div>
+                                    </div>
+                                )}
                                 <div className="rp-contact-item">
                                     <i className="fa fa-globe border-icon"></i>
                                     <div><label>WEBSITE</label><p>{profile.website || '—'}</p></div>
@@ -505,11 +521,84 @@ const ResearchProfile = () => {
                     value={activeTab}
                     onChange={setActiveTab}
                     items={[
-                        { value: 'phd', label: 'PhD Student Publications' },
                         { value: 'faculty', label: 'Faculty Publications' },
+                        ...(canViewSupervision ? [
+                            { value: 'phd', label: 'PhD Student Publications' },
+                            { value: 'supervision', label: 'Students & Committees' },
+                        ] : []),
                     ]}
                 />
 
+                {isSupervisionTab && (
+                    <div className="rp-supervision">
+                        <div className="rp-table-section">
+                            <h3>Supervising ({data.supervised_students?.length ?? 0})</h3>
+                            <div className="data-table-wrap">
+                                <table className="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>NAME</th><th>ROLL NO</th><th>EMAIL</th>
+                                            <th>DATE OF ADMISSION</th><th>PROGRESS</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {(data.supervised_students || []).map(student => (
+                                            <tr
+                                                key={student.roll_no}
+                                                className="rp-row-link"
+                                                onClick={() => navigate(`/students/${student.roll_no}`)}
+                                            >
+                                                <td>{student.name}</td>
+                                                <td>{student.roll_no}</td>
+                                                <td>{student.email || '—'}</td>
+                                                <td>{student.date_of_admission || '—'}</td>
+                                                <td>{student.overall_progress ?? '—'}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                                {!(data.supervised_students || []).length && (
+                                    <div className="empty-state">No students are being supervised.</div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="rp-table-section">
+                            <h3>Doctoral Committees ({data.doctoral_committee_students?.length ?? 0})</h3>
+                            <div className="data-table-wrap">
+                                <table className="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>NAME</th><th>ROLL NO</th><th>DEPARTMENT</th>
+                                            <th>DATE OF ADMISSION</th><th>PROGRESS</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {(data.doctoral_committee_students || []).map(student => (
+                                            <tr
+                                                key={student.roll_no}
+                                                className="rp-row-link"
+                                                onClick={() => navigate(`/students/${student.roll_no}`)}
+                                            >
+                                                <td>{student.name}</td>
+                                                <td>{student.roll_no}</td>
+                                                <td>{student.department || '—'}</td>
+                                                <td>{student.date_of_admission || '—'}</td>
+                                                <td>{student.overall_progress ?? '—'}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                                {!(data.doctoral_committee_students || []).length && (
+                                    <div className="empty-state">Not a member of any doctoral committee.</div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {!isSupervisionTab && (
+                <>
                 <div className="rp-filter-bar">
                     <div className="rp-filters">
                         <label>YEAR</label>
@@ -651,6 +740,8 @@ const ResearchProfile = () => {
                         </div>
                     )}
                 </div>
+                </>
+                )}
 
                 <CustomModal
                     isOpen={showPubForm}
@@ -665,7 +756,7 @@ const ResearchProfile = () => {
                     />
                 </CustomModal>
             </div>
-        </Layout>
+        </Shell>
     );
 };
 

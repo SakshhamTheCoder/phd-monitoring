@@ -11,6 +11,7 @@ import CustomModal from '../../components/forms/modal/CustomModal';
 import FacultyForm from '../../components/facultyForm/FacultyForm'; // assume it's placed here
 import { baseURL } from '../../api/urls';
 import CustomButton from '../../components/forms/fields/CustomButton';
+import useCapabilities from '../../hooks/useCapabilities';
 
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
 
@@ -26,6 +27,7 @@ const FacultyPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const features = useFeatures();
+  const can = useCapabilities();
 
   const handleFilterChange = (newFilter) => {
     setFilter(newFilter);
@@ -203,25 +205,28 @@ Khalid Bashir,khalid.bashir@demo.invalid,9800000002,Assistant Professor,10002,EC
             enableApproval={false}
             customOpenForm={openForm}
             extraTopbarComponents={
-              <div className="top-actions">
-                <CustomButton
-                  text="Bulk Import"
-                  variant="secondary"
-                  onClick={() => setShowBulkImportModal(true)}
-                />
-                <CustomButton text="Add Faculty +" onClick={() => openForm()} />
-              </div>
+              // A viewer with only directory access is browsing, not managing.
+              can('can_add_faculties') ? (
+                <div className="top-actions">
+                  <CustomButton
+                    text="Bulk Import"
+                    variant="secondary"
+                    onClick={() => setShowBulkImportModal(true)}
+                  />
+                  <CustomButton text="Add Faculty +" onClick={() => openForm()} />
+                </div>
+              ) : null
             }
             
             actions={[
-              {
+              ...(can('can_add_faculties') ? [{
                 icon: <i className="fa-solid fa-pen-to-square"></i>,
                 tooltip: 'Edit',
                 onClick: (facultyData) => openForm(facultyData),
-              },
+              }] : []),
               ...(features.research_profile ? [{
                 icon: <i className="fa fa-user-circle"></i>,
-                tooltip: 'Research Profile',
+                tooltip: 'View profile',
                 onClick: (facultyData) => navigate(`/faculty/${facultyData.faculty_code}/profile`),
               }] : []),
             ]}

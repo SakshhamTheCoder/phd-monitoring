@@ -158,7 +158,6 @@ const AppContent = () => {
           {(
             role === 'hod' || role === 'phd_coordinator' || role === 'doctoral' || role === 'external' || role === 'dordc' || role === 'adordc' || role === 'dra' || role === 'director' || role === 'admin') && (
               <>
-                <Route path="/faculty" element={<FacultyPage />} />
                 <Route path="/departments" element={<DepartmentPage />} />
                 {/* <Route path="/faculty/:roll_no" element={<StudentProfile />} />
               <Route path="/faculty/:roll_no/forms" element={<FormsPage />} />
@@ -168,6 +167,9 @@ const AppContent = () => {
             )}
           {role === 'dordc' && (
             <Route path="/supervisor-doctoral-approvals" element={<SupervisorDoctoralApproval />} />
+          )}
+          {role !== 'clerk' && (
+            <Route path="/faculty" element={<FacultyPage />} />
           )}
           {(role==='clerk' || role==='admin' || role==='student' || role==='hod') && (
             <Route path="/attendance" element={<AttendanceRoute />} />
