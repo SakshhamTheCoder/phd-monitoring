@@ -44,6 +44,7 @@ import ClerkManagement from './pages/admin/ClerkManagement';
 import PrivacyPolicy from './pages/privacy/PrivacyPolicy';
 import Support from './pages/support/Support';
 import ResearchProfile from './pages/admin/ResearchProfile';
+import Configuration from './pages/admin/Configuration';
 import ProjectsOverview from './pages/projects/ProjectsOverview';
 import CreateProject from './pages/projects/CreateProject';
 import ProjectDetails from './pages/projects/ProjectDetails';
@@ -182,6 +183,7 @@ const AppContent = () => {
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/clerk-management" element={<ClerkManagement />} />
                 <Route path="/clerks" element={<ClerkManagement />} />
+                <Route path="/configuration" element={<Configuration />} />
 
               {/* <Route path="/faculty/:roll_no" element={<StudentProfile />} />
               <Route path="/faculty/:roll_no/forms" element={<FormsPage />} />
