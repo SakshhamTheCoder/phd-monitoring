@@ -3,7 +3,7 @@
 namespace App\Support;
 
 use App\Models\Attendance;
-use App\Models\LeaveSetting;
+use App\Models\AppSetting;
 use App\Models\StudentLeaveForm;
 use Carbon\CarbonImmutable;
 
@@ -21,7 +21,7 @@ final class LeaveBalance
     /** @return array{start:string, end:string} */
     public static function yearWindow(string $onDate): array
     {
-        $startMonth = LeaveSetting::value('year_start_month');
+        $startMonth = AppSetting::value('leave', 'year_start_month');
         $date = CarbonImmutable::parse(substr($onDate, 0, 10));
 
         $startYear = $date->month >= $startMonth ? $date->year : $date->year - 1;
@@ -83,8 +83,8 @@ final class LeaveBalance
         $used['casual'] += self::unapprovedAbsences($rollNo, $window, $overlapping);
 
         $quota = [
-            'academic' => (float) LeaveSetting::value('academic_quota'),
-            'casual' => (float) LeaveSetting::value('casual_quota'),
+            'academic' => (float) AppSetting::value('leave', 'academic_quota'),
+            'casual' => (float) AppSetting::value('leave', 'casual_quota'),
         ];
 
         $out = ['window' => $window];

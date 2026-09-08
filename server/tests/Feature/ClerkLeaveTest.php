@@ -86,7 +86,7 @@ class ClerkLeaveTest extends TestCase
     {
         $this->actingAsAdmin();
 
-        $this->getJson('/api/clerks/leave-settings')->assertStatus(200);
+        $this->getJson('/api/settings/leave')->assertStatus(200);
     }
 
     public function test_leave_settings_are_not_readable_by_a_role_outside_the_gate(): void
@@ -94,6 +94,28 @@ class ClerkLeaveTest extends TestCase
         $director = User::whereHas('role', fn ($q) => $q->where('role', 'director'))->firstOrFail();
         $this->actingAs($director, 'sanctum');
 
-        $this->getJson('/api/clerks/leave-settings')->assertStatus(403);
+        $this->getJson('/api/settings/leave')->assertStatus(403);
+    }
+
+    /** Reading is open to four roles; writing is admin only. */
+    public function test_leave_settings_are_not_writable_by_a_reader_who_is_not_an_admin(): void
+    {
+        $student = Student::query()->firstOrFail();
+        $this->actingAs(User::findOrFail($student->user_id), 'sanctum');
+
+        $this->postJson('/api/settings/leave', [
+            'academic_quota' => 1,
+            'casual_quota' => 1,
+            'year_start_month' => 1,
+        ])->assertStatus(403);
+
+        $this->assertSame(10, \App\Models\AppSetting::value('leave', 'academic_quota'));
+    }
+
+    public function test_an_unknown_settings_group_is_not_found(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->getJson('/api/settings/nonsense')->assertStatus(404);
     }
 }

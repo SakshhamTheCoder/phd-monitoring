@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Attendance;
 use App\Models\ClerkDepartment;
 use App\Models\Department;
-use App\Models\LeaveSetting;
 use App\Models\Role;
 use App\Models\Student;
 use App\Models\StudentLeaveForm;
@@ -1011,39 +1010,5 @@ class ClerkController extends Controller
             DB::rollBack();
             return response()->json(['message'=>'Bulk update failed','error'=>$e->getMessage()],500);
         }
-    }
-
-    // -----------------------------------------------------------------------
-    // Leave quota settings
-    // -----------------------------------------------------------------------
-
-    /**
-     * Quotas are read by every role that shows a balance (spec 4.6); only
-     * admin writes (saveLeaveSettings below).
-     */
-    public function leaveSettings(Request $request)
-    {
-        if (!in_array(Auth::user()->current_role->role, ['admin', 'clerk', 'hod', 'student'], true)) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
-        }
-
-        return response()->json(LeaveSetting::map(), 200);
-    }
-
-    public function saveLeaveSettings(Request $request)
-    {
-        if ($denied = $this->authorizeAdmin()) return $denied;
-
-        $data = $request->validate([
-            'academic_quota' => 'required|integer|min:0|max:365',
-            'casual_quota' => 'required|integer|min:0|max:365',
-            'year_start_month' => 'required|integer|min:1|max:12',
-        ]);
-
-        foreach ($data as $key => $value) {
-            LeaveSetting::updateOrCreate(['key' => $key], ['value' => $value]);
-        }
-
-        return response()->json(LeaveSetting::map(), 200);
     }
 }

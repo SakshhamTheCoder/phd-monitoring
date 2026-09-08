@@ -11,8 +11,3 @@ export const apiLeaveBalance = () => customFetch(`${LEAVE}/balance`, 'GET', {}, 
 // Multipart, because an academic leave carries a PDF.
 export const apiLeaveSubmit = (id, formData) =>
   customFetch(`${LEAVE}/${id}`, 'POST', formData, true, true);
-
-export const apiLeaveSettings = () =>
-  customFetch(`${baseURL}/clerks/leave-settings`, 'GET', {}, true);
-export const apiSaveLeaveSettings = (values) =>
-  customFetch(`${baseURL}/clerks/leave-settings`, 'POST', values, true);

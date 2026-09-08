@@ -371,6 +371,10 @@ Route::prefix('users')->group(function () {
     require base_path('routes/base/users.php');
 });
 
+Route::prefix('settings')->group(function () {
+    require base_path('routes/base/settings.php');
+});
+
 Route::prefix('clerks')->group(function () {
     require base_path('routes/base/clerks.php');
 });

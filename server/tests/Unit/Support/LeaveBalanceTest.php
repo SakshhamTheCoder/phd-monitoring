@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Support;
 
-use App\Models\LeaveSetting;
+use App\Models\AppSetting;
 use App\Models\StudentLeaveForm;
 use App\Support\LeaveBalance;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -14,7 +14,7 @@ class LeaveBalanceTest extends TestCase
 
     private function setYearStart(int $month): void
     {
-        LeaveSetting::updateOrCreate(['key' => 'year_start_month'], ['value' => $month]);
+        AppSetting::put('leave', 'year_start_month', $month);
     }
 
     public function test_a_date_after_the_start_month_belongs_to_the_year_that_just_began(): void
@@ -131,7 +131,7 @@ class LeaveBalanceTest extends TestCase
     public function test_remaining_goes_negative_rather_than_clamping(): void
     {
         $this->setYearStart(7);
-        LeaveSetting::updateOrCreate(['key' => 'casual_quota'], ['value' => 1]);
+        AppSetting::put('leave', 'casual_quota', 1);
         $rollNo = (int) \App\Models\Student::query()->value('roll_no');
 
         StudentLeaveForm::create([

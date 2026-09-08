@@ -2,12 +2,12 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import CustomButton from '../../../components/forms/fields/CustomButton';
 import { validateLeaveSettings } from '../../../utils/leaveBalance';
-import { apiLeaveSettings, apiSaveLeaveSettings } from '../../../api/leave';
+import { apiSettings, apiSaveSettings } from '../../../api/settings';
 
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 /**
- * Leave quotas, read and written through /clerks/leave-settings.
+ * Leave quotas, read and written through the 'leave' settings group.
  *
  * A configuration section owns its own loading and saving rather than taking
  * them from Configuration.jsx: sections have nothing in common but the shell
@@ -21,7 +21,7 @@ const LeaveQuotas = () => {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await apiLeaveSettings();
+    const res = await apiSettings('leave');
     setLoading(false);
     if (res.success) {
       setForm({
@@ -43,7 +43,7 @@ const LeaveQuotas = () => {
     const error = validateLeaveSettings(values);
     if (error) { toast.error(error); return; }
     setSaving(true);
-    const res = await apiSaveLeaveSettings(values);
+    const res = await apiSaveSettings('leave', values);
     setSaving(false);
     if (res.success) {
       toast.success('Leave quota settings saved');
@@ -101,11 +101,6 @@ const LeaveQuotas = () => {
           <div style={{ marginLeft: 'auto' }}>
             <CustomButton text={saving ? 'Saving…' : 'Save'} onClick={handleSave} disabled={loading || saving} />
           </div>
-        </div>
-      </div>
-      <div className="form-list-container">
-        <div style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-          {loading ? 'Loading current settings…' : 'These quotas apply to every scholar and reset at the start of the chosen month each year.'}
         </div>
       </div>
     </div>

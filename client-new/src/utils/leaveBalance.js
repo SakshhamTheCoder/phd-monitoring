@@ -54,7 +54,7 @@ export const localDateString = (value) => {
 };
 
 /**
- * Client-side mirror of ClerkController::saveLeaveSettings's validation
+ * Client-side mirror of AppSetting::GROUPS['leave']['rules']
  * (academic_quota/casual_quota: integer 0-365, year_start_month: integer
  * 1-12) so a clearly invalid value is caught before the request rather than
  * round-tripping to the backend. Returns an error message, or null when the

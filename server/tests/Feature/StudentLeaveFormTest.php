@@ -144,7 +144,7 @@ class StudentLeaveFormTest extends TestCase
     public function test_an_over_quota_application_still_submits(): void
     {
         $student = $this->actingAsStudent();
-        \App\Models\LeaveSetting::updateOrCreate(['key' => 'casual_quota'], ['value' => 1]);
+        \App\Models\AppSetting::put('leave', 'casual_quota', 1);
         $form = StudentLeaveForm::create([
             'student_id' => $student->roll_no, 'stage' => 'student', 'status' => 'draft',
         ]);
