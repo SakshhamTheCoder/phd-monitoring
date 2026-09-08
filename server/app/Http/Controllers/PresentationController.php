@@ -535,6 +535,7 @@ class PresentationController extends Controller
                 return $this->handleAdordcForm($user, $form_id, $model, false);
             case 'faculty':
                 return $this->handleFacultyForm($user, $form_id, $model);
+            case 'director':
             case 'admin':
                 return $this->handleAdminForm($user, $form_id, $model, true);
 

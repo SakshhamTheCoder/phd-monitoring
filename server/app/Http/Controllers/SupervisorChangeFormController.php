@@ -93,6 +93,7 @@ class SupervisorChangeFormController extends Controller {
             case 'dordc':
             case 'dra':
                 return $this->handleAdminForm($user, $form_id, $model);
+            case 'director':
             case 'admin':
                 return $this->handleAdminForm($user, $form_id, $model,true);
            
