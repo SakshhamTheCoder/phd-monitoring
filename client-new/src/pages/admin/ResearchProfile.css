@@ -207,7 +207,7 @@
 /* Stats Cards */
 .rp-stats-cards {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
 }
 
@@ -644,4 +644,46 @@
     font-size: 1.2rem;
     color: #1f2937;
     margin-bottom: 0.8rem;
+}
+
+/* Every figure in one row: supervision load and research output read together
+   rather than interleaved down the sidebar, which is what made that list long
+   enough to scan. Wraps rather than shrinking the tiles on a narrow screen. */
+.rp-figures {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.rp-figure {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+    padding: 1rem 1.25rem;
+    text-align: center;
+}
+
+.rp-figure label {
+    display: block;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    color: #6b7280;
+    margin-bottom: 0.4rem;
+}
+
+.rp-figure span {
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1;
+}
+
+/* The banner is identity, contact and identifiers now, so the middle column no
+   longer carries a stack and the three read as equal cards. */
+.rp-middle-col,
+.rp-right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }

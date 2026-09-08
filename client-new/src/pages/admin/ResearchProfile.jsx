@@ -390,8 +390,9 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
             <div className="rp-container">
                 <div className="rp-top-nav">
                     <div className="rp-nav-left">
-                        <h1 className="page-title">Research Profile</h1>
+                        <h1 className="page-title">Faculty Profile</h1>
                     </div>
+                    {!isSupervisionTab && (
                     <div className="rp-search-bar">
                         <i className="fa fa-search"></i>
                         <input
@@ -401,6 +402,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                             onChange={e => setSearch(e.target.value)}
                         />
                     </div>
+                    )}
                 </div>
 
                 <div className="rp-banner-grid">
@@ -413,15 +415,8 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                         <h3 className="rp-designation">{profile.designation}</h3>
                         <p className="rp-department">{profile.department}</p>
                         <div className="rp-user-stats">
-                            <div className="rp-stat-row"><span>Joined</span><strong>{profile.joined ? formatDate(profile.joined) : '—'}</strong></div>
-                            <div className="rp-stat-row"><span>Publications</span><strong>{profile.total_publications}</strong></div>
-                            <div className="rp-stat-row"><span>Citations</span><strong>{profile.citations ?? '—'}</strong></div>
-                            <div className="rp-stat-row"><span>h-index</span><strong>{profile.h_index ?? '—'}</strong></div>
-                            <div className="rp-stat-row"><span>Supervising</span><strong>{counts.supervised_count ?? '—'}</strong></div>
-                            <div className="rp-stat-row"><span>Committees</span><strong>{counts.doctoral_committee_count ?? '—'}</strong></div>
-                            <div className="rp-stat-row"><span>Within TIET</span><strong>{profile.supervised_campus ?? '—'}</strong></div>
-                            <div className="rp-stat-row"><span>Outside TIET</span><strong>{profile.supervised_outside ?? '—'}</strong></div>
                             <div className="rp-stat-row"><span>Faculty code</span><strong>{profile.faculty_code}</strong></div>
+                            <div className="rp-stat-row"><span>Joined</span><strong>{profile.joined ? formatDate(profile.joined) : '—'}</strong></div>
                         </div>
                     </div>
 
@@ -446,11 +441,6 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                             </div>
                         </div>
 
-                        <div className="rp-stats-cards">
-                            <div className="rp-mini-stat"><label>TOTAL</label><span className="stat-num black">{profile.total_publications}</span></div>
-                            <div className="rp-mini-stat stat-green"><label>SYNCED</label><span className="stat-num green">{profile.synced}</span></div>
-                            <div className="rp-mini-stat stat-yellow"><label>SELF-REPORTED</label><span className="stat-num yellow">{profile.self_reported}</span></div>
-                        </div>
                     </div>
 
                     <div className="rp-right-col">
@@ -535,6 +525,16 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                     </div>
                 )}
 
+                <div className="rp-figures">
+                    <div className="rp-figure"><label>SUPERVISING</label><span>{counts.supervised_count ?? '—'}</span></div>
+                    <div className="rp-figure"><label>WITHIN TIET</label><span>{profile.supervised_campus ?? '—'}</span></div>
+                    <div className="rp-figure"><label>OUTSIDE TIET</label><span>{profile.supervised_outside ?? '—'}</span></div>
+                    <div className="rp-figure"><label>COMMITTEES</label><span>{counts.doctoral_committee_count ?? '—'}</span></div>
+                    <div className="rp-figure"><label>PUBLICATIONS</label><span>{profile.total_publications}</span></div>
+                    <div className="rp-figure"><label>CITATIONS</label><span>{profile.citations ?? '—'}</span></div>
+                    <div className="rp-figure"><label>h-INDEX</label><span>{profile.h_index ?? '—'}</span></div>
+                </div>
+
                 <Tabs
                     value={tab}
                     onChange={setActiveTab}
@@ -617,6 +617,12 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
 
                 {!isSupervisionTab && (
                 <>
+                <div className="rp-stats-cards">
+                    <div className="rp-mini-stat"><label>TOTAL</label><span className="stat-num black">{profile.total_publications}</span></div>
+                    <div className="rp-mini-stat stat-green"><label>SYNCED</label><span className="stat-num green">{profile.synced}</span></div>
+                    <div className="rp-mini-stat stat-yellow"><label>SELF-REPORTED</label><span className="stat-num yellow">{profile.self_reported}</span></div>
+                </div>
+
                 <div className="rp-filter-bar">
                     <div className="rp-filters">
                         <label>YEAR</label>
