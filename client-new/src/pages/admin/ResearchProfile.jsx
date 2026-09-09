@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
 import AddPublication from '../../components/publications/AddPublication';
@@ -75,6 +75,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
     const [bulkBusy, setBulkBusy] = useState(false);
     const [syncing, setSyncing] = useState(false);
     const [showResearch, setShowResearch] = useState(false);
+    const researchRef = useRef(null);
     // An admin has no faculty record, so "my own profile" does not exist for
     // them. Without this the page waited on a code that was never coming.
     const [resolving, setResolving] = useState(!routeCode && !codeProp);
@@ -398,7 +399,16 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                             type="button"
                             className={`faculty-research-toggle ${showResearch ? 'is-open' : ''}`.trim()}
                             aria-expanded={showResearch}
-                            onClick={() => setShowResearch(v => !v)}
+                            onClick={() => {
+                                const opening = !showResearch;
+                                setShowResearch(opening);
+                                // Wait a frame so the section exists to scroll to.
+                                if (opening) {
+                                    requestAnimationFrame(() =>
+                                        researchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                                    );
+                                }
+                            }}
                         >
                             <i className="fa fa-flask"></i>
                             {showResearch ? 'Hide research profile' : 'Research profile'}
@@ -490,7 +500,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                 </div>
 
                 {showResearch && (
-                <div className="rp-research">
+                <div className="rp-research" ref={researchRef}>
                     <div className="rp-search-bar">
                         <i className="fa fa-search"></i>
                         <input
@@ -533,15 +543,12 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                             ) : (
                                 <div className="rp-contact-list">
                                     <div className="rp-contact-item">
-                                        <i className="fa fa-id-card border-icon"></i>
                                         <div><label>ORCID ID</label><p>{profile.orcid_id || '—'}</p></div>
                                     </div>
                                     <div className="rp-contact-item">
-                                        <i className="fa fa-database border-icon"></i>
                                         <div><label>SCOPUS ID</label><p>{profile.scopus_id || '—'}</p></div>
                                     </div>
                                     <div className="rp-contact-item">
-                                        <i className="fa fa-graduation-cap border-icon"></i>
                                         <div>
                                             <label>GOOGLE SCHOLAR ID</label>
                                             <p>{profile.google_scholar_id
@@ -550,7 +557,6 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                                         </div>
                                     </div>
                                     <div className="rp-contact-item">
-                                        <i className="fa fa-lightbulb border-icon"></i>
                                         <div><label>AREA OF EXPERTISE</label><p>{Array.isArray(profile.expertise) && profile.expertise.length ? profile.expertise.join(', ') : '—'}</p></div>
                                     </div>
                                 </div>

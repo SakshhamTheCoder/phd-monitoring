@@ -160,15 +160,13 @@
 }
 
 .rp-contact-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 1rem 2rem;
 }
 
 .rp-contact-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+    min-width: 0;
 }
 
 .border-icon {
@@ -758,4 +756,43 @@
 
 .rp-tally.is-yellow strong {
     color: #eab308;
+}
+
+/* Filter bar. The action buttons were wrapping onto two lines and the year
+   select was collapsing to nothing, because everything in the row was free to
+   shrink. */
+.rp-filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-shrink: 0;
+}
+
+.rp-add-btn,
+.rp-export-btn {
+    white-space: nowrap;
+}
+
+.rp-export-btn {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.85rem;
+}
+
+.rp-filter-bar {
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.rp-filters {
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+}
+
+.rp-filters select {
+    min-width: 130px;
+}
+
+.rp-year-input {
+    width: auto;
+    min-width: 150px;
 }
