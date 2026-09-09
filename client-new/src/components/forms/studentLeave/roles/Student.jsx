@@ -169,21 +169,23 @@ const Student = ({ formData }) => {
 
       {/* day_part is only valid when from_date === to_date — a multi-day
           application must stay 'full' or the backend returns a 422. */}
-      {showDayPart && (
-        <div className="input-field-container">
-          <label className="input-label">Part of Day</label>
-          <select
-            className="input-field"
-            value={dayPart}
-            onChange={(e) => setDayPart(e.target.value)}
-            disabled={lock}
-          >
-            {DAY_PART_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-        </div>
-      )}
+      <div className="input-field-container">
+        <label className="input-label" htmlFor="leave-day-part">Part of Day</label>
+        <select
+          id="leave-day-part"
+          className="input-field"
+          value={dayPart}
+          onChange={(e) => setDayPart(e.target.value)}
+          disabled={lock || !showDayPart}
+        >
+          {DAY_PART_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+        {!showDayPart && (
+          <p className="field-hint">A half day applies to a single date only.</p>
+        )}
+      </div>
 
       <div className="input-field-container">
         <label className="input-label">Reason</label>

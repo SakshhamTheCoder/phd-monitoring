@@ -250,6 +250,48 @@ class StudentLeaveFormTest extends TestCase
         );
     }
 
+    public function test_a_scholar_can_delete_their_own_draft(): void
+    {
+        $student = $this->actingAsStudent();
+        $created = $this->postJson('/api/forms/student-leave')->assertStatus(200);
+        $id = $created->json('id');
+
+        $this->deleteJson("/api/forms/student-leave/{$id}")->assertStatus(200);
+
+        $this->assertDatabaseMissing('student_leave_forms', ['id' => $id]);
+    }
+
+    /** Once the HOD has it, it is a record of a request that was made. */
+    public function test_a_submitted_application_cannot_be_deleted(): void
+    {
+        $student = $this->actingAsStudent();
+        $form = $this->leaveAwaitingHod($student);
+
+        $this->deleteJson("/api/forms/student-leave/{$form->id}")->assertStatus(422);
+
+        $this->assertDatabaseHas('student_leave_forms', ['id' => $form->id]);
+    }
+
+    public function test_a_scholar_cannot_delete_someone_elses_draft(): void
+    {
+        $owner = Student::query()->firstOrFail();
+        $draft = StudentLeaveForm::create([
+            'student_id' => $owner->roll_no,
+            'status' => 'draft',
+            'stage' => 'student',
+        ]);
+
+        $other = Student::where('roll_no', '!=', $owner->roll_no)->first();
+        if (!$other) {
+            $this->markTestSkipped('Only one student in this database.');
+        }
+        $this->actingAs(User::findOrFail($other->user_id), 'sanctum');
+
+        $this->deleteJson("/api/forms/student-leave/{$draft->id}")->assertStatus(403);
+
+        $this->assertDatabaseHas('student_leave_forms', ['id' => $draft->id]);
+    }
+
     /** Both outcomes are terminal, so the scholar has to hear about both. */
     public function test_hod_rejection_notifies_the_scholar(): void
     {

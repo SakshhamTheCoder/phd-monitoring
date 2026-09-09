@@ -9,7 +9,7 @@ import StudentLeave from '../../components/forms/studentLeave/StudentLeave';
 import LeaveBalancePanel from './LeaveBalancePanel';
 import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
-import { apiLeaveCreate, apiLeaveLoad } from '../../api/leave';
+import { apiLeaveCreate, apiLeaveLoad, apiLeaveDelete } from '../../api/leave';
 import { badgeClass } from '../../data/badges';
 import { parseAttendanceQuery, localDateString, localMonthKey } from '../../utils/leaveBalance';
 import './AttendancePage.css';
@@ -125,6 +125,14 @@ const StudentAttendancePage = () => {
   const openLeave = async (id) => {
     const loaded = await apiLeaveLoad(id);
     if (loaded.success) setOpenForm(loaded.response);
+  };
+
+  // Opening an application and thinking better of it should not leave a row
+  // behind. Only a draft can go; once the HOD has it, it is a record.
+  const deleteDraft = async (id) => {
+    if (!window.confirm('Delete this draft application?')) return;
+    const res = await apiLeaveDelete(id);
+    if (res.success) loadData();
   };
 
   return (
@@ -247,15 +255,15 @@ const StudentAttendancePage = () => {
           <div className="form-list-container">
             <table className="form-table">
               <thead>
-                <tr><th>Type</th><th>From</th><th>To</th><th>Part</th><th>Status</th><th>HOD comment</th></tr>
+                <tr><th>Type</th><th>From</th><th>To</th><th>Part</th><th>Status</th><th>HOD comment</th><th></th></tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={6} className="no-data-cell">Loading…</td></tr>
+                  <tr><td colSpan={7} className="no-data-cell">Loading…</td></tr>
                 ) : error ? (
-                  <tr><td colSpan={6} className="no-data-cell">{error}</td></tr>
+                  <tr><td colSpan={7} className="no-data-cell">{error}</td></tr>
                 ) : leaveRows.length === 0 ? (
-                  <tr><td colSpan={6} className="no-data-cell">No leave applications yet.</td></tr>
+                  <tr><td colSpan={7} className="no-data-cell">No leave applications yet.</td></tr>
                 ) : leaveRows.map((l) => (
                   <tr
                     key={l.id}
@@ -272,6 +280,18 @@ const StudentAttendancePage = () => {
                     <td>{DAY_PART_LABEL[l.day_part] || l.day_part || '—'}</td>
                     <td><span className={badgeClass(l.status)}>{l.status}</span></td>
                     <td>{l.hod_comments || '—'}</td>
+                    <td>
+                      {l.status === 'draft' && (
+                        <button
+                          type="button"
+                          className="leave-draft-delete"
+                          title="Delete this draft"
+                          onClick={(e) => { e.stopPropagation(); deleteDraft(l.id); }}
+                        >
+                          <i className="fa fa-trash"></i>
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

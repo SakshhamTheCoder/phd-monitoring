@@ -130,3 +130,17 @@
 .form-table tr.leave-row--highlight td {
   background: var(--primary-wash);
 }
+
+/* Discard a draft application from the list. Only drafts carry it, so the
+   column is empty for anything the HOD has already seen. */
+.leave-draft-delete {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 0.25rem 0.4rem;
+}
+
+.leave-draft-delete:hover {
+    color: #c0392b;
+}

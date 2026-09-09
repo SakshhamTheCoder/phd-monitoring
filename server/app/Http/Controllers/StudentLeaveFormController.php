@@ -77,6 +77,40 @@ class StudentLeaveFormController extends Controller
         return response()->json(['message' => 'Form Created', 'id' => $form->id], 200);
     }
 
+    /**
+     * Discard an application the scholar has not submitted.
+     *
+     * Deliberately narrow: your own form, and only while it is still a draft.
+     * Once it reaches the HOD it is a record of a request that was made, and
+     * withdrawing it is a different feature with a different audit trail.
+     */
+    public function destroyForm(Request $request, $form_id)
+    {
+        $user = Auth::user();
+        if (!$user->may('can_apply_for_leave')) {
+            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+        }
+
+        $form = StudentLeaveForm::find($form_id);
+        if (!$form) {
+            return response()->json(['message' => 'No form found'], 404);
+        }
+
+        if ($form->student_id != $user->student->roll_no) {
+            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+        }
+
+        if ($form->status !== 'draft') {
+            return response()->json([
+                'message' => 'This application has already been submitted and cannot be deleted.',
+            ], 422);
+        }
+
+        $form->delete();
+
+        return response()->json(['message' => 'Draft deleted'], 200);
+    }
+
     public function loadForm(Request $request, $form_id = null)
     {
         $user = Auth::user();

@@ -70,3 +70,16 @@
     color: #374151;
     text-transform: capitalize;
 }
+
+.student-leave .field-hint {
+    margin: 0.35rem 0 0;
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: #6b7280;
+}
+
+.student-leave .input-field:disabled {
+    background: #f3f4f6;
+    color: #6b7280;
+    cursor: not-allowed;
+}
