@@ -392,10 +392,6 @@
 .rp-id-form { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.5rem; }
 .rp-id-form-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.6rem; }
 
-.rp-btn-outline, .rp-btn-primary { padding: 0.45rem 0.9rem; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
-.rp-btn-outline { background: #FFF; border: 1px solid #DDD; color: #444; }
-.rp-btn-primary { background: var(--primary-color); border: 1px solid var(--primary-color); color: #FFF; }
-.rp-btn-primary:hover { background: var(--hover-color); }
 
 .rp-filter-actions { display: flex; align-items: center; gap: 0.6rem; }
 .rp-add-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 0.9rem; background: var(--primary-color); color: #FFF; border: none; border-radius: 8px; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.04em; cursor: pointer; }
@@ -598,25 +594,8 @@
   }
   
 /* Research is a section of this page, revealed on demand. */
-.faculty-research-toggle {
-    margin-top: 2rem;
-    background: none;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 0.6rem 1rem;
-    font-size: 0.95rem;
-    color: #374151;
-    cursor: pointer;
-}
 
-.faculty-research-toggle:hover {
-    background: #f9fafb;
-}
 
-.faculty-research-toggle:focus-visible {
-    outline: 2px solid var(--primary, #b91c1c);
-    outline-offset: 2px;
-}
 
 .rp-research {
     max-width: 1000px;
@@ -638,45 +617,29 @@
    visible on arrival instead of below the supervision tables. */
 .faculty-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 1rem;
     flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+/* Same rule as ProfileCard.css, which this page does not import. The margin is
+   dropped: here the actions sit in the header row, not under it. */
+.faculty-header .profile-actions {
+    display: flex;
+    gap: 1rem;
+    margin: 0;
+    flex-shrink: 0;
 }
 
 .faculty-header h2 {
     margin-bottom: 0.3rem;
 }
 
-.faculty-research-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-shrink: 0;
-    background: #fff;
-    border: 1px solid var(--primary-color);
-    color: var(--primary-color);
-    border-radius: 999px;
-    padding: 0.55rem 1.1rem;
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.15s ease-out, color 0.15s ease-out;
-}
 
-.faculty-research-toggle:hover {
-    background: var(--primary-wash, #fdf2f2);
-}
 
-.faculty-research-toggle.is-open {
-    background: var(--primary-color);
-    color: #fff;
-}
 
-.faculty-research-toggle:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 2px;
-}
 
 /* Sync state is one line of status and one action, so it gets one line. */
 .rp-sync-strip {
@@ -834,35 +797,9 @@
 
 /* Edit profile. Reuses the identifier form's field and action styling so the
    two dialogs on this page look like one thing. */
-.faculty-header-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-}
 
-.faculty-edit-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: #fff;
-    border: 1px solid #d1d5db;
-    color: #374151;
-    border-radius: 999px;
-    padding: 0.55rem 1.1rem;
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-}
 
-.faculty-edit-btn:hover {
-    background: #f9fafb;
-}
 
-.faculty-edit-btn:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 2px;
-}
 
 .rp-profile-form {
     padding: 1.5rem;

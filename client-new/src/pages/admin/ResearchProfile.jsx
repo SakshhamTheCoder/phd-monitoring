@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
 import AddPublication from '../../components/publications/AddPublication';
 import CustomModal from '../../components/forms/modal/CustomModal';
+import CustomButton from '../../components/forms/fields/CustomButton';
 import Tabs from '../../components/tabs/Tabs';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import InputSuggestions from '../../components/forms/fields/InputSuggestions';
@@ -409,30 +410,23 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                         {/* Research lives on the same page but stays folded away:
                             most visits are about supervision. Kept beside the name
                             so it is seen without scrolling past the tables. */}
-                        <div className="faculty-header-actions">
-                        {canEdit && (
-                            <button type="button" className="faculty-edit-btn" onClick={startProfileEdit}>
-                                <i className="fa fa-pencil"></i> Edit profile
-                            </button>
-                        )}
-                        <button
-                            type="button"
-                            className={`faculty-research-toggle ${showResearch ? 'is-open' : ''}`.trim()}
-                            aria-expanded={showResearch}
-                            onClick={() => {
-                                const opening = !showResearch;
-                                setShowResearch(opening);
-                                // Wait a frame so the section exists to scroll to.
-                                if (opening) {
-                                    requestAnimationFrame(() =>
-                                        researchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                                    );
-                                }
-                            }}
-                        >
-                            <i className="fa fa-flask"></i>
-                            {showResearch ? 'Hide research profile' : 'Research profile'}
-                        </button>
+                        <div className="profile-actions">
+                            {canEdit && (
+                                <CustomButton text="Edit Profile" variant="secondary" onClick={startProfileEdit} />
+                            )}
+                            <CustomButton
+                                text={showResearch ? 'Hide Research Profile' : 'Research Profile'}
+                                onClick={() => {
+                                    const opening = !showResearch;
+                                    setShowResearch(opening);
+                                    // Wait a frame so the section exists to scroll to.
+                                    if (opening) {
+                                        requestAnimationFrame(() =>
+                                            researchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                                        );
+                                    }
+                                }}
+                            />
                         </div>
                     </div>
 
@@ -555,8 +549,8 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                                     <label>h-index</label>
                                     <input type="number" value={identifiers.h_index} onChange={e => setIdentifiers({ ...identifiers, h_index: e.target.value })} />
                                     <div className="rp-id-form-actions">
-                                        <button className="rp-btn-outline" onClick={() => setEditing(false)}>Cancel</button>
-                                        <button className="rp-btn-primary" onClick={saveIdentifiers}>Save</button>
+                                        <CustomButton text="Cancel" variant="secondary" onClick={() => setEditing(false)} />
+                                        <CustomButton text="Save" onClick={saveIdentifiers} />
                                     </div>
                                 </div>
                             ) : (
@@ -796,8 +790,8 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                         <p className="rp-field-hint">Separate each area with a comma.</p>
 
                         <div className="rp-id-form-actions">
-                            <button className="rp-btn-outline" onClick={() => setEditingProfile(false)}>Cancel</button>
-                            <button className="rp-btn-primary" onClick={saveProfile}>Save</button>
+                            <CustomButton text="Cancel" variant="secondary" onClick={() => setEditingProfile(false)} />
+                            <CustomButton text="Save" onClick={saveProfile} />
                         </div>
                     </div>
                 </CustomModal>
