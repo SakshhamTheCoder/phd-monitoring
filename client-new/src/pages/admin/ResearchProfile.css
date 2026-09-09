@@ -570,120 +570,159 @@
 /* Supervision tab. Sits between the dashboard's plain tables and the
    publication tables: same surface and type as the rest of the page, with the
    row affordance the dashboard had, since a row still opens the student. */
-.rp-supervision {
-    margin-top: 1.5rem;
-}
 
-.rp-supervision .rp-table-section:last-child {
-    margin-bottom: 1rem;
-}
 
-.rp-row-link {
-    cursor: pointer;
-}
 
-.rp-row-link:hover td {
-    background: var(--primary-wash, #fdf2f2);
-}
 
-.rp-row-link:focus-visible {
-    outline: 2px solid var(--primary, #b91c1c);
-    outline-offset: -2px;
-}
 
 /* Expertise, given the full-width row it had on the dashboard card rather than
    a line buried among the academic identifiers. */
-.rp-expertise-band {
-    background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
-    padding: 1.25rem 1.5rem;
-    margin-bottom: 1.5rem;
-}
 
-.rp-expertise-band > label {
-    display: block;
-    font-size: 0.72rem;
-    letter-spacing: 0.06em;
-    color: #6b7280;
-    margin-bottom: 0.75rem;
-}
 
-.rp-expertise-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
 
-.rp-expertise-tag {
-    background: #f3f4f6;
-    border: 1px solid #e5e7eb;
-    border-radius: 999px;
-    padding: 0.25rem 0.75rem;
-    font-size: 0.85rem;
-    font-weight: 400;
-    color: #374151;
-}
 
 /* The dashboard card's softer surface, carried onto the profile so the two
    read as the same product rather than two pages that grew separately. */
-.rp-supervision .rp-table-section,
-.rp-user-card,
-.rp-info-card {
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
-}
 
-.rp-supervision .rp-table-section {
-    background: #ffffff;
-    padding: 1.25rem 1.5rem;
-    margin-bottom: 1.5rem;
-}
 
-.rp-supervision .rp-table-section h3 {
-    font-size: 1.2rem;
-    color: #1f2937;
-    margin-bottom: 0.8rem;
-}
 
 /* Every figure in one row: supervision load and research output read together
    rather than interleaved down the sidebar, which is what made that list long
    enough to scan. Wraps rather than shrinking the tiles on a narrow screen. */
-.rp-figures {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
 
-.rp-figure {
-    background: #ffffff;
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
-    padding: 1rem 1.25rem;
-    text-align: center;
-}
 
-.rp-figure label {
-    display: block;
-    font-size: 0.68rem;
-    letter-spacing: 0.06em;
-    color: #6b7280;
-    margin-bottom: 0.4rem;
-}
 
-.rp-figure span {
-    font-size: 1.6rem;
-    font-weight: 600;
-    color: #111827;
-    line-height: 1;
-}
 
 /* The banner is identity, contact and identifiers now, so the middle column no
    longer carries a stack and the three read as equal cards. */
-.rp-middle-col,
-.rp-right-col {
-    display: flex;
-    flex-direction: column;
+
+/* The dashboard card, restored as the page itself. These rules came from
+   components/profileCard/FacultyProfile.css, which this page replaced; the
+   markup is unchanged, so the styles come with it rather than being reinvented. */
+.faculty-container {
+    background: #ffffff;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+    max-width: 1000px;
+    margin: auto;
+  }
+  
+  .faculty-container h2 {
+    margin-bottom: 0.3rem;
+    font-size: 1.8rem;
+    color: #111827;
+  }
+  
+  .faculty-sub {
+    font-size: 1rem;
+    color: #6b7280;
+    margin-bottom: 1.5rem;
+  }
+  
+  .faculty-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+    color: #374151;
+  }
+  
+  .faculty-table-section {
+    margin-top: 2.5rem;
+  }
+  
+  .faculty-table-section h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.8rem;
+    color: #1f2937;
+  }
+  
+  .responsive-table {
+    overflow-x: auto;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+  }
+  
+  .responsive-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    min-width: 600px;
+  }
+  
+  .responsive-table th,
+  .responsive-table td {
+    padding: 0.9rem 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  /* Headers stay on one line so "Date of Admission" doesn't stack and
+     inflate the row height. */
+  .responsive-table th {
+    white-space: nowrap;
+  }
+
+  /* Dates, roll numbers, phone numbers and percentages read as single
+     tokens, wrapping them mid-value is what made the rows look ragged.
+     Names and emails are still free to wrap and absorb the slack. */
+  .responsive-table .col-tight {
+    white-space: nowrap;
+  }
+
+  .responsive-table thead {
+    background-color: #f3f4f6;
+    color: #374151;
+    font-weight: 600;
+  }
+  
+  .responsive-table tbody tr:hover {
+    background-color: #f9fafb;
+  }
+  
+  .empty-msg {
+    color: #9ca3af;
+    font-style: italic;
+  }
+  
+/* Research is a section of this page, revealed on demand. */
+.faculty-research-toggle {
+    margin-top: 2rem;
+    background: none;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    font-size: 0.95rem;
+    color: #374151;
+    cursor: pointer;
+}
+
+.faculty-research-toggle:hover {
+    background: #f9fafb;
+}
+
+.faculty-research-toggle:focus-visible {
+    outline: 2px solid var(--primary, #b91c1c);
+    outline-offset: 2px;
+}
+
+.rp-research {
+    max-width: 1000px;
+    margin: 1.5rem auto 0;
+}
+
+.rp-research .rp-search-bar {
+    margin-bottom: 1.5rem;
+}
+
+/* Identifiers and sync sit side by side now that there is no banner column. */
+.rp-research .rp-right-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    align-items: start;
 }

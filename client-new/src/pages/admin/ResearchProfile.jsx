@@ -74,6 +74,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
     const [bulkTarget, setBulkTarget] = useState('');
     const [bulkBusy, setBulkBusy] = useState(false);
     const [syncing, setSyncing] = useState(false);
+    const [showResearch, setShowResearch] = useState(false);
     // An admin has no faculty record, so "my own profile" does not exist for
     // them. Without this the page waited on a code that was never coming.
     const [resolving, setResolving] = useState(!routeCode && !codeProp);
@@ -130,12 +131,8 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
         is_self: isSelf = false,
         counts = {},
     } = data;
-    // Supervision is what a viewer usually opens someone else's profile for, so
-    // it leads when they are allowed it. A public-tier viewer has no such tab
-    // and lands on publications.
-    const tab = activeTab ?? (canViewSupervision ? 'supervision' : 'faculty');
+    const tab = activeTab ?? 'faculty';
     const isOwnTab = tab === 'faculty';
-    const isSupervisionTab = tab === 'supervision';
     const groups = isOwnTab ? data.publications : (data.student_publications || {});
 
     const profileImage = profile.name
@@ -388,11 +385,109 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
     return (
         <Shell>
             <div className="rp-container">
-                <div className="rp-top-nav">
-                    <div className="rp-nav-left">
-                        <h1 className="page-title">Faculty Profile</h1>
+                <div className="faculty-container">
+                    <h2>{profile.name}</h2>
+                    <p className="faculty-sub">{profile.designation}, {profile.department}</p>
+
+                    <div className="faculty-info-grid">
+                        <div><strong>Email:</strong> {profile.email || "N/A"}</div>
+                        {profile.phone !== undefined && (
+                            <div><strong>Phone:</strong> {profile.phone || "N/A"}</div>
+                        )}
+                        <div><strong>Faculty Code:</strong> {profile.faculty_code}</div>
+                        <div><strong>Supervised (Within TIET):</strong> {profile.supervised_campus ?? 0}</div>
+                        <div><strong>Supervised (Outside TIET):</strong> {profile.supervised_outside ?? 0}</div>
+                        {/* A viewer who may not see who the students are still sees how many. */}
+                        {!canViewSupervision && (
+                            <>
+                                <div><strong>Supervising:</strong> {counts.supervised_count ?? 0}</div>
+                                <div><strong>Doctoral Committees:</strong> {counts.doctoral_committee_count ?? 0}</div>
+                            </>
+                        )}
+                        {profile.website && <div><strong>Website:</strong> {profile.website}</div>}
+                        <div style={{ gridColumn: '1 / -1' }}>
+                            <strong>Area of Expertise:</strong>{' '}
+                            {Array.isArray(profile.expertise) && profile.expertise.length ? profile.expertise.join(', ') : '—'}
+                        </div>
                     </div>
-                    {!isSupervisionTab && (
+
+                    {canViewSupervision && (
+                        <>
+                            <div className="faculty-table-section">
+                                <h3>Supervising Students</h3>
+                                {!(data.supervised_students || []).length ? (
+                                    <p className="empty-msg">No students currently being supervised.</p>
+                                ) : (
+                                    <div className="responsive-table">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>S.No</th><th>Name</th><th>Roll No</th><th>Email</th><th>Date of Admission</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                {(data.supervised_students || []).map((student, idx) => (
+                                    <tr key={student.roll_no} onClick={() => navigate(`/students/${student.roll_no}`)} style={{ cursor: 'pointer' }}>
+                                        <td className="col-tight">{idx + 1}</td>
+                                        <td>{student.name}</td>
+                                        <td className="col-tight">{student.roll_no}</td>
+                                        <td>{student.email}</td>
+                                        <td className="col-tight">{student.date_of_admission || "N/A"}</td>
+                                    </tr>
+                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="faculty-table-section">
+                                <h3>Doctoral Committee Membership</h3>
+                                {!(data.doctoral_committee_students || []).length ? (
+                                    <p className="empty-msg">Not a member of any doctoral committee.</p>
+                                ) : (
+                                    <div className="responsive-table">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>S.No</th><th>Name</th><th>Roll No</th><th>Email</th><th>Department</th><th>Date of Admission</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                {(data.doctoral_committee_students || []).map((student, idx) => (
+                                    <tr key={student.roll_no} onClick={() => navigate(`/students/${student.roll_no}`)} style={{ cursor: 'pointer' }}>
+                                        <td className="col-tight">{idx + 1}</td>
+                                        <td>{student.name}</td>
+                                        <td className="col-tight">{student.roll_no}</td>
+                                        <td>{student.email}</td>
+                                        <td className="col-tight">{student.department || "N/A"}</td>
+                                        <td className="col-tight">{student.date_of_admission || "N/A"}</td>
+                                    </tr>
+                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+                        </>
+                    )}
+
+                    {/* Research lives on the same page but stays folded away: most
+                        visits are about supervision, and unfolding both at once is
+                        what made this page hard to read. */}
+                    <button
+                        type="button"
+                        className="faculty-research-toggle"
+                        aria-expanded={showResearch}
+                        onClick={() => setShowResearch(v => !v)}
+                    >
+                        <i className={`fa fa-chevron-${showResearch ? 'up' : 'down'}`}></i>
+                        {showResearch ? ' Hide research profile' : ' Show research profile'}
+                    </button>
+                </div>
+
+                {showResearch && (
+                <div className="rp-research">
                     <div className="rp-search-bar">
                         <i className="fa fa-search"></i>
                         <input
@@ -401,46 +496,6 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                         />
-                    </div>
-                    )}
-                </div>
-
-                <div className="rp-banner-grid">
-                    <div className="rp-user-card">
-                        <div className="rp-avatar-wrapper">
-                            <img src={profileImage} alt="Profile" className="rp-avatar" />
-                            <div className="rp-status-badge"></div>
-                        </div>
-                        <h2>{profile.name}</h2>
-                        <h3 className="rp-designation">{profile.designation}</h3>
-                        <p className="rp-department">{profile.department}</p>
-                        <div className="rp-user-stats">
-                            <div className="rp-stat-row"><span>Faculty code</span><strong>{profile.faculty_code}</strong></div>
-                            <div className="rp-stat-row"><span>Joined</span><strong>{profile.joined ? formatDate(profile.joined) : '—'}</strong></div>
-                        </div>
-                    </div>
-
-                    <div className="rp-middle-col">
-                        <div className="rp-info-card">
-                            <h4 className="rp-card-title border-red">Contact Information</h4>
-                            <div className="rp-contact-list">
-                                <div className="rp-contact-item">
-                                    <i className="fa fa-envelope border-icon"></i>
-                                    <div><label>INSTITUTIONAL EMAIL</label><p>{profile.email || '—'}</p></div>
-                                </div>
-                                {profile.phone !== undefined && (
-                                    <div className="rp-contact-item">
-                                        <i className="fa fa-phone border-icon"></i>
-                                        <div><label>PHONE</label><p>{profile.phone || '—'}</p></div>
-                                    </div>
-                                )}
-                                <div className="rp-contact-item">
-                                    <i className="fa fa-globe border-icon"></i>
-                                    <div><label>WEBSITE</label><p>{profile.website || '—'}</p></div>
-                                </div>
-                            </div>
-                        </div>
-
                     </div>
 
                     <div className="rp-right-col">
@@ -512,111 +567,16 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                             )}
                         </div>
                     </div>
-                </div>
 
-                {Array.isArray(profile.expertise) && profile.expertise.length > 0 && (
-                    <div className="rp-expertise-band">
-                        <label>AREA OF EXPERTISE</label>
-                        <div className="rp-expertise-tags">
-                            {profile.expertise.map(area => (
-                                <span className="rp-expertise-tag" key={area}>{area}</span>
-                            ))}
-                        </div>
-                    </div>
-                )}
+                    <Tabs
+                        value={tab}
+                        onChange={setActiveTab}
+                        items={[
+                            { value: 'faculty', label: 'Faculty Publications' },
+                            ...(canViewSupervision ? [{ value: 'phd', label: 'PhD Student Publications' }] : []),
+                        ]}
+                    />
 
-                <div className="rp-figures">
-                    <div className="rp-figure"><label>SUPERVISING</label><span>{counts.supervised_count ?? '—'}</span></div>
-                    <div className="rp-figure"><label>WITHIN TIET</label><span>{profile.supervised_campus ?? '—'}</span></div>
-                    <div className="rp-figure"><label>OUTSIDE TIET</label><span>{profile.supervised_outside ?? '—'}</span></div>
-                    <div className="rp-figure"><label>COMMITTEES</label><span>{counts.doctoral_committee_count ?? '—'}</span></div>
-                    <div className="rp-figure"><label>PUBLICATIONS</label><span>{profile.total_publications}</span></div>
-                    <div className="rp-figure"><label>CITATIONS</label><span>{profile.citations ?? '—'}</span></div>
-                    <div className="rp-figure"><label>h-INDEX</label><span>{profile.h_index ?? '—'}</span></div>
-                </div>
-
-                <Tabs
-                    value={tab}
-                    onChange={setActiveTab}
-                    items={[
-                        { value: 'faculty', label: 'Faculty Publications' },
-                        ...(canViewSupervision ? [
-                            { value: 'phd', label: 'PhD Student Publications' },
-                            { value: 'supervision', label: 'Students & Committees' },
-                        ] : []),
-                    ]}
-                />
-
-                {isSupervisionTab && (
-                    <div className="rp-supervision">
-                        <div className="rp-table-section">
-                            <h3>Supervising ({data.supervised_students?.length ?? 0})</h3>
-                            <div className="data-table-wrap">
-                                <table className="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th>NAME</th><th>ROLL NO</th><th>EMAIL</th>
-                                            <th>DATE OF ADMISSION</th><th>PROGRESS</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {(data.supervised_students || []).map(student => (
-                                            <tr
-                                                key={student.roll_no}
-                                                className="rp-row-link"
-                                                onClick={() => navigate(`/students/${student.roll_no}`)}
-                                            >
-                                                <td>{student.name}</td>
-                                                <td>{student.roll_no}</td>
-                                                <td>{student.email || '—'}</td>
-                                                <td>{student.date_of_admission || '—'}</td>
-                                                <td>{student.overall_progress ?? '—'}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                                {!(data.supervised_students || []).length && (
-                                    <div className="empty-state">No students are being supervised.</div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="rp-table-section">
-                            <h3>Doctoral Committees ({data.doctoral_committee_students?.length ?? 0})</h3>
-                            <div className="data-table-wrap">
-                                <table className="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th>NAME</th><th>ROLL NO</th><th>DEPARTMENT</th>
-                                            <th>DATE OF ADMISSION</th><th>PROGRESS</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {(data.doctoral_committee_students || []).map(student => (
-                                            <tr
-                                                key={student.roll_no}
-                                                className="rp-row-link"
-                                                onClick={() => navigate(`/students/${student.roll_no}`)}
-                                            >
-                                                <td>{student.name}</td>
-                                                <td>{student.roll_no}</td>
-                                                <td>{student.department || '—'}</td>
-                                                <td>{student.date_of_admission || '—'}</td>
-                                                <td>{student.overall_progress ?? '—'}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                                {!(data.doctoral_committee_students || []).length && (
-                                    <div className="empty-state">Not a member of any doctoral committee.</div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {!isSupervisionTab && (
-                <>
                 <div className="rp-stats-cards">
                     <div className="rp-mini-stat"><label>TOTAL</label><span className="stat-num black">{profile.total_publications}</span></div>
                     <div className="rp-mini-stat stat-green"><label>SYNCED</label><span className="stat-num green">{profile.synced}</span></div>
@@ -764,7 +724,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                         </div>
                     )}
                 </div>
-                </>
+                </div>
                 )}
 
                 <CustomModal
