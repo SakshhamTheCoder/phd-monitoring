@@ -84,6 +84,7 @@ class FacultyProfileController extends Controller
             'citations' => 'nullable|integer|min:0',
             'h_index' => 'nullable|integer|min:0',
             'expertise' => 'nullable',
+            'phone' => 'nullable|string|max:20',
         ]);
         if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 400);
 
@@ -95,6 +96,14 @@ class FacultyProfileController extends Controller
             if (is_string($val)) $val = array_values(array_filter(array_map('trim', preg_split('/[,;]+/', $val))));
             $faculty->expertise = $val;
         }
+        // Phone lives on the user, not the faculty record, but it is edited from
+        // the same form, so it is written here rather than needing a second
+        // endpoint with its own copy of canEdit.
+        if ($request->exists('phone') && $faculty->user) {
+            $faculty->user->phone = $request->input('phone') ?: null;
+            $faculty->user->save();
+        }
+
         $faculty->save();
         return response()->json(['message' => 'Profile updated']);
     }

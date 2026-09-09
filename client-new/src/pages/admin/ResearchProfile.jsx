@@ -75,6 +75,8 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
     const [bulkBusy, setBulkBusy] = useState(false);
     const [syncing, setSyncing] = useState(false);
     const [showResearch, setShowResearch] = useState(false);
+    const [editingProfile, setEditingProfile] = useState(false);
+    const [profileForm, setProfileForm] = useState({ phone: '', expertise: '' });
     const researchRef = useRef(null);
     // An admin has no faculty record, so "my own profile" does not exist for
     // them. Without this the page waited on a code that was never coming.
@@ -180,9 +182,21 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
             joined_on: profile.joined || '',
             citations: profile.citations ?? '',
             h_index: profile.h_index ?? '',
-            expertise: Array.isArray(profile.expertise) ? profile.expertise.join(', ') : profile.expertise || '',
         });
         setEditing(true);
+    };
+
+    const startProfileEdit = () => {
+        setProfileForm({
+            phone: profile.phone || '',
+            expertise: Array.isArray(profile.expertise) ? profile.expertise.join(', ') : profile.expertise || '',
+        });
+        setEditingProfile(true);
+    };
+
+    const saveProfile = async () => {
+        const res = await apiUpdateResearchProfile(facultyCode, profileForm);
+        if (res.success) { setEditingProfile(false); toast.success('Profile updated.'); load(); }
     };
 
     const saveIdentifiers = async () => {
@@ -395,6 +409,12 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                         {/* Research lives on the same page but stays folded away:
                             most visits are about supervision. Kept beside the name
                             so it is seen without scrolling past the tables. */}
+                        <div className="faculty-header-actions">
+                        {canEdit && (
+                            <button type="button" className="faculty-edit-btn" onClick={startProfileEdit}>
+                                <i className="fa fa-pencil"></i> Edit profile
+                            </button>
+                        )}
                         <button
                             type="button"
                             className={`faculty-research-toggle ${showResearch ? 'is-open' : ''}`.trim()}
@@ -413,6 +433,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                             <i className="fa fa-flask"></i>
                             {showResearch ? 'Hide research profile' : 'Research profile'}
                         </button>
+                        </div>
                     </div>
 
                     <div className="faculty-info-grid">
@@ -533,8 +554,6 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                                     <input type="number" value={identifiers.citations} onChange={e => setIdentifiers({ ...identifiers, citations: e.target.value })} />
                                     <label>h-index</label>
                                     <input type="number" value={identifiers.h_index} onChange={e => setIdentifiers({ ...identifiers, h_index: e.target.value })} />
-                                    <label>Area of Expertise (comma separated)</label>
-                                    <input value={identifiers.expertise} onChange={e => setIdentifiers({ ...identifiers, expertise: e.target.value })} placeholder="e.g., Machine Learning, Data Mining, Cyber Security" />
                                     <div className="rp-id-form-actions">
                                         <button className="rp-btn-outline" onClick={() => setEditing(false)}>Cancel</button>
                                         <button className="rp-btn-primary" onClick={saveIdentifiers}>Save</button>
@@ -749,6 +768,39 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                 </div>
                 </div>
                 )}
+
+                <CustomModal
+                    isOpen={editingProfile}
+                    onClose={() => setEditingProfile(false)}
+                    maxWidth="480px"
+                    minHeight="auto"
+                >
+                    <div className="rp-profile-form">
+                        <h3>Edit profile</h3>
+
+                        <label htmlFor="rp-phone">Phone</label>
+                        <input
+                            id="rp-phone"
+                            value={profileForm.phone}
+                            onChange={e => setProfileForm({ ...profileForm, phone: e.target.value })}
+                            placeholder="e.g., 9876543210"
+                        />
+
+                        <label htmlFor="rp-expertise">Area of expertise</label>
+                        <input
+                            id="rp-expertise"
+                            value={profileForm.expertise}
+                            onChange={e => setProfileForm({ ...profileForm, expertise: e.target.value })}
+                            placeholder="e.g., Machine Learning, Data Mining, Cyber Security"
+                        />
+                        <p className="rp-field-hint">Separate each area with a comma.</p>
+
+                        <div className="rp-id-form-actions">
+                            <button className="rp-btn-outline" onClick={() => setEditingProfile(false)}>Cancel</button>
+                            <button className="rp-btn-primary" onClick={saveProfile}>Save</button>
+                        </div>
+                    </div>
+                </CustomModal>
 
                 <CustomModal
                     isOpen={showPubForm}

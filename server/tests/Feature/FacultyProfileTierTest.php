@@ -141,6 +141,33 @@ class FacultyProfileTierTest extends TestCase
         $this->assertArrayHasKey('expertise', $profile);
     }
 
+    public function test_a_faculty_can_edit_their_own_phone_and_expertise(): void
+    {
+        $faculty = $this->faculty();
+        $user = User::findOrFail($faculty->user_id);
+        $user->current_role_id = Role::where('role', 'faculty')->firstOrFail()->id;
+        $user->save();
+        $this->actingAs($user->fresh(), 'sanctum');
+
+        $this->postJson("/api/faculty/{$faculty->faculty_code}/profile", [
+            'phone' => '9876500000',
+            'expertise' => 'Machine Learning, Cyber Security',
+        ])->assertStatus(200);
+
+        $this->assertSame('9876500000', $user->fresh()->phone);
+        $this->assertSame(['Machine Learning', 'Cyber Security'], $faculty->fresh()->expertise);
+    }
+
+    public function test_another_faculty_cannot_edit_that_profile(): void
+    {
+        $faculty = $this->faculty();
+        $this->actingAs_('faculty', $faculty);
+
+        $this->postJson("/api/faculty/{$faculty->faculty_code}/profile", [
+            'phone' => '0000000000',
+        ])->assertStatus(403);
+    }
+
     public function test_a_clerk_cannot_open_a_faculty_profile(): void
     {
         $faculty = $this->faculty();
