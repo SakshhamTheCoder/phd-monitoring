@@ -385,11 +385,7 @@
 }
 
 /* Edit, source and modal additions */
-.rp-card-head-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
-.rp-inline-edit { background: none; border: none; color: var(--primary-color); cursor: pointer; font-size: 0.85rem; padding: 0.2rem 0.4rem; }
-.rp-inline-edit:hover { color: var(--hover-color); }
 
-.rp-id-form { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.5rem; }
 .rp-id-form-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.6rem; }
 
 
@@ -841,4 +837,26 @@
     font-size: 0.8rem;
     font-weight: 400;
     color: #6b7280;
+}
+
+/* Edit profile now covers identifiers too, so it needs a heading between the
+   two halves and a row for the pair of short numeric fields. */
+.rp-form-section {
+    margin: 1.5rem 0 1rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #e5e7eb;
+    font-size: 0.95rem;
+    color: #111827;
+}
+
+.rp-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+/* The dialog is taller now that it holds the whole profile. */
+.rp-profile-form {
+    max-height: 75vh;
+    overflow-y: auto;
 }

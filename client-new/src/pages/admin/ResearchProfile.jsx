@@ -49,8 +49,9 @@ const CATEGORY_TO_FIELDS = {
     patents: { publication_type: 'patent', type: null },
 };
 
-const emptyIdentifiers = {
-    orcid_id: '', scopus_id: '', google_scholar_id: '', joined_on: '', citations: '', h_index: '', expertise: '',
+const emptyProfileForm = {
+    phone: '', expertise: '',
+    orcid_id: '', scopus_id: '', google_scholar_id: '', joined_on: '', citations: '', h_index: '',
 };
 
 const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => {
@@ -64,8 +65,6 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
     const [filterType, setFilterType] = useState('All');
     const [filterSource, setFilterSource] = useState('All');
     const [search, setSearch] = useState('');
-    const [editing, setEditing] = useState(false);
-    const [identifiers, setIdentifiers] = useState(emptyIdentifiers);
     const [showPubForm, setShowPubForm] = useState(false);
     const [editPub, setEditPub] = useState(null);
     // Ids ticked for bulk reclassification. Imported publications arrive with
@@ -75,9 +74,8 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
     const [bulkTarget, setBulkTarget] = useState('');
     const [bulkBusy, setBulkBusy] = useState(false);
     const [syncing, setSyncing] = useState(false);
-    const [showResearch, setShowResearch] = useState(false);
     const [editingProfile, setEditingProfile] = useState(false);
-    const [profileForm, setProfileForm] = useState({ phone: '', expertise: '' });
+    const [profileForm, setProfileForm] = useState(emptyProfileForm);
     const researchRef = useRef(null);
     // An admin has no faculty record, so "my own profile" does not exist for
     // them. Without this the page waited on a code that was never coming.
@@ -175,8 +173,10 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
         );
     };
 
-    const startEdit = () => {
-        setIdentifiers({
+    const startProfileEdit = () => {
+        setProfileForm({
+            phone: profile.phone || '',
+            expertise: Array.isArray(profile.expertise) ? profile.expertise.join(', ') : profile.expertise || '',
             orcid_id: profile.orcid_id || '',
             scopus_id: profile.scopus_id || '',
             google_scholar_id: profile.google_scholar_id || '',
@@ -184,25 +184,12 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
             citations: profile.citations ?? '',
             h_index: profile.h_index ?? '',
         });
-        setEditing(true);
-    };
-
-    const startProfileEdit = () => {
-        setProfileForm({
-            phone: profile.phone || '',
-            expertise: Array.isArray(profile.expertise) ? profile.expertise.join(', ') : profile.expertise || '',
-        });
         setEditingProfile(true);
     };
 
     const saveProfile = async () => {
         const res = await apiUpdateResearchProfile(facultyCode, profileForm);
         if (res.success) { setEditingProfile(false); toast.success('Profile updated.'); load(); }
-    };
-
-    const saveIdentifiers = async () => {
-        const res = await apiUpdateResearchProfile(facultyCode, identifiers);
-        if (res.success) { setEditing(false); toast.success('Profile updated.'); load(); }
     };
 
     const runSync = async () => {
@@ -415,17 +402,8 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                                 <CustomButton text="Edit Profile" variant="secondary" onClick={startProfileEdit} />
                             )}
                             <CustomButton
-                                text={showResearch ? 'Hide Research Profile' : 'Research Profile'}
-                                onClick={() => {
-                                    const opening = !showResearch;
-                                    setShowResearch(opening);
-                                    // Wait a frame so the section exists to scroll to.
-                                    if (opening) {
-                                        requestAnimationFrame(() =>
-                                            researchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                                        );
-                                    }
-                                }}
+                                text="Research Profile"
+                                onClick={() => researchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                             />
                         </div>
                     </div>
@@ -514,7 +492,6 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                     )}
                 </div>
 
-                {showResearch && (
                 <div className="rp-research" ref={researchRef}>
                     <div className="rp-search-bar">
                         <i className="fa fa-search"></i>
@@ -528,52 +505,35 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
 
                     <div className="rp-right-col">
                         <div className="rp-info-card">
-                            <div className="rp-card-head-row">
-                                <h4 className="rp-card-title border-red">Academic Identifiers</h4>
-                                {canEdit && !editing && (
-                                    <button className="rp-inline-edit" onClick={startEdit} title="Edit identifiers"><i className="fa fa-pencil"></i></button>
-                                )}
+                            <h4 className="rp-card-title border-red">Academic Identifiers</h4>
+                            <div className="rp-contact-list">
+                                <div className="rp-contact-item">
+                                    <label>ORCID ID</label>
+                                    <p>{profile.orcid_id || '—'}</p>
+                                </div>
+                                <div className="rp-contact-item">
+                                    <label>SCOPUS ID</label>
+                                    <p>{profile.scopus_id || '—'}</p>
+                                </div>
+                                <div className="rp-contact-item">
+                                    <label>GOOGLE SCHOLAR ID</label>
+                                    <p>{profile.google_scholar_id
+                                        ? <a href={`https://scholar.google.com/citations?user=${profile.google_scholar_id}`} target="_blank" rel="noopener noreferrer">{profile.google_scholar_id}</a>
+                                        : '—'}</p>
+                                </div>
+                                <div className="rp-contact-item">
+                                    <label>CITATIONS</label>
+                                    <p>{profile.citations ?? '—'}</p>
+                                </div>
+                                <div className="rp-contact-item">
+                                    <label>H-INDEX</label>
+                                    <p>{profile.h_index ?? '—'}</p>
+                                </div>
+                                <div className="rp-contact-item">
+                                    <label>JOINED</label>
+                                    <p>{profile.joined ? formatDate(profile.joined) : '—'}</p>
+                                </div>
                             </div>
-                            {editing ? (
-                                <div className="rp-id-form">
-                                    <label>ORCID iD</label>
-                                    <input value={identifiers.orcid_id} onChange={e => setIdentifiers({ ...identifiers, orcid_id: e.target.value })} placeholder="0000-0002-1825-0097" />
-                                    <label>Scopus ID</label>
-                                    <input value={identifiers.scopus_id} onChange={e => setIdentifiers({ ...identifiers, scopus_id: e.target.value })} />
-                                    <label>Google Scholar ID</label>
-                                    <input value={identifiers.google_scholar_id} onChange={e => setIdentifiers({ ...identifiers, google_scholar_id: e.target.value })} />
-                                    <label>Joined On</label>
-                                    <input type="date" value={identifiers.joined_on || ''} onChange={e => setIdentifiers({ ...identifiers, joined_on: e.target.value })} />
-                                    <label>Citations</label>
-                                    <input type="number" value={identifiers.citations} onChange={e => setIdentifiers({ ...identifiers, citations: e.target.value })} />
-                                    <label>h-index</label>
-                                    <input type="number" value={identifiers.h_index} onChange={e => setIdentifiers({ ...identifiers, h_index: e.target.value })} />
-                                    <div className="rp-id-form-actions">
-                                        <CustomButton text="Cancel" variant="secondary" onClick={() => setEditing(false)} />
-                                        <CustomButton text="Save" onClick={saveIdentifiers} />
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="rp-contact-list">
-                                    <div className="rp-contact-item">
-                                        <div><label>ORCID ID</label><p>{profile.orcid_id || '—'}</p></div>
-                                    </div>
-                                    <div className="rp-contact-item">
-                                        <div><label>SCOPUS ID</label><p>{profile.scopus_id || '—'}</p></div>
-                                    </div>
-                                    <div className="rp-contact-item">
-                                        <div>
-                                            <label>GOOGLE SCHOLAR ID</label>
-                                            <p>{profile.google_scholar_id
-                                                ? <a href={`https://scholar.google.com/citations?user=${profile.google_scholar_id}`} target="_blank" rel="noopener noreferrer">{profile.google_scholar_id}</a>
-                                                : '—'}</p>
-                                        </div>
-                                    </div>
-                                    <div className="rp-contact-item">
-                                        <div><label>AREA OF EXPERTISE</label><p>{Array.isArray(profile.expertise) && profile.expertise.length ? profile.expertise.join(', ') : '—'}</p></div>
-                                    </div>
-                                </div>
-                            )}
                         </div>
 
                         <div className="rp-sync-strip">
@@ -761,7 +721,6 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                     )}
                 </div>
                 </div>
-                )}
 
                 <CustomModal
                     isOpen={editingProfile}
@@ -788,6 +747,61 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                             placeholder="e.g., Machine Learning, Data Mining, Cyber Security"
                         />
                         <p className="rp-field-hint">Separate each area with a comma.</p>
+
+                        <label htmlFor="rp-joined">Joined on</label>
+                        <input
+                            id="rp-joined"
+                            type="date"
+                            value={profileForm.joined_on || ''}
+                            onChange={e => setProfileForm({ ...profileForm, joined_on: e.target.value })}
+                        />
+
+                        <h4 className="rp-form-section">Academic identifiers</h4>
+
+                        <label htmlFor="rp-orcid">ORCID iD</label>
+                        <input
+                            id="rp-orcid"
+                            value={profileForm.orcid_id}
+                            onChange={e => setProfileForm({ ...profileForm, orcid_id: e.target.value })}
+                            placeholder="0000-0002-1825-0097"
+                        />
+
+                        <label htmlFor="rp-scopus">Scopus ID</label>
+                        <input
+                            id="rp-scopus"
+                            value={profileForm.scopus_id}
+                            onChange={e => setProfileForm({ ...profileForm, scopus_id: e.target.value })}
+                        />
+
+                        <label htmlFor="rp-scholar">Google Scholar ID</label>
+                        <input
+                            id="rp-scholar"
+                            value={profileForm.google_scholar_id}
+                            onChange={e => setProfileForm({ ...profileForm, google_scholar_id: e.target.value })}
+                        />
+
+                        <div className="rp-form-row">
+                            <div>
+                                <label htmlFor="rp-citations">Citations</label>
+                                <input
+                                    id="rp-citations"
+                                    type="number"
+                                    min="0"
+                                    value={profileForm.citations}
+                                    onChange={e => setProfileForm({ ...profileForm, citations: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="rp-hindex">h-index</label>
+                                <input
+                                    id="rp-hindex"
+                                    type="number"
+                                    min="0"
+                                    value={profileForm.h_index}
+                                    onChange={e => setProfileForm({ ...profileForm, h_index: e.target.value })}
+                                />
+                            </div>
+                        </div>
 
                         <div className="rp-id-form-actions">
                             <CustomButton text="Cancel" variant="secondary" onClick={() => setEditingProfile(false)} />
