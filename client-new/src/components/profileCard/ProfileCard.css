@@ -259,3 +259,16 @@
   background: #991b1b;
   color: #fff;
 }
+
+/* body sets font-weight 600 app-wide (App.css), so both the label and its value
+   arrive semi-bold and the matrix reads as one block of emphasis. The label is
+   the thing being emphasised; the value is data. Stated explicitly on both
+   profiles so they cannot drift apart again. */
+.student-info-grid {
+  font-weight: 400;
+}
+
+.student-info-grid strong {
+  font-weight: 600;
+  color: #1f2937;
+}
