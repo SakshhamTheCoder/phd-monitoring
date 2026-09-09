@@ -128,7 +128,6 @@ const AppContent = () => {
           <Route path="/notifications" element={<AllNotificationsPage />} />
           {features.research_profile && (
             <>
-              <Route path="/research-profile" element={<ResearchProfile />} />
               <Route path="/faculty/:facultyCode/profile" element={<ResearchProfile />} />
             </>
           )}

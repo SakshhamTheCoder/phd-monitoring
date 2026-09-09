@@ -5,9 +5,6 @@ import AddPublication from '../../components/publications/AddPublication';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import Tabs from '../../components/tabs/Tabs';
-import PageHeader from '../../components/pageHeader/PageHeader';
-import InputSuggestions from '../../components/forms/fields/InputSuggestions';
-import { baseURL } from '../../api/urls';
 import { generateAvatar } from '../../utils/profileImage';
 import { formatDate } from '../../data/projectsData';
 import { badgeClass } from '../../data/badges';
@@ -15,7 +12,6 @@ import {
     apiResearchProfile, apiUpdateResearchProfile, apiSyncPublications,
     apiAddFacultyPublication, apiUpdateFacultyPublication, apiDeleteFacultyPublication,
 } from '../../api/researchProfile';
-import { apiCurrentFaculty } from '../../api/projects';
 import { toast } from 'react-toastify';
 import { profileIdentity, isProfileAuthor, splitAuthors } from '../../utils/authorMatch';
 import './ResearchProfile.css';
@@ -77,10 +73,6 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
     const [editingProfile, setEditingProfile] = useState(false);
     const [profileForm, setProfileForm] = useState(emptyProfileForm);
     const researchRef = useRef(null);
-    // An admin has no faculty record, so "my own profile" does not exist for
-    // them. Without this the page waited on a code that was never coming.
-    const [resolving, setResolving] = useState(!routeCode && !codeProp);
-
     // Embedded on the dashboard, the page chrome is the host's job.
     const Shell = embedded ? React.Fragment : Layout;
 
@@ -91,37 +83,10 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
     }, [facultyCode]);
 
     useEffect(() => {
-        if (routeCode) { setFacultyCode(routeCode); setResolving(false); return; }
-        if (codeProp) { setFacultyCode(codeProp); setResolving(false); return; }
-        apiCurrentFaculty()
-            .then(f => { if (f) setFacultyCode(f.id); })
-            .finally(() => setResolving(false));
+        setFacultyCode(routeCode || codeProp || null);
     }, [routeCode, codeProp]);
 
     useEffect(() => { load(); }, [load]);
-
-    if (resolving) return <Shell><div className="loading-state">Loading Profile...</div></Shell>;
-
-    // No code in the URL and no faculty record of our own: pick whose to show.
-    if (!facultyCode) {
-        return (
-            <Shell>
-                <PageHeader
-                    title="Faculty Profile"
-                    subtitle="Your account is not linked to a faculty record, so pick whose profile to open."
-                />
-                <div className="card" style={{ maxWidth: '520px' }}>
-                    <InputSuggestions
-                        apiUrl={`${baseURL}/suggestions/faculty`}
-                        label="Find a faculty member"
-                        hint="Type a name, code or email..."
-                        fields={['name', 'department']}
-                        onSelect={(f) => f && f.id && navigate(`/faculty/${f.id}/profile`)}
-                    />
-                </div>
-            </Shell>
-        );
-    }
 
     if (!data) return <Shell><div className="loading-state">Loading Profile...</div></Shell>;
 
@@ -506,33 +471,18 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                     <div className="rp-right-col">
                         <div className="rp-info-card">
                             <h4 className="rp-card-title border-red">Academic Identifiers</h4>
-                            <div className="rp-contact-list">
-                                <div className="rp-contact-item">
-                                    <label>ORCID ID</label>
-                                    <p>{profile.orcid_id || '—'}</p>
-                                </div>
-                                <div className="rp-contact-item">
-                                    <label>SCOPUS ID</label>
-                                    <p>{profile.scopus_id || '—'}</p>
-                                </div>
-                                <div className="rp-contact-item">
-                                    <label>GOOGLE SCHOLAR ID</label>
-                                    <p>{profile.google_scholar_id
+                            <div className="faculty-info-grid">
+                                <div><strong>ORCID iD:</strong> {profile.orcid_id || '—'}</div>
+                                <div><strong>Scopus ID:</strong> {profile.scopus_id || '—'}</div>
+                                <div>
+                                    <strong>Google Scholar ID:</strong>{' '}
+                                    {profile.google_scholar_id
                                         ? <a href={`https://scholar.google.com/citations?user=${profile.google_scholar_id}`} target="_blank" rel="noopener noreferrer">{profile.google_scholar_id}</a>
-                                        : '—'}</p>
+                                        : '—'}
                                 </div>
-                                <div className="rp-contact-item">
-                                    <label>CITATIONS</label>
-                                    <p>{profile.citations ?? '—'}</p>
-                                </div>
-                                <div className="rp-contact-item">
-                                    <label>H-INDEX</label>
-                                    <p>{profile.h_index ?? '—'}</p>
-                                </div>
-                                <div className="rp-contact-item">
-                                    <label>JOINED</label>
-                                    <p>{profile.joined ? formatDate(profile.joined) : '—'}</p>
-                                </div>
+                                <div><strong>Citations:</strong> {profile.citations ?? '—'}</div>
+                                <div><strong>h-index:</strong> {profile.h_index ?? '—'}</div>
+                                <div><strong>Joined:</strong> {profile.joined ? formatDate(profile.joined) : '—'}</div>
                             </div>
                         </div>
 

@@ -168,6 +168,33 @@ class FacultyProfileTierTest extends TestCase
         ])->assertStatus(403);
     }
 
+    /** An admin manages faculty from the directory, so they edit from the profile. */
+    public function test_an_admin_can_edit_another_faculty_profile(): void
+    {
+        $faculty = $this->faculty();
+        $this->actingAs_('admin', $faculty);
+
+        $this->show($faculty)->assertStatus(200)->assertJsonPath('can_edit', true);
+
+        $this->postJson("/api/faculty/{$faculty->faculty_code}/profile", [
+            'phone' => '9000000001',
+        ])->assertStatus(200);
+
+        $this->assertSame('9000000001', $faculty->fresh()->user->phone);
+    }
+
+    public function test_a_student_cannot_edit_a_faculty_profile(): void
+    {
+        $faculty = $this->faculty();
+        $this->actingAs_('student', $faculty);
+
+        $this->show($faculty)->assertStatus(200)->assertJsonPath('can_edit', false);
+
+        $this->postJson("/api/faculty/{$faculty->faculty_code}/profile", [
+            'phone' => '0000000000',
+        ])->assertStatus(403);
+    }
+
     public function test_a_clerk_cannot_open_a_faculty_profile(): void
     {
         $faculty = $this->faculty();

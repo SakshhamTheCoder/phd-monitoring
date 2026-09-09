@@ -860,3 +860,10 @@
     max-height: 75vh;
     overflow-y: auto;
 }
+
+/* Identifiers use the same grid and label style as the card above, so the page
+   has one way of showing a field rather than two. Three across at the container
+   width, wrapping below it. */
+.rp-research .faculty-info-grid {
+    margin-bottom: 0;
+}
