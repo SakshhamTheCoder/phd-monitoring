@@ -375,11 +375,13 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                             )}
                             <CustomButton
                                 text="Research Profile"
+                                variant="secondary"
                                 onClick={() => researchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                             />
                         </div>
                     </div>
 
+                    <div className="faculty-details">
                     <div className="faculty-info-grid">
                         <div><strong>Email:</strong> {profile.email || "N/A"}</div>
                         {profile.phone !== undefined && (
@@ -400,6 +402,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                             <strong>Area of Expertise:</strong>{' '}
                             {Array.isArray(profile.expertise) && profile.expertise.length ? profile.expertise.join(', ') : '—'}
                         </div>
+                    </div>
                     </div>
 
                     {canViewSupervision && (
@@ -437,16 +440,6 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                 </div>
 
                 <div className="rp-research" ref={researchRef}>
-                    <div className="rp-search-bar">
-                        <i className="fa fa-search"></i>
-                        <input
-                            type="text"
-                            placeholder="Search publications..."
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
-                        />
-                    </div>
-
                     <div className="rp-right-col">
                         <div className="rp-info-card">
                             <h4 className="rp-card-title border-red">Academic Identifiers</h4>
@@ -529,6 +522,16 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                                 {availableSources.map(s => <option key={s} value={s}>{SOURCE_LABELS[s] || s}</option>)}
                             </select>
                         </div>
+                    </div>
+
+                    <div className="rp-search-bar">
+                        <i className="fa fa-search"></i>
+                        <input
+                            type="text"
+                            placeholder="Search publications..."
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                        />
                     </div>
 
                     <div className="rp-filter-actions">

@@ -18,18 +18,24 @@
 .rp-search-bar {
     display: flex;
     align-items: center;
-    background: #EAEAEA;
-    border-radius: 4px;
-    padding: 0.5rem 1rem;
-    margin-left: 2rem;
+    gap: 0.5rem;
+    height: 38px;
+    padding: 0 0.75rem;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    color: #6b7280;
+    flex: 1 1 200px;
+    min-width: 180px;
 }
 
 .rp-search-bar input {
     background: transparent;
     border: none;
     outline: none;
-    margin-left: 0.5rem;
+    width: 100%;
     font-size: 0.9rem;
+    font-weight: 400;
 }
 
 /* Banner Grid */
@@ -397,8 +403,6 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 1rem;
-    margin-top: 1.5rem;
-    margin-bottom: 2rem;
     font-size: 0.95rem;
     color: #374151;
   }
@@ -434,9 +438,6 @@
     margin: 1.5rem auto 0;
 }
 
-.rp-research .rp-search-bar {
-    margin-bottom: 1.5rem;
-}
 
 /* Identifiers span the width; the sync line sits under them as a strip rather
    than a second panel the same size for two lines of text. */
@@ -568,6 +569,7 @@
     flex-wrap: wrap;
     align-items: flex-end;
     gap: 1rem;
+    flex: 1 1 auto;
 }
 
 .rp-filter {
@@ -709,4 +711,19 @@
 .faculty-info-grid > div {
     min-width: 0;
     overflow-wrap: anywhere;
+}
+
+/* The matrix sits in an inset panel, matching .student-details on the student
+   card. Without it the fields floated on the card while the student's were
+   framed, which is the difference between the two profiles. */
+.faculty-details {
+    margin-top: 1.5rem;
+    padding: 1.25rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #fafafa;
+}
+
+.faculty-details .faculty-info-grid {
+    margin: 0;
 }
