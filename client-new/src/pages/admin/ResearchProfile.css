@@ -236,17 +236,7 @@
     margin-bottom: 2rem;
 }
 
-.rp-filters {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-}
 
-.rp-filters label {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #555;
-}
 
 .rp-filter-group {
     display: flex;
@@ -271,16 +261,12 @@
 
 
 
-.rp-year-filter {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
 
 .rp-year-tags {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+    margin: -1rem 0 1.5rem;
 }
 
 .rp-year-tag {
@@ -305,13 +291,6 @@
     padding: 0;
 }
 
-.rp-year-input {
-    padding: 0.5rem;
-    border: 1px solid #DDD;
-    border-radius: 4px;
-    outline: none;
-    width: 200px;
-}
 
 .rp-export-btn {
     background: none;
@@ -783,16 +762,72 @@
     gap: 1rem;
 }
 
+
+
+
+/* Filter bar. Each filter is a labelled group, so the label belongs to its
+   control instead of being a sibling in one long flex row, and every control
+   is the same height and width. */
 .rp-filters {
+    display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem 1.25rem;
+    align-items: flex-end;
+    gap: 1rem;
 }
 
-.rp-filters select {
-    min-width: 130px;
+.rp-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
 }
 
-.rp-year-input {
-    width: auto;
-    min-width: 150px;
+.rp-filter label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #6b7280;
+}
+
+.rp-filter select {
+    min-width: 170px;
+    height: 38px;
+    padding: 0 0.6rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: #374151;
+}
+
+.rp-filter select:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 1px;
+}
+
+/* Both actions match the control height so the row reads as one band. */
+.rp-add-btn,
+.rp-export-btn {
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    letter-spacing: 0;
+}
+
+.rp-export-btn {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #fff;
+    padding: 0 0.9rem;
+}
+
+.rp-export-btn:hover {
+    background: #f9fafb;
+}
+
+.rp-sync-hint {
+    font-style: italic;
 }

@@ -570,9 +570,12 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                                 Last synced <strong>{formatDate(profile.last_sync, 'never')}</strong>
                             </span>
                             {canEdit && canSync && (
-                                <button className="rp-sync-btn" onClick={runSync} disabled={syncing} title={syncing ? 'Syncing...' : 'Sync from ORCID/Scopus'}>
+                                <button className="rp-sync-btn" onClick={runSync} disabled={syncing} title="Sync from ORCID/Scopus">
                                     <i className={`fa ${syncing ? 'fa-spinner fa-spin' : 'fa-refresh'}`}></i> {syncing ? 'Syncing…' : 'Sync'}
                                 </button>
+                            )}
+                            {canEdit && !canSync && (
+                                <span className="rp-sync-hint">Add an ORCID or Scopus ID to sync automatically.</span>
                             )}
                         </div>
                     </div>
@@ -594,51 +597,62 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
 
                 <div className="rp-filter-bar">
                     <div className="rp-filters">
-                        <label>YEAR</label>
-                        <div className="rp-year-filter">
+                        <div className="rp-filter">
+                            <label htmlFor="rp-year">Year</label>
                             <select
+                                id="rp-year"
                                 value="Select"
                                 onChange={e => {
                                     const val = e.target.value;
                                     if (val !== 'Select' && !filterYears.includes(val)) setFilterYears([...filterYears, val]);
                                 }}
-                                className="rp-year-input"
                             >
-                                <option value="Select">Select year(s)</option>
+                                <option value="Select">All years</option>
                                 {allYears.map(y => <option key={y} value={y}>{y}</option>)}
                             </select>
-                            {filterYears.length > 0 && (
-                                <div className="rp-year-tags">
-                                    {filterYears.map(y => (
-                                        <span key={y} className="rp-year-tag">
-                                            {y} <button type="button" onClick={() => setFilterYears(filterYears.filter(v => v !== y))}>&times;</button>
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
                         </div>
 
-                        <label>TYPE</label>
-                        <select value={filterType} onChange={e => setFilterType(e.target.value)}>
-                            <option value="All">All</option>
-                            {TYPE_OPTIONS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                        </select>
+                        <div className="rp-filter">
+                            <label htmlFor="rp-type">Type</label>
+                            <select id="rp-type" value={filterType} onChange={e => setFilterType(e.target.value)}>
+                                <option value="All">All</option>
+                                {TYPE_OPTIONS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                            </select>
+                        </div>
 
-                        <label>SOURCE</label>
-                        <select value={filterSource} onChange={e => setFilterSource(e.target.value)}>
-                            <option value="All">All</option>
-                            {availableSources.map(s => <option key={s} value={s}>{SOURCE_LABELS[s] || s}</option>)}
-                        </select>
+                        <div className="rp-filter">
+                            <label htmlFor="rp-source">Source</label>
+                            <select id="rp-source" value={filterSource} onChange={e => setFilterSource(e.target.value)}>
+                                <option value="All">All</option>
+                                {availableSources.map(s => <option key={s} value={s}>{SOURCE_LABELS[s] || s}</option>)}
+                            </select>
+                        </div>
                     </div>
+
                     <div className="rp-filter-actions">
                         {canEdit && isOwnTab && (
                             <button className="rp-add-btn" onClick={() => { setEditPub(null); setShowPubForm(true); }}>
-                                <i className="fa fa-plus"></i> ADD PUBLICATION
+                                <i className="fa fa-plus"></i> Add publication
                             </button>
                         )}
-                        <button className="rp-export-btn" onClick={exportCSV}><i className="fa fa-download"></i> EXPORT CSV</button>
+                        <button className="rp-export-btn" onClick={exportCSV}>
+                            <i className="fa fa-download"></i> Export CSV
+                        </button>
                     </div>
                 </div>
+
+                {/* Chosen years sit under the bar rather than inside it, so adding
+                    one cannot change the height of the controls beside it. */}
+                {filterYears.length > 0 && (
+                    <div className="rp-year-tags">
+                        {filterYears.map(y => (
+                            <span key={y} className="rp-year-tag">
+                                {y}
+                                <button type="button" aria-label={`Remove ${y}`} onClick={() => setFilterYears(filterYears.filter(v => v !== y))}>&times;</button>
+                            </span>
+                        ))}
+                    </div>
+                )}
 
                 {/* Appears only once something is ticked, so it stays out of the
                     way until it is needed. */}
