@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
 import AddPublication from '../../components/publications/AddPublication';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import CustomButton from '../../components/forms/fields/CustomButton';
+import TableComponent from '../../components/forms/table/TableComponent';
 import Tabs from '../../components/tabs/Tabs';
 import { generateAvatar } from '../../utils/profileImage';
 import { formatDate } from '../../data/projectsData';
@@ -45,6 +46,13 @@ const CATEGORY_TO_FIELDS = {
     patents: { publication_type: 'patent', type: null },
 };
 
+// A supervised student's name opens their profile, as it did when these tables
+// lived on the dashboard.
+const studentNameCell = {
+    key: 'name',
+    component: ({ row }) => <Link to={`/students/${row.roll_no}`}>{row.name}</Link>,
+};
+
 const emptyProfileForm = {
     phone: '', expertise: '',
     orcid_id: '', scopus_id: '', google_scholar_id: '', joined_on: '', citations: '', h_index: '',
@@ -53,7 +61,6 @@ const emptyProfileForm = {
 const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => {
     // No code in the URL and none passed in means "my own profile".
     const { facultyCode: routeCode } = useParams();
-    const navigate = useNavigate();
     const [facultyCode, setFacultyCode] = useState(routeCode || codeProp || null);
     const [data, setData] = useState(null);
     const [activeTab, setActiveTab] = useState(null);
@@ -399,62 +406,34 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                         <>
                             <div className="faculty-table-section">
                                 <h3>Supervising Students</h3>
-                                {!(data.supervised_students || []).length ? (
+                                <TableComponent
+                                    data={data.supervised_students || []}
+                                    keys={['name', 'roll_no', 'email', 'date_of_admission']}
+                                    titles={['Name', 'Roll No', 'Email', 'Date of Admission']}
+                                    rowStyle={() => ({ cursor: 'pointer' })}
+                                    components={[studentNameCell]}
+                                />
+                                {!(data.supervised_students || []).length && (
                                     <p className="empty-msg">No students currently being supervised.</p>
-                                ) : (
-                                    <div className="responsive-table">
-                                        <table>
-                                            <thead>
-                                                <tr>
-                                                    <th>S.No</th><th>Name</th><th>Roll No</th><th>Email</th><th>Date of Admission</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                {(data.supervised_students || []).map((student, idx) => (
-                                    <tr key={student.roll_no} onClick={() => navigate(`/students/${student.roll_no}`)} style={{ cursor: 'pointer' }}>
-                                        <td className="col-tight">{idx + 1}</td>
-                                        <td>{student.name}</td>
-                                        <td className="col-tight">{student.roll_no}</td>
-                                        <td>{student.email}</td>
-                                        <td className="col-tight">{student.date_of_admission || "N/A"}</td>
-                                    </tr>
-                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
                                 )}
                             </div>
 
                             <div className="faculty-table-section">
                                 <h3>Doctoral Committee Membership</h3>
-                                {!(data.doctoral_committee_students || []).length ? (
+                                <TableComponent
+                                    data={data.doctoral_committee_students || []}
+                                    keys={['name', 'roll_no', 'email', 'department', 'date_of_admission']}
+                                    titles={['Name', 'Roll No', 'Email', 'Department', 'Date of Admission']}
+                                    rowStyle={() => ({ cursor: 'pointer' })}
+                                    components={[studentNameCell]}
+                                />
+                                {!(data.doctoral_committee_students || []).length && (
                                     <p className="empty-msg">Not a member of any doctoral committee.</p>
-                                ) : (
-                                    <div className="responsive-table">
-                                        <table>
-                                            <thead>
-                                                <tr>
-                                                    <th>S.No</th><th>Name</th><th>Roll No</th><th>Email</th><th>Department</th><th>Date of Admission</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                {(data.doctoral_committee_students || []).map((student, idx) => (
-                                    <tr key={student.roll_no} onClick={() => navigate(`/students/${student.roll_no}`)} style={{ cursor: 'pointer' }}>
-                                        <td className="col-tight">{idx + 1}</td>
-                                        <td>{student.name}</td>
-                                        <td className="col-tight">{student.roll_no}</td>
-                                        <td>{student.email}</td>
-                                        <td className="col-tight">{student.department || "N/A"}</td>
-                                        <td className="col-tight">{student.date_of_admission || "N/A"}</td>
-                                    </tr>
-                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
                                 )}
                             </div>
                         </>
                     )}
+
                 </div>
 
                 <div className="rp-research" ref={researchRef}>
