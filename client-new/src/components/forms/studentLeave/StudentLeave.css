@@ -1,0 +1,72 @@
+/* This form is rendered inside a modal from the attendance pages, which do not
+   import pages/forms/forms.css, so .form-container arrived with no padding at
+   all and every field sat against the dialog edge. The form carries its own
+   spacing instead of depending on whichever page happens to host it. */
+
+.student-leave .form-container {
+    padding: 0 1.75rem 1.75rem;
+    margin-top: 0;
+}
+
+.student-leave .grid-container {
+    margin-bottom: 1.25rem;
+}
+
+.student-leave .input-field-container {
+    margin-bottom: 0.5rem;
+}
+
+.student-leave .recommendation-field {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.5rem;
+    padding: 1rem 1.25rem;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.student-leave .recommendation-field .options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.student-leave .recommendation-field label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+/* What the scholar sees in place of the HOD's radio buttons. */
+.leave-outcome {
+    display: grid;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.leave-outcome__row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.leave-outcome__row > span:first-child {
+    min-width: 120px;
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #6b7280;
+}
+
+.leave-outcome__row > span:last-child {
+    font-weight: 400;
+    color: #374151;
+    text-transform: capitalize;
+}

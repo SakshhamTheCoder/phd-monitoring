@@ -4,7 +4,11 @@ import "./Fields.css";
 import { Table } from 'lucide-react';
 import TableComponent from '../table/TableComponent';
 
-const RecommendationField = ({ role, allowRejection = false, onRecommendationChange, initialValue ,lock=false,formData=null}) => {
+// `decision` collapses the three-way recommend / not recommend / reject into the
+// two answers some forms actually have. Leave is one: an HOD accepts or rejects,
+// and "not recommended" would post the same approval:false as a rejection while
+// reading as a third, different outcome.
+const RecommendationField = ({ role, allowRejection = false, onRecommendationChange, initialValue ,lock=false,formData=null, decision=false, title=null}) => {
     const [approval, setApproval] = useState(null);
     const [rejected, setRejected] = useState(false);
 
@@ -37,8 +41,33 @@ const RecommendationField = ({ role, allowRejection = false, onRecommendationCha
         <GridContainer 
             elements={[
                 <div className="recommendation-field" key="recommendation-field">
-                    <strong>Recommendation of {role}:</strong>
+                    <strong>{title || `Recommendation of ${role}:`}</strong>
                     <div className="options">
+                        {decision ? (
+                            <>
+                                <label>
+                                    <input
+                                        type="radio"
+                                        name={`recommendation-${role}`}
+                                        checked={approval === true}
+                                        onChange={() => handleRecommendationChange(true)}
+                                        disabled={lock}
+                                    />
+                                    Accepted
+                                </label>
+                                <label>
+                                    <input
+                                        type="radio"
+                                        name={`recommendation-${role}`}
+                                        checked={approval === false || rejected === true}
+                                        onChange={handleRejectionChange}
+                                        disabled={lock}
+                                    />
+                                    Rejected
+                                </label>
+                            </>
+                        ) : (
+                        <>
                         <label>
                             <input
                                 type="radio"
@@ -72,6 +101,8 @@ const RecommendationField = ({ role, allowRejection = false, onRecommendationCha
                                 />
                                 Rejected
                             </label>
+                        )}
+                        </>
                         )}
                     </div>
                 </div>

@@ -250,6 +250,26 @@ class StudentLeaveFormTest extends TestCase
         );
     }
 
+    /** Both outcomes are terminal, so the scholar has to hear about both. */
+    public function test_hod_rejection_notifies_the_scholar(): void
+    {
+        $student = Student::query()->firstOrFail();
+        $form = $this->leaveAwaitingHod($student);
+        $studentUserId = $student->user_id;
+
+        $this->actingAsHodFor($student);
+        $this->postJson("/api/forms/student-leave/{$form->id}", [
+            'approval' => false,
+            'comments' => 'Not this week.',
+        ])->assertStatus(200);
+
+        $this->assertTrue(
+            Notifications::where('user_id', $studentUserId)
+                ->where('link', "/attendance?tab=leaves&leave={$form->id}")
+                ->exists()
+        );
+    }
+
     /** FIX 2: a rejected leave is terminal, not a bounced-back draft. */
     public function test_hod_rejection_marks_the_leave_rejected(): void
     {

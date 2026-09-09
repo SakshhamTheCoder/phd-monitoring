@@ -118,10 +118,14 @@ const StudentAttendancePage = () => {
   }, [data]);
 
   const records = data?.records || [];
-  // An unfilled draft (created but never submitted — see handleApply) has no
-  // from_date. It's an implementation detail, not something a scholar should
-  // see reported back as part of their leave history.
-  const leaveRows = (data?.leaves || []).filter((l) => l.from_date);
+  const leaveRows = data?.leaves || [];
+
+  // Any application can be opened: a draft to finish it, a decided one to read
+  // the HOD's remarks.
+  const openLeave = async (id) => {
+    const loaded = await apiLeaveLoad(id);
+    if (loaded.success) setOpenForm(loaded.response);
+  };
 
   return (
     <Layout>
@@ -257,13 +261,15 @@ const StudentAttendancePage = () => {
                     key={l.id}
                     ref={l.id === opened.leave ? highlightRef : null}
                     className={l.id === opened.leave ? 'leave-row--highlight' : undefined}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => openLeave(l.id)}
                   >
-                    <td style={{ textTransform: 'capitalize' }}>{l.leave_type}</td>
+                    <td style={{ textTransform: 'capitalize' }}>{l.leave_type || '—'}</td>
                     {/* l.from_date/to_date are Laravel date-cast timestamps, same as
                         r.date above — localDateString undoes the UTC-midnight shift. */}
-                    <td>{localDateString(l.from_date)}</td>
-                    <td>{localDateString(l.to_date)}</td>
-                    <td>{DAY_PART_LABEL[l.day_part] || l.day_part}</td>
+                    <td>{localDateString(l.from_date) || '—'}</td>
+                    <td>{localDateString(l.to_date) || '—'}</td>
+                    <td>{DAY_PART_LABEL[l.day_part] || l.day_part || '—'}</td>
                     <td><span className={badgeClass(l.status)}>{l.status}</span></td>
                     <td>{l.hod_comments || '—'}</td>
                   </tr>
