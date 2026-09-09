@@ -10,29 +10,8 @@
 }
 
 /* Top Nav */
-.rp-top-nav {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    margin-bottom: 2rem;
-}
 
-.rp-nav-left {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-}
 
-.rp-back-btn {
-    background: none;
-    border: none;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #555;
-    cursor: pointer;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
 
 /* Title comes from styles/ui.css; it sits inline with the search bar here. */
 .rp-nav-left .page-title { margin: 0; }
@@ -55,92 +34,24 @@
 }
 
 /* Banner Grid */
-.rp-banner-grid {
-    display: grid;
-    grid-template-columns: 300px 1fr 1fr;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+
+.rp-info-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem 2rem;
 }
 
-.rp-user-card,
-.rp-info-card,
 
-.rp-user-card {
-    text-align: center;
-}
 
-.rp-avatar-wrapper {
-    position: relative;
-    width: 120px;
-    height: 120px;
-    margin: 0 auto 1rem;
-    border-radius: 50%;
-    border: 3px solid #FFF;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
 
-.rp-avatar {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-    background: #EEE;
-}
 
-.rp-status-badge {
-    position: absolute;
-    bottom: 5px;
-    right: 5px;
-    width: 20px;
-    height: 20px;
-    background: var(--primary-color);
-    border: 3px solid #FFF;
-    border-radius: 50%;
-}
 
-.rp-user-card h2 {
-    margin: 0;
-    font-size: 1.4rem;
-    font-weight: 600;
-}
 
-.rp-designation {
-    color: var(--primary-color);
-    font-size: 1rem;
-    font-weight: 600;
-    margin: 0.2rem 0;
-}
 
-.rp-department {
-    color: #666;
-    font-size: 0.9rem;
-    margin-bottom: 1.5rem;
-}
 
-.rp-user-stats {
-    border-top: 1px solid #EEE;
-    padding-top: 1rem;
-}
-
-.rp-stat-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
-    color: #555;
-}
-
-.rp-stat-row strong {
-    color: #000;
-    font-weight: 600;
-}
 
 /* Info Cards */
-.rp-middle-col {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
 
 .rp-right-col {
     display: flex;
@@ -159,15 +70,7 @@
     border-left: 4px solid var(--primary-color);
 }
 
-.rp-contact-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-    gap: 1rem 2rem;
-}
 
-.rp-contact-item {
-    min-width: 0;
-}
 
 .border-icon {
     display: flex;
@@ -180,21 +83,7 @@
     color: var(--primary-color);
 }
 
-.rp-contact-item label {
-    display: block;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    color: #777;
-    margin-bottom: 0.2rem;
-    font-weight: 600;
-}
 
-.rp-contact-item p {
-    margin: 0;
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #222;
-}
 
 /* Stats Cards */
 
@@ -238,12 +127,6 @@
 
 
 
-.rp-filter-group {
-    display: flex;
-    background: #FFF;
-    border-radius: 4px;
-    overflow: hidden;
-}
 
 .rp-filter-group button {
     background: none;
@@ -866,4 +749,11 @@
    width, wrapping below it. */
 .rp-research .faculty-info-grid {
     margin-bottom: 0;
+}
+
+/* A full ORCID is long. Values wrap inside their own cell instead of pushing the
+   column wider, and the label stays with the value it belongs to. */
+.faculty-info-grid > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
