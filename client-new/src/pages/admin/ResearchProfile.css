@@ -64,12 +64,6 @@
 
 .rp-user-card,
 .rp-info-card,
-.rp-sync-card {
-    background: #FFF;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-}
 
 .rp-user-card {
     text-align: center;
@@ -205,83 +199,21 @@
 }
 
 /* Stats Cards */
-.rp-stats-cards {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-}
 
-.rp-mini-stat {
-    background: #FFF;
-    padding: 1rem;
-    border-radius: 12px;
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-    border-bottom: 4px solid #EEE;
-}
 
-.rp-mini-stat.stat-green {
-    border-bottom-color: #22c55e;
-}
 
-.rp-mini-stat.stat-yellow {
-    border-bottom-color: #eab308;
-}
 
-.rp-mini-stat.stat-red {
-    border-bottom-color: #ef4444;
-}
 
-.rp-mini-stat label {
-    display: block;
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: #555;
-    margin-bottom: 0.5rem;
-}
 
-.stat-num {
-    font-size: 1.6rem;
-    font-weight: 700;
-}
 
-.stat-num.black {
-    color: #000;
-}
 
-.stat-num.green {
-    color: #22c55e;
-}
 
-.stat-num.yellow {
-    color: #eab308;
-}
 
-.stat-num.red {
-    color: #ef4444;
-}
 
 /* Sync Card */
-.rp-sync-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
 
-.rp-sync-info h4 {
-    margin: 0 0 0.5rem;
-    color: #333;
-}
 
-.rp-sync-info p {
-    margin: 0.2rem 0;
-    font-size: 0.9rem;
-    color: #555;
-}
 
-.rp-sync-info strong {
-    color: #000;
-}
 
 .rp-sync-btn {
     background: var(--primary-color);
@@ -718,11 +650,112 @@
     margin-bottom: 1.5rem;
 }
 
-/* Identifiers and sync sit side by side now that there is no banner column. */
+/* Identifiers span the width; the sync line sits under them as a strip rather
+   than a second panel the same size for two lines of text. */
 .rp-research .rp-right-col {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
+    display: block;
     margin-bottom: 1.5rem;
-    align-items: start;
+}
+
+/* Name on the left, the way into the research section on the right, so it is
+   visible on arrival instead of below the supervision tables. */
+.faculty-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.faculty-header h2 {
+    margin-bottom: 0.3rem;
+}
+
+.faculty-research-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    background: #fff;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    border-radius: 999px;
+    padding: 0.55rem 1.1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease-out, color 0.15s ease-out;
+}
+
+.faculty-research-toggle:hover {
+    background: var(--primary-wash, #fdf2f2);
+}
+
+.faculty-research-toggle.is-open {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+.faculty-research-toggle:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Sync state is one line of status and one action, so it gets one line. */
+.rp-sync-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    padding: 0.6rem 1rem;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: #6b7280;
+}
+
+.rp-sync-strip strong {
+    color: #374151;
+}
+
+.rp-sync-dot {
+    margin: 0 0.5rem;
+    color: #d1d5db;
+}
+
+.rp-sync-btn {
+    padding: 0.4rem 0.9rem;
+    font-size: 0.85rem;
+    border-radius: 6px;
+}
+
+/* Three tallies, read at a glance beside the filters rather than as three
+   panels the height of a stat card. */
+.rp-tallies {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: #6b7280;
+}
+
+.rp-tally strong {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #111827;
+    margin-right: 0.35rem;
+}
+
+.rp-tally.is-green strong {
+    color: #22c55e;
+}
+
+.rp-tally.is-yellow strong {
+    color: #eab308;
 }

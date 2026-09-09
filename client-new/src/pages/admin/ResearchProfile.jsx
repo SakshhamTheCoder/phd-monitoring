@@ -386,8 +386,24 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
         <Shell>
             <div className="rp-container">
                 <div className="faculty-container">
-                    <h2>{profile.name}</h2>
-                    <p className="faculty-sub">{profile.designation}, {profile.department}</p>
+                    <div className="faculty-header">
+                        <div>
+                            <h2>{profile.name}</h2>
+                            <p className="faculty-sub">{profile.designation}, {profile.department}</p>
+                        </div>
+                        {/* Research lives on the same page but stays folded away:
+                            most visits are about supervision. Kept beside the name
+                            so it is seen without scrolling past the tables. */}
+                        <button
+                            type="button"
+                            className={`faculty-research-toggle ${showResearch ? 'is-open' : ''}`.trim()}
+                            aria-expanded={showResearch}
+                            onClick={() => setShowResearch(v => !v)}
+                        >
+                            <i className="fa fa-flask"></i>
+                            {showResearch ? 'Hide research profile' : 'Research profile'}
+                        </button>
+                    </div>
 
                     <div className="faculty-info-grid">
                         <div><strong>Email:</strong> {profile.email || "N/A"}</div>
@@ -471,19 +487,6 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                             </div>
                         </>
                     )}
-
-                    {/* Research lives on the same page but stays folded away: most
-                        visits are about supervision, and unfolding both at once is
-                        what made this page hard to read. */}
-                    <button
-                        type="button"
-                        className="faculty-research-toggle"
-                        aria-expanded={showResearch}
-                        onClick={() => setShowResearch(v => !v)}
-                    >
-                        <i className={`fa fa-chevron-${showResearch ? 'up' : 'down'}`}></i>
-                        {showResearch ? ' Hide research profile' : ' Show research profile'}
-                    </button>
                 </div>
 
                 {showResearch && (
@@ -554,15 +557,15 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                             )}
                         </div>
 
-                        <div className="rp-sync-card">
-                            <div className="rp-sync-info">
-                                <h4>External Sync Status</h4>
-                                <p>Source: <strong>{profile.last_sync_source ? SOURCE_LABELS[profile.last_sync_source] : 'Not synced'}</strong></p>
-                                <p>Last synced: <strong>{formatDate(profile.last_sync, 'Never')}</strong></p>
-                            </div>
+                        <div className="rp-sync-strip">
+                            <span>
+                                Source <strong>{profile.last_sync_source ? SOURCE_LABELS[profile.last_sync_source] : 'not synced'}</strong>
+                                <span className="rp-sync-dot">·</span>
+                                Last synced <strong>{formatDate(profile.last_sync, 'never')}</strong>
+                            </span>
                             {canEdit && canSync && (
                                 <button className="rp-sync-btn" onClick={runSync} disabled={syncing} title={syncing ? 'Syncing...' : 'Sync from ORCID/Scopus'}>
-                                    <i className={`fa ${syncing ? 'fa-spinner fa-spin' : 'fa-refresh'}`}></i> {syncing ? 'Syncing...' : 'Sync Publications'}
+                                    <i className={`fa ${syncing ? 'fa-spinner fa-spin' : 'fa-refresh'}`}></i> {syncing ? 'Syncing…' : 'Sync'}
                                 </button>
                             )}
                         </div>
@@ -577,10 +580,10 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                         ]}
                     />
 
-                <div className="rp-stats-cards">
-                    <div className="rp-mini-stat"><label>TOTAL</label><span className="stat-num black">{profile.total_publications}</span></div>
-                    <div className="rp-mini-stat stat-green"><label>SYNCED</label><span className="stat-num green">{profile.synced}</span></div>
-                    <div className="rp-mini-stat stat-yellow"><label>SELF-REPORTED</label><span className="stat-num yellow">{profile.self_reported}</span></div>
+                <div className="rp-tallies">
+                    <span className="rp-tally"><strong>{profile.total_publications}</strong> total</span>
+                    <span className="rp-tally is-green"><strong>{profile.synced}</strong> synced</span>
+                    <span className="rp-tally is-yellow"><strong>{profile.self_reported}</strong> self-reported</span>
                 </div>
 
                 <div className="rp-filter-bar">
