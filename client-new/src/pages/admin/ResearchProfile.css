@@ -67,8 +67,8 @@
 .rp-card-title {
     margin: 0 0 1rem;
     padding-left: 0.5rem;
-    font-size: 1.1rem;
-    color: #333;
+    font-size: 1.2rem;
+    color: #1f2937;
 }
 
 .border-red {
@@ -184,8 +184,8 @@
 
 .rp-table-section h3 {
     margin-bottom: 1rem;
-    color: #333;
-    font-size: 1.1rem;
+    color: #1f2937;
+    font-size: 1.2rem;
 }
 
 /* body sets font-weight 600 app-wide, so every publication cell inherits
@@ -394,9 +394,9 @@
   }
   
   .faculty-sub {
-    font-size: 1rem;
+    font-size: 0.95rem;
     color: #6b7280;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0;
   }
   
   .faculty-info-grid {
@@ -519,7 +519,7 @@
 }
 
 .rp-tally strong {
-    font-size: 1.05rem;
+    font-size: 0.95rem;
     font-weight: 700;
     color: #111827;
     margin-right: 0.35rem;
@@ -641,8 +641,8 @@
 
 .rp-profile-form h3 {
     margin: 0 0 1.25rem;
-    font-size: 1.15rem;
-    color: #111827;
+    font-size: 1.2rem;
+    color: #1f2937;
 }
 
 .rp-profile-form label {
@@ -684,7 +684,7 @@
     padding-top: 1.25rem;
     border-top: 1px solid #e5e7eb;
     font-size: 0.95rem;
-    color: #111827;
+    color: #1f2937;
 }
 
 .rp-form-row {
