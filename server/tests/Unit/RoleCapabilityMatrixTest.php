@@ -44,8 +44,8 @@ class RoleCapabilityMatrixTest extends TestCase
         'can_read_department_faculties' => ['hod', 'phd_coordinator', 'adordc'],
 
         // FacultyController::add/update/upload, StudentController::add/bulk*
-        'can_add_faculties' => ['admin', 'adordc', 'director', 'dordc', 'dra'],
-        'can_add_students' => ['admin', 'adordc', 'director', 'dordc', 'dra'],
+        'can_manage_faculties' => ['admin', 'adordc', 'director', 'dordc', 'dra'],
+        'can_manage_students' => ['admin', 'adordc', 'director', 'dordc', 'dra'],
 
         // DepartmentController::authorize
         'can_edit_department' => ['admin', 'director', 'dra', 'dordc'],
@@ -53,7 +53,7 @@ class RoleCapabilityMatrixTest extends TestCase
 
         // SupervisorDoctoralChangeController
         'can_manage_supervisor_changes' => ['dordc', 'admin'],
-        'can_read_supervisor_change_requests' => ['hod', 'phd_coordinator', 'admin', 'doctoral', 'dordc'],
+        'can_propose_supervisor_changes' => ['hod', 'phd_coordinator', 'admin', 'doctoral', 'dordc'],
         'can_edit_doctoral_committee' => ['admin', 'doctoral', 'dordc'],
         'can_edit_supervisors' => ['dordc', 'admin'],
         'can_read_doctoral_committee' => ['hod', 'phd_coordinator', 'admin', 'doctoral', 'dordc'],

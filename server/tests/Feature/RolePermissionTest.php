@@ -71,8 +71,8 @@ class RolePermissionTest extends TestCase
 
         $this->assertSame(
             'false',
-            $user->current_role->can_add_students,
-            'A student role must not carry the add-students permission.'
+            $user->current_role->can_manage_students,
+            'A student role must not carry the manage-students permission.'
         );
     }
 }

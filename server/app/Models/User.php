@@ -24,6 +24,7 @@ class User extends Authenticatable
         'phone',
         'email',
         'gender',
+        'physically_handicapped',
         'role_id',
         'current_role_id',
         'default_role_id',
@@ -68,6 +69,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'available_roles' => 'array',
+            'physically_handicapped' => 'boolean',
         ];
     }
     public function role()

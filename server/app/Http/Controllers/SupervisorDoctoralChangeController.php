@@ -99,7 +99,7 @@ class SupervisorDoctoralChangeController extends Controller
         $user = Auth::user();
         $role = $user->current_role->role;
 
-        if (!$user->may('can_read_supervisor_change_requests')) {
+        if (!$user->may('can_propose_supervisor_changes')) {
             return response()->json([
                 'message' => 'You do not have permission to propose changes'
             ], 403);

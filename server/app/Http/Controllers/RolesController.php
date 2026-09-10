@@ -25,8 +25,8 @@ class RolesController extends Controller {
         $role->can_edit_phd_title = $request->can_edit_phd_title;
         $role->can_add_department_students = $request->can_add_department_students;
         $role->can_add_department_faculties = $request->can_add_department_faculties;
-        $role->can_add_faculties = $request->can_add_faculties;
-        $role->can_add_students = $request->can_add_students;
+        $role->can_manage_faculties = $request->can_manage_faculties;
+        $role->can_manage_students = $request->can_manage_students;
         $role->can_read_supervisors = $request->can_read_supervisors;
         $role->can_read_doctoral_committee = $request->can_read_doctoral_committee;
         $role->can_edit_supervisors = $request->can_edit_supervisors;
