@@ -7,6 +7,7 @@ use App\Http\Controllers\Traits\GeneralFormCreate;
 use App\Http\Controllers\Traits\GeneralFormHandler;
 use App\Http\Controllers\Traits\GeneralFormList;
 use App\Http\Controllers\Traits\GeneralFormSubmitter;
+use App\Models\Examiner;
 use App\Models\ExaminersRecommendation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,6 +22,9 @@ use App\Models\User;
 
 class ListOfExaminersController extends Controller
 {
+    /** Examiners a supervisor must propose, and DoRDC must approve, per list. */
+    private const REQUIRED_PER_LIST = 4;
+
     use GeneralFormHandler;
     use GeneralFormSubmitter;
     use GeneralFormList;
@@ -121,6 +125,58 @@ class ListOfExaminersController extends Controller
         }
     }
 
+    /**
+     * Withdraw a proposed examiner.
+     *
+     * Only while the form is still with the supervisor, and only for a
+     * proposal nobody has ruled on yet: once DoRDC has approved or rejected
+     * someone, that decision is part of the record and removing the row would
+     * erase it. The person stays in the directory either way; what goes is the
+     * claim that they were proposed for this student.
+     */
+    public function destroyExaminer(Request $request, $form_id, $recommendation_id)
+    {
+        $user = Auth::user();
+        if ($user->current_role->role !== 'faculty') {
+            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+        }
+
+        $form = ListOfExaminersForm::find($form_id);
+        if (!$form) {
+            return response()->json(['message' => 'No form found'], 404);
+        }
+
+        if (!$form->student->checkSupervises($user->faculty->faculty_code)) {
+            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+        }
+
+        if ($form->supervisor_lock || $form->stage !== 'supervisor') {
+            return response()->json(['message' => 'This form is no longer with you.'], 403);
+        }
+
+        $recommendation = ExaminersRecommendation::where('form_id', $form->id)
+            ->with('examiner')
+            ->find($recommendation_id);
+
+        if (!$recommendation) {
+            return response()->json(['message' => 'No such examiner on this form'], 404);
+        }
+
+        if ($recommendation->recommendation !== 'pending') {
+            return response()->json([
+                'message' => 'This examiner has already been ' . $recommendation->recommendation . ' and cannot be removed.',
+            ], 403);
+        }
+
+        $name = $recommendation->examiner?->name;
+        $recommendation->delete();
+
+        $form->addHistoryEntry('Supervisor removed ' . $name . ' from the ' . $recommendation->type . ' list', $user->name());
+        $form->save();
+
+        return response()->json(['message' => 'Examiner removed']);
+    }
+
     public function submit(Request $request, $form_id)
     {
         $user = Auth::user();
@@ -150,7 +206,33 @@ class ListOfExaminersController extends Controller
             $request->validate([
                 'national' => 'array|required',
                 'international' => 'array|required',
+                'national.*.name' => 'required|string|max:255',
+                'national.*.email' => 'required|email|max:255',
+                'national.*.institution' => 'required|string|max:255',
+                'national.*.designation' => 'required|string|max:255',
+                'national.*.department' => 'required|string|max:255',
+                'national.*.phone' => 'nullable|string|max:32',
+                'international.*.name' => 'required|string|max:255',
+                'international.*.email' => 'required|email|max:255',
+                'international.*.institution' => 'required|string|max:255',
+                'international.*.designation' => 'required|string|max:255',
+                'international.*.department' => 'required|string|max:255',
+                'international.*.phone' => 'nullable|string|max:32',
             ]);
+
+            // An examiner is national or international, never both. Allowing
+            // both stored two rows for one person, and DoRDC could only ever
+            // decide one of them, leaving the form permanently pending.
+            $onBothLists = array_intersect(
+                $this->emailsOf($request->national),
+                $this->emailsOf($request->international)
+            );
+            if ($onBothLists) {
+                throw new \Exception(
+                    'The same examiner appears on both lists: ' . implode(', ', array_unique($onBothLists))
+                    . '. Each examiner belongs to one list only.'
+                );
+            }
 
             $this->processExaminers($request->national, 'national', $formInstance, $user);
 
@@ -173,9 +255,13 @@ class ListOfExaminersController extends Controller
         );
     }
 
+    /**
+     * The Director's approval completes the form. The appointed panel is the
+     * set of recommendations already marked approved, so there is nothing to
+     * copy anywhere: `examiners_recommendation` is the record.
+     */
     private function directorSubmit($user, Request $request, $form_id)
     {
-
         return $this->submitForm(
             $user,
             $request,
@@ -183,10 +269,7 @@ class ListOfExaminersController extends Controller
             ListOfExaminersForm::class,
             'director',
             'dordc',
-            'complete',
-               function ($formInstance, $user) use ($request) {
-                    //yaha p move the examiners to list_of_examiners table
-               }
+            'complete'
         );
     }
 
@@ -204,35 +287,15 @@ class ListOfExaminersController extends Controller
             'director',
             function ($formInstance, $user) use ($request) {
                 $request->validate([
-                    'approvals' => "array | required",
-                    'rejections' => "array | nullable",
+                    'approvals' => 'array|required',
+                    'approvals.*' => 'integer',
+                    'rejections' => 'array|nullable',
+                    'rejections.*' => 'integer',
                 ]);
-                $approvals = $request->approvals;
-                foreach ($approvals as $email) {
-                    $examiner = ExaminersRecommendation::where('form_id', $formInstance->id)
-                        ->where('email', $email)
-                        ->first();
-                    if ($examiner) {
-                        if($examiner->recommendation != 'approved'){
-                            $examiner->recommendation = 'approved';
-                            $examiner->save();
-                            $formInstance->addHistoryEntry("DORDC approved examiner " . $examiner->name, $user->name());
-                        }
-                    }
-                }
-                $rejections = $request->rejections;
-                foreach ($rejections as $email) {
-                    $examiner = ExaminersRecommendation::where('form_id', $formInstance->id)
-                        ->where('email', $email)
-                        ->first();
-                    if ($examiner) {
-                        if($examiner->recommendation != 'rejected'){
-                            $examiner->recommendation = 'rejected';
-                            $examiner->save();
-                            $formInstance->addHistoryEntry("DORDC rejected examiner " . $examiner->name, $user->name());
-                        }
-                    }
-                }
+
+                $this->recordDecisions($formInstance, $request->approvals ?? [], 'approved', $user);
+                $this->recordDecisions($formInstance, $request->rejections ?? [], 'rejected', $user);
+
                 $examinersNationalCount = ExaminersRecommendation::where('form_id', $formInstance->id)
                     ->where('recommendation', 'approved')
                     ->where('type', 'national')
@@ -247,34 +310,80 @@ class ListOfExaminersController extends Controller
                 if ($pendingExaminers > 0) {
                     throw new \Exception("All examiners must be either approved or rejected before the form can be submitted");
                 }
-                if($request->approval)
-                if ($examinersNationalCount < 4 || $examinersInternationalCount < 4) {
-                    $formInstance->supervisor_lock = false;
-                    $index = array_search('faculty', $formInstance->steps);
-                    $formInstance->update([
-                        'stage' => 'supervisor',
-                        'supervisor' . '_approval' => false,
-                        'supervisor' . '_comments' => null,
-                        'status' => 'pending',
-                        'current_step' => $index,
-                        'supervisor_lock'=>false,
-                        'maximum_step' => $index > $formInstance->maximum_step ? $index : $formInstance->maximum_step,
-                    ]);
-                    throw new \Exception("Form Moved to Supervisor to add more examiners. At least 4 approved examiners are required in both National and International categories.");
+                if ($request->approval && ($examinersNationalCount < self::REQUIRED_PER_LIST || $examinersInternationalCount < self::REQUIRED_PER_LIST)) {
+                    $shortfall = 'At least ' . self::REQUIRED_PER_LIST
+                        . ' approved examiners are required on each list. Approved so far: '
+                        . $examinersNationalCount . ' national, ' . $examinersInternationalCount . ' international.';
+
+                    // Hand it back the way a rejection does: same stage, same
+                    // unlock, and the supervisor is notified. Hand-rolling this
+                    // moved the form without telling anyone it had moved.
+                    $formInstance->supervisor_approval = false;
+                    $formInstance->supervisor_comments = null;
+                    $this->handleFallbackToPreviousLevel($user, $formInstance, 'faculty', $shortfall, ListOfExaminersForm::class);
+
+                    // The only way out of an extraSteps callback. The message is
+                    // what DoRDC is shown.
+                    throw new \Exception('Returned to the supervisor to add more examiners. ' . $shortfall);
                 }
             }
         );
     }
 
+    /**
+     * Record DoRDC's verdict on each recommendation.
+     *
+     * Keyed by row id, not by email: an examiner's email is not unique within a
+     * form, so an email-keyed update could only ever reach the first matching
+     * row and left the other pending forever.
+     */
+    private function recordDecisions($formInstance, array $ids, string $verdict, $user): void
+    {
+        if (!$ids) {
+            return;
+        }
+
+        $examiners = ExaminersRecommendation::where('form_id', $formInstance->id)
+            ->whereIn('id', $ids)
+            ->with('examiner')
+            ->get();
+
+        foreach ($examiners as $examiner) {
+            if ($examiner->recommendation === $verdict) {
+                continue;
+            }
+            $examiner->recommendation = $verdict;
+            $examiner->save();
+            $formInstance->addHistoryEntry(
+                'DoRDC ' . $verdict . ' examiner ' . $examiner->examiner?->name,
+                $user->name()
+            );
+        }
+    }
+
+    /**
+     * Emails as they are compared and stored: case and spacing are how the same
+     * person slipped past the duplicate checks.
+     *
+     * @return array<int,string>
+     */
+    private function emailsOf(array $examiners): array
+    {
+        return array_map(
+            fn ($examiner) => strtolower(trim((string) ($examiner['email'] ?? ''))),
+            $examiners
+        );
+    }
+
     // Generalized function to process examiners
-    private function processExaminers($examiners, $type, $formInstance, $user, $requiredCount = 4)
+    private function processExaminers($examiners, $type, $formInstance, $user, $requiredCount = self::REQUIRED_PER_LIST)
     {
         if (!$examiners) {
             throw new \Exception(ucfirst($type) . ' Examiners are required');
         }
     
         // Check for duplicate examiners in the input
-        $emails = array_column($examiners, 'email');
+        $emails = $this->emailsOf($examiners);
         if (count($emails) !== count(array_unique($emails))) {
             throw new \Exception("Duplicate examiners found in the $type list");
         }
@@ -301,24 +410,23 @@ class ListOfExaminersController extends Controller
     
         $count = 0;
         foreach ($examiners as $examiner) {
+            // The person goes into the shared directory; the form keeps only
+            // which list they are on and what was decided about them.
+            $directoryEntry = Examiner::fromDetails($examiner);
+
             $exists = ExaminersRecommendation::where('form_id', $formInstance->id)
-                ->where('email', $examiner['email'])
+                ->where('examiner_id', $directoryEntry->id)
                 ->where('type', $type)
                 ->first();
     
             if (!$exists) {
                 ExaminersRecommendation::create([
                     'form_id' => $formInstance->id,
-                    'name' => $examiner['name'],
-                    'email' => $examiner['email'],
-                    'institution' => $examiner['institution'],
-                    'designation' => $examiner['designation'],
-                    'department' => $examiner['department'],
-                    'phone' => $examiner['phone'],
+                    'examiner_id' => $directoryEntry->id,
                     'faculty_id' => $user->faculty->faculty_code,
                     'type' => $type,
                 ]);
-                $formInstance->addHistoryEntry("Supervisor added Examiner to " . $type . " list", $user->name());
+                $formInstance->addHistoryEntry("Supervisor added " . $directoryEntry->name . " to the " . $type . " list", $user->name());
                 $count++;
             } else {
                 if ($exists->recommendation != 'rejected') {
@@ -328,7 +436,7 @@ class ListOfExaminersController extends Controller
         }
     
         if ($count < $requiredCount) {
-            throw new \Exception("Exactly $requiredCount $type examiners are required");
+            throw new \Exception("At least $requiredCount $type examiners are required");
         }
     }
     

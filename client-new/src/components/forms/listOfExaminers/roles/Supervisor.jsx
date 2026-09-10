@@ -18,10 +18,13 @@ const ExaminerManager = ({
   examData,
   apiUrl,
   onAddExaminer,
+  onRemoveExaminer,
 }) => {
   const [examiners, setExaminers] = useState(examData || []);
   const [modalData, setModalData] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const canEdit = !formData.locks.supervisor && formData.role === 'faculty';
 
   const handleSearchSelect = (selectedExaminer) => {
     setModalData(selectedExaminer);
@@ -43,6 +46,22 @@ const ExaminerManager = ({
     setIsModalOpen(false);
   };
 
+  // A row already saved on the form has an id and has to go from the server.
+  // One only added in this sitting has not been saved yet, so dropping it from
+  // the list is all there is to do.
+  const handleRemove = async (row) => {
+    if (row.id) {
+      const res = await customFetch(
+        `${baseURL}/forms/list-of-examiners/${formData.form_id}/examiners/${row.id}`,
+        'DELETE'
+      );
+      if (!res || !res.success) return;
+      toast.success('Examiner removed');
+    }
+    setExaminers((prev) => prev.filter((item) => item !== row));
+    onRemoveExaminer(row);
+  };
+
   return (
     <div>
       <CustomModal
@@ -55,8 +74,7 @@ const ExaminerManager = ({
       >
         <AddExaminer data={modalData} onSubmit={handleAddExaminer} />
       </CustomModal>
-      {console.log(formData)}
-      {!formData.locks.supervisor && formData.role === 'faculty' && (
+      {canEdit && (
         <>
           <GridContainer
             elements={[
@@ -92,6 +110,7 @@ const ExaminerManager = ({
                   'Designation',
                   'Institution',
                   'Status',
+                  ...(canEdit ? [''] : []),
                 ]}
                 keys={[
                   'name',
@@ -100,7 +119,28 @@ const ExaminerManager = ({
                   'designation',
                   'institution',
                   'recommendation',
+                  ...(canEdit ? ['remove'] : []),
                 ]}
+                components={
+                  canEdit
+                    ? [
+                        {
+                          key: 'remove',
+                          component: ({ row }) =>
+                            row.recommendation && row.recommendation !== 'pending' ? null : (
+                              <button
+                                type="button"
+                                className="examiner-remove"
+                                aria-label={`Remove ${row.name}`}
+                                onClick={() => handleRemove(row)}
+                              >
+                                <i className="fa fa-trash" aria-hidden="true"></i>
+                              </button>
+                            ),
+                        },
+                      ]
+                    : []
+                }
               />,
             ]}
             space={3}
@@ -119,14 +159,15 @@ const Supervisor = ({ formData }) => {
   const { setLoading } = useLoading();
   const location = useLocation();
   const handleAddNationalExaminer = (examiner) => {
-    console.log('National Examiner Added:', examiner);
     setNational([...national, examiner]);
   };
 
   const handleAddInternationalExaminer = (examiner) => {
-    console.log('International Examiner Added:', examiner);
     setInternational([...international, examiner]);
   };
+
+  const removeFrom = (setList) => (examiner) =>
+    setList((prev) => prev.filter((item) => item.email !== examiner.email));
 
   const submitExaminers = () => {
     setLoading(true);
@@ -152,6 +193,7 @@ const Supervisor = ({ formData }) => {
         examData={formData.national}
         apiUrl={`${baseURL}/suggestions/examiner`}
         onAddExaminer={handleAddNationalExaminer}
+        onRemoveExaminer={removeFrom(setNational)}
       />
       <ExaminerManager
         type='International'
@@ -159,6 +201,7 @@ const Supervisor = ({ formData }) => {
         examData={formData.international}
         apiUrl={`${baseURL}/suggestions/examiner`}
         onAddExaminer={handleAddInternationalExaminer}
+        onRemoveExaminer={removeFrom(setInternational)}
       />
        {!formData.locks.supervisor && formData.role === 'faculty' && (
       <GridContainer

@@ -250,7 +250,7 @@ class IrbSubController extends Controller
                 [
                     'form_type' => 'thesis-extension',
                     'form_name' => 'Thesis Extension',
-                    'max_count' => 10,
+                    'max_count' => 2,
                     'stage' => 'student',
                 ],
                 [
