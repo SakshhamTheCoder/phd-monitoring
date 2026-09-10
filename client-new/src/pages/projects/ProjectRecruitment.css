@@ -3,8 +3,6 @@
 .pr-back-link:hover { color: var(--primary-color); }
 .pr-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
 /* Header comes from styles/ui.css */
-.pr-post-btn { background: var(--primary-color); color: #FFF; border: none; padding: 0.7rem 1.3rem; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; }
-.pr-post-btn:hover { background: var(--hover-color); }
 
 /* View Toggle */
 .pr-view-toggle { display: flex; gap: 0; margin-bottom: 1.5rem; border-bottom: 1px solid #DDD; }

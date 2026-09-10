@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
 import {
-  formatCurrency, getMilestoneProgress, milestoneStatusOptions, formatDate, formatDuration,
+  formatCurrency, getMilestoneProgress, milestoneStatusOptions, formatDuration,
   subVal, setSubCell, headTotal, yearTotal, grandTotal, budgetYears as budgetYearsOf,
   subItemsTotal, headSubMismatch,
   manpowerCell, setManpowerCell, unionLabels,
@@ -12,6 +12,7 @@ import {
   setOtherAmount, renameOtherRow, dropOtherRow, addOtherRow,
   KEY_MANPOWER, HEAD_MANPOWER, HEAD_EQUIPMENT, HEAD_OTHER,
 } from '../../data/projectsData';
+import { formatDate, EMPTY_VALUE } from '../../utils/timeParse';
 import { badgeClass } from '../../data/badges';
 import { apiGetProject, apiUpdateProject, apiAddMilestone, apiUpdateMilestone, apiAddDocument, apiUpdateDocument, apiDeleteDocument, fileUrl, mapMilestone, mapDocument, apiProjectMeta, apiUploadGanttChart } from '../../api/projects';
 import InputSuggestions from '../../components/forms/fields/InputSuggestions';
@@ -87,7 +88,7 @@ const ProjectDetails = () => {
   };
   const saveBudgetEdit = async () => {
     const res = await apiUpdateProject(project.id, { budget: budgetDraft });
-    if (res.success) { setBudgetData(budgetDraft); setEditingBudget(false); toast.success('Budget updated successfully!'); }
+    if (res.success) { setBudgetData(budgetDraft); setEditingBudget(false); toast.success('Budget updated.'); }
   };
 
   // In-table editing for the derived heads, mirroring the create wizard:
@@ -175,7 +176,7 @@ const ProjectDetails = () => {
                     value={manpowerCell(budgetDraft, y, cat).amount || ''} placeholder="0"
                     onChange={e => editManpower(y, cat, 'amount', e.target.value)} />
                 ) : (
-                  <>{amt ? `₹${amt.toLocaleString('en-IN')}` : '—'}</>
+                  <>{amt ? `₹${amt.toLocaleString('en-IN')}` : EMPTY_VALUE}</>
                 )}
               </td>
             );
@@ -213,7 +214,7 @@ const ProjectDetails = () => {
                   <i className="fa fa-trash"></i>
                 </button>
               </span>
-            ) : <>↳ {row.label || '—'}</>}
+            ) : <>↳ {row.label || EMPTY_VALUE}</>}
           </td>
           {budgetYears.map(y => {
             const amt = Number(((equipLine(b, y, row.key) || {}).amount) || 0);
@@ -225,7 +226,7 @@ const ProjectDetails = () => {
                     placeholder="0"
                     onChange={e => editEquipAmount(y, row.key, e.target.value)} />
                 ) : (
-                  <>{amt ? `₹${amt.toLocaleString('en-IN')}` : '—'}</>
+                  <>{amt ? `₹${amt.toLocaleString('en-IN')}` : EMPTY_VALUE}</>
                 )}
               </td>
             );
@@ -275,7 +276,7 @@ const ProjectDetails = () => {
                         <i className="fa fa-trash"></i>
                       </button>
                     </span>
-                  ) : <>↳ {row.label || '—'}</>}
+                  ) : <>↳ {row.label || EMPTY_VALUE}</>}
                 </td>
                 {budgetYears.map(y => {
                   const amt = Number(((otherLine(b, y, row.key) || {}).amount) || 0);
@@ -290,7 +291,7 @@ const ProjectDetails = () => {
                       ) : (
                         <span className={bad ? 'pd-budget-bad' : undefined}
                           title={bad ? `Sub-items sum to ₹${otherSubTotal(b, y, row.key).toLocaleString('en-IN')}` : undefined}>
-                          {amt ? `₹${amt.toLocaleString('en-IN')}` : '—'}{bad ? ' ⚠' : ''}
+                          {amt ? `₹${amt.toLocaleString('en-IN')}` : EMPTY_VALUE}{bad ? ' ⚠' : ''}
                         </span>
                       )}
                     </td>
@@ -312,7 +313,7 @@ const ProjectDetails = () => {
                           <i className="fa fa-trash"></i>
                         </button>
                       </span>
-                    ) : <>↳ {sub.label || '—'}</>}
+                    ) : <>↳ {sub.label || EMPTY_VALUE}</>}
                   </td>
                   {budgetYears.map(y => {
                     const amt = Number(((otherLine(b, y, sub.key) || {}).amount) || 0);
@@ -324,7 +325,7 @@ const ProjectDetails = () => {
                             placeholder="0"
                             onChange={e => editOther(y, sub.key, row.key, e.target.value)} />
                         ) : (
-                          <>{amt ? `₹${amt.toLocaleString('en-IN')}` : '—'}</>
+                          <>{amt ? `₹${amt.toLocaleString('en-IN')}` : EMPTY_VALUE}</>
                         )}
                       </td>
                     );
@@ -362,7 +363,7 @@ const ProjectDetails = () => {
     if (invalidCopi(newCopi)) return;
     const updated = [...coPIs, { ...newCopi }];
     const res = await apiUpdateProject(project.id, { co_pis: updated });
-    if (res.success) { setCoPIs(updated); setNewCopi(emptyCopi); setShowCopiForm(false); toast.success('Co-PI added successfully!'); }
+    if (res.success) { setCoPIs(updated); setNewCopi(emptyCopi); setShowCopiForm(false); toast.success('Co-PI added.'); }
   };
   const removeCopi = async (i) => {
     const updated = coPIs.filter((_, idx) => idx !== i);
@@ -377,7 +378,7 @@ const ProjectDetails = () => {
     if (invalidCopi(copiEditForm)) return;
     const updated = coPIs.map((c, idx) => (idx === editingCopiIdx ? { ...copiEditForm } : c));
     const res = await apiUpdateProject(project.id, { co_pis: updated });
-    if (res.success) { setCoPIs(updated); setEditingCopiIdx(null); toast.success('Co-PI updated successfully!'); }
+    if (res.success) { setCoPIs(updated); setEditingCopiIdx(null); toast.success('Co-PI updated.'); }
   };
 
   // Documents management (backend has no update endpoint -> edit = delete + re-upload)
@@ -417,7 +418,7 @@ const ProjectDetails = () => {
       const doc = mapDocument((res.response && res.response.document) || res.response);
       setDocuments(prev => (editingDocIdx !== null ? prev.map((d, i) => (i === editingDocIdx ? doc : d)) : [...prev, doc]));
       setShowDocModal(false);
-      toast.success(editingDocIdx !== null ? 'Document updated!' : 'Document uploaded successfully!');
+      toast.success(editingDocIdx !== null ? 'Document updated.' : 'Document uploaded.');
     }
   };
   const removeDoc = async (i) => {
@@ -456,7 +457,7 @@ const ProjectDetails = () => {
         const p = await apiGetProject(id);
         if (p) setSanctionDoc(sanctionFromProject(p));
         setShowSanctionModal(false);
-        toast.success('Sanction letter updated!');
+        toast.success('Sanction letter updated.');
       }
     } else {
       if (!sanctionLinkInput.trim()) { toast.error('Please enter a link.'); return; }
@@ -464,7 +465,7 @@ const ProjectDetails = () => {
       if (res.success) {
         setSanctionDoc({ name: 'Sanction Letter', url: sanctionLinkInput.trim(), isLink: true });
         setShowSanctionModal(false);
-        toast.success('Sanction letter updated!');
+        toast.success('Sanction letter updated.');
       }
     }
   };
@@ -657,7 +658,7 @@ const ProjectDetails = () => {
                                     onChange={e => updateSubCell(y, bh.head, sub, e.target.value)}
                                   />
                                 ) : (
-                                  <>{subVal(budgetData, y, bh.head, sub) ? `₹${subVal(budgetData, y, bh.head, sub).toLocaleString('en-IN')}` : '—'}</>
+                                  <>{subVal(budgetData, y, bh.head, sub) ? `₹${subVal(budgetData, y, bh.head, sub).toLocaleString('en-IN')}` : EMPTY_VALUE}</>
                                 )}
                               </td>
                             ))}
@@ -708,7 +709,7 @@ const ProjectDetails = () => {
                       const file = e.target.files[0];
                       if (!file) return;
                       const res = await apiUploadGanttChart(project.id, file);
-                      if (res.success) { toast.success('Gantt chart uploaded'); loadProject(); }
+                      if (res.success) { toast.success('Gantt chart uploaded.'); loadProject(); }
                     }} />
                 </label>
               )}
@@ -992,13 +993,13 @@ const ProjectDetails = () => {
             </div>
             <h1 className="page-title">{project.title}</h1>
             <div className="pd-header-meta">
-              <div className="pd-hm-item"><span>FUNDING AGENCY</span><strong>{project.fundingAgency || '—'}</strong></div>
+              <div className="pd-hm-item"><span>FUNDING AGENCY</span><strong>{project.fundingAgency || EMPTY_VALUE}</strong></div>
               <div className="pd-hm-item"><span>SANCTIONED AMOUNT</span><strong>₹ {Number(project.amount || 0).toLocaleString('en-IN')}</strong></div>
               <div className="pd-hm-item">
                 <span>DURATION</span>
                 <strong>
                   {formatDuration(project.durationYears, project.durationMonths)}
-                  {project.startDate ? ` · ${formatDate(project.startDate)} — ${project.endDate ? formatDate(project.endDate) : '—'}` : ''}
+                  {project.startDate ? ` · ${formatDate(project.startDate)} — ${formatDate(project.endDate)}` : ''}
                 </strong>
               </div>
             </div>

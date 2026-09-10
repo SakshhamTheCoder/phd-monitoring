@@ -114,16 +114,16 @@ const AdminCourseManagement = () => {
       const response = await customFetch(`${baseURL}/courses/add`, 'POST', formData, false);
 
       if (response.success) {
-        toast.success('Course added successfully');
+        toast.success('Course added.');
         setShowAddModal(false);
         resetForm();
         setRefreshKey(prev => prev + 1);
       } else {
-        toast.error(response.response?.message || 'Something went wrong');
+        toast.error(response.response?.message || 'Failed to add course.');
       }
     } catch (error) {
       console.error('Error adding course:', error);
-      toast.error('Failed to add course');
+      toast.error('Failed to add course.');
     } finally {
       setLoading(false);
       setSubmitting(false);
@@ -140,16 +140,16 @@ const AdminCourseManagement = () => {
       const response = await customFetch(`${baseURL}/courses/update/${editingCourse.id}`, 'PUT', formData, false);
 
       if (response.success) {
-        toast.success('Course updated successfully');
+        toast.success('Course updated.');
         setShowEditModal(false);
         resetForm();
         setRefreshKey(prev => prev + 1);
       } else {
-        toast.error(response.response?.message || 'Something went wrong');
+        toast.error(response.response?.message || 'Failed to update course.');
       }
     } catch (error) {
       console.error('Error updating course:', error);
-      toast.error('Failed to update course');
+      toast.error('Failed to update course.');
     } finally {
       setLoading(false);
       setSubmitting(false);
@@ -166,14 +166,14 @@ const AdminCourseManagement = () => {
       const response = await customFetch(`${baseURL}/courses/delete/${courseId}`, 'DELETE', {}, false);
       
       if (response.success) {
-        toast.success('Course deleted successfully');
+        toast.success('Course deleted.');
         setRefreshKey(prev => prev + 1);
       } else {
-        toast.error(response.response?.message || 'Something went wrong');
+        toast.error(response.response?.message || 'Failed to delete course.');
       }
     } catch (error) {
       console.error('Error deleting course:', error);
-      toast.error('Failed to delete course');
+      toast.error('Failed to delete course.');
     } finally {
       setLoading(false);
     }
@@ -186,17 +186,17 @@ const AdminCourseManagement = () => {
       const response = await customFetch(`${baseURL}/courses/student/tag`, 'POST', tagData, false);
       
       if (response.success) {
-        toast.success('Student tagged with course successfully');
+        toast.success('Student tagged with course.');
         setShowTagModal(false);
         resetTagData();
         setRefreshKey(prev => prev + 1);
         fetchAllCourses();
       } else {
-        toast.error(response.response?.message || 'Something went wrong');
+        toast.error(response.response?.message || 'Failed to tag student.');
       }
     } catch (error) {
       console.error('Error tagging student:', error);
-      toast.error('Failed to tag student');
+      toast.error('Failed to tag student.');
     } finally {
       setLoading(false);
       setSubmitting(false);
@@ -230,17 +230,17 @@ const AdminCourseManagement = () => {
         toast.success(data.message);
         if (data.data.errors.length > 0) {
           console.log('Import errors:', data.data.errors);
-          toast.info(`Check console for ${data.data.error_count} errors`);
+          toast.info(`Check console for ${data.data.error_count} errors.`);
         }
         setShowBulkImportModal(false);
         setCsvFile(null);
         setRefreshKey(prev => prev + 1);
       } else {
-        toast.error(data.message || 'Failed to import');
+        toast.error(data.message || 'Failed to import.');
       }
     } catch (error) {
       console.error('Error importing CSV:', error);
-      toast.error('Failed to import CSV');
+      toast.error('Failed to import CSV.');
     } finally {
       setLoading(false);
       setSubmitting(false);
@@ -388,7 +388,7 @@ const AdminCourseManagement = () => {
               className="custom-button"
               disabled={submitting}
             >
-              {submitting ? 'Adding...' : 'Add Course'}
+              {submitting ? 'Adding…' : 'Add Course'}
             </button>
           </div>
         </div>
@@ -454,7 +454,7 @@ const AdminCourseManagement = () => {
               className="custom-button"
               disabled={submitting}
             >
-              {submitting ? 'Updating...' : 'Update Course'}
+              {submitting ? 'Updating…' : 'Update Course'}
             </button>
           </div>
         </div>
@@ -530,7 +530,7 @@ const AdminCourseManagement = () => {
               className="custom-button"
               disabled={submitting}
             >
-              {submitting ? 'Tagging...' : 'Tag Student'}
+              {submitting ? 'Tagging…' : 'Tag Student'}
             </button>
           </div>
         </div>
@@ -596,7 +596,7 @@ const AdminCourseManagement = () => {
               className="custom-button"
               disabled={submitting || !csvFile}
             >
-              {submitting ? 'Importing...' : 'Import CSV'}
+              {submitting ? 'Importing…' : 'Import CSV'}
             </button>
           </div>
         </div>

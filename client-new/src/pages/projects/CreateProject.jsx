@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
 import {
-  categoryOptions, roleOptions, milestoneStatusOptions, formatDate, formatDuration,
+  categoryOptions, roleOptions, milestoneStatusOptions, formatDuration,
   subVal, setSubCell, headTotal, yearTotal, grandTotal, emptyBudget,
   subItemsTotal, headSubMismatch,
   manpowerCell, setManpowerCell, unionLabels,
@@ -12,6 +12,7 @@ import {
   setOtherAmount, renameOtherRow, dropOtherRow, addOtherRow,
   KEY_MANPOWER, HEAD_MANPOWER, HEAD_EQUIPMENT, HEAD_OTHER,
 } from '../../data/projectsData';
+import { formatDate, EMPTY_VALUE } from '../../utils/timeParse';
 import { apiCreateProject, apiUpdateProjectFromForm, apiUpdateProject, apiCurrentFaculty, apiProjectMeta, apiUploadGanttChart } from '../../api/projects';
 import InputSuggestions from '../../components/forms/fields/InputSuggestions';
 import FacultyLink from '../../components/facultyLink/FacultyLink';
@@ -149,7 +150,7 @@ const CreateProject = () => {
 
   const saveDraft = () => {
     localStorage.setItem('projectDraft', JSON.stringify(form));
-    toast.success('Draft saved successfully!');
+    toast.success('Draft saved.');
   };
 
   const [submitting, setSubmitting] = useState(false);
@@ -184,7 +185,7 @@ const CreateProject = () => {
     }
     setSubmitting(false);
     if (res.success) {
-      toast.success(isEditMode ? 'Project updated successfully!' : 'Project created successfully!');
+      toast.success(isEditMode ? 'Project updated.' : 'Project created.');
       navigate('/projects');
     }
   };
@@ -805,17 +806,17 @@ const CreateProject = () => {
           <div className="cp-review-grid">
             <div className="cp-review-card" style={{ gridColumn: '1 / -1' }}>
               <h4>Basic Information</h4>
-              <div className="cp-review-row"><span>Title</span><strong>{form.title || '—'}</strong></div>
-              <div className="cp-review-row"><span>Category</span><strong>{form.category || '—'}</strong></div>
-              <div className="cp-review-row"><span>Funding Agency</span><strong>{form.fundingAgency || '—'}</strong></div>
-              <div className="cp-review-row"><span>Duration</span><strong>{formatDuration(form.durationYears, form.durationMonths)}{form.startDate ? ` · ${formatDate(form.startDate)} to ${form.endDate ? formatDate(form.endDate) : '—'}` : ''}</strong></div>
-              <div className="cp-review-row"><span>SDGs</span><strong>{form.sdgs.length ? form.sdgs.map(id => (meta.sdgs.find(g => g.id === id) || {}).label).filter(Boolean).join(', ') : '—'}</strong></div>
-              <div className="cp-review-row"><span>Description</span><strong style={{ textAlign: 'right', maxWidth: '75%', fontWeight: '500', fontSize: '0.8rem', lineHeight: '1.4' }}>{form.description ? (form.description.length > 150 ? form.description.substring(0, 150) + '...' : form.description) : '—'}</strong></div>
+              <div className="cp-review-row"><span>Title</span><strong>{form.title || EMPTY_VALUE}</strong></div>
+              <div className="cp-review-row"><span>Category</span><strong>{form.category || EMPTY_VALUE}</strong></div>
+              <div className="cp-review-row"><span>Funding Agency</span><strong>{form.fundingAgency || EMPTY_VALUE}</strong></div>
+              <div className="cp-review-row"><span>Duration</span><strong>{formatDuration(form.durationYears, form.durationMonths)}{form.startDate ? ` · ${formatDate(form.startDate)} to ${formatDate(form.endDate)}` : ''}</strong></div>
+              <div className="cp-review-row"><span>SDGs</span><strong>{form.sdgs.length ? form.sdgs.map(id => (meta.sdgs.find(g => g.id === id) || {}).label).filter(Boolean).join(', ') : EMPTY_VALUE}</strong></div>
+              <div className="cp-review-row"><span>Description</span><strong style={{ textAlign: 'right', maxWidth: '75%', fontWeight: '500', fontSize: '0.8rem', lineHeight: '1.4' }}>{form.description ? (form.description.length > 150 ? form.description.substring(0, 150) + '...' : form.description) : EMPTY_VALUE}</strong></div>
             </div>
             <div className="cp-review-card">
               <h4>Team</h4>
-              <div className="cp-review-row"><span>PI</span><strong>{pi ? pi.name : '—'}</strong></div>
-              <div className="cp-review-row"><span>Your Role</span><strong>{form.role || '—'}</strong></div>
+              <div className="cp-review-row"><span>PI</span><strong>{pi ? pi.name : EMPTY_VALUE}</strong></div>
+              <div className="cp-review-row"><span>Your Role</span><strong>{form.role || EMPTY_VALUE}</strong></div>
               {form.coPIs.length > 0 ? (
                 form.coPIs.map((copi, idx) => (
                   <div key={idx} className="cp-review-row">

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
+import { EMPTY_VALUE } from '../../utils/timeParse';
 import { facultyNameCell } from '../facultyLink/FacultyLink';
 import CustomButton from '../forms/fields/CustomButton';
 import CustomModal from '../forms/modal/CustomModal';
@@ -21,31 +22,31 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
 
   const hodTableData = currentHod ? [{
     faculty_code: currentHod.faculty_code,
-    name: currentHod.user?.name || 'N/A',
-    email: currentHod.user?.email || 'N/A',
-    phone: currentHod.user?.phone || 'N/A',
-    designation: currentHod.designation || 'N/A',
-    department: currentHod.department?.name || 'N/A',
+    name: currentHod.user?.name || EMPTY_VALUE,
+    email: currentHod.user?.email || EMPTY_VALUE,
+    phone: currentHod.user?.phone || EMPTY_VALUE,
+    designation: currentHod.designation || EMPTY_VALUE,
+    department: currentHod.department?.name || EMPTY_VALUE,
     actions: { faculty_code: currentHod.faculty_code }
   }] : [];
 
   const adordcTableData = currentAdordc ? [{
     faculty_code: currentAdordc.faculty_code,
-    name: currentAdordc.user?.name || 'N/A',
-    email: currentAdordc.user?.email || 'N/A',
-    phone: currentAdordc.user?.phone || 'N/A',
-    designation: currentAdordc.designation || 'N/A',
-    department: currentAdordc.department?.name || 'N/A',
+    name: currentAdordc.user?.name || EMPTY_VALUE,
+    email: currentAdordc.user?.email || EMPTY_VALUE,
+    phone: currentAdordc.user?.phone || EMPTY_VALUE,
+    designation: currentAdordc.designation || EMPTY_VALUE,
+    department: currentAdordc.department?.name || EMPTY_VALUE,
     actions: { faculty_code: currentAdordc.faculty_code }
   }] : [];
 
   const coordinatorsTableData = currentCoordinators.map(coord => ({
     faculty_code: coord.faculty?.faculty_code,
-    name: coord.faculty?.user?.name || 'N/A',
-    email: coord.faculty?.user?.email || 'N/A',
-    phone: coord.faculty?.user?.phone || 'N/A',
-    designation: coord.faculty?.designation || 'N/A',
-    department: coord.faculty?.department?.name || 'N/A',
+    name: coord.faculty?.user?.name || EMPTY_VALUE,
+    email: coord.faculty?.user?.email || EMPTY_VALUE,
+    phone: coord.faculty?.user?.phone || EMPTY_VALUE,
+    designation: coord.faculty?.designation || EMPTY_VALUE,
+    department: coord.faculty?.department?.name || EMPTY_VALUE,
     actions: { 
       faculty_code: coord.faculty?.faculty_code,
       coordinator_id: coord.id
@@ -69,16 +70,16 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
       });
 
       if (response.success) {
-        toast.success('HOD assigned successfully');
+        toast.success('HOD assigned.');
         setShowHodModal(false);
         setSelectedFaculty(null);
         if (onUpdate) onUpdate();
       } else {
-        toast.error(response.message || 'Failed to assign HOD');
+        toast.error(response.message || 'Failed to assign HOD.');
       }
     } catch (error) {
       console.error('Error assigning HOD:', error);
-      toast.error('Failed to assign HOD');
+      toast.error('Failed to assign HOD.');
     } finally {
       setLoadingState(false);
       setLoading(false);
@@ -102,16 +103,16 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
       });
 
       if (response.success) {
-        toast.success('ADORDC assigned successfully');
+        toast.success('ADORDC assigned.');
         setShowAdordcModal(false);
         setSelectedFaculty(null);
         if (onUpdate) onUpdate();
       } else {
-        toast.error(response.message || 'Failed to assign ADORDC');
+        toast.error(response.message || 'Failed to assign ADORDC.');
       }
     } catch (error) {
       console.error('Error assigning ADORDC:', error);
-      toast.error('Failed to assign ADORDC');
+      toast.error('Failed to assign ADORDC.');
     } finally {
       setLoadingState(false);
       setLoading(false);
@@ -134,16 +135,16 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
       });
 
       if (response.success) {
-        toast.success('PhD Coordinator added successfully');
+        toast.success('PhD Coordinator added.');
         setShowCoordinatorModal(false);
         setSelectedFaculty(null);
         if (onUpdate) onUpdate();
       } else {
-        toast.error(response.message || 'Failed to add coordinator');
+        toast.error(response.message || 'Failed to add coordinator.');
       }
     } catch (error) {
       console.error('Error adding coordinator:', error);
-      toast.error('Failed to add coordinator');
+      toast.error('Failed to add coordinator.');
     } finally {
       setLoadingState(false);
       setLoading(false);
@@ -161,14 +162,14 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
       const response = await customFetch(`${baseURL}/departments/remove-coordinator/${coordinatorId}`, 'DELETE');
 
       if (response.success) {
-        toast.success('PhD Coordinator removed successfully');
+        toast.success('PhD Coordinator removed.');
         if (onUpdate) onUpdate();
       } else {
-        toast.error(response.message || 'Failed to remove coordinator');
+        toast.error(response.message || 'Failed to remove coordinator.');
       }
     } catch (error) {
       console.error('Error removing coordinator:', error);
-      toast.error('Failed to remove coordinator');
+      toast.error('Failed to remove coordinator.');
     } finally {
       setLoading(false);
     }
@@ -300,7 +301,7 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
             onClick={() => { setShowHodModal(false); setSelectedFaculty(null); }}
           />
           <CustomButton
-            text={loading ? 'Assigning...' : 'Assign as HOD'}
+            text={loading ? 'Assigning…' : 'Assign as HOD'}
             onClick={handleAssignHod}
             disabled={loading || !selectedFaculty}
           />
@@ -339,7 +340,7 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
             onClick={() => { setShowAdordcModal(false); setSelectedFaculty(null); }}
           />
           <CustomButton
-            text={loading ? 'Assigning...' : 'Assign as ADORDC'}
+            text={loading ? 'Assigning…' : 'Assign as ADORDC'}
             onClick={handleAssignAdordc}
             disabled={loading || !selectedFaculty}
           />
@@ -377,7 +378,7 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
             onClick={() => { setShowCoordinatorModal(false); setSelectedFaculty(null); }}
           />
           <CustomButton
-            text={loading ? 'Adding...' : 'Add Coordinator'}
+            text={loading ? 'Adding…' : 'Add Coordinator'}
             onClick={handleAddCoordinator}
             disabled={loading || !selectedFaculty}
           />

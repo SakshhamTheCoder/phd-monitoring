@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Layout from '../../components/dashboard/layout';
-import { formatDate } from '../../data/projectsData';
+import { formatDate } from '../../utils/timeParse';
 import { badgeClass } from '../../data/badges';
 import { apiOpenings, apiApply, apiMyApplications, apiApplicantProfile } from '../../api/openings';
 import CustomModal from '../../components/forms/modal/CustomModal';
@@ -74,7 +74,7 @@ const Openings = () => {
     if (res.success) {
       setMyApps(await apiMyApplications());
       setApplyFor(null);
-      toast.success('Application submitted successfully!');
+      toast.success('Application submitted.');
       setTab('Applied');
     }
   };

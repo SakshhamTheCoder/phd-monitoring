@@ -12,6 +12,7 @@ import { customFetch } from '../../api/base';
 import { apiLeaveCreate, apiLeaveLoad, apiLeaveDelete } from '../../api/leave';
 import { badgeClass } from '../../data/badges';
 import { parseAttendanceQuery, localDateString, localMonthKey } from '../../utils/leaveBalance';
+import { EMPTY_VALUE } from '../../utils/timeParse';
 import './AttendancePage.css';
 
 const DAY_PART_LABEL = { full: 'Full day', first_half: 'First half', second_half: 'Second half' };
@@ -36,12 +37,11 @@ const StudentAttendancePage = () => {
   const [applying, setApplying] = useState(false);
   const highlightRef = useRef(null);
 
-  // localStorage holds no roll_no for a scholar. Read it the same way
-  // ProfileCard does — GET /students with no id resolves to the caller's own
-  // record. See client-new/src/components/profileCard/ProfileCard.jsx:45.
+  // localStorage holds no roll_no for a scholar. GET /students/me answers with
+  // the caller's own record, the same endpoint ProfileCard reads.
   useEffect(() => {
-    customFetch(`${baseURL}/students`, 'GET', {}, true, false).then((res) => {
-      const rn = res?.success ? res.response.data?.[0]?.roll_no ?? null : null;
+    customFetch(`${baseURL}/students/me`, 'GET', {}, true, false).then((res) => {
+      const rn = res?.success ? res.response.profile?.roll_no ?? null : null;
       if (rn) {
         setRollNo(rn);
       } else {
@@ -175,7 +175,7 @@ const StudentAttendancePage = () => {
           <div className="attendance-summary-card">
             <span className="attendance-summary-label">Attendance</span>
             <span className="attendance-summary-value">
-              {data.summary.percent != null ? `${data.summary.percent}%` : '—'}
+              {data.summary.percent != null ? `${data.summary.percent}%` : EMPTY_VALUE}
             </span>
           </div>
           <p className="attendance-summary-caption">
@@ -272,14 +272,14 @@ const StudentAttendancePage = () => {
                     style={{ cursor: 'pointer' }}
                     onClick={() => openLeave(l.id)}
                   >
-                    <td style={{ textTransform: 'capitalize' }}>{l.leave_type || '—'}</td>
+                    <td style={{ textTransform: 'capitalize' }}>{l.leave_type || EMPTY_VALUE}</td>
                     {/* l.from_date/to_date are Laravel date-cast timestamps, same as
                         r.date above — localDateString undoes the UTC-midnight shift. */}
-                    <td>{localDateString(l.from_date) || '—'}</td>
-                    <td>{localDateString(l.to_date) || '—'}</td>
-                    <td>{DAY_PART_LABEL[l.day_part] || l.day_part || '—'}</td>
+                    <td>{localDateString(l.from_date) || EMPTY_VALUE}</td>
+                    <td>{localDateString(l.to_date) || EMPTY_VALUE}</td>
+                    <td>{DAY_PART_LABEL[l.day_part] || l.day_part || EMPTY_VALUE}</td>
                     <td><span className={badgeClass(l.status)}>{l.status}</span></td>
-                    <td>{l.hod_comments || '—'}</td>
+                    <td>{l.hod_comments || EMPTY_VALUE}</td>
                     <td>
                       {l.status === 'draft' && (
                         <button

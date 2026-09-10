@@ -10,6 +10,7 @@ import CustomModal from '../../components/forms/modal/CustomModal';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { countAbsent, applyMarkAll, buildSaveMessage } from '../../utils/attendanceMark';
+import { EMPTY_VALUE } from '../../utils/timeParse';
 import './AttendancePage.css';
 
 const EDIT_WINDOW = 7;
@@ -183,11 +184,11 @@ const AttendancePage = () => {
     const params = new URLSearchParams({ from: exportFrom, to: exportTo, summary: '1' });
     if (exportDept) params.set('department_id', exportDept);
     const res = await fetch(baseURL + `/clerks/attendance/export?${params.toString()}`, { headers: { Authorization: `Bearer ${token}` } });
-    if (!res.ok) { toast.error('Export failed'); return; }
+    if (!res.ok) { toast.error('Export failed.'); return; }
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `attendance_${exportFrom}_to_${exportTo}.csv`; a.click(); URL.revokeObjectURL(url);
-    toast.success('Export downloaded');
+    toast.success('Export downloaded.');
   };
 
   const handleFileChange = (e) => {
@@ -230,7 +231,7 @@ const AttendancePage = () => {
         if (data.data?.errors?.length) toast.warning(`${data.data.error_count} rows had errors — check console`);
         console.log('CSV import errors', data.data?.errors);
         setShowCsvModal(false); setCsvFile(null); setCsvPreview(null); loadRoster();
-      } else toast.error(data.message || 'Import failed');
+      } else toast.error(data.message || 'Import failed.');
     } catch (e) { toast.error('Upload failed: ' + e.message); } finally { setUploading(false); }
   };
 
@@ -244,7 +245,7 @@ const AttendancePage = () => {
     <Layout>
       <PageHeader
         title="Attendance"
-        subtitle={departments.length > 0 ? `${departments.map((d) => d.name).join(', ')}` : 'Your departments will appear here once an admin tags you.'}
+        subtitle={departments.length > 0 ? `${departments.map((d) => d.name).join(', ')}` : (isAdmin ? 'No departments exist yet.' : 'Your departments will appear here once an admin tags you.')}
         actions={
           <div style={{ display: 'flex', gap: '10px' }}>
             <CustomButton text="Upload CSV" variant="secondary" onClick={() => setShowCsvModal(true)} />
@@ -337,7 +338,7 @@ const AttendancePage = () => {
             </div>
           )}
           {departments.length === 0 && !loading ? (
-            <div className="empty-state">No departments are assigned to you yet. Please contact an administrator.</div>
+            <div className="empty-state">{isAdmin ? 'No departments exist yet.' : 'No departments are assigned to you yet. Please contact an administrator.'}</div>
           ) : (
             <div className="form-list-container">
               <table className="form-table">
@@ -384,20 +385,20 @@ const AttendancePage = () => {
           <div className="attendance-summary-cards">
             <div className="attendance-summary-card">
               <span className="attendance-summary-label">Present</span>
-              <span className="attendance-summary-value present">{daySummary ? daySummary.present : '—'}</span>
+              <span className="attendance-summary-value present">{daySummary ? daySummary.present : EMPTY_VALUE}</span>
             </div>
             <div className="attendance-summary-card">
               <span className="attendance-summary-label">Absent</span>
-              <span className="attendance-summary-value absent">{daySummary ? daySummary.absent : '—'}</span>
+              <span className="attendance-summary-value absent">{daySummary ? daySummary.absent : EMPTY_VALUE}</span>
             </div>
             <div className="attendance-summary-card">
               <span className="attendance-summary-label">Not recorded</span>
-              <span className="attendance-summary-value">{daySummary ? daySummary.not_recorded : '—'}</span>
+              <span className="attendance-summary-value">{daySummary ? daySummary.not_recorded : EMPTY_VALUE}</span>
             </div>
             <div className="attendance-summary-card">
               <span className="attendance-summary-label">Attendance</span>
               <span className="attendance-summary-value">
-                {daySummary && daySummary.percent != null ? `${daySummary.percent}%` : '—'}
+                {daySummary && daySummary.percent != null ? `${daySummary.percent}%` : EMPTY_VALUE}
               </span>
             </div>
             <p className="attendance-summary-caption">
@@ -437,15 +438,15 @@ const AttendancePage = () => {
           <div className="attendance-summary-cards">
             <div className="attendance-summary-card">
               <span className="attendance-summary-label">Sessions held</span>
-              <span className="attendance-summary-value">{monthData ? monthData.days_with_sessions : '—'}</span>
+              <span className="attendance-summary-value">{monthData ? monthData.days_with_sessions : EMPTY_VALUE}</span>
             </div>
             <div className="attendance-summary-card">
               <span className="attendance-summary-label">Total present</span>
-              <span className="attendance-summary-value present">{monthData ? monthData.totals.present : '—'}</span>
+              <span className="attendance-summary-value present">{monthData ? monthData.totals.present : EMPTY_VALUE}</span>
             </div>
             <div className="attendance-summary-card">
               <span className="attendance-summary-label">Total absent</span>
-              <span className="attendance-summary-value absent">{monthData ? monthData.totals.absent : '—'}</span>
+              <span className="attendance-summary-value absent">{monthData ? monthData.totals.absent : EMPTY_VALUE}</span>
             </div>
             <p className="attendance-summary-caption">
               {monthData ? `${monthData.label} · per-scholar totals for the month` : 'Loading the month…'}
@@ -466,11 +467,11 @@ const AttendancePage = () => {
                   <tr key={s.roll_no}>
                     <td>{s.roll_no}</td>
                     <td>{s.name}</td>
-                    <td>{s.department_name || '—'}</td>
+                    <td>{s.department_name || EMPTY_VALUE}</td>
                     <td style={{ color: 'var(--success-text)' }}>{s.present}</td>
                     <td style={{ color: 'var(--danger-text)' }}>{s.absent}</td>
                     <td>{s.total}</td>
-                    <td>{s.percent != null ? `${s.percent}%` : '—'}</td>
+                    <td>{s.percent != null ? `${s.percent}%` : EMPTY_VALUE}</td>
                   </tr>
                 ))}
               </tbody>
@@ -531,7 +532,7 @@ const AttendancePage = () => {
           )}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
             <button onClick={() => { setShowCsvModal(false); setCsvFile(null); setCsvPreview(null); }} style={{ padding: '0.75rem 1.5rem', background: 'white', color: 'var(--text-muted)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius)', fontSize: '1rem', fontWeight: '500', cursor: 'pointer' }}>Cancel</button>
-            <button onClick={handleCsvUpload} disabled={uploading || !csvFile} style={{ padding: '0.75rem 1.5rem', background: uploading || !csvFile ? 'var(--text-subtle)' : 'var(--primary-color)', color: 'white', border: 'none', borderRadius: 'var(--radius)', fontSize: '1rem', fontWeight: '500', cursor: uploading || !csvFile ? 'not-allowed' : 'pointer' }}>{uploading ? 'Uploading...' : 'Upload'}</button>
+            <button onClick={handleCsvUpload} disabled={uploading || !csvFile} style={{ padding: '0.75rem 1.5rem', background: uploading || !csvFile ? 'var(--text-subtle)' : 'var(--primary-color)', color: 'white', border: 'none', borderRadius: 'var(--radius)', fontSize: '1rem', fontWeight: '500', cursor: uploading || !csvFile ? 'not-allowed' : 'pointer' }}>{uploading ? 'Uploading…' : 'Upload'}</button>
           </div>
         </div>
       </CustomModal>

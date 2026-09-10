@@ -71,9 +71,7 @@ const ProjectsOverview = () => {
             <p className="page-subtitle">Monitoring all ongoing research initiatives and funding channels.</p>
           </div>
           <div className="page-actions">
-            <button className="po-create-btn" onClick={() => navigate('/projects/create')}>
-              <i className="fa fa-plus"></i> Create Project
-            </button>
+            <CustomButton text="Create Project +" onClick={() => navigate('/projects/create')} />
           </div>
         </div>
 

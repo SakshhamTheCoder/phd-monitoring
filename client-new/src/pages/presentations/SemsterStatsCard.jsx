@@ -18,6 +18,7 @@ import SchedulePresentation from "../../components/forms/presentations/ScheduleP
 import FileUploadField from "../../components/forms/fields/FileUploadField";
 // import FilterBar from "../../components/filterBar/FilterBar";
 import { set } from "react-hook-form";
+import { formatDate } from '../../utils/timeParse';
 
 const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
   const [semesterStats, setSemesterStats] = useState(null);
@@ -386,10 +387,10 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
         <div className="semester-stats-line">
           <div className="stat-item">
             <strong>Start Date:</strong>{" "}
-            {new Date(start_date).toLocaleDateString()}
+            {formatDate(start_date)}
           </div>
           <div className="stat-item">
-            <strong>End Date:</strong> {new Date(end_date).toLocaleDateString()}
+            <strong>End Date:</strong> {formatDate(end_date)}
           </div>
           {(role === "admin" ||
             role === "hod" ||

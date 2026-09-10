@@ -109,14 +109,14 @@ const AreaOfSpecialization = () => {
       const response = await customFetch(endpoint, method, formData, false);
       
       if (response.success) {
-        toast.success(editData ? 'Area updated successfully' : 'Area added successfully');
+        toast.success(editData ? 'Area updated.' : 'Area added.');
         setIsOpen(false);
         setRefreshKey((prev) => prev + 1);
       } else {
-        toast.error(response.message || 'Operation failed');
+        toast.error(response.message || (editData ? 'Failed to update area.' : 'Failed to add area.'));
       }
     } catch (error) {
-      toast.error('Failed to save area of specialization');
+      toast.error('Failed to save area of specialization.');
     } finally {
       setLoading(false);
     }
@@ -137,13 +137,13 @@ const AreaOfSpecialization = () => {
       );
       
       if (response.success) {
-        toast.success('Area deleted successfully');
+        toast.success('Area deleted.');
         setRefreshKey((prev) => prev + 1);
       } else {
-        toast.error(response.message || 'Delete failed');
+        toast.error(response.message || 'Failed to delete area.');
       }
     } catch (error) {
-      toast.error('Failed to delete area of specialization');
+      toast.error('Failed to delete area of specialization.');
     } finally {
       setLoading(false);
     }
@@ -171,15 +171,15 @@ const AreaOfSpecialization = () => {
       const result = await response.json();
 
       if (result.success) {
-        toast.success(`Successfully imported ${result.imported_count || 0} areas`);
+        toast.success(`Imported ${result.imported_count || 0} area(s).`);
         setIsUploadModalOpen(false);
         setCsvFile(null);
         setRefreshKey((prev) => prev + 1);
       } else {
-        toast.error(result.message || 'Import failed');
+        toast.error(result.message || 'Failed to import areas.');
       }
     } catch (error) {
-      toast.error('Failed to upload CSV file');
+      toast.error('Failed to upload CSV file.');
     } finally {
       setLoading(false);
     }
