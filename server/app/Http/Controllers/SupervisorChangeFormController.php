@@ -29,18 +29,30 @@ class SupervisorChangeFormController extends Controller {
        $user = Auth::user();
        if($student_id)
          return $this->listFormsStudent($user, SupervisorChangeForm::class, $student_id);
+
+       // Reason is often personal; only the scholar, HOD and admin get it
+       // (same capability ClerkController uses for leave reasons). Without
+       // this the supervisor being replaced could read why.
+       $canReadReason = $user->may('can_read_leave_reason');
        return $this->listForms($user, SupervisorChangeForm::class,$request,null,false,[
-        'fields' => [
-            "name","roll_no","to_change","reason"
-        ],
-        'extra_fields' => [
-            "to_change" => function ($form) {
-                return $form->student->supervisors->map(function ($supervisor) {
-                    return $supervisor->user->name();
-                })->join(', ');
-            },
-        ],
-        'titles' => [ "Name", "Roll No","To Change","Reason"],
+        'fields' => array_merge(
+            ["name","roll_no","to_change"],
+            $canReadReason ? ["reason"] : []
+        ),
+        'extra_fields' => array_merge(
+            [
+                "to_change" => function ($form) {
+                    return $form->student->supervisors->map(function ($supervisor) {
+                        return $supervisor->user->name();
+                    })->join(', ');
+                },
+            ],
+            $canReadReason ? ["reason"] : []
+        ),
+        'titles' => array_merge(
+            ["Name", "Roll No","To Change"],
+            $canReadReason ? ["Reason"] : []
+        ),
     ]);
     }
 

@@ -38,16 +38,30 @@ class StudentSemesterOffFormController extends Controller
        $user = Auth::user();
        if($student_id)
          return $this->listFormsStudent($user, StudentSemesterOffForm::class, $student_id);
+
+       // Reason is often personal; only the scholar, HOD and admin get it
+       // (same capability ClerkController uses for leave reasons), so a
+       // supervisor or committee member browsing this list never sees it.
+       $canReadReason = $user->may('can_read_leave_reason');
        return $this->listForms($user, StudentSemesterOffForm::class,$request,null,false,[
-        'fields' => [
-            "name","roll_no","reason","semester_off_required"
-        ],
-        'extra_fields' => [
-            "semester_off_required" => function ($form) {
-                return $form->semester_off_required;
-            },
-        ],
-        'titles' => [ "Name", "Roll No","Reason","Semester Off Required"],
+        'fields' => array_merge(
+            ["name","roll_no"],
+            $canReadReason ? ["reason"] : [],
+            ["semester_off_required"]
+        ),
+        'extra_fields' => array_merge(
+            $canReadReason ? ["reason"] : [],
+            [
+                "semester_off_required" => function ($form) {
+                    return $form->semester_off_required;
+                },
+            ]
+        ),
+        'titles' => array_merge(
+            ["Name", "Roll No"],
+            $canReadReason ? ["Reason"] : [],
+            ["Semester Off Required"]
+        ),
     ]);
     }
 

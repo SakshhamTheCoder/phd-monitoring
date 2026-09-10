@@ -166,9 +166,10 @@ class Faculty extends Model
                 }
             }
         } else if ($this->user->current_role->role == 'faculty' && $roll_no) {
-            $super = Forms::where('student_id', $roll_no)->where('supervisor_available', true)->get();
             $data = [];
-            if ($super)
+            // Only forms for a student this faculty member actually supervises.
+            if ($this->supervisedStudents->contains('roll_no', $roll_no)) {
+                $super = Forms::where('student_id', $roll_no)->where('supervisor_available', true)->get();
                 foreach ($super as $s) {
                     $forms = $s->student->forms();
 
@@ -180,16 +181,37 @@ class Faculty extends Model
                         $data[] = $s;
                     }
                 }
-        } else if ($this->user->current_role->role == 'doctoral' || $this->user->current_role->role == 'external') {
+            }
+        } else if ($this->user->current_role->role == 'doctoral') {
+            $data = [];
+            // Only forms for a student on this faculty member's doctoral committee.
+            $committee = $this->doctoredStudents->pluck('roll_no');
             if ($roll_no) {
-                $data = Forms::where('doctoral_available', true)->where('student_id', $roll_no)->get();
-                $data = Forms::where('external_available', true)->where('student_id', $roll_no)->get();
+                if ($committee->contains($roll_no)) {
+                    $data = Forms::where('doctoral_available', true)->where('student_id', $roll_no)->get();
+                }
             } else {
-                $data = Forms::where('doctoral_available', true)->get();
-                $data = Forms::where('external_available', true)->get();
+                $data = Forms::where('doctoral_available', true)->whereIn('student_id', $committee)->get();
             }
             foreach ($data as $d) {
                 if ($d->stage == 'doctoral')
+                    $d['action_required'] = true;
+                else
+                    $d['action_required'] = false;
+            }
+        } else if ($this->user->current_role->role == 'external') {
+            $data = [];
+            // Only forms for a student on this faculty member's doctoral committee.
+            $committee = $this->doctoredStudents->pluck('roll_no');
+            if ($roll_no) {
+                if ($committee->contains($roll_no)) {
+                    $data = Forms::where('external_available', true)->where('student_id', $roll_no)->get();
+                }
+            } else {
+                $data = Forms::where('external_available', true)->whereIn('student_id', $committee)->get();
+            }
+            foreach ($data as $d) {
+                if ($d->stage == 'external')
                     $d['action_required'] = true;
                 else
                     $d['action_required'] = false;

@@ -44,7 +44,7 @@ class FacultyController extends Controller
 
         $user = Auth::user();
 
-        if($user->current_role->can_add_faculties !== 'true')
+        if(!$user->may('can_manage_faculties'))
         {
             return response()->json([
                 'message' => 'You do not have permission to add faculty'
@@ -142,7 +142,7 @@ class FacultyController extends Controller
     {
         $user = Auth::user();
 
-        if($user->current_role->can_add_faculties !== 'true')
+        if(!$user->may('can_manage_faculties'))
         {
             return response()->json([
                 'message' => 'You do not have permission to update faculty'
@@ -265,9 +265,17 @@ class FacultyController extends Controller
             ->orderBy(User::select('last_name')->whereColumn('users.id', 'faculty.user_id'));
 
         $faculties = $facultyQuery->paginate($perPage, ['*'], 'page', $page);
-    
-        $result = $faculties->getCollection()->map(function ($faculty) {
-            return [
+
+        // Same capabilities FacultyProfileController::show gates the profile on.
+        // The column is shared across every row, so unlike the profile's self
+        // exception, phone can't come back for just the viewer's own row: a
+        // column with one cell filled and the rest missing is worse than no
+        // column, so it stays out of `fields` for anyone without the capability.
+        $canSeePhone = $loggedInUser->may('can_read_faculty_phone');
+        $canSeeSupervision = $loggedInUser->may('can_read_faculty_supervision');
+
+        $result = $faculties->getCollection()->map(function ($faculty) use ($canSeePhone, $canSeeSupervision) {
+            $row = [
                 'id' => $faculty->faculty_code,
                 'faculty_code' => $faculty->faculty_code,
                 'first_name' => $faculty->user->first_name,
@@ -292,8 +300,24 @@ class FacultyController extends Controller
                 'supervised_outside'=> $faculty->supervised_outside,
                 'supervised_campus'=> $faculty->supervised_campus,
             ];
+
+            if (!$canSeePhone) {
+                unset($row['phone']);
+            }
+            if (!$canSeeSupervision) {
+                unset($row['supervised_students'], $row['doctored_students']);
+            }
+
+            return $row;
         });
-    
+
+        $fields = ['name', 'designation', 'email', 'department'];
+        $fieldsTitles = ['Name', 'Designation', 'Email', 'Department'];
+        if ($canSeePhone) {
+            $fields = ['name', 'designation', 'email', 'phone', 'department'];
+            $fieldsTitles = ['Name', 'Designation', 'Email', 'Phone', 'Department'];
+        }
+
         return response()->json([
             'data' => $result,
             'total' => $faculties->total(),
@@ -301,8 +325,8 @@ class FacultyController extends Controller
             'current_page' => $faculties->currentPage(),
             'totalPages' => $faculties->lastPage(),
             'role' => $role,
-            'fields' => ['name', 'designation', 'email', 'phone', 'department'],
-            'fieldsTitles' => ['Name', 'Designation', 'Email', 'Phone', 'Department'],
+            'fields' => $fields,
+            'fieldsTitles' => $fieldsTitles,
         ]);
     }
     
@@ -316,7 +340,7 @@ class FacultyController extends Controller
     {
         $user = Auth::user();
 
-        if($user->current_role->can_add_faculties !== 'true')
+        if(!$user->may('can_manage_faculties'))
         {
             return response()->json([
                 'message' => 'You do not have permission to upload faculty'
