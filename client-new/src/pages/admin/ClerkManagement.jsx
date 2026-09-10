@@ -5,6 +5,7 @@ import FilterBar from '../../components/filterBar/FilterBar';
 import { toast } from 'react-toastify';
 import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
+import { EMPTY_VALUE } from '../../utils/timeParse';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import ClerkForm from '../../components/clerkForm/ClerkForm';
@@ -81,7 +82,7 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
     );
     setSaving(false);
     if (res.success) {
-      toast.success(res.response.message || 'Departments updated');
+      toast.success(res.response.message || 'Departments updated.');
       setEditing(null);
       loadClerks();
     }
@@ -140,13 +141,13 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
             retryCount++;
             await new Promise(resolve => setTimeout(resolve, 1000));
           } else {
-            toast.error(`Batch ${batchIndex + 1} failed`);
+            toast.error(`Batch ${batchIndex + 1} failed.`);
             totalErrors += batch.length;
           }
         }
       }
 
-      toast.success(`Import completed: ${totalSuccess} created, ${totalUpdated} updated, ${totalErrors} errors`);
+      toast.success(`Import completed: ${totalSuccess} created, ${totalUpdated} updated, ${totalErrors} errors.`);
       if (allErrors.length > 0) {
         console.log('Import errors:', allErrors);
         toast.warning(`${totalErrors} rows failed. Check console for details.`);
@@ -158,7 +159,7 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
       loadClerks();
     } catch (error) {
       console.error('Error importing CSV:', error);
-      toast.error('Failed to import CSV');
+      toast.error('Failed to import CSV.');
     } finally {
       setBulkSubmitting(false);
       setUploadProgress(null);
@@ -217,18 +218,17 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
                 <th>Email</th>
                 <th>Departments</th>
                 <th>Actions</th>
-                <th></th>
               </tr>
             </thead>
             <tbody>
               {filteredClerks.map((clerk, idx) => (
-                <tr key={clerk.id} className="form-row row-link" tabIndex={0}>
+                <tr key={clerk.id} className="form-row">
                   <td>{idx + 1}</td>
                   <td>{clerk.name}</td>
                   <td>{clerk.email}</td>
                   <td>
                     {clerk.departments.length === 0 ? (
-                      <span style={{ color: 'var(--text-subtle)', fontStyle: 'italic' }}>Not assigned</span>
+                      <span style={{ color: 'var(--text-subtle)', fontStyle: 'italic' }}>{EMPTY_VALUE}</span>
                     ) : (
                       clerk.departments.map((d) => d.name).join(', ')
                     )}
@@ -263,9 +263,6 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
                         </div>
                       )}
                     </div>
-                  </td>
-                  <td className="row-go" title="Manage">
-                    <i className="fa fa-angle-right"></i>
                   </td>
                 </tr>
               ))}
@@ -308,7 +305,7 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
           }}
         >
           {departments.length === 0 ? (
-            <span style={{ color: 'var(--text-subtle)', fontStyle: 'italic' }}>No departments found.</span>
+            <span style={{ color: 'var(--text-subtle)', fontStyle: 'italic' }}>No departments yet.</span>
           ) : (
             departments.map((d) => {
               const selected = selectedDeptIds.includes(d.id);

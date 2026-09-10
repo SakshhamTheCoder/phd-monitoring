@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
-import { positionTypes, formatDate } from '../../data/projectsData';
+import { positionTypes } from '../../data/projectsData';
+import { formatDate, EMPTY_VALUE } from '../../utils/timeParse';
 import { badgeClass } from '../../data/badges';
 import { apiGetProject, apiListPositions, apiAddPosition, apiUpdatePosition, apiDeletePosition, apiListApplications, apiSetApplicationStatus, fileUrl } from '../../api/projects';
 import CustomModal from '../../components/forms/modal/CustomModal';
+import CustomButton from '../../components/forms/fields/CustomButton';
 import { toast } from 'react-toastify';
 import './ProjectRecruitment.css';
 
@@ -66,6 +68,8 @@ const ProjectRecruitment = () => {
     return <Layout><div style={{ textAlign: 'center', padding: '4rem', color: '#999' }}>Project not found.</div></Layout>;
   }
 
+  const canEdit = project.canEdit;
+
   // Applications for the currently-opened position.
   const posApps = selectedPosition ? applications.filter(a => a.posKey === selectedPosition.id) : [];
   const appStats = {
@@ -94,7 +98,7 @@ const ProjectRecruitment = () => {
       : await apiAddPosition(project.id, body);
     if (res.success) {
       setPositions(await apiListPositions(project.id));
-      toast.success(editingPosIdx !== null ? 'Position updated!' : 'Position published!');
+      toast.success(editingPosIdx !== null ? 'Position updated.' : 'Position published.');
       closePostForm();
     }
   };
@@ -135,9 +139,9 @@ const ProjectRecruitment = () => {
             <p className="page-subtitle">Manage positions and applications for this project.</p>
           </div>
           <div className="page-actions">
-            <button className="pr-post-btn" onClick={() => (showPostForm ? closePostForm() : openAddPos())}>
-              <i className="fa fa-plus"></i> Post Opening
-            </button>
+            {canEdit && (
+              <CustomButton text="Post Opening +" onClick={() => (showPostForm ? closePostForm() : openAddPos())} />
+            )}
           </div>
         </div>
 
@@ -194,7 +198,9 @@ const ProjectRecruitment = () => {
             <h3 className="pr-section-heading">Open Positions</h3>
             {positions.length > 0 ? (
               positions.map((pos, i) => (
-                <div key={i} className="pr-card pr-position-card pr-position-clickable" onClick={() => setSelectedPosition(pos)}>
+                // Applications are PI only server side, so for anyone else the
+                // card is the whole story and opening it would show an empty list.
+                <div key={i} className={`pr-card pr-position-card${canEdit ? ' pr-position-clickable' : ''}`} onClick={canEdit ? () => setSelectedPosition(pos) : undefined}>
                   <div className="pr-pos-top">
                     <div>
                       <span className="pr-pos-type">{pos.type}</span>
@@ -202,27 +208,33 @@ const ProjectRecruitment = () => {
                     </div>
                     <div className="pr-pos-top-right">
                       <span className={badgeClass(pos.status)}>{pos.status}</span>
-                      <span className="pr-pos-deadline"><i className="fa fa-calendar"></i> Deadline: {pos.deadline ? formatDate(pos.deadline) : '—'}</span>
-                      <div className="pr-pos-actions">
-                        <button className="pr-pos-edit" onClick={(e) => { e.stopPropagation(); togglePositionStatus(i); }} title={pos.status === 'Closed' ? 'Reopen position' : 'Close position'}>
-                          <i className={`fa ${pos.status === 'Closed' ? 'fa-unlock' : 'fa-lock'}`}></i>
-                        </button>
-                        <button className="pr-pos-edit" onClick={(e) => { e.stopPropagation(); openEditPos(i); }} title="Edit position"><i className="fa fa-pencil"></i></button>
-                        <button className="pr-pos-delete" onClick={(e) => { e.stopPropagation(); deletePosition(i); }} title="Delete position"><i className="fa fa-trash"></i></button>
-                      </div>
+                      <span className="pr-pos-deadline"><i className="fa fa-calendar"></i> Deadline: {formatDate(pos.deadline)}</span>
+                      {canEdit && (
+                        <div className="pr-pos-actions">
+                          <button className="pr-pos-edit" onClick={(e) => { e.stopPropagation(); togglePositionStatus(i); }} title={pos.status === 'Closed' ? 'Reopen position' : 'Close position'}>
+                            <i className={`fa ${pos.status === 'Closed' ? 'fa-unlock' : 'fa-lock'}`}></i>
+                          </button>
+                          <button className="pr-pos-edit" onClick={(e) => { e.stopPropagation(); openEditPos(i); }} title="Edit position"><i className="fa fa-pencil"></i></button>
+                          <button className="pr-pos-delete" onClick={(e) => { e.stopPropagation(); deletePosition(i); }} title="Delete position"><i className="fa fa-trash"></i></button>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="pr-pos-stats">
                     <div className="pr-pos-stat"><span>Filled</span><strong>{pos.selected ?? 0} / {pos.openings}</strong></div>
-                    <div className="pr-pos-stat"><span>Stipend</span><strong>{pos.stipend || '—'}</strong></div>
+                    <div className="pr-pos-stat"><span>Stipend</span><strong>{pos.stipend || EMPTY_VALUE}</strong></div>
                     <div className="pr-pos-stat"><span>Applicants</span><strong>{pos.applicants ?? 0}</strong></div>
                     <div className="pr-pos-stat"><span>Shortlisted</span><strong>{pos.shortlisted ?? 0}</strong></div>
                   </div>
-                  <div className="pr-pos-view-hint"><i className="fa fa-users"></i> View applications <i className="fa fa-arrow-right"></i></div>
+                  {canEdit && (
+                    <div className="pr-pos-view-hint"><i className="fa fa-users"></i> View applications <i className="fa fa-arrow-right"></i></div>
+                  )}
                 </div>
               ))
             ) : (
-              <div className="empty-state">No positions posted yet. Click "Post Opening" to create one.</div>
+              <div className="empty-state">
+                {canEdit ? 'No positions posted yet. Click "Post Opening" to create one.' : 'No positions posted yet.'}
+              </div>
             )}
           </>
         )}
@@ -291,13 +303,13 @@ const ProjectRecruitment = () => {
                 </div>
               </div>
               <div className="pr-modal-grid">
-                <div className="pr-modal-item"><span>Email</span><strong>{selectedApplicant.email || '—'}</strong></div>
-                <div className="pr-modal-item"><span>Phone</span><strong>{selectedApplicant.phone || '—'}</strong></div>
+                <div className="pr-modal-item"><span>Email</span><strong>{selectedApplicant.email || EMPTY_VALUE}</strong></div>
+                <div className="pr-modal-item"><span>Phone</span><strong>{selectedApplicant.phone || EMPTY_VALUE}</strong></div>
                 <div className="pr-modal-item"><span>Applied For</span><strong>{selectedApplicant.position}</strong></div>
                 <div className="pr-modal-item"><span>CGPA</span><strong>{selectedApplicant.cgpa}</strong></div>
                 <div className="pr-modal-item"><span>Degree</span><strong>{selectedApplicant.degree}</strong></div>
                 <div className="pr-modal-item"><span>Institute</span><strong>{selectedApplicant.institute}</strong></div>
-                <div className="pr-modal-item"><span>Applied On</span><strong>{selectedApplicant.appliedDate ? formatDate(selectedApplicant.appliedDate) : '—'}</strong></div>
+                <div className="pr-modal-item"><span>Applied On</span><strong>{formatDate(selectedApplicant.appliedDate)}</strong></div>
                 <div className="pr-modal-item full"><span>Research Interest</span><strong>{selectedApplicant.research}</strong></div>
                 <div className="pr-modal-item full"><span>Skills</span><strong>{(selectedApplicant.skills || []).join(', ')}</strong></div>
               </div>
@@ -310,12 +322,14 @@ const ProjectRecruitment = () => {
                   </div>
                 )}
               </div>
-              <div className="pr-modal-actions">
-                <button className="pr-decision-btn shortlist" onClick={() => setAppStatus('Shortlisted')}><i className="fa fa-star"></i> Shortlist</button>
-                <button className="pr-decision-btn interview" onClick={() => setAppStatus('Interview Scheduled')}><i className="fa fa-calendar"></i> Interview</button>
-                <button className="pr-decision-btn select" onClick={() => setAppStatus('Selected')}><i className="fa fa-check"></i> Select</button>
-                <button className="pr-decision-btn reject" onClick={() => setAppStatus('Rejected')}><i className="fa fa-times"></i> Reject</button>
-              </div>
+              {canEdit && (
+                <div className="pr-modal-actions">
+                  <button className="pr-decision-btn shortlist" onClick={() => setAppStatus('Shortlisted')}><i className="fa fa-star"></i> Shortlist</button>
+                  <button className="pr-decision-btn interview" onClick={() => setAppStatus('Interview Scheduled')}><i className="fa fa-calendar"></i> Interview</button>
+                  <button className="pr-decision-btn select" onClick={() => setAppStatus('Selected')}><i className="fa fa-check"></i> Select</button>
+                  <button className="pr-decision-btn reject" onClick={() => setAppStatus('Rejected')}><i className="fa fa-times"></i> Reject</button>
+                </div>
+              )}
             </>
           </CustomModal>
         )}

@@ -1,21 +1,21 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
 import AddPublication from '../../components/publications/AddPublication';
 import CustomModal from '../../components/forms/modal/CustomModal';
+import CustomButton from '../../components/forms/fields/CustomButton';
+import TableComponent from '../../components/forms/table/TableComponent';
 import Tabs from '../../components/tabs/Tabs';
-import PageHeader from '../../components/pageHeader/PageHeader';
-import InputSuggestions from '../../components/forms/fields/InputSuggestions';
-import { baseURL } from '../../api/urls';
+import InfoGrid from '../../components/profileFields/InfoGrid';
 import { generateAvatar } from '../../utils/profileImage';
-import { formatDate } from '../../data/projectsData';
+import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
 import { badgeClass } from '../../data/badges';
 import {
     apiResearchProfile, apiUpdateResearchProfile, apiSyncPublications,
     apiAddFacultyPublication, apiUpdateFacultyPublication, apiDeleteFacultyPublication,
 } from '../../api/researchProfile';
-import { apiCurrentFaculty } from '../../api/projects';
 import { toast } from 'react-toastify';
+import { profileIdentity, isProfileAuthor, splitAuthors } from '../../utils/authorMatch';
 import './ResearchProfile.css';
 
 const TYPE_OPTIONS = [
@@ -47,23 +47,28 @@ const CATEGORY_TO_FIELDS = {
     patents: { publication_type: 'patent', type: null },
 };
 
-const emptyIdentifiers = {
-    orcid_id: '', scopus_id: '', google_scholar_id: '', joined_on: '', citations: '', h_index: '', expertise: '',
+// A supervised student's name opens their profile, as it did when these tables
+// lived on the dashboard.
+const studentNameCell = {
+    key: 'name',
+    component: ({ row }) => <Link to={`/students/${row.roll_no}`}>{row.name}</Link>,
 };
 
-const ResearchProfile = () => {
-    // No code in the URL means "my own profile".
+const emptyProfileForm = {
+    phone: '', expertise: '',
+    orcid_id: '', scopus_id: '', google_scholar_id: '', joined_on: '', citations: '', h_index: '',
+};
+
+const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => {
+    // No code in the URL and none passed in means "my own profile".
     const { facultyCode: routeCode } = useParams();
-    const navigate = useNavigate();
-    const [facultyCode, setFacultyCode] = useState(routeCode || null);
+    const [facultyCode, setFacultyCode] = useState(routeCode || codeProp || null);
     const [data, setData] = useState(null);
-    const [activeTab, setActiveTab] = useState('faculty');
+    const [activeTab, setActiveTab] = useState(null);
     const [filterYears, setFilterYears] = useState([]);
     const [filterType, setFilterType] = useState('All');
     const [filterSource, setFilterSource] = useState('All');
     const [search, setSearch] = useState('');
-    const [editing, setEditing] = useState(false);
-    const [identifiers, setIdentifiers] = useState(emptyIdentifiers);
     const [showPubForm, setShowPubForm] = useState(false);
     const [editPub, setEditPub] = useState(null);
     // Ids ticked for bulk reclassification. Imported publications arrive with
@@ -73,9 +78,11 @@ const ResearchProfile = () => {
     const [bulkTarget, setBulkTarget] = useState('');
     const [bulkBusy, setBulkBusy] = useState(false);
     const [syncing, setSyncing] = useState(false);
-    // An admin has no faculty record, so "my own profile" does not exist for
-    // them. Without this the page waited on a code that was never coming.
-    const [resolving, setResolving] = useState(!routeCode);
+    const [editingProfile, setEditingProfile] = useState(false);
+    const [profileForm, setProfileForm] = useState(emptyProfileForm);
+    const researchRef = useRef(null);
+    // Embedded on the dashboard, the page chrome is the host's job.
+    const Shell = embedded ? React.Fragment : Layout;
 
     const load = useCallback(async () => {
         if (!facultyCode) return;
@@ -84,42 +91,24 @@ const ResearchProfile = () => {
     }, [facultyCode]);
 
     useEffect(() => {
-        if (routeCode) { setFacultyCode(routeCode); setResolving(false); return; }
-        apiCurrentFaculty()
-            .then(f => { if (f) setFacultyCode(f.id); })
-            .finally(() => setResolving(false));
-    }, [routeCode]);
+        setFacultyCode(routeCode || codeProp || null);
+    }, [routeCode, codeProp]);
 
     useEffect(() => { load(); }, [load]);
 
-    if (resolving) return <Layout><div className="loading-state">Loading Profile...</div></Layout>;
+    if (!data) return <Shell><div className="loading-state">Loading Profile…</div></Shell>;
 
-    // No code in the URL and no faculty record of our own: pick whose to show.
-    if (!facultyCode) {
-        return (
-            <Layout>
-                <PageHeader
-                    title="Research Profile"
-                    subtitle="Your account is not linked to a faculty record, so pick whose profile to open."
-                />
-                <div className="card" style={{ maxWidth: '520px' }}>
-                    <InputSuggestions
-                        apiUrl={`${baseURL}/suggestions/faculty`}
-                        label="Find a faculty member"
-                        hint="Type a name, code or email..."
-                        fields={['name', 'department']}
-                        onSelect={(f) => f && f.id && navigate(`/faculty/${f.id}/profile`)}
-                    />
-                </div>
-            </Layout>
-        );
-    }
-
-    if (!data) return <Layout><div className="loading-state">Loading Profile...</div></Layout>;
-
-    const { profile, can_edit: canEdit, can_sync: canSync } = data;
-    const isOwnTab = activeTab === 'faculty';
-    const groups = isOwnTab ? data.publications : data.student_publications;
+    const {
+        profile,
+        can_edit: canEdit,
+        can_sync: canSync,
+        can_view_supervision: canViewSupervision = false,
+        is_self: isSelf = false,
+        counts = {},
+    } = data;
+    const tab = activeTab ?? 'faculty';
+    const isOwnTab = tab === 'faculty';
+    const groups = isOwnTab ? data.publications : (data.student_publications || {});
 
     const profileImage = profile.name
         ? (() => {
@@ -150,30 +139,78 @@ const ResearchProfile = () => {
 
     const formatAuthors = (authors) => {
         if (!authors) return '';
-        if (!profile.name) return authors;
-        const parts = String(authors).split(new RegExp(`(${profile.name})`, 'gi'));
-        return parts.map((part, i) =>
-            part.toLowerCase() === profile.name.toLowerCase() ? <strong key={i}>{part}</strong> : part
+        const id = profileIdentity(profile.name);
+        if (!id) return authors;
+        return splitAuthors(authors).map((piece, i) =>
+            isProfileAuthor(piece, id) ? <strong key={i}>{piece}</strong> : piece
         );
     };
 
-    const startEdit = () => {
-        setIdentifiers({
+    const expertiseText = Array.isArray(profile.expertise)
+        ? profile.expertise.join(', ')
+        : profile.expertise || '';
+
+    const startProfileEdit = () => {
+        setProfileForm({
+            phone: profile.phone || '',
+            expertise: expertiseText,
             orcid_id: profile.orcid_id || '',
             scopus_id: profile.scopus_id || '',
             google_scholar_id: profile.google_scholar_id || '',
             joined_on: profile.joined || '',
             citations: profile.citations ?? '',
             h_index: profile.h_index ?? '',
-            expertise: Array.isArray(profile.expertise) ? profile.expertise.join(', ') : profile.expertise || '',
         });
-        setEditing(true);
+        setEditingProfile(true);
     };
 
-    const saveIdentifiers = async () => {
-        const res = await apiUpdateResearchProfile(facultyCode, identifiers);
-        if (res.success) { setEditing(false); toast.success('Profile updated.'); load(); }
+    const setProfileField = (field, value) => setProfileForm(prev => ({ ...prev, [field]: value }));
+
+    const saveProfile = async () => {
+        const res = await apiUpdateResearchProfile(facultyCode, profileForm);
+        if (res.success) { setEditingProfile(false); toast.success('Profile updated.'); load(); }
     };
+
+    /**
+     * Who this faculty member is. Phone is absent, not blank, for a viewer who
+     * may not see it, so the row goes with it.
+     */
+    const identityRows = [
+        { label: 'Email', value: profile.email },
+        profile.phone !== undefined && { label: 'Phone', value: profile.phone, field: 'phone' },
+        { label: 'Faculty Code', value: profile.faculty_code },
+        { label: 'Supervised (Within TIET)', value: profile.supervised_campus ?? 0 },
+        { label: 'Supervised (Outside TIET)', value: profile.supervised_outside ?? 0 },
+        // A viewer who may not see who the students are still sees how many.
+        ...(canViewSupervision ? [] : [
+            { label: 'Supervising', value: counts.supervised_count ?? 0 },
+            { label: 'Doctoral Committees', value: counts.doctoral_committee_count ?? 0 },
+        ]),
+        profile.website && { label: 'Website', value: profile.website },
+        {
+            label: 'Area of Expertise',
+            value: expertiseText,
+            field: 'expertise',
+            hint: 'Separate each area with a comma.',
+            span: 'all',
+        },
+    ];
+
+    /** What the sync runs on, kept beside the Sync button that uses it. */
+    const identifierRows = [
+        { label: 'ORCID iD', value: profile.orcid_id, field: 'orcid_id' },
+        { label: 'Scopus ID', value: profile.scopus_id, field: 'scopus_id' },
+        {
+            label: 'Google Scholar ID',
+            field: 'google_scholar_id',
+            node: profile.google_scholar_id
+                ? <a href={`https://scholar.google.com/citations?user=${profile.google_scholar_id}`} target="_blank" rel="noopener noreferrer">{profile.google_scholar_id}</a>
+                : undefined,
+        },
+        { label: 'Citations', value: profile.citations, field: 'citations', type: 'number' },
+        { label: 'h-index', value: profile.h_index, field: 'h_index', type: 'number' },
+        { label: 'Joined', value: profile.joined && formatDate(profile.joined), field: 'joined_on', type: 'date' },
+    ];
 
     const runSync = async () => {
         setSyncing(true);
@@ -325,6 +362,24 @@ const ResearchProfile = () => {
 
     const actionHeader = canEdit && isOwnTab ? <th></th> : null;
 
+    // A column's width comes from its heading, so the classes are picked off the
+    // label rather than the position: the select checkbox shifts every index,
+    // and the year/title columns sit in different places from table to table.
+    const columnClass = (label) => {
+        if (label.startsWith('YEAR OF')) return 'rp-col-year';
+        if (label.startsWith('TITLE OF')) return 'rp-col-title';
+        return undefined;
+    };
+
+    // "YEAR OF PUBLICATION" on one line holds the column open to the width of the
+    // whole phrase. Broken after "OF", the column only has to fit "PUBLICATION",
+    // and the space saved goes to the title.
+    const headingText = (label) => {
+        if (!label.startsWith('YEAR OF')) return label;
+        const cut = label.lastIndexOf(' ');
+        return (<>{label.slice(0, cut)}<br />{label.slice(cut + 1)}</>);
+    };
+
     const table = (key, title, columns, renderRow) => (
         filtered[key] && filtered[key].length > 0 && (
             <div className="rp-table-section" key={key}>
@@ -332,14 +387,14 @@ const ResearchProfile = () => {
                     {title}
                     {canEdit && isOwnTab && (
                         <button type="button" className="rp-select-all" onClick={() => toggleGroup(key)}>
-                            select all
+                            Select all
                         </button>
                     )}
                 </h3>
                 <div className="data-table-wrap">
                     <table className="data-table">
-                        <thead><tr>{selectHeader}{columns.map(c => <th key={c}>{c}</th>)}<th>SOURCE</th>{actionHeader}</tr></thead>
-                        <tbody>{filtered[key].map(pub => <tr key={`${pub.source}-${pub.id}`}>{selectCell(pub)}{renderRow(pub)}<td>{sourceBadge(pub)}</td>{rowActions(pub)}</tr>)}</tbody>
+                        <thead><tr>{selectHeader}<th className="rp-col-num"></th>{columns.map(c => <th key={c} className={columnClass(c)}>{headingText(c)}</th>)}<th>SOURCE</th>{actionHeader}</tr></thead>
+                        <tbody>{filtered[key].map((pub, i) => <tr key={`${pub.source}-${pub.id}`}>{selectCell(pub)}<td className="rp-col-num">{i + 1}</td>{renderRow(pub)}<td>{sourceBadge(pub)}</td>{rowActions(pub)}</tr>)}</tbody>
                     </table>
                 </div>
             </div>
@@ -347,16 +402,164 @@ const ResearchProfile = () => {
     );
 
     const doiCell = (pub) => (
-        <td>{pub.doi_link ? <a href={pub.doi_link} target="_blank" rel="noopener noreferrer"><i className="fa fa-link"></i> DOI</a> : '—'}</td>
+        <td>{pub.doi_link ? <a href={pub.doi_link} target="_blank" rel="noopener noreferrer"><i className="fa fa-link"></i> DOI</a> : EMPTY_VALUE}</td>
     );
 
     return (
-        <Layout>
+        <Shell>
             <div className="rp-container">
-                <div className="rp-top-nav">
-                    <div className="rp-nav-left">
-                        <h1 className="page-title">Research Profile</h1>
+                <div className="faculty-container">
+                    <div className="faculty-header">
+                        <div>
+                            <h2>{profile.name}</h2>
+                            <p className="faculty-sub">{profile.designation}, {profile.department}</p>
+                        </div>
+                        {/* Research lives on the same page but stays folded away:
+                            most visits are about supervision. Kept beside the name
+                            so it is seen without scrolling past the tables. */}
+                        <div className="profile-actions">
+                            {canEdit && !editingProfile && (
+                                <button className="profile-edit-small" onClick={startProfileEdit}>
+                                    <i className="fa fa-pencil" aria-hidden="true"></i> Edit
+                                </button>
+                            )}
+                            {canEdit && editingProfile && (
+                                <>
+                                    <CustomButton text="Save" onClick={saveProfile} />
+                                    <CustomButton text="Cancel" variant="secondary" onClick={() => setEditingProfile(false)} />
+                                </>
+                            )}
+                            <CustomButton
+                                text="Research Profile"
+                                variant="secondary"
+                                onClick={() => researchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                            />
+                        </div>
                     </div>
+
+                    <div className="faculty-details">
+                        <InfoGrid
+                            className="faculty-info-grid"
+                            rows={identityRows}
+                            editing={editingProfile}
+                            values={profileForm}
+                            onChange={setProfileField}
+                        />
+
+                        {/* Same card as the fields above, so one Edit shows
+                            everything that one Save will write. */}
+                        <h4 className="faculty-details-heading">Academic Identifiers</h4>
+                        <InfoGrid
+                            className="faculty-info-grid"
+                            rows={identifierRows}
+                            editing={editingProfile}
+                            values={profileForm}
+                            onChange={setProfileField}
+                        />
+                    </div>
+
+                    {canViewSupervision && (
+                        <>
+                            <div className="faculty-table-section">
+                                <h3>Supervising Students</h3>
+                                <TableComponent
+                                    data={data.supervised_students || []}
+                                    keys={['name', 'roll_no', 'email', 'date_of_admission']}
+                                    titles={['Name', 'Roll No', 'Email', 'Date of Admission']}
+                                    rowStyle={() => ({ cursor: 'pointer' })}
+                                    components={[studentNameCell]}
+                                />
+                                {!(data.supervised_students || []).length && (
+                                    <p className="empty-msg">No students currently being supervised.</p>
+                                )}
+                            </div>
+
+                            <div className="faculty-table-section">
+                                <h3>Doctoral Committee Membership</h3>
+                                <TableComponent
+                                    data={data.doctoral_committee_students || []}
+                                    keys={['name', 'roll_no', 'email', 'department', 'date_of_admission']}
+                                    titles={['Name', 'Roll No', 'Email', 'Department', 'Date of Admission']}
+                                    rowStyle={() => ({ cursor: 'pointer' })}
+                                    components={[studentNameCell]}
+                                />
+                                {!(data.doctoral_committee_students || []).length && (
+                                    <p className="empty-msg">Not a member of any doctoral committee.</p>
+                                )}
+                            </div>
+                        </>
+                    )}
+
+                </div>
+
+                <div className="rp-research" ref={researchRef}>
+                    <div className="rp-right-col">
+                        <div className="rp-sync-strip">
+                            <span>
+                                Source <strong>{profile.last_sync_source ? SOURCE_LABELS[profile.last_sync_source] : 'not synced'}</strong>
+                                <span className="rp-sync-dot">·</span>
+                                Last synced <strong>{formatDate(profile.last_sync, 'never')}</strong>
+                            </span>
+                            {canEdit && canSync && (
+                                <button className="rp-sync-btn" onClick={runSync} disabled={syncing} title="Sync from ORCID/Scopus">
+                                    <i className={`fa ${syncing ? 'fa-spinner fa-spin' : 'fa-refresh'}`}></i> {syncing ? 'Syncing…' : 'Sync'}
+                                </button>
+                            )}
+                            {canEdit && !canSync && (
+                                <span className="rp-sync-hint">Add an ORCID or Scopus ID to sync automatically.</span>
+                            )}
+                        </div>
+                    </div>
+
+                    <Tabs
+                        value={tab}
+                        onChange={setActiveTab}
+                        items={[
+                            { value: 'faculty', label: 'Faculty Publications' },
+                            ...(canViewSupervision ? [{ value: 'phd', label: 'PhD Student Publications' }] : []),
+                        ]}
+                    />
+
+                <div className="rp-tallies">
+                    <span className="rp-tally"><strong>{profile.total_publications}</strong> total</span>
+                    <span className="rp-tally is-green"><strong>{profile.synced}</strong> synced</span>
+                    <span className="rp-tally is-yellow"><strong>{profile.self_reported}</strong> self-reported</span>
+                </div>
+
+                <div className="rp-filter-bar">
+                    <div className="rp-filters">
+                        <div className="rp-filter">
+                            <label htmlFor="rp-year">Year</label>
+                            <select
+                                id="rp-year"
+                                value="Select"
+                                onChange={e => {
+                                    const val = e.target.value;
+                                    if (val !== 'Select' && !filterYears.includes(val)) setFilterYears([...filterYears, val]);
+                                }}
+                            >
+                                <option value="Select">All years</option>
+                                {allYears.map(y => <option key={y} value={y}>{y}</option>)}
+                            </select>
+                        </div>
+
+                        <div className="rp-filter">
+                            <label htmlFor="rp-type">Type</label>
+                            <select id="rp-type" value={filterType} onChange={e => setFilterType(e.target.value)}>
+                                <option value="All">All</option>
+                                {TYPE_OPTIONS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                            </select>
+                        </div>
+
+                        <div className="rp-filter">
+                            <label htmlFor="rp-source">Source</label>
+                            <select id="rp-source" value={filterSource} onChange={e => setFilterSource(e.target.value)}>
+                                <option value="All">All</option>
+                                {availableSources.map(s => <option key={s} value={s}>{SOURCE_LABELS[s] || s}</option>)}
+                            </select>
+                        </div>
+                    </div>
+
                     <div className="rp-search-bar">
                         <i className="fa fa-search"></i>
                         <input
@@ -366,178 +569,31 @@ const ResearchProfile = () => {
                             onChange={e => setSearch(e.target.value)}
                         />
                     </div>
-                </div>
 
-                <div className="rp-banner-grid">
-                    <div className="rp-user-card">
-                        <div className="rp-avatar-wrapper">
-                            <img src={profileImage} alt="Profile" className="rp-avatar" />
-                            <div className="rp-status-badge"></div>
-                        </div>
-                        <h2>{profile.name}</h2>
-                        <h3 className="rp-designation">{profile.designation}</h3>
-                        <p className="rp-department">{profile.department}</p>
-                        <div className="rp-user-stats">
-                            <div className="rp-stat-row"><span>Joined</span><strong>{profile.joined ? formatDate(profile.joined) : '—'}</strong></div>
-                            <div className="rp-stat-row"><span>Publications</span><strong>{profile.total_publications}</strong></div>
-                            <div className="rp-stat-row"><span>Citations</span><strong>{profile.citations ?? '—'}</strong></div>
-                            <div className="rp-stat-row"><span>h-index</span><strong>{profile.h_index ?? '—'}</strong></div>
-                        </div>
-                    </div>
-
-                    <div className="rp-middle-col">
-                        <div className="rp-info-card">
-                            <h4 className="rp-card-title border-red">Contact Information</h4>
-                            <div className="rp-contact-list">
-                                <div className="rp-contact-item">
-                                    <i className="fa fa-envelope border-icon"></i>
-                                    <div><label>INSTITUTIONAL EMAIL</label><p>{profile.email || '—'}</p></div>
-                                </div>
-                                <div className="rp-contact-item">
-                                    <i className="fa fa-phone border-icon"></i>
-                                    <div><label>PHONE</label><p>{profile.phone || '—'}</p></div>
-                                </div>
-                                <div className="rp-contact-item">
-                                    <i className="fa fa-globe border-icon"></i>
-                                    <div><label>WEBSITE</label><p>{profile.website || '—'}</p></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="rp-stats-cards">
-                            <div className="rp-mini-stat"><label>TOTAL</label><span className="stat-num black">{profile.total_publications}</span></div>
-                            <div className="rp-mini-stat stat-green"><label>SYNCED</label><span className="stat-num green">{profile.synced}</span></div>
-                            <div className="rp-mini-stat stat-yellow"><label>SELF-REPORTED</label><span className="stat-num yellow">{profile.self_reported}</span></div>
-                        </div>
-                    </div>
-
-                    <div className="rp-right-col">
-                        <div className="rp-info-card">
-                            <div className="rp-card-head-row">
-                                <h4 className="rp-card-title border-red">Academic Identifiers</h4>
-                                {canEdit && !editing && (
-                                    <button className="rp-inline-edit" onClick={startEdit} title="Edit identifiers"><i className="fa fa-pencil"></i></button>
-                                )}
-                            </div>
-                            {editing ? (
-                                <div className="rp-id-form">
-                                    <label>ORCID iD</label>
-                                    <input value={identifiers.orcid_id} onChange={e => setIdentifiers({ ...identifiers, orcid_id: e.target.value })} placeholder="0000-0002-1825-0097" />
-                                    <label>Scopus ID</label>
-                                    <input value={identifiers.scopus_id} onChange={e => setIdentifiers({ ...identifiers, scopus_id: e.target.value })} />
-                                    <label>Google Scholar ID</label>
-                                    <input value={identifiers.google_scholar_id} onChange={e => setIdentifiers({ ...identifiers, google_scholar_id: e.target.value })} />
-                                    <label>Joined On</label>
-                                    <input type="date" value={identifiers.joined_on || ''} onChange={e => setIdentifiers({ ...identifiers, joined_on: e.target.value })} />
-                                    <label>Citations</label>
-                                    <input type="number" value={identifiers.citations} onChange={e => setIdentifiers({ ...identifiers, citations: e.target.value })} />
-                                    <label>h-index</label>
-                                    <input type="number" value={identifiers.h_index} onChange={e => setIdentifiers({ ...identifiers, h_index: e.target.value })} />
-                                    <label>Area of Expertise (comma separated)</label>
-                                    <input value={identifiers.expertise} onChange={e => setIdentifiers({ ...identifiers, expertise: e.target.value })} placeholder="e.g., Machine Learning, Data Mining, Cyber Security" />
-                                    <div className="rp-id-form-actions">
-                                        <button className="rp-btn-outline" onClick={() => setEditing(false)}>Cancel</button>
-                                        <button className="rp-btn-primary" onClick={saveIdentifiers}>Save</button>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="rp-contact-list">
-                                    <div className="rp-contact-item">
-                                        <i className="fa fa-id-card border-icon"></i>
-                                        <div><label>ORCID ID</label><p>{profile.orcid_id || '—'}</p></div>
-                                    </div>
-                                    <div className="rp-contact-item">
-                                        <i className="fa fa-database border-icon"></i>
-                                        <div><label>SCOPUS ID</label><p>{profile.scopus_id || '—'}</p></div>
-                                    </div>
-                                    <div className="rp-contact-item">
-                                        <i className="fa fa-graduation-cap border-icon"></i>
-                                        <div>
-                                            <label>GOOGLE SCHOLAR ID</label>
-                                            <p>{profile.google_scholar_id
-                                                ? <a href={`https://scholar.google.com/citations?user=${profile.google_scholar_id}`} target="_blank" rel="noopener noreferrer">{profile.google_scholar_id}</a>
-                                                : '—'}</p>
-                                        </div>
-                                    </div>
-                                    <div className="rp-contact-item">
-                                        <i className="fa fa-lightbulb border-icon"></i>
-                                        <div><label>AREA OF EXPERTISE</label><p>{Array.isArray(profile.expertise) && profile.expertise.length ? profile.expertise.join(', ') : '—'}</p></div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="rp-sync-card">
-                            <div className="rp-sync-info">
-                                <h4>External Sync Status</h4>
-                                <p>Source: <strong>{profile.last_sync_source ? SOURCE_LABELS[profile.last_sync_source] : 'Not synced'}</strong></p>
-                                <p>Last synced: <strong>{formatDate(profile.last_sync, 'Never')}</strong></p>
-                            </div>
-                            {canEdit && canSync && (
-                                <button className="rp-sync-btn" onClick={runSync} disabled={syncing} title={syncing ? 'Syncing...' : 'Sync from ORCID/Scopus'}>
-                                    <i className={`fa ${syncing ? 'fa-spinner fa-spin' : 'fa-refresh'}`}></i> {syncing ? 'Syncing...' : 'Sync Publications'}
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                <Tabs
-                    value={activeTab}
-                    onChange={setActiveTab}
-                    items={[
-                        { value: 'phd', label: 'PhD Student Publications' },
-                        { value: 'faculty', label: 'Faculty Publications' },
-                    ]}
-                />
-
-                <div className="rp-filter-bar">
-                    <div className="rp-filters">
-                        <label>YEAR</label>
-                        <div className="rp-year-filter">
-                            <select
-                                value="Select"
-                                onChange={e => {
-                                    const val = e.target.value;
-                                    if (val !== 'Select' && !filterYears.includes(val)) setFilterYears([...filterYears, val]);
-                                }}
-                                className="rp-year-input"
-                            >
-                                <option value="Select">Select year(s)</option>
-                                {allYears.map(y => <option key={y} value={y}>{y}</option>)}
-                            </select>
-                            {filterYears.length > 0 && (
-                                <div className="rp-year-tags">
-                                    {filterYears.map(y => (
-                                        <span key={y} className="rp-year-tag">
-                                            {y} <button type="button" onClick={() => setFilterYears(filterYears.filter(v => v !== y))}>&times;</button>
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        <label>TYPE</label>
-                        <select value={filterType} onChange={e => setFilterType(e.target.value)}>
-                            <option value="All">All</option>
-                            {TYPE_OPTIONS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                        </select>
-
-                        <label>SOURCE</label>
-                        <select value={filterSource} onChange={e => setFilterSource(e.target.value)}>
-                            <option value="All">All</option>
-                            {availableSources.map(s => <option key={s} value={s}>{SOURCE_LABELS[s] || s}</option>)}
-                        </select>
-                    </div>
                     <div className="rp-filter-actions">
                         {canEdit && isOwnTab && (
                             <button className="rp-add-btn" onClick={() => { setEditPub(null); setShowPubForm(true); }}>
-                                <i className="fa fa-plus"></i> ADD PUBLICATION
+                                <i className="fa fa-plus"></i> Add publication
                             </button>
                         )}
-                        <button className="rp-export-btn" onClick={exportCSV}><i className="fa fa-download"></i> EXPORT CSV</button>
+                        <button className="rp-export-btn" onClick={exportCSV}>
+                            <i className="fa fa-download"></i> Export CSV
+                        </button>
                     </div>
                 </div>
+
+                {/* Chosen years sit under the bar rather than inside it, so adding
+                    one cannot change the height of the controls beside it. */}
+                {filterYears.length > 0 && (
+                    <div className="rp-year-tags">
+                        {filterYears.map(y => (
+                            <span key={y} className="rp-year-tag">
+                                {y}
+                                <button type="button" aria-label={`Remove ${y}`} onClick={() => setFilterYears(filterYears.filter(v => v !== y))}>&times;</button>
+                            </span>
+                        ))}
+                    </div>
+                )}
 
                 {/* Appears only once something is ticked, so it stays out of the
                     way until it is needed. */}
@@ -578,59 +634,62 @@ const ResearchProfile = () => {
                     {table('uncategorised', 'Unclassified (needs a category)',
                         ['AUTHOR(S)', 'YEAR OF PUBLICATION', 'TITLE OF PAPER', 'PUBLISHED IN', 'DOI'],
                         pub => (<>
-                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || '—'}</td><td>{pub.title}</td>
-                            <td>{pub.name || '—'}</td>{doiCell(pub)}
+                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td><td>{pub.title}</td>
+                            <td>{pub.name || EMPTY_VALUE}</td>{doiCell(pub)}
                         </>))}
 
                     {table('sci', 'SCI/SCIE/SSCI/ABDC/AHCI Journal',
                         ['AUTHOR(S)', 'YEAR OF PUBLICATION', 'TITLE OF PAPER', 'NAME OF THE JOURNAL', 'IMPACT FACTOR', 'DOI'],
                         pub => (<>
-                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || '—'}</td><td>{pub.title}</td>
-                            <td>{pub.name}</td><td>{pub.impact_factor ?? '—'}</td>{doiCell(pub)}
+                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td><td>{pub.title}</td>
+                            <td>{pub.name}</td><td>{pub.impact_factor ?? EMPTY_VALUE}</td>{doiCell(pub)}
                         </>))}
 
                     {table('non_sci', 'Papers in Scopus Journal',
                         ['AUTHOR(S)', 'YEAR OF PUBLICATION', 'TITLE OF PAPER', 'NAME OF THE JOURNAL', 'IMPACT FACTOR', 'NAME OF PUBLISHER'],
                         pub => (<>
-                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || '—'}</td><td>{pub.title}</td>
-                            <td>{pub.name}</td><td>{pub.impact_factor ?? '—'}</td><td>{pub.publisher || '—'}</td>
+                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td><td>{pub.title}</td>
+                            <td>{pub.name}</td><td>{pub.impact_factor ?? EMPTY_VALUE}</td><td>{pub.publisher || EMPTY_VALUE}</td>
                         </>))}
 
                     {table('international', 'Papers in International Conferences',
                         ['AUTHOR(S)', 'YEAR OF PUBLICATION', 'TITLE OF PAPER', 'NAME OF CONFERENCE', 'PLACE OF CONFERENCE', 'DOI'],
                         pub => (<>
-                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || '—'}</td><td>{pub.title}</td>
-                            <td>{pub.name}</td><td>{pub.country || '—'}</td>{doiCell(pub)}
+                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td><td>{pub.title}</td>
+                            <td>{pub.name}</td><td>{pub.country || EMPTY_VALUE}</td>{doiCell(pub)}
                         </>))}
 
                     {table('national', 'Papers in National Conferences',
                         ['AUTHOR(S)', 'YEAR OF PUBLICATION', 'TITLE OF PAPER', 'NAME OF CONFERENCE', 'PLACE OF CONFERENCE', 'DOI'],
                         pub => (<>
-                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || '—'}</td><td>{pub.title}</td>
-                            <td>{pub.name}</td><td>{pub.city || '—'}</td>{doiCell(pub)}
+                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td><td>{pub.title}</td>
+                            <td>{pub.name}</td><td>{pub.city || EMPTY_VALUE}</td>{doiCell(pub)}
                         </>))}
 
                     {table('book', 'Book/Book Chapters',
                         ['AUTHOR(S)', 'YEAR OF PUBLICATION', 'NAME OF BOOK', 'TITLE OF PAPER', 'NAME OF PUBLISHER'],
                         pub => (<>
-                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || '—'}</td><td>{pub.name}</td>
-                            <td>{pub.title}</td><td>{pub.publisher || '—'}</td>
+                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td><td>{pub.name}</td>
+                            <td>{pub.title}</td><td>{pub.publisher || EMPTY_VALUE}</td>
                         </>))}
 
                     {table('patents', 'Patents',
                         ['AUTHOR(S)', 'YEAR OF AWARD', 'TITLE OF PATENT', 'INTERNATIONAL/NATIONAL'],
                         pub => (<>
-                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || '—'}</td>
-                            <td>{pub.title}</td><td>{pub.country || '—'}</td>
+                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td>
+                            <td>{pub.title}</td><td>{pub.country || EMPTY_VALUE}</td>
                         </>))}
 
                     {Object.values(filtered).every(list => !list || !list.length) && (
                         <div className="empty-state">
                             {isOwnTab
-                                ? 'No publications recorded yet. Add one, or sync from ORCID or Scopus.'
+                                ? (canEdit
+                                    ? 'No publications recorded yet. Add one, or sync from ORCID or Scopus.'
+                                    : 'No publications recorded yet.')
                                 : 'No publications from supervised students match these filters.'}
                         </div>
                     )}
+                </div>
                 </div>
 
                 <CustomModal
@@ -646,7 +705,7 @@ const ResearchProfile = () => {
                     />
                 </CustomModal>
             </div>
-        </Layout>
+        </Shell>
     );
 };
 

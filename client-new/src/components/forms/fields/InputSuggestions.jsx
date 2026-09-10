@@ -120,7 +120,7 @@ useEffect(() => {
                     value={inputValue}
                     onChange={handleInputChange}
                     onFocus={() => setIsFocused(true)}
-                    placeholder={hintText}
+                    placeholder={isLocked && !inputValue ? 'Not provided' : hintText}
                     className="input-field"
                     disabled={isLocked}
                 />

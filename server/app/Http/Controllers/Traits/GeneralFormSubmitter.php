@@ -49,6 +49,26 @@ trait GeneralFormSubmitter
             if ($formInstance->{$role . '_lock'} || ($role == 'faculty' && $formInstance->supervisor_lock)) {
                 return response()->json(['message' => 'You are not authorized to access this resource'], 403);
             }
+
+            // The lock above records that a role has already acted; it does not
+            // say whose turn it is. Without this, a role further down the chain
+            // could approve a form still sitting with an earlier one, because
+            // current_step was written on every transition and never read back.
+            //
+            // `stage` is the cursor, not current_step: current_step is written on
+            // every transition but is not maintained everywhere a form is created,
+            // so reading it here rejects legitimate approvals.
+            //
+            // Fails open on an empty stage, so a form written before this check
+            // cannot stall. The faculty step is stored as 'supervisor'.
+            $expected = $formInstance->stage ?: null;
+            $acting = $role === 'faculty' ? 'supervisor' : $role;
+            if ($expected !== null && $expected !== $acting) {
+                return response()->json([
+                    'message' => 'This form is waiting on ' . $this->roleLabel($expected) . ', not you.'
+                        . $this->switchHint($user, $formInstance, $expected),
+                ], 403);
+            }
             Log::info('Form instance found: ' . $formInstance->id);
             $this->handleRoleSpecificLogic($user, $formInstance, $role, $extraSteps);
 
@@ -204,10 +224,7 @@ trait GeneralFormSubmitter
     private function handleFallbackToPreviousLevel($user, $formInstance, $previousLevel, $comments, $model)
     {
 
-        $link = '/forms/' . $this->getFormType($model) . '/' . $formInstance->id;
-        if ($this->getFormType($model) == 'presentation') {
-            $link = '/presentation/semester/' . $formInstance->period_of_report . '/' . $formInstance->id;
-        }
+        $link = $this->formLink($formInstance, $model);
         $this->formNotification($formInstance->student, $this->getFormType($model) . ' form for ' . $formInstance->student?->user->name() . ' has been rejected', 'Form has been rejected',  $link, $previousLevel, true);
 
         if ($previousLevel == 'faculty') {
@@ -239,10 +256,7 @@ trait GeneralFormSubmitter
             $formInstance->current_step = $index;
             $formInstance->maximum_step = $index > $formInstance->maximum_step ? $index : $formInstance->maximum_step;
         } else {
-            $link = '/forms/' . $this->getFormType($model) . '/' . $formInstance->id;
-            if ($this->getFormType($model) == 'presentation') {
-                $link = '/presentation/semester/' . $formInstance->period_of_report . '/' . $formInstance->id;
-            }
+            $link = $this->formLink($formInstance, $model);
             $this->formNotification($formInstance->student, $this->getFormType($model) . ' form for ' . $formInstance->student?->user?->name() . ' has pending action', 'Form has pending  action',  $link, $nextLevel, true);
             if ($nextLevel == 'faculty') {
                 $nextLevel = 'supervisor';
@@ -325,22 +339,13 @@ trait GeneralFormSubmitter
                 }
                 break;
 
+            // Institute-wide, so there is no student or department to scope them
+            // to. They previously re-tested the role against the case that
+            // selected it, which could never fail; the turn check in submitForm
+            // is what actually keeps them from acting out of order.
             case 'dordc':
-                if ($user->current_role->role != 'dordc') {
-                    throw new \Exception('You are not authorized to access this resource');
-                }
-                break;
-
             case 'dra':
-                if ($user->current_role->role != 'dra') {
-                    throw new \Exception('You are not authorized to access this resource');
-                }
-                break;
-
             case 'director':
-                if ($user->current_role->role != 'director') {
-                    throw new \Exception('You are not authorized to access this resource');
-                }
                 break;
 
             default:
@@ -382,6 +387,85 @@ trait GeneralFormSubmitter
         };
     }
 
+    /**
+     * Where a notification about this form should land.
+     *
+     * Most forms live on the Forms page and take the default. A form surfaced
+     * elsewhere overrides this in its own controller — which is why there is a
+     * hook here rather than a growing if-chain in shared code.
+     */
+    protected function formLink($formInstance, $model): string
+    {
+        return '/forms/' . $this->getFormType($model) . '/' . $formInstance->id;
+    }
+
+    /**
+     * Tells the user to switch role, but only when switching would actually
+     * work: they hold the role the form is waiting on, and that role has
+     * standing on this particular student. Without the second half it would
+     * tell every supervisor in the institute to switch to Supervisor for a
+     * student who is not theirs.
+     */
+    private function switchHint($user, $formInstance, string $expectedStage): string
+    {
+        $role = $expectedStage === 'supervisor' ? 'faculty' : $expectedStage;
+
+        if (!in_array($role, $user->availableRoles(), true)) {
+            return '';
+        }
+
+        if (!$this->hasStandingAs($user, $formInstance, $role)) {
+            return '';
+        }
+
+        return ' You hold that role for this student, so switch to '
+            . $this->roleLabel($expectedStage) . ' to act on it.';
+    }
+
+    /**
+     * Whether $user is the specific person this role means for this form: the
+     * student's own supervisor, their department's HOD, and so on. Mirrors the
+     * predicates handleRoleSpecificLogic enforces, without throwing.
+     */
+    private function hasStandingAs($user, $formInstance, string $role): bool
+    {
+        $facultyCode = $user->faculty?->faculty_code;
+        $student = $formInstance->student;
+
+        if (!$student) {
+            return false;
+        }
+
+        return match ($role) {
+            'student' => $user->student && $formInstance->student_id == $user->student->roll_no,
+            'faculty' => $facultyCode && $student->checkSupervises($facultyCode),
+            'doctoral' => $facultyCode && $student->checkDoctoralCommittee($facultyCode),
+            'phd_coordinator' => $facultyCode && $student->department?->checkCoordinates($facultyCode),
+            'hod' => $facultyCode && $student->department?->hod_id == $facultyCode,
+            'adordc' => $facultyCode && $user->faculty->adordcDepartments
+                ->pluck('id')->contains($student->department_id),
+            // Institute-wide: no student to be attached to.
+            'dordc', 'dra', 'director' => true,
+            default => false,
+        };
+    }
+
+    /** Human-readable role name for the out-of-turn message. */
+    private function roleLabel(string $role): string
+    {
+        return match ($role) {
+            'faculty', 'supervisor' => 'the supervisor',
+            'phd_coordinator' => 'the PhD coordinator',
+            'hod' => 'the HOD',
+            'doctoral' => 'the doctoral committee',
+            'external' => 'the external member',
+            'director' => 'the Vice Chancellor',
+            'student' => 'the student',
+            'complete' => 'nobody, it is complete',
+            default => strtoupper($role),
+        };
+    }
+
     private function getFormType($model)
     {
         $model = (new \ReflectionClass($model))->getShortName();
@@ -399,12 +483,15 @@ trait GeneralFormSubmitter
             'ListOfExaminersForm' => 'list-of-examiners',
             'SynopsisSubmission' => 'synopsis-submission',
             'Presentation' => 'presentation',
+            'StudentLeaveForm' => 'student-leave',
         };
     }
 
     private function updateForm($model, $student_id, $next)
     {
-        if ($model === Presentation::class)
+        // Neither of these creates a `forms` row: they are surfaced on their own
+        // pages, so there is nothing in the Forms list to advance.
+        if ($model === Presentation::class || $model === \App\Models\StudentLeaveForm::class)
             return;
         $form = Forms::where('form_type', $this->getFormType($model))->where('student_id', $student_id)->first();
         if ($next == 'external') $next = 'doctoral';

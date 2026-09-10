@@ -117,6 +117,7 @@ class ConstituteOfIRBController extends Controller
                 return $this->handleAdordcForm($user,$form_id,$model);
             case 'faculty':
                 return $this->handleFacultyForm($user, $form_id, $model);
+            case 'director':
             case 'admin':
                 return $this->handleAdminForm($user, $form_id, $model,true);
             default:
@@ -138,7 +139,6 @@ class ConstituteOfIRBController extends Controller
                 return $this->hodSubmit($user, $request, $form_id);
             case 'adordc':
                 return $this->adordcSubmit($user, $request, $form_id);
-            case 'dra':
                 return $this->draSubmit($user, $request, $form_id);
             case 'dordc':
                 return $this->dordcSubmit($user, $request, $form_id);

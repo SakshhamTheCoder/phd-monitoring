@@ -35,8 +35,9 @@ export function timeAgo(isoString) {
 
 // utils/dateFormatter.js
 
-// The portal's em dash for "nothing recorded".
-export const EMPTY_VALUE = '—';
+// The portal wide token for a missing value. Import this instead of
+// hardcoding "N/A", an em dash, or any other "nothing here" string.
+export const EMPTY_VALUE = 'N/A';
 
 // MySQL's zero date, and the epoch a bare `new Date(null)` lands on. Neither is
 // a date anyone entered, so neither is shown as one.

@@ -20,11 +20,13 @@ const ListOfExaminers = ({formData}) => {
           currentRole={formData.role}
         >
         <Supervisor formData={formData}></Supervisor>
-      
+
+        {/* Backend supports rejection at HOD step with comment requirement,
+            but UI was hiding the reject button. Allow rejection now. */}
         <Recommendation
           formData={formData}
           role="hod"
-          allowRejection={false}
+          allowRejection={true}
         ></Recommendation>
 
         <Dordc formData={formData}></Dordc>
@@ -32,7 +34,7 @@ const ListOfExaminers = ({formData}) => {
         <Recommendation
           formData={formData}
           role="director"
-          allowRejection={false}
+          allowRejection={true}
         ></Recommendation>
         
         </RoleBasedWrapper>

@@ -404,3 +404,17 @@ label:disabled:hover {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 2px var(--primary-tint);
 }
+
+/* Withdraw a proposed examiner. Matches the row actions on the research
+   profile's publication tables. */
+.examiner-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #777;
+  padding: 0.2rem 0.35rem;
+}
+
+.examiner-remove:hover {
+  color: var(--primary-color);
+}

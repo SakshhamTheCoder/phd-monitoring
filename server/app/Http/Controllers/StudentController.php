@@ -27,7 +27,7 @@ class StudentController extends Controller {
     public function add(Request $request)
     {
         $loggenInUser = Auth::user();
-        if($loggenInUser->current_role->can_add_student == 'false'){
+        if(!$loggenInUser->may('can_manage_students')){
             return response()->json([
                 'message' => 'You do not have permission to create student'
             ], 403);
@@ -45,6 +45,7 @@ class StudentController extends Controller {
                 'date_of_registration' => 'required|date',
                 'current_status' => 'required|in:part-time,full-time,executive',
                 'gender' => 'required|in:Male,Female',
+                'physically_handicapped' => 'nullable|boolean',
                 'date_of_irb' => 'nullable|date',
                 'date_of_thesis' => 'nullable|date',
                 'phd_title' => 'nullable|string',
@@ -68,6 +69,7 @@ class StudentController extends Controller {
         $user->password = bcrypt($password);
         $user->address = $request->address;
         $user->gender = $request->gender;
+        $user->physically_handicapped = $request->boolean('physically_handicapped');
         $user->role_id = $role_id;
         //crate new entry in users table
 
@@ -116,7 +118,7 @@ class StudentController extends Controller {
     public function bulkUpload(Request $request)
     {
         $loggedInUser = Auth::user();
-        if($loggedInUser->current_role->can_add_student == 'false'){
+        if(!$loggedInUser->may('can_manage_students')){
             return response()->json([
                 'message' => 'You do not have permission to create students'
             ], 403);
@@ -276,7 +278,7 @@ class StudentController extends Controller {
     public function bulkUpdate(Request $request)
     {
         $loggedInUser = Auth::user();
-        if($loggedInUser->current_role->can_add_student == 'false'){
+        if(!$loggedInUser->may('can_manage_students')){
             return response()->json(['message' => 'You do not have permission to update students'], 403);
         }
         $request->validate([
@@ -366,32 +368,27 @@ class StudentController extends Controller {
 
     $studentsQuery = Student::with(['user', 'department', 'supervisors.user', 'doctoralCommittee.user']);
 
-    switch ($role) {
-        case 'hod':
-        case 'phd_coordinator':
-            $studentsQuery->where('department_id', $loggedInUser->faculty->department_id);
-            break;
-        case 'faculty':
-            $studentsQuery = $loggedInUser->faculty->supervisedStudents()->with(['user', 'department', 'supervisors.user', 'doctoralCommittee.user']);
-            break;
-        case 'doctoral':
-        case 'external':
-            $studentsQuery = $loggedInUser->faculty->doctoredStudents()->with(['user', 'department', 'supervisors.user', 'doctoralCommittee.user']);
-            break;
-        case 'student':
-            $studentsQuery->where('user_id', $loggedInUser->id);
-            break;
-        case 'adordc': 
-            $departments = $loggedInUser->faculty->adordcDepartments->pluck('id');
-            $studentsQuery->whereIn('department_id', $departments);
-            break;
-        case 'admin':
-        case 'director':
-        case 'dra':
-        case 'dordc':
-            break;
-        default:
-            return response()->json(['message' => 'You do not have permission to view students'], 403);
+    // The capability decides whether a role may read at all; the role still
+    // decides which records that means, because "their department" is one
+    // department for a HOD and a list of them for an ADORDC.
+    $with = ['user', 'department', 'supervisors.user', 'doctoralCommittee.user'];
+
+    if ($loggedInUser->may('can_read_all_students')) {
+        // No scoping.
+    } elseif ($loggedInUser->may('can_read_department_students')) {
+        $departments = $role === 'adordc'
+            ? $loggedInUser->faculty->adordcDepartments->pluck('id')
+            : [$loggedInUser->faculty->department_id];
+        $studentsQuery->whereIn('department_id', $departments);
+    } elseif ($loggedInUser->may('can_read_supervised_students')) {
+        $studentsQuery = $loggedInUser->faculty->supervisedStudents()->with($with);
+    } elseif ($loggedInUser->may('can_read_committee_students')) {
+        $studentsQuery = $loggedInUser->faculty->doctoredStudents()->with($with);
+    } elseif ($role === 'student') {
+        // Reading your own record is identity, not a capability.
+        $studentsQuery->where('user_id', $loggedInUser->id);
+    } else {
+        return response()->json(['message' => 'You do not have permission to view students'], 403);
     }
 
     if ($filters) {
@@ -445,55 +442,109 @@ class StudentController extends Controller {
     public function get(Request $request, $roll_no)
     {
         $loggenInUser = Auth::user();
-        $role=$loggenInUser->current_role->role;
-        switch($role){
-            case 'admin':
-            case 'director':
-            case 'dra':
-            case 'dordc':
-                $student = Student::find($roll_no);
-                break;
-            case 'adordc': 
-                 $departments = $loggenInUser->faculty->adordcDepartments->pluck('id');
-                $student = Student::whereIn('department_id', $departments)
-                    ->where('roll_no', $roll_no)->first();
-            break;
-            case 'hod':
-            case 'phd_coordinator':
-                $student = Student::where('department_id',$loggenInUser->faculty->department_id)->where('roll_no',$roll_no)->first();
-                break;
-            case 'faculty':
-                $student =  Student::find($roll_no);
-                if(!$student->checkSupervises($loggenInUser->faculty->faculty_code))
-                    return response()->json([
-                        'message' => 'You do not have permission to view student'
-                    ], 403);
-               break;
-            case 'student':
-                $student = Student::where('user_id',$loggenInUser->id)->where('roll_no',$roll_no)->first();
-                break;
-            default:
+        $role = $loggenInUser->current_role->role;
+
+        // Mirrors list(): the capability decides whether, the role still decides
+        // which records. These two had drifted, so a doctoral committee member
+        // saw a student in the listing and was refused when they opened them.
+        if ($loggenInUser->may('can_read_all_students')) {
+            $student = Student::find($roll_no);
+        } elseif ($loggenInUser->may('can_read_department_students')) {
+            $departments = $role === 'adordc'
+                ? $loggenInUser->faculty->adordcDepartments->pluck('id')
+                : [$loggenInUser->faculty->department_id];
+            $student = Student::whereIn('department_id', $departments)
+                ->where('roll_no', $roll_no)->first();
+        } elseif ($loggenInUser->may('can_read_supervised_students')
+            || $loggenInUser->may('can_read_committee_students')) {
+            $student = Student::find($roll_no);
+            $code = $loggenInUser->faculty?->faculty_code;
+            // Supervising them or sitting on their committee both count: the
+            // profile links to committee students, and refusing the link the
+            // page itself offers is not a boundary, it is a dead end.
+            $related = $code && ($student?->checkSupervises($code) || $student?->checkDoctoralCommittee($code));
+            if (!$related) {
                 return response()->json([
                     'message' => 'You do not have permission to view student'
                 ], 403);
+            }
+        } elseif ($role === 'student') {
+            $student = Student::where('user_id', $loggenInUser->id)->where('roll_no', $roll_no)->first();
+        } else {
+            return response()->json([
+                'message' => 'You do not have permission to view student'
+            ], 403);
         }
         if(!$student){
             return response()->json([
                 'message' => 'Student not found'
             ], 404);
         }
-        $stu= $this->ListStudentProfile($student);
-        return response()->json([
-            'data'=>[$stu]
-        ],200);
+        return response()->json($this->profileEnvelope($student), 200);
+    }
+
+    /**
+     * The signed-in student's own profile.
+     *
+     * Mirrors faculty: a profile is addressed either by id or by "me", and both
+     * answer with the same envelope, so a page that shows a profile never has
+     * to care which it asked for.
+     */
+    public function me()
+    {
+        $student = optional(Auth::user())->student;
+        if (!$student) {
+            return response()->json(['message' => 'No student record for this user'], 404);
+        }
+
+        return response()->json($this->profileEnvelope($student), 200);
+    }
+
+    /**
+     * One profile plus what the viewer may do with it.
+     *
+     * The flags are named as they are on the faculty profile: `can_edit` is
+     * permission to write the record at all, `can_manage` is permission to
+     * write anyone's. A screen reads these instead of deciding from the role it
+     * finds in local storage, which is how the student page came to offer
+     * supervisor management to a doctoral member who cannot save it, and to
+     * withhold it from a DRA who can.
+     */
+    private function profileEnvelope($student): array
+    {
+        return [
+            'profile' => $this->ListStudentProfile($student),
+            'is_self' => $this->isSelf($student),
+            'can_edit' => $this->canEditProfile($student),
+            'can_manage' => $this->canManageStudents(),
+        ];
+    }
+
+    private function isSelf($student): bool
+    {
+        return optional(Auth::user())->id === $student->user_id;
+    }
+
+    private function canManageStudents(): bool
+    {
+        return optional(Auth::user()?->current_role)->can_manage_students === 'true';
+    }
+
+    private function canEditProfile($student): bool
+    {
+        if ($this->canManageStudents()) {
+            return true;
+        }
+
+        return $this->isSelf($student)
+            && (bool) optional(Auth::user())?->may('can_edit_own_student_profile');
     }
 
     // Admin/privileged update of any student, keyed by roll_no. Distinct from
     // updateProfile (which is the student editing their own limited fields).
     public function adminUpdate(Request $request, $roll_no)
     {
-        $loggedInUser = Auth::user();
-        if ($loggedInUser->current_role->can_add_student == 'false') {
+        if (!$this->canManageStudents()) {
             return response()->json([
                 'message' => 'You do not have permission to edit student'
             ], 403);
@@ -515,6 +566,7 @@ class StudentController extends Controller {
             'date_of_registration' => 'required|date',
             'current_status' => 'required|in:part-time,full-time,executive',
             'gender' => 'required|in:Male,Female',
+            'physically_handicapped' => 'nullable|boolean',
             'date_of_irb' => 'nullable|date',
             'date_of_thesis' => 'nullable|date',
             'phd_title' => 'nullable|string',
@@ -533,6 +585,8 @@ class StudentController extends Controller {
         $user->email = $request->email;
         if ($request->has('address')) $user->address = $request->address;
         if ($request->has('gender')) $user->gender = $request->gender;
+        // Extends the thesis deadline, so it stays on the privileged path only.
+        if ($request->has('physically_handicapped')) $user->physically_handicapped = $request->boolean('physically_handicapped');
         $user->save();
 
         $student->department_id = $request->department_id;
@@ -547,13 +601,28 @@ class StudentController extends Controller {
         if ($request->has('overall_progress')) $student->overall_progress = $request->overall_progress;
         $student->save();
 
-        return response()->json(['message' => 'Student updated successfully'], 200);
+        return response()->json([
+            'message' => 'Student updated successfully',
+        ] + $this->profileEnvelope($student->refresh()), 200);
     }
 
-    public function updateProfile(Request $request)
+    /**
+     * The soft half of a student record: what the scholar keeps current about
+     * themselves. Addressed by roll number and open to a privileged role too,
+     * so it is the same shape as the faculty profile write.
+     *
+     * Distinct from adminUpdate, which owns the provisioning half: department,
+     * admission date, status, gender. That split exists on the faculty side as
+     * well, between this controller and FacultyController::update.
+     */
+    public function updateProfile(Request $request, $roll_no)
     {
-        $user = Auth::user();
-        if ($user->current_role->role !== 'student') {
+        $student = Student::where('roll_no', $roll_no)->first();
+        if (!$student) {
+            return response()->json(['message' => 'Student not found'], 404);
+        }
+
+        if (!$this->canEditProfile($student)) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -567,23 +636,28 @@ class StudentController extends Controller {
             'cgpa'                 => 'nullable|numeric',
         ]);
 
-        $user->phone = $request->phone ?? $user->phone;
-        $user->save();
-
-        $student = $user->student;
-        if ($student) {
-            if ($request->has('address'))      $student->address      = $request->address;
-            if ($request->has('fathers_name')) $student->fathers_name = $request->fathers_name;
-            // PhD title and tentative fields can be edited until IRB is constituted/locked
-            if (!$student->phdTitleLocked()) {
-                if ($request->has('phd_title'))            $student->phd_title            = $request->phd_title;
-                if ($request->has('tentative_desc'))       $student->tentative_desc       = $request->tentative_desc;
-                if ($request->has('tentative_broad_area')) $student->tentative_broad_area = $request->tentative_broad_area;
-            }
-            if ($request->has('cgpa'))         $student->cgpa         = $request->cgpa;
-            $student->save();
+        // The phone belongs to the student being edited, not to whoever is
+        // signed in. Reading it off the acting user would have written an
+        // admin's own number onto their account.
+        $user = $student->user;
+        if ($user) {
+            $user->phone = $request->phone ?? $user->phone;
+            $user->save();
         }
 
-        return response()->json(['message' => 'Profile updated successfully'], 200);
+        if ($request->has('address'))      $student->address      = $request->address;
+        if ($request->has('fathers_name')) $student->fathers_name = $request->fathers_name;
+        // PhD title and tentative fields can be edited until IRB is constituted/locked
+        if (!$student->phdTitleLocked()) {
+            if ($request->has('phd_title'))            $student->phd_title            = $request->phd_title;
+            if ($request->has('tentative_desc'))       $student->tentative_desc       = $request->tentative_desc;
+            if ($request->has('tentative_broad_area')) $student->tentative_broad_area = $request->tentative_broad_area;
+        }
+        if ($request->has('cgpa'))         $student->cgpa         = $request->cgpa;
+        $student->save();
+
+        return response()->json([
+            'message' => 'Profile updated successfully',
+        ] + $this->profileEnvelope($student->refresh()), 200);
     }
 }

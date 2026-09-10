@@ -9,6 +9,7 @@ import InputSuggestions from "../forms/fields/InputSuggestions";
 import { baseURL } from "../../api/urls";
 import DateField from "../forms/fields/DateField";
 import DropdownField from "../forms/fields/DropdownField";
+import ToggleSwitch from "../forms/fields/ToggleSwitch";
 
 const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => {
   const [submitting, setSubmitting] = useState(false);
@@ -27,6 +28,7 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
     address: "",
     current_status: "",
     gender: "",
+    physically_handicapped: false,
     overall_progress: 0,
     cgpa: "",
   });
@@ -49,6 +51,7 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
         // Exclude legacy null / invalid gender values so the dropdown shows "Select"
         // instead of a broken option, forcing the admin to pick a valid one.
         gender: ["Male", "Female"].includes(studentData.gender) ? studentData.gender : "",
+        physically_handicapped: !!studentData.physically_handicapped,
         overall_progress: studentData.overall_progress || 0,
         cgpa: studentData.cgpa || "",
       });
@@ -181,11 +184,17 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
         ]}
       />
       <GridContainer
+        space={3}
         elements={[
           <DateField
             label="Date of Thesis"
             initialValue={formData.date_of_thesis}
             onChange={(val) => handleChange("date_of_thesis", val)}
+          />,
+          <ToggleSwitch
+            label="Physically handicapped"
+            isOn={formData.physically_handicapped}
+            onToggle={() => handleChange("physically_handicapped", !formData.physically_handicapped)}
           />,
         ]}
       />

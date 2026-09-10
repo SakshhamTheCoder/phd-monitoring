@@ -6,8 +6,10 @@ namespace App\Support;
  * A project's budget: what is stored, what is derived, and how an old one is
  * read forward.
  *
- * Manpower costs count x amount; Equipment and Any Other Expenses are
- * free-form lists. Reserved __keys hold the lists; everything else is a year.
+ * Manpower is a fixed category list, Equipment and Other Expenses are
+ * free-form lists, and any of the three may instead carry a head total typed
+ * by hand (__headamt), which overrides its breakdown. Reserved __keys hold the
+ * lists; everything else is a year.
  *
  * Migration invariant: a legacy year's total is the sum of plain values in
  * budget[year]. normalize() reproduces that exact total: a stored head amount
@@ -18,22 +20,65 @@ final class ProjectBudget
     public const HEAD_MANPOWER = 'Manpower';
     public const HEAD_TRAVEL = 'Travel';
     public const HEAD_EQUIPMENT = 'Equipment';
+    public const HEAD_CONSUMABLES = 'Consumables';
     public const HEAD_CONTINGENCY = 'Contingency';
     public const HEAD_OVERHEAD = 'Overhead';
-    public const HEAD_OTHER = 'Any Other Expenses';
+    public const HEAD_OTHER = 'Other Expenses';
+    /**
+     * What this head was called before. A legacy budget stores its amount under
+     * budget[year]['Other Expenses'] and its breakdown under the same key in
+     * __subitems, so every read has to keep answering to the old wording or that
+     * money detaches from the head and shows up as a stray legacy row.
+     */
+    public const HEAD_OTHER_LEGACY = 'Any Other Expenses';
 
     public const KEY_SUBITEMS = '__subitems';
     public const KEY_MANPOWER = '__manpower';
     public const KEY_EQUIPMENT = '__equipment';
     public const KEY_OTHER = '__other';
+    /**
+     * A head total typed directly against Manpower/Equipment/Other Expenses.
+     * Deliberately NOT stored as budget[year][head]: that slot means "the legacy
+     * total this head's breakdown must reconcile to" (see authoritativeFor()),
+     * and reusing it would make every hand-typed total inject a reconciling
+     * line. Kept apart, a typed total simply overrides the line sum and legacy
+     * reads are left exactly as they were.
+     */
+    public const KEY_HEADAMT = '__headamt';
 
     /** Requirement 3: PhD Scholar is deliberately absent. */
     public const MANPOWER_CATEGORIES = ['Postdoc', 'JRF', 'SRF', 'UG Intern', 'PG Intern'];
 
-    private const RESERVED = [self::KEY_SUBITEMS, self::KEY_MANPOWER, self::KEY_EQUIPMENT, self::KEY_OTHER];
+    private const RESERVED = [self::KEY_SUBITEMS, self::KEY_MANPOWER, self::KEY_EQUIPMENT, self::KEY_OTHER, self::KEY_HEADAMT];
 
     /** The three heads that are computed from a line list, never stored against a year directly. */
     private const DERIVED_HEADS = [self::HEAD_MANPOWER, self::HEAD_EQUIPMENT, self::HEAD_OTHER];
+
+    /** Derived heads plus the wording Other Expenses used to carry. */
+    private static function isDerivedHead(string $head): bool
+    {
+        return in_array($head, self::DERIVED_HEADS, true) || $head === self::HEAD_OTHER_LEGACY;
+    }
+
+    /**
+     * Fold a legacy head key onto the name it has now, so a budget written under
+     * the old wording keeps its amount attached to the head instead of surfacing
+     * as an unrecognised leftover row.
+     *
+     * @param array<string, mixed> $byHead
+     * @return array<string, mixed>
+     */
+    private static function canonicalizeHeads(array $byHead): array
+    {
+        if (array_key_exists(self::HEAD_OTHER_LEGACY, $byHead)) {
+            if (!array_key_exists(self::HEAD_OTHER, $byHead)) {
+                $byHead[self::HEAD_OTHER] = $byHead[self::HEAD_OTHER_LEGACY];
+            }
+            unset($byHead[self::HEAD_OTHER_LEGACY]);
+        }
+
+        return $byHead;
+    }
 
     /**
      * Label for the synthetic line normalize() adds when a legacy head amount
@@ -59,6 +104,7 @@ final class ProjectBudget
             ['head' => self::HEAD_MANPOWER, 'kind' => 'lines', 'subItems' => []],
             ['head' => self::HEAD_TRAVEL, 'kind' => 'subitems', 'subItems' => ['Domestic', 'International']],
             ['head' => self::HEAD_EQUIPMENT, 'kind' => 'lines', 'subItems' => []],
+            ['head' => self::HEAD_CONSUMABLES, 'kind' => 'amount', 'subItems' => []],
             ['head' => self::HEAD_CONTINGENCY, 'kind' => 'amount', 'subItems' => []],
             ['head' => self::HEAD_OVERHEAD, 'kind' => 'amount', 'subItems' => []],
             ['head' => self::HEAD_OTHER, 'kind' => 'lines', 'subItems' => []],
@@ -95,12 +141,40 @@ final class ProjectBudget
         return $years;
     }
 
+    /**
+     * A head total typed by hand, or null when the head has none and its lines
+     * are the source of truth. Only ever set for the derived heads.
+     */
+    public static function typedHeadAmount(array $budget, string $year, string $head): ?int
+    {
+        $typed = $budget[self::KEY_HEADAMT][$year][$head] ?? null;
+        if ($typed === null || $typed === '') {
+            return null;
+        }
+        $number = self::toNumber($typed);
+
+        return $number === null ? null : self::toInt($number);
+    }
+
     public static function headTotal(array $budget, string $year, string $head): int
     {
+        // Answer to the old wording too, so a caller holding a legacy head name
+        // still resolves to the head that absorbed it.
+        if ($head === self::HEAD_OTHER_LEGACY) {
+            $head = self::HEAD_OTHER;
+        }
+
+        if (in_array($head, self::DERIVED_HEADS, true)) {
+            $typed = self::typedHeadAmount($budget, $year, $head);
+            if ($typed !== null) {
+                return $typed;
+            }
+        }
+
         return match ($head) {
             self::HEAD_MANPOWER => self::sumManpowerLines($budget[self::KEY_MANPOWER][$year] ?? null),
             self::HEAD_EQUIPMENT => self::sumAmountLines($budget[self::KEY_EQUIPMENT][$year] ?? null),
-            self::HEAD_OTHER => self::sumAmountLines($budget[self::KEY_OTHER][$year] ?? null),
+            self::HEAD_OTHER => self::sumTopLevelAmountLines($budget[self::KEY_OTHER][$year] ?? null),
             default => self::toInt(self::toNumber(
                 is_array($budget[$year] ?? null) ? ($budget[$year][$head] ?? 0) : 0
             ) ?? 0.0),
@@ -111,8 +185,8 @@ final class ProjectBudget
      * A year's total is the three derived heads plus every plain value sitting
      * under budget[year] — not just the six heads the UI currently offers.
      * That second half is what lets a legacy head the current menu no longer
-     * shows (Consumables, say) keep counting after migration instead of
-     * silently vanishing from the total while still sitting in the data.
+     * shows keep counting after migration instead of silently vanishing from
+     * the total while still sitting in the data.
      */
     public static function yearTotal(array $budget, string $year): int
     {
@@ -124,7 +198,7 @@ final class ProjectBudget
         $stored = $budget[$year] ?? [];
         if (is_array($stored)) {
             foreach ($stored as $head => $value) {
-                if (in_array($head, self::DERIVED_HEADS, true)) {
+                if (self::isDerivedHead($head)) {
                     continue; // never true after normalize(), but headTotal() already covers these two ways
                 }
                 $total += self::toInt(self::toNumber($value) ?? 0.0);
@@ -171,6 +245,7 @@ final class ProjectBudget
             self::KEY_MANPOWER => [],
             self::KEY_EQUIPMENT => [],
             self::KEY_OTHER => [],
+            self::KEY_HEADAMT => [],
         ];
 
         // A year only counts as a legacy row — subject to the "total must
@@ -186,14 +261,15 @@ final class ProjectBudget
         foreach (self::years($raw) as $year) {
             $isLegacyRow = array_key_exists($year, $legacyYears);
             $stored = ($isLegacyRow && is_array($raw[$year] ?? null)) ? $raw[$year] : [];
+            $stored = self::canonicalizeHeads($stored);
             $subs = $raw[self::KEY_SUBITEMS][$year] ?? [];
-            $subs = is_array($subs) ? $subs : [];
+            $subs = self::canonicalizeHeads(is_array($subs) ? $subs : []);
 
             // Stored heads: every plain value that isn't one of the three
             // derived ones, known to the current menu or not.
             $out[$year] = [];
             foreach ($stored as $head => $value) {
-                if (in_array($head, self::DERIVED_HEADS, true)) {
+                if (self::isDerivedHead($head)) {
                     continue;
                 }
                 $number = self::toNumber($value);
@@ -207,6 +283,23 @@ final class ProjectBudget
                     fn ($v) => self::toInt(self::toNumber($v) ?? 0.0),
                     $subs[self::HEAD_TRAVEL]
                 );
+            }
+
+            // Hand-typed head totals, kept only for the heads that can have one
+            // and only when a real number was entered — a blank clears back to
+            // "the breakdown is the total".
+            $typed = $raw[self::KEY_HEADAMT][$year] ?? null;
+            if (is_array($typed)) {
+                foreach (self::DERIVED_HEADS as $derived) {
+                    $value = $typed[$derived] ?? null;
+                    if ($value === null || $value === '') {
+                        continue;
+                    }
+                    $number = self::toNumber($value);
+                    if ($number !== null) {
+                        $out[self::KEY_HEADAMT][$year][$derived] = self::toInt($number);
+                    }
+                }
             }
 
             $out[self::KEY_MANPOWER][$year] = self::normalizeManpower($raw, $stored, $subs, $year, $isLegacyRow);
@@ -224,14 +317,15 @@ final class ProjectBudget
                 $stored,
                 self::HEAD_OTHER,
                 $isLegacyRow,
-                'label'
+                'label',
+                true
             );
         }
 
         return $out;
     }
 
-    /** @return array<int, array{category: string, count: int, amount: int}> */
+    /** @return array<int, array{category: string, amount: int}> */
     private static function normalizeManpower(array $raw, array $stored, array $subs, string $year, bool $isLegacyRow): array
     {
         $current = $raw[self::KEY_MANPOWER][$year] ?? null;
@@ -243,23 +337,30 @@ final class ProjectBudget
         return self::reconcile(
             $lines,
             $authoritative,
-            fn ($l) => $l['count'] * $l['amount'],
-            fn ($amount) => ['category' => '', 'count' => 1, 'amount' => $amount],
-            fn ($amount) => ['category' => self::RECONCILE_LABEL, 'count' => 1, 'amount' => $amount]
+            fn ($l) => $l['amount'],
+            fn ($amount) => ['category' => '', 'amount' => $amount],
+            fn ($amount) => ['category' => self::RECONCILE_LABEL, 'amount' => $amount]
         );
     }
 
-    /** @return array<int, array{category: string, count: int, amount: int}> */
+    /** @return array<int, array{category: string, amount: int}> */
     private static function manpowerLines(mixed $current, mixed $legacySubs): array
     {
         if (is_array($current) && $current !== []) {
             return array_values(array_map(function ($l) {
                 $l = is_array($l) ? $l : [];
 
+                $amount = self::toInt(self::toNumber($l['amount'] ?? null) ?? 0.0);
+                // Legacy lines costed count x amount. Fold the multiplier in so a
+                // migrated row keeps the exact total it had before count was dropped.
+                if (array_key_exists('count', $l)) {
+                    $count = self::toInt(self::toNumber($l['count'] ?? null) ?? 0.0);
+                    $amount *= $count;
+                }
+
                 return [
                     'category' => trim((string) ($l['category'] ?? '')),
-                    'count' => self::toInt(self::toNumber($l['count'] ?? null) ?? 0.0),
-                    'amount' => self::toInt(self::toNumber($l['amount'] ?? null) ?? 0.0),
+                    'amount' => $amount,
                 ];
             }, $current));
         }
@@ -269,7 +370,6 @@ final class ProjectBudget
             foreach ($legacySubs as $category => $amount) {
                 $lines[] = [
                     'category' => (string) $category,
-                    'count' => 1,
                     'amount' => self::toInt(self::toNumber($amount) ?? 0.0),
                 ];
             }
@@ -281,7 +381,7 @@ final class ProjectBudget
     }
 
     /**
-     * Equipment and Any Other Expenses share a shape and the same
+     * Equipment and Other Expenses share a shape and the same
      * head-vs-breakdown reconciliation as Manpower; only the label key
      * ("item" or "label") and which head is being read differ.
      *
@@ -293,39 +393,58 @@ final class ProjectBudget
         array $stored,
         string $head,
         bool $isLegacyRow,
-        string $labelKey
+        string $labelKey,
+        bool $keepParent = false
     ): array {
         $usingCurrent = is_array($current) && $current !== [];
-        $lines = self::itemLines($current, $legacySubs, $labelKey);
+        $lines = self::itemLines($current, $legacySubs, $labelKey, $keepParent);
         $authoritative = self::authoritativeFor($stored, $isLegacyRow, $usingCurrent, $head);
 
         return self::reconcile(
             $lines,
             $authoritative,
             fn ($l) => $l['amount'],
-            fn ($amount) => [$labelKey => '', 'amount' => $amount],
-            fn ($amount) => [$labelKey => self::RECONCILE_LABEL, 'amount' => $amount]
+            fn ($amount) => $keepParent
+                ? [$labelKey => '', 'amount' => $amount, 'parent' => '']
+                : [$labelKey => '', 'amount' => $amount],
+            fn ($amount) => $keepParent
+                ? [$labelKey => self::RECONCILE_LABEL, 'amount' => $amount, 'parent' => '']
+                : [$labelKey => self::RECONCILE_LABEL, 'amount' => $amount]
         );
     }
 
     /** @return array<int, array<string, int|string>> */
-    private static function itemLines(mixed $current, mixed $legacySubs, string $labelKey): array
+    private static function itemLines(mixed $current, mixed $legacySubs, string $labelKey, bool $keepParent = false): array
     {
         if (is_array($current) && $current !== []) {
-            return array_values(array_map(function ($l) use ($labelKey) {
+            return array_values(array_map(function ($l) use ($labelKey, $keepParent) {
                 $l = is_array($l) ? $l : [];
-
-                return [
+                $line = [
                     $labelKey => trim((string) ($l[$labelKey] ?? $l['item'] ?? $l['label'] ?? '')),
                     'amount' => self::toInt(self::toNumber($l['amount'] ?? null) ?? 0.0),
                 ];
+                // The row's identity, so two blank rows stay two rows.
+                $id = trim((string) ($l['id'] ?? ''));
+                if ($id !== '') {
+                    $line['id'] = $id;
+                }
+                // An empty parent is a top-level row; legacy rows have none at all.
+                if ($keepParent) {
+                    $line['parent'] = trim((string) ($l['parent'] ?? ''));
+                }
+
+                return $line;
             }, $current));
         }
 
         if (is_array($legacySubs) && $legacySubs !== []) {
             $lines = [];
             foreach ($legacySubs as $label => $amount) {
-                $lines[] = [$labelKey => (string) $label, 'amount' => self::toInt(self::toNumber($amount) ?? 0.0)];
+                $line = [$labelKey => (string) $label, 'amount' => self::toInt(self::toNumber($amount) ?? 0.0)];
+                if ($keepParent) {
+                    $line['parent'] = '';
+                }
+                $lines[] = $line;
             }
 
             return $lines;
@@ -407,15 +526,39 @@ final class ProjectBudget
             if (!is_array($line)) {
                 continue;
             }
-            $count = self::toInt(self::toNumber($line['count'] ?? null) ?? 0.0);
             $amount = self::toInt(self::toNumber($line['amount'] ?? null) ?? 0.0);
-            $sum += $count * $amount;
+            // A row written before count was dropped still costs count x amount.
+            if (array_key_exists('count', $line)) {
+                $amount *= self::toInt(self::toNumber($line['count'] ?? null) ?? 0.0);
+            }
+            $sum += $amount;
         }
 
         return $sum;
     }
 
-    /** An item/label line list (Equipment, Any Other Expenses), guarded the same way. */
+    /**
+     * Other Expenses only: a sub-row breaks its parent row down, so counting
+     * both would bill the same money twice. Top-level rows carry the head.
+     */
+    private static function sumTopLevelAmountLines(mixed $lines): int
+    {
+        if (!is_array($lines)) {
+            return 0;
+        }
+
+        $sum = 0;
+        foreach ($lines as $line) {
+            if (!is_array($line) || trim((string) ($line['parent'] ?? '')) !== '') {
+                continue;
+            }
+            $sum += self::toInt(self::toNumber($line['amount'] ?? null) ?? 0.0);
+        }
+
+        return $sum;
+    }
+
+    /** An item line list (Equipment), guarded the same way. */
     private static function sumAmountLines(mixed $lines): int
     {
         if (!is_array($lines)) {

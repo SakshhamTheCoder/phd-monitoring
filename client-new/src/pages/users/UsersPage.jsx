@@ -16,6 +16,7 @@ import { baseURL } from '../../api/urls';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import { customFetch } from '../../api/base';
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
+import useCapabilities from '../../hooks/useCapabilities';
 
 const UsersPage = () => {
   const [filter, setFilter] = useState([]);
@@ -31,6 +32,7 @@ const UsersPage = () => {
   const [createKind, setCreateKind] = useState(null);
   const { setLoading } = useLoading();
   const location = useLocation();
+  const can = useCapabilities();
 
   const handleFilterChange = (newFilter) => {
     setFilter(newFilter);
@@ -249,18 +251,23 @@ Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,d
             endpoint={location.pathname}
             filters={filter}
             enableApproval={false}
+            // The row is a way into the edit form, so it follows the same
+            // capability as the Edit action rather than the route alone.
+            rowClickable={can('can_manage_users')}
             customOpenForm={openForm}
             extraTopbarComponents={
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <CustomButton
-                  text="Bulk Import CSV"
-                  variant="secondary"
-                  onClick={() => setShowBulkImportModal(true)}
-                />
-                <CustomButton text="Add User +" onClick={() => openForm()} />
-              </div>
+              can('can_manage_users') ? (
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <CustomButton
+                    text="Bulk Import CSV"
+                    variant="secondary"
+                    onClick={() => setShowBulkImportModal(true)}
+                  />
+                  <CustomButton text="Add User +" onClick={() => openForm()} />
+                </div>
+              ) : null
             }
-            actions={[
+            actions={can('can_manage_users') ? [
               {
                 icon: <i className="fa-solid fa-pen-to-square"></i>,
                 tooltip: 'Edit',
@@ -276,7 +283,7 @@ Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,d
                 tooltip: 'Delete',
                 onClick: (userData) => handleDeleteUser(userData),
               },
-            ]}
+            ] : []}
           />
           <CustomModal
             isOpen={isOpen}

@@ -6,25 +6,6 @@
 /* Header */
 /* Header comes from styles/ui.css */
 
-.po-create-btn {
-  background: var(--primary-color);
-  color: #FFF;
-  border: none;
-  padding: 0.7rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: background 0.2s;
-}
-
-.po-create-btn:hover {
-  background: var(--hover-color);
-}
-
 /* Stats Grid */
 .po-stats-grid {
   display: grid;

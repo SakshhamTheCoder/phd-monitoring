@@ -286,6 +286,7 @@ trait GeneralFormList
             'can_edit_tentative' => $student->canEditTentative(),
             'is_supervisor_allocated' => $student->isSupervisorAllocated(),
             'gender' => $student->user->gender,
+            'physically_handicapped' => (bool) $student->user->physically_handicapped,
             'department_id' => $student->department_id,
             'overall_progress' => $student->overall_progress,
             'roll_no' => $student->roll_no,
@@ -309,6 +310,7 @@ trait GeneralFormList
             'date_of_irb' => $student->date_of_irb,
             'date_of_synopsis' => $student->date_of_synopsis,
             'date_of_thesis' => $student->date_of_thesis,
+            'thesis_window' => $student->thesisWindow(),
             'doctoral' => $student->doctoralCommittee->map(function ($faculty) {
                 return [
                     'faculty_code' => $faculty->faculty_code,

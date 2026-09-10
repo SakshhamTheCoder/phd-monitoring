@@ -9,6 +9,8 @@ import CustomButton from '../../components/forms/fields/CustomButton';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { countAbsent, applyMarkAll, buildSaveMessage } from '../../utils/attendanceMark';
+import { EMPTY_VALUE } from '../../utils/timeParse';
 import './AttendancePage.css';
 
 const EDIT_WINDOW = 7;
@@ -93,6 +95,12 @@ const AttendancePage = () => {
     const isToday = date === todayString();
     list.forEach((s) => {
       if (s.status != null) next[s.roll_no] = s.status;
+      // Deliberately not excluding s.on_leave here: a same-day scholar on
+      // leave still gets this 'present' default, which rides along into
+      // handleSave's `records` and lets the backend report them in
+      // skipped_on_leave (it always refuses to write their row either way).
+      // Nulling this out for on-leave scholars would silently stop the save
+      // toast's skip notice from ever firing on the common same-day case.
       else next[s.roll_no] = isToday ? 'present' : null;
     });
     setStatuses(next);
@@ -138,22 +146,28 @@ const AttendancePage = () => {
   useEffect(() => { if (activeTab === 'monthly') loadMonth(); }, [activeTab, loadMonth]);
 
   const setStatus = (rollNo, status) => setStatuses((prev) => ({ ...prev, [rollNo]: status }));
-  const markAll = (status) => {
-    const next = {};
-    students.forEach((s) => { next[s.roll_no] = status; });
-    setStatuses(next);
-  };
-  const absentCount = useMemo(() => students.filter((s) => statuses[s.roll_no] === 'absent').length, [students, statuses]);
+  // A scholar on approved leave has no radio to bulk-set — the backend
+  // refuses to write their attendance row either way — so bulk actions must
+  // leave their entry alone.
+  const markAll = (status) => setStatuses((prev) => applyMarkAll(students, prev, status));
+  const absentCount = useMemo(() => countAbsent(students, statuses), [students, statuses]);
 
   const handleSave = async () => {
     if (students.length === 0) { toast.info('Nothing to save'); return; }
+    // Not filtering out s.on_leave here either: keeping an on-leave scholar's
+    // (possibly default) status in `records` is what lets the server see and
+    // report them in skipped_on_leave below — see the matching note in
+    // loadRoster. Excluding them here would drop that signal just as quietly.
     const records = students.filter((s) => statuses[s.roll_no] === 'present' || statuses[s.roll_no] === 'absent').map((s) => ({ roll_no: s.roll_no, status: statuses[s.roll_no] }));
     if (records.length === 0) { toast.info('No attendance marked — treated as no session (nothing saved)'); return; }
     if (records.length < students.length) toast.info(`${students.length - records.length} unmarked scholar(s) will be left as no session`);
     setSaving(true);
     const res = await customFetch(baseURL + '/clerks/attendance', 'POST', { date, records }, true);
     setSaving(false);
-    if (res.success) { toast.success(res.response.message || 'Attendance saved'); loadRoster(); }
+    if (res.success) {
+      toast.success(buildSaveMessage(res.response.message, res.response.skipped_on_leave));
+      loadRoster();
+    }
   };
 
   const downloadTemplate = async () => {
@@ -170,11 +184,11 @@ const AttendancePage = () => {
     const params = new URLSearchParams({ from: exportFrom, to: exportTo, summary: '1' });
     if (exportDept) params.set('department_id', exportDept);
     const res = await fetch(baseURL + `/clerks/attendance/export?${params.toString()}`, { headers: { Authorization: `Bearer ${token}` } });
-    if (!res.ok) { toast.error('Export failed'); return; }
+    if (!res.ok) { toast.error('Export failed.'); return; }
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = `attendance_${exportFrom}_to_${exportTo}.csv`; a.click(); URL.revokeObjectURL(url);
-    toast.success('Export downloaded');
+    toast.success('Export downloaded.');
   };
 
   const handleFileChange = (e) => {
@@ -209,11 +223,15 @@ const AttendancePage = () => {
       const res = await fetch(baseURL + '/clerks/attendance/csv', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: form });
       const data = await res.json();
       if (res.ok) {
-        toast.success(data.message || 'CSV imported');
+        // data.data.skipped_on_leave (Task 7) counts rows the import refused
+        // to write because the scholar has an approved leave for that date —
+        // same silent-drop risk the Mark tab's save toast guards against, so
+        // it gets the same treatment here.
+        toast.success(buildSaveMessage(data.message || 'CSV imported', data.data?.skipped_on_leave));
         if (data.data?.errors?.length) toast.warning(`${data.data.error_count} rows had errors — check console`);
         console.log('CSV import errors', data.data?.errors);
         setShowCsvModal(false); setCsvFile(null); setCsvPreview(null); loadRoster();
-      } else toast.error(data.message || 'Import failed');
+      } else toast.error(data.message || 'Import failed.');
     } catch (e) { toast.error('Upload failed: ' + e.message); } finally { setUploading(false); }
   };
 
@@ -227,7 +245,7 @@ const AttendancePage = () => {
     <Layout>
       <PageHeader
         title="Attendance"
-        subtitle={departments.length > 0 ? `${departments.map((d) => d.name).join(', ')}` : 'Your departments will appear here once an admin tags you.'}
+        subtitle={departments.length > 0 ? `${departments.map((d) => d.name).join(', ')}` : (isAdmin ? 'No departments exist yet.' : 'Your departments will appear here once an admin tags you.')}
         actions={
           <div style={{ display: 'flex', gap: '10px' }}>
             <CustomButton text="Upload CSV" variant="secondary" onClick={() => setShowCsvModal(true)} />
@@ -320,7 +338,7 @@ const AttendancePage = () => {
             </div>
           )}
           {departments.length === 0 && !loading ? (
-            <div className="empty-state">No departments are assigned to you yet. Please contact an administrator.</div>
+            <div className="empty-state">{isAdmin ? 'No departments exist yet.' : 'No departments are assigned to you yet. Please contact an administrator.'}</div>
           ) : (
             <div className="form-list-container">
               <table className="form-table">
@@ -334,14 +352,18 @@ const AttendancePage = () => {
                         <tr key={s.roll_no}>
                           <td>{s.roll_no}</td><td>{s.name}</td><td>{s.department_name || s.department_code || '-'}</td>
                           <td>
-                            <span style={{ display: 'inline-flex', gap: '1rem', alignItems: 'center' }}>
-                              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', fontWeight: cur === 'present' ? 600 : 400 }}>
-                                <input type="radio" name={`status-${s.roll_no}`} checked={cur === 'present'} onChange={() => setStatus(s.roll_no, 'present')} /> Present
-                              </label>
-                              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', color: cur === 'absent' ? 'var(--danger-text)' : undefined, fontWeight: cur === 'absent' ? 600 : 400 }}>
-                                <input type="radio" name={`status-${s.roll_no}`} checked={cur === 'absent'} onChange={() => setStatus(s.roll_no, 'absent')} /> Absent
-                              </label>
-                            </span>
+                            {s.on_leave ? (
+                              <span className="badge badge--neutral">On leave · {s.leave_type}</span>
+                            ) : (
+                              <span style={{ display: 'inline-flex', gap: '1rem', alignItems: 'center' }}>
+                                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', fontWeight: cur === 'present' ? 600 : 400 }}>
+                                  <input type="radio" name={`status-${s.roll_no}`} checked={cur === 'present'} onChange={() => setStatus(s.roll_no, 'present')} /> Present
+                                </label>
+                                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', color: cur === 'absent' ? 'var(--danger-text)' : undefined, fontWeight: cur === 'absent' ? 600 : 400 }}>
+                                  <input type="radio" name={`status-${s.roll_no}`} checked={cur === 'absent'} onChange={() => setStatus(s.roll_no, 'absent')} /> Absent
+                                </label>
+                              </span>
+                            )}
                           </td>
                           <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                             {s.recorded ? (s.marked_by_name ? <span title={`Marked by ${s.marked_by_name}`}>by {s.marked_by_name}</span> : <span style={{ color: 'var(--text-subtle)', fontStyle: 'italic' }}>Recorded</span>) : <span style={{ color: 'var(--text-subtle)', fontStyle: 'italic' }} title="No record — treated as no session">No session</span>}
@@ -363,20 +385,20 @@ const AttendancePage = () => {
           <div className="attendance-summary-cards">
             <div className="attendance-summary-card">
               <span className="attendance-summary-label">Present</span>
-              <span className="attendance-summary-value present">{daySummary ? daySummary.present : '—'}</span>
+              <span className="attendance-summary-value present">{daySummary ? daySummary.present : EMPTY_VALUE}</span>
             </div>
             <div className="attendance-summary-card">
               <span className="attendance-summary-label">Absent</span>
-              <span className="attendance-summary-value absent">{daySummary ? daySummary.absent : '—'}</span>
+              <span className="attendance-summary-value absent">{daySummary ? daySummary.absent : EMPTY_VALUE}</span>
             </div>
             <div className="attendance-summary-card">
               <span className="attendance-summary-label">Not recorded</span>
-              <span className="attendance-summary-value">{daySummary ? daySummary.not_recorded : '—'}</span>
+              <span className="attendance-summary-value">{daySummary ? daySummary.not_recorded : EMPTY_VALUE}</span>
             </div>
             <div className="attendance-summary-card">
               <span className="attendance-summary-label">Attendance</span>
               <span className="attendance-summary-value">
-                {daySummary && daySummary.percent != null ? `${daySummary.percent}%` : '—'}
+                {daySummary && daySummary.percent != null ? `${daySummary.percent}%` : EMPTY_VALUE}
               </span>
             </div>
             <p className="attendance-summary-caption">
@@ -416,15 +438,15 @@ const AttendancePage = () => {
           <div className="attendance-summary-cards">
             <div className="attendance-summary-card">
               <span className="attendance-summary-label">Sessions held</span>
-              <span className="attendance-summary-value">{monthData ? monthData.days_with_sessions : '—'}</span>
+              <span className="attendance-summary-value">{monthData ? monthData.days_with_sessions : EMPTY_VALUE}</span>
             </div>
             <div className="attendance-summary-card">
               <span className="attendance-summary-label">Total present</span>
-              <span className="attendance-summary-value present">{monthData ? monthData.totals.present : '—'}</span>
+              <span className="attendance-summary-value present">{monthData ? monthData.totals.present : EMPTY_VALUE}</span>
             </div>
             <div className="attendance-summary-card">
               <span className="attendance-summary-label">Total absent</span>
-              <span className="attendance-summary-value absent">{monthData ? monthData.totals.absent : '—'}</span>
+              <span className="attendance-summary-value absent">{monthData ? monthData.totals.absent : EMPTY_VALUE}</span>
             </div>
             <p className="attendance-summary-caption">
               {monthData ? `${monthData.label} · per-scholar totals for the month` : 'Loading the month…'}
@@ -445,11 +467,11 @@ const AttendancePage = () => {
                   <tr key={s.roll_no}>
                     <td>{s.roll_no}</td>
                     <td>{s.name}</td>
-                    <td>{s.department_name || '—'}</td>
+                    <td>{s.department_name || EMPTY_VALUE}</td>
                     <td style={{ color: 'var(--success-text)' }}>{s.present}</td>
                     <td style={{ color: 'var(--danger-text)' }}>{s.absent}</td>
                     <td>{s.total}</td>
-                    <td>{s.percent != null ? `${s.percent}%` : '—'}</td>
+                    <td>{s.percent != null ? `${s.percent}%` : EMPTY_VALUE}</td>
                   </tr>
                 ))}
               </tbody>
@@ -510,7 +532,7 @@ const AttendancePage = () => {
           )}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
             <button onClick={() => { setShowCsvModal(false); setCsvFile(null); setCsvPreview(null); }} style={{ padding: '0.75rem 1.5rem', background: 'white', color: 'var(--text-muted)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius)', fontSize: '1rem', fontWeight: '500', cursor: 'pointer' }}>Cancel</button>
-            <button onClick={handleCsvUpload} disabled={uploading || !csvFile} style={{ padding: '0.75rem 1.5rem', background: uploading || !csvFile ? 'var(--text-subtle)' : 'var(--primary-color)', color: 'white', border: 'none', borderRadius: 'var(--radius)', fontSize: '1rem', fontWeight: '500', cursor: uploading || !csvFile ? 'not-allowed' : 'pointer' }}>{uploading ? 'Uploading...' : 'Upload'}</button>
+            <button onClick={handleCsvUpload} disabled={uploading || !csvFile} style={{ padding: '0.75rem 1.5rem', background: uploading || !csvFile ? 'var(--text-subtle)' : 'var(--primary-color)', color: 'white', border: 'none', borderRadius: 'var(--radius)', fontSize: '1rem', fontWeight: '500', cursor: uploading || !csvFile ? 'not-allowed' : 'pointer' }}>{uploading ? 'Uploading…' : 'Upload'}</button>
           </div>
         </div>
       </CustomModal>

@@ -13,7 +13,6 @@ const NAV_LABELS = buttonConfig.reduce((map, item) => {
 const EXTRA_LABELS = {
   '/projects/create': 'New Project',
   '/forms/manage': 'Manage Forms',
-  '/research-profile': 'Research Profile',
   '/areasOfSpecialization': 'Areas of Specialization',
   '/outside-experts': 'Outside Experts',
   // Reachable but not in the nav, so this is the only source of its name.

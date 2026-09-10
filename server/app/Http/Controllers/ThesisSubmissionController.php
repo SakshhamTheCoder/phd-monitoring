@@ -87,6 +87,7 @@ class ThesisSubmissionController extends Controller
                 return $this->handleAdminForm($user, $form_id, $model);
             case 'faculty':
                 return $this->handleFacultyForm($user, $form_id, $model);
+            case 'director':
             case 'admin':
                 return $this->handleAdminForm($user, $form_id, $model,true);
            
@@ -207,9 +208,45 @@ class ThesisSubmissionController extends Controller
         return response()->json(['message' => 'Publications unlinked from Presentation'], 200);
     }
 
+    /**
+     * The Institute's submission window, checked at the one point a thesis
+     * actually leaves the student. Too early is a flat no; too late is a no
+     * with the extension route named, since that is the only way back in.
+     */
+    private function windowRefusal($student)
+    {
+        $window = $student?->thesisWindow();
+        if (!$window) {
+            return null;
+        }
+
+        $today = now()->toDateString();
+
+        if ($today < $window['earliest']) {
+            return response()->json([
+                'message' => 'A thesis cannot be submitted before ' . $window['earliest']
+                    . ', the minimum period from your date of admission.',
+            ], 403);
+        }
+
+        if ($today > $window['latest']) {
+            return response()->json([
+                'message' => 'Your submission period ended on ' . $window['latest']
+                    . '. Apply for a thesis extension before submitting.',
+            ], 403);
+        }
+
+        return null;
+    }
+
     private function studentSubmit($user, $request, $form_id)
     {
         $model = ThesisSubmission::class;
+
+        $refusal = $this->windowRefusal($user->student);
+        if ($refusal) {
+            return $refusal;
+        }
 
         return $this->submitForm(
             $user,

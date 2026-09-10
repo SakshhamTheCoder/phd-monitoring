@@ -101,7 +101,7 @@ const FormList = () => {
           ))}
         </div>
       ) : (
-        <p>No forms to display</p>
+        <p>No forms yet.</p>
       )}
     </>
   );

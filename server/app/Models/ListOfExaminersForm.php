@@ -48,18 +48,23 @@ class ListOfExaminersForm extends Model
         return array_merge($commonJSON, [
             'status' => $this->status,
             'history' => $this->history,
-            'national' => $this->nationalExaminersRecommendations->toArray(),
-            'international' => $this->internationalExaminersRecommendations->toArray(),
+            // Flattened, not the raw rows: the screens read an examiner's name
+            // and email off the row itself, and moving those to the directory
+            // must not change what the form hands them.
+            'national' => $this->nationalExaminersRecommendations->map->toFormRow()->values(),
+            'international' => $this->internationalExaminersRecommendations->map->toFormRow()->values(),
         ]);
     }
     public function nationalExaminersRecommendations()
     {
         return $this->hasMany(ExaminersRecommendation::class, 'form_id', 'id')
+            ->with('examiner')
             ->where('type', 'national');
     }
     public function internationalExaminersRecommendations()
     {
         return $this->hasMany(ExaminersRecommendation::class, 'form_id', 'id')
+            ->with('examiner')
             ->where('type', 'international');
     }
 

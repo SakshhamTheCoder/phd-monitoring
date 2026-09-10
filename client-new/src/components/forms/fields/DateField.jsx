@@ -22,18 +22,22 @@ const DateField = ({ label, initialValue, isLocked, onChange, hint = null, showL
     return (
         <div className="input-field-container">
             {showLabel && (<label className="input-label">{label}{required && <span className="req">*</span>}</label>)}
-            <input
-                type="date"
-                className="input-field"
-                value={value}
-                placeholder={hintText}
-                onChange={(e) => {
-                    updateValue(e.target.value);
-                    onChange(e.target.value);
-                }}
-                readOnly={isLocked}
-                disabled={isLocked}
-            />
+            {isLocked && !value ? (
+                <div className="input-field field-readonly">Not provided</div>
+            ) : (
+                <input
+                    type="date"
+                    className="input-field"
+                    value={value}
+                    placeholder={hintText}
+                    onChange={(e) => {
+                        updateValue(e.target.value);
+                        onChange(e.target.value);
+                    }}
+                    readOnly={isLocked}
+                    disabled={isLocked}
+                />
+            )}
         </div>
     );
 };

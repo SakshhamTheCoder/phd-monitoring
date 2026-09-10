@@ -11,4 +11,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/filters', [ListOfExaminersController::class, 'listFilters']);
     Route::get('/{form_id}', [ListOfExaminersController::class, 'loadForm'])->name('form.load');
     Route::post('/{form_id}', [ListOfExaminersController::class, 'submit'])->name('form.submit');
+    Route::delete('/{form_id}/examiners/{recommendation_id}', [ListOfExaminersController::class, 'destroyExaminer']);
 });

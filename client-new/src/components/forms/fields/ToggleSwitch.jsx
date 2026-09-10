@@ -1,14 +1,26 @@
-// src/components/forms/fields/ToggleSwitch.js
 import React from "react";
 import "./ToggleSwitch.css";
 
-const ToggleSwitch = ({ isOn, onToggle, label = "" }) => {
+/**
+ * A switch, not a styled div: keyboard users need to reach and flip it, and
+ * a screen reader needs to hear its on/off state. Every caller gets that
+ * from the element itself rather than repeating the wiring.
+ */
+const ToggleSwitch = ({ isOn, onToggle, label = "", disabled = false }) => {
   return (
     <div className="toggle-container">
       {label && <span>{label}</span>}
-      <div className={`toggle-switch ${isOn ? "on" : "off"}`} onClick={onToggle}>
-        <div className="toggle-handle" />
-      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={!!isOn}
+        aria-label={label || undefined}
+        disabled={disabled}
+        className={`toggle-switch ${isOn ? "on" : "off"}`}
+        onClick={onToggle}
+      >
+        <span className="toggle-handle" />
+      </button>
     </div>
   );
 };

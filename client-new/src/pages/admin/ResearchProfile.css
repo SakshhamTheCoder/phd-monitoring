@@ -10,142 +10,32 @@
 }
 
 /* Top Nav */
-.rp-top-nav {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    margin-bottom: 2rem;
-}
 
-.rp-nav-left {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-}
 
-.rp-back-btn {
-    background: none;
-    border: none;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #555;
-    cursor: pointer;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
 
 /* Title comes from styles/ui.css; it sits inline with the search bar here. */
-.rp-nav-left .page-title { margin: 0; }
 
 .rp-search-bar {
     display: flex;
     align-items: center;
-    background: #EAEAEA;
-    border-radius: 4px;
-    padding: 0.5rem 1rem;
-    margin-left: 2rem;
+    gap: 0.5rem;
+    height: 38px;
+    padding: 0 0.75rem;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    color: #6b7280;
+    flex: 1 1 200px;
+    min-width: 180px;
 }
 
 .rp-search-bar input {
     background: transparent;
     border: none;
     outline: none;
-    margin-left: 0.5rem;
-    font-size: 0.9rem;
-}
-
-/* Banner Grid */
-.rp-banner-grid {
-    display: grid;
-    grid-template-columns: 300px 1fr 1fr;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.rp-user-card,
-.rp-info-card,
-.rp-sync-card {
-    background: #FFF;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-}
-
-.rp-user-card {
-    text-align: center;
-}
-
-.rp-avatar-wrapper {
-    position: relative;
-    width: 120px;
-    height: 120px;
-    margin: 0 auto 1rem;
-    border-radius: 50%;
-    border: 3px solid #FFF;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.rp-avatar {
     width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: cover;
-    background: #EEE;
-}
-
-.rp-status-badge {
-    position: absolute;
-    bottom: 5px;
-    right: 5px;
-    width: 20px;
-    height: 20px;
-    background: var(--primary-color);
-    border: 3px solid #FFF;
-    border-radius: 50%;
-}
-
-.rp-user-card h2 {
-    margin: 0;
-    font-size: 1.4rem;
-    font-weight: 600;
-}
-
-.rp-designation {
-    color: var(--primary-color);
-    font-size: 1rem;
-    font-weight: 600;
-    margin: 0.2rem 0;
-}
-
-.rp-department {
-    color: #666;
     font-size: 0.9rem;
-    margin-bottom: 1.5rem;
-}
-
-.rp-user-stats {
-    border-top: 1px solid #EEE;
-    padding-top: 1rem;
-}
-
-.rp-stat-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
-    color: #555;
-}
-
-.rp-stat-row strong {
-    color: #000;
-    font-weight: 600;
-}
-
-/* Info Cards */
-.rp-middle-col {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+    font-weight: 400;
 }
 
 .rp-right-col {
@@ -154,28 +44,7 @@
     gap: 1.5rem;
 }
 
-.rp-card-title {
-    margin: 0 0 1rem;
-    padding-left: 0.5rem;
-    font-size: 1.1rem;
-    color: #333;
-}
 
-.border-red {
-    border-left: 4px solid var(--primary-color);
-}
-
-.rp-contact-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.rp-contact-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
 
 .border-icon {
     display: flex;
@@ -188,100 +57,24 @@
     color: var(--primary-color);
 }
 
-.rp-contact-item label {
-    display: block;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    color: #777;
-    margin-bottom: 0.2rem;
-    font-weight: 600;
-}
 
-.rp-contact-item p {
-    margin: 0;
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #222;
-}
 
 /* Stats Cards */
-.rp-stats-cards {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-}
 
-.rp-mini-stat {
-    background: #FFF;
-    padding: 1rem;
-    border-radius: 12px;
-    text-align: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-    border-bottom: 4px solid #EEE;
-}
 
-.rp-mini-stat.stat-green {
-    border-bottom-color: #22c55e;
-}
 
-.rp-mini-stat.stat-yellow {
-    border-bottom-color: #eab308;
-}
 
-.rp-mini-stat.stat-red {
-    border-bottom-color: #ef4444;
-}
 
-.rp-mini-stat label {
-    display: block;
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: #555;
-    margin-bottom: 0.5rem;
-}
 
-.stat-num {
-    font-size: 1.6rem;
-    font-weight: 700;
-}
 
-.stat-num.black {
-    color: #000;
-}
 
-.stat-num.green {
-    color: #22c55e;
-}
 
-.stat-num.yellow {
-    color: #eab308;
-}
 
-.stat-num.red {
-    color: #ef4444;
-}
 
 /* Sync Card */
-.rp-sync-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
 
-.rp-sync-info h4 {
-    margin: 0 0 0.5rem;
-    color: #333;
-}
 
-.rp-sync-info p {
-    margin: 0.2rem 0;
-    font-size: 0.9rem;
-    color: #555;
-}
 
-.rp-sync-info strong {
-    color: #000;
-}
 
 .rp-sync-btn {
     background: var(--primary-color);
@@ -306,51 +99,19 @@
     margin-bottom: 2rem;
 }
 
-.rp-filters {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-}
-
-.rp-filters label {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #555;
-}
-
-.rp-filter-group {
-    display: flex;
-    background: #FFF;
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.rp-filter-group button {
-    background: none;
-    border: none;
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-    cursor: pointer;
-    font-weight: 500;
-}
-
-.rp-filter-group button.active {
-    background: var(--primary-color);
-    color: #FFF;
-}
 
 
 
-.rp-year-filter {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
+
+
+
+
 
 .rp-year-tags {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+    margin: -1rem 0 1.5rem;
 }
 
 .rp-year-tag {
@@ -375,13 +136,6 @@
     padding: 0;
 }
 
-.rp-year-input {
-    padding: 0.5rem;
-    border: 1px solid #DDD;
-    border-radius: 4px;
-    outline: none;
-    width: 200px;
-}
 
 .rp-export-btn {
     background: none;
@@ -399,8 +153,46 @@
 
 .rp-table-section h3 {
     margin-bottom: 1rem;
-    color: #333;
-    font-size: 1.1rem;
+    color: #1f2937;
+    font-size: 1.2rem;
+}
+
+/* body sets font-weight 600 app-wide, so every publication cell inherits
+   semi-bold and the rows read as a wall of emphasis. The list is data: give it
+   a normal weight. The column headers keep their own 600 from .data-table th,
+   the section heading keeps the inherited one, and the author highlight stays
+   bold because <strong> resolves relative to this. */
+.rp-table-section .data-table td {
+    font-weight: 400;
+}
+
+/* .data-table th is nowrap app-wide, which made "YEAR OF PUBLICATION" hold open
+   a column far wider than a four-digit year needs. Letting these headings wrap
+   onto two lines returns that space to the title, which is the column that
+   actually has something long to say. */
+.rp-table-section .data-table th {
+    white-space: normal;
+}
+
+.rp-table-section .data-table .rp-col-year {
+    width: 4.5rem;
+    white-space: nowrap;
+}
+
+/* Claimed rather than merely allowed: without a width the freed space is shared
+   out among every remaining column instead of going to the title. */
+.rp-table-section .data-table .rp-col-title {
+    width: 42%;
+}
+
+/* Row number: a narrow, quiet index. Fixed width so the column does not shift
+   when a list crosses from single to double digits. */
+.rp-table-section .data-table .rp-col-num {
+    width: 2.5rem;
+    color: var(--text-muted);
+    text-align: right;
+    padding-right: 0.5rem;
+    white-space: nowrap;
 }
 
 
@@ -438,17 +230,8 @@
 }
 
 /* Edit, source and modal additions */
-.rp-card-head-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
-.rp-inline-edit { background: none; border: none; color: var(--primary-color); cursor: pointer; font-size: 0.85rem; padding: 0.2rem 0.4rem; }
-.rp-inline-edit:hover { color: var(--hover-color); }
 
-.rp-id-form { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.5rem; }
-.rp-id-form-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.6rem; }
 
-.rp-btn-outline, .rp-btn-primary { padding: 0.45rem 0.9rem; border-radius: 8px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
-.rp-btn-outline { background: #FFF; border: 1px solid #DDD; color: #444; }
-.rp-btn-primary { background: var(--primary-color); border: 1px solid var(--primary-color); color: #FFF; }
-.rp-btn-primary:hover { background: var(--hover-color); }
 
 .rp-filter-actions { display: flex; align-items: center; gap: 0.6rem; }
 .rp-add-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 0.9rem; background: var(--primary-color); color: #FFF; border: none; border-radius: 8px; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.04em; cursor: pointer; }
@@ -528,3 +311,320 @@
     color: #1b3a6b;
     cursor: pointer;
 }
+
+/* Supervision tab. Sits between the dashboard's plain tables and the
+   publication tables: same surface and type as the rest of the page, with the
+   row affordance the dashboard had, since a row still opens the student. */
+
+
+
+
+
+/* Expertise, given the full-width row it had on the dashboard card rather than
+   a line buried among the academic identifiers. */
+
+
+
+
+/* The dashboard card's softer surface, carried onto the profile so the two
+   read as the same product rather than two pages that grew separately. */
+
+
+
+/* Every figure in one row: supervision load and research output read together
+   rather than interleaved down the sidebar, which is what made that list long
+   enough to scan. Wraps rather than shrinking the tiles on a narrow screen. */
+
+
+
+
+/* The banner is identity, contact and identifiers now, so the middle column no
+   longer carries a stack and the three read as equal cards. */
+
+/* The dashboard card, restored as the page itself. These rules came from
+   components/profileCard/FacultyProfile.css, which this page replaced; the
+   markup is unchanged, so the styles come with it rather than being reinvented. */
+.faculty-container {
+    background: #ffffff;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+    max-width: 1100px;
+    margin: auto;
+  }
+  
+  .faculty-container h2 {
+    margin-bottom: 0.3rem;
+    font-size: 1.5rem;
+    line-height: 1.25;
+    font-weight: 600;
+    color: #111827;
+  }
+  
+  .faculty-sub {
+    font-size: 0.95rem;
+    color: #6b7280;
+    margin-bottom: 0;
+  }
+  
+  .faculty-table-section {
+    margin-top: 2.5rem;
+  }
+  
+  .faculty-table-section h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.8rem;
+    color: #1f2937;
+  }
+
+  /* Headers stay on one line so "Date of Admission" doesn't stack and
+     inflate the row height. */
+
+  /* Dates, roll numbers, phone numbers and percentages read as single
+     tokens, wrapping them mid-value is what made the rows look ragged.
+     Names and emails are still free to wrap and absorb the slack. */
+  
+  .empty-msg {
+    color: #9ca3af;
+    font-style: italic;
+  }
+  
+/* Research is a section of this page, revealed on demand. */
+
+
+
+.rp-research {
+    max-width: 1100px;
+    margin: 1.5rem auto 0;
+}
+
+
+/* Identifiers span the width; the sync line sits under them as a strip rather
+   than a second panel the same size for two lines of text. */
+.rp-research .rp-right-col {
+    display: block;
+    margin-bottom: 1.5rem;
+}
+
+/* Name on the left, the way into the research section on the right, so it is
+   visible on arrival instead of below the supervision tables. */
+.faculty-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+/* Same rule as ProfileCard.css, which this page does not import. The margin is
+   dropped: here the actions sit in the header row, not under it. */
+.faculty-header .profile-actions {
+    display: flex;
+    gap: 1rem;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.faculty-header h2 {
+    margin-bottom: 0.3rem;
+}
+
+
+
+
+
+/* Sync state is one line of status and one action, so it gets one line. */
+.rp-sync-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    padding: 0.6rem 1rem;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: #6b7280;
+}
+
+.rp-sync-strip strong {
+    color: #374151;
+}
+
+.rp-sync-dot {
+    margin: 0 0.5rem;
+    color: #d1d5db;
+}
+
+.rp-sync-btn {
+    padding: 0.4rem 0.9rem;
+    font-size: 0.85rem;
+    border-radius: 6px;
+}
+
+/* Three tallies, read at a glance beside the filters rather than as three
+   panels the height of a stat card. */
+.rp-tallies {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: #6b7280;
+}
+
+.rp-tally strong {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #111827;
+    margin-right: 0.35rem;
+}
+
+.rp-tally.is-green strong {
+    color: #22c55e;
+}
+
+.rp-tally.is-yellow strong {
+    color: #eab308;
+}
+
+/* Filter bar. The action buttons were wrapping onto two lines and the year
+   select was collapsing to nothing, because everything in the row was free to
+   shrink. */
+.rp-filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-shrink: 0;
+}
+
+.rp-add-btn,
+.rp-export-btn {
+    white-space: nowrap;
+}
+
+.rp-export-btn {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.85rem;
+}
+
+.rp-filter-bar {
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+
+
+
+/* Filter bar. Each filter is a labelled group, so the label belongs to its
+   control instead of being a sibling in one long flex row, and every control
+   is the same height and width. */
+.rp-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1rem;
+    flex: 1 1 auto;
+}
+
+.rp-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.rp-filter label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #6b7280;
+}
+
+.rp-filter select {
+    min-width: 170px;
+    height: 38px;
+    padding: 0 0.6rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: #374151;
+}
+
+.rp-filter select:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 1px;
+}
+
+/* Both actions match the control height so the row reads as one band. */
+.rp-add-btn,
+.rp-export-btn {
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    letter-spacing: 0;
+}
+
+.rp-export-btn {
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #fff;
+    padding: 0 0.9rem;
+}
+
+.rp-export-btn:hover {
+    background: #f9fafb;
+}
+
+.rp-sync-hint {
+    font-style: italic;
+}
+
+/* Edit profile. Reuses the identifier form's field and action styling so the
+   two dialogs on this page look like one thing. */
+
+
+
+
+
+/* Identifiers use the same grid and label style as the card above, so the page
+   has one way of showing a field rather than two. Three across at the container
+   width, wrapping below it. */
+.rp-research .faculty-info-grid {
+    margin-bottom: 0;
+}
+
+/* The matrix sits in an inset panel, matching .student-details on the student
+   card. Without it the fields floated on the card while the student's were
+   framed, which is the difference between the two profiles. */
+.faculty-details {
+    margin-top: 1.5rem;
+    padding: 1.25rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #fafafa;
+}
+
+.faculty-details .faculty-info-grid {
+    margin: 0;
+}
+
+/* Splits the profile card into who they are and what the sync runs on, without
+   splitting it into two cards that edit separately. */
+.faculty-details-heading {
+    margin: 1.5rem 0 1rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #e5e7eb;
+    font-size: 0.95rem;
+    color: #1f2937;
+}
+

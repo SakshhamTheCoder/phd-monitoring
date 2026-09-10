@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { customFetch } from "../../api/base";
 import { baseURL } from "../../api/urls";
+import { EMPTY_VALUE } from "../../utils/timeParse";
 import { useLoading } from "../../context/LoadingContext";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -96,7 +97,7 @@ const AdminFormManagement = () => {
         setStudents(response.response.data || []);
       }
     } catch (error) {
-      toast.error("Failed to fetch students");
+      toast.error("Failed to fetch students.");
     } finally {
       setLoading(false);
     }
@@ -117,7 +118,7 @@ const AdminFormManagement = () => {
         setSelectedStudent(response.response.student);
       }
     } catch (error) {
-      toast.error("Failed to fetch student forms");
+      toast.error("Failed to fetch student forms.");
     } finally {
       setLoading(false);
     }
@@ -178,7 +179,7 @@ const AdminFormManagement = () => {
           );
         }
         
-        toast.success("Stage updated successfully");
+        toast.success("Stage updated.");
         await fetchStudentForms(selectedStudent.roll_no);
         
         // Update the selected form for instances modal if it's open
@@ -191,7 +192,7 @@ const AdminFormManagement = () => {
         }
       }
     } catch (error) {
-      toast.error("Failed to update stage");
+      toast.error("Failed to update stage.");
     } finally {
       setLoading(false);
     }
@@ -229,7 +230,7 @@ const AdminFormManagement = () => {
         false
       );
       if (response.success) {
-        toast.success(`${roleLabels[role]} availability ${!currentValue ? "enabled" : "disabled"}`);
+        toast.success(`${roleLabels[role]} availability ${!currentValue ? "enabled" : "disabled"}.`);
         const updatedForms = await getUpdatedForms();
         setStudentForms(updatedForms);
         
@@ -242,7 +243,7 @@ const AdminFormManagement = () => {
         }
       }
     } catch (error) {
-      toast.error("Failed to toggle availability");
+      toast.error("Failed to toggle availability.");
     } finally {
       setLoading(false);
     }
@@ -265,13 +266,13 @@ const AdminFormManagement = () => {
         false
       );
       if (response.success) {
-        toast.success("Form disabled successfully");
+        toast.success("Form disabled.");
         await fetchStudentForms(selectedStudent.roll_no);
         setIsManageFormModalOpen(false);
         setSelectedFormForManagement(null);
       }
     } catch (error) {
-      toast.error(error.message || "Failed to disable form");
+      toast.error(error.message || "Failed to disable form.");
     } finally {
       setLoading(false);
     }
@@ -293,7 +294,7 @@ const AdminFormManagement = () => {
         false
       );
       if (response.success) {
-        toast.success(`Lock ${!currentValue ? "enabled" : "disabled"}`);
+        toast.success(`Lock ${!currentValue ? "enabled" : "disabled"}.`);
         await fetchStudentForms(selectedStudent.roll_no);
         
         // Update the selected form for instances modal if it's open
@@ -306,7 +307,7 @@ const AdminFormManagement = () => {
         }
       }
     } catch (error) {
-      toast.error("Failed to toggle lock");
+      toast.error("Failed to toggle lock.");
     } finally {
       setLoading(false);
     }
@@ -328,11 +329,11 @@ const AdminFormManagement = () => {
         false
       );
       if (response.success) {
-        toast.success("Form enabled successfully");
+        toast.success("Form enabled.");
         await fetchStudentForms(selectedStudent.roll_no);
       }
     } catch (error) {
-      toast.error(error.message || "Failed to enable form");
+      toast.error(error.message || "Failed to enable form.");
     } finally {
       setLoading(false);
     }
@@ -354,7 +355,7 @@ const AdminFormManagement = () => {
         false
       );
       if (response.success) {
-        toast.success("Form instance created successfully");
+        toast.success("Form instance created.");
         await fetchStudentForms(selectedStudent.roll_no);
         
         // Update the selected form for instances modal if it's open
@@ -367,7 +368,7 @@ const AdminFormManagement = () => {
         }
       }
     } catch (error) {
-      toast.error(error.message || "Failed to create form instance");
+      toast.error(error.message || "Failed to create form instance.");
     } finally {
       setLoading(false);
     }
@@ -409,7 +410,7 @@ const AdminFormManagement = () => {
         false
       );
       if (response.success) {
-        toast.success("Form deleted successfully");
+        toast.success("Form deleted.");
         await fetchStudentForms(selectedStudent.roll_no);
         
         // Update the selected form for instances modal if it's open
@@ -422,7 +423,7 @@ const AdminFormManagement = () => {
         }
       }
     } catch (error) {
-      toast.error("Failed to delete form");
+      toast.error("Failed to delete form.");
     } finally {
       setLoading(false);
     }
@@ -444,7 +445,7 @@ const AdminFormManagement = () => {
         false
       );
       if (response.success) {
-        toast.success("Steps updated successfully");
+        toast.success("Steps updated.");
         await fetchStudentForms(selectedStudent.roll_no);
         
         // Update the selected form for instances modal if it's open
@@ -457,7 +458,7 @@ const AdminFormManagement = () => {
         }
       }
     } catch (error) {
-      toast.error("Failed to update steps");
+      toast.error("Failed to update steps.");
     } finally {
       setLoading(false);
     }
@@ -521,7 +522,7 @@ const AdminFormManagement = () => {
 
           {studentForms.length === 0 ? (
             <div className="empty-state">
-              <p>No forms available for this student</p>
+              <p>No forms available for this student yet.</p>
             </div>
           ) : (
             <div className="forms-grid">
@@ -745,7 +746,7 @@ const AdminFormManagement = () => {
 
             {selectedFormForInstances.instances.length === 0 ? (
               <div className="empty-instances">
-                <p>No instances created yet. Create one to get started.</p>
+                <p>No instances yet. Create one to get started.</p>
               </div>
             ) : (
               <div className="instances-list">
@@ -851,14 +852,14 @@ const AdminFormManagement = () => {
                         </div>
 
                         <div className="control-group full-width">
-                          <label>Steps Sequence (Current: {instance.steps?.[instance.current_step] || 'N/A'})</label>
+                          <label>Steps Sequence (Current: {instance.steps?.[instance.current_step] || EMPTY_VALUE})</label>
                           <span className="steps-display-modal">
                             {instance.steps?.map((step, idx) => (
                               <span key={idx} className={idx === instance.current_step ? 'current-step' : idx <= (instance.maximum_step || 0) ? 'reached-step' : ''}>
                                 {step}
                                 {idx < instance.steps.length - 1 ? ' → ' : ''}
                               </span>
-                            )) || "N/A"}
+                            )) || EMPTY_VALUE}
                           </span>
                         </div>
                       </div>

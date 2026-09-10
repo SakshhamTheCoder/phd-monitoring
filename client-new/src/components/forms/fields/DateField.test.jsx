@@ -17,14 +17,23 @@ describe('DateField', () => {
   });
 
   // Regression for C2: formData.date_of_irb is NULL for a student submitting
-  // their own IRB, so callers pass it through formatDate() first, which
-  // returns the portal's em dash ('—') for "nothing recorded". That em dash
-  // used to reach `new Date(initialValue).toISOString()` unguarded, which
-  // throws RangeError: Invalid time value from inside a useEffect.
+  // their own IRB, so callers pass it through formatDate() first, which used
+  // to return the portal's em dash ('—') for "nothing recorded" and now
+  // returns EMPTY_VALUE ('N/A'). Either string used to reach
+  // `new Date(initialValue).toISOString()` unguarded, which throws
+  // RangeError: Invalid time value from inside a useEffect.
   it('does not throw and renders an empty date input when given the em dash', () => {
     let container;
     expect(() => {
       ({ container } = render(<DateField label="Date" initialValue="—" onChange={() => {}} />));
+    }).not.toThrow();
+    expect(dateValue(container)).toBe('');
+  });
+
+  it('does not throw and renders an empty date input when given EMPTY_VALUE', () => {
+    let container;
+    expect(() => {
+      ({ container } = render(<DateField label="Date" initialValue="N/A" onChange={() => {}} />));
     }).not.toThrow();
     expect(dateValue(container)).toBe('');
   });

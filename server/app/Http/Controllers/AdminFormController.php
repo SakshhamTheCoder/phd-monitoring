@@ -95,7 +95,8 @@ class AdminFormController extends Controller
         ],
         'thesis-extension' => [
             'form_name' => 'Thesis Extension',
-            'max_count' => 10,
+            // One ordinary extension, then one special extension. Nothing after.
+            'max_count' => 2,
             'steps' => ["student","faculty","phd_coordinator","hod","dra","dordc","complete"]
         ],
         // 'presentation' => [

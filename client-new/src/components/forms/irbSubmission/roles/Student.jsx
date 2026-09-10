@@ -131,7 +131,7 @@ const Student = ({ formData }) => {
               <p></p>,
               <></>,
               <>
-                {!lock  && (
+                {formData.role === "student" && !lock && (
                   <CustomButton text={"+ Add"} onClick={addObjective} />
                 )}
               </>,

@@ -5,12 +5,14 @@ import { customFetch } from "../../api/base";
 import { useLoading } from "../../context/LoadingContext";
 import { toast } from "react-toastify";
 import FileLink, { isFilePath } from "../common/FileLink";
+import { EMPTY_VALUE } from "../../utils/timeParse";
 
 const PagenationTable = ({
   endpoint,
   filters,
   enableApproval = false,
   customOpenForm, // function(id)
+  rowClickable = true,
   customBulkAction, // function(formIds)
   extraTopbarComponents = null,
   enableSelect=true,
@@ -75,6 +77,13 @@ const PagenationTable = ({
       return newSet;
     });
   };
+
+  // FilterBar hands back { combine, conditions, mandatory_filter } and pages
+  // start from an empty array, so the object itself is always truthy. Only a
+  // condition the user actually added means the list was filtered.
+  const hasFilters = Array.isArray(filters)
+    ? filters.length > 0
+    : (filters?.conditions?.length ?? 0) > 0;
 
   const openForm = (form) => {
     if (customOpenForm) customOpenForm(form);
@@ -159,19 +168,20 @@ const PagenationTable = ({
         {forms.length === 0 && (
   <tr className="no-data-row">
     <td colSpan={fields.length + 3} className="no-data-cell">
-      No Data to Display
+      {hasFilters ? "No results match your filters." : "No results yet."}
     </td>
   </tr>
 )}
    {forms.map((form, index) => {
             const formId = form.id || form.id;
+            const clickable = rowClickable || selectMode;
             return (
               <tr
                 key={formId}
-                className={`form-row row-link ${selectMode && selectedForms.has(formId) ? "selected-row" : ""}`}
-                tabIndex={0}
-                onClick={() => selectMode ? toggleSelectOne(formId) : openForm(form)}
-                onKeyDown={(e) => e.key === "Enter" && (selectMode ? toggleSelectOne(formId) : openForm(form))}
+                className={`form-row ${clickable ? "row-link" : ""} ${selectMode && selectedForms.has(formId) ? "selected-row" : ""}`}
+                tabIndex={clickable ? 0 : -1}
+                onClick={clickable ? () => selectMode ? toggleSelectOne(formId) : openForm(form) : undefined}
+                onKeyDown={clickable ? (e) => e.key === "Enter" && (selectMode ? toggleSelectOne(formId) : openForm(form)) : undefined}
               >
                 {selectMode && (
                   <td>
@@ -187,7 +197,7 @@ const PagenationTable = ({
                   const val = form[field];
                   return (
                     <td key={idx}>
-                      {isFilePath(val) ? <FileLink value={val} /> : (val ?? "N/A")}
+                      {isFilePath(val) ? <FileLink value={val} /> : (val ?? EMPTY_VALUE)}
                     </td>
                   );
                 })}

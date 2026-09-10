@@ -4,8 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BroadAreaSpecialization;
 use App\Models\Department;
-use App\Models\ExaminersDetail;
-use App\Models\ExaminersRecommendation;
+use App\Models\Examiner;
 use App\Models\Faculty;
 use App\Models\OutsideExpert;
 use App\Models\User;
@@ -74,7 +73,7 @@ class SuggestionController extends Controller
     public function suggestExaminer(Request $request)
     {
         $loggenInUser = Auth::user();
-        if ($loggenInUser->current_role->role != 'faculty') {
+        if (!$loggenInUser->may('can_suggest_examiners')) {
             return response()->json(["message" => "Only faculty can view examiners"]);
         }
 
@@ -93,7 +92,10 @@ class SuggestionController extends Controller
             return response()->json([], 200);
         }
 
-        $examinerQuery = ExaminersRecommendation::query();
+        // The directory, not the per-form rows. Searching the rows returned the
+        // same person once per form they had ever been proposed on, each hit
+        // carrying that form's verdict.
+        $examinerQuery = Examiner::query();
 
         foreach ($tokens as $token) {
             $examinerQuery->where(function ($query) use ($token) {
@@ -108,8 +110,7 @@ class SuggestionController extends Controller
         $examiners = $examinerQuery
             ->orderBy('name')
             ->limit(25)
-            ->get()
-            ->makeHidden('added_by');
+            ->get();
 
         // Return the examiners as a JSON response
         return response()->json($examiners);
@@ -122,6 +123,12 @@ class SuggestionController extends Controller
             'text' => 'required|string',
             'department_id' => 'nullable|integer',
         ]);
+
+        // Mirrors the authorization check in the faculty directory endpoints.
+        $user = Auth::user();
+        if (!$user?->may('can_read_faculty_directory')) {
+            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+        }
 
         if (!$request->text) {
             return response()->json([], 200);

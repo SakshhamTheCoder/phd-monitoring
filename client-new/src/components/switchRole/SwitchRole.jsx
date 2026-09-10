@@ -6,24 +6,26 @@ import { toast } from 'react-toastify';
 import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
 import {getRoleName} from '../../utils/roleName';
+import { clearCapabilities } from '../../hooks/useCapabilities';
 const SwitchRole = () => {
     const [body, setBody] = useState({});
     const { setLoading } = useLoading();
     const [roles, setRoles] = useState([]);
 
-    const available_roles= JSON.parse(localStorage.getItem("available_roles")) || [];
-    
+    // localStorage holds whatever the last login returned. A role granted since
+    // then is missing from it, and the user cannot pick a role the dropdown does
+    // not list, so re-read the roles from the server on mount.
     useEffect(() => {
-        const rls=[]
-        available_roles.forEach(rol => {
-            let tt={
-                title:getRoleName( rol),
-                value:rol
-            }
-            rls.push(tt);
+        const toOptions = (list) => (list || []).map((rol) => ({ title: getRoleName(rol), value: rol }));
+
+        setRoles(toOptions(JSON.parse(localStorage.getItem("available_roles")) || []));
+
+        customFetch(`${baseURL}/my-roles`, "GET", {}, true).then((data) => {
+            if (!data?.success) return;
+            const fresh = data.response.available_roles || [];
+            localStorage.setItem("available_roles", JSON.stringify(fresh));
+            setRoles(toOptions(fresh));
         });
-        setRoles(rls);
-        console.log(roles);
     }, [])
 
    const setRole=(role) => {
@@ -38,6 +40,8 @@ const SwitchRole = () => {
             if (data && data.success) {
                 localStorage.setItem("user", JSON.stringify(data.response.user));
                 localStorage.setItem("userRole", data.response.user.role.role);
+                // The new role has its own capabilities; drop the old answer.
+                clearCapabilities();
                 toast.success("Role switched successfully");
                 // Broadcast the change so the header, notifications and any listening
                 // view re-fetch for the newly-active role — no full page reload needed.

@@ -51,9 +51,27 @@ class ProjectBudgetTest extends TestCase
         $this->assertSame(325000, ProjectBudget::headTotal($this->sample(), 'year1', 'Equipment'));
     }
 
-    public function test_any_other_expenses_is_its_own_head(): void
+    public function test_other_expenses_is_its_own_head(): void
     {
+        $this->assertSame(30000, ProjectBudget::headTotal($this->sample(), 'year1', 'Other Expenses'));
+    }
+
+    public function test_the_old_any_other_expenses_wording_still_resolves(): void
+    {
+        // The head was renamed; a caller or a stored budget still holding the old
+        // name has to land on the same money rather than read as a missing head.
         $this->assertSame(30000, ProjectBudget::headTotal($this->sample(), 'year1', 'Any Other Expenses'));
+        $this->assertNotContains('Any Other Expenses', array_column(ProjectBudget::heads(), 'head'));
+        $this->assertContains('Other Expenses', array_column(ProjectBudget::heads(), 'head'));
+    }
+
+    public function test_a_legacy_any_other_expenses_amount_folds_onto_the_renamed_head(): void
+    {
+        $n = ProjectBudget::normalize(['year1' => ['Any Other Expenses' => 30000, 'Travel' => 1000]]);
+        $this->assertSame(30000, ProjectBudget::headTotal($n, 'year1', 'Other Expenses'));
+        // and it must not also linger as a plain stored row, which would double it
+        $this->assertArrayNotHasKey('Any Other Expenses', $n['year1']);
+        $this->assertSame(31000, ProjectBudget::yearTotal($n, 'year1'));
     }
 
     public function test_stored_heads_are_read_straight_through(): void
@@ -97,7 +115,7 @@ class ProjectBudgetTest extends TestCase
 
     // ---- legacy migration ----
 
-    public function test_legacy_manpower_sub_items_become_counted_lines_keeping_their_category(): void
+    public function test_legacy_manpower_sub_items_become_lines_keeping_their_category(): void
     {
         $legacy = [
             'year1' => ['Manpower' => 90000],
@@ -107,8 +125,8 @@ class ProjectBudgetTest extends TestCase
 
         $this->assertSame(
             [
-                ['category' => 'PhD Scholar', 'count' => 1, 'amount' => 60000],
-                ['category' => 'JRF', 'count' => 1, 'amount' => 30000],
+                ['category' => 'PhD Scholar', 'amount' => 60000],
+                ['category' => 'JRF', 'amount' => 30000],
             ],
             $n['__manpower']['year1']
         );
@@ -137,7 +155,7 @@ class ProjectBudgetTest extends TestCase
         $legacy = ['year1' => ['Manpower' => 40000, 'Equipment' => 15000]];
         $n = ProjectBudget::normalize($legacy);
 
-        $this->assertSame([['category' => '', 'count' => 1, 'amount' => 40000]], $n['__manpower']['year1']);
+        $this->assertSame([['category' => '', 'amount' => 40000]], $n['__manpower']['year1']);
         $this->assertSame([['item' => '', 'amount' => 15000]], $n['__equipment']['year1']);
         $this->assertSame(40000, ProjectBudget::headTotal($n, 'year1', 'Manpower'));
         $this->assertSame(15000, ProjectBudget::headTotal($n, 'year1', 'Equipment'));
@@ -226,8 +244,8 @@ class ProjectBudgetTest extends TestCase
         $this->assertSame(100000, ProjectBudget::headTotal($n, 'year1', 'Manpower'));
         $this->assertSame(
             [
-                ['category' => 'X', 'count' => 1, 'amount' => 30000],
-                ['category' => 'Unallocated (legacy total)', 'count' => 1, 'amount' => 70000],
+                ['category' => 'X', 'amount' => 30000],
+                ['category' => 'Unallocated (legacy total)', 'amount' => 70000],
             ],
             $n['__manpower']['year1']
         );
@@ -268,17 +286,26 @@ class ProjectBudgetTest extends TestCase
         $this->assertSame(-5000, ProjectBudget::yearTotal($n, 'year1'));
     }
 
-    public function test_negative_line_amount_and_count_are_preserved_not_clamped(): void
+    public function test_negative_line_amount_is_preserved_not_clamped(): void
     {
-        // count x amount still comes out positive (-2 x -500), and the stored head agrees,
-        // so there's no reconciliation line — but the line itself must keep its sign.
+        // A legacy count folds into the amount (-2 x -500 = 1000), which is what the
+        // stored head already said, so there's no reconciliation line — and the folded
+        // amount must keep the sign the arithmetic gives it rather than being clamped.
         $legacy = [
             'year1' => ['Manpower' => 1000],
             '__manpower' => ['year1' => [['category' => 'X', 'count' => -2, 'amount' => -500]]],
         ];
         $n = ProjectBudget::normalize($legacy);
-        $this->assertSame(['category' => 'X', 'count' => -2, 'amount' => -500], $n['__manpower']['year1'][0]);
+        $this->assertSame(['category' => 'X', 'amount' => 1000], $n['__manpower']['year1'][0]);
         $this->assertSame(1000, ProjectBudget::headTotal($n, 'year1', 'Manpower'));
+
+        // A genuinely negative line with no count to fold stays negative.
+        $n = ProjectBudget::normalize([
+            'year1' => ['Manpower' => -500],
+            '__manpower' => ['year1' => [['category' => 'X', 'amount' => -500]]],
+        ]);
+        $this->assertSame(['category' => 'X', 'amount' => -500], $n['__manpower']['year1'][0]);
+        $this->assertSame(-500, ProjectBudget::headTotal($n, 'year1', 'Manpower'));
     }
 
     public function test_subitems_for_a_head_with_no_stored_amount_reconcile_to_zero_but_stay_visible(): void
@@ -294,8 +321,8 @@ class ProjectBudgetTest extends TestCase
         $this->assertSame(0, ProjectBudget::headTotal($n, 'year1', 'Manpower'));
         $this->assertSame(
             [
-                ['category' => 'PhD Scholar', 'count' => 1, 'amount' => 60000],
-                ['category' => 'Unallocated (legacy total)', 'count' => 1, 'amount' => -60000],
+                ['category' => 'PhD Scholar', 'amount' => 60000],
+                ['category' => 'Unallocated (legacy total)', 'amount' => -60000],
             ],
             $n['__manpower']['year1']
         );
@@ -316,7 +343,7 @@ class ProjectBudgetTest extends TestCase
         $legacy = ['year1' => ['Any Other Expenses' => 30000]];
         $n = ProjectBudget::normalize($legacy);
         $this->assertSame(30000, ProjectBudget::headTotal($n, 'year1', 'Any Other Expenses'));
-        $this->assertSame([['label' => '', 'amount' => 30000]], $n['__other']['year1']);
+        $this->assertSame([['label' => '', 'amount' => 30000, 'parent' => '']], $n['__other']['year1']);
     }
 
     public function test_a_numeric_string_head_amount_is_accepted(): void
@@ -493,5 +520,98 @@ class ProjectBudgetTest extends TestCase
         }
 
         return $sum;
+    }
+
+    public function test_consumables_is_a_head_in_display_order_before_contingency(): void
+    {
+        $heads = array_column(ProjectBudget::heads(), 'head');
+        $this->assertContains('Consumables', $heads);
+        $this->assertLessThan(
+            array_search('Contingency', $heads, true),
+            array_search('Consumables', $heads, true)
+        );
+        // Like Contingency, it is a plain per-year amount with no breakdown.
+        $consumables = collect(ProjectBudget::heads())->firstWhere('head', 'Consumables');
+        $this->assertSame('amount', $consumables['kind']);
+        $this->assertSame([], $consumables['subItems']);
+    }
+
+    public function test_a_typed_head_amount_overrides_its_breakdown(): void
+    {
+        $b = ProjectBudget::normalize([
+            '__manpower' => ['year1' => [['category' => 'JRF', 'amount' => 40000]]],
+            '__headamt' => ['year1' => ['Manpower' => 500000]],
+        ]);
+        $this->assertSame(500000, ProjectBudget::headTotal($b, 'year1', 'Manpower'));
+        // The breakdown is kept intact underneath the typed total.
+        $this->assertSame([['category' => 'JRF', 'amount' => 40000]], $b['__manpower']['year1']);
+    }
+
+    public function test_without_a_typed_head_amount_the_breakdown_is_the_total(): void
+    {
+        $b = ProjectBudget::normalize([
+            '__manpower' => ['year1' => [['category' => 'JRF', 'amount' => 40000]]],
+        ]);
+        $this->assertNull(ProjectBudget::typedHeadAmount($b, 'year1', 'Manpower'));
+        $this->assertSame(40000, ProjectBudget::headTotal($b, 'year1', 'Manpower'));
+    }
+
+    public function test_a_blank_typed_head_amount_falls_back_to_the_breakdown(): void
+    {
+        $b = ProjectBudget::normalize([
+            '__equipment' => ['year1' => [['item' => 'GPU', 'amount' => 25000]]],
+            '__headamt' => ['year1' => ['Equipment' => '']],
+        ]);
+        $this->assertNull(ProjectBudget::typedHeadAmount($b, 'year1', 'Equipment'));
+        $this->assertSame(25000, ProjectBudget::headTotal($b, 'year1', 'Equipment'));
+    }
+
+    public function test_a_typed_head_amount_is_only_kept_for_the_heads_that_can_have_one(): void
+    {
+        $b = ProjectBudget::normalize([
+            '__headamt' => ['year1' => ['Manpower' => 1000, 'Contingency' => 9999]],
+        ]);
+        $this->assertSame(1000, $b['__headamt']['year1']['Manpower']);
+        // Contingency is a plain stored head; a typed override there would be a
+        // second, competing home for the same number.
+        $this->assertArrayNotHasKey('Contingency', $b['__headamt']['year1']);
+    }
+
+    public function test_an_other_sub_row_breaks_its_parent_down_without_adding_to_the_head(): void
+    {
+        $b = ProjectBudget::normalize([
+            '__other' => ['year1' => [
+                ['label' => 'Fabrication', 'amount' => 80000, 'parent' => ''],
+                ['label' => 'Casting', 'amount' => 50000, 'parent' => 'Fabrication'],
+                ['label' => 'Machining', 'amount' => 30000, 'parent' => 'Fabrication'],
+            ]],
+        ]);
+        // Counting the sub-rows too would bill the same 80,000 twice over.
+        $this->assertSame(80000, ProjectBudget::headTotal($b, 'year1', 'Any Other Expenses'));
+        $this->assertSame(80000, ProjectBudget::yearTotal($b, 'year1'));
+    }
+
+    public function test_a_legacy_manpower_count_folds_into_the_amount_keeping_the_total(): void
+    {
+        // The whole point of dropping the count: a migrated line must be worth
+        // exactly what count x amount was worth before.
+        $b = ProjectBudget::normalize([
+            '__manpower' => ['year1' => [['category' => 'JRF', 'count' => 3, 'amount' => 50000]]],
+        ]);
+        $this->assertSame([['category' => 'JRF', 'amount' => 150000]], $b['__manpower']['year1']);
+        $this->assertSame(150000, ProjectBudget::headTotal($b, 'year1', 'Manpower'));
+    }
+
+    public function test_a_normalized_budget_is_stable_under_a_second_normalize(): void
+    {
+        // Folding the count must not fold it twice on a re-save.
+        $once = ProjectBudget::normalize([
+            '__manpower' => ['year1' => [['category' => 'JRF', 'count' => 3, 'amount' => 50000]]],
+            '__other' => ['year1' => [['label' => 'Fab', 'amount' => 80000, 'parent' => '']]],
+            '__headamt' => ['year1' => ['Equipment' => 12000]],
+            'year1' => ['Consumables' => 25000],
+        ]);
+        $this->assertSame($once, ProjectBudget::normalize($once));
+        $this->assertSame(150000, ProjectBudget::headTotal($once, 'year1', 'Manpower'));
     }
 }

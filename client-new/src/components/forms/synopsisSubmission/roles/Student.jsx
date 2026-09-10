@@ -358,8 +358,9 @@ const Student = ({ formData }) => {
               elements={[
                 <ShowPublications
                   formData={body}
-                  enableEdit={!lock}
-                  enableDelete={!lock}
+                  enableEdit={formData?.role === "student" && !lock}
+                  enableDelete={formData?.role === "student" && !lock}
+                  canAdd={formData?.role === "student" && !lock}
                   onDelete={removePublication}
                   refetchData={refetchPublications}
                 />,
@@ -394,6 +395,7 @@ const Student = ({ formData }) => {
               formData={studentPublications}
               enableSelect={true}
               enableSubmit={true}
+              canAdd={true}
               onSelect={updateValue}
               onSubmit={submitPublication}
               refetchData={refetchPublications}

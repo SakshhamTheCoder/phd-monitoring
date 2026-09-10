@@ -9,7 +9,7 @@ import { useLoading } from '../../../context/LoadingContext';
 import { submitForm } from '../../../api/form';
 import TableComponent from '../table/TableComponent';
 
-const Recommendation = ({formData,allowRejection,role,moreFields,handleRecommendationChange,isLocked}) => {
+const Recommendation = ({formData,allowRejection,role,moreFields,handleRecommendationChange,isLocked,submitPath,decision,title}) => {
     const [roleName, setRoleName] = useState('');
     const [body, setBody] = useState({});
     const [lock, setLock] = useState(false);
@@ -30,6 +30,16 @@ const Recommendation = ({formData,allowRejection,role,moreFields,handleRecommend
             setLock(true);
         }
         if(formData.stage!==role && role!=="supervisor"){
+            setLock(true);
+        }
+        // locks[role] says the step is answered and the stage says whose turn
+        // it is, but neither says who is reading. RoleBasedWrapper renders every
+        // earlier step to the roles above it, so a DORDC opening a form parked
+        // at the HOD step was handed the HOD's live controls. Only the role
+        // being asked may answer. The supervisor step is named "faculty" in
+        // formData.steps, which is the role a supervisor actually holds.
+        const viewerRole = formData.role === "faculty" ? "supervisor" : formData.role;
+        if(viewerRole !== role){
             setLock(true);
         }
     }, [role, formData]);
@@ -94,7 +104,7 @@ const Recommendation = ({formData,allowRejection,role,moreFields,handleRecommend
             </>,
             
                  ]}/> */}
-            <RecommendationField role={roleName} allowRejection={allowRejection} onRecommendationChange={(data)=>{onRecommendationChange(data)}} initialValue={body} lock={lock} formData={formData}/>
+            <RecommendationField role={roleName} allowRejection={allowRejection} onRecommendationChange={(data)=>{onRecommendationChange(data)}} initialValue={body} lock={lock} formData={formData} decision={decision} title={title}/>
             {(!lock || body.comments) && (
                 <GridContainer
                     elements={[
@@ -117,7 +127,11 @@ const Recommendation = ({formData,allowRejection,role,moreFields,handleRecommend
             )}
            
             { !lock && moreFields!==true && ( <GridContainer elements={[
-                <CustomButton text='Submit' onClick={()=>{submitForm(body,location,setLoading)}} />
+                // submitForm only reads location.pathname to build its POST URL, so a
+                // caller rendered somewhere other than /forms/:type/:id (its usual home)
+                // can override just that via submitPath. Every existing caller leaves
+                // submitPath unset, so this falls back to the real location unchanged.
+                <CustomButton text='Submit' onClick={()=>{submitForm(body,submitPath?{...location,pathname:submitPath}:location,setLoading)}} />
             ]}/>)}
 
         </>

@@ -32,7 +32,7 @@ class DepartmentController extends Controller
         $perPage = $request->input('rows', 15);
         $page = $request->input('page', 1);
     
-        if (!in_array($role, ['admin', 'director', 'dra', 'dordc'])) {
+        if (!$loggedInUser->may('can_edit_department')) {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
     
@@ -122,7 +122,7 @@ class DepartmentController extends Controller
     public function add(Request $request)
     {
         $loggenInUser = Auth::user();
-        if($loggenInUser->current_role->can_add_department == 'false'){
+        if(!$loggenInUser->may('can_add_department')){
             return response()->json([
                 'message' => 'You do not have permission to create department'
             ], 403);
@@ -148,7 +148,7 @@ class DepartmentController extends Controller
         try{
 
         $loggenInUser = Auth::user();
-        if($loggenInUser->current_role->can_add_department == 'false'){
+        if(!$loggenInUser->may('can_add_department')){
             return response()->json([
                 'message' => 'You do not have permission to create department'
             ], 403);
@@ -186,7 +186,7 @@ class DepartmentController extends Controller
     {
         try {
             $loggedInUser = Auth::user();
-            if($loggedInUser->current_role->can_add_department == 'false'){
+            if(!$loggedInUser->may('can_add_department')){
                 return response()->json([
                     'message' => 'You do not have permission to add area of specialization'
                 ], 403);
@@ -512,7 +512,7 @@ class DepartmentController extends Controller
     {
         try{
         $loggenInUser = Auth::user();
-        if($loggenInUser->current_role->can_add_department == 'false'){
+        if(!$loggenInUser->may('can_add_department')){
             return response()->json([
                 'message' => 'You do not have permission to add HOD'
             ], 403);
@@ -581,7 +581,7 @@ class DepartmentController extends Controller
     {
         try{
         $loggenInUser = Auth::user();
-        if($loggenInUser->current_role->can_add_department == 'false'){
+        if(!$loggenInUser->may('can_add_department')){
             return response()->json([
                 'message' => 'You do not have permission to assign ADORDC'
             ], 403);
@@ -653,7 +653,7 @@ class DepartmentController extends Controller
     {
         try{
         $loggenInUser = Auth::user();
-        if($loggenInUser->current_role->can_add_department == 'false'){
+        if(!$loggenInUser->may('can_add_department')){
             return response()->json([
                 'message' => 'You do not have permission to add coordinator'
             ], 403);
@@ -725,7 +725,7 @@ class DepartmentController extends Controller
     {
         try{
         $loggenInUser = Auth::user();
-        if($loggenInUser->current_role->can_add_department == 'false'){
+        if(!$loggenInUser->may('can_add_department')){
             return response()->json([
                 'message' => 'You do not have permission to remove coordinator'
             ], 403);

@@ -18,15 +18,11 @@ class ExaminersRecommendation extends Model
     // Indicates if the IDs are auto-incrementing
     public $incrementing = true;
 
-    // The attributes that are mass assignable
+    // What belongs to one form: which examiner, which list, and the verdict.
+    // Who the examiner is lives on the Examiner they point at.
     protected $fillable = [
         'form_id',
-        'name',
-        'email',
-        'institution',
-        'designation',
-        'department',
-        'phone',
+        'examiner_id',
         'type',
         'comment',
         'faculty_id',
@@ -37,6 +33,32 @@ class ExaminersRecommendation extends Model
     protected $casts = [
         'recommendation' => 'string',
     ];
+
+    public function examiner()
+    {
+        return $this->belongsTo(Examiner::class, 'examiner_id', 'id');
+    }
+
+    /**
+     * This recommendation as the form screens read it: the person's details
+     * alongside the verdict, which is the shape the tables were always given.
+     */
+    public function toFormRow(): array
+    {
+        return [
+            'id' => $this->id,
+            'examiner_id' => $this->examiner_id,
+            'name' => $this->examiner?->name,
+            'email' => $this->examiner?->email,
+            'institution' => $this->examiner?->institution,
+            'designation' => $this->examiner?->designation,
+            'department' => $this->examiner?->department,
+            'phone' => $this->examiner?->phone,
+            'type' => $this->type,
+            'recommendation' => $this->recommendation,
+            'comment' => $this->comment,
+        ];
+    }
 
     public function listOfExaminers()
     {

@@ -6,6 +6,7 @@ import { customFetch } from "../../../api/base";
 import { useLoading } from "../../../context/LoadingContext";
 import GridContainer from "../fields/GridContainer";
 import { toast } from "react-toastify";
+import { EMPTY_VALUE } from "../../../utils/timeParse";
 
 const FormTable = ({ filters }) => {
   const [forms, setForms] = useState([]);
@@ -168,6 +169,15 @@ const FormTable = ({ filters }) => {
         </thead>
 
         <tbody>
+          {forms.length === 0 && (
+            <tr className="no-data-row">
+              <td colSpan={fields.length + 3} className="no-data-cell">
+                {(filters?.conditions?.length ?? 0) > 0
+                  ? "No results match your filters."
+                  : "No results yet."}
+              </td>
+            </tr>
+          )}
           {forms.map((form,index) => (
          
             <tr
@@ -203,7 +213,7 @@ const FormTable = ({ filters }) => {
               )}
 
               {fields.map((field, index) => (
-                <td key={index}>{form[field] == null ? "N/A" : form[field]}</td>
+                <td key={index}>{form[field] == null ? EMPTY_VALUE : form[field]}</td>
               ))}
               {role==='admin' && (
                 <td>

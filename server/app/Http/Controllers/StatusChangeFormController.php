@@ -28,16 +28,28 @@ class StatusChangeFormController extends Controller
        $user = Auth::user();
        if($student_id)
          return $this->listFormsStudent($user, StudentStatusChangeForms::class, $student_id);
+
+       // Reason is often personal; only the scholar, HOD and admin get it
+       // (same capability ClerkController uses for leave reasons), so a
+       // supervisor or committee member browsing this list never sees it.
+       $canReadReason = $user->may('can_read_leave_reason');
        return $this->listForms($user, StudentStatusChangeForms::class,$request,null,false,[
-        'fields' => [
-            "name","roll_no","type_of_change","reason"
-        ],
-        'extra_fields' => [
-            "type_of_change" => function ($form) {
-                return $form->student->current_status == "full-time" ? "full-time to part-time" : "part-time to full-time";
-            },
-        ],
-        'titles' => [ "Name", "Roll No","Type of Change","Reason"],
+        'fields' => array_merge(
+            ["name","roll_no","type_of_change"],
+            $canReadReason ? ["reason"] : []
+        ),
+        'extra_fields' => array_merge(
+            [
+                "type_of_change" => function ($form) {
+                    return $form->student->current_status == "full-time" ? "full-time to part-time" : "part-time to full-time";
+                },
+            ],
+            $canReadReason ? ["reason"] : []
+        ),
+        'titles' => array_merge(
+            ["Name", "Roll No","Type of Change"],
+            $canReadReason ? ["Reason"] : []
+        ),
     ]);
     }
 

@@ -18,21 +18,16 @@
 .student-sub-meta-locked {
   font-size: 0.78rem;
   color: #991b1b;
-  margin: 0.4rem 0 0 0;
+  margin: 0.6rem 0 0 0;
 }
 
 .student-info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
   margin-bottom: 2rem;
   margin-top: 1.5rem;
-  font-size: 0.95rem;
-  color: #374151;
 }
 
-/* Title, domain and description sit with the facts rather than shouting above
-   them, at the same type scale as the matrix so the block reads as one card. */
+/* The frame holds the fact matrix. What the student is researching is not a
+   fact of the same kind, so it sits with the name instead. */
 .student-details {
   margin-top: 1.5rem;
   margin-bottom: 2rem;
@@ -42,21 +37,26 @@
   background: #fafafa;
 }
 
+/* Title, domain and description belong to the person, so they read straight
+   down from the name: title first, then the two that qualify it. */
 .student-research {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-  padding-bottom: 1rem;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid #e5e7eb;
-  font-size: 0.95rem;
+  margin-top: 0.4rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
   color: #374151;
 }
 
-.student-research .span-all { grid-column: 1 / -1; }
-.student-research .span-2 { grid-column: span 2; }
+.student-research p {
+  margin: 0.2rem 0 0 0;
+  max-width: 70ch;
+}
 
-.student-research-item strong { color: #6b7280; font-weight: 600; }
+.student-research .student-research-title {
+  font-size: 1rem;
+  margin-top: 0;
+}
+
+.student-research-label { color: #6b7280; font-weight: 600; }
 
 .student-value-empty { color: #9ca3af; font-style: italic; }
 
@@ -123,13 +123,24 @@
 .student-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 1.5rem;
   flex-wrap: wrap;
   margin-bottom: 1.5rem;
 }
 
+/* Same rule as ResearchProfile.css: in the header the controls sit on the name's
+   line, so they carry no margin of their own. */
+.student-header .profile-actions {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+/* The header now carries the name block, the edit controls and the ring. 70%
+   left too little for the other two and pushed the ring onto its own line. */
 .student-header-text {
-  max-width: 70%;
+  flex: 1 1 300px;
+  max-width: 60%;
   min-width: 300px;
 }
 
@@ -146,21 +157,6 @@
 }
 
 /* Inline profile editing (for personal info grid) */
-.profile-inline-input {
-  width: 100%;
-  padding: 0.35rem 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.25rem;
-  box-sizing: border-box;
-  font-size: 0.9rem;
-}
-
-.profile-inline-input:disabled {
-  background: #f3f4f6;
-  color: #6b7280;
-  cursor: not-allowed;
-}
-
 /* Title + proposal edit block */
 .student-sub-edit {
   margin-top: 0.35rem;
@@ -242,20 +238,5 @@
 }
 
 /* Edit button */
-.profile-edit-small {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.3rem 0.7rem;
-  font-size: 0.8rem;
-  background: #fff;
-  color: #991b1b;
-  border: 1px solid #991b1b;
-  border-radius: 0.35rem;
-  cursor: pointer;
-}
-
-.profile-edit-small:hover {
-  background: #991b1b;
-  color: #fff;
-}
+.profile-deadline-due { color: #b91c1c; font-weight: 600; }
+.profile-deadline-note { color: #6b7280; }

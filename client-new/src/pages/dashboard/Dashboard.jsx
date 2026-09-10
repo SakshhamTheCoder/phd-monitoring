@@ -5,7 +5,7 @@ import { useLoading } from '../../context/LoadingContext';
 import ProfileCard from '../../components/profileCard/ProfileCard';
 import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
-import FacultyProfile from '../../components/profileCard/FacultyProfile';
+import FacultyProfile from '../admin/ResearchProfile';
 import AdminHome from '../../components/profileCard/AdminHome';
 
 const Dashboard = () => {
@@ -62,7 +62,9 @@ const Dashboard = () => {
           ) : view === 'admin' ? (
             <AdminHome data={data} />
           ) : (
-            <FacultyProfile faculty={data} />
+            // The faculty profile is one page; the dashboard shows the
+            // signed-in faculty's own, without the page chrome.
+            <FacultyProfile facultyCode={data.faculty_code} embedded />
           )}
         </>
       )}

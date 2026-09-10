@@ -11,7 +11,8 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\UserController;
 
 Route::get('/', [StudentController::class, 'list'])->middleware('auth:sanctum');
-Route::post('/update-profile', [StudentController::class, 'updateProfile'])->middleware('auth:sanctum');
+// Declared before the '{id}' group below, or 'me' is read as a roll number.
+Route::get('/me', [StudentController::class, 'me'])->middleware('auth:sanctum');
  
 
 Route::post('/add', [StudentController::class, 'add'])->middleware('auth:sanctum');
@@ -21,6 +22,9 @@ Route::get('/filters', [StudentController::class, 'listFilters'])->middleware('a
 
 Route::prefix('{id}')->group(function () {
     Route::get('', [StudentController::class, 'get'])->middleware('auth:sanctum');
+    // Two writes, as on the faculty side: '/profile' is the soft half a scholar
+    // keeps current, '/update' the provisioning half only a privileged role sets.
+    Route::post('/profile', [StudentController::class, 'updateProfile'])->middleware('auth:sanctum');
     Route::post('/update', [StudentController::class, 'adminUpdate'])->middleware('auth:sanctum');
 
     Route::get('/forms', [UserController::class, 'listForms'])->middleware('auth:sanctum');

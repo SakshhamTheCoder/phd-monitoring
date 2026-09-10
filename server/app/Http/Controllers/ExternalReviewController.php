@@ -121,8 +121,7 @@ class ExternalReviewController extends Controller
     /** POST /api/irb-submissions/{id}/resend-external-review — resend the same token. Authed. */
     public function resend(Request $request, $id)
     {
-        $role = $request->user()?->current_role?->role;
-        if (!in_array($role, self::RESEND_ROLES, true)) {
+        if (!$request->user()?->may('can_resend_external_review')) {
             return response()->json(['message' => 'You are not authorized to resend this review.'], 403);
         }
 

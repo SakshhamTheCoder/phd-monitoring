@@ -1,0 +1,66 @@
+/* Shared by every profile that uses InfoGrid, so the two never drift on what an
+   inline field looks like. */
+.profile-inline-input {
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  box-sizing: border-box;
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
+.profile-inline-input:disabled {
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.profile-field-hint {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: #6b7280;
+}
+
+/* Every profile lays the matrix out the same way. A page may still add its own
+   class for spacing; it does not have to restate the grid. */
+.profile-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  font-size: 0.95rem;
+  color: #374151;
+}
+
+.profile-info-grid .span-all { grid-column: 1 / -1; }
+
+/* body sets font-weight 600 app-wide (App.css), so both the label and its value
+   would arrive semi-bold and the matrix would read as one block of emphasis.
+   The label is the thing being emphasised; the value is data. */
+.profile-info-grid { font-weight: 400; }
+.profile-info-grid strong { font-weight: 600; color: #1f2937; }
+
+/* An ORCID is long. Values wrap inside their cell instead of widening it. */
+.profile-info-grid > div { min-width: 0; overflow-wrap: anywhere; }
+
+/* The trigger for this grid's edit mode. Lives here rather than on either
+   profile's stylesheet, because both profiles show the same control. */
+.profile-edit-small {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8rem;
+  background: #fff;
+  color: #991b1b;
+  border: 1px solid #991b1b;
+  border-radius: 0.35rem;
+  cursor: pointer;
+}
+
+.profile-edit-small:hover {
+  background: #991b1b;
+  color: #fff;
+}

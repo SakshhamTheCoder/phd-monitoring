@@ -9,27 +9,68 @@ use App\Jobs\SyncFacultyPublications;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
 
 class FacultyProfileController extends Controller
 {
     private $identifierFields = ['orcid_id', 'scopus_id', 'google_scholar_id', 'joined_on', 'citations', 'h_index'];
 
+    /**
+     * One profile, three tiers.
+     *
+     * Everyone with directory access gets the public tier. The supervision tier
+     * (who they supervise, whose committees they sit on, those students'
+     * publications) is added for the roles that hold the capability and for the
+     * faculty member themselves. Phone is its own capability so it can be shown
+     * to students again by flipping one row.
+     *
+     * The restricted keys are absent from the response rather than blanked, so
+     * a viewer who may not see them cannot read them out of the payload.
+     */
     public function show($facultyCode)
     {
+        $user = Auth::user();
+        if (!$user?->may('can_read_faculty_directory')) {
+            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+        }
+
         $faculty = Faculty::with(['user', 'department'])->find($facultyCode);
         if (!$faculty) return response()->json(['message' => 'Faculty not found'], 404);
 
         $own = FacultyPublication::where('faculty_code', $faculty->faculty_code)->orderByDesc('year')->get();
         $rollNumbers = $faculty->supervisedStudents()->pluck('students.roll_no');
+        $studentPublications = $this->groupStudent($rollNumbers);
 
-        return response()->json([
-            'profile' => $this->profilePayload($faculty, $own),
+        $isSelf = optional($user->faculty)->faculty_code === $faculty->faculty_code;
+        $seesSupervision = $isSelf || $user->may('can_read_faculty_supervision');
+
+        $profile = $this->profilePayload($faculty, $own);
+        if (!$isSelf && !$user->may('can_read_faculty_phone')) {
+            unset($profile['phone']);
+        }
+
+        $payload = [
+            'profile' => $profile,
+            'is_self' => $isSelf,
             'can_edit' => $this->canEdit($faculty),
+            'can_manage' => $this->canManage(),
             'can_sync' => $this->canSync($faculty),
+            'can_view_supervision' => $seesSupervision,
             'publications' => $this->groupOwn($own),
-            'student_publications' => $this->groupStudent($rollNumbers),
-        ]);
+            'counts' => $faculty->supervisionCounts($this->countGroups($studentPublications)),
+        ];
+
+        if ($seesSupervision) {
+            $payload['student_publications'] = $studentPublications;
+            $payload += $faculty->supervisionPayload();
+        }
+
+        return response()->json($payload);
+    }
+
+    /** Total rows across the grouped publication buckets. */
+    private function countGroups(array $groups): int
+    {
+        return array_sum(array_map('count', $groups));
     }
 
     public function update(Request $request, $facultyCode)
@@ -38,13 +79,16 @@ class FacultyProfileController extends Controller
         if (!$faculty) return response()->json(['message' => 'Faculty not found'], 404);
         if (!$this->canEdit($faculty)) return response()->json(['message' => 'Not authorized'], 403);
 
-        $validator = Validator::make($request->all(), [
+        // validate() rather than a hand-rolled Validator: it fails with the 422
+        // and {message, errors} body the rest of the API answers with, which is
+        // what the client's error handling already expects.
+        $request->validate([
             'joined_on' => 'nullable|date',
             'citations' => 'nullable|integer|min:0',
             'h_index' => 'nullable|integer|min:0',
             'expertise' => 'nullable',
+            'phone' => 'nullable|string|max:20',
         ]);
-        if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 400);
 
         foreach ($this->identifierFields as $field) {
             if ($request->exists($field)) $faculty->$field = $request->input($field) ?: null;
@@ -54,8 +98,25 @@ class FacultyProfileController extends Controller
             if (is_string($val)) $val = array_values(array_filter(array_map('trim', preg_split('/[,;]+/', $val))));
             $faculty->expertise = $val;
         }
+        // Phone lives on the user, not the faculty record, but it is edited from
+        // the same form, so it is written here rather than needing a second
+        // endpoint with its own copy of canEdit.
+        if ($request->exists('phone') && $faculty->user) {
+            $faculty->user->phone = $request->input('phone') ?: null;
+            $faculty->user->save();
+        }
+
         $faculty->save();
-        return response()->json(['message' => 'Profile updated']);
+
+        // Answer with the saved profile, so a caller never has to guess what
+        // was accepted or refetch to find out.
+        $faculty->refresh()->loadMissing(['user', 'department']);
+        $own = FacultyPublication::where('faculty_code', $faculty->faculty_code)->orderByDesc('year')->get();
+
+        return response()->json([
+            'message' => 'Profile updated',
+            'profile' => $this->profilePayload($faculty, $own),
+        ]);
     }
 
     public function storePublication(Request $request, $facultyCode)
@@ -64,8 +125,7 @@ class FacultyProfileController extends Controller
         if (!$faculty) return response()->json(['message' => 'Faculty not found'], 404);
         if (!$this->canEdit($faculty)) return response()->json(['message' => 'Not authorized'], 403);
 
-        $validator = Validator::make($request->all(), $this->publicationRules());
-        if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 400);
+        $request->validate($this->publicationRules());
 
         $publication = new FacultyPublication();
         $publication->faculty_code = $faculty->faculty_code;
@@ -75,7 +135,7 @@ class FacultyProfileController extends Controller
         $publication->verified = false;
         $this->fill($publication, $request);
         $publication->save();
-        return response()->json($publication, 201);
+        return response()->json(['message' => 'Publication added', 'publication' => $publication], 201);
     }
 
     public function updatePublication(Request $request, $facultyCode, $publicationId)
@@ -87,8 +147,7 @@ class FacultyProfileController extends Controller
         $publication = FacultyPublication::where('faculty_code', $faculty->faculty_code)->find($publicationId);
         if (!$publication) return response()->json(['message' => 'Publication not found'], 404);
 
-        $validator = Validator::make($request->all(), $this->publicationRules(true));
-        if ($validator->fails()) return response()->json(['errors' => $validator->errors()], 400);
+        $request->validate($this->publicationRules(true));
 
         $this->fill($publication, $request);
 
@@ -153,12 +212,26 @@ class FacultyProfileController extends Controller
         return (bool) $faculty->orcid_id || ($faculty->scopus_id && config('services.scopus.key'));
     }
 
+    /**
+     * May write this profile at all: the faculty member themselves, or a role
+     * that provisions faculty records.
+     *
+     * Read from the capability table rather than a role name, so the answer
+     * matches FacultyController::add/update, which every privileged edit of a
+     * faculty record already goes through.
+     */
     private function canEdit($faculty)
     {
         $user = Auth::user();
         if (!$user) return false;
-        if (optional($user->current_role)->role === 'admin') return true;
+        if ($this->canManage()) return true;
         return optional($user->faculty)->faculty_code === $faculty->faculty_code;
+    }
+
+    /** May write anyone's profile, not only their own. */
+    private function canManage()
+    {
+        return (bool) optional(Auth::user())?->may('can_manage_faculties');
     }
 
     private function publicationRules($isUpdate = false)

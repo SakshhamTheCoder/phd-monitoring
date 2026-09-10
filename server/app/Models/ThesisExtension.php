@@ -18,8 +18,9 @@ class ThesisExtension extends Model
         'form_id',
     ];
 
+    // period_of_extention is a whole number of months, not a date.
     protected $casts = [
-        'period_of_extention' => 'date',
+        'period_of_extention' => 'integer',
     ];
 
     /**

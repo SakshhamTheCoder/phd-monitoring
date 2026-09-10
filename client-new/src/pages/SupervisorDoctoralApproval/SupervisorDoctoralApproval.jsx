@@ -8,6 +8,7 @@ import CustomModal from '../../components/forms/modal/CustomModal';
 import GridContainer from '../../components/forms/fields/GridContainer';
 import InputField from '../../components/forms/fields/InputField';
 import Layout from '../../components/dashboard/layout';
+import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
 
 const SupervisorDoctoralApproval = () => {
   const [pendingChanges, setPendingChanges] = useState([]);
@@ -127,12 +128,12 @@ const SupervisorDoctoralApproval = () => {
 
   const tableData = pendingChanges.map(change => ({
     student: change.student_name || 'Unknown',
-    roll_no: change.student_roll_no || '—',
-    department: change.department || '—',
+    roll_no: change.student_roll_no || EMPTY_VALUE,
+    department: change.department || EMPTY_VALUE,
     change: getChangeDescription(change),
-    reason: change.reason || '—',
+    reason: change.reason || EMPTY_VALUE,
     requested_by: change.requested_by || 'Unknown',
-    requested_at: change.requested_at ? new Date(change.requested_at).toLocaleDateString() : '—',
+    requested_at: formatDate(change.requested_at),
     actions: (
       <GridContainer
         space={1}

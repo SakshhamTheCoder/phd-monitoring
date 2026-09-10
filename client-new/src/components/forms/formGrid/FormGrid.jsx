@@ -82,7 +82,7 @@ const FormGrid = ({ forms }) => {
                     <div className="form-grid-column">{optional.map(renderCard)}</div>
                 </div>
             ) : (
-                <p>No forms to display</p>
+                <p>No forms yet.</p>
             )}
         </>
     );

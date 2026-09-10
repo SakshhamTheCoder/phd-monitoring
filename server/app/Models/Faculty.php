@@ -166,9 +166,10 @@ class Faculty extends Model
                 }
             }
         } else if ($this->user->current_role->role == 'faculty' && $roll_no) {
-            $super = Forms::where('student_id', $roll_no)->where('supervisor_available', true)->get();
             $data = [];
-            if ($super)
+            // Only forms for a student this faculty member actually supervises.
+            if ($this->supervisedStudents->contains('roll_no', $roll_no)) {
+                $super = Forms::where('student_id', $roll_no)->where('supervisor_available', true)->get();
                 foreach ($super as $s) {
                     $forms = $s->student->forms();
 
@@ -180,16 +181,37 @@ class Faculty extends Model
                         $data[] = $s;
                     }
                 }
-        } else if ($this->user->current_role->role == 'doctoral' || $this->user->current_role->role == 'external') {
+            }
+        } else if ($this->user->current_role->role == 'doctoral') {
+            $data = [];
+            // Only forms for a student on this faculty member's doctoral committee.
+            $committee = $this->doctoredStudents->pluck('roll_no');
             if ($roll_no) {
-                $data = Forms::where('doctoral_available', true)->where('student_id', $roll_no)->get();
-                $data = Forms::where('external_available', true)->where('student_id', $roll_no)->get();
+                if ($committee->contains($roll_no)) {
+                    $data = Forms::where('doctoral_available', true)->where('student_id', $roll_no)->get();
+                }
             } else {
-                $data = Forms::where('doctoral_available', true)->get();
-                $data = Forms::where('external_available', true)->get();
+                $data = Forms::where('doctoral_available', true)->whereIn('student_id', $committee)->get();
             }
             foreach ($data as $d) {
                 if ($d->stage == 'doctoral')
+                    $d['action_required'] = true;
+                else
+                    $d['action_required'] = false;
+            }
+        } else if ($this->user->current_role->role == 'external') {
+            $data = [];
+            // Only forms for a student on this faculty member's doctoral committee.
+            $committee = $this->doctoredStudents->pluck('roll_no');
+            if ($roll_no) {
+                if ($committee->contains($roll_no)) {
+                    $data = Forms::where('external_available', true)->where('student_id', $roll_no)->get();
+                }
+            } else {
+                $data = Forms::where('external_available', true)->whereIn('student_id', $committee)->get();
+            }
+            foreach ($data as $d) {
+                if ($d->stage == 'external')
                     $d['action_required'] = true;
                 else
                     $d['action_required'] = false;
@@ -272,6 +294,57 @@ class Faculty extends Model
         return array_values(array_filter(array_map('trim', preg_split('/[,;]+/', (string)$value))));
     }
 
+    /**
+     * The students this faculty supervises and the committees they sit on.
+     *
+     * One serializer for both consumers: the faculty profile and the faculty
+     * branch of HomeController. Written twice they drifted, which is how the
+     * dashboard and the profile ended up describing a supervised student
+     * differently.
+     */
+    public function supervisionPayload(): array
+    {
+        $supervised = $this->supervisedStudents()->with('user')->get()
+            ->sortBy(fn ($student) => $student->user?->name())
+            ->values()
+            ->map(fn ($student) => [
+                'name' => $student->user?->name(),
+                'roll_no' => $student->roll_no,
+                'email' => $student->user?->email,
+                'phone' => $student->user?->phone,
+                'date_of_admission' => $student->date_of_registration?->format('Y-m-d'),
+                'overall_progress' => $student->overall_progress,
+            ]);
+
+        $doctoral = $this->doctoredStudents()->with(['user', 'department'])->get()
+            ->sortBy(fn ($student) => $student->user?->name())
+            ->values()
+            ->map(fn ($student) => [
+                'name' => $student->user?->name(),
+                'roll_no' => $student->roll_no,
+                'email' => $student->user?->email,
+                'phone' => $student->user?->phone,
+                'department' => $student->department?->name,
+                'date_of_admission' => $student->date_of_registration?->format('Y-m-d'),
+                'overall_progress' => $student->overall_progress,
+            ]);
+
+        return [
+            'supervised_students' => $supervised->all(),
+            'doctoral_committee_students' => $doctoral->all(),
+        ];
+    }
+
+    /** Sizes only, for a viewer who may not see who the students are. */
+    public function supervisionCounts(int $studentPublications): array
+    {
+        return [
+            'supervised_count' => $this->supervisedStudents()->count(),
+            'doctoral_committee_count' => $this->doctoredStudents()->count(),
+            'student_publication_count' => $studentPublications,
+        ];
+    }
+
     public function toProfilePayload($own): array
     {
         return [
@@ -289,6 +362,10 @@ class Faculty extends Model
             'citations' => $this->citations,
             'h_index' => $this->h_index,
             'expertise' => $this->expertise ?? [],
+            // Head counts the dashboard has always shown. Sizes, not names, so
+            // they sit in the public tier with the other counts.
+            'supervised_campus' => $this->supervised_campus,
+            'supervised_outside' => $this->supervised_outside,
             'last_sync' => $this->last_synced_at,
             'last_sync_source' => $this->last_sync_source,
             'total_publications' => $own->count(),

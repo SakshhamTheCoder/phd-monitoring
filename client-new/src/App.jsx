@@ -39,11 +39,12 @@ import OutsideExperts from './pages/OutsideExperts/OutsideExperts';
 import ExternalReview from './pages/externalReview/ExternalReview';
 import SupervisorDoctoralApproval from './pages/SupervisorDoctoralApproval/SupervisorDoctoralApproval';
 import UsersPage from './pages/users/UsersPage';
-import AttendancePage from './pages/attendance/AttendancePage';
+import AttendanceRoute from './pages/attendance/AttendanceRoute';
 import ClerkManagement from './pages/admin/ClerkManagement';
 import PrivacyPolicy from './pages/privacy/PrivacyPolicy';
 import Support from './pages/support/Support';
 import ResearchProfile from './pages/admin/ResearchProfile';
+import Configuration from './pages/admin/Configuration';
 import ProjectsOverview from './pages/projects/ProjectsOverview';
 import CreateProject from './pages/projects/CreateProject';
 import ProjectDetails from './pages/projects/ProjectDetails';
@@ -127,17 +128,21 @@ const AppContent = () => {
           <Route path="/notifications" element={<AllNotificationsPage />} />
           {features.research_profile && (
             <>
-              <Route path="/research-profile" element={<ResearchProfile />} />
               <Route path="/faculty/:facultyCode/profile" element={<ResearchProfile />} />
             </>
           )}
-          <Route path="/presentation" element={<PresentationSemester />} />
-          <Route path="/presentation/semester" element={<Navigate to="/presentation" replace />} />
-
-          {/* <Route path="/presentation/form" element={<PresentationListPage/>} />   */}
-
-          <Route path="/presentation/semester/:semester_id" element={<PresentationListPage />} />
-          <Route path="/presentation/semester/:semester_id/:id" element={<Presentation />} />
+          {/* Matches the sidebar's Progress Monitoring entry, so clerk and external
+              (who have no sidebar link for it) can't land on the page either. */}
+          {(role === 'student' || role === 'hod' || role === 'phd_coordinator' || role === 'faculty' || role === 'dordc' || role === 'adordc' || role === 'dra' || role === 'director' || role === 'doctoral' || role === 'admin') && (
+            <>
+              <Route path="/presentation" element={<PresentationSemester />} />
+              <Route path="/presentation/semester" element={<Navigate to="/presentation" replace />} />
+              {/* The semester and form pages sit under the same gate, so a role
+                  kept off the landing page cannot reach them by deep link. */}
+              <Route path="/presentation/semester/:semester_id" element={<PresentationListPage />} />
+              <Route path="/presentation/semester/:semester_id/:id" element={<Presentation />} />
+            </>
+          )}
 
           <Route path="/forms/:form_type" element={<FormListPage />} />
           <Route path="/forms/:form_type/:id" element={<MainFormPage />} />
@@ -154,10 +159,9 @@ const AppContent = () => {
               )}
             </>
           )}
-          {(
-            role === 'hod' || role === 'phd_coordinator' || role === 'doctoral' || role === 'external' || role === 'dordc' || role === 'adordc' || role === 'dra' || role === 'director' || role === 'admin') && (
+          {/* Matches can_edit_department, which DepartmentController::list requires. */}
+          {(role === 'dordc' || role === 'dra' || role === 'director' || role === 'admin') && (
               <>
-                <Route path="/faculty" element={<FacultyPage />} />
                 <Route path="/departments" element={<DepartmentPage />} />
                 {/* <Route path="/faculty/:roll_no" element={<StudentProfile />} />
               <Route path="/faculty/:roll_no/forms" element={<FormsPage />} />
@@ -165,11 +169,15 @@ const AppContent = () => {
               <Route path="/faculty/:roll_no/forms/:form_type/:id" element={<MainFormPage />} /> */}
               </>
             )}
-          {role === 'dordc' && (
+          {/* can_manage_supervisor_changes is granted to dordc and admin on the server. */}
+          {(role === 'dordc' || role === 'admin') && (
             <Route path="/supervisor-doctoral-approvals" element={<SupervisorDoctoralApproval />} />
           )}
-          {(role==='clerk' || role==='admin') && (
-            <Route path="/attendance" element={<AttendancePage />} />
+          {role !== 'clerk' && (
+            <Route path="/faculty" element={<FacultyPage />} />
+          )}
+          {(role==='clerk' || role==='admin' || role==='student' || role==='hod') && (
+            <Route path="/attendance" element={<AttendanceRoute />} />
           )}
           {(
             role==='admin') && (
@@ -182,6 +190,7 @@ const AppContent = () => {
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/clerk-management" element={<ClerkManagement />} />
                 <Route path="/clerks" element={<ClerkManagement />} />
+                <Route path="/configuration" element={<Configuration />} />
 
               {/* <Route path="/faculty/:roll_no" element={<StudentProfile />} />
               <Route path="/faculty/:roll_no/forms" element={<FormsPage />} />

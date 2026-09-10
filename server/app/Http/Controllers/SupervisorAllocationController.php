@@ -90,6 +90,7 @@ class SupervisorAllocationController extends Controller
                 return $this->handleHodForm($user, $form_id, $model);
             case 'phd_coordinator':
                 return $this->handleCoordinatorForm($user, $form_id, $model);
+            case 'director':
             case 'admin':
                 return $this->handleAdminForm($user, $form_id, $model, true);
 

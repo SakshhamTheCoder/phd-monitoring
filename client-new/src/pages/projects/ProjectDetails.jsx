@@ -2,13 +2,17 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
 import {
-  formatCurrency, getMilestoneProgress, milestoneStatusOptions, formatDate, formatDuration,
+  formatCurrency, getMilestoneProgress, milestoneStatusOptions, formatDuration,
   subVal, setSubCell, headTotal, yearTotal, grandTotal, budgetYears as budgetYearsOf,
   subItemsTotal, headSubMismatch,
-  manpowerCell, setManpowerCell, unionLabels, namedLine, equipRows,
-  setNamedAmount, renameNamedLines, dropNamedLines, appendBlankLine,
-  KEY_MANPOWER, KEY_EQUIPMENT, KEY_OTHER, HEAD_MANPOWER, HEAD_EQUIPMENT, HEAD_OTHER,
+  manpowerCell, setManpowerCell, unionLabels,
+  manpowerTotal, equipmentTotal, typedHead, setTypedHead,
+  equipRows, equipLine, setEquipAmount, renameEquipRow, dropEquipRow, addEquipRow,
+  otherRows, otherSubRows, otherLine, otherSubTotal, otherSubMismatch,
+  setOtherAmount, renameOtherRow, dropOtherRow, addOtherRow,
+  KEY_MANPOWER, HEAD_MANPOWER, HEAD_EQUIPMENT, HEAD_OTHER,
 } from '../../data/projectsData';
+import { formatDate, EMPTY_VALUE } from '../../utils/timeParse';
 import { badgeClass } from '../../data/badges';
 import { apiGetProject, apiUpdateProject, apiAddMilestone, apiUpdateMilestone, apiAddDocument, apiUpdateDocument, apiDeleteDocument, fileUrl, mapMilestone, mapDocument, apiProjectMeta, apiUploadGanttChart } from '../../api/projects';
 import InputSuggestions from '../../components/forms/fields/InputSuggestions';
@@ -84,67 +88,101 @@ const ProjectDetails = () => {
   };
   const saveBudgetEdit = async () => {
     const res = await apiUpdateProject(project.id, { budget: budgetDraft });
-    if (res.success) { setBudgetData(budgetDraft); setEditingBudget(false); toast.success('Budget updated successfully!'); }
+    if (res.success) { setBudgetData(budgetDraft); setEditingBudget(false); toast.success('Budget updated.'); }
   };
 
   // In-table editing for the derived heads, mirroring the create wizard:
-  // fixed manpower category rows with count × amount cells, self-added
-  // equipment rows, and a single Any Other Expenses amount row.
+  // fixed manpower category rows, self-added equipment rows, and Any Other
+  // Expenses rows that may own sub-rows. Any of the three may instead carry a
+  // hand-typed head total that overrides its breakdown.
   const manpowerCats = (meta.manpowerCategories && meta.manpowerCategories.length)
     ? meta.manpowerCategories : ['Postdoc', 'JRF', 'SRF', 'UG Intern', 'PG Intern'];
   const extraManpowerCats = (b) => unionLabels(b, KEY_MANPOWER, 'category')
     .filter(c => c && !manpowerCats.includes(c));
   const equipItems = (b) => equipRows(b);
-  const otherLabels = (b) => unionLabels(b, KEY_OTHER, 'label');
 
   const editManpower = (y, cat, field, value) =>
     setBudgetDraft(prev => setManpowerCell(prev, y, cat, field, value));
-  const editEquipAmount = (y, item, value) =>
-    setBudgetDraft(prev => setNamedAmount(prev, KEY_EQUIPMENT, y, 'item', item, value));
-  const renameEquip = (oldName, newName) =>
-    setBudgetDraft(prev => renameNamedLines(prev, KEY_EQUIPMENT, 'item', oldName, newName));
+  const editEquipAmount = (y, key, value) =>
+    setBudgetDraft(prev => setEquipAmount(prev, y, key, value));
+  const renameEquip = (key, label) =>
+    setBudgetDraft(prev => renameEquipRow(prev, key, label));
   const addEquip = () =>
-    setBudgetDraft(prev => appendBlankLine(prev, KEY_EQUIPMENT, budgetYears, { item: '', amount: 0 }));
-  const dropEquip = (item) =>
-    setBudgetDraft(prev => dropNamedLines(prev, KEY_EQUIPMENT, 'item', item));
-  const editOtherAmount = (y, label, value) =>
-    setBudgetDraft(prev => setNamedAmount(prev, KEY_OTHER, y, 'label', label, value));
+    setBudgetDraft(prev => addEquipRow(prev, budgetYears));
+  const dropEquip = (key) =>
+    setBudgetDraft(prev => dropEquipRow(prev, key));
+  const editTypedHead = (y, head, value) =>
+    setBudgetDraft(prev => setTypedHead(prev, y, head, value));
+  const editOther = (y, key, parentKey, value) =>
+    setBudgetDraft(prev => setOtherAmount(prev, y, key, parentKey, value));
+  const renameOther = (key, label) =>
+    setBudgetDraft(prev => renameOtherRow(prev, key, label));
+  const dropOther = (key) =>
+    setBudgetDraft(prev => dropOtherRow(prev, key));
+  const addOther = (parentKey) =>
+    setBudgetDraft(prev => addOtherRow(prev, budgetYears, parentKey));
 
-  // One table in budgetHeads order (Manpower, Travel, Equipment,
-  // Contingency, Overhead, Any Other Expenses), mirroring the wizard.
+  // One table in budgetHeads order (Manpower, Travel, Equipment, Consumables,
+  // Contingency, Overhead, Other Expenses), mirroring the wizard.
+  const pdHeadSum = (b, head, y) =>
+    head === HEAD_MANPOWER ? manpowerTotal(b, y) : equipmentTotal(b, y);
+  const pdHeadMismatch = (b, head, y) => {
+    const typed = typedHead(b, y, head);
+    const sum = pdHeadSum(b, head, y);
+    return typed !== null && sum > 0 && typed !== sum;
+  };
+
+  // The head cell: a typed total when there is one, otherwise the breakdown's
+  // own sum. Editable only while the budget is in edit mode.
+  const renderPdHeadCells = (b, head) => budgetYears.map(y => {
+    const sum = pdHeadSum(b, head, y);
+    const bad = pdHeadMismatch(b, head, y);
+    if (!editingBudget) {
+      return (
+        <td key={y} className={bad ? 'pd-budget-bad' : undefined}
+          title={bad ? `Breakdown sums to ₹${sum.toLocaleString('en-IN')}` : undefined}>
+          ₹{headTotal(b, y, head).toLocaleString('en-IN')}{bad ? ' ⚠' : ''}
+        </td>
+      );
+    }
+    const typed = typedHead(budgetDraft, y, head);
+    return (
+      <td key={y}>
+        <input type="number" min="0" className="pd-budget-edit-input"
+          value={typed === null ? '' : typed}
+          placeholder={pdHeadSum(budgetDraft, head, y) ? String(pdHeadSum(budgetDraft, head, y)) : '0'}
+          title="Leave blank to use the breakdown below"
+          onChange={e => editTypedHead(y, head, e.target.value)} />
+      </td>
+    );
+  });
+
   const renderManpowerRows = (b) => (
     <>
       <tr className="pd-budget-head-row">
         <td className="pd-budget-head-name">{HEAD_MANPOWER}</td>
-        {budgetYears.map(y => <td key={y}>₹{headTotal(b, y, HEAD_MANPOWER).toLocaleString('en-IN')}</td>)}
+        {renderPdHeadCells(b, HEAD_MANPOWER)}
         <td className="pd-bh-total">₹{budgetYears.reduce((s, y) => s + headTotal(b, y, HEAD_MANPOWER), 0).toLocaleString('en-IN')}</td>
       </tr>
       {[...manpowerCats, ...extraManpowerCats(b)].map(cat => (
         <tr key={cat} className="pd-budget-sub-row">
-          <td className="pd-budget-sub-name">↳ {cat}</td>
+          <td className="pd-budget-sub-name">↳ {cat}(s)</td>
           {budgetYears.map(y => {
-            const cell = manpowerCell(b, y, cat);
+            const amt = Number(manpowerCell(b, y, cat).amount) || 0;
             return (
               <td key={y} className="pd-budget-sub-cell">
                 {editingBudget ? (
-                  <span className="pd-budget-countpair">
-                    <input type="number" min="0" className="pd-budget-edit-input" title="Count"
-                      value={manpowerCell(budgetDraft, y, cat).count || 0}
-                      onChange={e => editManpower(y, cat, 'count', e.target.value)} />
-                    <input type="number" min="0" className="pd-budget-edit-input" title="Amount (₹)"
-                      value={manpowerCell(budgetDraft, y, cat).amount || 0}
-                      onChange={e => editManpower(y, cat, 'amount', e.target.value)} />
-                  </span>
+                  <input type="number" min="0" className="pd-budget-edit-input" title="Amount (₹)"
+                    value={manpowerCell(budgetDraft, y, cat).amount || ''} placeholder="0"
+                    onChange={e => editManpower(y, cat, 'amount', e.target.value)} />
                 ) : (
-                  <>{cell.count ? `${cell.count} × ₹${(Number(cell.amount) || 0).toLocaleString('en-IN')}` : '—'}</>
+                  <>{amt ? `₹${amt.toLocaleString('en-IN')}` : EMPTY_VALUE}</>
                 )}
               </td>
             );
           })}
-          <td className="pd-budget-sub-total">₹{budgetYears.reduce((s, y) => {
-            const c = manpowerCell(b, y, cat);
-            return s + (Number(c.count) || 0) * (Number(c.amount) || 0);
-          }, 0).toLocaleString('en-IN')}</td>
+          <td className="pd-budget-sub-total">₹{budgetYears.reduce((s, y) =>
+            s + (Number(manpowerCell(b, y, cat).amount) || 0), 0).toLocaleString('en-IN')}</td>
         </tr>
       ))}
     </>
@@ -154,75 +192,151 @@ const ProjectDetails = () => {
     <>
       <tr className="pd-budget-head-row">
         <td className="pd-budget-head-name">{HEAD_EQUIPMENT}
-          {editingBudget && !equipItems(budgetDraft).includes('') && (
+          {editingBudget && (
             <button type="button" className="cp-add-btn cp-add-inline" onClick={addEquip}>
-              <i className="fa fa-plus"></i> Add
+              <i className="fa fa-plus"></i> Add Item
             </button>
           )}
         </td>
-        {budgetYears.map(y => <td key={y}>₹{headTotal(b, y, HEAD_EQUIPMENT).toLocaleString('en-IN')}</td>)}
+        {renderPdHeadCells(b, HEAD_EQUIPMENT)}
         <td className="pd-bh-total">₹{budgetYears.reduce((s, y) => s + headTotal(b, y, HEAD_EQUIPMENT), 0).toLocaleString('en-IN')}</td>
       </tr>
-      {equipItems(b).map((item, idx) => (
-        <tr key={`eq-${idx}`} className="pd-budget-sub-row">
+      {equipItems(editingBudget ? budgetDraft : b).map(row => (
+        <tr key={row.key} className="pd-budget-sub-row">
           <td className="pd-budget-sub-name">
             {editingBudget ? (
               <span className="pd-budget-countpair">
-                <input type="text" className="pd-budget-edit-input" value={item}
+                <input type="text" className="pd-budget-edit-input" value={row.label}
                   placeholder="e.g. GPU Workstation"
-                  onChange={e => renameEquip(item, e.target.value)} />
-                <button type="button" className="cp-remove-btn" title="Remove" onClick={() => dropEquip(item)}>
+                  onChange={e => renameEquip(row.key, e.target.value)} />
+                <button type="button" className="cp-remove-btn" title="Remove item"
+                  onClick={() => dropEquip(row.key)}>
                   <i className="fa fa-trash"></i>
                 </button>
               </span>
-            ) : <>↳ {item || '—'}</>}
+            ) : <>↳ {row.label || EMPTY_VALUE}</>}
           </td>
           {budgetYears.map(y => {
-            const amt = Number(((namedLine(b, KEY_EQUIPMENT, y, 'item', item) || {}).amount) || 0);
+            const amt = Number(((equipLine(b, y, row.key) || {}).amount) || 0);
             return (
               <td key={y} className="pd-budget-sub-cell">
                 {editingBudget ? (
                   <input type="number" min="0" className="pd-budget-edit-input"
-                    value={Number(((namedLine(budgetDraft, KEY_EQUIPMENT, y, 'item', item) || {}).amount) || 0)}
-                    onChange={e => editEquipAmount(y, item, e.target.value)} />
+                    value={(equipLine(budgetDraft, y, row.key) || {}).amount || ''}
+                    placeholder="0"
+                    onChange={e => editEquipAmount(y, row.key, e.target.value)} />
                 ) : (
-                  <>{amt ? `₹${amt.toLocaleString('en-IN')}` : '—'}</>
+                  <>{amt ? `₹${amt.toLocaleString('en-IN')}` : EMPTY_VALUE}</>
                 )}
               </td>
             );
           })}
           <td className="pd-budget-sub-total">₹{budgetYears.reduce((s, y) =>
-            s + Number(((namedLine(b, KEY_EQUIPMENT, y, 'item', item) || {}).amount) || 0), 0).toLocaleString('en-IN')}</td>
+            s + Number(((equipLine(b, y, row.key) || {}).amount) || 0), 0).toLocaleString('en-IN')}</td>
         </tr>
       ))}
     </>
   );
 
+  // Other Expenses: named rows that may own sub-items. The parent row holds the
+  // money; its sub-items break it down and never add to the head on their own.
   const renderOtherRows = (b) => {
-    const labels = otherLabels(b);
+    const src = editingBudget ? budgetDraft : b;
+    const rows = otherRows(src);
     return (
       <>
-        {(labels.length ? labels : ['']).map(label => (
-          <tr key={label || '__other'} className="pd-budget-head-row">
-            <td className="pd-budget-head-name">{label || HEAD_OTHER}</td>
-            {budgetYears.map(y => {
-              const amt = Number(((namedLine(b, KEY_OTHER, y, 'label', label) || {}).amount) || 0);
-              return (
-                <td key={y}>
+        <tr className="pd-budget-head-row">
+          <td className="pd-budget-head-name">{HEAD_OTHER}
+            {editingBudget && (
+              <button type="button" className="cp-add-btn cp-add-inline" onClick={() => addOther('')}>
+                <i className="fa fa-plus"></i> Add Expense
+              </button>
+            )}
+          </td>
+          {budgetYears.map(y => <td key={y}>₹{headTotal(b, y, HEAD_OTHER).toLocaleString('en-IN')}</td>)}
+          <td className="pd-bh-total">₹{budgetYears.reduce((s, y) => s + headTotal(b, y, HEAD_OTHER), 0).toLocaleString('en-IN')}</td>
+        </tr>
+        {rows.map(row => {
+          const subs = otherSubRows(src, row.key);
+          return (
+            <React.Fragment key={row.key}>
+              <tr className="pd-budget-sub-row">
+                <td className="pd-budget-sub-name">
                   {editingBudget ? (
-                    <input type="number" min="0" className="pd-budget-edit-input"
-                      value={Number(((namedLine(budgetDraft, KEY_OTHER, y, 'label', label) || {}).amount) || 0)}
-                      onChange={e => editOtherAmount(y, label, e.target.value)} />
-                  ) : (
-                    <>₹{amt.toLocaleString('en-IN')}</>
-                  )}
+                    <span className="pd-budget-countpair">
+                      <input type="text" className="pd-budget-edit-input" value={row.label}
+                        placeholder="e.g. Fabrication"
+                        onChange={e => renameOther(row.key, e.target.value)} />
+                      <button type="button" className="cp-add-btn cp-add-inline" title="Add sub-item"
+                        onClick={() => addOther(row.key)}>
+                        <i className="fa fa-plus"></i>
+                      </button>
+                      <button type="button" className="cp-remove-btn" title="Remove expense"
+                        onClick={() => dropOther(row.key)}>
+                        <i className="fa fa-trash"></i>
+                      </button>
+                    </span>
+                  ) : <>↳ {row.label || EMPTY_VALUE}</>}
                 </td>
-              );
-            })}
-            <td className="pd-bh-total">₹{budgetYears.reduce((s, y) =>
-              s + Number(((namedLine(b, KEY_OTHER, y, 'label', label) || {}).amount) || 0), 0).toLocaleString('en-IN')}</td>
-          </tr>
-        ))}
+                {budgetYears.map(y => {
+                  const amt = Number(((otherLine(b, y, row.key) || {}).amount) || 0);
+                  const bad = otherSubMismatch(b, y, row.key);
+                  return (
+                    <td key={y} className="pd-budget-sub-cell">
+                      {editingBudget ? (
+                        <input type="number" min="0" className="pd-budget-edit-input"
+                          value={(otherLine(budgetDraft, y, row.key) || {}).amount || ''}
+                          placeholder="0"
+                          onChange={e => editOther(y, row.key, '', e.target.value)} />
+                      ) : (
+                        <span className={bad ? 'pd-budget-bad' : undefined}
+                          title={bad ? `Sub-items sum to ₹${otherSubTotal(b, y, row.key).toLocaleString('en-IN')}` : undefined}>
+                          {amt ? `₹${amt.toLocaleString('en-IN')}` : EMPTY_VALUE}{bad ? ' ⚠' : ''}
+                        </span>
+                      )}
+                    </td>
+                  );
+                })}
+                <td className="pd-budget-sub-total">₹{budgetYears.reduce((s, y) =>
+                  s + Number(((otherLine(b, y, row.key) || {}).amount) || 0), 0).toLocaleString('en-IN')}</td>
+              </tr>
+              {subs.map(sub => (
+                <tr key={sub.key} className="pd-budget-sub-row pd-budget-subsub-row">
+                  <td className="pd-budget-sub-name">
+                    {editingBudget ? (
+                      <span className="pd-budget-countpair">
+                        <input type="text" className="pd-budget-edit-input" value={sub.label}
+                          placeholder="e.g. Casting"
+                          onChange={e => renameOther(sub.key, e.target.value)} />
+                        <button type="button" className="cp-remove-btn" title="Remove sub-item"
+                          onClick={() => dropOther(sub.key)}>
+                          <i className="fa fa-trash"></i>
+                        </button>
+                      </span>
+                    ) : <>↳ {sub.label || EMPTY_VALUE}</>}
+                  </td>
+                  {budgetYears.map(y => {
+                    const amt = Number(((otherLine(b, y, sub.key) || {}).amount) || 0);
+                    return (
+                      <td key={y} className="pd-budget-sub-cell">
+                        {editingBudget ? (
+                          <input type="number" min="0" className="pd-budget-edit-input"
+                            value={(otherLine(budgetDraft, y, sub.key) || {}).amount || ''}
+                            placeholder="0"
+                            onChange={e => editOther(y, sub.key, row.key, e.target.value)} />
+                        ) : (
+                          <>{amt ? `₹${amt.toLocaleString('en-IN')}` : EMPTY_VALUE}</>
+                        )}
+                      </td>
+                    );
+                  })}
+                  <td className="pd-budget-sub-total">₹{budgetYears.reduce((s, y) =>
+                    s + Number(((otherLine(b, y, sub.key) || {}).amount) || 0), 0).toLocaleString('en-IN')}</td>
+                </tr>
+              ))}
+            </React.Fragment>
+          );
+        })}
       </>
     );
   };
@@ -249,7 +363,7 @@ const ProjectDetails = () => {
     if (invalidCopi(newCopi)) return;
     const updated = [...coPIs, { ...newCopi }];
     const res = await apiUpdateProject(project.id, { co_pis: updated });
-    if (res.success) { setCoPIs(updated); setNewCopi(emptyCopi); setShowCopiForm(false); toast.success('Co-PI added successfully!'); }
+    if (res.success) { setCoPIs(updated); setNewCopi(emptyCopi); setShowCopiForm(false); toast.success('Co-PI added.'); }
   };
   const removeCopi = async (i) => {
     const updated = coPIs.filter((_, idx) => idx !== i);
@@ -264,7 +378,7 @@ const ProjectDetails = () => {
     if (invalidCopi(copiEditForm)) return;
     const updated = coPIs.map((c, idx) => (idx === editingCopiIdx ? { ...copiEditForm } : c));
     const res = await apiUpdateProject(project.id, { co_pis: updated });
-    if (res.success) { setCoPIs(updated); setEditingCopiIdx(null); toast.success('Co-PI updated successfully!'); }
+    if (res.success) { setCoPIs(updated); setEditingCopiIdx(null); toast.success('Co-PI updated.'); }
   };
 
   // Documents management (backend has no update endpoint -> edit = delete + re-upload)
@@ -304,7 +418,7 @@ const ProjectDetails = () => {
       const doc = mapDocument((res.response && res.response.document) || res.response);
       setDocuments(prev => (editingDocIdx !== null ? prev.map((d, i) => (i === editingDocIdx ? doc : d)) : [...prev, doc]));
       setShowDocModal(false);
-      toast.success(editingDocIdx !== null ? 'Document updated!' : 'Document uploaded successfully!');
+      toast.success(editingDocIdx !== null ? 'Document updated.' : 'Document uploaded.');
     }
   };
   const removeDoc = async (i) => {
@@ -343,7 +457,7 @@ const ProjectDetails = () => {
         const p = await apiGetProject(id);
         if (p) setSanctionDoc(sanctionFromProject(p));
         setShowSanctionModal(false);
-        toast.success('Sanction letter updated!');
+        toast.success('Sanction letter updated.');
       }
     } else {
       if (!sanctionLinkInput.trim()) { toast.error('Please enter a link.'); return; }
@@ -351,7 +465,7 @@ const ProjectDetails = () => {
       if (res.success) {
         setSanctionDoc({ name: 'Sanction Letter', url: sanctionLinkInput.trim(), isLink: true });
         setShowSanctionModal(false);
-        toast.success('Sanction letter updated!');
+        toast.success('Sanction letter updated.');
       }
     }
   };
@@ -544,7 +658,7 @@ const ProjectDetails = () => {
                                     onChange={e => updateSubCell(y, bh.head, sub, e.target.value)}
                                   />
                                 ) : (
-                                  <>{subVal(budgetData, y, bh.head, sub) ? `₹${subVal(budgetData, y, bh.head, sub).toLocaleString('en-IN')}` : '—'}</>
+                                  <>{subVal(budgetData, y, bh.head, sub) ? `₹${subVal(budgetData, y, bh.head, sub).toLocaleString('en-IN')}` : EMPTY_VALUE}</>
                                 )}
                               </td>
                             ))}
@@ -595,7 +709,7 @@ const ProjectDetails = () => {
                       const file = e.target.files[0];
                       if (!file) return;
                       const res = await apiUploadGanttChart(project.id, file);
-                      if (res.success) { toast.success('Gantt chart uploaded'); loadProject(); }
+                      if (res.success) { toast.success('Gantt chart uploaded.'); loadProject(); }
                     }} />
                 </label>
               )}
@@ -879,13 +993,13 @@ const ProjectDetails = () => {
             </div>
             <h1 className="page-title">{project.title}</h1>
             <div className="pd-header-meta">
-              <div className="pd-hm-item"><span>FUNDING AGENCY</span><strong>{project.fundingAgency || '—'}</strong></div>
+              <div className="pd-hm-item"><span>FUNDING AGENCY</span><strong>{project.fundingAgency || EMPTY_VALUE}</strong></div>
               <div className="pd-hm-item"><span>SANCTIONED AMOUNT</span><strong>₹ {Number(project.amount || 0).toLocaleString('en-IN')}</strong></div>
               <div className="pd-hm-item">
                 <span>DURATION</span>
                 <strong>
                   {formatDuration(project.durationYears, project.durationMonths)}
-                  {project.startDate ? ` · ${formatDate(project.startDate)} — ${project.endDate ? formatDate(project.endDate) : '—'}` : ''}
+                  {project.startDate ? ` · ${formatDate(project.startDate)} — ${formatDate(project.endDate)}` : ''}
                 </strong>
               </div>
             </div>

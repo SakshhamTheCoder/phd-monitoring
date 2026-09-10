@@ -6,6 +6,7 @@ import CustomButton from '../forms/fields/CustomButton';
 import InputField from '../forms/fields/InputField';
 import DropdownField from '../forms/fields/DropdownField';
 import GridContainer from '../forms/fields/GridContainer';
+import ToggleSwitch from '../forms/fields/ToggleSwitch';
 import './UserForm.css';
 
 const UserForm = ({ edit, userData, onClose }) => {
@@ -15,6 +16,7 @@ const UserForm = ({ edit, userData, onClose }) => {
     email: '',
     phone: '',
     gender: '',
+    physically_handicapped: false,
     role_id: '',
     current_role_id: '',
     default_role_id: '',
@@ -42,6 +44,7 @@ const UserForm = ({ edit, userData, onClose }) => {
         email: userData.email || '',
         phone: userData.phone || '',
         gender: userData.gender || '',
+        physically_handicapped: !!userData.physically_handicapped,
         role_id: userData.role_id || '',
         current_role_id: userData.current_role_id || '',
         default_role_id: userData.default_role_id || '',
@@ -57,6 +60,7 @@ const UserForm = ({ edit, userData, onClose }) => {
         email: '',
         phone: '',
         gender: '',
+        physically_handicapped: false,
         role_id: '',
         current_role_id: '',
         default_role_id: '',
@@ -253,8 +257,13 @@ const UserForm = ({ edit, userData, onClose }) => {
               onChange={(value) => setFormData({ ...formData, status: value })}
               key={`status_${formData.id || 'new'}`}
             />,
+            <ToggleSwitch
+              label="Physically handicapped"
+              isOn={formData.physically_handicapped}
+              onToggle={() => setFormData({ ...formData, physically_handicapped: !formData.physically_handicapped })}
+            />,
           ]}
-          space={2}
+          space={3}
         />
 
         <div style={{ marginTop: '1rem', marginBottom: '1rem' }}>

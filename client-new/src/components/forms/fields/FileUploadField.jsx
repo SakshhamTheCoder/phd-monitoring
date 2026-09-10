@@ -44,15 +44,21 @@ const FileUploadField = ({
     <div className='file-upload-container'>
       {showLabel && <label className='input-label'>{label}{required && <span className="req">*</span>}</label>}
 
-      {initialValue && isLocked ? (
-        <a
-          href={rootURL + initialValue.replace('app/public', 'storage')}
-          target='_blank'
-          rel='noopener noreferrer'
-          className='file-link'
-        >
-          <div className='preview-file'> {fileName}</div>
-        </a>
+      {isLocked ? (
+        initialValue ? (
+          <a
+            href={rootURL + initialValue.replace('app/public', 'storage')}
+            target='_blank'
+            rel='noopener noreferrer'
+            className='file-link'
+          >
+            <div className='preview-file'> {fileName}</div>
+          </a>
+        ) : (
+          // Same read only treatment as every other empty locked field, rather
+          // than the dashed box that reads as a drop zone.
+          <div className='input-field field-readonly'>Not provided</div>
+        )
       ) : (
         <input
           type='file'

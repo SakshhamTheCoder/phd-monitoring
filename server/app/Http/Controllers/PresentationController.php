@@ -30,6 +30,12 @@ class PresentationController extends Controller
     use FilterLogicTrait;
     use HasSemesterCodeValidation;
     use GeneralFormList;
+    /** Progress monitoring is shown on its own page, not in the Forms list. */
+    protected function formLink($formInstance, $model): string
+    {
+        return '/presentation/semester/' . $formInstance->period_of_report . '/' . $formInstance->id;
+    }
+
     public function listFilters(Request $request)
     {
         return response()->json($this->getAvailableFilters("presentation"));
@@ -529,6 +535,7 @@ class PresentationController extends Controller
                 return $this->handleAdordcForm($user, $form_id, $model, false);
             case 'faculty':
                 return $this->handleFacultyForm($user, $form_id, $model);
+            case 'director':
             case 'admin':
                 return $this->handleAdminForm($user, $form_id, $model, true);
 

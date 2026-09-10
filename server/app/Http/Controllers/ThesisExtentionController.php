@@ -57,6 +57,11 @@ class ThesisExtentionController extends Controller
         if($role->role != 'student'){
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
+        // The first extension ends at DoRDC. A second one is the special
+        // extension, so it needs the Director's approval on top.
+        if($user->student->thesisExtentions()->count() > 0){
+            $steps=['student','faculty','phd_coordinator','hod','dra','dordc','director','complete'];
+        }
         $data=[
             'roll_no'=>$user->student->roll_no,
             'steps'=>$steps,
@@ -72,7 +77,7 @@ class ThesisExtentionController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
         $model = ThesisExtentionForm::class;
-        $steps=['student','faculty','phd_coordinator','hod','dra','dordc'];
+        $steps=['student','faculty','phd_coordinator','hod','dra','dordc','director'];
         switch ($role->role) {
             case 'student':
                 return $this->handleStudentForm($user, $form_id, $model,$steps);
@@ -85,6 +90,7 @@ class ThesisExtentionController extends Controller
                 return $this->handleAdminForm($user, $form_id, $model);
             case 'faculty':
                 return $this->handleFacultyForm($user, $form_id, $model);
+            case 'director':
             case 'admin':
                 return $this->handleAdminForm($user, $form_id, $model,true);
            
@@ -226,11 +232,37 @@ class ThesisExtentionController extends Controller
         );
     }
 
-    //TODO: implement Thesis extention checks of director and male female
+    /** An extension is granted a year at a time. */
+    private const EXTENSION_MONTHS = 12;
+
+    /**
+     * One granted year, recorded against the student. The form is the request;
+     * this row is the grant, and it is what every deadline is counted from.
+     *
+     * The form carries no period: nothing on it asks the student for one, and
+     * the regulations do not let them choose. Falling back to a year keeps the
+     * grant from landing with no length and leaving the deadline unmoved.
+     */
+    private function recordExtension($formInstance)
+    {
+        $formInstance->student->thesisExtentions()->create([
+            'period_of_extention' => $formInstance->period_of_extention ?: self::EXTENSION_MONTHS,
+            'reason' => $formInstance->reason,
+            'form_id' => $formInstance->id,
+        ]);
+    }
 
     private function dordcSubmit($user, $request, $form_id)
     {
         $model = ThesisExtentionForm::class;
+        $form = ThesisExtentionForm::find($form_id);
+
+        // First extension: DoRDC alone may grant it. Second: DoRDC only
+        // recommends, and the Director grants it.
+        if ($form && $form->student->thesisExtentions()->count() > 0) {
+            return $this->submitForm($user, $request, $form_id, $model, 'dordc', 'dra', 'director');
+        }
+
         return $this->submitForm(
             $user,
             $request,
@@ -243,7 +275,8 @@ class ThesisExtentionController extends Controller
                 if ($request->approval) {
                     $formInstance->completion='complete';
                     $formInstance->status = 'approved';
-                    $formInstance->addHistoryEntry("Thesis approved by DORDC", $user->name());
+                    $this->recordExtension($formInstance);
+                    $formInstance->addHistoryEntry("Thesis extension approved by DORDC", $user->name());
                 }
             }
         );
@@ -264,7 +297,8 @@ class ThesisExtentionController extends Controller
                 if ($request->approval) {
                     $formInstance->completion='complete';
                     $formInstance->status = 'approved';
-                    $formInstance->addHistoryEntry("Thesis Extention approved by Director", $user->name());
+                    $this->recordExtension($formInstance);
+                    $formInstance->addHistoryEntry("Thesis extension approved by Director", $user->name());
                 }
             }
         );

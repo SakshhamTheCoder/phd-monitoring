@@ -23,7 +23,7 @@ class SupervisorDoctoralChangeController extends Controller
         $user = Auth::user();
         $role = $user->current_role->role;
 
-        if (!in_array($role, ['dordc', 'admin'])) {
+        if (!$user->may('can_manage_supervisor_changes')) {
             return response()->json([
                 'message' => 'You do not have permission to view pending changes'
             ], 403);
@@ -99,7 +99,7 @@ class SupervisorDoctoralChangeController extends Controller
         $user = Auth::user();
         $role = $user->current_role->role;
 
-        if (!in_array($role, ['hod', 'phd_coordinator', 'admin', 'doctoral', 'dordc'])) {
+        if (!$user->may('can_propose_supervisor_changes')) {
             return response()->json([
                 'message' => 'You do not have permission to propose changes'
             ], 403);
@@ -164,7 +164,7 @@ class SupervisorDoctoralChangeController extends Controller
         }
 
         // Admin, doctoral, and dordc can apply changes directly without approval
-        if (in_array($role, ['admin', 'doctoral', 'dordc'])) {
+        if ($user->may('can_edit_doctoral_committee')) {
             DB::beginTransaction();
             try {
                 // Create the change record
@@ -235,7 +235,7 @@ class SupervisorDoctoralChangeController extends Controller
         $user = Auth::user();
         $role = $user->current_role->role;
 
-        if (!in_array($role, ['dordc', 'admin'])) {
+        if (!$user->may('can_manage_supervisor_changes')) {
             return response()->json([
                 'message' => 'You do not have permission to approve changes'
             ], 403);
@@ -290,7 +290,7 @@ class SupervisorDoctoralChangeController extends Controller
         $user = Auth::user();
         $role = $user->current_role->role;
 
-        if (!in_array($role, ['dordc', 'admin'])) {
+        if (!$user->may('can_manage_supervisor_changes')) {
             return response()->json([
                 'message' => 'You do not have permission to reject changes'
             ], 403);
@@ -419,7 +419,7 @@ class SupervisorDoctoralChangeController extends Controller
                     'message' => 'You can only view students from your department'
                 ], 403);
             }
-        } elseif (!in_array($role, ['dordc', 'admin'])) {
+        } elseif (!$user->may('can_manage_supervisor_changes')) {
             return response()->json([
                 'message' => 'You do not have permission to view changes'
             ], 403);

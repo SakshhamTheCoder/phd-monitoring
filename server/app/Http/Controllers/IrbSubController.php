@@ -96,6 +96,7 @@ class IrbSubController extends Controller
                 return $this->handleAdordcForm($user, $form_id, $model);
             case 'faculty':
                 return $this->handleFacultyForm($user, $form_id, $model);
+            case 'director':
             case 'admin':
                     return $this->handleAdminForm($user, $form_id, $model,true);
            
@@ -249,7 +250,7 @@ class IrbSubController extends Controller
                 [
                     'form_type' => 'thesis-extension',
                     'form_name' => 'Thesis Extension',
-                    'max_count' => 10,
+                    'max_count' => 2,
                     'stage' => 'student',
                 ],
                 [

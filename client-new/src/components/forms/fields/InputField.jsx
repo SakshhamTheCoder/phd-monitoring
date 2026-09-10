@@ -18,7 +18,7 @@ const InputField = ({ label, initialValue, isLocked, onChange,hint=null,showLabe
                 type={type}
                 className="input-field"
                 value={value}
-                placeholder={hintText}
+                placeholder={isLocked && !value ? 'Not provided' : hintText}
                 onChange={(e) => {updateValue(e.target.value); onChange(e.target.value)}}
                 readOnly={isLocked} 
                 disabled={isLocked}
