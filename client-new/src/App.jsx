@@ -131,13 +131,18 @@ const AppContent = () => {
               <Route path="/faculty/:facultyCode/profile" element={<ResearchProfile />} />
             </>
           )}
-          <Route path="/presentation" element={<PresentationSemester />} />
-          <Route path="/presentation/semester" element={<Navigate to="/presentation" replace />} />
-
-          {/* <Route path="/presentation/form" element={<PresentationListPage/>} />   */}
-
-          <Route path="/presentation/semester/:semester_id" element={<PresentationListPage />} />
-          <Route path="/presentation/semester/:semester_id/:id" element={<Presentation />} />
+          {/* Matches the sidebar's Progress Monitoring entry, so clerk and external
+              (who have no sidebar link for it) can't land on the page either. */}
+          {(role === 'student' || role === 'hod' || role === 'phd_coordinator' || role === 'faculty' || role === 'dordc' || role === 'adordc' || role === 'dra' || role === 'director' || role === 'doctoral' || role === 'admin') && (
+            <>
+              <Route path="/presentation" element={<PresentationSemester />} />
+              <Route path="/presentation/semester" element={<Navigate to="/presentation" replace />} />
+              {/* The semester and form pages sit under the same gate, so a role
+                  kept off the landing page cannot reach them by deep link. */}
+              <Route path="/presentation/semester/:semester_id" element={<PresentationListPage />} />
+              <Route path="/presentation/semester/:semester_id/:id" element={<Presentation />} />
+            </>
+          )}
 
           <Route path="/forms/:form_type" element={<FormListPage />} />
           <Route path="/forms/:form_type/:id" element={<MainFormPage />} />
@@ -154,8 +159,8 @@ const AppContent = () => {
               )}
             </>
           )}
-          {(
-            role === 'hod' || role === 'phd_coordinator' || role === 'doctoral' || role === 'external' || role === 'dordc' || role === 'adordc' || role === 'dra' || role === 'director' || role === 'admin') && (
+          {/* Matches can_edit_department, which DepartmentController::list requires. */}
+          {(role === 'dordc' || role === 'dra' || role === 'director' || role === 'admin') && (
               <>
                 <Route path="/departments" element={<DepartmentPage />} />
                 {/* <Route path="/faculty/:roll_no" element={<StudentProfile />} />
@@ -164,7 +169,8 @@ const AppContent = () => {
               <Route path="/faculty/:roll_no/forms/:form_type/:id" element={<MainFormPage />} /> */}
               </>
             )}
-          {role === 'dordc' && (
+          {/* can_manage_supervisor_changes is granted to dordc and admin on the server. */}
+          {(role === 'dordc' || role === 'admin') && (
             <Route path="/supervisor-doctoral-approvals" element={<SupervisorDoctoralApproval />} />
           )}
           {role !== 'clerk' && (

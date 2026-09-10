@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import { useLoading } from '../../context/LoadingContext';
@@ -8,9 +8,8 @@ import PagenationTable from '../../components/pagenationTable/PagenationTable';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import DepartmentManager from '../../components/departmentManager/DepartmentManager';
 import AddDepartmentForm from './AddDepartmentForm';
-import { customFetch } from '../../api/base';
-import { baseURL } from '../../api/urls';
 import CustomButton from '../../components/forms/fields/CustomButton';
+import useCapabilities from '../../hooks/useCapabilities';
 
 const DepartmentPage = () => {
   const [filter, setFilter] = useState([]);
@@ -19,6 +18,10 @@ const DepartmentPage = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const { setLoading } = useLoading();
   const location = useLocation();
+  const can = useCapabilities();
+  // Every department write is gated on can_add_department server side, so a
+  // role without it is shown the directory, not the controls.
+  const mayManage = can('can_add_department');
 
   const handleFilterChange = (newFilter) => {
     setFilter(newFilter);
@@ -54,18 +57,20 @@ const DepartmentPage = () => {
             endpoint={location.pathname}
             filters={filter}
             enableApproval={false}
+            rowClickable={mayManage}
             customOpenForm={openForm}
             extraTopbarComponents={
-              <CustomButton text="Add Department +" onClick={() => openForm()} />
+              mayManage ? (
+                <CustomButton text="Add Department +" onClick={() => openForm()} />
+              ) : null
             }
-            
-            actions={[
+            actions={mayManage ? [
               {
                 icon: <i className="fa-solid fa-users-gear"></i>,
                 tooltip: 'Manage HOD & Coordinators',
                 onClick: (deptData) => openForm(deptData),
               },
-            ]}
+            ] : []}
           />
           <CustomModal
             isOpen={isOpen}

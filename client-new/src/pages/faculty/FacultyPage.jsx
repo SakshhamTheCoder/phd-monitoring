@@ -203,10 +203,15 @@ Khalid Bashir,khalid.bashir@demo.invalid,9800000002,Assistant Professor,10002,EC
             endpoint={location.pathname}
             filters={filter}
             enableApproval={false}
-            customOpenForm={openForm}
+            // A row leads to the profile, never to the edit form. Editing lives
+            // in the actions menu, where the role check is.
+            rowClickable={!!features.research_profile}
+            customOpenForm={(facultyData) =>
+              navigate(`/faculty/${facultyData.faculty_code}/profile`)
+            }
             extraTopbarComponents={
               // A viewer with only directory access is browsing, not managing.
-              can('can_add_faculties') ? (
+              can('can_manage_faculties') ? (
                 <div className="top-actions">
                   <CustomButton
                     text="Bulk Import"
@@ -219,7 +224,7 @@ Khalid Bashir,khalid.bashir@demo.invalid,9800000002,Assistant Professor,10002,EC
             }
             
             actions={[
-              ...(can('can_add_faculties') ? [{
+              ...(can('can_manage_faculties') ? [{
                 icon: <i className="fa-solid fa-pen-to-square"></i>,
                 tooltip: 'Edit',
                 onClick: (facultyData) => openForm(facultyData),
