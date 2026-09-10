@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Faculty;
+use App\Support\SupervisionCapacity;
 
 class FacultyRecommendationService
 {
@@ -95,7 +96,22 @@ class FacultyRecommendationService
                 'score' => round($score, 3), 'percent' => (int) round(min(0.99, $score) * 100),
             ];
         }
-        usort($scored, fn($a,$b) => $b['score'] <=> $a['score']);
+
+        // A supervisor with no room left is still a real answer to "who works
+        // on this", so they stay in the list and sink below everyone who can
+        // actually take the scholar, rather than disappearing without saying
+        // why. Loads are counted once for the whole set, not per row.
+        $loads = SupervisionCapacity::loadsFor(array_column($scored, 'faculty_code'));
+        foreach ($scored as &$row) {
+            $row['supervision'] = SupervisionCapacity::describeWithLoad(
+                $row['designation'],
+                $loads[$row['faculty_code']] ?? 0,
+            );
+        }
+        unset($row);
+
+        usort($scored, fn($a, $b) => [$a['supervision']['is_full'], $b['score']] <=> [$b['supervision']['is_full'], $a['score']]);
+
         return array_values(array_filter(array_slice($scored, 0, $limit), fn($r) => $r['score'] > 0.01));
     }
 

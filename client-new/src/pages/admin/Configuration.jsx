@@ -4,6 +4,7 @@ import PageHeader from '../../components/pageHeader/PageHeader';
 import Tabs from '../../components/tabs/Tabs';
 import LeaveQuotas from './configuration/LeaveQuotas';
 import ThesisLimits from './configuration/ThesisLimits';
+import SupervisionLimits from './configuration/SupervisionLimits';
 
 /**
  * One admin home for settings that would otherwise be hardcoded or buried in
@@ -17,6 +18,7 @@ import ThesisLimits from './configuration/ThesisLimits';
 const SECTIONS = [
   { value: 'leave', label: 'Leave Quotas', Component: LeaveQuotas },
   { value: 'thesis', label: 'Thesis Duration', Component: ThesisLimits },
+  { value: 'supervision', label: 'Supervision Limits', Component: SupervisionLimits },
 ];
 
 const Configuration = () => {

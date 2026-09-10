@@ -14,6 +14,7 @@ use App\Models\BroadAreaSpecialization;
 use App\Models\Faculty;
 use App\Models\Forms;
 use App\Models\Supervisor;
+use App\Support\SupervisionCapacity;
 use App\Models\SupervisorAllocation;
 
 class SupervisorAllocationController extends Controller
@@ -334,6 +335,28 @@ class SupervisorAllocationController extends Controller
                     $formInstance->status = 'approved';
 
                     $supervisors = $formInstance->supervisors;
+
+                    // The last point where a supervisor can still be swapped.
+                    // Checked here rather than at the coordinator's stage
+                    // because this is where the commitment is actually written,
+                    // and a scholar allocated last week may have filled the
+                    // supervisor's last slot since.
+                    foreach ($supervisors as $supervisor) {
+                        $faculty = Faculty::find($supervisor);
+                        if (!$faculty) {
+                            continue;
+                        }
+
+                        $capacity = SupervisionCapacity::describe($faculty);
+                        if ($capacity['is_full']) {
+                            throw new \Exception(
+                                $faculty->user?->name() . ' already guides ' . $capacity['current']
+                                . ' scholars, which is the limit for a ' . $faculty->designation
+                                . '. Send the form back so another supervisor can be chosen.'
+                            );
+                        }
+                    }
+
                     foreach ($supervisors as $supervisor) {
                         Supervisor::create([
                             'student_id' => $formInstance->student_id,
