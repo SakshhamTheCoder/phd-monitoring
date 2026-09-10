@@ -32,7 +32,7 @@ const DropdownField = ({ label, options, initialValue, isLocked, onChange, requi
                 onClick={handleDropdownClick}
                 disabled={isLocked}
             >
-                {!showInitialValue && <option value="">Select</option>}
+                {!showInitialValue && <option value="">{isLocked ? 'Not provided' : 'Select'}</option>}
                 {showInitialValue ? (
                     <option value={value}>{initialValue}</option>
                 ) : (

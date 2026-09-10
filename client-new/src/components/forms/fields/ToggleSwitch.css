@@ -6,6 +6,9 @@
   }
   
   .toggle-switch {
+    padding: 0;
+    border: none;
+    appearance: none;
     width: 50px;
     height: 24px;
     background-color: #ccc;
@@ -17,6 +20,11 @@
   
   .toggle-switch.on {
     background-color: #4caf50;
+  }
+
+  .toggle-switch:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
   }
   
   .toggle-handle {

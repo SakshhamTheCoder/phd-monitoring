@@ -87,7 +87,7 @@ const Publications = () => {
                 </div>    
              </div>
 
-                <ShowPublications formData={formData} refetchData={fetchData} enableDelete={true} onDelete={handleDelete}/>
+                <ShowPublications formData={formData} refetchData={fetchData} enableDelete={true} onDelete={handleDelete} canAdd={true}/>
 
                 <CustomModal isOpen={open} onClose={closeModal} title={'Add Publication'}
                     minHeight='200px' maxHeight='600px' minWidth='650px' maxWidth='700px' closeOnOutsideClick={false}>

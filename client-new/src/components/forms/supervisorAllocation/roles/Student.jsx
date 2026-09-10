@@ -182,7 +182,7 @@ const Student = ({ formData }) => {
           />
         </>
       )}
-      {isLoaded && (formData.stage === "student" && !lock) ? (
+      {isLoaded && (formData.role === "student" && formData.stage === "student" && !lock) ? (
         <>
           <GridContainer
             label={[<span>Recommended supervisors (Top 8) {recLoading && <span style={{ color: 'var(--text-muted)' }}>loading…</span>}</span>]}

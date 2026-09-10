@@ -167,7 +167,7 @@ const Student = ({ formData }) => {
             space={2}
           />
 
-      {!lock ? (
+      {formData.role === "student" && !lock ? (
         <>
           <GridContainer
             elements={[<p>Select Supervisors to change</p>]}

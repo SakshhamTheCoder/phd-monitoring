@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import GridContainer from '../forms/fields/GridContainer';
 import TableComponent from '../forms/table/TableComponent';
-import { formatDate } from '../../utils/timeParse';
+import { formatDate, EMPTY_VALUE } from '../../utils/timeParse';
 import CustomButton from '../forms/fields/CustomButton';
 import AddPublication from './AddPublication';
 import CustomModal from '../forms/modal/CustomModal';
@@ -12,6 +12,7 @@ const ShowPublications = ({
     enableDelete = false,
     enableEdit = true,
     enableSubmit = false,
+    canAdd = false,
     onSubmit,
     onSelect,
     onDelete,
@@ -119,7 +120,7 @@ const ShowPublications = ({
                                     keys={['authors', 'year', 'title', 'name', 'impact_factor', 'doi_link', 'id']}
                                     titles={['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of the Journal', 'Impact Factor', 'DOI', '']}
                                     components={[
-                                        { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>N/A</span> },
+                                        { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>{EMPTY_VALUE}</span> },
                                           { key: 'id', component: ({ data }) => renderActions(data, 'sci') }
                                     ]}
                                     rowStyle={(data) => getRowStyle(data.id, 'sci')}
@@ -137,7 +138,7 @@ const ShowPublications = ({
                                     keys={['authors', 'year', 'title', 'name', 'impact_factor', 'doi_link','id']}
                                     titles={['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of the Journal', 'Impact Factor', 'DOI','']}
                                     components={[
-                                        { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>N/A</span> },
+                                        { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>{EMPTY_VALUE}</span> },
                                          { key: 'id', component: ({ data }) => renderActions(data, 'non_sci') }
                                     ]}
                                     rowStyle={(data) => getRowStyle(data.id, 'non_sci')}
@@ -155,7 +156,7 @@ const ShowPublications = ({
                                     keys={['authors', 'year', 'title', 'name', 'country', 'doi_link','id']}
                                     titles={['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of Conference', 'Place of Conference', 'DOI',' ']}
                                     components={[
-                                        { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>N/A</span> },
+                                        { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>{EMPTY_VALUE}</span> },
                                          { key: 'country', component: ({ data }) => <span>{data}</span> },
                                         { key: 'id', component: ({ data }) => renderActions(data, 'international') }
                                     ]}
@@ -174,7 +175,7 @@ const ShowPublications = ({
                                     keys={['authors', 'year', 'title', 'name', 'city', 'doi_link','id']}
                                     titles={['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of Conference', 'Place of Conference', 'DOI',' ']}
                                     components={[
-                                        { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>N/A</span> },
+                                        { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>{EMPTY_VALUE}</span> },
                                          {key: 'id', component: ({ data }) => renderActions(data, 'national') }
                                     ]}
                                     rowStyle={(data) => getRowStyle(data.id, 'national')}
@@ -218,7 +219,7 @@ const ShowPublications = ({
                         </>
                     )}
                     {totalPublications === 0 && (
-                        <p style={{textAlign:'center'}}>No Publications Found, Add One to Continue</p>
+                        <p style={{textAlign:'center'}}>{canAdd ? "No publications yet. Add one to continue." : "No publications yet."}</p>
                     )}
                      {enableSubmit && (
                         <GridContainer elements={[
