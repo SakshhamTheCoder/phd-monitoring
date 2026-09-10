@@ -19,15 +19,6 @@ export const formatCurrency = (amount) => {
   return `₹${value.toLocaleString('en-IN')}`;
 };
 
-// Format an ISO / YYYY-MM-DD date string as DD-MM-YYYY for display.
-export const formatDate = (d) => {
-  if (!d) return '';
-  const parts = String(d).split('T')[0].split('-');
-  if (parts.length !== 3) return d;
-  const [y, m, day] = parts;
-  return `${day}-${m}-${y}`;
-};
-
 export const getMilestoneProgress = (milestones) => {
   if (!milestones || milestones.length === 0) return 0;
   const completed = milestones.filter(m => m.status === 'Completed').length;
