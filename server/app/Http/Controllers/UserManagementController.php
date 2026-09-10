@@ -57,6 +57,7 @@ class UserManagementController extends Controller
                 'email' => $user->email,
                 'phone' => $user->phone,
                 'gender' => $user->gender,
+                'physically_handicapped' => (bool) $user->physically_handicapped,
                 'role' => $user->role ? $user->role->role : 'N/A',
                 'current_role' => $user->current_role ? $user->current_role->role : 'N/A',
                 'default_role' => $user->default_role ? $user->default_role->role : 'N/A',
@@ -106,6 +107,7 @@ class UserManagementController extends Controller
             'email' => $user->email,
             'phone' => $user->phone,
             'gender' => $user->gender,
+            'physically_handicapped' => (bool) $user->physically_handicapped,
             'role_id' => $user->role_id,
             'role' => $user->role ? $user->role->role : null,
             'current_role_id' => $user->current_role_id,
@@ -135,6 +137,7 @@ class UserManagementController extends Controller
             'last_name' => 'nullable|string|max:255',
             'phone' => 'required|string|max:20',
             'gender' => 'nullable|in:Male,Female',
+            'physically_handicapped' => 'nullable|boolean',
             'role_id' => 'required|exists:roles,id',
             'current_role_id' => 'nullable|exists:roles,id',
             'default_role_id' => 'nullable|exists:roles,id',
@@ -183,6 +186,7 @@ class UserManagementController extends Controller
         $user->email = $request->email;
         $user->phone = $request->phone;
         $user->gender = $request->gender;
+        $user->physically_handicapped = $request->boolean('physically_handicapped');
         $user->role_id = $request->role_id;
         $user->current_role_id = $request->current_role_id ?? $request->role_id;
         $user->default_role_id = $request->default_role_id ?? $request->role_id;

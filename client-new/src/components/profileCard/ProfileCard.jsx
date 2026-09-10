@@ -5,7 +5,7 @@ import "react-circular-progressbar/dist/styles.css";
 import "./ProfileCard.css";
 import { facultyNameCell } from "../facultyLink/FacultyLink";
 
-import { formatDate } from "../../utils/timeParse";
+import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
 import { baseURL } from "../../api/urls";
 import { customFetch } from "../../api/base";
 import GridContainer from "../forms/fields/GridContainer";
@@ -14,10 +14,20 @@ import CustomButton from "../forms/fields/CustomButton";
 import CustomModal from "../forms/modal/CustomModal";
 import SupervisorDoctoralManager from "../supervisorDoctoralManager/SupervisorDoctoralManager";
 import InputSuggestions from "../forms/fields/InputSuggestions";
+import InfoGrid from "../profileFields/InfoGrid";
 import { toast } from "react-toastify";
 
+/**
+ * What the deadline means today. The server owns the dates and the count, so
+ * this only phrases them.
+ */
+const deadlineNote = ({ days_remaining: daysLeft, extensions_granted: granted }) => {
+  const extended = granted > 0 ? `, ${granted} extension${granted > 1 ? 's' : ''} granted` : '';
+  if (daysLeft < 0) return `(overdue by ${Math.abs(daysLeft)} days${extended})`;
+  return `(${daysLeft} days left${extended})`;
+};
+
 const ProfileCard = ({ dataIP = null, link = false }) => {
-  const [showEditButton, setShowEditButton] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   const [isEditingInline, setIsEditingInline] = useState(false);
@@ -39,24 +49,28 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
 
   const [profile, setProfile] = useState(locationState || dataIP);
   const [loading, setLoading] = useState(!profile);
-const [userRole, setUserRole] = useState('');
-  useEffect(() => {
-    if (!profile) {
-      let url = roll_no
-        ? `${baseURL}/students/${roll_no}`
-        : `${baseURL}/students`;
+  // What this viewer may do with this profile is the server's answer, not a
+  // guess from the role in local storage.
+  const [permissions, setPermissions] = useState({ is_self: false, can_edit: false, can_manage: false });
 
-      customFetch(url, "GET", {}, true, false).then((data) => {
-        if (data?.success) {
-          const student = data.response.data[0];
-          setProfile(student);
-        }
-        setLoading(false);
-      });
-    } else {
+  const profileUrl = roll_no ? `${baseURL}/students/${roll_no}` : `${baseURL}/students/me`;
+
+  useEffect(() => {
+    customFetch(profileUrl, "GET", {}, true, false).then((res) => {
+      if (res?.success) {
+        setPermissions({
+          is_self: !!res.response.is_self,
+          can_edit: !!res.response.can_edit,
+          can_manage: !!res.response.can_manage,
+        });
+        // A profile handed in by the caller is already on screen; only the
+        // permissions still have to be fetched.
+        if (!locationState && !dataIP) setProfile(res.response.profile);
+      }
       setLoading(false);
-    }
-  }, [roll_no, profile]);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileUrl]);
   
   const fetchCourses = async () => {
     const studentId = profile?.database_id || profile?.id;
@@ -128,16 +142,6 @@ const [userRole, setUserRole] = useState('');
     }
   };
 
-  useEffect(() => {
-    // Set the user role from localStorage
-    let userRole1 = localStorage.getItem("userRole");
-    console.log("Role in ProfileCard:", userRole1);
-    if (userRole1 === "hod" || userRole1 === "admin" || userRole1 === "dordc" || userRole1 === "doctoral") {
-      setShowEditButton(true);
-
-    }
-    setUserRole(userRole1);
-  }, [loading]);
   const navigateToForms = () => {
     navigate(pathname + "/forms");
   };
@@ -171,10 +175,13 @@ const [userRole, setUserRole] = useState('');
       delete payload.tentative_broad_area;
       delete payload.tentative_desc;
     }
-    const response = await customFetch(`${baseURL}/students/update-profile`, 'POST', payload);
+    const response = await customFetch(`${baseURL}/students/${profile.roll_no}/profile`, 'POST', payload);
     if (response?.success) {
       toast.success('Profile updated successfully');
-      setProfile((prev) => ({ ...prev, ...payload }));
+      // The server answers with what it actually saved. Merging the payload
+      // instead would leave a refused field, a locked title among them, showing
+      // on screen until the next reload.
+      setProfile(response.response.profile);
       setIsEditingInline(false);
     } else {
       toast.error('Failed to update profile');
@@ -217,10 +224,23 @@ const [userRole, setUserRole] = useState('');
       { label: "Father's Name", value: fathers_name, field: "fathers_name" },
       { label: "Address", value: address, field: "address" },
       { label: "Current Status", value: current_status },
+      // Read-only here: it moves the thesis deadline, so only the roles that
+      // may edit a student record can set it.
+      { label: "Physically Handicapped", value: profile.physically_handicapped ? "Yes" : "No" },
       { label: "Date of Admission", value: formatDate(date_of_registration) },
       { label: "Date of IRB", value: formatDate(date_of_irb) },
       { label: "Date of Synopsis", value: formatDate(date_of_synopsis) },
       { label: "Date of Thesis", value: formatDate(date_of_thesis) },
+      ...(profile.thesis_window ? [{
+        label: "Thesis Deadline",
+        node: (
+          <span className={profile.thesis_window.days_remaining <= 30 ? "profile-deadline-due" : undefined}>
+            {formatDate(profile.thesis_window.latest)}
+            {" "}
+            <span className="profile-deadline-note">{deadlineNote(profile.thesis_window)}</span>
+          </span>
+        ),
+      }] : []),
       ...(attendance ? [{
         label: 'Attendance',
         node: (
@@ -228,7 +248,7 @@ const [userRole, setUserRole] = useState('');
             <span className="profile-attendance-value">
               {attendance.total > 0
                 ? `${attendance.present}/${attendance.total} (${attendance.percent}%)`
-                : '—'}
+                : EMPTY_VALUE}
             </span>
             <span className="profile-attendance-pop" role="tooltip">
               <strong>{attendance.currentMonth?.label || 'Current Month'} Attendance</strong>
@@ -251,26 +271,26 @@ const [userRole, setUserRole] = useState('');
       if (typeof sup === "string") {
         return {
           name: sup,
-          email: "—",
-          phone: "—",
-          designation: "—",
+          email: EMPTY_VALUE,
+          phone: EMPTY_VALUE,
+          designation: EMPTY_VALUE,
         };
       }
       return {
         faculty_code: sup.faculty_code,
-        name: sup.name || "—",
-        email: sup.email || "—",
-        phone: sup.phone || "—",
-        designation: sup.designation || "—",
+        name: sup.name || EMPTY_VALUE,
+        email: sup.email || EMPTY_VALUE,
+        phone: sup.phone || EMPTY_VALUE,
+        designation: sup.designation || EMPTY_VALUE,
       };
     });
 
     const doctoralTableData = (doctoral || []).map((member) => ({
       faculty_code: member.faculty_code,
-      name: member.name || "—",
-      email: member.email || "—",
-      phone: member.phone || "—",
-      designation: member.designation || "—",
+      name: member.name || EMPTY_VALUE,
+      email: member.email || EMPTY_VALUE,
+      phone: member.phone || EMPTY_VALUE,
+      designation: member.designation || EMPTY_VALUE,
     }));
 
     return (
@@ -279,6 +299,31 @@ const [userRole, setUserRole] = useState('');
           <div className="student-header">
             <div className="student-header-text">
               <h2>{name}</h2>
+              {!isEditingInline && (
+                <div className="student-research">
+                  <p className="student-research-title">
+                    <span className="student-research-label">{titleLabel}:</span>{" "}
+                    <span className={phd_title ? "" : "student-value-empty"}>
+                      {phd_title || EMPTY_VALUE}
+                    </span>
+                  </p>
+                  <p>
+                    <span className="student-research-label">Domain:</span>{" "}
+                    <span className={profile.tentative_broad_area ? "" : "student-value-empty"}>
+                      {profile.tentative_broad_area || EMPTY_VALUE}
+                    </span>
+                  </p>
+                  <p>
+                    <span className="student-research-label">Description:</span>{" "}
+                    <span className={profile.tentative_desc ? "" : "student-value-empty"}>
+                      {profile.tentative_desc || EMPTY_VALUE}
+                    </span>
+                  </p>
+                  {profile.phd_title_locked && (
+                    <p className="student-sub-meta-locked">Locked, IRB constituted</p>
+                  )}
+                </div>
+              )}
               {isEditingInline && (
                 <div className="student-sub-edit">
                   <div className="inline-field-item">
@@ -294,7 +339,7 @@ const [userRole, setUserRole] = useState('');
                     />
                     {profile.phd_title_locked && (
                       <small className="profile-lock-note">
-                        Locked — IRB constitution form already submitted.
+                        Locked. IRB constitution form already submitted.
                       </small>
                     )}
                   </div>
@@ -332,6 +377,22 @@ const [userRole, setUserRole] = useState('');
                 </div>
               )}
             </div>
+            {permissions.can_edit && permissions.is_self && (
+              <div className="profile-actions">
+                {!isEditingInline && (
+                  <button className="profile-edit-small" onClick={startInlineEdit}>
+                    <i className="fa fa-pencil" aria-hidden="true"></i> Edit
+                  </button>
+                )}
+                {isEditingInline && (
+                  <>
+                    <CustomButton text="Save" onClick={handleInlineSave} />
+                    <CustomButton text="Cancel" variant="secondary" onClick={cancelInlineEdit} />
+                  </>
+                )}
+              </div>
+            )}
+
             <div className="student-progress">
               <CircularProgressbar
                 value={overall_progress}
@@ -347,51 +408,13 @@ const [userRole, setUserRole] = useState('');
           </div>
 
           <div className="student-details">
-            {!isEditingInline && (
-              <div className="student-research">
-                <div className="student-research-item span-2">
-                  <strong>{titleLabel}:</strong>{" "}
-                  <span className={phd_title ? "" : "student-value-empty"}>
-                    {phd_title || "Not added"}
-                  </span>
-                </div>
-                <div className="student-research-item">
-                  <strong>Domain:</strong>{" "}
-                  <span className={profile.tentative_broad_area ? "" : "student-value-empty"}>
-                    {profile.tentative_broad_area || "Not added"}
-                  </span>
-                </div>
-                <div className="student-research-item span-all">
-                  <strong>Description:</strong>{" "}
-                  <span className={profile.tentative_desc ? "" : "student-value-empty"}>
-                    {profile.tentative_desc || "Not added"}
-                  </span>
-                </div>
-                {profile.phd_title_locked && (
-                  <p className="student-sub-meta-locked span-all">Locked — IRB constituted</p>
-                )}
-              </div>
-            )}
-
-            <div className="student-info-grid">
-              {personalInfo.map((item, idx) => (
-                <div key={idx}>
-                  <strong>{item.label}:</strong>{" "}
-                  {isEditingInline && item.field ? (
-                    <input
-                      className="profile-inline-input"
-                      type="text"
-                      value={editForm[item.field] ?? ""}
-                      onChange={(e) =>
-                        setEditForm((prev) => ({ ...prev, [item.field]: e.target.value }))
-                      }
-                    />
-                  ) : (
-                    item.node ?? (item.value || "—")
-                  )}
-                </div>
-              ))}
-            </div>
+            <InfoGrid
+              className="student-info-grid"
+              rows={personalInfo}
+              editing={isEditingInline}
+              values={editForm}
+              onChange={(field, value) => setEditForm((prev) => ({ ...prev, [field]: value }))}
+            />
           </div>
 
 
@@ -410,36 +433,29 @@ const [userRole, setUserRole] = useState('');
           />
         </div>
       </div> */}
-          <div className="profile-actions">
-            {userRole !== "student" &&(<>
-            <CustomButton text="View Forms" onClick={navigateToForms} />
-            <CustomButton
-              text="View Progress Monitoring"
-              onClick={navigateToProgress}
-              disabled={true}
-            />
-            </>)}
-            {userRole === "student" && !isEditingInline && (
-              <button className="profile-edit-small" onClick={startInlineEdit}>
-                <i className="fa fa-pencil" aria-hidden="true"></i> Edit
-              </button>
-            )}
-            {userRole === "student" && isEditingInline && (
-              <>
-                <CustomButton text="Save" onClick={handleInlineSave} />
-                <CustomButton text="Cancel" onClick={cancelInlineEdit} variant="secondary" />
-              </>
-            )}
-            {showEditButton && (
-              <>
-                <CustomButton text="Tag Course" onClick={() => {
-                  fetchAllCourses();
-                  setIsTagModalOpen(true);
-                }} />
-                <CustomButton text="Manage Supervisors/Doctoral" onClick={() => setShowSupervisorDoctoralModal(true)} />
-              </>
-            )}
-          </div>
+          {/* Page actions, not profile editing. Rendered only when there is
+              something in them, or the row is 3rem of empty margin. */}
+          {(!permissions.is_self || permissions.can_manage) && (
+            <div className="profile-actions">
+              {!permissions.is_self && (<>
+                <CustomButton text="View Forms" onClick={navigateToForms} />
+                <CustomButton
+                  text="View Progress Monitoring"
+                  onClick={navigateToProgress}
+                  disabled={true}
+                />
+              </>)}
+              {permissions.can_manage && (
+                <>
+                  <CustomButton text="Tag Course" onClick={() => {
+                    fetchAllCourses();
+                    setIsTagModalOpen(true);
+                  }} />
+                  <CustomButton text="Manage Supervisors/Doctoral" onClick={() => setShowSupervisorDoctoralModal(true)} />
+                </>
+              )}
+            </div>
+          )}
           
         
 
@@ -665,14 +681,8 @@ const [userRole, setUserRole] = useState('');
               onClose={() => {
                 setShowSupervisorDoctoralModal(false);
                 // Refresh profile data to show updated supervisors/doctoral
-                const url = roll_no
-                  ? `${baseURL}/students/${roll_no}`
-                  : `${baseURL}/students`;
-                customFetch(url, "GET", {}, true, false).then((data) => {
-                  if (data?.success) {
-                    const student = data.response.data[0];
-                    setProfile(student);
-                  }
+                customFetch(profileUrl, "GET", {}, true, false).then((res) => {
+                  if (res?.success) setProfile(res.response.profile);
                 });
               }}
             />

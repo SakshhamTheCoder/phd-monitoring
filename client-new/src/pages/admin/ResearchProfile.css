@@ -38,41 +38,10 @@
     font-weight: 400;
 }
 
-/* Banner Grid */
-
-.rp-info-card {
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
-    padding: 2rem;
-}
-
-
-
-
-
-
-
-
-
-
-/* Info Cards */
-
 .rp-right-col {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-}
-
-.rp-card-title {
-    margin: 0 0 1rem;
-    padding-left: 0.5rem;
-    font-size: 1.2rem;
-    color: #1f2937;
-}
-
-.border-red {
-    border-left: 4px solid var(--primary-color);
 }
 
 
@@ -262,7 +231,6 @@
 
 /* Edit, source and modal additions */
 
-.rp-id-form-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.6rem; }
 
 
 .rp-filter-actions { display: flex; align-items: center; gap: 0.6rem; }
@@ -397,14 +365,6 @@
     font-size: 0.95rem;
     color: #6b7280;
     margin-bottom: 0;
-  }
-  
-  .faculty-info-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
-    font-size: 0.95rem;
-    color: #374151;
   }
   
   .faculty-table-section {
@@ -635,82 +595,12 @@
 
 
 
-.rp-profile-form {
-    padding: 1.5rem;
-}
-
-.rp-profile-form h3 {
-    margin: 0 0 1.25rem;
-    font-size: 1.2rem;
-    color: #1f2937;
-}
-
-.rp-profile-form label {
-    display: block;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #374151;
-    margin-bottom: 0.35rem;
-}
-
-.rp-profile-form input {
-    width: 100%;
-    height: 38px;
-    padding: 0 0.6rem;
-    margin-bottom: 1rem;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-weight: 400;
-    box-sizing: border-box;
-}
-
-.rp-profile-form input:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 1px;
-}
-
-.rp-field-hint {
-    margin: -0.6rem 0 1.25rem;
-    font-size: 0.8rem;
-    font-weight: 400;
-    color: #6b7280;
-}
-
-/* Edit profile now covers identifiers too, so it needs a heading between the
-   two halves and a row for the pair of short numeric fields. */
-.rp-form-section {
-    margin: 1.5rem 0 1rem;
-    padding-top: 1.25rem;
-    border-top: 1px solid #e5e7eb;
-    font-size: 0.95rem;
-    color: #1f2937;
-}
-
-.rp-form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-}
-
-/* The dialog is taller now that it holds the whole profile. */
-.rp-profile-form {
-    max-height: 75vh;
-    overflow-y: auto;
-}
 
 /* Identifiers use the same grid and label style as the card above, so the page
    has one way of showing a field rather than two. Three across at the container
    width, wrapping below it. */
 .rp-research .faculty-info-grid {
     margin-bottom: 0;
-}
-
-/* A full ORCID is long. Values wrap inside their own cell instead of pushing the
-   column wider, and the label stays with the value it belongs to. */
-.faculty-info-grid > div {
-    min-width: 0;
-    overflow-wrap: anywhere;
 }
 
 /* The matrix sits in an inset panel, matching .student-details on the student
@@ -728,15 +618,13 @@
     margin: 0;
 }
 
-/* body sets font-weight 600 app-wide (App.css), so both the label and its value
-   arrive semi-bold and the matrix reads as one block of emphasis. The label is
-   the thing being emphasised; the value is data. Stated explicitly on both
-   profiles so they cannot drift apart again. */
-.faculty-info-grid {
-    font-weight: 400;
-}
-
-.faculty-info-grid strong {
-    font-weight: 600;
+/* Splits the profile card into who they are and what the sync runs on, without
+   splitting it into two cards that edit separately. */
+.faculty-details-heading {
+    margin: 1.5rem 0 1rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #e5e7eb;
+    font-size: 0.95rem;
     color: #1f2937;
 }
+

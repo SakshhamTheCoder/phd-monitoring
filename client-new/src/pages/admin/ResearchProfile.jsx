@@ -6,8 +6,9 @@ import CustomModal from '../../components/forms/modal/CustomModal';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import TableComponent from '../../components/forms/table/TableComponent';
 import Tabs from '../../components/tabs/Tabs';
+import InfoGrid from '../../components/profileFields/InfoGrid';
 import { generateAvatar } from '../../utils/profileImage';
-import { formatDate } from '../../data/projectsData';
+import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
 import { badgeClass } from '../../data/badges';
 import {
     apiResearchProfile, apiUpdateResearchProfile, apiSyncPublications,
@@ -95,7 +96,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
 
     useEffect(() => { load(); }, [load]);
 
-    if (!data) return <Shell><div className="loading-state">Loading Profile...</div></Shell>;
+    if (!data) return <Shell><div className="loading-state">Loading Profile…</div></Shell>;
 
     const {
         profile,
@@ -145,10 +146,14 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
         );
     };
 
+    const expertiseText = Array.isArray(profile.expertise)
+        ? profile.expertise.join(', ')
+        : profile.expertise || '';
+
     const startProfileEdit = () => {
         setProfileForm({
             phone: profile.phone || '',
-            expertise: Array.isArray(profile.expertise) ? profile.expertise.join(', ') : profile.expertise || '',
+            expertise: expertiseText,
             orcid_id: profile.orcid_id || '',
             scopus_id: profile.scopus_id || '',
             google_scholar_id: profile.google_scholar_id || '',
@@ -159,10 +164,53 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
         setEditingProfile(true);
     };
 
+    const setProfileField = (field, value) => setProfileForm(prev => ({ ...prev, [field]: value }));
+
     const saveProfile = async () => {
         const res = await apiUpdateResearchProfile(facultyCode, profileForm);
         if (res.success) { setEditingProfile(false); toast.success('Profile updated.'); load(); }
     };
+
+    /**
+     * Who this faculty member is. Phone is absent, not blank, for a viewer who
+     * may not see it, so the row goes with it.
+     */
+    const identityRows = [
+        { label: 'Email', value: profile.email },
+        profile.phone !== undefined && { label: 'Phone', value: profile.phone, field: 'phone' },
+        { label: 'Faculty Code', value: profile.faculty_code },
+        { label: 'Supervised (Within TIET)', value: profile.supervised_campus ?? 0 },
+        { label: 'Supervised (Outside TIET)', value: profile.supervised_outside ?? 0 },
+        // A viewer who may not see who the students are still sees how many.
+        ...(canViewSupervision ? [] : [
+            { label: 'Supervising', value: counts.supervised_count ?? 0 },
+            { label: 'Doctoral Committees', value: counts.doctoral_committee_count ?? 0 },
+        ]),
+        profile.website && { label: 'Website', value: profile.website },
+        {
+            label: 'Area of Expertise',
+            value: expertiseText,
+            field: 'expertise',
+            hint: 'Separate each area with a comma.',
+            span: 'all',
+        },
+    ];
+
+    /** What the sync runs on, kept beside the Sync button that uses it. */
+    const identifierRows = [
+        { label: 'ORCID iD', value: profile.orcid_id, field: 'orcid_id' },
+        { label: 'Scopus ID', value: profile.scopus_id, field: 'scopus_id' },
+        {
+            label: 'Google Scholar ID',
+            field: 'google_scholar_id',
+            node: profile.google_scholar_id
+                ? <a href={`https://scholar.google.com/citations?user=${profile.google_scholar_id}`} target="_blank" rel="noopener noreferrer">{profile.google_scholar_id}</a>
+                : undefined,
+        },
+        { label: 'Citations', value: profile.citations, field: 'citations', type: 'number' },
+        { label: 'h-index', value: profile.h_index, field: 'h_index', type: 'number' },
+        { label: 'Joined', value: profile.joined && formatDate(profile.joined), field: 'joined_on', type: 'date' },
+    ];
 
     const runSync = async () => {
         setSyncing(true);
@@ -354,7 +402,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
     );
 
     const doiCell = (pub) => (
-        <td>{pub.doi_link ? <a href={pub.doi_link} target="_blank" rel="noopener noreferrer"><i className="fa fa-link"></i> DOI</a> : '—'}</td>
+        <td>{pub.doi_link ? <a href={pub.doi_link} target="_blank" rel="noopener noreferrer"><i className="fa fa-link"></i> DOI</a> : EMPTY_VALUE}</td>
     );
 
     return (
@@ -370,8 +418,16 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                             most visits are about supervision. Kept beside the name
                             so it is seen without scrolling past the tables. */}
                         <div className="profile-actions">
-                            {canEdit && (
-                                <CustomButton text="Edit Profile" variant="secondary" onClick={startProfileEdit} />
+                            {canEdit && !editingProfile && (
+                                <button className="profile-edit-small" onClick={startProfileEdit}>
+                                    <i className="fa fa-pencil" aria-hidden="true"></i> Edit
+                                </button>
+                            )}
+                            {canEdit && editingProfile && (
+                                <>
+                                    <CustomButton text="Save" onClick={saveProfile} />
+                                    <CustomButton text="Cancel" variant="secondary" onClick={() => setEditingProfile(false)} />
+                                </>
                             )}
                             <CustomButton
                                 text="Research Profile"
@@ -382,27 +438,24 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                     </div>
 
                     <div className="faculty-details">
-                    <div className="faculty-info-grid">
-                        <div><strong>Email:</strong> {profile.email || "N/A"}</div>
-                        {profile.phone !== undefined && (
-                            <div><strong>Phone:</strong> {profile.phone || "N/A"}</div>
-                        )}
-                        <div><strong>Faculty Code:</strong> {profile.faculty_code}</div>
-                        <div><strong>Supervised (Within TIET):</strong> {profile.supervised_campus ?? 0}</div>
-                        <div><strong>Supervised (Outside TIET):</strong> {profile.supervised_outside ?? 0}</div>
-                        {/* A viewer who may not see who the students are still sees how many. */}
-                        {!canViewSupervision && (
-                            <>
-                                <div><strong>Supervising:</strong> {counts.supervised_count ?? 0}</div>
-                                <div><strong>Doctoral Committees:</strong> {counts.doctoral_committee_count ?? 0}</div>
-                            </>
-                        )}
-                        {profile.website && <div><strong>Website:</strong> {profile.website}</div>}
-                        <div style={{ gridColumn: '1 / -1' }}>
-                            <strong>Area of Expertise:</strong>{' '}
-                            {Array.isArray(profile.expertise) && profile.expertise.length ? profile.expertise.join(', ') : '—'}
-                        </div>
-                    </div>
+                        <InfoGrid
+                            className="faculty-info-grid"
+                            rows={identityRows}
+                            editing={editingProfile}
+                            values={profileForm}
+                            onChange={setProfileField}
+                        />
+
+                        {/* Same card as the fields above, so one Edit shows
+                            everything that one Save will write. */}
+                        <h4 className="faculty-details-heading">Academic Identifiers</h4>
+                        <InfoGrid
+                            className="faculty-info-grid"
+                            rows={identifierRows}
+                            editing={editingProfile}
+                            values={profileForm}
+                            onChange={setProfileField}
+                        />
                     </div>
 
                     {canViewSupervision && (
@@ -441,23 +494,6 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
 
                 <div className="rp-research" ref={researchRef}>
                     <div className="rp-right-col">
-                        <div className="rp-info-card">
-                            <h4 className="rp-card-title border-red">Academic Identifiers</h4>
-                            <div className="faculty-info-grid">
-                                <div><strong>ORCID iD:</strong> {profile.orcid_id || '—'}</div>
-                                <div><strong>Scopus ID:</strong> {profile.scopus_id || '—'}</div>
-                                <div>
-                                    <strong>Google Scholar ID:</strong>{' '}
-                                    {profile.google_scholar_id
-                                        ? <a href={`https://scholar.google.com/citations?user=${profile.google_scholar_id}`} target="_blank" rel="noopener noreferrer">{profile.google_scholar_id}</a>
-                                        : '—'}
-                                </div>
-                                <div><strong>Citations:</strong> {profile.citations ?? '—'}</div>
-                                <div><strong>h-index:</strong> {profile.h_index ?? '—'}</div>
-                                <div><strong>Joined:</strong> {profile.joined ? formatDate(profile.joined) : '—'}</div>
-                            </div>
-                        </div>
-
                         <div className="rp-sync-strip">
                             <span>
                                 Source <strong>{profile.last_sync_source ? SOURCE_LABELS[profile.last_sync_source] : 'not synced'}</strong>
@@ -598,149 +634,63 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                     {table('uncategorised', 'Unclassified (needs a category)',
                         ['AUTHOR(S)', 'YEAR OF PUBLICATION', 'TITLE OF PAPER', 'PUBLISHED IN', 'DOI'],
                         pub => (<>
-                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || '—'}</td><td>{pub.title}</td>
-                            <td>{pub.name || '—'}</td>{doiCell(pub)}
+                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td><td>{pub.title}</td>
+                            <td>{pub.name || EMPTY_VALUE}</td>{doiCell(pub)}
                         </>))}
 
                     {table('sci', 'SCI/SCIE/SSCI/ABDC/AHCI Journal',
                         ['AUTHOR(S)', 'YEAR OF PUBLICATION', 'TITLE OF PAPER', 'NAME OF THE JOURNAL', 'IMPACT FACTOR', 'DOI'],
                         pub => (<>
-                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || '—'}</td><td>{pub.title}</td>
-                            <td>{pub.name}</td><td>{pub.impact_factor ?? '—'}</td>{doiCell(pub)}
+                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td><td>{pub.title}</td>
+                            <td>{pub.name}</td><td>{pub.impact_factor ?? EMPTY_VALUE}</td>{doiCell(pub)}
                         </>))}
 
                     {table('non_sci', 'Papers in Scopus Journal',
                         ['AUTHOR(S)', 'YEAR OF PUBLICATION', 'TITLE OF PAPER', 'NAME OF THE JOURNAL', 'IMPACT FACTOR', 'NAME OF PUBLISHER'],
                         pub => (<>
-                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || '—'}</td><td>{pub.title}</td>
-                            <td>{pub.name}</td><td>{pub.impact_factor ?? '—'}</td><td>{pub.publisher || '—'}</td>
+                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td><td>{pub.title}</td>
+                            <td>{pub.name}</td><td>{pub.impact_factor ?? EMPTY_VALUE}</td><td>{pub.publisher || EMPTY_VALUE}</td>
                         </>))}
 
                     {table('international', 'Papers in International Conferences',
                         ['AUTHOR(S)', 'YEAR OF PUBLICATION', 'TITLE OF PAPER', 'NAME OF CONFERENCE', 'PLACE OF CONFERENCE', 'DOI'],
                         pub => (<>
-                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || '—'}</td><td>{pub.title}</td>
-                            <td>{pub.name}</td><td>{pub.country || '—'}</td>{doiCell(pub)}
+                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td><td>{pub.title}</td>
+                            <td>{pub.name}</td><td>{pub.country || EMPTY_VALUE}</td>{doiCell(pub)}
                         </>))}
 
                     {table('national', 'Papers in National Conferences',
                         ['AUTHOR(S)', 'YEAR OF PUBLICATION', 'TITLE OF PAPER', 'NAME OF CONFERENCE', 'PLACE OF CONFERENCE', 'DOI'],
                         pub => (<>
-                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || '—'}</td><td>{pub.title}</td>
-                            <td>{pub.name}</td><td>{pub.city || '—'}</td>{doiCell(pub)}
+                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td><td>{pub.title}</td>
+                            <td>{pub.name}</td><td>{pub.city || EMPTY_VALUE}</td>{doiCell(pub)}
                         </>))}
 
                     {table('book', 'Book/Book Chapters',
                         ['AUTHOR(S)', 'YEAR OF PUBLICATION', 'NAME OF BOOK', 'TITLE OF PAPER', 'NAME OF PUBLISHER'],
                         pub => (<>
-                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || '—'}</td><td>{pub.name}</td>
-                            <td>{pub.title}</td><td>{pub.publisher || '—'}</td>
+                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td><td>{pub.name}</td>
+                            <td>{pub.title}</td><td>{pub.publisher || EMPTY_VALUE}</td>
                         </>))}
 
                     {table('patents', 'Patents',
                         ['AUTHOR(S)', 'YEAR OF AWARD', 'TITLE OF PATENT', 'INTERNATIONAL/NATIONAL'],
                         pub => (<>
-                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || '—'}</td>
-                            <td>{pub.title}</td><td>{pub.country || '—'}</td>
+                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td>
+                            <td>{pub.title}</td><td>{pub.country || EMPTY_VALUE}</td>
                         </>))}
 
                     {Object.values(filtered).every(list => !list || !list.length) && (
                         <div className="empty-state">
                             {isOwnTab
-                                ? 'No publications recorded yet. Add one, or sync from ORCID or Scopus.'
+                                ? (canEdit
+                                    ? 'No publications recorded yet. Add one, or sync from ORCID or Scopus.'
+                                    : 'No publications recorded yet.')
                                 : 'No publications from supervised students match these filters.'}
                         </div>
                     )}
                 </div>
                 </div>
-
-                <CustomModal
-                    isOpen={editingProfile}
-                    onClose={() => setEditingProfile(false)}
-                    maxWidth="480px"
-                    minHeight="auto"
-                >
-                    <div className="rp-profile-form">
-                        <h3>Edit profile</h3>
-
-                        <label htmlFor="rp-phone">Phone</label>
-                        <input
-                            id="rp-phone"
-                            value={profileForm.phone}
-                            onChange={e => setProfileForm({ ...profileForm, phone: e.target.value })}
-                            placeholder="e.g., 9876543210"
-                        />
-
-                        <label htmlFor="rp-expertise">Area of expertise</label>
-                        <input
-                            id="rp-expertise"
-                            value={profileForm.expertise}
-                            onChange={e => setProfileForm({ ...profileForm, expertise: e.target.value })}
-                            placeholder="e.g., Machine Learning, Data Mining, Cyber Security"
-                        />
-                        <p className="rp-field-hint">Separate each area with a comma.</p>
-
-                        <label htmlFor="rp-joined">Joined on</label>
-                        <input
-                            id="rp-joined"
-                            type="date"
-                            value={profileForm.joined_on || ''}
-                            onChange={e => setProfileForm({ ...profileForm, joined_on: e.target.value })}
-                        />
-
-                        <h4 className="rp-form-section">Academic identifiers</h4>
-
-                        <label htmlFor="rp-orcid">ORCID iD</label>
-                        <input
-                            id="rp-orcid"
-                            value={profileForm.orcid_id}
-                            onChange={e => setProfileForm({ ...profileForm, orcid_id: e.target.value })}
-                            placeholder="0000-0002-1825-0097"
-                        />
-
-                        <label htmlFor="rp-scopus">Scopus ID</label>
-                        <input
-                            id="rp-scopus"
-                            value={profileForm.scopus_id}
-                            onChange={e => setProfileForm({ ...profileForm, scopus_id: e.target.value })}
-                        />
-
-                        <label htmlFor="rp-scholar">Google Scholar ID</label>
-                        <input
-                            id="rp-scholar"
-                            value={profileForm.google_scholar_id}
-                            onChange={e => setProfileForm({ ...profileForm, google_scholar_id: e.target.value })}
-                        />
-
-                        <div className="rp-form-row">
-                            <div>
-                                <label htmlFor="rp-citations">Citations</label>
-                                <input
-                                    id="rp-citations"
-                                    type="number"
-                                    min="0"
-                                    value={profileForm.citations}
-                                    onChange={e => setProfileForm({ ...profileForm, citations: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <label htmlFor="rp-hindex">h-index</label>
-                                <input
-                                    id="rp-hindex"
-                                    type="number"
-                                    min="0"
-                                    value={profileForm.h_index}
-                                    onChange={e => setProfileForm({ ...profileForm, h_index: e.target.value })}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="rp-id-form-actions">
-                            <CustomButton text="Cancel" variant="secondary" onClick={() => setEditingProfile(false)} />
-                            <CustomButton text="Save" onClick={saveProfile} />
-                        </div>
-                    </div>
-                </CustomModal>
 
                 <CustomModal
                     isOpen={showPubForm}
