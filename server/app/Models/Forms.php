@@ -27,6 +27,7 @@ class Forms extends Model
         'dra_available',
         'director_available',
         'doctoral_available',
+        'external_available',
         'stage',
         'count',
         'max_count',
