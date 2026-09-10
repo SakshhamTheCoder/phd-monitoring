@@ -189,12 +189,20 @@ const Student = ({ formData }) => {
             elements={[
               <TableComponent
                 data={recs}
-                keys={["name","department","expertise","select"]}
-                titles={["Name","Department","Area of Expertise","Action"]}
+                keys={["name","department","expertise","supervision","select"]}
+                titles={["Name","Department","Area of Expertise","Availability","Action"]}
                 components={[
                   {
                     key: "expertise",
                     component: ({ row }) => <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{(row.expertise || []).slice(0,3).join(', ')}</span>
+                  },
+                  {
+                    key: "supervision",
+                    component: ({ row }) => row.supervision?.is_full ? (
+                      <span className="badge badge--warning">Full</span>
+                    ) : (
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{row.supervision ? `${row.supervision.remaining} of ${row.supervision.limit} free` : ''}</span>
+                    )
                   },
                   {
                     key: "select",

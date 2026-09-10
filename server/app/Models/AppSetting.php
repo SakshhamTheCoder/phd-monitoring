@@ -35,6 +35,26 @@ class AppSetting extends Model
             // Spec 4.6: every role that shows a leave balance reads these.
             'readers' => ['admin', 'clerk', 'hod', 'student'],
         ],
+        'supervision' => [
+            // A ceiling per rank, following the institute's own rule rather
+            // than the person. 'other' catches the designations that name no
+            // rank at all, which are administrative posts rather than guides.
+            'defaults' => [
+                'max_professor' => 8,
+                'max_associate_professor' => 6,
+                'max_assistant_professor' => 4,
+                'max_other' => 4,
+            ],
+            'rules' => [
+                'max_professor' => 'required|integer|min:0|max:50',
+                'max_associate_professor' => 'required|integer|min:0|max:50',
+                'max_assistant_professor' => 'required|integer|min:0|max:50',
+                'max_other' => 'required|integer|min:0|max:50',
+            ],
+            // A coordinator and a HoD allocate supervisors, so they need to see
+            // the ceiling they are allocating against.
+            'readers' => ['admin', 'phd_coordinator', 'hod', 'dordc'],
+        ],
         'thesis' => [
             'defaults' => [
                 'min_years' => 3,

@@ -39,6 +39,32 @@ class FacultyController extends Controller
     public function listFilters(Request $request){
         return response()->json($this->getAvailableFilters("faculty"));
     }
+
+    /**
+     * Department ids a writer may manage faculty in, mirroring list()'s read
+     * scoping: null means no limit (can_read_all_faculties), otherwise the
+     * writer's own department(s), an ADORDC resolving to several via
+     * adordcDepartments, everyone else to their single department.
+     *
+     * @return array<int, int>|null
+     */
+    private function facultyWriteDepartmentIds(User $user): ?array
+    {
+        if ($user->may('can_read_all_faculties')) {
+            return null;
+        }
+
+        if (!$user->faculty) {
+            return [];
+        }
+
+        $role = $user->current_role->role;
+
+        return $role === 'adordc'
+            ? $user->faculty->adordcDepartments->pluck('id')->all()
+            : [$user->faculty->department_id];
+    }
+
     public function add(Request $request)
     {
 
@@ -50,7 +76,9 @@ class FacultyController extends Controller
                 'message' => 'You do not have permission to add faculty'
             ], 403);
         }
-      
+
+        $departmentScope = $this->facultyWriteDepartmentIds($user);
+
         $validationRules = [
             'full_name' => 'required_without:first_name|string',
             'first_name' => 'required_without:full_name|string',
@@ -79,6 +107,16 @@ class FacultyController extends Controller
         }
 
         $request->validate($validationRules);
+
+        if ($departmentScope !== null) {
+            $targetDepartment = $request->filled('department_id') ? Department::find($request->department_id) : null;
+            if (!$targetDepartment || !in_array($targetDepartment->id, $departmentScope, true)) {
+                $label = $targetDepartment->name ?? 'that department';
+                return response()->json([
+                    'message' => "You do not have permission to add faculty to {$label}"
+                ], 403);
+            }
+        }
 
         $name = $request->filled('full_name')
             ? PersonName::split($request->input('full_name'))
@@ -156,6 +194,14 @@ class FacultyController extends Controller
             ], 404);
         }
 
+        $departmentScope = $this->facultyWriteDepartmentIds($user);
+        if ($departmentScope !== null && !in_array($faculty->department_id, $departmentScope, true)) {
+            $label = $faculty->department?->name ?? 'that department';
+            return response()->json([
+                'message' => "You do not have permission to update faculty in {$label}"
+            ], 403);
+        }
+
         $validationRules = [
             'full_name' => 'nullable|string',
             'first_name' => 'nullable|string',
@@ -185,6 +231,16 @@ class FacultyController extends Controller
 
         $request->validate($validationRules);
 
+        if ($departmentScope !== null && $request->filled('department_id') && (int) $request->department_id !== $faculty->department_id) {
+            $destination = Department::find($request->department_id);
+            if (!$destination || !in_array($destination->id, $departmentScope, true)) {
+                $label = $destination->name ?? 'that department';
+                return response()->json([
+                    'message' => "You do not have permission to move faculty to {$label}"
+                ], 403);
+            }
+        }
+
         // Neither full_name nor first_name is required here, so a caller that
         // only touches email/phone/department must not blank the stored name.
         if ($request->filled('full_name')) {
@@ -208,7 +264,11 @@ class FacultyController extends Controller
         }
         // External faculty code remains auto-generated, can't be changed
 
-        $faculty->department_id = $request->department_id;
+        // department_id is nullable in the rules but NOT NULL in the table, so a
+        // caller that edits only a phone or a designation must not blank it.
+        if ($request->filled('department_id')) {
+            $faculty->department_id = $request->department_id;
+        }
         $faculty->designation = $request->designation;
         $faculty->type = $type;
         $faculty->institution = $request->institution ?? 'Thapar Institute of Engineering and Technology';
@@ -363,6 +423,8 @@ class FacultyController extends Controller
             'batch_data.*.row_number' => 'required|integer',
         ]);
 
+        $departmentScope = $this->facultyWriteDepartmentIds($user);
+
         $batchData = $request->batch_data;
         $successCount = 0;
         $updateCount = 0;
@@ -426,6 +488,17 @@ class FacultyController extends Controller
                     if (!$department) {
                         $errors[] = "Row " . $rowNumber . ": Department code '{$departmentCode}' not found. "
                             . "Create the department first, or correct the code.";
+                        $errorCount++; continue;
+                    }
+                }
+
+                // A row with no department_code keeps the existing faculty's
+                // department, so an update must be checked against that one.
+                if ($departmentScope !== null) {
+                    $rowDepartment = $department ?? $existingFacultyCheck?->department;
+                    if (!$rowDepartment || !in_array($rowDepartment->id, $departmentScope, true)) {
+                        $label = $rowDepartment->name ?? 'that department';
+                        $errors[] = "Row " . $rowNumber . ": You do not have permission to manage faculty in {$label}";
                         $errorCount++; continue;
                     }
                 }

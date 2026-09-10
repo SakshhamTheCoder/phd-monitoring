@@ -86,11 +86,30 @@ class Faculty extends Model
     }
 
     /**
+     * The scholars still being guided, as opposed to everyone ever guided.
+     *
+     * Nothing removes a row from `supervisors` when a scholar finishes, and
+     * nothing should: who guided whom is worth keeping. But a submitted thesis
+     * is not a current commitment, so it does not count towards a supervisor's
+     * load or occupy one of their slots.
+     */
+    public function currentlySupervisedStudents()
+    {
+        return $this->supervisedStudents()->whereNull('students.date_of_thesis');
+    }
+
+    /**
      * Live count of students this faculty is currently supervising on campus.
      * Overrides the stored `supervised_campus` column (which was stale/broken)
      * so every profile/list reads the real number of supervised students.
      */
     public function getSupervisedCampusAttribute()
+    {
+        return $this->currentlySupervisedStudents()->count();
+    }
+
+    /** Everyone ever guided here, including those who have submitted. */
+    public function getSupervisedEverAttribute()
     {
         return $this->supervisedStudents()->count();
     }
@@ -339,7 +358,8 @@ class Faculty extends Model
     public function supervisionCounts(int $studentPublications): array
     {
         return [
-            'supervised_count' => $this->supervisedStudents()->count(),
+            'supervised_count' => $this->currentlySupervisedStudents()->count(),
+            'supervised_ever_count' => $this->supervisedStudents()->count(),
             'doctoral_committee_count' => $this->doctoredStudents()->count(),
             'student_publication_count' => $studentPublications,
         ];
