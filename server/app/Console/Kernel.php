@@ -14,6 +14,10 @@ class Kernel extends ConsoleKernel
     {
         // This ensures scheduled emails are processed
         $schedule->command('queue:work --stop-when-empty')->everyMinute();
+
+        // One pass a day is enough: the warning window is a month wide and the
+        // command will not send the same warning twice.
+        $schedule->command('thesis:notify-deadlines')->dailyAt('06:00');
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\ThesisDeadline;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -239,6 +240,39 @@ class Student extends Model
     public function subdomains()
     {
         return $this->hasMany(StudentSubdomain::class, 'student_id', 'roll_no');
+    }
+
+    /**
+     * Earliest and latest thesis submission dates, or null when the student has
+     * no date of admission to count from. Every caller reads them from here so
+     * the profile, the submission guard and the deadline notice agree.
+     *
+     * @return array{earliest:string, latest:string, days_remaining:int, extensions_granted:int}|null
+     */
+    public function thesisWindow(): ?array
+    {
+        if (!$this->date_of_registration) {
+            return null;
+        }
+
+        $limits = AppSetting::map('thesis');
+        $admission = $this->date_of_registration->toDateString();
+        $baseYears = ThesisDeadline::baseYearsFor(
+            $this->user?->gender,
+            (bool) $this->user?->physically_handicapped,
+            $limits['base_years_male'],
+            $limits['base_years_female_ph']
+        );
+
+        $extensions = $this->thesisExtentions;
+        $latest = ThesisDeadline::latest($admission, $baseYears, (int) $extensions->sum('period_of_extention'));
+
+        return [
+            'earliest' => ThesisDeadline::earliest($admission, $limits['min_years']),
+            'latest' => $latest,
+            'days_remaining' => ThesisDeadline::daysRemaining($latest, now()->toDateString()),
+            'extensions_granted' => $extensions->count(),
+        ];
     }
 
     public function initialStatus()

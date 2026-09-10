@@ -13,6 +13,7 @@ class AppSettingTest extends TestCase
     public function test_missing_rows_fall_back_to_defaults(): void
     {
         AppSetting::query()->delete();
+        AppSetting::forgetCache();
 
         $this->assertSame(
             ['academic_quota' => 10, 'casual_quota' => 8, 'year_start_month' => 7],

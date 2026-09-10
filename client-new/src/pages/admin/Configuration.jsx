@@ -3,6 +3,7 @@ import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import Tabs from '../../components/tabs/Tabs';
 import LeaveQuotas from './configuration/LeaveQuotas';
+import ThesisLimits from './configuration/ThesisLimits';
 
 /**
  * One admin home for settings that would otherwise be hardcoded or buried in
@@ -15,6 +16,7 @@ import LeaveQuotas from './configuration/LeaveQuotas';
  */
 const SECTIONS = [
   { value: 'leave', label: 'Leave Quotas', Component: LeaveQuotas },
+  { value: 'thesis', label: 'Thesis Duration', Component: ThesisLimits },
 ];
 
 const Configuration = () => {
