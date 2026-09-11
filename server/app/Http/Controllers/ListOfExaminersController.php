@@ -16,6 +16,7 @@ use App\Models\Forms;
 use App\Models\ListOfExaminersForm;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\ExaminerOverlap;
 
 //TODO: add outside expert not in the system
 
@@ -234,6 +235,15 @@ class ListOfExaminersController extends Controller
                 );
             }
 
+            // Checked for both lists before either is written. processExaminers
+            // creates rows as it goes and nothing here runs in a transaction, so
+            // validating inside it would leave the national list saved when the
+            // international one is refused.
+            $this->refuseRepeatedLists($formInstance, [
+                'national' => $request->national,
+                'international' => $request->international,
+            ]);
+
             $this->processExaminers($request->national, 'national', $formInstance, $user);
 
             $this->processExaminers($request->international, 'international', $formInstance, $user);
@@ -362,6 +372,44 @@ class ListOfExaminersController extends Controller
     }
 
     /**
+     * Refuse a proposal that repeats too much of an earlier list.
+     *
+     * A supervisor sending the same panel to every scholar is the thing being
+     * prevented, so the message names the scholar whose list is being repeated
+     * and the people in common: without those there is nothing to act on.
+     *
+     * @param  array<string, array<int, array<string, mixed>>>  $lists  by type
+     */
+    private function refuseRepeatedLists($formInstance, array $lists): void
+    {
+        $student = $formInstance->student;
+        if (!$student) {
+            return;
+        }
+
+        $problems = [];
+
+        foreach ($lists as $type => $examiners) {
+            foreach (ExaminerOverlap::breaches($student, $type, $this->emailsOf($examiners ?? [])) as $breach) {
+                $problems[] = 'the ' . $type . ' list repeats ' . count($breach['shared'])
+                    . ' of the examiners already proposed for ' . $breach['roll_no']
+                    . ' (' . implode(', ', $breach['shared']) . ')';
+            }
+        }
+
+        if (!$problems) {
+            return;
+        }
+
+        $share = (int) round(ExaminerOverlap::LIMIT * 100);
+
+        throw new \Exception(
+            'No more than ' . $share . '% of a list may be examiners already proposed for another scholar, but '
+            . implode('; and ', $problems) . '. Replace the extra names.'
+        );
+    }
+
+    /**
      * Emails as they are compared and stored: case and spacing are how the same
      * person slipped past the duplicate checks.
      *
@@ -387,26 +435,6 @@ class ListOfExaminersController extends Controller
         if (count($emails) !== count(array_unique($emails))) {
             throw new \Exception("Duplicate examiners found in the $type list");
         }
-    
-        // Get the last form submitted by the faculty
-        // $lastForm = ListOfExaminersForm::where('faculty_id', $user->faculty->faculty_code)
-        //     ->where('id', '<', $formInstance->id) // Assuming `id` represents the chronological order of forms
-        //     ->latest('id')
-        //     ->first();
-    
-        // if ($lastForm) {
-        //     // Get the examiners of the last form
-        //     $lastFormExaminers = ExaminersRecommendation::where('form_id', $lastForm->id)
-        //         ->where('type', $type)
-        //         ->pluck('email')
-        //         ->toArray();
-    
-        //     // Check for common examiners
-        //     $commonExaminers = array_intersect($emails, $lastFormExaminers);
-        //     if (count($commonExaminers) > 2) {
-        //         throw new \Exception("The $type list cannot have more than 2 examiners in common with the last submitted form");
-        //     }
-        // }
     
         $count = 0;
         foreach ($examiners as $examiner) {
