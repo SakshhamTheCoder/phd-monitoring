@@ -199,7 +199,7 @@ Khalid Bashir,khalid.bashir@demo.invalid,9800000002,Assistant Professor,10002,EC
     <Layout
       children={
         <>
-          <PageHeader title="Faculty" subtitle="Directory of internal and external faculty." />
+          <PageHeader title="Faculty" subtitle="Directory of internal faculty." />
           <FilterBar onSearch={handleFilterChange} />
           <PagenationTable
             key={refreshKey}
