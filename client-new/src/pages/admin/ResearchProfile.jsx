@@ -8,6 +8,7 @@ import TableComponent from '../../components/forms/table/TableComponent';
 import Tabs from '../../components/tabs/Tabs';
 import InfoGrid from '../../components/profileFields/InfoGrid';
 import { generateAvatar } from '../../utils/profileImage';
+import { isNetworkError, NETWORK_ERROR_MESSAGE } from '../../api/base';
 import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
 import { badgeClass } from '../../data/badges';
 import {
@@ -243,7 +244,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                 toast.info('Sync is taking longer than expected — refresh in a bit.');
             }
         } catch (e) {
-            toast.error('Sync failed: ' + (e.message || 'unknown'));
+            toast.error(isNetworkError(e) ? NETWORK_ERROR_MESSAGE : 'Sync failed: ' + (e.message || 'unknown'));
         } finally {
             setSyncing(false);
             load();

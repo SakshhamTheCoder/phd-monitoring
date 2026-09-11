@@ -14,7 +14,7 @@ import FacultyForm from '../../components/facultyForm/FacultyForm';
 import ClerkForm from '../../components/clerkForm/ClerkForm';
 import { baseURL } from '../../api/urls';
 import CustomButton from '../../components/forms/fields/CustomButton';
-import { customFetch } from '../../api/base';
+import { customFetch, isNetworkError, NETWORK_ERROR_MESSAGE } from '../../api/base';
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
 import useCapabilities from '../../hooks/useCapabilities';
 
@@ -212,7 +212,9 @@ Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,d
               await new Promise(resolve => setTimeout(resolve, 1000));
               continue;
             }
-            toast.error(`Batch ${batchIndex + 1} network error: ${fetchError.message}`);
+            toast.error(isNetworkError(fetchError)
+                            ? NETWORK_ERROR_MESSAGE
+                            : `Batch ${batchIndex + 1} network error: ${fetchError.message}`);
             totalErrors += batch.length;
           }
         }

@@ -4,7 +4,7 @@ import PageHeader from '../../components/pageHeader/PageHeader';
 import Tabs from '../../components/tabs/Tabs';
 import { toast } from 'react-toastify';
 import { baseURL } from '../../api/urls';
-import { customFetch } from '../../api/base';
+import { customFetch, isNetworkError, NETWORK_ERROR_MESSAGE } from '../../api/base';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import DatePicker from 'react-datepicker';
@@ -232,7 +232,7 @@ const AttendancePage = () => {
         console.log('CSV import errors', data.data?.errors);
         setShowCsvModal(false); setCsvFile(null); setCsvPreview(null); loadRoster();
       } else toast.error(data.message || 'Import failed.');
-    } catch (e) { toast.error('Upload failed: ' + e.message); } finally { setUploading(false); }
+    } catch (e) { toast.error(isNetworkError(e) ? NETWORK_ERROR_MESSAGE : 'Upload failed: ' + e.message); } finally { setUploading(false); }
   };
 
   const todayDate = useMemo(() => { const d = new Date(); d.setHours(0,0,0,0); return d; }, []);

@@ -5,6 +5,7 @@ import { useLoading } from '../../context/LoadingContext';
 import { useFeatures } from '../../context/FeaturesContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { isNetworkError, NETWORK_ERROR_MESSAGE } from '../../api/base';
 import FilterBar from '../../components/filterBar/FilterBar';
 import PagenationTable from '../../components/pagenationTable/PagenationTable';
 import CustomModal from '../../components/forms/modal/CustomModal';
@@ -164,7 +165,9 @@ Khalid Bashir,khalid.bashir@demo.invalid,9800000002,Assistant Professor,10002,EC
               await new Promise(resolve => setTimeout(resolve, 1000));
               continue;
             }
-            toast.error(`Batch ${batchIndex + 1} network error: ${fetchError.message}`);
+            toast.error(isNetworkError(fetchError)
+              ? NETWORK_ERROR_MESSAGE
+              : `Batch ${batchIndex + 1} network error: ${fetchError.message}`);
             totalErrors += batch.length;
           }
         }

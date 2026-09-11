@@ -1,5 +1,5 @@
 import { toast } from "react-toastify";
-import { customFetch } from "./base";
+import { customFetch, isNetworkError, NETWORK_ERROR_MESSAGE } from "./base";
 import { baseURL } from "./urls";
 
 export const submitForm = async (body, location, setLoading, files = null) => {
@@ -49,7 +49,9 @@ export const submitForm = async (body, location, setLoading, files = null) => {
             console.log("Form submission response:", data);
         }
     } catch (error) {
-        toast.error("Failed to submit the form:" + (error.message || error));
+        toast.error(isNetworkError(error)
+            ? NETWORK_ERROR_MESSAGE
+            : "Failed to submit the form: " + (error.message || error));
         console.log(error);
     } finally {
         setLoading(false);

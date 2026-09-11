@@ -1,5 +1,12 @@
 import { toast } from "react-toastify";
 
+export const NETWORK_ERROR_MESSAGE =
+  "Network unstable. Check your internet connection and try again.";
+
+// fetch() rejects with a TypeError when the request never reached the server.
+export const isNetworkError = (error) =>
+  !navigator.onLine || error instanceof TypeError;
+
 // In-memory cache store with timestamp
 const cacheStore = new Map();
 const CACHE_DURATION = 0 * 60 * 1000; // 5 minutes in milliseconds
@@ -85,6 +92,11 @@ export const customFetch = async (
         console.error("Error parsing JSON:", jsonError);
         return { success: false, response: jsonError };
       }
+    } else if (isNetworkError(error)) {
+      // Browser reports a failed fetch the same way for offline, DNS failure and a
+      // dead server, so blame the connection rather than showing "Failed to fetch".
+      if (showToast) toast.error(NETWORK_ERROR_MESSAGE, { toastId: "network-error" });
+      return { success: false, response: error, networkError: true };
     } else {
       if (showToast) toast.error("Unexpected error: " + error);
       return { success: false, response: error };
