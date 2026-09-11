@@ -44,7 +44,13 @@ class StudentLeaveFormController extends Controller
 
         return $this->listForms($user, StudentLeaveForm::class, $request, null, false, [
             'fields' => ['leave_type', 'from_date', 'to_date', 'day_part'],
-            'extra_fields' => ['leave_type', 'from_date', 'to_date', 'day_part'],
+            'extra_fields' => [
+                'leave_type', 'from_date', 'to_date', 'day_part',
+                // An HOD only ever reads their own department, but an admin reads
+                // every department at once and has to be able to tell them apart.
+                'department' => fn ($form) => $form->student->department?->name,
+                'department_id' => fn ($form) => $form->student->department_id,
+            ],
             'titles' => ['Type', 'From', 'To', 'Part'],
         ]);
     }

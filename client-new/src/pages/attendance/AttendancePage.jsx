@@ -7,6 +7,7 @@ import { baseURL } from '../../api/urls';
 import { customFetch, isNetworkError, NETWORK_ERROR_MESSAGE } from '../../api/base';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import CustomModal from '../../components/forms/modal/CustomModal';
+import LeaveRequests from './LeaveRequests';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { countAbsent, applyMarkAll, buildSaveMessage } from '../../utils/attendanceMark';
@@ -261,6 +262,9 @@ const AttendancePage = () => {
           { value: 'history', label: 'Past Sessions' },
           { value: 'monthly', label: 'Monthly' },
           { value: 'export', label: 'Export' },
+          // The HOD decides leave; an admin reads every department's
+          // applications alongside, without a decision of their own.
+          ...(isAdmin ? [{ value: 'leaves', label: 'Leave Requests' }] : []),
         ]}
       />
 
@@ -280,7 +284,7 @@ const AttendancePage = () => {
               </select>
             </div>
 
-            {activeTab !== 'monthly' && (
+            {(activeTab === 'mark' || activeTab === 'history') && (
               <div className="input-field-container" style={{ minWidth: '190px' }}>
                 <label className="input-label">
                   Date {date === todayString() && <span className="badge badge--success attendance-today-pill">Today</span>}
@@ -324,6 +328,10 @@ const AttendancePage = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {activeTab === 'leaves' && isAdmin && (
+        <LeaveRequests departmentId={departmentFilter} showDepartment />
       )}
 
       {/* Mark tab */}

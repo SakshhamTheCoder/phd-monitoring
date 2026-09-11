@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Faculty;
 use App\Models\Notifications;
+use App\Models\Role;
 use App\Models\Student;
 use App\Models\StudentLeaveForm;
 use App\Models\User;
@@ -34,6 +35,37 @@ class StudentLeaveFormTest extends TestCase
         $this->actingAs($hodUser, 'sanctum');
     }
 
+    /** An admin, acting as one. */
+    private function actingAsAdmin(): User
+    {
+        $role = Role::where('role', 'admin')->firstOrFail();
+        $admin = User::where('role_id', $role->id)->first();
+        if (!$admin) {
+            $this->markTestSkipped('No admin account in this database.');
+        }
+
+        $admin->current_role_id = $role->id;
+        $admin->save();
+        $this->actingAs($admin->fresh(), 'sanctum');
+
+        return $admin;
+    }
+
+    /** Two scholars in different departments, so a list can be seen to span them. */
+    private function scholarsInTwoDepartments(): array
+    {
+        $first = Student::query()->whereNotNull('department_id')->first();
+        $second = $first
+            ? Student::query()->whereNotNull('department_id')->where('department_id', '!=', $first->department_id)->first()
+            : null;
+
+        if (!$second) {
+            $this->markTestSkipped('Needs scholars in two different departments.');
+        }
+
+        return [$first, $second];
+    }
+
     /** A leave already filled in and waiting at the HOD's desk. */
     private function leaveAwaitingHod(Student $student, array $attributes = []): StudentLeaveForm
     {
@@ -52,6 +84,42 @@ class StudentLeaveFormTest extends TestCase
             'student_lock' => true,
             'hod_lock' => false,
         ], $attributes));
+    }
+
+    public function test_an_admin_sees_leave_applications_from_every_department(): void
+    {
+        [$first, $second] = $this->scholarsInTwoDepartments();
+        $one = $this->leaveAwaitingHod($first);
+        $two = $this->leaveAwaitingHod($second);
+
+        $this->actingAsAdmin();
+        $response = $this->getJson('/api/forms/student-leave?rows=10000');
+
+        $response->assertOk();
+        $rows = collect($response->json('data'))->keyBy('id');
+
+        $this->assertTrue($rows->has($one->id), 'the first department application is listed');
+        $this->assertTrue($rows->has($two->id), 'the second department application is listed');
+        $this->assertSame($first->department->name, $rows[$one->id]['department']);
+        $this->assertSame((int) $second->department_id, (int) $rows[$two->id]['department_id']);
+    }
+
+    public function test_an_admin_can_read_an_application_but_not_decide_it(): void
+    {
+        $student = Student::query()->firstOrFail();
+        $leave = $this->leaveAwaitingHod($student);
+
+        $this->actingAsAdmin();
+
+        $this->getJson("/api/forms/student-leave/{$leave->id}")
+            ->assertOk()
+            ->assertJsonPath('form_id', $leave->id)
+            ->assertJsonPath('role', 'admin');
+
+        $this->postJson("/api/forms/student-leave/{$leave->id}", ['approval' => true])
+            ->assertStatus(403);
+
+        $this->assertSame('pending', $leave->fresh()->status, 'reading an application must not decide it');
     }
 
     public function test_an_academic_application_without_a_document_is_rejected(): void

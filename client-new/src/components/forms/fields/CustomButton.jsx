@@ -1,3 +1,4 @@
+import React from 'react';
 import "./Fields.css";
 const CustomButton = ({ text, onClick, disabled = false, label, variant, style, type }) => {
     return (

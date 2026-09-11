@@ -11,8 +11,9 @@ import './StudentLeave.css';
 // Recommendation's Submit button posts to the right form endpoint.
 const StudentLeave = ({ formData, submitPath }) => {
   // The scholar has no decision to make on their own application, so they get
-  // the outcome rather than a locked set of radio buttons. Every other role
-  // reaching this form is the HOD, whose decision it is.
+  // the outcome rather than a locked set of radio buttons. Everyone else sees
+  // the HOD's decision: live for the HOD, and locked by Recommendation for an
+  // admin reading along, since the viewer is not the role being asked.
   const isStudent = localStorage.getItem('userRole') === 'student';
 
   return (
