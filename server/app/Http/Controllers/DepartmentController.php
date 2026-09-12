@@ -165,7 +165,6 @@ class DepartmentController extends Controller
             $areaOfSpecialization = new \App\Models\AreaOfSpecialization();
             $areaOfSpecialization->name = $request->name;
             $areaOfSpecialization->department_id = $request->department_id;
-            $areaOfSpecialization->outside_expert_id = $this->resolveOutsideExpert($request, $department);
             $areaOfSpecialization->save();
 
             return response()->json([
@@ -218,7 +217,7 @@ class DepartmentController extends Controller
             $perPage = $request->input('rows', 15);
             $page = $request->input('page', 1);
 
-            $query = \App\Models\AreaOfSpecialization::with(['department', 'outsideExpert']);
+            $query = \App\Models\AreaOfSpecialization::with('department');
 
             // Apply role-based filtering
             if ($role === 'hod') {
@@ -248,15 +247,6 @@ class DepartmentController extends Controller
                     'name' => $area->name,
                     'department_id' => $area->department_id,
                     'department_name' => $area->department->name ?? 'N/A',
-                    'expert_id' => $area->outside_expert_id,
-                    'expert_name' => $area->outsideExpert
-                        ? trim($area->outsideExpert->first_name . ' ' . $area->outsideExpert->last_name)
-                        : null,
-                    'expert_email' => $area->outsideExpert?->email,
-                    'expert_phone' => $area->outsideExpert?->phone,
-                    'expert_college' => $area->outsideExpert?->institution,
-                    'expert_designation' => $area->outsideExpert?->designation,
-                    'expert_website' => $area->outsideExpert?->website,
                     'created_at' => $area->created_at,
                 ];
             });
@@ -269,8 +259,8 @@ class DepartmentController extends Controller
                 'current_page' => $areas->currentPage(),
                 'totalPages' => $areas->lastPage(),
                 'role' => $role,
-                'fields' => ['name', 'department_name', 'expert_name', 'expert_email', 'expert_phone'],
-                'fieldsTitles' => ['Area Name', 'Department', 'Expert Name', 'Expert Email', 'Expert Phone'],
+                'fields' => ['name', 'department_name'],
+                'fieldsTitles' => ['Area Name', 'Department'],
             ], 200);
         } catch(\Exception $e) {
             return response()->json([
@@ -316,7 +306,6 @@ class DepartmentController extends Controller
 
             $area->name = $request->name;
             $area->department_id = $request->department_id;
-            $area->outside_expert_id = $this->resolveOutsideExpert($request, $area->department);
             $area->save();
 
             return response()->json([
@@ -397,49 +386,7 @@ class DepartmentController extends Controller
         return [
             'name' => 'required|string',
             'department_id' => 'required|integer',
-            'expert_name' => 'nullable|string',
-            'expert_email' => 'nullable|email',
-            'expert_phone' => 'nullable|string',
-            'expert_college' => 'nullable|string',
-            'expert_designation' => 'nullable|string',
-            'expert_website' => 'nullable|string',
         ];
-    }
-
-    /**
-     * The outside expert this area's form describes, as a row in the expert
-     * table rather than six columns on the area.
-     *
-     * The same examiner covers several areas, so the email decides identity and
-     * a second area naming them reuses the row instead of copying it.
-     */
-    private function resolveOutsideExpert(Request $request, ?\App\Models\Department $department): ?int
-    {
-        $email = trim((string) $request->expert_email);
-        if ($email === '') {
-            return null;
-        }
-
-        $name = \App\Support\PersonName::split($request->expert_name);
-        $expert = \App\Models\OutsideExpert::firstOrNew(['email' => $email]);
-
-        $expert->first_name = $name['first'] !== '' ? $name['first'] : ($expert->first_name ?: 'Unknown');
-        $expert->last_name = $name['last'];
-        $expert->designation = trim((string) $request->expert_designation) ?: ($expert->designation ?: 'Unknown');
-        $expert->institution = trim((string) $request->expert_college) ?: ($expert->institution ?: 'Unknown');
-        $expert->department = $expert->department ?: ($department->name ?? 'Unknown');
-        $expert->website = $request->expert_website ?: $expert->website;
-
-        // The phone column is unique, so a number another expert already holds
-        // has to be left off rather than fail the whole save.
-        $phone = trim((string) $request->expert_phone);
-        if ($phone !== '' && !\App\Models\OutsideExpert::where('phone', $phone)->where('email', '!=', $email)->exists()) {
-            $expert->phone = $phone;
-        }
-
-        $expert->save();
-
-        return $expert->id;
     }
 
     /**

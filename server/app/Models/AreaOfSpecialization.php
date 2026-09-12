@@ -18,7 +18,6 @@ class AreaOfSpecialization extends Model
     protected $fillable = [
         'department_id',
         'name',
-        'outside_expert_id',
     ];
 
     public function department()
@@ -36,25 +35,4 @@ class AreaOfSpecialization extends Model
         return $this->hasMany(Faculty::class, 'area_of_specialization_id');
     }
 
-    /**
-     * The external examiner the DoRDC adds to a doctoral committee when an IRB
-     * in this area is approved.
-     */
-    public function outsideExpert()
-    {
-        return $this->belongsTo(OutsideExpert::class, 'outside_expert_id');
-    }
-
-    /**
-     * The expert's faculty record, created on first use.
-     *
-     * The expert used to be six columns on this row, with their own account
-     * creation that disagreed with the one on OutsideExpert about both the role
-     * and the password. There is one expert table now, so there is one way to
-     * turn an expert into a faculty record.
-     */
-    public function getExpertFaculty()
-    {
-        return $this->outsideExpert?->getFaculty();
-    }
 }

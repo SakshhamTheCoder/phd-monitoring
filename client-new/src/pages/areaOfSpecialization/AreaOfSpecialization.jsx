@@ -25,12 +25,6 @@ const AreaOfSpecialization = () => {
   const [formData, setFormData] = useState({
     name: '',
     department_id: '',
-    expert_name: '',
-    expert_email: '',
-    expert_phone: '',
-    expert_college: '',
-    expert_designation: '',
-    expert_website: '',
   });
   const [submitting, setSubmitting] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -68,24 +62,12 @@ const AreaOfSpecialization = () => {
       setFormData({
         name: data.name || '',
         department_id: data.department_id || '',
-        expert_name: data.expert_name || '',
-        expert_email: data.expert_email || '',
-        expert_phone: data.expert_phone || '',
-        expert_college: data.expert_college || '',
-        expert_designation: data.expert_designation || '',
-        expert_website: data.expert_website || '',
       });
     } else {
       setEditData(null);
       setFormData({
         name: '',
         department_id: '',
-        expert_name: '',
-        expert_email: '',
-        expert_phone: '',
-        expert_college: '',
-        expert_designation: '',
-        expert_website: '',
 
       });
     }
@@ -186,18 +168,18 @@ const AreaOfSpecialization = () => {
     setRefreshKey((prev) => prev + 1);
   };
 
-  const AREA_HEADERS = 'name,department_code,expert_name,expert_email,expert_phone,expert_college,expert_designation,expert_website';
+  const AREA_HEADERS = 'name,department_code';
 
   const areaSampleCsv = `${AREA_HEADERS}
-Machine Learning,CSED,Expert One,expert.one@example.edu,9800000041,IIT Delhi,Professor,https://example.edu/one
-Data Science,CSED,Expert Two,expert.two@example.edu,9800000042,IIT Bombay,Associate Professor,`;
+Machine Learning,CSED
+Data Science,CSED`;
 
   return (
     <Layout>
       <div className="area-specialization-page">
         <PageHeader
           title="Areas of Specialization"
-          subtitle="Research areas and the experts associated with each department."
+          subtitle="The research areas each department offers."
         />
 
         {/* <FilterBar onSearch={handleFilterChange} /> */}
@@ -257,62 +239,6 @@ Data Science,CSED,Expert Two,expert.two@example.edu,9800000042,IIT Bombay,Associ
                   initialValue={formData.department_id}
                   options={departments}
                   onChange={(value) => setFormData({ ...formData, department_id: value })}
-                />,
-              ]}
-            />
-
-            <div className="section-divider">
-              <h3>Expert Information (Optional)</h3>
-            </div>
-
-            <GridContainer
-              elements={[
-                <InputField
-                  label="Expert Name"
-                  initialValue={formData.expert_name}
-                  onChange={(value) => setFormData({ ...formData, expert_name: value })}
-                  hint="Name of the subject matter expert"
-                />,
-                <InputField
-                  label="Expert Email"
-                  initialValue={formData.expert_email}
-                  onChange={(value) => setFormData({ ...formData, expert_email: value })}
-                  hint="Email address"
-                />,
-              ]}
-            />
-
-            <GridContainer
-              elements={[
-                <InputField
-                  label="Expert Phone"
-                  initialValue={formData.expert_phone}
-                  onChange={(value) => setFormData({ ...formData, expert_phone: value })}
-                  hint="Contact number"
-                />,
-                <InputField
-                  label="Expert College/Institution"
-                  initialValue={formData.expert_college}
-                  onChange={(value) => setFormData({ ...formData, expert_college: value })}
-                  hint="Institution name"
-                />,
-              ]}
-            />
-            
-
-            <GridContainer
-              elements={[
-                <InputField
-                  label="Expert Designation"
-                  initialValue={formData.expert_designation}
-                  onChange={(value) => setFormData({ ...formData, expert_designation: value })}
-                  hint="Designation of the expert"
-                />,
-                <InputField
-                  label="Expert Website"
-                  initialValue={formData.expert_website}
-                  onChange={(value) => setFormData({ ...formData, expert_website: value })}
-                  hint="Website URL"
                 />,
               ]}
             />
