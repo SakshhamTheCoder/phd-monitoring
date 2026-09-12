@@ -7,8 +7,11 @@ import { customFetch } from '../api/base';
 //
 // The list is a fixed per-department vocabulary: only the admin page and the
 // research area import add to it, so every form that asks for a broad area asks
-// for one of these rather than free text. Three forms need the same list, which
-// is why it lives here rather than in each of them.
+// for one of these rather than free text.
+//
+// Scoped to the signed-in user, so it suits the scholar's own forms. The faculty
+// form and the research profile ask for a department explicitly, because an
+// admin editing someone else needs that person's department, not their own.
 export const useResearchAreas = () => {
   const [areas, setAreas] = useState([]);
 
