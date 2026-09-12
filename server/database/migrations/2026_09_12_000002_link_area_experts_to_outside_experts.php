@@ -21,6 +21,11 @@ use Illuminate\Support\Facades\Schema;
  * Experts whose email is blank cannot be moved, because `outside_experts.email`
  * is unique and the row has no other identity. Those areas end up with no
  * expert, which is what they effectively had.
+ *
+ * An email that already belongs to a portal account is skipped for a different
+ * reason: that person is internal staff who was named as an examiner, so their
+ * details are already held and copying them into the outside expert directory
+ * would only invite someone to nominate them as an external reviewer.
  */
 return new class extends Migration
 {
@@ -47,6 +52,16 @@ return new class extends Migration
             ->get();
 
         foreach ($areas as $area) {
+            // Someone who already has a portal account is not an outside
+            // expert and their details are not at risk of being lost, so there
+            // is nothing to copy. Production has a real faculty member named as
+            // the examiner on one area; archiving him would have put him in the
+            // outside expert directory, where he could then be nominated as an
+            // external examiner for somebody's IRB.
+            if (DB::table('users')->where('email', trim($area->expert_email))->exists()) {
+                continue;
+            }
+
             $expertId = $this->findOrCreateExpert($area);
 
             DB::table('area_of_specializations')
