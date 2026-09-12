@@ -7,12 +7,14 @@ use App\Support\DepartmentCodes;
 use Illuminate\Console\Command;
 
 /**
- * Brings departments in line with the official listing on thapar.edu/academics:
- * the institute's own code and the standing HoD address.
+ * Brings departments in line with the department officers sheet: the code the
+ * institute uses for each department, and the standing HoD address.
  *
- * Both come from one place. A department's subdomain is its code, and the HoD
- * address is that subdomain with an h in front, so som.thapar.edu gives the code
- * SOM and the address hsom@thapar.edu.
+ * The two no longer come from one place. The HoD address is still the thapar.edu
+ * subdomain with an h in front (hsom@thapar.edu), but the officers sheet calls
+ * that department DOM, not SOM, and the same split applies to DEE, DPMS, DCBC
+ * and DHSS. The sheet is the authority for the code; the subdomain survives only
+ * as the address.
  *
  * The stored name is kept identical to the code, which is how the portal has
  * always displayed departments.
@@ -47,9 +49,9 @@ class SetDepartmentHodEmails extends Command
      * code are found through DepartmentCodes::LEGACY_ALIASES, so this command is
      * idempotent: it works before the rename and after it.
      *
-     * LMTSM (lmtsm) and SLAS (tslas) are real departments with no HoD address in
-     * the official list, so they are deliberately absent, as are the Dera Bassi
-     * campus departments and DSAI.
+     * LMTSM, TSLAS and CoE-DSAI are real departments with no HoD address in the
+     * official list, so they are absent here. The two that still need a code
+     * change are in CODE_ONLY_RENAMES instead.
      */
     private const MAPPING = [
         'BTD'  => ['hbtd@thapar.edu',  'btd',  'Biotechnology'],
@@ -59,27 +61,31 @@ class SetDepartmentHodEmails extends Command
         'EIED' => ['heied@thapar.edu', 'eied', 'Electrical & Instrumentation Engineering'],
         'ECED' => ['heced@thapar.edu', 'eced', 'Electronics & Communication Engineering'],
         'MED'  => ['hmed@thapar.edu',  'med',  'Mechanical Engineering'],
-        'SMSS' => ['hsmss@thapar.edu', 'smss', 'School of Humanities & Social Sciences'],
-        'SPMS' => ['hspms@thapar.edu', 'spms', 'Physics & Materials Science'],
-        'SCBC' => ['hscbc@thapar.edu', 'scbc', 'Chemistry & Biochemistry'],
-        'SOM'  => ['hsom@thapar.edu',  'som',  'Mathematics'],
-        'SEE'  => ['hsee@thapar.edu',  'see',  'Energy and Environment'],
+        'DHSS' => ['hsmss@thapar.edu', 'smss', 'School of Humanities & Social Sciences'],
+        'DPMS' => ['hspms@thapar.edu', 'spms', 'Physics & Materials Science'],
+        'DCBC' => ['hscbc@thapar.edu', 'scbc', 'Chemistry & Biochemistry'],
+        'DOM'  => ['hsom@thapar.edu',  'som',  'Mathematics'],
+        'DEE'  => ['hsee@thapar.edu',  'see',  'Energy and Environment'],
     ];
 
     /**
-     * Dera Bassi campus departments, which follow their main campus counterpart.
+     * Departments whose code changes but which have no HoD address to set.
      *
-     * They are not in the official listing and have no HoD address of their own,
-     * so only the code and name change. The suffix is normalised at the same
-     * time: it was stored as Derabassi, DeraBassi and Dera Bassi.
+     * Two kinds. The Dera Bassi campus departments follow their main campus
+     * counterpart and only need the suffix normalised, which was stored three
+     * ways (Derabassi, DeraBassi, Dera Bassi). TSLAS and CoE-DSAI are main
+     * campus departments the official listing carries no address for.
      *
      * current code => corrected code
      */
-    private const CAMPUS_RENAMES = [
+    private const CODE_ONLY_RENAMES = [
         'DCB (Derabassi)'   => 'SCBC (Derabassi)',
         'DOM (Derabassi)'   => 'SOM (Derabassi)',
         'DPMS (DeraBassi)'  => 'SPMS (Derabassi)',
         'EIED (Dera Bassi)' => 'EIED (Derabassi)',
+
+        'SLAS' => 'TSLAS',
+        'DSAI' => 'CoE-DSAI',
     ];
 
     public function handle()
@@ -154,10 +160,10 @@ class SetDepartmentHodEmails extends Command
             $toWrite[] = [$department, $changes];
         }
 
-        // Dera Bassi departments follow their main campus counterpart. Handled
-        // separately because they carry no HoD address.
+        // Handled separately from MAPPING because these carry no HoD address,
+        // so there is nothing to sync beyond the code and the name.
         if (!$skipCodes) {
-            foreach (self::CAMPUS_RENAMES as $currentCode => $correctedCode) {
+            foreach (self::CODE_ONLY_RENAMES as $currentCode => $correctedCode) {
                 $department = Department::whereRaw('UPPER(code) = ?', [strtoupper($currentCode)])->first();
 
                 if (!$department) {
@@ -177,7 +183,7 @@ class SetDepartmentHodEmails extends Command
 
                 $rows[] = [
                     $department->code . ' -> ' . $correctedCode,
-                    'Dera Bassi campus',
+                    'code only, no HoD address',
                     $department->name . ' -> ' . $correctedCode,
                     '(none)',
                     $apply ? 'WRITING' : 'would write',

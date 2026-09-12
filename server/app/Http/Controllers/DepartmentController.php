@@ -663,6 +663,191 @@ class DepartmentController extends Controller
         return Department::where('id', $departmentId)->value('code') ?? (string) $departmentId;
     }
 
+    /**
+     * Load the institute's department officers sheet.
+     *
+     * One row per department: the code it should be called, its HoD, ADORDC,
+     * PhD coordinators and clerk. Departments are never created or deleted
+     * here. A row whose code the portal still stores under an earlier spelling
+     * renames that department in place, which is what keeps every scholar,
+     * faculty member and saved form pointing at the same record.
+     *
+     * The officer writes go through the same methods the Departments page
+     * calls, so the role demotions and the transactions they already handle are
+     * not repeated here.
+     */
+    public function importDepartments(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user->may('can_add_department')) {
+            return response()->json([
+                'message' => 'You do not have permission to import departments'
+            ], 403);
+        }
+
+        $request->validate([
+            'rows' => 'required|array',
+            'rows.*.department_code' => 'required|string',
+            'rows.*.row_number' => 'required|integer',
+        ]);
+
+        $updated = 0;
+        $errors = [];
+        $clerkRows = [];
+
+        foreach ($request->rows as $row) {
+            $rowNumber = $row['row_number'];
+            $code = trim((string) $row['department_code']);
+
+            // The sheet is the authority for the code, so its value is the
+            // official one and the portal may still store the superseded
+            // spelling. resolveOfficial goes that way round; resolve is the
+            // fallback for a sheet that still carries an old code.
+            $department = \App\Support\DepartmentCodes::resolveOfficial($code)
+                ?? \App\Support\DepartmentCodes::resolve($code);
+
+            if (!$department) {
+                $errors[] = "Row {$rowNumber}: no department for code '{$code}'";
+                continue;
+            }
+
+            if (strcasecmp($department->code, $code) !== 0) {
+                $taken = Department::where('id', '!=', $department->id)
+                    ->whereRaw('UPPER(code) = ?', [strtoupper($code)])->exists();
+
+                if ($taken) {
+                    $errors[] = "Row {$rowNumber}: another department already uses the code '{$code}'";
+                    continue;
+                }
+
+                // The stored name has always matched the code.
+                $department->code = $code;
+                $department->name = $code;
+                $department->save();
+            }
+
+            $officeEmail = trim((string) ($row['hod_office_email'] ?? ''));
+            if ($officeEmail !== '') {
+                $department->hod_email = $officeEmail;
+                $department->save();
+            }
+
+            foreach ([['hod', 'addHOD'], ['adordc', 'addAdordc']] as [$field, $method]) {
+                $email = trim((string) ($row[$field . '_email'] ?? ''));
+                if ($email === '') {
+                    continue;
+                }
+
+                $faculty = $this->facultyByEmail($email);
+                if (!$faculty) {
+                    // The sheet gives office addresses for some ADORDCs
+                    // (adorsp3@thapar.edu), which name a post, not a person.
+                    $errors[] = "Row {$rowNumber}: no faculty with the email '{$email}', "
+                        . strtoupper($field) . " left as it is";
+                    continue;
+                }
+
+                $this->$method(new Request([
+                    'department_id' => $department->id,
+                    'faculty_code' => $faculty->faculty_code,
+                ]));
+            }
+
+            $coordinatorErrors = $this->syncCoordinators($department, $row, $rowNumber);
+            $errors = array_merge($errors, $coordinatorErrors);
+
+            $clerkEmail = trim((string) ($row['clerk_email'] ?? ''));
+            if ($clerkEmail !== '') {
+                $clerkRows[] = [
+                    'email' => $clerkEmail,
+                    'full_name' => trim((string) ($row['clerk_name'] ?? '')),
+                    'phone' => trim((string) ($row['clerk_phone'] ?? '')),
+                    'department_codes' => $department->code,
+                ];
+            }
+
+            $updated++;
+        }
+
+        if ($clerkRows) {
+            // The clerk page already creates or updates a clerk by email and
+            // replaces their department tags, so it owns this write.
+            $clerkResponse = app(ClerkController::class)->bulkUpdate(new Request(['clerks' => $clerkRows]));
+            $clerkErrors = $clerkResponse->getData(true)['data']['errors'] ?? [];
+            $errors = array_merge($errors, $clerkErrors);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Updated {$updated} departments",
+            'data' => [
+                'update_count' => $updated,
+                'error_count' => count($errors),
+                'errors' => $errors,
+            ],
+        ], 200);
+    }
+
+    /**
+     * Make the department's coordinators exactly the ones the row names.
+     *
+     * A row with both coordinator cells blank leaves the current ones alone,
+     * because a sheet that does not mention them is not saying there are none.
+     *
+     * @param  array<string, mixed>  $row
+     * @return array<int, string>
+     */
+    private function syncCoordinators(Department $department, array $row, int $rowNumber): array
+    {
+        $errors = [];
+        $wanted = [];
+
+        foreach ([1, 2] as $slot) {
+            $email = trim((string) ($row['coordinator_' . $slot . '_email'] ?? ''));
+            if ($email === '') {
+                continue;
+            }
+
+            $faculty = $this->facultyByEmail($email);
+            if (!$faculty) {
+                $errors[] = "Row {$rowNumber}: no faculty with the email '{$email}', coordinator {$slot} skipped";
+                continue;
+            }
+
+            $wanted[] = $faculty->faculty_code;
+        }
+
+        if (!$wanted) {
+            return $errors;
+        }
+
+        $current = PhdCoordinator::where('department_id', $department->id)->get();
+
+        foreach ($current as $coordinator) {
+            if (!in_array($coordinator->faculty_id, $wanted)) {
+                $this->removeCoordinator(new Request(), $coordinator->id);
+            }
+        }
+
+        foreach ($wanted as $facultyCode) {
+            if ($current->where('faculty_id', $facultyCode)->isEmpty()) {
+                $this->addCoordinator(new Request([
+                    'department_id' => $department->id,
+                    'faculty_code' => $facultyCode,
+                ]));
+            }
+        }
+
+        return $errors;
+    }
+
+    private function facultyByEmail(string $email): ?Faculty
+    {
+        $userId = \App\Models\User::whereRaw('LOWER(email) = ?', [strtolower(trim($email))])->value('id');
+
+        return $userId ? Faculty::where('user_id', $userId)->first() : null;
+    }
+
     public function addHOD(Request $request)
     {
         try{
@@ -690,11 +875,6 @@ class DepartmentController extends Controller
             return response()->json([
                 'message' => 'Faculty not found'
             ], 404);
-        }
-        if($faculty->department_id != $request->department_id){
-            return response()->json([
-                'message' => 'Faculty does not belong to this department'
-            ], 400);
         }
 
         // Demote the outgoing HOD, set the department linkage, then grant the
@@ -831,11 +1011,6 @@ class DepartmentController extends Controller
             return response()->json([
                 'message' => 'Faculty not found'
             ], 404);
-        }
-        if($faculty->department_id != $request->department_id){
-            return response()->json([
-                'message' => 'Faculty does not belong to this department'
-            ], 400);
         }
 
         // Check if already a coordinator

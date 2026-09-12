@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Auth;
 
 Route::get('',[DepartmentController::class,'list'])->middleware('auth:sanctum');    
 Route::post('/add', [DepartmentController::class, 'add'])->middleware('auth:sanctum');
+Route::post('/import', [DepartmentController::class, 'importDepartments'])->middleware('auth:sanctum');
 Route::post('/area-of-specialization/add', [DepartmentController::class, 'addAreaOfSpecialization'])->middleware('auth:sanctum');
 Route::get('/area-of-specialization', [DepartmentController::class, 'getAreasOfSpecialization'])->middleware('auth:sanctum');
 Route::get('/area-of-specialization/list', [DepartmentController::class, 'listAreasOfSpecialization'])->middleware('auth:sanctum');
