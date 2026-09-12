@@ -162,23 +162,13 @@ const PresentationSemester = () => {
             isOpen={showProgressImport}
             onClose={() => setShowProgressImport(false)}
             title="Import Progress History"
-            formatString={PROGRESS_HEADERS}
-            infoNodes={
-              <>
-                <p style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '0.875rem' }}>
-                  One row per scholar per semester. The gain for each period is worked out
-                  from the totals, so only the running total is needed.
-                </p>
-                <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
-                  Progress for AY is the semester code, for example 2425ODD.
-                </p>
-                <p style={{ color: '#6b7280', fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                  A blank total means the evaluation has not happened yet, and a semester the
-                  scholar already has a presentation for is left to its own workflow. Use Bulk
-                  Schedule for the current semester.
-                </p>
-              </>
-            }
+            required={['Registration Number', 'Progress for AY', 'Total Progress %']}
+            rules={[
+              'One row per scholar per semester. The gain for each period is worked out from the totals.',
+              'Progress for AY is the semester code, for example 2425ODD.',
+              'A blank total means the evaluation has not happened yet, so the row is skipped.',
+              'A semester the scholar already has a presentation for is left to its own workflow.',
+            ]}
             sampleFileName="progress_history_sample.csv"
             sampleCsvContent={progressSampleCsv}
             onImport={handleProgressImport}

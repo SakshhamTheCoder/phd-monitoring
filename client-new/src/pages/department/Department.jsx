@@ -159,22 +159,12 @@ CSED,Hod One,hod.one@thapar.edu,hcsed@thapar.edu,Adordc One,adordc.one@thapar.ed
             isOpen={showImport}
             onClose={() => setShowImport(false)}
             title="Bulk Import Departments"
-            formatString={OFFICER_HEADERS}
-            infoNodes={
-              <>
-                <p style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '0.875rem' }}>
-                  Departments are never created or deleted here. A code the portal still
-                  stores under an older spelling renames that department in place.
-                </p>
-                <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
-                  Officers are matched by their personal email. An office address, such as
-                  a shared ADORDC mailbox, is reported and that officer is left as it is.
-                </p>
-                <p style={{ color: '#6b7280', fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                  Both coordinator cells blank leaves the current coordinators alone.
-                </p>
-              </>
-            }
+            required={['Department Code']}
+            rules={[
+              'Departments are never created or deleted. A renamed code renames the department in place.',
+              'Officers are matched by their personal email. An office mailbox is reported and skipped.',
+              'Both coordinator cells blank leaves the current coordinators alone.',
+            ]}
             sampleFileName="department_officers_sample.csv"
             sampleCsvContent={officerSampleCsv}
             onImport={handleImport}

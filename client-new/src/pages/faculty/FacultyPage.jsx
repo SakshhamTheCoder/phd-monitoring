@@ -274,24 +274,13 @@ const FacultyPage = () => {
             isOpen={showBulkImportModal}
             onClose={() => setShowBulkImportModal(false)}
             title="Bulk Import Faculty"
-            formatString={FACULTY_HEADERS}
-            infoNodes={
-              <>
-                <p style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '0.875rem' }}>
-                  <strong>Required for new faculty:</strong> Full Name, Email, Designation, Emp id, Department Code
-                </p>
-                <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
-                  Broad Area of Expertise must already be on that department's research area list.
-                  Students Supervising in TIET is only checked against the portal's own count.
-                </p>
-                <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
-                  Imported faculty are added as internal faculty.
-                </p>
-                <p style={{ color: '#6b7280', fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                  Existing faculty matched by email will be updated with provided non-empty fields (including area of expertise).
-                </p>
-              </>
-            }
+            required={['Emp id', 'Full Name', 'Email', 'Designation', 'Department Code']}
+            rules={[
+              'Matched by email. An existing faculty member is updated from the cells the row fills in.',
+              "Broad Area of Expertise must already be on that department's research area list.",
+              'Students Supervising in TIET is compared against the portal\'s own count, not stored.',
+              'New faculty are added as internal faculty.',
+            ]}
             sampleFileName="faculty_bulk_import_sample.csv"
             sampleCsvContent={facultySampleCsv}
             onImport={handleBulkImport}

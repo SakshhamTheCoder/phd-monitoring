@@ -322,22 +322,12 @@ Data Science,CSED,Expert Two,expert.two@example.edu,9800000042,IIT Bombay,Associ
           isOpen={isUploadModalOpen}
           onClose={() => setIsUploadModalOpen(false)}
           title="Bulk Import Research Areas"
-          formatString={AREA_HEADERS}
-          infoNodes={
-            <>
-              <p style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '0.875rem' }}>
-                The institute's matrix also loads as it is: one column per department code,
-                one area per cell.
-              </p>
-              <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
-                An area already on the list is left alone, so the same file can be loaded twice.
-              </p>
-              <p style={{ color: '#6b7280', fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                An area the sheet drops is removed only when no scholar or faculty member
-                points at it. One in use is kept and named back to you.
-              </p>
-            </>
-          }
+          required={['name', 'department_code']}
+          rules={[
+              "The institute's matrix also loads as it is: one column per department code, one area per cell.",
+              'An area already on the list is left alone, so the same file can be loaded twice.',
+              'An area the sheet drops is removed only when no scholar or faculty member points at it.',
+            ]}
           sampleFileName="research_areas_sample.csv"
           sampleCsvContent={areaSampleCsv}
           onImport={handleCSVUpload}

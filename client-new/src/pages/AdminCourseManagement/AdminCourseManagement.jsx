@@ -520,22 +520,13 @@ const AdminCourseManagement = () => {
         isOpen={showBulkImportModal}
         onClose={() => setShowBulkImportModal(false)}
         title="Bulk Import Coursework"
-        formatString={COURSE_HEADERS}
-        infoNodes={
-          <>
-            <p style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '0.875rem' }}>
-              A subject code the portal does not have yet is created from the row, so the
-              courses do not have to be entered first. One it already has is reused.
-            </p>
-            <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
-              A grade means the course is finished. Leave it blank while it is still being taken.
-            </p>
-            <p style={{ color: '#6b7280', fontSize: '0.8rem', marginTop: '0.5rem' }}>
-              Academic Year is the semester code, for example 2425ODD. Importing the same file
-              again updates the enrolments rather than duplicating them.
-            </p>
-          </>
-        }
+        required={['Registration Number', 'Academic Year', 'Subject Code']}
+        rules={[
+              'A subject code the portal does not have yet is created from the row.',
+              'A grade means the course is finished. Leave it blank while it is still being taken.',
+              'Academic Year is the semester code, for example 2425ODD.',
+              'Importing the same file again updates the enrolments rather than duplicating them.',
+            ]}
         sampleFileName="coursework_sample.csv"
         sampleCsvContent={courseSampleCsv}
         onImport={handleBulkImport}

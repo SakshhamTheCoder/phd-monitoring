@@ -257,29 +257,14 @@ const StudentsPage = () => {
             isOpen={isBulkUploadModalOpen}
             onClose={() => { setIsBulkUploadModalOpen(false); }}
             title="Bulk Import Students"
-            formatString={STUDENT_HEADERS}
-            infoNodes={
-              <>
-                <p style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '0.875rem' }}>
-                  <strong>Required for new scholars:</strong> Registration Number, Full Name, Email, Phone, Department Code, Date of Admission, Enrollment Type
-                </p>
-                <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
-                  <strong>Enrollment Type:</strong> Full Time, Part Time or Executive
-                </p>
-                <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
-                  The IRB member and external expert columns are read from the sheet but not
-                  imported yet, so they are ignored rather than reported as errors.
-                </p>
-                <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
-                  Supervisors and committee members are matched by email. Filled cells replace the
-                  whole list, so anyone the sheet leaves out is removed; all cells blank leaves it alone.
-                </p>
-                <p style={{ color: '#6b7280', fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                  An existing scholar is updated from the cells the row fills in. A blank cell never
-                  clears a stored value; clear one on the scholar's profile instead.
-                </p>
-              </>
-            }
+            required={['Registration Number', 'Full Name', 'Email', 'Phone', 'Department Code', 'Date of Admission', 'Enrollment Type']}
+            rules={[
+              'Matched by registration number, then email. Both must belong to the same scholar.',
+              'A blank cell never clears a stored value. Clear one on the scholar\'s profile.',
+              'Supervisors and committee: filled cells replace the whole list, all blank leaves it alone.',
+              'Enrollment Type is Full Time, Part Time or Executive.',
+              'IRB member and external expert columns are read past, not imported yet.',
+            ]}
             sampleFileName="students_bulk_import_sample.csv"
             sampleCsvContent={studentsSampleCsv}
             onImport={handleBulkImport}
