@@ -7,17 +7,15 @@
 // source sheets ship with once the correct spelling is listed alongside.
 //
 // A bracketed aside is an instruction to whoever fills the sheet, not part of
-// the column's name: "Grade Earned (Leave Blank If Enrolled But Not Cleared
-// Yet)" is the Grade column. Those are dropped first, so the sheets keep
-// loading when someone adds or reworks a hint.
+// the column's name, so it is dropped first: "Grade Earned (Leave Blank If
+// Enrolled...)" is the Grade column.
 const normalise = (header) => String(header ?? '')
   .replace(/\([^)]*\)/g, '')
   .toLowerCase()
   .replace(/[^a-z0-9]+/g, '');
 
-// The value of the first alias the row has filled in, or ''. Aliases are tried
-// in the order given, so a row carrying two spellings of the same column uses
-// the one the caller named first.
+// Aliases are tried in the order given, so a row carrying two spellings of the
+// same column uses the one the caller named first.
 export const column = (row, ...aliases) => {
   const values = {};
   for (const key of Object.keys(row || {})) {

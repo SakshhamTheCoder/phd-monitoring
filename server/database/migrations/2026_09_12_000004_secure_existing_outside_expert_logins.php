@@ -66,6 +66,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        // Deliberately empty.
+        // Nothing to undo. Restoring a password printed in the source would
+        // put the hole back.
     }
 };
