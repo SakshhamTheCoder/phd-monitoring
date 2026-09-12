@@ -334,6 +334,192 @@ class PresentationController extends Controller
         return response()->json(['message' => 'You are not authorized to access this resource'], 403);
     }
 
+    /**
+     * Load the institute's progress sheet: one row per scholar per semester,
+     * back to whenever they were admitted.
+     *
+     * The portal records progress as a gain per period on top of a running
+     * total, but the sheet states the total, which is the figure that survives
+     * a missing semester or a typo in an older one. Each scholar's rows are
+     * ordered by semester code and the gain is the difference between one total
+     * and the one before it.
+     *
+     * Nothing live is touched. A row whose total is blank was never evaluated,
+     * and a semester the scholar already has a presentation for is left to its
+     * own workflow, so re-running the same file changes nothing.
+     */
+    public function importProgress(Request $request)
+    {
+        $user = Auth::user();
+        $role = $user->current_role->role;
+
+        if (!in_array($role, ['admin', 'dordc'])) {
+            return response()->json([
+                'message' => 'You do not have permission to import progress history'
+            ], 403);
+        }
+
+        $request->validate([
+            'rows' => 'required|array',
+            'rows.*.roll_no' => 'required',
+            'rows.*.semester' => 'required|string',
+            'rows.*.row_number' => 'required|integer',
+        ]);
+
+        $errors = [];
+        $imported = 0;
+        $skipped = 0;
+
+        $byScholar = [];
+        foreach ($request->rows as $row) {
+            $total = trim((string) ($row['total_progress'] ?? ''));
+            if ($total === '') {
+                // Not evaluated yet. The normal workflow will record it.
+                $skipped++;
+                continue;
+            }
+
+            $byScholar[(string) $row['roll_no']][] = $row + ['total_progress' => $total];
+        }
+
+        foreach ($byScholar as $rollNumber => $rows) {
+            $student = Student::where('roll_no', $rollNumber)->first();
+            if (!$student) {
+                foreach ($rows as $row) {
+                    $errors[] = "Row {$row['row_number']}: no scholar with registration number '{$rollNumber}'";
+                }
+                continue;
+            }
+
+            usort($rows, fn ($a, $b) => $this->semesterOrder($a['semester']) <=> $this->semesterOrder($b['semester']));
+
+            // Anything already recorded is the baseline the sheet continues from.
+            $previous = (float) Presentation::where('student_id', $student->roll_no)
+                ->max('total_progress');
+            $latestTotal = null;
+
+            foreach ($rows as $row) {
+                $rowNumber = $row['row_number'];
+                $semesterCode = strtoupper(trim($row['semester']));
+                $total = (float) $row['total_progress'];
+
+                if ($total < 0 || $total > 100) {
+                    $errors[] = "Row {$rowNumber}: total progress of {$total} is outside 0 to 100";
+                    continue;
+                }
+
+                if ($total < $previous) {
+                    $errors[] = "Row {$rowNumber}: total progress of {$total} is lower than the {$previous} already recorded";
+                    continue;
+                }
+
+                $semester = Semester::where('semester_name', $semesterCode)->first()
+                    ?? $this->createSemesterForImport($semesterCode);
+
+                if (!$semester) {
+                    $errors[] = "Row {$rowNumber}: '{$semesterCode}' is not a semester code, expected something like 2425ODD";
+                    continue;
+                }
+
+                if (!$semester->end_date) {
+                    $errors[] = "Row {$rowNumber}: {$semesterCode} was created without dates, "
+                        . "so it will not appear under Past Semesters until they are set";
+                }
+
+                if (Presentation::where('student_id', $student->roll_no)
+                    ->where('semester_id', $semester->id)->exists()) {
+                    $errors[] = "Row {$rowNumber}: {$rollNumber} already has a presentation for {$semesterCode}";
+                    $skipped++;
+                    continue;
+                }
+
+                $presentation = Presentation::create([
+                    'student_id' => $student->roll_no,
+                    'date' => $row['date'] ?: null,
+                    'period_of_report' => $semesterCode,
+                    'semester_id' => $semester->id,
+                    'current_progress' => $previous,
+                    'progress' => $total - $previous,
+                    'total_progress' => $total,
+                    'overall_progress' => 'satisfactory',
+                    'status' => 'approved',
+                    'completion' => 'complete',
+                    'steps' => ['student', 'faculty', 'doctoral', 'hod', 'adordc', 'dordc', 'complete'],
+                ]);
+
+                $presentation->addHistoryEntry('Imported from progress sheet', $user->first_name);
+
+                $previous = $total;
+                $latestTotal = $total;
+                $imported++;
+            }
+
+            if ($latestTotal !== null) {
+                $student->overall_progress = $latestTotal;
+                $student->save();
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Imported {$imported} evaluations, skipped {$skipped}",
+            'data' => [
+                'success_count' => $imported,
+                'skipped_count' => $skipped,
+                'error_count' => count($errors),
+                'errors' => $errors,
+            ],
+        ], 200);
+    }
+
+    /**
+     * Create a semester the sheet names but the portal has never had.
+     *
+     * The dates are the institute's usual term boundaries rather than anything
+     * in the sheet, whose date column is when one presentation happened to be
+     * held. They matter because the Past Semesters table filters on
+     * `end_date < now`, so a semester created without them is invisible.
+     *
+     * Both date columns are unique, so a nominal date another semester already
+     * occupies leaves this one dateless and the caller reports it. An admin can
+     * set the real dates from the semester's own edit form.
+     */
+    private function createSemesterForImport(string $code): ?Semester
+    {
+        if (!preg_match('/^(\d{2})(\d{2})(ODD|EVEN)$/', $code, $matches)) {
+            return null;
+        }
+
+        $isOdd = $matches[3] === 'ODD';
+        $year = 2000 + (int) ($isOdd ? $matches[1] : $matches[2]);
+
+        $start = sprintf('%d-%s-01', $year, $isOdd ? '07' : '01');
+        $end = sprintf('%d-%s-30', $year, $isOdd ? '12' : '06');
+
+        $taken = Semester::where('start_date', $start)->orWhere('end_date', $end)->exists();
+
+        return Semester::createOrUpdateFromCode(
+            $code,
+            $taken ? null : $start,
+            $taken ? null : $end
+        );
+    }
+
+    /**
+     * Sortable form of a semester code: 2425ODD before 2425EVEN before 2526ODD.
+     *
+     * The dates in the sheet are when each presentation happened, which is not
+     * reliable enough to order by on its own.
+     */
+    private function semesterOrder(string $code): int
+    {
+        if (!preg_match('/^(\d{2})(\d{2})(ODD|EVEN)$/i', strtoupper(trim($code)), $matches)) {
+            return PHP_INT_MAX;
+        }
+
+        return ((int) $matches[1]) * 10 + (strtoupper($matches[3]) === 'ODD' ? 1 : 2);
+    }
+
     public function listSemesterPresentation(Request $request)
     {
         $user = Auth::user();
