@@ -382,6 +382,7 @@ class Faculty extends Model
             'name' => $this->user ? $this->user->name() : '',
             'designation' => $this->designation,
             'department' => $this->department->name ?? '',
+            'department_id' => $this->department_id,
             'email' => $this->user->email ?? '',
             'phone' => $this->user->phone ?? '',
             'website' => $this->website_link,
@@ -392,6 +393,8 @@ class Faculty extends Model
             'citations' => $this->citations,
             'h_index' => $this->h_index,
             'expertise' => $this->expertise ?? [],
+            'area_of_specialization_id' => $this->area_of_specialization_id,
+            'broad_area' => $this->areaOfSpecialization?->name,
             // Head counts the dashboard has always shown. Sizes, not names, so
             // they sit in the public tier with the other counts.
             'supervised_campus' => $this->supervised_campus,

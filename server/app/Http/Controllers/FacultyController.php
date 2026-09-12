@@ -433,6 +433,9 @@ class FacultyController extends Controller
             'batch_data.*.institution' => 'nullable|string',
             'batch_data.*.website_link' => 'nullable|string',
             'batch_data.*.expertise' => 'nullable',
+            'batch_data.*.broad_area' => 'nullable|string',
+            'batch_data.*.supervised_campus' => 'nullable',
+            'batch_data.*.supervised_outside' => 'nullable',
             'batch_data.*.row_number' => 'required|integer',
         ]);
 
@@ -466,6 +469,9 @@ class FacultyController extends Controller
                 // Expertise may arrive as a JSON array (validation allows it) — only trim strings
                 $expertiseRaw = $data['expertise'] ?? null;
                 if (is_string($expertiseRaw)) $expertiseRaw = trim($expertiseRaw);
+                $broadArea = trim((string)($data['broad_area'] ?? ''));
+                $supervisedOutside = trim((string)($data['supervised_outside'] ?? ''));
+                $claimedCampus = trim((string)($data['supervised_campus'] ?? ''));
 
                 // Determine if this is an update (existing faculty by email)
                 $existingUserCheck = User::where('email', $email)->first();
@@ -516,6 +522,27 @@ class FacultyController extends Controller
                     }
                 }
 
+                // The broad area has to be one this department already offers,
+                // because the list is what the recommender and the faculty
+                // dropdown both read. A department is needed to check it, so an
+                // update with no department code uses the stored one.
+                $areaId = null;
+                if ($broadArea !== '') {
+                    $areaDepartment = $department ?? $existingFacultyCheck?->department;
+                    $areaId = $areaDepartment
+                        ? \App\Models\AreaOfSpecialization::where('department_id', $areaDepartment->id)
+                            ->whereRaw('LOWER(TRIM(name)) = ?', [strtolower(trim($broadArea))])
+                            ->value('id')
+                        : null;
+
+                    if (!$areaId) {
+                        $label = $areaDepartment->code ?? 'that department';
+                        $errors[] = "Row " . $rowNumber . ": '{$broadArea}' is not a research area of {$label}. "
+                            . "Import the research area matrix first, or correct the spelling.";
+                        $errorCount++; continue;
+                    }
+                }
+
                 // Check if user exists
                 $existingUser = User::where('email', $email)->first();
                 
@@ -546,7 +573,18 @@ class FacultyController extends Controller
                         if ($expertiseRaw !== null && $expertiseRaw !== '') {
                             $existingFaculty->expertise = Faculty::normalizeExpertise($expertiseRaw);
                         }
+                        if ($areaId) $existingFaculty->area_of_specialization_id = $areaId;
+                        if ($supervisedOutside !== '') $existingFaculty->supervised_outside = (int) $supervisedOutside;
                         $existingFaculty->save();
+
+                        // The portal counts scholars it knows about, so the
+                        // sheet's own figure is a cross check rather than
+                        // something to store. A mismatch usually means a
+                        // supervisor was never recorded against a scholar.
+                        if ($claimedCampus !== '' && (int) $claimedCampus !== $existingFaculty->supervised_campus) {
+                            $errors[] = "Row " . $rowNumber . ": sheet says {$claimedCampus} scholars in TIET, "
+                                . "the portal has {$existingFaculty->supervised_campus}";
+                        }
 
                         $updateCount++;
                     } else {
@@ -560,6 +598,8 @@ class FacultyController extends Controller
                             'institution' => $institution,
                             'website_link' => $websiteLink,
                             'expertise' => Faculty::normalizeExpertise($expertiseRaw),
+                            'area_of_specialization_id' => $areaId,
+                            'supervised_outside' => $supervisedOutside !== '' ? (int) $supervisedOutside : 0,
                         ]);
 
                         $successCount++;
@@ -589,6 +629,8 @@ class FacultyController extends Controller
                         'institution' => $institution,
                         'website_link' => $websiteLink,
                         'expertise' => Faculty::normalizeExpertise($expertiseRaw),
+                        'area_of_specialization_id' => $areaId,
+                        'supervised_outside' => $supervisedOutside !== '' ? (int) $supervisedOutside : 0,
                     ]);
 
                     $successCount++;

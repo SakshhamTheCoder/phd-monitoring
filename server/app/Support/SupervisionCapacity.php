@@ -51,10 +51,14 @@ class SupervisionCapacity
      * table, and always will be: nothing detaches them, and the record of who
      * guided whom is worth keeping. They are not a current commitment though,
      * so they do not occupy a slot.
+     *
+     * Scholars guided outside TIET occupy a slot too. The institute's limit is
+     * on how many people someone is supervising, not on how many of them this
+     * portal happens to know about, so the self-reported outside count is added.
      */
     public static function currentLoad(Faculty $faculty): int
     {
-        return $faculty->currentlySupervisedStudents()->count();
+        return $faculty->currentlySupervisedStudents()->count() + (int) $faculty->supervised_outside;
     }
 
     /** Slots left, never negative: a supervisor over the line reads as full. */
@@ -80,15 +84,30 @@ class SupervisionCapacity
             return [];
         }
 
-        return DB::table('supervisors')
+        $inside = DB::table('supervisors')
             ->join('students', 'students.roll_no', '=', 'supervisors.student_id')
             ->whereIn('supervisors.faculty_id', $codes)
             ->whereNull('students.date_of_thesis')
             ->groupBy('supervisors.faculty_id')
             ->selectRaw('supervisors.faculty_id, COUNT(*) as total')
-            ->pluck('total', 'supervisors.faculty_id')
-            ->map(fn ($total) => (int) $total)
-            ->all();
+            ->pluck('total', 'supervisors.faculty_id');
+
+        // Outside scholars count against the same limit, and a faculty member
+        // with only outside scholars has no row in the join above.
+        $outside = DB::table('faculty')
+            ->whereIn('faculty_code', $codes)
+            ->where('supervised_outside', '>', 0)
+            ->pluck('supervised_outside', 'faculty_code');
+
+        $loads = [];
+        foreach ($codes as $code) {
+            $total = (int) ($inside[$code] ?? 0) + (int) ($outside[$code] ?? 0);
+            if ($total) {
+                $loads[$code] = $total;
+            }
+        }
+
+        return $loads;
     }
 
     /** The same shape as describe(), from a load already counted in bulk. */
