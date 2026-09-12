@@ -22,7 +22,8 @@ class Faculty extends Model
         'department_id',
         'faculty_code',
         'supervised_campus',
-        'supervied_outside',
+        'supervised_outside',
+        'area_of_specialization_id',
         'type',
         'institution',
         'website_link',
@@ -70,6 +71,15 @@ class Faculty extends Model
     /**
      * Get the department associated with the faculty.
      */
+    /**
+     * The one broad area this faculty member works in, from their department's
+     * list. `expertise` holds the free-text specifics under it.
+     */
+    public function areaOfSpecialization()
+    {
+        return $this->belongsTo(AreaOfSpecialization::class, 'area_of_specialization_id');
+    }
+
     public function department()
     {
         return $this->belongsTo(Department::class);

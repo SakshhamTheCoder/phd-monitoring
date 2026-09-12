@@ -34,7 +34,11 @@ const DropdownField = ({ label, options, initialValue, isLocked, onChange, requi
             >
                 {!showInitialValue && <option value="">{isLocked ? 'Not provided' : 'Select'}</option>}
                 {showInitialValue ? (
-                    <option value={value}>{initialValue}</option>
+                    // A prefilled value is often an id, so show the option it
+                    // names rather than the id itself.
+                    <option value={value}>
+                        {options?.find((option) => String(option.value) === String(value))?.title ?? initialValue}
+                    </option>
                 ) : (
                     <>{options && options?.map((option, index) => (
                         <option key={index} value={option.value}>

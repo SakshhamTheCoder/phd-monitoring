@@ -4,6 +4,7 @@ import InputField from "../forms/fields/InputField";
 import GridContainer from "../forms/fields/GridContainer";
 import CustomButton from "../forms/fields/CustomButton";
 import InputSuggestions from "../forms/fields/InputSuggestions";
+import DropdownField from "../forms/fields/DropdownField";
 import { customFetch } from "../../api/base";
 import { baseURL } from "../../api/urls";
 
@@ -17,12 +18,40 @@ const FacultyForm = ({ edit = false, facultyData = {}, onSuccess, onClose }) => 
     faculty_code: "",
     institution: "Thapar Institute of Engineering and Technology",
     website_link: "",
+    area_of_specialization_id: "",
     expertise: "",
   });
   // Display name for the department field (InputSuggestions shows the name,
   // while formData.department_id holds the id sent to the backend).
   const [departmentName, setDepartmentName] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // The broad area comes from the chosen department's list, so it reloads when
+  // the department does. The signed-in admin's own department is irrelevant here.
+  const [researchAreas, setResearchAreas] = useState([]);
+
+  useEffect(() => {
+    if (!formData.department_id) {
+      setResearchAreas([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    customFetch(
+      `${baseURL}/departments/area-of-specialization?department_id=${formData.department_id}`,
+      'GET',
+      {},
+      false
+    ).then((response) => {
+      if (cancelled || !response.success) return;
+      const rows = response.response?.data || [];
+      setResearchAreas(rows.map((area) => ({ title: area.name, value: area.id })));
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [formData.department_id]);
 
   useEffect(() => {
     if (edit && facultyData) {
@@ -40,6 +69,7 @@ const FacultyForm = ({ edit = false, facultyData = {}, onSuccess, onClose }) => 
         faculty_code: facultyData.faculty_code || "",
         institution: facultyData.institution || "Thapar Institute of Engineering and Technology",
         website_link: facultyData.website_link || "",
+        area_of_specialization_id: facultyData.area_of_specialization_id || "",
         expertise: exp,
       });
       setDepartmentName(facultyData.department || "");
@@ -185,8 +215,18 @@ const FacultyForm = ({ edit = false, facultyData = {}, onSuccess, onClose }) => 
       )}
       <GridContainer
         elements={[
+          <DropdownField
+            label="Broad Area of Expertise"
+            options={researchAreas}
+            initialValue={formData.area_of_specialization_id}
+            onChange={(val) => handleChange("area_of_specialization_id", val)}
+          />,
+        ]}
+      />
+      <GridContainer
+        elements={[
           <InputField
-            label="Area of Expertise (comma separated)"
+            label="Specific Areas under Broad Area (comma separated)"
             initialValue={formData.expertise}
             onChange={(val) => handleChange("expertise", val)}
             placeholder="e.g., Machine Learning, Data Mining, Cyber Security"

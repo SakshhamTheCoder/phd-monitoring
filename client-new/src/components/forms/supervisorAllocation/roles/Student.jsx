@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import InputSuggestions from "../../fields/InputSuggestions";
+import DropdownField from "../../fields/DropdownField";
+import { useResearchAreas } from "../../../../hooks/useResearchAreas";
 import { baseURL } from "../../../../api/urls";
 import GridContainer from "../../fields/GridContainer";
 import InputField from "../../fields/InputField";
@@ -15,7 +17,7 @@ import { toast } from "react-toastify";
 
 const Student = ({ formData }) => {
   const apiUrl_suggestion = baseURL + "/suggestions/faculty";
-  const apiUrl_broad_suggestion = baseURL + "/suggestions/specialization";
+  const researchAreas = useResearchAreas();
   const [body, setBody] = useState({});
   const [lock, setLock] = useState(formData.locks?.student);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -75,8 +77,11 @@ const Student = ({ formData }) => {
     };
   };
 
+  // Areas are ids from the department's list, which is what the recommender
+  // matches faculty on and what the server stores.
   const handleBroadAreaSelect = (value, index) => {
-    body.broad_area_of_research[index] = value.name || value;
+    body.broad_area_of_research[index] = value ? Number(value) : null;
+    setBody({ ...body });
     fetchRecs(body.broad_area_of_research);
   };
 
@@ -143,39 +148,33 @@ const Student = ({ formData }) => {
           <GridContainer
            label={[<p>Select 3 Broad Areas of Research</p>]}
             elements={[
-              <InputSuggestions
-                initialValue={formData.broad_area_of_research?.[0]}
-                apiUrl={apiUrl_broad_suggestion}
-                onSelect={(value) => handleBroadAreaSelect(value, 0)}
-                lock={lock}
-                showLabel={false}
-                suggestionManadatory={false}
+              <DropdownField
+                options={researchAreas}
+                initialValue={formData.broad_area_of_research_id?.[0]}
+                onChange={(value) => handleBroadAreaSelect(value, 0)}
+                isLocked={lock}
               />,
             ]}
             space={2}
           />
           <GridContainer
             elements={[
-              <InputSuggestions
-                initialValue={formData.broad_area_of_research?.[1]}
-                apiUrl={apiUrl_broad_suggestion}
-                onSelect={(value) => handleBroadAreaSelect(value, 1)}
-                lock={lock}
-                suggestionManadatory={false}
-                showLabel={false}
+              <DropdownField
+                options={researchAreas}
+                initialValue={formData.broad_area_of_research_id?.[1]}
+                onChange={(value) => handleBroadAreaSelect(value, 1)}
+                isLocked={lock}
               />,
             ]}
             space={2}
           />
           <GridContainer
             elements={[
-              <InputSuggestions
-                initialValue={formData.broad_area_of_research?.[2]}
-                apiUrl={apiUrl_broad_suggestion}
-                onSelect={(value) => handleBroadAreaSelect(value, 2)}
-                lock={lock}
-                showLabel={false}
-                suggestionManadatory={false}
+              <DropdownField
+                options={researchAreas}
+                initialValue={formData.broad_area_of_research_id?.[2]}
+                onChange={(value) => handleBroadAreaSelect(value, 2)}
+                isLocked={lock}
               />,
             ]}
             space={2}

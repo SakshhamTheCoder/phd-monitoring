@@ -32,7 +32,8 @@ class FacultyController extends Controller
             'designation' => $faculty->designation,
             'department' => $faculty->department->name ?? 'N/A',
             'expertise' => $faculty->expertise ?? [],
-            'expertise_raw' => $faculty->expertise_raw,
+            'area_of_specialization_id' => $faculty->area_of_specialization_id,
+            'broad_area' => $faculty->areaOfSpecialization?->name,
         ]);
     }
 
@@ -91,6 +92,7 @@ class FacultyController extends Controller
             // unless another caller says otherwise.
             'type' => 'nullable|in:internal,external',
             'expertise' => 'nullable',
+            'area_of_specialization_id' => 'nullable|integer|exists:area_of_specializations,id',
         ];
 
         $type = $request->input('type', 'internal');
@@ -167,6 +169,7 @@ class FacultyController extends Controller
         $faculty->institution = $request->institution ?? 'Thapar Institute of Engineering and Technology';
         $faculty->website_link = $request->website_link;
         $faculty->expertise = Faculty::normalizeExpertise($request->input('expertise'));
+        $faculty->area_of_specialization_id = $request->input('area_of_specialization_id');
         $faculty->save();
 
         return response()->json([
@@ -215,6 +218,7 @@ class FacultyController extends Controller
             // record's current one.
             'type' => 'nullable|in:internal,external',
             'expertise' => 'nullable',
+            'area_of_specialization_id' => 'nullable|integer|exists:area_of_specializations,id',
         ];
 
         $type = $request->input('type', $faculty->type ?? 'internal');
@@ -273,8 +277,14 @@ class FacultyController extends Controller
         $faculty->type = $type;
         $faculty->institution = $request->institution ?? 'Thapar Institute of Engineering and Technology';
         $faculty->website_link = $request->website_link;
-        if ($request->has('expertise')) {
+        // `has` is true for a field the client sent empty, which is how an edit
+        // form that never received the stored expertise erased it on every save.
+        // Only a field the request actually carries a value for is written.
+        if ($request->filled('expertise')) {
             $faculty->expertise = Faculty::normalizeExpertise($request->input('expertise'));
+        }
+        if ($request->filled('area_of_specialization_id')) {
+            $faculty->area_of_specialization_id = $request->input('area_of_specialization_id');
         }
         $faculty->save();
 
@@ -297,7 +307,7 @@ class FacultyController extends Controller
         $perPage = $request->input('rows', 15);
         $page = $request->input('page', 1);
     
-        $facultyQuery = Faculty::with(['user', 'department']);
+        $facultyQuery = Faculty::with(['user', 'department', 'areaOfSpecialization']);
         
         // As in StudentController::list: the capability says whether, the role
         // says which departments, since an ADORDC answers for several.
@@ -359,6 +369,9 @@ class FacultyController extends Controller
                 ]),
                 'supervised_outside'=> $faculty->supervised_outside,
                 'supervised_campus'=> $faculty->supervised_campus,
+                'expertise' => $faculty->expertise ?? [],
+                'area_of_specialization_id' => $faculty->area_of_specialization_id,
+                'broad_area' => $faculty->areaOfSpecialization?->name,
             ];
 
             if (!$canSeePhone) {

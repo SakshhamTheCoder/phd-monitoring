@@ -143,45 +143,6 @@ class DepartmentController extends Controller
         ], 200);
     }
 
-    public function addBroadAreaSpecialization(Request $request)
-    {
-        try{
-
-        $loggenInUser = Auth::user();
-        if(!$loggenInUser->may('can_add_department')){
-            return response()->json([
-                'message' => 'You do not have permission to create department'
-            ], 403);
-        }
-
-        $request->validate(
-            [
-                'broad_area' => 'required|string',
-                'department_id' => 'required|integer',
-
-            ]
-        );
-        $department = \App\Models\Department::find($request->department_id);
-        if(!$department){
-            return response()->json([
-                'message' => 'Department not found'
-            ], 404);
-        }
-        $broadAreaSpecialization = new \App\Models\BroadAreaSpecialization();
-        $broadAreaSpecialization->broad_area = $request->broad_area;
-        $broadAreaSpecialization->department_id = $request->department_id;
-        $broadAreaSpecialization->save();
-        return response()->json([
-            'message' => 'Broad area specialization added successfully'
-        ], 200);
-      }
-        catch(\Exception $e){
-            return response()->json([
-                'message' => 'An error occured'
-            ], 500);
-        }
-    }
-
     public function addAreaOfSpecialization(Request $request)
     {
         try {
@@ -192,16 +153,7 @@ class DepartmentController extends Controller
                 ], 403);
             }
 
-            $request->validate([
-                'name' => 'required|string',
-                'department_id' => 'required|integer',
-                'expert_name' => 'nullable|string',
-                'expert_email' => 'nullable|email',
-                'expert_phone' => 'nullable|string',
-                'expert_college' => 'nullable|string',
-                'expert_designation' => 'nullable|string',
-                'expert_website' => 'nullable|string',
-            ]);
+            $request->validate($this->areaRules());
 
             $department = \App\Models\Department::find($request->department_id);
             if(!$department){
@@ -213,12 +165,7 @@ class DepartmentController extends Controller
             $areaOfSpecialization = new \App\Models\AreaOfSpecialization();
             $areaOfSpecialization->name = $request->name;
             $areaOfSpecialization->department_id = $request->department_id;
-            $areaOfSpecialization->expert_name = $request->expert_name;
-            $areaOfSpecialization->expert_email = $request->expert_email;
-            $areaOfSpecialization->expert_phone = $request->expert_phone;
-            $areaOfSpecialization->expert_college = $request->expert_college;
-            $areaOfSpecialization->expert_designation = $request->expert_designation;
-            $areaOfSpecialization->expert_website = $request->expert_website;
+            $areaOfSpecialization->outside_expert_id = $this->resolveOutsideExpert($request, $department);
             $areaOfSpecialization->save();
 
             return response()->json([
@@ -271,7 +218,7 @@ class DepartmentController extends Controller
             $perPage = $request->input('rows', 15);
             $page = $request->input('page', 1);
 
-            $query = \App\Models\AreaOfSpecialization::with('department');
+            $query = \App\Models\AreaOfSpecialization::with(['department', 'outsideExpert']);
 
             // Apply role-based filtering
             if ($role === 'hod') {
@@ -301,10 +248,15 @@ class DepartmentController extends Controller
                     'name' => $area->name,
                     'department_id' => $area->department_id,
                     'department_name' => $area->department->name ?? 'N/A',
-                    'expert_name' => $area->expert_name,
-                    'expert_email' => $area->expert_email,
-                    'expert_phone' => $area->expert_phone,
-                    'expert_college' => $area->expert_college,
+                    'expert_id' => $area->outside_expert_id,
+                    'expert_name' => $area->outsideExpert
+                        ? trim($area->outsideExpert->first_name . ' ' . $area->outsideExpert->last_name)
+                        : null,
+                    'expert_email' => $area->outsideExpert?->email,
+                    'expert_phone' => $area->outsideExpert?->phone,
+                    'expert_college' => $area->outsideExpert?->institution,
+                    'expert_designation' => $area->outsideExpert?->designation,
+                    'expert_website' => $area->outsideExpert?->website,
                     'created_at' => $area->created_at,
                 ];
             });
@@ -332,14 +284,7 @@ class DepartmentController extends Controller
         try {
             $loggedInUser = Auth::user();
             
-            $request->validate([
-                'name' => 'required|string',
-                'department_id' => 'required|integer',
-                'expert_name' => 'nullable|string',
-                'expert_email' => 'nullable|email',
-                'expert_phone' => 'nullable|string',
-                'expert_college' => 'nullable|string',
-            ]);
+            $request->validate($this->areaRules());
 
             $area = \App\Models\AreaOfSpecialization::find($id);
             if (!$area) {
@@ -371,10 +316,7 @@ class DepartmentController extends Controller
 
             $area->name = $request->name;
             $area->department_id = $request->department_id;
-            $area->expert_name = $request->expert_name;
-            $area->expert_email = $request->expert_email;
-            $area->expert_phone = $request->expert_phone;
-            $area->expert_college = $request->expert_college;
+            $area->outside_expert_id = $this->resolveOutsideExpert($request, $area->department);
             $area->save();
 
             return response()->json([
@@ -422,6 +364,18 @@ class DepartmentController extends Controller
                 }
             }
 
+            // Scholars and faculty point at this row, and the preference link
+            // cascades, so deleting a used area quietly drops people's choices.
+            $inUse = $area->students()->exists()
+                || $area->faculty()->exists()
+                || \App\Models\StudentAreaPreference::where('specialization_id', $area->id)->exists();
+
+            if ($inUse) {
+                return response()->json([
+                    'message' => 'This area is in use by scholars or faculty. Move them to another area before deleting it.'
+                ], 409);
+            }
+
             $area->delete();
 
             return response()->json([
@@ -435,77 +389,278 @@ class DepartmentController extends Controller
         }
     }
 
+    /**
+     * @return array<string, string>
+     */
+    private function areaRules(): array
+    {
+        return [
+            'name' => 'required|string',
+            'department_id' => 'required|integer',
+            'expert_name' => 'nullable|string',
+            'expert_email' => 'nullable|email',
+            'expert_phone' => 'nullable|string',
+            'expert_college' => 'nullable|string',
+            'expert_designation' => 'nullable|string',
+            'expert_website' => 'nullable|string',
+        ];
+    }
+
+    /**
+     * The outside expert this area's form describes, as a row in the expert
+     * table rather than six columns on the area.
+     *
+     * The same examiner covers several areas, so the email decides identity and
+     * a second area naming them reuses the row instead of copying it.
+     */
+    private function resolveOutsideExpert(Request $request, ?\App\Models\Department $department): ?int
+    {
+        $email = trim((string) $request->expert_email);
+        if ($email === '') {
+            return null;
+        }
+
+        $name = \App\Support\PersonName::split($request->expert_name);
+        $expert = \App\Models\OutsideExpert::firstOrNew(['email' => $email]);
+
+        $expert->first_name = $name['first'] !== '' ? $name['first'] : ($expert->first_name ?: 'Unknown');
+        $expert->last_name = $name['last'];
+        $expert->designation = trim((string) $request->expert_designation) ?: ($expert->designation ?: 'Unknown');
+        $expert->institution = trim((string) $request->expert_college) ?: ($expert->institution ?: 'Unknown');
+        $expert->department = $expert->department ?: ($department->name ?? 'Unknown');
+        $expert->website = $request->expert_website ?: $expert->website;
+
+        // The phone column is unique, so a number another expert already holds
+        // has to be left off rather than fail the whole save.
+        $phone = trim((string) $request->expert_phone);
+        if ($phone !== '' && !\App\Models\OutsideExpert::where('phone', $phone)->where('email', '!=', $email)->exists()) {
+            $expert->phone = $phone;
+        }
+
+        $expert->save();
+
+        return $expert->id;
+    }
+
+    /**
+     * Load the department research areas from the institute's matrix sheet.
+     *
+     * The sheet is wide: one column per department code, one broad area per
+     * cell below it. The page's own template is long (name, department code,
+     * expert details), and saved copies of it still exist, so both are read.
+     *
+     * Re-running is safe. An area already on the list is left alone rather than
+     * inserted again, which is what the old version did on every run. An area
+     * the sheet drops is deleted only when nobody points at it; one in use is
+     * kept and named in the response.
+     */
     public function importAreasFromCSV(Request $request)
     {
         try {
             $loggedInUser = Auth::user();
-            
+            if (!$loggedInUser->may('can_add_department')) {
+                return response()->json([
+                    'message' => 'You do not have permission to import research areas'
+                ], 403);
+            }
+
             $request->validate([
                 'csv_file' => 'required|file|mimes:csv,txt|max:20480',
             ]);
 
-            $file = $request->file('csv_file');
-            $path = $file->getRealPath();
-            $data = array_map('str_getcsv', file($path));
-            $header = array_shift($data);
+            $rows = array_map('str_getcsv', file($request->file('csv_file')->getRealPath()));
+            $rows = array_values(array_filter($rows, fn ($row) => $row !== [null] && trim(implode('', $row)) !== ''));
 
-            $importedCount = 0;
-            $errors = [];
+            if (!$rows) {
+                return response()->json(['message' => 'The file is empty'], 422);
+            }
 
-            foreach ($data as $index => $row) {
-                try {
-                    if (count($row) < 2) continue;
+            $header = array_shift($rows);
+            $areasByDepartment = $this->readAreaRows($header, $rows, $errors);
 
-                    $rowData = array_combine($header, $row);
-                    
-                    // Check authorization for department
-                    $departmentId = $rowData['department_id'] ?? null;
-                    $role = $loggedInUser->current_role->role;
-                    
-                    if ($role === 'hod' || $role === 'phd_coordinator') {
-                        $facultyCode = $loggedInUser->faculty->faculty_code;
-                        $allowedDepartmentId = null;
-                        
-                        if ($role === 'hod') {
-                            $hodDepartment = Department::where('hod_id', $facultyCode)->first();
-                            $allowedDepartmentId = $hodDepartment->id ?? null;
-                        } else {
-                            $coordinator = \App\Models\PhdCoordinator::where('faculty_id', $facultyCode)->first();
-                            $allowedDepartmentId = $coordinator->department_id ?? null;
-                        }
+            $allowedDepartmentId = $this->areaWriteDepartmentId($loggedInUser);
+            $created = 0;
+            $kept = [];
+            $removed = 0;
 
-                        if ($departmentId != $allowedDepartmentId) {
-                            $errors[] = "Row " . ($index + 2) . ": Not authorized for this department";
-                            continue;
-                        }
+            foreach ($areasByDepartment as $departmentId => $names) {
+                if ($allowedDepartmentId && $departmentId != $allowedDepartmentId) {
+                    $errors[] = "Not authorized for department " . $this->departmentCode($departmentId);
+                    continue;
+                }
+
+                $existing = \App\Models\AreaOfSpecialization::where('department_id', $departmentId)->get();
+                $existingByKey = $existing->keyBy(fn ($area) => $this->areaKey($area->name));
+
+                foreach ($names as $key => $name) {
+                    if ($existingByKey->has($key)) {
+                        continue;
                     }
 
-                    $area = new \App\Models\AreaOfSpecialization();
-                    $area->name = $rowData['name'] ?? '';
-                    $area->department_id = $departmentId;
-                    $area->expert_name = $rowData['expert_name'] ?? null;
-                    $area->expert_email = $rowData['expert_email'] ?? null;
-                    $area->expert_phone = $rowData['expert_phone'] ?? null;
-                    $area->expert_college = $rowData['expert_college'] ?? null;
-                    $area->save();
+                    \App\Models\AreaOfSpecialization::create([
+                        'department_id' => $departmentId,
+                        'name' => $name,
+                    ]);
+                    $created++;
+                }
 
-                    $importedCount++;
-                } catch (\Exception $e) {
-                    $errors[] = "Row " . ($index + 2) . ": " . $e->getMessage();
+                foreach ($existing as $area) {
+                    if (isset($names[$this->areaKey($area->name)])) {
+                        continue;
+                    }
+
+                    if ($this->areaIsInUse($area)) {
+                        $kept[] = $this->departmentCode($departmentId) . ': ' . $area->name;
+                        continue;
+                    }
+
+                    $area->delete();
+                    $removed++;
                 }
             }
 
             return response()->json([
                 'success' => true,
-                'message' => "Imported {$importedCount} areas successfully",
-                'imported_count' => $importedCount,
+                'message' => "Added {$created} areas, removed {$removed} unused areas",
+                'imported_count' => $created,
+                'removed_count' => $removed,
+                'kept_in_use' => $kept,
                 'errors' => $errors,
             ], 200);
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'message' => 'An error occurred: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Read either sheet shape into department id => [key => name].
+     *
+     * The long template is the one with a `name` column; anything else whose
+     * header carries a department code is the wide matrix. Testing for `name`
+     * rather than counting codes means a department that sends a sheet for
+     * itself alone still reads as wide.
+     *
+     * @param  array<int, string|null>  $header
+     * @param  array<int, array<int, string|null>>  $rows
+     * @param  array<int, string>|null  $errors
+     * @return array<int, array<string, string>>
+     */
+    private function readAreaRows(array $header, array $rows, ?array &$errors): array
+    {
+        $errors = [];
+        $areas = [];
+
+        $columnDepartments = [];
+        foreach ($header as $column => $code) {
+            $department = \App\Support\DepartmentCodes::resolve($code);
+            if ($department) {
+                $columnDepartments[$column] = $department->id;
+            }
+        }
+
+        $isLongTemplate = (bool) array_filter($header, fn ($column) => strtolower(trim((string) $column)) === 'name');
+
+        if ($columnDepartments && !$isLongTemplate) {
+            foreach ($rows as $row) {
+                foreach ($columnDepartments as $column => $departmentId) {
+                    $name = $this->cleanAreaName($row[$column] ?? null);
+                    if ($name !== '') {
+                        $areas[$departmentId][$this->areaKey($name)] = $name;
+                    }
+                }
+            }
+
+            return $areas;
+        }
+
+        // Long shape: the page's own template, one area per row.
+        foreach ($rows as $index => $row) {
+            $rowNumber = $index + 2;
+            $rowData = $this->combineRow($header, $row);
+            $name = $this->cleanAreaName($rowData['name'] ?? null);
+
+            if ($name === '') {
+                $errors[] = "Row {$rowNumber}: no area name";
+                continue;
+            }
+
+            $department = \App\Support\DepartmentCodes::resolve($rowData['department_code'] ?? null)
+                ?? Department::find($rowData['department_id'] ?? null);
+
+            if (!$department) {
+                $errors[] = "Row {$rowNumber}: department not found";
+                continue;
+            }
+
+            $areas[$department->id][$this->areaKey($name)] = $name;
+        }
+
+        return $areas;
+    }
+
+    /**
+     * Pad or trim a row to the header so a short row reports a missing value
+     * rather than throwing a count mismatch that reads as "an error occurred".
+     *
+     * @param  array<int, string|null>  $header
+     * @param  array<int, string|null>  $row
+     * @return array<string, string|null>
+     */
+    private function combineRow(array $header, array $row): array
+    {
+        $row = array_pad(array_slice($row, 0, count($header)), count($header), null);
+
+        return array_combine(array_map(fn ($key) => trim((string) $key), $header), $row);
+    }
+
+    /**
+     * The one department this user may write areas for, or null for a role that
+     * may write any.
+     */
+    private function areaWriteDepartmentId($user): ?int
+    {
+        $role = $user->current_role->role;
+
+        if ($role === 'hod') {
+            return Department::where('hod_id', $user->faculty->faculty_code)->value('id');
+        }
+
+        if ($role === 'phd_coordinator') {
+            return \App\Models\PhdCoordinator::where('faculty_id', $user->faculty->faculty_code)
+                ->value('department_id');
+        }
+
+        return null;
+    }
+
+    private function areaIsInUse(\App\Models\AreaOfSpecialization $area): bool
+    {
+        return $area->students()->exists()
+            || $area->faculty()->exists()
+            || \App\Models\StudentAreaPreference::where('specialization_id', $area->id)->exists();
+    }
+
+    private function cleanAreaName(?string $name): string
+    {
+        return trim(preg_replace('/\s+/', ' ', (string) $name));
+    }
+
+    /**
+     * Case, spacing and punctuation differ far more often than meaning, so all
+     * three are ignored when deciding whether the sheet already lists an area.
+     */
+    private function areaKey(?string $name): string
+    {
+        $normalised = strtolower(trim(preg_replace('/[^a-z0-9]+/i', ' ', (string) $name)));
+
+        return preg_replace('/\s+/', ' ', $normalised);
+    }
+
+    private function departmentCode(int $departmentId): string
+    {
+        return Department::where('id', $departmentId)->value('code') ?? (string) $departmentId;
     }
 
     public function addHOD(Request $request)

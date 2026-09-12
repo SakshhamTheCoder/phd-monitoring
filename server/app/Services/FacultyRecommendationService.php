@@ -26,7 +26,10 @@ class FacultyRecommendationService
 
     public function recommend(array $queryAreas, ?int $departmentId = null, int $limit = 8): array
     {
-        // Resolve numeric specialization ids in one query (N+1 → whereIn)
+        // The allocation form sends ids from the department research area list,
+        // and faculty now hold an id from that same list, so an exact match is
+        // the strongest signal there is. The text scoring below still runs: it
+        // is what ranks the free-text specifics under the broad area.
         $trimmed = array_map(fn($a) => trim((string)$a), $queryAreas);
         $numericIds = array_values(array_filter(array_map(fn($a) => $a !== '' && ctype_digit($a) ? (int)$a : null, $trimmed)));
         if ($numericIds) {
@@ -38,6 +41,7 @@ class FacultyRecommendationService
         }
         $queryAreas = array_values(array_filter(array_map('trim', $trimmed)));
         if (!$queryAreas) return [];
+        $queryAreaIds = array_flip($numericIds);
         $queryTokens = $this->tokens(implode(' ', $queryAreas));
         if (!$queryTokens) return [];
 
@@ -88,6 +92,10 @@ class FacultyRecommendationService
                 $inter = count(array_intersect($queryTokens, array_keys($vec)));
                 $union = count(array_unique(array_merge($queryTokens, array_keys($vec))));
                 $score = $union ? $inter / $union * 0.5 : 0;
+            }
+            // Applied last so the low-score fallback above cannot discard it.
+            if ($f->area_of_specialization_id && isset($queryAreaIds[$f->area_of_specialization_id])) {
+                $score += 0.5;
             }
             $scored[] = [
                 'faculty_code' => $f->faculty_code, 'name' => $f->user?->name() ?? '—',

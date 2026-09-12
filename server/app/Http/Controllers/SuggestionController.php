@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BroadAreaSpecialization;
+use App\Models\AreaOfSpecialization;
 use App\Models\Department;
 use App\Models\Examiner;
 use App\Models\Faculty;
@@ -16,33 +16,39 @@ use Illuminate\Support\Facades\Http;
 class SuggestionController extends Controller
 {
 
+    /**
+     * The research areas the caller's department offers.
+     *
+     * This used to read a second list that the allocation form itself wrote to,
+     * so every area a scholar typed became a suggestion for everyone else. There
+     * is one list now and only the admin page and the research area import add
+     * to it, which is what makes it a fixed vocabulary the forms can present as
+     * a dropdown.
+     *
+     * `text` is optional: without it the whole list comes back, which is what a
+     * dropdown needs.
+     */
     public function suggestSpecialization(Request $request)
     {
-        $department = null;
         $loggenInUser = Auth::user();
-        if ($loggenInUser->current_role->role == 'student') {
-            $department = $loggenInUser->student->department;
-        }
-        else {
-            $department = $loggenInUser->faculty->department;
+        $department = $loggenInUser->current_role->role == 'student'
+            ? $loggenInUser->student?->department
+            : $loggenInUser->faculty?->department;
+
+        if (!$department) {
+            return response()->json([]);
         }
 
-        $request->validate(
-        [
-            'text' => 'required|string',
-        ]
-        );
+        $request->validate([
+            'text' => 'nullable|string',
+        ]);
 
-        $specializations = BroadAreaSpecialization::where('department_id', $department->id)
-            ->where('broad_area', 'LIKE', '%' . $request->text . '%')
-            ->orderBy('broad_area')
-            ->get();
-        foreach ($specializations as $specialization) {
-            $specialization->name = $specialization->broad_area;
-        }
-        // Return the specializations as a JSON response
-        return response()->json($specializations);
+        $areas = AreaOfSpecialization::where('department_id', $department->id)
+            ->when($request->filled('text'), fn ($query) => $query->where('name', 'LIKE', '%' . $request->text . '%'))
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
+        return response()->json($areas);
     }
 
     public function suggestSubdomain(Request $request)

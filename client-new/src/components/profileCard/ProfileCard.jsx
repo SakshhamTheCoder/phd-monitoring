@@ -13,7 +13,6 @@ import TableComponent from "../forms/table/TableComponent";
 import CustomButton from "../forms/fields/CustomButton";
 import CustomModal from "../forms/modal/CustomModal";
 import SupervisorDoctoralManager from "../supervisorDoctoralManager/SupervisorDoctoralManager";
-import InputSuggestions from "../forms/fields/InputSuggestions";
 import InfoGrid from "../profileFields/InfoGrid";
 import { toast } from "react-toastify";
 
@@ -156,7 +155,6 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
       address: profile?.address || '',
       fathers_name: profile?.fathers_name || '',
       phd_title: profile?.phd_title || '',
-      tentative_broad_area: profile?.tentative_broad_area || '',
       tentative_desc: profile?.tentative_desc || '',
       cgpa: profile?.cgpa || '',
     });
@@ -172,7 +170,6 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
     const payload = { ...editForm };
     if (profile?.phd_title_locked) {
       delete payload.phd_title;
-      delete payload.tentative_broad_area;
       delete payload.tentative_desc;
     }
     const response = await customFetch(`${baseURL}/students/${profile.roll_no}/profile`, 'POST', payload);
@@ -309,8 +306,8 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
                   </p>
                   <p>
                     <span className="student-research-label">Domain:</span>{" "}
-                    <span className={profile.tentative_broad_area ? "" : "student-value-empty"}>
-                      {profile.tentative_broad_area || EMPTY_VALUE}
+                    <span className={profile.broad_area ? "" : "student-value-empty"}>
+                      {profile.broad_area || EMPTY_VALUE}
                     </span>
                   </p>
                   <p>
@@ -343,21 +340,14 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
                       </small>
                     )}
                   </div>
+                  {/* The domain is not typed here any more. It is chosen from
+                      the department's list on the supervisor allocation form and
+                      settled on the IRB form, so this reports it. */}
                   <div className="inline-field-item" style={{ marginTop: '0.6rem' }}>
                     <label>Domain</label>
-                    <InputSuggestions
-                      apiUrl={baseURL + "/suggestions/specialization"}
-                      initialValue={editForm.tentative_broad_area}
-                      onSelect={(value) => {
-                        const name = typeof value === 'object' ? (value.name || value.broad_area) : value;
-                        setEditForm((prev) => ({ ...prev, tentative_broad_area: name }));
-                      }}
-                      lock={profile.phd_title_locked}
-                      showLabel={false}
-                      suggestionManadatory={false}
-                      hint="Type to search broad areas (e.g., AI, Machine Learning)"
-                      fields={["name"]}
-                    />
+                    <p className={profile.broad_area ? "" : "student-value-empty"}>
+                      {profile.broad_area || 'Set on your supervisor allocation form'}
+                    </p>
                   </div>
                   <div className="inline-field-item" style={{ marginTop: '0.6rem' }}>
                     <label>Description</label>

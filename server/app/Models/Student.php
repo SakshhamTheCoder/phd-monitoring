@@ -25,7 +25,6 @@ class Student extends Model
         'date_of_thesis',
         'phd_title',
         'tentative_desc',
-        'tentative_broad_area',
         'fathers_name',
         'address',
         'current_status',
@@ -232,9 +231,13 @@ class Student extends Model
         return $this->hasOne(SupervisorChangeForm::class, 'student_id', 'roll_no');
     }
 
-    public function broad_area_specialization()
+    /**
+     * The up to three areas the scholar asked to work in, from the allocation
+     * form. Their settled area is area_of_specialization_id, set later.
+     */
+    public function areaPreferences()
     {
-        return $this->hasMany(StudentBroadAreaSpecialization::class, 'student_id', 'roll_no');
+        return $this->hasMany(StudentAreaPreference::class, 'student_id', 'roll_no');
     }
 
     public function subdomains()

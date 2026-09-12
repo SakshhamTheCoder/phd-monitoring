@@ -632,7 +632,6 @@ class StudentController extends Controller {
             'fathers_name'         => 'nullable|string',
             'phd_title'            => 'nullable|string|max:1000',
             'tentative_desc'       => 'nullable|string|max:5000',
-            'tentative_broad_area' => 'nullable|string|max:1000',
             'cgpa'                 => 'nullable|numeric',
         ]);
 
@@ -651,7 +650,6 @@ class StudentController extends Controller {
         if (!$student->phdTitleLocked()) {
             if ($request->has('phd_title'))            $student->phd_title            = $request->phd_title;
             if ($request->has('tentative_desc'))       $student->tentative_desc       = $request->tentative_desc;
-            if ($request->has('tentative_broad_area')) $student->tentative_broad_area = $request->tentative_broad_area;
         }
         if ($request->has('cgpa'))         $student->cgpa         = $request->cgpa;
         $student->save();

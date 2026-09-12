@@ -182,7 +182,7 @@ class ConstituteOfIRBController extends Controller
             'title' => 'required|string',
             'irb_pdf' => 'required|file|mimes:pdf|max:20480',
             'address' => 'required|string',
-            'broad_area_of_research' => 'nullable|string',
+            'broad_area_of_research' => 'nullable|integer',
             'subdomains' => 'nullable|array',
             'subdomains.*' => 'string',
         ]);
@@ -230,15 +230,20 @@ class ConstituteOfIRBController extends Controller
            
             $formInstance->student->address = $request->address;
             
-            // Save broad area of research (free text, or a legacy AreaOfSpecialization id)
-            if ($request->has('broad_area_of_research') && $request->broad_area_of_research) {
-                $formInstance->broad_area_of_research = $request->broad_area_of_research;
-                // Only link the structured area FK when the value is a real, existing
-                // area id — a numeric-looking free-text entry must not hit the FK.
-                if (is_numeric($request->broad_area_of_research)
-                    && \App\Models\AreaOfSpecialization::whereKey($request->broad_area_of_research)->exists()) {
-                    $formInstance->student->area_of_specialization_id = $request->broad_area_of_research;
+            // The scholar's settled research area, chosen from their
+            // department's list. It used to be free text stored on the form,
+            // with the link to the area only written when the value happened to
+            // be numeric, which the form never sent.
+            if ($request->filled('broad_area_of_research')) {
+                $belongsToDepartment = \App\Models\AreaOfSpecialization::whereKey($request->broad_area_of_research)
+                    ->where('department_id', $formInstance->student->department_id)
+                    ->exists();
+
+                if (!$belongsToDepartment) {
+                    throw new \Exception("Select a broad area from your department's list");
                 }
+
+                $formInstance->student->area_of_specialization_id = $request->broad_area_of_research;
             }
 
             // Save subdomain keywords (reusable per student). Only touch them when the

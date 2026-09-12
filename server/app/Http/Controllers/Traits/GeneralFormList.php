@@ -282,7 +282,12 @@ trait GeneralFormList
             'phd_title_locked' => $student->phdTitleLocked(),
             'irb_completed' => $student->irbCompleted(),
             'tentative_desc' => $student->tentative_desc,
-            'tentative_broad_area' => $student->tentative_broad_area,
+            // The broad area is no longer typed here. It is the scholar's
+            // settled area once the IRB form sets one, and their allocation
+            // preferences until then, so the profile reports rather than asks.
+            'broad_area' => $student->areaOfSpecialization?->name
+                ?: $student->areaPreferences->map(fn ($preference) => $preference->specialization?->name)
+                    ->filter()->join(', ') ?: null,
             'can_edit_tentative' => $student->canEditTentative(),
             'is_supervisor_allocated' => $student->isSupervisorAllocated(),
             'gender' => $student->user->gender,
