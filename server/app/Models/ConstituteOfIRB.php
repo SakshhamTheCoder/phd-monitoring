@@ -46,15 +46,10 @@ class ConstituteOfIRB extends Model
             })->values(),
             'subdomains' => $this->student->subdomains->pluck('keyword')->values(),
             'irb_pdf' => $this->irb_pdf,
-            // The form no longer stores an area of its own: the scholar's
+            // The form no longer keeps an area of its own: the scholar's
             // settled area lives on their record and this is the screen that
-            // sets it. The id is what the dropdown submits, the name is what it
-            // shows.
-            'broad_area_of_research' => $this->student->area_of_specialization_id,
-            'area_of_specialization' => $this->student->areaOfSpecialization ? [
-                'id' => $this->student->areaOfSpecialization->id,
-                'name' => $this->student->areaOfSpecialization->name,
-            ] : null,
+            // sets it.
+            'broad_area_of_research' => $this->student->broad_area,
             'chairman' => ($this->student->department->hod && $this->student->department->hod->user) ? [
                 'name' => $this->student->department->hod->user->name(),
                 'designation' => $this->student->department->hod->designation,

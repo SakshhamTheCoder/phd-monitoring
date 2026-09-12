@@ -285,7 +285,7 @@ trait GeneralFormList
             // The broad area is no longer typed here. It is the scholar's
             // settled area once the IRB form sets one, and their allocation
             // preferences until then, so the profile reports rather than asks.
-            'broad_area' => $student->areaOfSpecialization?->name
+            'broad_area' => $student->broad_area
                 ?: ($student->areaPreferences->pluck('broad_area')->filter()->join(', ') ?: null),
             'can_edit_tentative' => $student->canEditTentative(),
             'is_supervisor_allocated' => $student->isSupervisorAllocated(),

@@ -353,11 +353,10 @@ class DepartmentController extends Controller
                 }
             }
 
-            // Scholars and faculty point at this row by id, so deleting it
-            // would quietly clear their settled area. Allocation preferences
-            // are the scholar's own words and point at nothing, so they do not
-            // hold an area open.
-            $inUse = $area->students()->exists() || $area->faculty()->exists();
+            // Faculty are listed under this area by id, so deleting it would
+            // quietly clear their broad area. What scholars write is their own
+            // words and points at nothing, so it does not hold an area open.
+            $inUse = $area->faculty()->exists();
 
             if ($inUse) {
                 return response()->json([
@@ -584,7 +583,7 @@ class DepartmentController extends Controller
 
     private function areaIsInUse(\App\Models\AreaOfSpecialization $area): bool
     {
-        return $area->students()->exists() || $area->faculty()->exists();
+        return $area->faculty()->exists();
     }
 
     private function cleanAreaName(?string $name): string

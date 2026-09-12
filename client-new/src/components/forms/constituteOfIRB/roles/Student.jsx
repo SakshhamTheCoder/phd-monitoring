@@ -13,7 +13,6 @@ import TableComponent from "../../table/TableComponent";
 import { customFetch } from "../../../../api/base";
 import { baseURL } from "../../../../api/urls";
 import { toast } from "react-toastify";
-import { useResearchAreas } from "../../../../hooks/useResearchAreas";
 
 const Student = ({ formData }) => {
   const [lock, setLock] = useState(formData.locks?.student);
@@ -22,7 +21,6 @@ const Student = ({ formData }) => {
   const [files, setFiles] = useState([]);
   const location = useLocation();
   const { setLoading } = useLoading();
-  const researchAreas = useResearchAreas();
 
   useEffect(() => {
     setLock(formData.locks?.student);
@@ -171,15 +169,17 @@ const Student = ({ formData }) => {
 
           <GridContainer
             elements={[
-              <DropdownField
+              <InputSuggestions
                 required={true}
                 label={"Broad Area of Research"}
-                options={researchAreas}
                 initialValue={formData.broad_area_of_research}
-                onChange={(value) => {
-                  body.broad_area_of_research = value ? Number(value) : null;
+                apiUrl={baseURL + "/suggestions/specialization"}
+                onSelect={(value) => {
+                  body.broad_area_of_research = value?.name ?? value ?? '';
                 }}
-                isLocked={lock}
+                lock={lock}
+                suggestionManadatory={false}
+                hint="Type your broad area of research"
               />,
             ]}
             space={2}

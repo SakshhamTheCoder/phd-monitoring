@@ -61,8 +61,7 @@ class ConstituteOfIRBController extends Controller
             })->join(', ');
             },
             'broad_area_of_research' => function ($form) {
-                $area = $form->student->areaOfSpecialization;
-                return $area ? $area->name : null;
+                return $form->student->broad_area;
             },
         ],
         'titles' => [ "Name", "Roll No",  "Email","Supervisors","Broad Area of Research"],
@@ -182,7 +181,7 @@ class ConstituteOfIRBController extends Controller
             'title' => 'required|string',
             'irb_pdf' => 'required|file|mimes:pdf|max:20480',
             'address' => 'required|string',
-            'broad_area_of_research' => 'nullable|integer',
+            'broad_area_of_research' => 'nullable|string|max:255',
             'subdomains' => 'nullable|array',
             'subdomains.*' => 'string',
         ]);
@@ -230,20 +229,13 @@ class ConstituteOfIRBController extends Controller
            
             $formInstance->student->address = $request->address;
             
-            // The scholar's settled research area, chosen from their
-            // department's list. It used to be free text stored on the form,
-            // with the link to the area only written when the value happened to
-            // be numeric, which the form never sent.
+            // The scholar's settled research area, in their own words. The
+            // department's curated areas are offered as suggestions, but this
+            // is a description of the research and not a choice from a policy,
+            // so anything is accepted. It lives on the scholar rather than on
+            // this form, which used to hold a second copy of it.
             if ($request->filled('broad_area_of_research')) {
-                $belongsToDepartment = \App\Models\AreaOfSpecialization::whereKey($request->broad_area_of_research)
-                    ->where('department_id', $formInstance->student->department_id)
-                    ->exists();
-
-                if (!$belongsToDepartment) {
-                    throw new \Exception("Select a broad area from your department's list");
-                }
-
-                $formInstance->student->area_of_specialization_id = $request->broad_area_of_research;
+                $formInstance->student->broad_area = trim(preg_replace('/\s+/', ' ', $request->broad_area_of_research));
             }
 
             // Save subdomain keywords (reusable per student). Only touch them when the

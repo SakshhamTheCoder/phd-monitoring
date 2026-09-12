@@ -173,7 +173,7 @@ class SemesterController extends Controller
                 'email' => $student->user->email,
                 'phone' => $student->user->phone,
                 'roll_no' => $student->roll_no,
-                'broad_area'=>$student->areaOfSpecialization->name ?? '-',
+                'broad_area'=>$student->broad_area ?: '-',
                 'department' => $student->department->short_name ?? '-',
             ];
         });
@@ -219,7 +219,7 @@ class SemesterController extends Controller
                 'email' => $student->user->email,
                 'phone' => $student->user->phone,
                 'roll_no' => $student->roll_no,
-                'broad_area'=>$student->areaOfSpecialization->name ?? '-',
+                'broad_area'=>$student->broad_area ?: '-',
                 'department' => $student->department->short_name ?? '-',
             ];
         });

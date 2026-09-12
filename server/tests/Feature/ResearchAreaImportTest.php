@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Models\AreaOfSpecialization;
 use App\Models\Department;
 use App\Models\Role;
-use App\Models\Student;
+use App\Models\Faculty;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
@@ -115,11 +115,11 @@ class ResearchAreaImportTest extends TestCase
         $inUse = AreaOfSpecialization::where('department_id', $department->id)
             ->where('name', 'Quantum Computing')->firstOrFail();
 
-        // A scholar's settled area is what holds one open. Allocation
-        // preferences are the scholar's own words and point at nothing.
-        $student = Student::where('department_id', $department->id)->firstOrFail();
-        $student->area_of_specialization_id = $inUse->id;
-        $student->save();
+        // A faculty member listed under an area is what holds it open. What
+        // scholars write is their own words and points at nothing.
+        $faculty = Faculty::where('department_id', $department->id)->firstOrFail();
+        $faculty->area_of_specialization_id = $inUse->id;
+        $faculty->save();
 
         $response = $this->upload($wide, [['1', 'Machine Learning']])->assertStatus(200);
 
