@@ -185,11 +185,14 @@ const AreaOfSpecialization = () => {
     }
   };
 
+  // The institute's matrix is wide, one column per department code, and the
+  // import reads that shape too. This long form is what the page's own add
+  // dialog mirrors, and the only shape that can carry an outside expert.
   const downloadCSVTemplate = () => {
-    const csvContent = 'name,department_id,expert_name,expert_email,expert_phone,expert_college,expert_designation,expert_website\n' +
-      'Machine Learning,1,Dr. John Doe,john@example.com,1234567890,MIT,Professor,http://johndoe.com\n' +
-      'Data Science,1,Dr. Jane Smith,jane@example.com,0987654321,Stanford,Associate Professor,http://janesmith.com';
-    
+    const csvContent = 'name,department_code,expert_name,expert_email,expert_phone,expert_college,expert_designation,expert_website\n' +
+      'Machine Learning,CSED,Expert One,expert.one@example.edu,9800000041,IIT Delhi,Professor,https://example.edu/one\n' +
+      'Data Science,CSED,Expert Two,expert.two@example.edu,9800000042,IIT Bombay,Associate Professor,';
+
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
