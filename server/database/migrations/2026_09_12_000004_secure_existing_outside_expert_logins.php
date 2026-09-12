@@ -14,8 +14,13 @@ use Illuminate\Support\Str;
  * Role id 1 is the admin row on this install, so an external examiner could sign
  * in with a password printed in the source and hold administrative access.
  *
- * Every such account carries a faculty code beginning 777, which nothing else
- * generates. Those are moved to the `external` role and any password still set
+ * Such an account is an external faculty record whose code begins 777. Both
+ * halves matter: the prefix alone is not enough, because test accounts for the
+ * DRA and DoRDC roles were created by hand with codes like 77758899, and they
+ * are internal staff who must keep the role they were given. `type` is what
+ * actually says the record was made for someone outside the institute.
+ *
+ * Matching accounts are moved to the `external` role and any password still set
  * to one of the two literals is replaced with a random one. Experts reach their
  * reviews through a signed link, so nobody loses access.
  *
@@ -37,6 +42,7 @@ return new class extends Migration
         $accounts = DB::table('faculty')
             ->join('users', 'users.id', '=', 'faculty.user_id')
             ->where('faculty.faculty_code', 'like', '777%')
+            ->where('faculty.type', 'external')
             ->select('users.id', 'users.password', 'users.role_id', 'users.current_role_id', 'users.default_role_id')
             ->get();
 
