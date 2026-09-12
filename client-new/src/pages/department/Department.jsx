@@ -109,7 +109,7 @@ CSED,Hod One,hod.one@thapar.edu,hcsed@thapar.edu,Adordc One,adordc.one@thapar.ed
             extraTopbarComponents={
               mayManage ? (
                 <>
-                  <CustomButton text="Bulk Import" onClick={() => setShowImport(true)} />
+                  <CustomButton text="Bulk Import" variant="secondary" onClick={() => setShowImport(true)} />
                   <CustomButton text="Add Department +" onClick={() => openForm()} />
                 </>
               ) : null

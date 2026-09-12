@@ -19,7 +19,7 @@ export const useResearchAreas = () => {
     let cancelled = false;
 
     const load = async () => {
-      const response = await customFetch(baseURL + '/suggestions/specialization', 'GET', {}, false);
+      const response = await customFetch(baseURL + '/suggestions/specialization', 'POST', {}, false);
       if (cancelled || !response.success) return;
 
       const rows = response.response?.data || response.response || [];

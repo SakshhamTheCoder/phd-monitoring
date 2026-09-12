@@ -146,7 +146,7 @@ const PresentationSemester = () => {
             }}
             extraTopbarComponents={
               (role === "admin" || role === "dordc") ? (
-                <CustomButton text="Import Progress History" onClick={() => setShowProgressImport(true)} />
+                <CustomButton text="Import Progress History" variant="secondary" onClick={() => setShowProgressImport(true)} />
               ) : null
             }
             actions={(role === "admin" || role === "dordc") ? [

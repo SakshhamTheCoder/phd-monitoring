@@ -449,6 +449,9 @@ class DepartmentController extends Controller
      * cell below it. The page's own template is long (name, department code,
      * expert details), and saved copies of it still exist, so both are read.
      *
+     * Rows arrive already split by the import modal every other page uses, so
+     * the CSV is parsed in one place rather than once per importer.
+     *
      * Re-running is safe. An area already on the list is left alone rather than
      * inserted again, which is what the old version did on every run. An area
      * the sheet drops is deleted only when nobody points at it; one in use is
@@ -465,18 +468,11 @@ class DepartmentController extends Controller
             }
 
             $request->validate([
-                'csv_file' => 'required|file|mimes:csv,txt|max:20480',
+                'rows' => 'required|array',
+                'rows.*' => 'array',
             ]);
 
-            $rows = array_map('str_getcsv', file($request->file('csv_file')->getRealPath()));
-            $rows = array_values(array_filter($rows, fn ($row) => $row !== [null] && trim(implode('', $row)) !== ''));
-
-            if (!$rows) {
-                return response()->json(['message' => 'The file is empty'], 422);
-            }
-
-            $header = array_shift($rows);
-            $areasByDepartment = $this->readAreaRows($header, $rows, $errors);
+            $areasByDepartment = $this->readAreaRows($request->rows, $errors);
 
             $allowedDepartmentId = $this->areaWriteDepartmentId($loggedInUser);
             $created = 0;
@@ -538,29 +534,31 @@ class DepartmentController extends Controller
      * Read either sheet shape into department id => [key => name].
      *
      * The long template is the one with a `name` column; anything else whose
-     * header carries a department code is the wide matrix. Testing for `name`
-     * rather than counting codes means a department that sends a sheet for
-     * itself alone still reads as wide.
+     * columns are named after departments is the wide matrix. Testing for
+     * `name` rather than counting codes means a department that sends a sheet
+     * for itself alone still reads as wide.
      *
-     * @param  array<int, string|null>  $header
-     * @param  array<int, array<int, string|null>>  $rows
+     * @param  array<int, array<string, mixed>>  $rows
      * @param  array<int, string>|null  $errors
      * @return array<int, array<string, string>>
      */
-    private function readAreaRows(array $header, array $rows, ?array &$errors): array
+    private function readAreaRows(array $rows, ?array &$errors): array
     {
         $errors = [];
         $areas = [];
 
         $columnDepartments = [];
-        foreach ($header as $column => $code) {
-            $department = \App\Support\DepartmentCodes::resolve($code);
+        foreach (array_keys(reset($rows) ?: []) as $column) {
+            $department = \App\Support\DepartmentCodes::resolve((string) $column);
             if ($department) {
                 $columnDepartments[$column] = $department->id;
             }
         }
 
-        $isLongTemplate = (bool) array_filter($header, fn ($column) => strtolower(trim((string) $column)) === 'name');
+        $isLongTemplate = (bool) array_filter(
+            array_keys(reset($rows) ?: []),
+            fn ($column) => strtolower(trim((string) $column)) === 'name'
+        );
 
         if ($columnDepartments && !$isLongTemplate) {
             foreach ($rows as $row) {
@@ -576,18 +574,17 @@ class DepartmentController extends Controller
         }
 
         // Long shape: the page's own template, one area per row.
-        foreach ($rows as $index => $row) {
-            $rowNumber = $index + 2;
-            $rowData = $this->combineRow($header, $row);
-            $name = $this->cleanAreaName($rowData['name'] ?? null);
+        foreach ($rows as $row) {
+            $rowNumber = $row['_rowNumber'] ?? $row['row_number'] ?? '?';
+            $name = $this->cleanAreaName($row['name'] ?? null);
 
             if ($name === '') {
                 $errors[] = "Row {$rowNumber}: no area name";
                 continue;
             }
 
-            $department = \App\Support\DepartmentCodes::resolve($rowData['department_code'] ?? null)
-                ?? Department::find($rowData['department_id'] ?? null);
+            $department = \App\Support\DepartmentCodes::resolve($row['department_code'] ?? null)
+                ?? Department::find($row['department_id'] ?? null);
 
             if (!$department) {
                 $errors[] = "Row {$rowNumber}: department not found";
@@ -598,21 +595,6 @@ class DepartmentController extends Controller
         }
 
         return $areas;
-    }
-
-    /**
-     * Pad or trim a row to the header so a short row reports a missing value
-     * rather than throwing a count mismatch that reads as "an error occurred".
-     *
-     * @param  array<int, string|null>  $header
-     * @param  array<int, string|null>  $row
-     * @return array<string, string|null>
-     */
-    private function combineRow(array $header, array $row): array
-    {
-        $row = array_pad(array_slice($row, 0, count($header)), count($header), null);
-
-        return array_combine(array_map(fn ($key) => trim((string) $key), $header), $row);
     }
 
     /**

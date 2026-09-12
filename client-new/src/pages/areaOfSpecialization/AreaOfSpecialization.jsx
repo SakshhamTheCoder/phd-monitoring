@@ -10,7 +10,7 @@ import CustomButton from '../../components/forms/fields/CustomButton';
 import GridContainer from '../../components/forms/fields/GridContainer';
 import InputField from '../../components/forms/fields/InputField';
 import DropdownField from '../../components/forms/fields/DropdownField';
-import FileUploadField from '../../components/forms/fields/FileUploadField';
+import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
 import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
 import { toast } from 'react-toastify';
@@ -32,7 +32,7 @@ const AreaOfSpecialization = () => {
     expert_designation: '',
     expert_website: '',
   });
-  const [csvFile, setCsvFile] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const { setLoading } = useLoading();
   const location = useLocation();
@@ -149,58 +149,40 @@ const AreaOfSpecialization = () => {
     }
   };
 
-  const handleCSVUpload = async () => {
-    if (!csvFile) {
-      toast.error('Please select a CSV file');
+  const handleCSVUpload = async (preview, reset) => {
+    setSubmitting(true);
+
+    const response = await customFetch(
+      `${baseURL}/departments/area-of-specialization/import`,
+      'POST',
+      { rows: preview.data },
+      false
+    );
+
+    setSubmitting(false);
+
+    if (!response.success) {
+      toast.error(response.response?.message || 'Failed to import areas');
       return;
     }
 
-    setLoading(true);
-    try {
-      const formDataUpload = new FormData();
-      formDataUpload.append('csv_file', csvFile);
+    const { imported_count: added = 0, removed_count: removed = 0, kept_in_use: kept = [], errors = [] } =
+      response.response || {};
 
-      const response = await fetch(`${baseURL}/departments/area-of-specialization/import`, {
-        method: 'POST',
-        body: formDataUpload,
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+    toast.success(`${added} areas added, ${removed} unused areas removed`);
+    kept.forEach((area) => toast.info(`${area} is in use, so it was kept`));
+    errors.forEach((message) => toast.warn(message));
 
-      const result = await response.json();
-
-      if (result.success) {
-        toast.success(`Imported ${result.imported_count || 0} area(s).`);
-        setIsUploadModalOpen(false);
-        setCsvFile(null);
-        setRefreshKey((prev) => prev + 1);
-      } else {
-        toast.error(result.message || 'Failed to import areas.');
-      }
-    } catch (error) {
-      toast.error('Failed to upload CSV file.');
-    } finally {
-      setLoading(false);
-    }
+    reset();
+    setIsUploadModalOpen(false);
+    setRefreshKey((prev) => prev + 1);
   };
 
-  // The institute's matrix is wide, one column per department code, and the
-  // import reads that shape too. This long form is what the page's own add
-  // dialog mirrors, and the only shape that can carry an outside expert.
-  const downloadCSVTemplate = () => {
-    const csvContent = 'name,department_code,expert_name,expert_email,expert_phone,expert_college,expert_designation,expert_website\n' +
-      'Machine Learning,CSED,Expert One,expert.one@example.edu,9800000041,IIT Delhi,Professor,https://example.edu/one\n' +
-      'Data Science,CSED,Expert Two,expert.two@example.edu,9800000042,IIT Bombay,Associate Professor,';
+  const AREA_HEADERS = 'name,department_code,expert_name,expert_email,expert_phone,expert_college,expert_designation,expert_website';
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'area_of_specialization_template.csv';
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
+  const areaSampleCsv = `${AREA_HEADERS}
+Machine Learning,CSED,Expert One,expert.one@example.edu,9800000041,IIT Delhi,Professor,https://example.edu/one
+Data Science,CSED,Expert Two,expert.two@example.edu,9800000042,IIT Bombay,Associate Professor,`;
 
   return (
     <Layout>
@@ -221,7 +203,7 @@ const AreaOfSpecialization = () => {
           extraTopbarComponents={
             <div className="top-actions">
               <CustomButton
-                text="Upload CSV"
+                text="Bulk Import"
                 variant="secondary"
                 onClick={() => setIsUploadModalOpen(true)}
               />
@@ -336,56 +318,31 @@ const AreaOfSpecialization = () => {
           </div>
         </CustomModal>
 
-        {/* CSV Upload Modal */}
-        <CustomModal
+        <UnifiedBulkImportModal
           isOpen={isUploadModalOpen}
-          onClose={() => {
-            setIsUploadModalOpen(false);
-            setCsvFile(null);
-          }}
-          title="Import Areas from CSV"
-          minWidth="500px"
-          maxWidth="600px"
-        >
-          <div className="upload-container">
-            <div className="upload-info">
-              <p>Upload a CSV file to import multiple areas of specialization at once.</p>
-              <p className="note">
-                <strong>Note:</strong> CSV should have columns: name, department_id, expert_name, 
-                expert_email, expert_phone, expert_college
+          onClose={() => setIsUploadModalOpen(false)}
+          title="Bulk Import Research Areas"
+          formatString={AREA_HEADERS}
+          infoNodes={
+            <>
+              <p style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '0.875rem' }}>
+                The institute's matrix also loads as it is: one column per department code,
+                one area per cell.
               </p>
-              <CustomButton 
-                text="Download CSV Template" 
-                onClick={downloadCSVTemplate} 
-              />
-            </div>
-
-            <GridContainer
-              elements={[
-                <FileUploadField
-                  label="Select CSV File"
-                  showLabel={true}
-                  onChange={(file) => setCsvFile(file)}
-                  accept=".csv"
-                />,
-              ]}
-              space={2}
-            />
-
-            <GridContainer
-              elements={[
-                <CustomButton 
-                  text="Cancel" 
-                  onClick={() => {
-                    setIsUploadModalOpen(false);
-                    setCsvFile(null);
-                  }} 
-                />,
-                <CustomButton text="Upload" onClick={handleCSVUpload} />,
-              ]}
-            />
-          </div>
-        </CustomModal>
+              <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
+                An area already on the list is left alone, so the same file can be loaded twice.
+              </p>
+              <p style={{ color: '#6b7280', fontSize: '0.8rem', marginTop: '0.5rem' }}>
+                An area the sheet drops is removed only when no scholar or faculty member
+                points at it. One in use is kept and named back to you.
+              </p>
+            </>
+          }
+          sampleFileName="research_areas_sample.csv"
+          sampleCsvContent={areaSampleCsv}
+          onImport={handleCSVUpload}
+          submitting={submitting}
+        />
       </div>
     </Layout>
   );

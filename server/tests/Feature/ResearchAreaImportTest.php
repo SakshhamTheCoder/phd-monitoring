@@ -9,7 +9,6 @@ use App\Models\Student;
 use App\Models\StudentAreaPreference;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 /**
@@ -38,11 +37,21 @@ class ResearchAreaImportTest extends TestCase
         return $user;
     }
 
-    private function upload(string $csv)
+    /**
+     * The import takes rows, not a file: the shared modal splits the CSV on the
+     * client, the same as every other importer. This mirrors what it sends.
+     *
+     * @param  array<int, string>  $header
+     * @param  array<int, array<int, string>>  $rows
+     */
+    private function upload(array $header, array $rows)
     {
-        return $this->post('/api/departments/area-of-specialization/import', [
-            'csv_file' => UploadedFile::fake()->createWithContent('matrix.csv', $csv),
-        ]);
+        $payload = [];
+        foreach ($rows as $index => $row) {
+            $payload[] = array_combine($header, $row) + ['_rowNumber' => $index + 2];
+        }
+
+        return $this->postJson('/api/departments/area-of-specialization/import', ['rows' => $payload]);
     }
 
     private function areaNames(Department $department): array
@@ -57,14 +66,14 @@ class ResearchAreaImportTest extends TestCase
         $department = Department::firstOrFail();
         AreaOfSpecialization::where('department_id', $department->id)->delete();
 
-        $csv = "S.No,{$department->code}\n1,Machine Learning\n2,Quantum Computing\n";
+        $wide = ['S.No', $department->code];
 
-        $this->upload($csv)->assertStatus(200);
+        $this->upload($wide, [['1', 'Machine Learning'], ['2', 'Quantum Computing']])->assertStatus(200);
         $this->assertSame(['Machine Learning', 'Quantum Computing'], $this->areaNames($department));
 
         // Case and spacing differ far more often than meaning, so a second run
         // of the same list must not add near duplicates of what is already there.
-        $this->upload("S.No,{$department->code}\n1,machine  learning\n2,Quantum Computing\n")
+        $this->upload($wide, [['1', 'machine  learning'], ['2', 'Quantum Computing']])
             ->assertStatus(200)
             ->assertJsonPath('imported_count', 0)
             ->assertJsonPath('removed_count', 0);
@@ -78,8 +87,8 @@ class ResearchAreaImportTest extends TestCase
         $department = Department::firstOrFail();
         AreaOfSpecialization::where('department_id', $department->id)->delete();
 
-        $this->upload("S.No,{$department->code}\n1,Machine Learning\n2,Quantum Computing\n")
-            ->assertStatus(200);
+        $wide = ['S.No', $department->code];
+        $this->upload($wide, [['1', 'Machine Learning'], ['2', 'Quantum Computing']])->assertStatus(200);
 
         $inUse = AreaOfSpecialization::where('department_id', $department->id)
             ->where('name', 'Quantum Computing')->firstOrFail();
@@ -90,7 +99,7 @@ class ResearchAreaImportTest extends TestCase
             'specialization_id' => $inUse->id,
         ]);
 
-        $response = $this->upload("S.No,{$department->code}\n1,Machine Learning\n")->assertStatus(200);
+        $response = $this->upload($wide, [['1', 'Machine Learning']])->assertStatus(200);
 
         $this->assertSame(['Machine Learning', 'Quantum Computing'], $this->areaNames($department));
         $this->assertSame(

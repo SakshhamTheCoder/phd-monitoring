@@ -197,6 +197,77 @@ class SuggestionController extends Controller
 
         return response()->json($faculty);
     }
+    /**
+     * Scholars matching what the user has typed.
+     *
+     * The alternative was a plain dropdown holding every scholar, which is what
+     * the course tagging dialog had: it asked for one page of the directory and
+     * offered whatever came back, so most of the register was simply missing
+     * from the list and there was no way to reach it.
+     *
+     * Matching follows suggestFaculty: each word has to match something, in any
+     * order, because names are stored inconsistently and a registration number
+     * is as likely a search term as a name.
+     */
+    public function suggestStudent(Request $request)
+    {
+        $request->validate([
+            'text' => 'required|string',
+            'department_id' => 'nullable|integer',
+        ]);
+
+        $user = Auth::user();
+        if (!$user?->may('can_read_all_students') && !$user?->may('can_read_department_students')) {
+            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+        }
+
+        $tokens = preg_split('/[\s.,]+/', trim($request->text), -1, PREG_SPLIT_NO_EMPTY);
+        if (empty($tokens)) {
+            return response()->json([], 200);
+        }
+
+        $studentQuery = \App\Models\Student::query();
+
+        foreach ($tokens as $token) {
+            $studentQuery->where(function ($query) use ($token) {
+                $like = '%' . $token . '%';
+
+                $query->whereHas('user', function ($user) use ($like) {
+                    $user->where('first_name', 'LIKE', $like)
+                        ->orWhere('last_name', 'LIKE', $like)
+                        ->orWhere('email', 'LIKE', $like)
+                        ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", [$like]);
+                })->orWhere('roll_no', 'LIKE', $like);
+            });
+        }
+
+        // A reader limited to their own department sees only that department,
+        // the same scoping the student directory applies.
+        if (!$user->may('can_read_all_students')) {
+            $studentQuery->where('department_id', $user->faculty?->department_id);
+        }
+
+        if (!empty($request->department_id)) {
+            $studentQuery->where('department_id', $request->department_id);
+        }
+
+        $students = $studentQuery->with(['user', 'department'])
+            ->orderBy(User::select('first_name')->whereColumn('users.id', 'students.user_id'))
+            // A single letter can match a large slice of the register, so cap
+            // what comes back. Anyone past this point should type another word.
+            ->limit(25)
+            ->get()
+            ->map(fn ($student) => [
+                'id' => $student->roll_no,
+                'name' => $student->user->name(),
+                'roll_no' => $student->roll_no,
+                'email' => $student->user->email,
+                'department' => $student->department->name ?? 'N/A',
+            ]);
+
+        return response()->json($students);
+    }
+
     public function suggestDepartment(Request $request)
     {
         $request->validate([

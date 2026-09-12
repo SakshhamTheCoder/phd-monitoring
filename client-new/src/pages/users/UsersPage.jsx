@@ -261,7 +261,7 @@ Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,d
               can('can_manage_users') ? (
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <CustomButton
-                    text="Bulk Import CSV"
+                    text="Bulk Import"
                     variant="secondary"
                     onClick={() => setShowBulkImportModal(true)}
                   />

@@ -8,12 +8,12 @@ import PagenationTable from '../../components/pagenationTable/PagenationTable';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import DropdownField from '../../components/forms/fields/DropdownField';
+import InputSuggestions from '../../components/forms/fields/InputSuggestions';
 import InputField from '../../components/forms/fields/InputField';
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
 const AdminCourseManagement = () => {
   const [courses, setCourses] = useState([]);
   const [departments, setDepartments] = useState([]);
-  const [students, setStudents] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0);
   const { setLoading } = useLoading();
   const [submitting, setSubmitting] = useState(false);
@@ -36,6 +36,7 @@ const AdminCourseManagement = () => {
   
   const [tagData, setTagData] = useState({
     student_id: '',
+    student_name: '',
     course_id: '',
     semester: '',
     status: 'enrolled',
@@ -45,7 +46,6 @@ const AdminCourseManagement = () => {
 
   useEffect(() => {
     fetchDepartments();
-    fetchStudents();
     fetchAllCourses();
   }, []);
 
@@ -60,20 +60,6 @@ const AdminCourseManagement = () => {
       }
     } catch (error) {
       console.error('Error fetching departments:', error);
-    }
-  };
-
-  const fetchStudents = async () => {
-    try {
-      const response = await customFetch(`${baseURL}/students/`, 'GET');
-      if (response.success) {
-        setStudents(response?.response?.data?.map(student => ({
-          value: student.database_id || student.id,
-          title: `${student.name} (${student.roll_no})`
-        })));
-      }
-    } catch (error) {
-      console.error('Error fetching students:', error);
     }
   };
 
@@ -259,6 +245,7 @@ const AdminCourseManagement = () => {
   const resetTagData = () => {
     setTagData({
       student_id: '',
+      student_name: '',
       course_id: '',
       semester: '',
       status: 'enrolled',
@@ -293,7 +280,7 @@ const AdminCourseManagement = () => {
                 onClick={() => setShowTagModal(true)}
               />
               <CustomButton
-                text="Bulk Import CSV"
+                text="Bulk Import"
                 variant="secondary"
                 onClick={() => setShowBulkImportModal(true)}
               />
@@ -459,11 +446,16 @@ const AdminCourseManagement = () => {
         closeOnOutsideClick={false}
       >
         <div className="modal-form">
-          <DropdownField
+          <InputSuggestions
             label="Student"
-            options={students}
-            initialValue={tagData.student_id}
-            onChange={(value) => handleTagInputChange('student_id', value)}
+            apiUrl={`${baseURL}/suggestions/student`}
+            initialValue={tagData.student_name}
+            fields={["name", "roll_no"]}
+            hint="Type a name or registration number"
+            onSelect={(student) => {
+              handleTagInputChange('student_id', student.roll_no);
+              handleTagInputChange('student_name', student.name);
+            }}
             required
           />
           
