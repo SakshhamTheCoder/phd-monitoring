@@ -9,6 +9,7 @@ import StudentForm from "../../components/studentForm/StudentForm";
 import CustomButton from "../../components/forms/fields/CustomButton";
 import SupervisorDoctoralManager from "../../components/supervisorDoctoralManager/SupervisorDoctoralManager";
 import UnifiedBulkImportModal from "../../components/bulkImport/UnifiedBulkImportModal";
+import { column } from "../../components/bulkImport/columns";
 import { toast } from "react-toastify";
 import { baseURL } from "../../api/urls";
 import { customFetch } from "../../api/base";
@@ -34,8 +35,13 @@ const StudentsPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(null);
 
-  const studentsSampleCsv = `Full Name,Email,Phone,Roll Number,Department Code,Date of Registration (YYYY-MM-DD),Date of IRB (YYYY-MM-DD),PhD Title,Father's Name,Address,Current Status,CGPA,Overall Progress
-Sakshham Bhagat,sakshham.bhagat@demo.invalid,9800000011,900011,CSED,2024-08-01,,,Rajesh Bhagat,Patiala,full-time,8.4,10`;
+  const STUDENT_HEADERS = "Registration Number,Full Name,Email,Phone,Department Code,Father Name,Gender,Enrollment Type,Date of Admission,Date of IRB,Date of Synopsis,Date of Thesis,CGPA,Overall Progress,PhD Title,Permanent Address,Supervisor 1 Name,Supervisor 1 Email,Supervisor 2 Name,Supervisor 2 Email,Supervisor 3 Name,Supervisor 3 Email,Committee Member 1 Name,Committee Member 1 Email,Committee Member 2 Name,Committee Member 2 Email,Committee Member 3 Name,Committee Member 3 Email";
+
+  const studentsSampleCsv = `${STUDENT_HEADERS}
+900011,Scholar One,scholar.one@demo.invalid,9800000011,CSED,Parent One,Female,Full Time,2024-08-01,,,,8.4,10,,Patiala,Supervisor One,supervisor.one@thapar.edu,,,,,Committee One,committee.one@thapar.edu,,,,`;
+
+  // The sheet says "Full Time"; the portal stores "full-time".
+  const enrolmentType = (value) => value.trim().toLowerCase().replace(/\s+/g, '-');
 
   const handleBulkImport = async (csvPreview, resetState) => {
     try {
@@ -62,20 +68,34 @@ Sakshham Bhagat,sakshham.bhagat@demo.invalid,9800000011,900011,CSED,2024-08-01,,
           percentage: Math.round(((batchIndex + 1) / batches.length) * 100)
         });
 
+        // Every column is read by the institute sheet's wording or the
+        // portal's older template, and a blank cell is sent as an empty string
+        // the server treats as "not supplied". Sending null or 0 for a blank
+        // is what used to wipe stored values on an update.
         const students = batch.map(r => ({
-          full_name: r['Full Name'] || [r['First Name'], r['Last Name']].filter(Boolean).join(' ') || '',
-          email: r['Email'],
-          phone: r['Phone'],
-          roll_no: r['Roll Number'],
-          department_code: r['Department Code'],
-          date_of_registration: r['Date of Registration (YYYY-MM-DD)'],
-          date_of_irb: r['Date of IRB (YYYY-MM-DD)'] || null,
-          phd_title: r['PhD Title'] || null,
-          fathers_name: r["Father's Name"] || null,
-          address: r['Address'] || null,
-          current_status: r['Current Status'],
-          cgpa: r['CGPA'] || null,
-          overall_progress: r['Overall Progress'] || 0
+          full_name: column(r, 'Full Name', 'full_name')
+            || [column(r, 'First Name'), column(r, 'Last Name')].filter(Boolean).join(' '),
+          email: column(r, 'Email', 'email'),
+          phone: column(r, 'Phone', 'phone'),
+          roll_no: column(r, 'Registration Number', 'Roll Number', 'roll_no'),
+          department_code: column(r, 'Department Code', 'department_code'),
+          gender: column(r, 'Gender', 'gender'),
+          date_of_registration: column(r, 'Date of Admission', 'Date of Registration (YYYY-MM-DD)', 'date_of_registration'),
+          date_of_irb: column(r, 'Date of IRB', 'Date of URB or IRB', 'Date of IRB (YYYY-MM-DD)', 'date_of_irb'),
+          date_of_synopsis: column(r, 'Date of Synopsis', 'date_of_synopsis'),
+          date_of_thesis: column(r, 'Date of Thesis', 'date_of_thesis'),
+          phd_title: column(r, 'PhD Title', 'phd_title'),
+          fathers_name: column(r, 'Father Name', "Father's Name", 'fathers_name'),
+          address: column(r, 'Permanent Address', 'Address', 'address'),
+          current_status: enrolmentType(column(r, 'Enrollment Type', 'Enrolment Type', 'Current Status', 'current_status')),
+          cgpa: column(r, 'CGPA', 'cgpa'),
+          overall_progress: column(r, 'Overall Progress', 'overall_progress'),
+          supervisors: [1, 2, 3]
+            .map((slot) => column(r, `Supervisor ${slot} Email`))
+            .filter(Boolean),
+          committee: [1, 2, 3]
+            .map((slot) => column(r, `Committee Member ${slot} Email`))
+            .filter(Boolean),
         }));
 
         let retryCount = 0;
@@ -233,20 +253,22 @@ Sakshham Bhagat,sakshham.bhagat@demo.invalid,9800000011,900011,CSED,2024-08-01,,
             isOpen={isBulkUploadModalOpen}
             onClose={() => { setIsBulkUploadModalOpen(false); }}
             title="Bulk Import Students"
-            formatString="Full Name,Email,Phone,Roll Number,Department Code,Date of Registration (YYYY-MM-DD),Date of IRB (YYYY-MM-DD),PhD Title,Father's Name,Address,Current Status,CGPA,Overall Progress"
+            formatString={STUDENT_HEADERS}
             infoNodes={
               <>
                 <p style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '0.875rem' }}>
-                  <strong>Required for new students:</strong> Full Name, Email, Phone, Roll Number, Department Code, Date of Registration, Current Status
+                  <strong>Required for new scholars:</strong> Registration Number, Full Name, Email, Phone, Department Code, Date of Admission, Enrollment Type
                 </p>
                 <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
-                  <strong>Optional:</strong> Date of IRB, PhD Title, Father's Name, Address, CGPA, Overall Progress
+                  <strong>Enrollment Type:</strong> Full Time, Part Time or Executive
                 </p>
                 <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
-                  <strong>Current Status:</strong> part-time, full-time, executive
+                  Supervisors and committee members are matched by email. Filled cells replace the
+                  whole list, so anyone the sheet leaves out is removed; all cells blank leaves it alone.
                 </p>
                 <p style={{ color: '#6b7280', fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                  Existing students matched by email or roll number will be updated with provided non-empty fields.
+                  An existing scholar is updated from the cells the row fills in. A blank cell never
+                  clears a stored value; clear one on the scholar's profile instead.
                 </p>
               </>
             }
