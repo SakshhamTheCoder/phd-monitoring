@@ -353,11 +353,11 @@ class DepartmentController extends Controller
                 }
             }
 
-            // Scholars and faculty point at this row, and the preference link
-            // cascades, so deleting a used area quietly drops people's choices.
-            $inUse = $area->students()->exists()
-                || $area->faculty()->exists()
-                || \App\Models\StudentAreaPreference::where('specialization_id', $area->id)->exists();
+            // Scholars and faculty point at this row by id, so deleting it
+            // would quietly clear their settled area. Allocation preferences
+            // are the scholar's own words and point at nothing, so they do not
+            // hold an area open.
+            $inUse = $area->students()->exists() || $area->faculty()->exists();
 
             if ($inUse) {
                 return response()->json([
@@ -584,9 +584,7 @@ class DepartmentController extends Controller
 
     private function areaIsInUse(\App\Models\AreaOfSpecialization $area): bool
     {
-        return $area->students()->exists()
-            || $area->faculty()->exists()
-            || \App\Models\StudentAreaPreference::where('specialization_id', $area->id)->exists();
+        return $area->students()->exists() || $area->faculty()->exists();
     }
 
     private function cleanAreaName(?string $name): string

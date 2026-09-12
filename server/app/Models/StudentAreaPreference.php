@@ -6,12 +6,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * The three areas a scholar would like to work in, chosen on the supervisor
+ * The areas a scholar says they would like to work in, from the supervisor
  * allocation form.
  *
- * These are preferences, not a settled research area: they exist to rank
- * faculty before a supervisor is assigned. The settled one is
- * `students.area_of_specialization_id`, written later from the IRB form.
+ * Free text on purpose. This is written before a supervisor exists, when the
+ * scholar is describing what they hope to pursue rather than choosing from
+ * anything settled, and the only thing that reads it is the faculty
+ * recommender, which matches words against a supervisor's expertise.
+ *
+ * It is deliberately not a link into `area_of_specializations`. That list is
+ * what a department offers, and a scholar's hopes are not a statement about
+ * that. The settled area, chosen from the list once the research is defined,
+ * is `students.area_of_specialization_id`.
  */
 class StudentAreaPreference extends Model
 {
@@ -21,16 +27,11 @@ class StudentAreaPreference extends Model
 
     protected $fillable = [
         'student_id',
-        'specialization_id',
+        'broad_area',
     ];
 
     public function student()
     {
         return $this->belongsTo(Student::class, 'student_id', 'roll_no');
-    }
-
-    public function specialization()
-    {
-        return $this->belongsTo(AreaOfSpecialization::class, 'specialization_id');
     }
 }

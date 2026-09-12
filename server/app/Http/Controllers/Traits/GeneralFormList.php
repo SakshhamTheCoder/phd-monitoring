@@ -286,8 +286,7 @@ trait GeneralFormList
             // settled area once the IRB form sets one, and their allocation
             // preferences until then, so the profile reports rather than asks.
             'broad_area' => $student->areaOfSpecialization?->name
-                ?: $student->areaPreferences->map(fn ($preference) => $preference->specialization?->name)
-                    ->filter()->join(', ') ?: null,
+                ?: ($student->areaPreferences->pluck('broad_area')->filter()->join(', ') ?: null),
             'can_edit_tentative' => $student->canEditTentative(),
             'is_supervisor_allocated' => $student->isSupervisorAllocated(),
             'gender' => $student->user->gender,

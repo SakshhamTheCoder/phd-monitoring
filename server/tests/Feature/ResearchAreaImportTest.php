@@ -6,7 +6,6 @@ use App\Models\AreaOfSpecialization;
 use App\Models\Department;
 use App\Models\Role;
 use App\Models\Student;
-use App\Models\StudentAreaPreference;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
@@ -116,11 +115,11 @@ class ResearchAreaImportTest extends TestCase
         $inUse = AreaOfSpecialization::where('department_id', $department->id)
             ->where('name', 'Quantum Computing')->firstOrFail();
 
+        // A scholar's settled area is what holds one open. Allocation
+        // preferences are the scholar's own words and point at nothing.
         $student = Student::where('department_id', $department->id)->firstOrFail();
-        StudentAreaPreference::create([
-            'student_id' => $student->roll_no,
-            'specialization_id' => $inUse->id,
-        ]);
+        $student->area_of_specialization_id = $inUse->id;
+        $student->save();
 
         $response = $this->upload($wide, [['1', 'Machine Learning']])->assertStatus(200);
 

@@ -36,12 +36,7 @@ class SupervisorAllocation extends Model
         {
             $commonJSON = $this->fullCommonForm($user);
             return array_merge($commonJSON, [
-                'broad_area_of_research' => $this->student->areaPreferences->map(function ($preference) {
-                    return $preference->specialization->name;
-                }),
-                'broad_area_of_research_id' => $this->student->areaPreferences->map(function ($preference) {
-                    return $preference->specialization_id;
-                }),
+                'broad_area_of_research' => $this->student->areaPreferences->pluck('broad_area'),
                 'prefrences' => collect($this->prefrences)->map(function ($prefrence) {
                     $faculty = Faculty::where('faculty_code', $prefrence)->first();
                     return [
