@@ -472,7 +472,7 @@ class DepartmentController extends Controller
                 'rows.*' => 'array',
             ]);
 
-            $areasByDepartment = $this->readAreaRows($request->rows, $errors);
+            $areasByDepartment = $this->readAreaRows($request->rows, $errors, $ignoredColumns);
 
             $allowedDepartmentId = $this->areaWriteDepartmentId($loggedInUser);
             $created = 0;
@@ -521,6 +521,7 @@ class DepartmentController extends Controller
                 'imported_count' => $created,
                 'removed_count' => $removed,
                 'kept_in_use' => $kept,
+                'ignored_columns' => $ignoredColumns,
                 'errors' => $errors,
             ], 200);
         } catch (\Exception $e) {
@@ -538,29 +539,46 @@ class DepartmentController extends Controller
      * `name` rather than counting codes means a department that sends a sheet
      * for itself alone still reads as wide.
      *
+     * Column headers that name no department are reported rather than skipped
+     * in silence, because in the wide shape a typo in one header would drop
+     * that entire department's areas with nothing to show for it. The first
+     * column is the sheet's own row label, so it is never a department.
+     *
      * @param  array<int, array<string, mixed>>  $rows
      * @param  array<int, string>|null  $errors
+     * @param  array<int, string>|null  $ignoredColumns
      * @return array<int, array<string, string>>
      */
-    private function readAreaRows(array $rows, ?array &$errors): array
+    private function readAreaRows(array $rows, ?array &$errors, ?array &$ignoredColumns = null): array
     {
         $errors = [];
+        $ignoredColumns = [];
         $areas = [];
 
+        $headers = array_keys(reset($rows) ?: []);
         $columnDepartments = [];
-        foreach (array_keys(reset($rows) ?: []) as $column) {
+        $unresolved = [];
+
+        foreach ($headers as $position => $column) {
             $department = \App\Support\DepartmentCodes::resolve((string) $column);
             if ($department) {
                 $columnDepartments[$column] = $department->id;
+                continue;
+            }
+
+            if ($position > 0 && $column !== '_rowNumber' && trim((string) $column) !== '') {
+                $unresolved[] = (string) $column;
             }
         }
 
         $isLongTemplate = (bool) array_filter(
-            array_keys(reset($rows) ?: []),
+            $headers,
             fn ($column) => strtolower(trim((string) $column)) === 'name'
         );
 
         if ($columnDepartments && !$isLongTemplate) {
+            $ignoredColumns = $unresolved;
+
             foreach ($rows as $row) {
                 foreach ($columnDepartments as $column => $departmentId) {
                     $name = $this->cleanAreaName($row[$column] ?? null);

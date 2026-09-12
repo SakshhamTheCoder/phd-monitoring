@@ -81,6 +81,29 @@ class ResearchAreaImportTest extends TestCase
         $this->assertSame(['Machine Learning', 'Quantum Computing'], $this->areaNames($department));
     }
 
+    public function test_the_institutes_own_matrix_header_loads(): void
+    {
+        $this->admin();
+        $department = Department::firstOrFail();
+        AreaOfSpecialization::where('department_id', $department->id)->delete();
+
+        // The Drive sheet verbatim: a label column, then one column per
+        // department, and most cells on any given row empty.
+        $header = ['Dept Broad areas of research', $department->code, 'NOTADEPT'];
+
+        $response = $this->upload($header, [
+            ['1', 'Machine Learning', 'Ignored'],
+            ['2', '', 'Ignored'],
+            ['3', 'Cyber Security', ''],
+        ])->assertStatus(200);
+
+        $this->assertSame(['Cyber Security', 'Machine Learning'], $this->areaNames($department));
+
+        // A column header that is not a department is named back, so a typo in
+        // the sheet cannot silently drop a whole department's areas.
+        $this->assertSame(['NOTADEPT'], $response->json('ignored_columns'));
+    }
+
     public function test_an_area_in_use_is_kept_when_the_sheet_drops_it(): void
     {
         $this->admin();

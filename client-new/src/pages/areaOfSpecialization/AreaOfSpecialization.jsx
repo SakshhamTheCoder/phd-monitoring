@@ -166,10 +166,18 @@ const AreaOfSpecialization = () => {
       return;
     }
 
-    const { imported_count: added = 0, removed_count: removed = 0, kept_in_use: kept = [], errors = [] } =
-      response.response || {};
+    const {
+      imported_count: added = 0,
+      removed_count: removed = 0,
+      kept_in_use: kept = [],
+      ignored_columns: ignored = [],
+      errors = [],
+    } = response.response || {};
 
     toast.success(`${added} areas added, ${removed} unused areas removed`);
+    if (ignored.length) {
+      toast.warn(`No department matches these columns, so they were skipped: ${ignored.join(', ')}`);
+    }
     kept.forEach((area) => toast.info(`${area} is in use, so it was kept`));
     errors.forEach((message) => toast.warn(message));
 
