@@ -290,7 +290,7 @@ class StudentCourseController extends Controller
                     $rollNumber = $this->cell($data, 'Registration Number', 'Roll Number', 'roll_number');
                     $courseCode = $this->cell($data, 'Subject Code', 'Course Code', 'course_code');
                     $semester = $this->cell($data, 'Academic Year', 'Semester', 'semester');
-                    $grade = $this->cell($data, 'Grade', 'grade');
+                    $grade = $this->cell($data, 'Grade Earned', 'Grade', 'grade');
 
                     $student = Student::where('roll_no', $rollNumber)->first();
                     if (!$student) {
@@ -380,7 +380,14 @@ class StudentCourseController extends Controller
      */
     private function cell(array $data, string ...$aliases): string
     {
-        $normalise = fn ($name) => strtolower(preg_replace('/[^a-z0-9]+/i', '', (string) $name));
+        // A bracketed aside is an instruction to whoever fills the sheet, not
+        // part of the column's name: "Grade Earned (Leave Blank If Enrolled But
+        // Not Cleared Yet)" is the Grade column.
+        $normalise = fn ($name) => strtolower(preg_replace(
+            ['/\([^)]*\)/', '/[^a-z0-9]+/i'],
+            '',
+            (string) $name
+        ));
 
         $values = [];
         foreach ($data as $key => $value) {

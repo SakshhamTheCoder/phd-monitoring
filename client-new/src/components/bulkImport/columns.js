@@ -5,7 +5,15 @@
 // copies of both. Case, spaces and punctuation carry no meaning in a header, so
 // they are stripped before comparing, which also covers the misspellings the
 // source sheets ship with once the correct spelling is listed alongside.
-const normalise = (header) => String(header ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+//
+// A bracketed aside is an instruction to whoever fills the sheet, not part of
+// the column's name: "Grade Earned (Leave Blank If Enrolled But Not Cleared
+// Yet)" is the Grade column. Those are dropped first, so the sheets keep
+// loading when someone adds or reworks a hint.
+const normalise = (header) => String(header ?? '')
+  .replace(/\([^)]*\)/g, '')
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, '');
 
 // The value of the first alias the row has filled in, or ''. Aliases are tried
 // in the order given, so a row carrying two spellings of the same column uses

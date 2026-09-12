@@ -102,7 +102,7 @@ const FacultyPage = () => {
           email: column(row, 'Email', 'email'),
           phone: column(row, 'Phone', 'phone'),
           designation: column(row, 'Designation', 'designation'),
-          faculty_code: column(row, 'Emp id', 'faculty_code'),
+          faculty_code: column(row, 'Emp id', 'E Code', 'faculty_code'),
           department_code: column(row, 'Department Code', 'department_code'),
           institution: column(row, 'institution'),
           website_link: column(row, 'website_link'),

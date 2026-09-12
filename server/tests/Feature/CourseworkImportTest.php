@@ -95,6 +95,30 @@ class CourseworkImportTest extends TestCase
         $this->assertNull($enrolments[0]->grade);
     }
 
+    public function test_the_sheets_bracketed_header_hints_are_ignored(): void
+    {
+        $this->actAs('admin');
+        $student = $this->scholar();
+
+        // The institute's own headers, hints and all.
+        $this->import([[
+            'Registration Number' => (string) $student->roll_no,
+            'Academic Year (In which Student Studied the Subject)' => '2425ODD',
+            'Subjectcode' => 'ZZTEST101',
+            'Subject' => 'Research Methodology',
+            'Credits' => '4',
+            'Grade Earned (Leave Blank If Enrolled But Not Cleared Yet)' => 'A',
+            'row_number' => 2,
+        ]])->assertStatus(200)->assertJsonPath('data.success_count', 1);
+
+        $course = Course::where('course_code', 'ZZTEST101')->firstOrFail();
+        $enrolment = StudentCourse::where('student_id', $student->roll_no)
+            ->where('course_id', $course->id)->firstOrFail();
+
+        $this->assertSame('2425ODD', $enrolment->semester);
+        $this->assertSame('A', $enrolment->grade);
+    }
+
     public function test_columns_are_read_by_name_not_position(): void
     {
         $this->actAs('admin');
