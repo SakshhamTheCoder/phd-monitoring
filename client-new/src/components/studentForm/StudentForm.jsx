@@ -29,6 +29,7 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
     current_status: "",
     gender: "",
     physically_handicapped: false,
+    is_jrf: false,
     overall_progress: 0,
     cgpa: "",
   });
@@ -52,6 +53,7 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
         // instead of a broken option, forcing the admin to pick a valid one.
         gender: ["Male", "Female"].includes(studentData.gender) ? studentData.gender : "",
         physically_handicapped: !!studentData.physically_handicapped,
+        is_jrf: !!studentData.is_jrf,
         overall_progress: studentData.overall_progress || 0,
         cgpa: studentData.cgpa || "",
       });
@@ -195,6 +197,11 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
             label="Physically handicapped"
             isOn={formData.physically_handicapped}
             onToggle={() => handleChange("physically_handicapped", !formData.physically_handicapped)}
+          />,
+          <ToggleSwitch
+            label="JRF"
+            isOn={formData.is_jrf}
+            onToggle={() => handleChange("is_jrf", !formData.is_jrf)}
           />,
         ]}
       />

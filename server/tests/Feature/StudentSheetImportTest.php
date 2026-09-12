@@ -58,6 +58,7 @@ class StudentSheetImportTest extends TestCase
             'address' => '',
             'current_status' => '',
             'cgpa' => '',
+            'is_jrf' => null,
             'overall_progress' => '',
             'supervisors' => [],
             'committee' => [],
@@ -96,6 +97,22 @@ class StudentSheetImportTest extends TestCase
         $this->assertSame(8.4, (float) $student->cgpa);
         $this->assertSame(60.0, (float) $student->overall_progress);
         $this->assertSame('9800000000', $student->user->fresh()->phone);
+    }
+
+    public function test_the_jrf_answer_is_imported_and_a_blank_one_stays_unstated(): void
+    {
+        $this->admin();
+        $student = $this->scholar();
+
+        $student->is_jrf = null;
+        $student->save();
+
+        $this->import($this->row($student, ['is_jrf' => true]))->assertStatus(200);
+        $this->assertTrue((bool) $student->fresh()->is_jrf);
+
+        // A blank cell is not an answer of No, so it leaves the stored one.
+        $this->import($this->row($student))->assertStatus(200);
+        $this->assertTrue((bool) $student->fresh()->is_jrf);
     }
 
     public function test_a_row_pairing_two_different_scholars_is_refused(): void

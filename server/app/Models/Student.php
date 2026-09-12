@@ -29,6 +29,7 @@ class Student extends Model
         'address',
         'current_status',
         'cgpa',
+        'is_jrf',
         'overall_progress',
     ];
 
@@ -37,6 +38,7 @@ class Student extends Model
         'date_of_irb' => 'date',
         'date_of_synopsis' => 'date',
         'date_of_thesis' => 'date',
+        'is_jrf' => 'boolean',
         'overall_progress' => 'float',
     ];
 

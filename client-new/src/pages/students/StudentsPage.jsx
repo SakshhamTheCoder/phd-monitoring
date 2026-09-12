@@ -35,13 +35,16 @@ const StudentsPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(null);
 
-  const STUDENT_HEADERS = "Registration Number,Full Name,Email,Phone,Department Code,Father Name,Gender,Enrollment Type,Date of Admission,Date of IRB,Date of Synopsis,Date of Thesis,CGPA,Overall Progress,PhD Title,Permanent Address,Supervisor 1 Name,Supervisor 1 Email,Supervisor 2 Name,Supervisor 2 Email,Supervisor 3 Name,Supervisor 3 Email,Committee Member 1 Name,Committee Member 1 Email,Committee Member 2 Name,Committee Member 2 Email,Committee Member 3 Name,Committee Member 3 Email";
+  const STUDENT_HEADERS = "Registration Number,Full Name,Email,Phone,Department Code,Father Name,Gender,Enrollment Type,Date of Admission,Date of IRB,Date of Synopsis,Date of Thesis,CGPA,Overall Progress,PhD Title,JRF?,Permanent Address,Supervisor 1 Name,Supervisor 1 Email,Supervisor 2 Name,Supervisor 2 Email,Supervisor 3 Name,Supervisor 3 Email,Committee Member 1 Name,Committee Member 1 Email,Committee Member 2 Name,Committee Member 2 Email,Committee Member 3 Name,Committee Member 3 Email";
 
   const studentsSampleCsv = `${STUDENT_HEADERS}
-900011,Scholar One,scholar.one@demo.invalid,9800000011,CSED,Parent One,Female,Full Time,2024-08-01,,,,8.4,10,,Patiala,Supervisor One,supervisor.one@thapar.edu,,,,,Committee One,committee.one@thapar.edu,,,,`;
+900011,Scholar One,scholar.one@demo.invalid,9800000011,CSED,Parent One,Female,Full Time,2024-08-01,,,,8.4,10,,Yes,Patiala,Supervisor One,supervisor.one@thapar.edu,,,,,Committee One,committee.one@thapar.edu,,,,`;
 
   // The sheet says "Full Time"; the portal stores "full-time".
   const enrolmentType = (value) => value.trim().toLowerCase().replace(/\s+/g, '-');
+
+  // A blank JRF cell means nobody has said yet, which is not the same as No.
+  const yesNo = (value) => (value === '' ? null : /^y/i.test(value));
 
   const handleBulkImport = async (csvPreview, resetState) => {
     try {
@@ -89,6 +92,7 @@ const StudentsPage = () => {
           address: column(r, 'Permanent Address', 'Address', 'address'),
           current_status: enrolmentType(column(r, 'Enrollment Type', 'Enrolment Type', 'Current Status', 'current_status')),
           cgpa: column(r, 'CGPA', 'cgpa'),
+          is_jrf: yesNo(column(r, 'JRF?', 'JRF', 'is_jrf')),
           overall_progress: column(r, 'Overall Progress', 'overall_progress'),
           supervisors: [1, 2, 3]
             .map((slot) => column(r, `Supervisor ${slot} Email`))
@@ -261,6 +265,10 @@ const StudentsPage = () => {
                 </p>
                 <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
                   <strong>Enrollment Type:</strong> Full Time, Part Time or Executive
+                </p>
+                <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
+                  The IRB member and external expert columns are read from the sheet but not
+                  imported yet, so they are ignored rather than reported as errors.
                 </p>
                 <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
                   Supervisors and committee members are matched by email. Filled cells replace the

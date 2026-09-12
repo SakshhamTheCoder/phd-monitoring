@@ -224,6 +224,9 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
       // Read-only here: it moves the thesis deadline, so only the roles that
       // may edit a student record can set it.
       { label: "Physically Handicapped", value: profile.physically_handicapped ? "Yes" : "No" },
+      // Read-only here too: it says where the scholar's stipend comes from.
+      // Null means nobody has stated it, which is not the same as No.
+      { label: "JRF", value: profile.is_jrf === null || profile.is_jrf === undefined ? EMPTY_VALUE : (profile.is_jrf ? "Yes" : "No") },
       { label: "Date of Admission", value: formatDate(date_of_registration) },
       { label: "Date of IRB", value: formatDate(date_of_irb) },
       { label: "Date of Synopsis", value: formatDate(date_of_synopsis) },

@@ -292,6 +292,7 @@ trait GeneralFormList
             'is_supervisor_allocated' => $student->isSupervisorAllocated(),
             'gender' => $student->user->gender,
             'physically_handicapped' => (bool) $student->user->physically_handicapped,
+            'is_jrf' => $student->is_jrf,
             'department_id' => $student->department_id,
             'overall_progress' => $student->overall_progress,
             'roll_no' => $student->roll_no,

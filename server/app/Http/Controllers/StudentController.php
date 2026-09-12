@@ -128,6 +128,7 @@ class StudentController extends Controller {
         'fathers_name',
         'address',
         'cgpa',
+        'is_jrf',
         'overall_progress',
         'current_status',
         'date_of_registration',
@@ -247,6 +248,7 @@ class StudentController extends Controller {
             'students.*.overall_progress' => 'nullable|numeric',
             'students.*.cgpa' => 'nullable|numeric',
             'students.*.gender' => 'nullable|string',
+            'students.*.is_jrf' => 'nullable|boolean',
             'students.*.date_of_synopsis' => 'nullable|date',
             'students.*.date_of_thesis' => 'nullable|date',
             'students.*.supervisors' => 'nullable|array',
@@ -364,6 +366,7 @@ class StudentController extends Controller {
                     $student->current_status = $studentData['current_status'];
                     $student->address = $studentData['address'] ?? null;
                     $student->cgpa = $studentData['cgpa'] ?? null;
+                    $student->is_jrf = $studentData['is_jrf'] ?? null;
                     $student->overall_progress = $studentData['overall_progress'] ?? 0.0;
                     $student->save();
 
@@ -706,6 +709,7 @@ class StudentController extends Controller {
             'current_status' => 'required|in:part-time,full-time,executive',
             'gender' => 'required|in:Male,Female',
             'physically_handicapped' => 'nullable|boolean',
+            'is_jrf' => 'nullable|boolean',
             'date_of_irb' => 'nullable|date',
             'date_of_thesis' => 'nullable|date',
             'phd_title' => 'nullable|string',
@@ -737,6 +741,9 @@ class StudentController extends Controller {
         $student->current_status = $request->current_status;
         if ($request->has('address')) $student->address = $request->address;
         $student->cgpa = $request->cgpa;
+        // Says where the scholar's stipend comes from, so it stays on the
+        // privileged path rather than the scholar's own profile edit.
+        if ($request->has('is_jrf')) $student->is_jrf = $request->boolean('is_jrf');
         if ($request->has('overall_progress')) $student->overall_progress = $request->overall_progress;
         $student->save();
 
