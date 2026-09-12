@@ -667,9 +667,15 @@ class DepartmentController extends Controller
                     continue;
                 }
 
-                // The stored name has always matched the code.
+                // Most departments are stored with the name set to the code,
+                // and those follow the rename. One that carries a real name
+                // keeps it: production has DSAI stored as "DSAI Department",
+                // and renaming the code is not a reason to lose that.
+                if (strcasecmp($department->name, $department->code) === 0) {
+                    $department->name = $code;
+                }
+
                 $department->code = $code;
-                $department->name = $code;
                 $department->save();
             }
 
