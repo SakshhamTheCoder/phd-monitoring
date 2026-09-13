@@ -174,7 +174,16 @@ trait GeneralFormList
 
             return $index <= $form->maximum_step;
         });
-        return  response()->json($filteredForms, 200);
+        // The table on the other side reads {data, fields, fieldsTitles}. This
+        // used to hand back a bare array, so the page drew a single S.NO column
+        // and said "No results yet" however many forms came back.
+        return response()->json($this->paginateAndMap($filteredForms, 1, [
+            'fields' => ['status', 'stage', 'submitted'],
+            'titles' => ['Status', 'Stage', 'Submitted'],
+            'extra_fields' => [
+                'submitted' => fn ($form) => optional($form->created_at)->format('d/m/Y'),
+            ],
+        ], 50, $user), 200);
     }
 
 
