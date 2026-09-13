@@ -23,8 +23,20 @@ const LandingPage = () => {
       description: 'Real-time visibility of academic progress for students and supervisors'
     },
     {
+      title: 'Presentations',
+      description: 'Schedule semester presentations and record doctoral committee evaluation'
+    },
+    {
+      title: 'Publication Records',
+      description: 'Log journal and conference publications in one verified record'
+    },
+    {
       title: 'Synopsis & Thesis',
       description: 'Digital submission and approval workflow for synopsis and thesis'
+    },
+    {
+      title: 'Research Projects',
+      description: 'Create projects, track milestones, and manage project teams'
     },
     {
       title: 'Centralized Communication',
