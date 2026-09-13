@@ -144,7 +144,7 @@ const Student = ({ formData }) => {
         
 
           <GridContainer
-           label={[<p>Up to 3 broad areas you would like to work in</p>]}
+           label={[<p>Select 3 Broad Areas of Research</p>]}
             elements={[
               <InputSuggestions
                 initialValue={formData.broad_area_of_research?.[0]}
@@ -153,7 +153,6 @@ const Student = ({ formData }) => {
                 lock={lock}
                 showLabel={false}
                 suggestionManadatory={false}
-                hint="Type an area you would like to work in"
               />,
             ]}
             space={2}
@@ -167,7 +166,6 @@ const Student = ({ formData }) => {
                 lock={lock}
                 showLabel={false}
                 suggestionManadatory={false}
-                hint="Type an area you would like to work in"
               />,
             ]}
             space={2}
@@ -181,7 +179,6 @@ const Student = ({ formData }) => {
                 lock={lock}
                 showLabel={false}
                 suggestionManadatory={false}
-                hint="Type an area you would like to work in"
               />,
             ]}
             space={2}
