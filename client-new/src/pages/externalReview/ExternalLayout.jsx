@@ -38,7 +38,7 @@ const ExternalLayout = ({ crumbs = [], children }) => (
           </nav>
           <div className="topbar_right">
             <div className="xr-brand">
-              <span className="user_name">PhD Monitoring Portal</span>
+              <span className="user_name">Doctoral, Research and Innovation Management Portal</span>
               <span className="user_role">Thapar Institute of Engineering &amp; Technology</span>
             </div>
           </div>

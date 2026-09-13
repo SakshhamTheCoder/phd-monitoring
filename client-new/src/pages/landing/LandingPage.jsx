@@ -69,7 +69,7 @@ const LandingPage = () => {
         <div className="nav-container">
           <div className="nav-brand">
             <img src="/images/tiet_logo.png" alt="University Logo" className="nav-logo" />
-            <span className="nav-title">PhD Portal <span className="beta-badge">BETA</span></span>
+            <span className="nav-title">Doctoral, Research and Innovation Management Portal <span className="beta-badge">BETA</span></span>
           </div>
           <div className="nav-links">
             <a href="#features">Features</a>
@@ -83,13 +83,13 @@ const LandingPage = () => {
       <section className="hero-section">
         <div className="hero-container">
           <div className="hero-content">
-            <h1 className="hero-title">PhD Monitoring & Management Portal</h1>
+            <h1 className="hero-title">Doctoral, Research and Innovation Management Portal</h1>
             <div className="beta-notice">
               <span className="beta-highlight">●</span>
               <span>Currently in Beta Testing Phase</span>
             </div>
             <p className="hero-subtitle">
-              Platform to streamline and automate every stage of the PhD journey
+              Platform to streamline and automate every stage of the research and innovation journey
             </p>
             <p className="hero-description">
               Bringing scholars, supervisors, doctoral committees, and administrative authorities together on a unified system
@@ -115,11 +115,11 @@ const LandingPage = () => {
           <h2 className="section-title">About the Portal</h2>
           <div className="about-content">
             <p className="about-text">
-              The PhD Portal is a comprehensive digital platform designed to streamline and automate every stage of the PhD journey. 
+              The Doctoral, Research and Innovation Management Portal is a comprehensive digital platform designed to streamline and automate every stage of the research and innovation journey. 
               It eliminates manual paperwork, miscommunication, and delays traditionally associated with the PhD lifecycle.
             </p>
             <p className="about-text">
-              By digitizing forms, approvals, document management, communication, and progress monitoring, the PhD Portal ensures 
+              By digitizing forms, approvals, document management, communication, and progress monitoring, the portal ensures 
               accuracy, accountability, and real-time visibility for all stakeholders. It reduces dependency on physical files and 
               offline follow-ups, enabling a smooth and organized PhD experience.
             </p>
@@ -270,7 +270,7 @@ const LandingPage = () => {
           <div className="footer-content">
             <div className="footer-section">
               <img src="/images/tiet_logo.png" alt="University Logo" className="footer-logo" />
-              <p className="footer-text">PhD Monitoring & Management Portal</p>
+              <p className="footer-text">Doctoral, Research and Innovation Management Portal</p>
               <p className="footer-text">Thapar Institute of Engineering & Technology</p>
             </div>
             <div className="footer-section">

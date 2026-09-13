@@ -166,7 +166,7 @@ const Team = () => {
         <img src='/images/tiet_logo.png' alt='Thapar Logo' className='logo' />
         <h1 className='heading'>Meet the Portal Team</h1>
         <p className='team-subtitle'>
-          The dedicated group of mentors, developers, and designers who designed and built the PhD Monitoring Portal.
+          The dedicated group of mentors, developers, and designers who designed and built the Doctoral, Research and Innovation Management Portal.
         </p>
 
         <h2 className='subheading'>Mentors</h2>
