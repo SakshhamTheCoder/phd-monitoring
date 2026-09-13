@@ -58,6 +58,8 @@ const AttendancePage = () => {
   const [historyTotal, setHistoryTotal] = useState(0);
   const [historyLastPage, setHistoryLastPage] = useState(1);
   const [daySummary, setDaySummary] = useState(null);
+  const [scholarHistory, setScholarHistory] = useState(null);
+  const [scholarHistoryLoading, setScholarHistoryLoading] = useState(false);
   // monthly
   const [monthData, setMonthData] = useState(null);
   const [monthLoading, setMonthLoading] = useState(false);
@@ -111,7 +113,7 @@ const AttendancePage = () => {
     setStatuses(next);
   }, [date, departmentFilter]);
 
-  useEffect(() => { if (activeTab === 'mark') loadRoster(); }, [loadRoster, activeTab]);
+  useEffect(() => { if (activeTab === 'mark' || activeTab === 'history') loadRoster(); }, [loadRoster, activeTab]);
 
   const loadHistory = useCallback(async () => {
     setHistoryLoading(true);
@@ -169,6 +171,33 @@ const AttendancePage = () => {
     () => (monthData?.students || []).filter((s) => matchesScholar(s, scholarFilter)),
     [monthData, scholarFilter]
   );
+
+  // Past Sessions lists one row per day for the whole department. Naming a
+  // scholar turns it into that scholar's own record, which is the only way to
+  // read how much of the term they actually attended.
+  const filteredRoll = useMemo(() => {
+    const text = scholarFilter.trim();
+    if (!text) return null;
+    if (/^\d+$/.test(text)) return text;
+    const matches = students.filter((s) => matchesScholar(s, text));
+    return matches.length === 1 ? String(matches[0].roll_no) : null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scholarFilter, students]);
+
+  useEffect(() => {
+    if (activeTab !== 'history' || !filteredRoll) { setScholarHistory(null); return; }
+
+    let cancelled = false;
+    setScholarHistoryLoading(true);
+    customFetch(baseURL + `/clerks/attendance/student/${filteredRoll}`, 'GET', {}, false)
+      .then((res) => {
+        if (cancelled) return;
+        setScholarHistoryLoading(false);
+        setScholarHistory(res.success ? res.response : null);
+      });
+
+    return () => { cancelled = true; };
+  }, [activeTab, filteredRoll]);
 
   const markAll = (status) => setStatuses((prev) => applyMarkAll(visibleStudents, prev, status));
   const absentCount = useMemo(() => countAbsent(visibleStudents, statuses), [visibleStudents, statuses]);
@@ -304,7 +333,7 @@ const AttendancePage = () => {
               </select>
             </div>
 
-            {(activeTab === 'mark' || activeTab === 'monthly') && (
+            {(activeTab === 'mark' || activeTab === 'monthly' || activeTab === 'history') && (
               <div className="input-field-container" style={{ minWidth: '220px' }}>
                 <label className="input-label" htmlFor="attendance-scholar-filter">Scholar</label>
                 <input
@@ -421,9 +450,63 @@ const AttendancePage = () => {
         </>
       )}
 
-      {/* History tab */}
-      {activeTab === 'history' && (
+      {/* History tab, one scholar */}
+      {activeTab === 'history' && filteredRoll && (
         <div style={{ marginTop: '1rem' }}>
+          <div className="attendance-summary-cards">
+            <div className="attendance-summary-card">
+              <span className="attendance-summary-label">Present</span>
+              <span className="attendance-summary-value present">{scholarHistory ? scholarHistory.summary.present : EMPTY_VALUE}</span>
+            </div>
+            <div className="attendance-summary-card">
+              <span className="attendance-summary-label">Absent</span>
+              <span className="attendance-summary-value absent">{scholarHistory ? scholarHistory.summary.absent : EMPTY_VALUE}</span>
+            </div>
+            <div className="attendance-summary-card">
+              <span className="attendance-summary-label">Sessions</span>
+              <span className="attendance-summary-value">{scholarHistory ? scholarHistory.summary.total : EMPTY_VALUE}</span>
+            </div>
+            <div className="attendance-summary-card">
+              <span className="attendance-summary-label">Attendance</span>
+              <span className="attendance-summary-value">
+                {scholarHistory && scholarHistory.summary.percent != null ? `${scholarHistory.summary.percent}%` : EMPTY_VALUE}
+              </span>
+            </div>
+            <p className="attendance-summary-caption">
+              {scholarHistoryLoading
+                ? 'Loading the scholar’s record…'
+                : scholarHistory
+                  ? `${scholarHistory.student.name} (${scholarHistory.student.roll_no}) · all sessions to date · days covered by an approved leave are left out`
+                  : 'No record for that scholar.'}
+            </p>
+          </div>
+          <div className="form-list-container">
+            <table className="form-table">
+              <thead><tr><th>Date</th><th>Status</th><th>Marked by</th></tr></thead>
+              <tbody>
+                {scholarHistoryLoading ? <tr><td colSpan={3} className="no-data-cell">Loading…</td></tr>
+                  : !scholarHistory || scholarHistory.records.length === 0 ? <tr><td colSpan={3} className="no-data-cell">No attendance recorded for this scholar yet.</td></tr>
+                  : scholarHistory.records.map((r) => (
+                    <tr key={`${r.date}-${r.lecture_id}`}>
+                      <td>{r.date?.slice?.(0, 10) || r.date}</td>
+                      <td style={{ color: r.status === 'absent' ? 'var(--danger-text)' : 'var(--success-text)' }}>{r.status}</td>
+                      <td>{r.marked_by || EMPTY_VALUE}</td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* History tab, the whole department */}
+      {activeTab === 'history' && !filteredRoll && (
+        <div style={{ marginTop: '1rem' }}>
+          {scholarFilter.trim() && (
+            <p className="attendance-summary-caption" style={{ marginBottom: '0.75rem' }}>
+              That matches no single scholar, so the sessions below are still the whole selection.
+            </p>
+          )}
           <div className="attendance-summary-cards">
             <div className="attendance-summary-card">
               <span className="attendance-summary-label">Present</span>
