@@ -43,6 +43,12 @@ class PresentationController extends Controller
     public function listForm(Request $request, $semester_id = null)
     {
         $user = Auth::user();
+        // Under /students/{id}/forms/presentation the scholar is the first
+        // route parameter, so the positional argument above is their roll
+        // number rather than a semester. Read both by name instead of position,
+        // which is right on either path.
+        $studentId = $request->route('id');
+        $semester_id = $request->route('semester_id');
         $filters = $request->input('filters', null);
         $filtersJson = $request->query('filters');
     
@@ -208,6 +214,15 @@ class PresentationController extends Controller
                 'key' => 'period_of_report',
                 'op' => '=',
                 'value' => $semester_id
+            ];
+        }
+
+        // One scholar's progress monitoring, reached from their profile.
+        if ($studentId) {
+            $mandatoryFilters[] = [
+                'key' => 'student_id',
+                'op' => '=',
+                'value' => $studentId
             ];
         }
     
@@ -697,6 +712,9 @@ class PresentationController extends Controller
     public function loadForm(Request $request, $semester_id=null,$form_id = null)
     {
         $user = Auth::user();
+        // Same positional shift as listForm: read the form by name so the
+        // scholar-scoped path resolves to the form and not to their roll number.
+        $form_id = $request->route('form_id') ?? $form_id;
         $steps = ['student', 'faculty', 'doctoral', 'hod', 'adordc','dordc', 'complete'];
         $model = Presentation::class;
         $form = Presentation::find($form_id);
