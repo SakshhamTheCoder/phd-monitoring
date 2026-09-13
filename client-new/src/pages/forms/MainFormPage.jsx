@@ -17,11 +17,13 @@ import IrbExtention from "../../components/forms/irbExtention/IrbExtention";
 import SupervisorChange from "../../components/forms/supervisorChange/SupervisorChange";
 import ListOfExaminers from "../../components/forms/listOfExaminers/ListOfExaminers";
 import ReviseTitle from "../../components/forms/reviseTitle/ReviseTitle";
+import useScholarInPath from "../../hooks/useScholarInPath";
 const MainFormPage = () => {
   const [formData, setFormData] = useState({});
   const { setLoading } = useLoading();
   const [isLoaded, setIsLoaded] = useState(false);
   const location = useLocation();
+  const scholar = useScholarInPath();
   const { form_type } = useParams();
 
   useEffect(() => {
@@ -45,6 +47,11 @@ const MainFormPage = () => {
     <Layout
       children={
         <>
+          {scholar && (
+            <p className="viewing-scholar">
+              You are viewing <strong>{scholar.label}</strong>'s form.
+            </p>
+          )}
           {isLoaded && formData && (
             <>
               {(() => {

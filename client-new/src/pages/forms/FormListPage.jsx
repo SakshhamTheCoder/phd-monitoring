@@ -11,9 +11,11 @@ import CustomButton from "../../components/forms/fields/CustomButton";
 import CustomModal from "../../components/forms/modal/CustomModal";
 import InputField from "../../components/forms/fields/InputField";
 import BulkAllocateSupervisors from "../../components/bulkAllocateSupervisors/BulkAllocateSupervisors";
+import useScholarInPath from "../../hooks/useScholarInPath";
 
 const FormListPage = () => {
   const location = useLocation();
+  const scholar = useScholarInPath();
   // The form type is the last path segment: /forms/synopsis-submission
   const formTypeLabel = (location.pathname.split('/').filter(Boolean).pop() || 'Forms')
     .replace(/[-_]/g, ' ')
@@ -69,7 +71,11 @@ const FormListPage = () => {
     <Layout
       children={
         <>
-          <PageHeader title={formTypeLabel} actions={headerAction} />
+          <PageHeader
+            title={formTypeLabel}
+            subtitle={scholar ? `Viewing ${scholar.label}` : undefined}
+            actions={headerAction}
+          />
           {role !== "student" ? (
             <>
               <FilterBar onSearch={handleSearch} />

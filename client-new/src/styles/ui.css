@@ -366,6 +366,24 @@
 .badge--purple  { background: #FCE7F3; color: #9D174D; }
 .badge--accent  { background: var(--primary-wash); color: var(--primary-color); }
 
+/* Says whose record is open when a page is read on someone else's behalf.
+   A line rather than a colour alone, so it survives a colour-blind reader. */
+.viewing-scholar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding: 0.6rem 0.9rem;
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--primary-color);
+    border-radius: var(--radius);
+    background: var(--primary-wash);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.viewing-scholar strong { color: var(--text-color); }
+
 /* --- Tables --------------------------------------------------------------
    Three components render tables with different data contracts, so they keep
    their own class names, but there is no reason for three different looks.

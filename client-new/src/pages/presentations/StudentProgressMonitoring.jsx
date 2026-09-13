@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import Layout from "../../components/dashboard/layout";
 import PageHeader from "../../components/pageHeader/PageHeader";
 import PagenationTable from "../../components/pagenationTable/PagenationTable";
+import useScholarInPath from "../../hooks/useScholarInPath";
 
 /**
  * One scholar's progress monitoring, opened from their profile.
@@ -15,6 +16,7 @@ import PagenationTable from "../../components/pagenationTable/PagenationTable";
 const StudentProgressMonitoring = () => {
   const { roll_no } = useParams();
   const navigate = useNavigate();
+  const scholar = useScholarInPath();
 
   // The form lives under its semester, so the row's own semester completes the
   // path. A row without one has no form page to open.
@@ -29,7 +31,7 @@ const StudentProgressMonitoring = () => {
         <>
           <PageHeader
             title="Progress Monitoring"
-            subtitle={`Every evaluation recorded for ${roll_no}.`}
+            subtitle={`Every evaluation recorded for ${scholar?.label ?? roll_no}.`}
           />
           <PagenationTable
             endpoint={`/students/${roll_no}/forms/presentation`}
