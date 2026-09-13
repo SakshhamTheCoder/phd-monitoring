@@ -88,6 +88,7 @@ class ResearchExtentionController extends Controller
 
     public function loadForm(Request $request, $form_id=null)
     {
+        $form_id = $this->formIdFrom($request, $form_id);
         $user = Auth::user();
         $role = $user->current_role;
         $model = ResearchExtentionsForm::class;
@@ -123,6 +124,7 @@ class ResearchExtentionController extends Controller
 
     public function submit(Request $request, $form_id)
     {
+        $form_id = $this->formIdFrom($request, $form_id);
         $user = Auth::user();
         $role = $user->current_role;
 

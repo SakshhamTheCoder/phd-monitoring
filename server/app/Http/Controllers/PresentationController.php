@@ -730,9 +730,7 @@ class PresentationController extends Controller
     public function loadForm(Request $request, $semester_id=null,$form_id = null)
     {
         $user = Auth::user();
-        // Same positional shift as listForm: read the form by name so the
-        // scholar-scoped path resolves to the form and not to their roll number.
-        $form_id = $request->route('form_id') ?? $form_id;
+        $form_id = $this->formIdFrom($request, $form_id);
         $steps = ['student', 'faculty', 'doctoral', 'hod', 'adordc','dordc', 'complete'];
         $model = Presentation::class;
         $form = Presentation::find($form_id);
