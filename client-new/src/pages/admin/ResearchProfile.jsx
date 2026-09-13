@@ -8,7 +8,8 @@ import TableComponent from '../../components/forms/table/TableComponent';
 import Tabs from '../../components/tabs/Tabs';
 import InfoGrid from '../../components/profileFields/InfoGrid';
 import { generateAvatar } from '../../utils/profileImage';
-import { isNetworkError, NETWORK_ERROR_MESSAGE } from '../../api/base';
+import { customFetch, isNetworkError, NETWORK_ERROR_MESSAGE } from '../../api/base';
+import { baseURL } from '../../api/urls';
 import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
 import { badgeClass } from '../../data/badges';
 import {
@@ -75,6 +76,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
     // Ids ticked for bulk reclassification. Imported publications arrive with
     // only the category their source could prove, so moving a batch at once is
     // the difference between a short chore and twenty trips through the modal.
+    const [researchAreas, setResearchAreas] = useState([]);
     const [selected, setSelected] = useState([]);
     const [bulkTarget, setBulkTarget] = useState('');
     const [bulkBusy, setBulkBusy] = useState(false);
@@ -96,6 +98,35 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
     }, [routeCode, codeProp]);
 
     useEffect(() => { load(); }, [load]);
+
+    // The broad areas belong to the department of the profile being viewed,
+    // which is not the viewer's own when an admin opens someone else's page.
+    // Declared before the loading guard below, because a hook cannot run
+    // behind an early return.
+    const departmentId = data?.profile?.department_id;
+    useEffect(() => {
+        if (!departmentId) {
+            setResearchAreas([]);
+            return;
+        }
+
+        let cancelled = false;
+
+        customFetch(
+            `${baseURL}/departments/area-of-specialization?department_id=${departmentId}`,
+            'GET',
+            {},
+            false
+        ).then((response) => {
+            if (cancelled || !response.success) return;
+            const rows = response.response?.data || [];
+            setResearchAreas(rows.map((area) => ({ title: area.name, value: area.id })));
+        });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [departmentId]);
 
     if (!data) return <Shell><div className="loading-state">Loading Profile…</div></Shell>;
 
@@ -155,6 +186,8 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
         setProfileForm({
             phone: profile.phone || '',
             expertise: expertiseText,
+            area_of_specialization_id: profile.area_of_specialization_id || '',
+            supervised_outside: profile.supervised_outside ?? 0,
             orcid_id: profile.orcid_id || '',
             scopus_id: profile.scopus_id || '',
             google_scholar_id: profile.google_scholar_id || '',
@@ -181,7 +214,13 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
         profile.phone !== undefined && { label: 'Phone', value: profile.phone, field: 'phone' },
         { label: 'Faculty Code', value: profile.faculty_code },
         { label: 'Supervised (Within TIET)', value: profile.supervised_campus ?? 0 },
-        { label: 'Supervised (Outside TIET)', value: profile.supervised_outside ?? 0 },
+        {
+            label: 'Supervised (Outside TIET)',
+            value: profile.supervised_outside ?? 0,
+            field: 'supervised_outside',
+            type: 'number',
+            hint: 'Scholars you guide at another institute. They count against your supervision limit.',
+        },
         // A viewer who may not see who the students are still sees how many.
         ...(canViewSupervision ? [] : [
             { label: 'Supervising', value: counts.supervised_count ?? 0 },
@@ -189,7 +228,14 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
         ]),
         profile.website && { label: 'Website', value: profile.website },
         {
-            label: 'Area of Expertise',
+            label: 'Broad Area of Expertise',
+            value: profile.broad_area,
+            field: 'area_of_specialization_id',
+            options: researchAreas,
+            hint: "One of your department's research areas.",
+        },
+        {
+            label: 'Specific Areas',
             value: expertiseText,
             field: 'expertise',
             hint: 'Separate each area with a comma.',

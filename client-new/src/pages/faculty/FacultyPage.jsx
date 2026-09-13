@@ -15,6 +15,7 @@ import CustomButton from '../../components/forms/fields/CustomButton';
 import useCapabilities from '../../hooks/useCapabilities';
 
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
+import { column } from '../../components/bulkImport/columns';
 
 const FacultyPage = () => {
   const [filter, setFilter] = useState([]);
@@ -34,9 +35,11 @@ const FacultyPage = () => {
     setFilter(newFilter);
   };
 
-  const facultySampleCsv = `full_name,email,phone,designation,faculty_code,department_code,expertise
-Dr. Tarunpreet Bhatia,tarunpreet.bhatia@demo.invalid,9800000001,Professor,10001,CSED,"Machine Learning, Cyber Security"
-Khalid Bashir,khalid.bashir@demo.invalid,9800000002,Assistant Professor,10002,ECED,"Signal Processing"`;
+  const FACULTY_HEADERS = 'Emp id,Full Name,Email,Phone,Designation,Department Code,Broad Area of Expertise,Specific Areas under Broad Area of Expertise (comma separated),Students Supervising in TIET,Students Supervising Outside TIET';
+
+  const facultySampleCsv = `${FACULTY_HEADERS}
+10001,Dr. Tarunpreet Bhatia,tarunpreet.bhatia@demo.invalid,9800000001,Professor,CSED,Artificial Intelligence,"Machine Learning, Cyber Security",3,1
+10002,Khalid Bashir,khalid.bashir@demo.invalid,9800000002,Assistant Professor,ECED,Signal Processing,"Speech Processing",0,0`;
 
 
   const openForm = async (data) => {
@@ -90,16 +93,30 @@ Khalid Bashir,khalid.bashir@demo.invalid,9800000002,Assistant Professor,10002,EC
           percentage: Math.round(((batchIndex + 1) / batches.length) * 100)
         });
 
+        // The institute's supervisor sheet and the portal's own template use
+        // different header wording for the same columns, and saved copies of
+        // both are in circulation, so each column is read by either name.
         const batchData = batch.map(row => ({
-          full_name: row.full_name || [row.first_name, row.last_name].filter(Boolean).join(' ') || '',
-          email: row.email || '',
-          phone: row.phone || '',
-          designation: row.designation || '',
-          faculty_code: row.faculty_code || '',
-          department_code: row.department_code || '',
-          institution: row.institution || '',
-          website_link: row.website_link || '',
-          expertise: row.expertise || '',
+          full_name: column(row, 'Full Name', 'full_name')
+            || [column(row, 'first_name'), column(row, 'last_name')].filter(Boolean).join(' '),
+          email: column(row, 'Email', 'email'),
+          phone: column(row, 'Phone', 'phone'),
+          designation: column(row, 'Designation', 'designation'),
+          faculty_code: column(row, 'Emp id', 'E Code', 'faculty_code'),
+          department_code: column(row, 'Department Code', 'department_code'),
+          institution: column(row, 'institution'),
+          website_link: column(row, 'website_link'),
+          broad_area: column(row, 'Broad Area of Expertise', 'broad_area'),
+          expertise: column(
+            row,
+            'Specific Areas under Broad Area of Expertise (comma separated)',
+            'Specific Areas under Broad Area of Expertise',
+            'Specific Areas under Broad Area of Expertise (comma seperated)',
+            'Area of Expertise',
+            'expertise'
+          ),
+          supervised_campus: column(row, 'Students Supervising in TIET', 'supervised_campus'),
+          supervised_outside: column(row, 'Students Supervising Outside TIET', 'Students Outside TIET', 'supervised_outside'),
           row_number: row._rowNumber
         }));
 
@@ -257,20 +274,13 @@ Khalid Bashir,khalid.bashir@demo.invalid,9800000002,Assistant Professor,10002,EC
             isOpen={showBulkImportModal}
             onClose={() => setShowBulkImportModal(false)}
             title="Bulk Import Faculty"
-            formatString="full_name,email,phone,designation,faculty_code,department_code,expertise"
-            infoNodes={
-              <>
-                <p style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '0.875rem' }}>
-                  <strong>Required for new faculty:</strong> full_name, email, designation, faculty_code, department_code
-                </p>
-                <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
-                  Imported faculty are added as internal faculty.
-                </p>
-                <p style={{ color: '#6b7280', fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                  Existing faculty matched by email will be updated with provided non-empty fields (including area of expertise).
-                </p>
-              </>
-            }
+            required={['Emp id', 'Full Name', 'Email', 'Designation', 'Department Code']}
+            rules={[
+              'Matched by email. An existing faculty member is updated from the cells the row fills in.',
+              "Broad Area of Expertise must already be on that department's research area list.",
+              'Students Supervising in TIET is compared against the portal\'s own count, not stored.',
+              'New faculty are added as internal faculty.',
+            ]}
             sampleFileName="faculty_bulk_import_sample.csv"
             sampleCsvContent={facultySampleCsv}
             onImport={handleBulkImport}

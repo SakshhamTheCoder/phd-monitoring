@@ -143,6 +143,136 @@
     border-top: 1px solid var(--border-subtle);
 }
 
+/* --- CSV import dialog ---------------------------------------------------
+   The column list used to be one comma-joined string in a monospace block set
+   to break-all, so a 28-column sheet wrapped mid-word and read as noise. One
+   chip per column wraps on column boundaries instead, and the required ones
+   carry a marker rather than being described in a sentence underneath. */
+.csv-import-section {
+    margin-bottom: 1.25rem;
+}
+
+.csv-import-heading {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    margin: 0 0 0.5rem;
+}
+
+.csv-import-columns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.csv-import-columns li {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    background: #FAFAFA;
+    color: var(--text-muted);
+}
+
+/* Required is carried by weight and an asterisk, not by colour alone. */
+.csv-import-columns li.is-required {
+    color: var(--text-color);
+    font-weight: 600;
+    border-color: var(--text-muted);
+    background: #FFF;
+}
+
+.csv-import-columns li.is-required::after {
+    content: '*';
+    margin-left: 0.15rem;
+}
+
+.csv-import-note {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0.5rem 0 0;
+}
+
+.csv-import-rules {
+    margin: 0;
+    padding-left: 1.1rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.csv-import-rules li + li {
+    margin-top: 0.25rem;
+}
+
+.csv-import-file {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.csv-import-input {
+    flex: 1 1 16rem;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.csv-import-preview {
+    margin-bottom: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+}
+
+.csv-import-preview-head {
+    padding: 0.75rem;
+    background: #F9FAFB;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.csv-import-empty {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.csv-import-progress {
+    margin-bottom: 1rem;
+}
+
+.csv-import-progress-head {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.csv-import-progress-track {
+    width: 100%;
+    height: 8px;
+    background: var(--border-subtle);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.csv-import-progress-bar {
+    height: 100%;
+    background: var(--primary-color);
+    transition: width 0.2s ease-out;
+}
+
 /* --- CSV import preview --------------------------------------------------
    A grid of raw rows before they are committed, so it is ruled rather than
    striped: you are checking cells, not scanning records. Written twice

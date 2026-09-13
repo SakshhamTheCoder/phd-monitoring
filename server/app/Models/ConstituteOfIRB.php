@@ -27,7 +27,6 @@ class ConstituteOfIRB extends Model
             'outside_expert',
             'phd_title',
             'irb_pdf',
-            'broad_area_of_research',
         ], $commonFieldKeys);
 
         parent::__construct($attributes);
@@ -47,15 +46,10 @@ class ConstituteOfIRB extends Model
             })->values(),
             'subdomains' => $this->student->subdomains->pluck('keyword')->values(),
             'irb_pdf' => $this->irb_pdf,
-            // Stored value may be a legacy AreaOfSpecialization id (numeric) or, for
-            // newer forms, free text the student typed. If not yet set on form, prefill from tentative_broad_area.
-            'broad_area_of_research' => is_numeric($this->broad_area_of_research)
-                ? (AreaOfSpecialization::find($this->broad_area_of_research)?->name ?? $this->broad_area_of_research)
-                : ($this->broad_area_of_research ?: $this->student->tentative_broad_area),
-            'area_of_specialization' => $this->student->areaOfSpecialization ? [
-                'id' => $this->student->areaOfSpecialization->id,
-                'name' => $this->student->areaOfSpecialization->name,
-            ] : null,
+            // The form no longer keeps an area of its own: the scholar's
+            // settled area lives on their record and this is the screen that
+            // sets it.
+            'broad_area_of_research' => $this->student->broad_area,
             'chairman' => ($this->student->department->hod && $this->student->department->hod->user) ? [
                 'name' => $this->student->department->hod->user->name(),
                 'designation' => $this->student->department->hod->designation,

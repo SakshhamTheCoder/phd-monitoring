@@ -11,6 +11,10 @@ Route::middleware('auth:sanctum')->group(function () {
     
     Route::get('/semester', [PresentationController::class, 'listSemesterPresentation']);
 
+    // Progress history from the institute's sheet, loaded once per scholar
+    // per past semester. The bulk schedule above is for the current one.
+    Route::post('/import-progress', [PresentationController::class, 'importProgress']);
+
     // Filters
     Route::get('/filters', [PresentationController::class, 'listFilters']);
     Route::get('/form/filters', [PresentationController::class, 'listFilters']);

@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Role;
 use App\Models\Student;
 use App\Models\Department;
+use App\Models\Faculty;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
@@ -46,7 +47,9 @@ class StudentController extends Controller {
                 'current_status' => 'required|in:part-time,full-time,executive',
                 'gender' => 'required|in:Male,Female',
                 'physically_handicapped' => 'nullable|boolean',
+                'is_jrf' => 'nullable|boolean',
                 'date_of_irb' => 'nullable|date',
+                'date_of_synopsis' => 'nullable|date',
                 'date_of_thesis' => 'nullable|date',
                 'phd_title' => 'nullable|string',
                 'fathers_name' => 'nullable|string',
@@ -85,12 +88,14 @@ class StudentController extends Controller {
         $student->department_id = $request->department_id;
         $student->date_of_registration = $request->date_of_registration;
         $student->date_of_irb = $request->date_of_irb;
+        $student->date_of_synopsis = $request->date_of_synopsis;
         $student->date_of_thesis = $request->date_of_thesis;
         $student->phd_title = $request->phd_title;
         $student->fathers_name = $request->fathers_name;
         $student->current_status = $request->current_status;
         $student->address = $request->address;
         $student->cgpa = $request->cgpa;
+        $student->is_jrf = $request->has('is_jrf') ? $request->boolean('is_jrf') : null;
         if($request->has('overall_progress'))
              $student->overall_progress = $request->overall_progress;
         else
@@ -113,6 +118,111 @@ class StudentController extends Controller {
         return response()->json($password,200);
         //return the password to the user
         //TODO: Send email to the user with the password        
+    }
+
+    /**
+     * Student columns an import may set, all of them optional.
+     *
+     * Walked rather than written out one `if` per field, because the rule is
+     * the same for every one of them and the old per-field form is where the
+     * blank-overwrites-value bug lived.
+     */
+    private const OPTIONAL_STUDENT_FIELDS = [
+        'phd_title',
+        'fathers_name',
+        'address',
+        'cgpa',
+        'is_jrf',
+        'overall_progress',
+        'current_status',
+        'date_of_registration',
+        'date_of_irb',
+        'date_of_synopsis',
+        'date_of_thesis',
+    ];
+
+    /**
+     * Make the scholar's supervisors and doctoral committee the ones the row
+     * names, matching each by email or employee code.
+     *
+     * The sheet is a statement of who is guiding whom right now, so a filled
+     * cell replaces the whole set: someone the portal lists and the sheet does
+     * not is no longer on it. A row with every cell blank is not making that
+     * statement, so it leaves the set alone.
+     *
+     * A supervisor pushed over their limit is reported, not refused. The sheet
+     * describes what is already true, and refusing it would leave the portal
+     * disagreeing with the institute instead.
+     *
+     * @param  array<string, mixed>  $row
+     * @return array<int, string>
+     */
+    private function syncSupervisionTeam(Student $student, array $row, int $rowNumber): array
+    {
+        $errors = [];
+
+        $groups = [
+            'supervisors' => [\App\Models\Supervisor::class, 'supervisor'],
+            'committee' => [\App\Models\DoctoralCommittee::class, 'committee member'],
+        ];
+
+        foreach ($groups as $key => [$model, $label]) {
+            $identifiers = array_values(array_filter(array_map('trim', (array) ($row[$key] ?? []))));
+            if (!$identifiers) {
+                continue;
+            }
+
+            $facultyCodes = [];
+            foreach ($identifiers as $identifier) {
+                $faculty = $this->facultyByIdentifier($identifier);
+                if (!$faculty) {
+                    $errors[] = "Row {$rowNumber}: no faculty matching '{$identifier}', {$label} skipped";
+                    continue;
+                }
+                $facultyCodes[] = $faculty->faculty_code;
+            }
+
+            $facultyCodes = array_values(array_unique($facultyCodes));
+            if (!$facultyCodes) {
+                continue;
+            }
+
+            $model::where('student_id', $student->roll_no)
+                ->whereNotIn('faculty_id', $facultyCodes)
+                ->delete();
+
+            foreach ($facultyCodes as $facultyCode) {
+                $model::firstOrCreate([
+                    'student_id' => $student->roll_no,
+                    'faculty_id' => $facultyCode,
+                ]);
+            }
+
+            if ($key === 'supervisors') {
+                foreach ($facultyCodes as $facultyCode) {
+                    $faculty = Faculty::where('faculty_code', $facultyCode)->first();
+                    if ($faculty && \App\Support\SupervisionCapacity::remaining($faculty) <= 0) {
+                        $errors[] = "Row {$rowNumber}: {$faculty->user?->name()} is now over their supervision limit";
+                    }
+                }
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
+     * A faculty member named in a sheet, by email or by employee code.
+     */
+    private function facultyByIdentifier(string $identifier): ?Faculty
+    {
+        if (str_contains($identifier, '@')) {
+            $userId = \App\Models\User::whereRaw('LOWER(email) = ?', [strtolower($identifier)])->value('id');
+
+            return $userId ? Faculty::where('user_id', $userId)->first() : null;
+        }
+
+        return ctype_digit($identifier) ? Faculty::where('faculty_code', $identifier)->first() : null;
     }
 
     public function bulkUpload(Request $request)
@@ -140,7 +250,15 @@ class StudentController extends Controller {
             'students.*.fathers_name' => 'nullable|string',
             'students.*.address' => 'nullable|string',
             'students.*.overall_progress' => 'nullable|numeric',
-            'students.*.cgpa' => 'nullable|numeric'
+            'students.*.cgpa' => 'nullable|numeric',
+            'students.*.gender' => 'nullable|string',
+            'students.*.is_jrf' => 'nullable|boolean',
+            'students.*.date_of_synopsis' => 'nullable|date',
+            'students.*.date_of_thesis' => 'nullable|date',
+            'students.*.supervisors' => 'nullable|array',
+            'students.*.supervisors.*' => 'nullable|string',
+            'students.*.committee' => 'nullable|array',
+            'students.*.committee.*' => 'nullable|string',
         ]);
 
         $role_id = Role::where('role', 'student')->first()->id;
@@ -170,26 +288,45 @@ class StudentController extends Controller {
                     if (!empty($studentData['roll_no'])) $existingStudent = Student::where('roll_no', $studentData['roll_no'])->first();
                     if (!$existingStudent && $existingUser) $existingStudent = Student::where('user_id', $existingUser->id)->first();
 
+                    // The roll number and the email have to name the same
+                    // person. Matching them separately let a row with one
+                    // scholar's email and another's roll number write the name
+                    // and phone onto the first while writing everything else
+                    // onto the second.
+                    if ($existingUser && $existingStudent && $existingStudent->user_id !== $existingUser->id) {
+                        $errors[] = "Row " . ($index + 1) . ": the email and the registration number belong to different scholars";
+                        $failed++; continue;
+                    }
+
                     if ($existingUser && $existingStudent) {
-                        // Partial update: only overwrite provided non-empty fields
-                        // Address lives on Student only (ListStudentProfile uses student.address)
+                        // A blank cell means "not supplied", never "clear this".
+                        // A spreadsheet carries every column on every row, so
+                        // treating a present-but-empty cell as a value emptied
+                        // the title, address, CGPA and IRB date of every scholar
+                        // whose row only meant to correct a phone number, and
+                        // zeroed the progress the DoRDC had approved.
+                        // Clearing a field is done on the profile screen.
                         $name = PersonName::fromRow($studentData);
                         if ($name !== null) {
                             $existingUser->first_name = $name['first'];
                             $existingUser->last_name = $name['last'];
                         }
                         if (!empty($studentData['phone'])) $existingUser->phone = $studentData['phone'];
+                        if (!empty($studentData['gender'])) $existingUser->gender = $studentData['gender'];
                         $existingUser->save();
                         if (!empty($studentData['department_code']) && $department) $existingStudent->department_id = $department->id;
-                        if (array_key_exists('phd_title', $studentData)) $existingStudent->phd_title = $studentData['phd_title'];
-                        if (array_key_exists('fathers_name', $studentData)) $existingStudent->fathers_name = $studentData['fathers_name'];
-                        if (array_key_exists('address', $studentData)) $existingStudent->address = $studentData['address'];
-                        if (array_key_exists('cgpa', $studentData)) $existingStudent->cgpa = $studentData['cgpa'];
-                        if (array_key_exists('overall_progress', $studentData)) $existingStudent->overall_progress = $studentData['overall_progress'];
-                        if (!empty($studentData['current_status'])) $existingStudent->current_status = $studentData['current_status'];
-                        if (!empty($studentData['date_of_registration'])) $existingStudent->date_of_registration = $studentData['date_of_registration'];
-                        if (array_key_exists('date_of_irb', $studentData)) $existingStudent->date_of_irb = $studentData['date_of_irb'];
+                        foreach (self::OPTIONAL_STUDENT_FIELDS as $field) {
+                            if (isset($studentData[$field]) && $studentData[$field] !== '') {
+                                $existingStudent->$field = $studentData[$field];
+                            }
+                        }
                         $existingStudent->save();
+
+                        $errors = array_merge(
+                            $errors,
+                            $this->syncSupervisionTeam($existingStudent, $studentData, $index + 1)
+                        );
+
                         $updateCount++;
                         continue;
                     }
@@ -214,6 +351,7 @@ class StudentController extends Controller {
                     $user->phone = $studentData['phone'];
                     $user->email = $studentData['email'];
                     $user->password = bcrypt($password);
+                    $user->gender = $studentData['gender'] ?? null;
                     $user->role_id = $role_id;
                     $user->current_role_id = $role_id;
                     $user->save();
@@ -225,11 +363,14 @@ class StudentController extends Controller {
                     $student->department_id = $department->id;
                     $student->date_of_registration = $studentData['date_of_registration'];
                     $student->date_of_irb = $studentData['date_of_irb'] ?? null;
+                    $student->date_of_synopsis = $studentData['date_of_synopsis'] ?? null;
+                    $student->date_of_thesis = $studentData['date_of_thesis'] ?? null;
                     $student->phd_title = $studentData['phd_title'] ?? null;
                     $student->fathers_name = $studentData['fathers_name'] ?? null;
                     $student->current_status = $studentData['current_status'];
                     $student->address = $studentData['address'] ?? null;
                     $student->cgpa = $studentData['cgpa'] ?? null;
+                    $student->is_jrf = $studentData['is_jrf'] ?? null;
                     $student->overall_progress = $studentData['overall_progress'] ?? 0.0;
                     $student->save();
 
@@ -244,6 +385,11 @@ class StudentController extends Controller {
                     if ($formData) {
                         Forms::create($formData);
                     }
+
+                    $errors = array_merge(
+                        $errors,
+                        $this->syncSupervisionTeam($student, $studentData, $index + 1)
+                    );
 
                     $createCount++;
 
@@ -567,7 +713,9 @@ class StudentController extends Controller {
             'current_status' => 'required|in:part-time,full-time,executive',
             'gender' => 'required|in:Male,Female',
             'physically_handicapped' => 'nullable|boolean',
+            'is_jrf' => 'nullable|boolean',
             'date_of_irb' => 'nullable|date',
+            'date_of_synopsis' => 'nullable|date',
             'date_of_thesis' => 'nullable|date',
             'phd_title' => 'nullable|string',
             'fathers_name' => 'nullable|string',
@@ -592,12 +740,16 @@ class StudentController extends Controller {
         $student->department_id = $request->department_id;
         $student->date_of_registration = $request->date_of_registration;
         $student->date_of_irb = $request->date_of_irb;
+        $student->date_of_synopsis = $request->date_of_synopsis;
         $student->date_of_thesis = $request->date_of_thesis;
         $student->phd_title = $request->phd_title;
         $student->fathers_name = $request->fathers_name;
         $student->current_status = $request->current_status;
         if ($request->has('address')) $student->address = $request->address;
         $student->cgpa = $request->cgpa;
+        // Says where the scholar's stipend comes from, so it stays on the
+        // privileged path rather than the scholar's own profile edit.
+        if ($request->has('is_jrf')) $student->is_jrf = $request->boolean('is_jrf');
         if ($request->has('overall_progress')) $student->overall_progress = $request->overall_progress;
         $student->save();
 
@@ -632,7 +784,6 @@ class StudentController extends Controller {
             'fathers_name'         => 'nullable|string',
             'phd_title'            => 'nullable|string|max:1000',
             'tentative_desc'       => 'nullable|string|max:5000',
-            'tentative_broad_area' => 'nullable|string|max:1000',
             'cgpa'                 => 'nullable|numeric',
         ]);
 
@@ -651,7 +802,6 @@ class StudentController extends Controller {
         if (!$student->phdTitleLocked()) {
             if ($request->has('phd_title'))            $student->phd_title            = $request->phd_title;
             if ($request->has('tentative_desc'))       $student->tentative_desc       = $request->tentative_desc;
-            if ($request->has('tentative_broad_area')) $student->tentative_broad_area = $request->tentative_broad_area;
         }
         if ($request->has('cgpa'))         $student->cgpa         = $request->cgpa;
         $student->save();

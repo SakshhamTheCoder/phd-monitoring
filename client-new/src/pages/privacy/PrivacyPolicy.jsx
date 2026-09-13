@@ -26,7 +26,7 @@ const PrivacyPolicy = () => {
         <div className="tw-max-w-4xl tw-mx-auto tw-p-2 tw-w-full">
           
           <h1 className="tw-text-4xl tw-font-bold tw-text-gray-900 tw-mb-4">
-            Privacy Policy for PhD Portal
+            Privacy Policy for the Doctoral, Research and Innovation Management Portal
           </h1>
           
           <p className="tw-text-sm tw-text-gray-600 tw-mb-8">

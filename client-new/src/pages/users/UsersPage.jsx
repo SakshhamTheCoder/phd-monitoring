@@ -261,7 +261,7 @@ Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,d
               can('can_manage_users') ? (
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <CustomButton
-                    text="Bulk Import CSV"
+                    text="Bulk Import"
                     variant="secondary"
                     onClick={() => setShowBulkImportModal(true)}
                   />
@@ -319,20 +319,12 @@ Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,d
             isOpen={showBulkImportModal}
             onClose={() => setShowBulkImportModal(false)}
             title="Bulk Import Users"
-            formatString="full_name,email,phone,gender,role,available_roles,status"
-            infoNodes={
-              <>
-                <p style={{ margin: '0.5rem 0 0.25rem 0', fontSize: '0.875rem' }}>
-                  <strong>Required for new users:</strong> full_name, email, role
-                </p>
-                <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
-                  <strong>Optional:</strong> phone, gender (male/female/other), available_roles (comma-separated), status (active/inactive/suspended)
-                </p>
-                <p style={{ color: '#6b7280', fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                  Existing users matched by email will be updated with provided non-empty fields.
-                </p>
-              </>
-            }
+            required={['full_name', 'email', 'role']}
+            rules={[
+              'Matched by email. An existing user is updated from the cells the row fills in.',
+              'gender is male, female or other. status is active, inactive or suspended.',
+              'available_roles is a comma separated list.',
+            ]}
             sampleFileName="users_bulk_import_sample.csv"
             sampleCsvContent={usersSampleCsv}
             onImport={handleBulkImport}

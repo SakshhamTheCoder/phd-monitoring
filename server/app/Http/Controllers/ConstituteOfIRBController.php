@@ -61,8 +61,7 @@ class ConstituteOfIRBController extends Controller
             })->join(', ');
             },
             'broad_area_of_research' => function ($form) {
-                $area = $form->student->areaOfSpecialization;
-                return $area ? $area->name : null;
+                return $form->student->broad_area;
             },
         ],
         'titles' => [ "Name", "Roll No",  "Email","Supervisors","Broad Area of Research"],
@@ -182,7 +181,7 @@ class ConstituteOfIRBController extends Controller
             'title' => 'required|string',
             'irb_pdf' => 'required|file|mimes:pdf|max:20480',
             'address' => 'required|string',
-            'broad_area_of_research' => 'nullable|string',
+            'broad_area_of_research' => 'nullable|string|max:255',
             'subdomains' => 'nullable|array',
             'subdomains.*' => 'string',
         ]);
@@ -230,15 +229,13 @@ class ConstituteOfIRBController extends Controller
            
             $formInstance->student->address = $request->address;
             
-            // Save broad area of research (free text, or a legacy AreaOfSpecialization id)
-            if ($request->has('broad_area_of_research') && $request->broad_area_of_research) {
-                $formInstance->broad_area_of_research = $request->broad_area_of_research;
-                // Only link the structured area FK when the value is a real, existing
-                // area id — a numeric-looking free-text entry must not hit the FK.
-                if (is_numeric($request->broad_area_of_research)
-                    && \App\Models\AreaOfSpecialization::whereKey($request->broad_area_of_research)->exists()) {
-                    $formInstance->student->area_of_specialization_id = $request->broad_area_of_research;
-                }
+            // The scholar's settled research area, in their own words. The
+            // department's curated areas are offered as suggestions, but this
+            // is a description of the research and not a choice from a policy,
+            // so anything is accepted. It lives on the scholar rather than on
+            // this form, which used to hold a second copy of it.
+            if ($request->filled('broad_area_of_research')) {
+                $formInstance->student->broad_area = trim(preg_replace('/\s+/', ' ', $request->broad_area_of_research));
             }
 
             // Save subdomain keywords (reusable per student). Only touch them when the
@@ -544,22 +541,6 @@ class ConstituteOfIRBController extends Controller
                             'member_type' => Faculty::class,
                             'member_id'   => $irbExpert->expert_id,
                         ]);
-                    }
-                    // The structured area of specialization is optional. A student who
-                    // entered a free-text broad area has no area FK (see studentSubmit,
-                    // which only links the FK for a real area id). Only add the area's
-                    // expert to the committee when it actually resolves; a missing area
-                    // must not crash the whole DORDC approval.
-                    $area = $formInstance->student->areaOfSpecialization;
-                    $areaExpert = $area?->getExpertFaculty();
-                    if ($areaExpert) {
-                        DoctoralCommittee::firstOrCreate(
-                            [
-                                'student_id' => $formInstance->student->roll_no,
-                                'faculty_id' => $areaExpert->faculty_code,
-                            ],
-                            ['type' => 'external']
-                        );
                     }
                     $formInstance->update([
                         'outside_expert' => $outsideExpertId,

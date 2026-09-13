@@ -64,7 +64,6 @@ class ListOfExaminersController extends Controller
         $role = $user->current_role;
         $steps = [
             'faculty',
-            'hod',
             'dordc',
             'director',
             'complete'
@@ -104,15 +103,7 @@ class ListOfExaminersController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
         $model = ListOfExaminersForm::class;
-        $steps = [
-            'faculty',
-            'hod',
-            'dordc',
-            'director',
-        ];
         switch ($role->role) {
-            case 'hod':
-                return $this->handleHodForm($user, $form_id, $model);
             case 'dordc':
             case 'director':
                 return $this->handleAdminForm($user, $form_id, $model);
@@ -186,8 +177,6 @@ class ListOfExaminersController extends Controller
         switch ($role->role) {
             case 'faculty':
                 return $this->supervisorSubmit($user, $request, $form_id);
-            case 'hod':
-                return $this->hodSubmit($user, $request, $form_id);
             case 'dordc':
                 return $this->dordcSubmit($user, $request, $form_id);
             case 'director':
@@ -202,7 +191,7 @@ class ListOfExaminersController extends Controller
     {
 
         $request->merge(['approval' => true]);
-        return $this->submitForm($user, $request, $form_id, ListOfExaminersForm::class, 'faculty', 'faculty', 'hod', function ($formInstance) use ($request, $user) {
+        return $this->submitForm($user, $request, $form_id, ListOfExaminersForm::class, 'faculty', 'faculty', 'dordc', function ($formInstance) use ($request, $user) {
 
             $request->validate([
                 'national' => 'array|required',
@@ -251,20 +240,6 @@ class ListOfExaminersController extends Controller
         });
     }
 
-    private function hodSubmit($user, Request $request, $form_id)
-    {
-
-        return $this->submitForm(
-            $user,
-            $request,
-            $form_id,
-            ListOfExaminersForm::class,
-            'hod',
-            'faculty',
-            'dordc',
-        );
-    }
-
     /**
      * The Director's approval completes the form. The appointed panel is the
      * set of recommendations already marked approved, so there is nothing to
@@ -293,7 +268,7 @@ class ListOfExaminersController extends Controller
             $form_id,
             ListOfExaminersForm::class,
             'dordc',
-            'hod',
+            'faculty',
             'director',
             function ($formInstance, $user) use ($request) {
                 $request->validate([

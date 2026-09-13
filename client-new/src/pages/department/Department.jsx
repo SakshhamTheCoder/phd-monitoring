@@ -10,12 +10,19 @@ import DepartmentManager from '../../components/departmentManager/DepartmentMana
 import AddDepartmentForm from './AddDepartmentForm';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import useCapabilities from '../../hooks/useCapabilities';
+import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
+import { column } from '../../components/bulkImport/columns';
+import { customFetch } from '../../api/base';
+import { baseURL } from '../../api/urls';
+import { toast } from 'react-toastify';
 
 const DepartmentPage = () => {
   const [filter, setFilter] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [editData, setEditData] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [showImport, setShowImport] = useState(false);
+  const [importing, setImporting] = useState(false);
   const { setLoading } = useLoading();
   const location = useLocation();
   const can = useCapabilities();
@@ -40,6 +47,46 @@ const DepartmentPage = () => {
     }
   };
 
+  const OFFICER_HEADERS = 'Department Code,HOD Name,HOD Personal Email,HOD Office Email,ADORDC Name,ADORDC Email,PhD Coordinator 1 Name,PhD Coordinator 1 Email,PhD Coordinator 2 Name,PhD Coordinator 2 Email,Clerk Name,Clerk Email,Clerk Phone';
+
+  const officerSampleCsv = `${OFFICER_HEADERS}
+CSED,Hod One,hod.one@thapar.edu,hcsed@thapar.edu,Adordc One,adordc.one@thapar.edu,Coordinator One,coordinator.one@thapar.edu,Coordinator Two,coordinator.two@thapar.edu,Clerk One,clerk.one@thapar.edu,9800000031`;
+
+  // People are matched by their personal address, so an office address such as
+  // adorsp3@thapar.edu is reported rather than guessed at.
+  const handleImport = async (preview, reset) => {
+    setImporting(true);
+
+    const rows = preview.data.map((row) => ({
+      department_code: column(row, 'Department Code', 'department_code'),
+      hod_email: column(row, 'HOD Personal Email', 'HOD Email', 'hod_email'),
+      hod_office_email: column(row, 'HOD Office Email', 'hod_office_email'),
+      adordc_email: column(row, 'ADORDC Email', 'adordc_email'),
+      coordinator_1_email: column(row, 'PhD Coordinator 1 Email', 'coordinator_1_email'),
+      coordinator_2_email: column(row, 'PhD Coordinator 2 Email', 'coordinator_2_email'),
+      clerk_name: column(row, 'Clerk Name', 'clerk_name'),
+      clerk_email: column(row, 'Clerk Email', 'clerk_email'),
+      clerk_phone: column(row, 'Clerk Phone', 'clerk_phone'),
+      row_number: row._rowNumber,
+    })).filter((row) => row.department_code);
+
+    const response = await customFetch(`${baseURL}/departments/import`, 'POST', { rows }, false);
+    setImporting(false);
+
+    if (!response.success) {
+      toast.error(response.response?.message || 'Import failed');
+      return;
+    }
+
+    const { update_count: updated = 0, errors = [] } = response.response.data || {};
+    toast.success(`${updated} departments updated`);
+    errors.forEach((message) => toast.warn(message));
+
+    reset();
+    setShowImport(false);
+    setRefreshKey((prev) => prev + 1);
+  };
+
   const handleUpdate = () => {
     setIsOpen(false);
     setEditData(null);
@@ -61,7 +108,10 @@ const DepartmentPage = () => {
             customOpenForm={openForm}
             extraTopbarComponents={
               mayManage ? (
-                <CustomButton text="Add Department +" onClick={() => openForm()} />
+                <>
+                  <CustomButton text="Bulk Import" variant="secondary" onClick={() => setShowImport(true)} />
+                  <CustomButton text="Add Department +" onClick={() => openForm()} />
+                </>
               ) : null
             }
             actions={mayManage ? [
@@ -104,6 +154,22 @@ const DepartmentPage = () => {
               />
             )}
           </CustomModal>
+
+          <UnifiedBulkImportModal
+            isOpen={showImport}
+            onClose={() => setShowImport(false)}
+            title="Bulk Import Departments"
+            required={['Department Code']}
+            rules={[
+              'Departments are never created or deleted. A renamed code renames the department in place.',
+              'Officers are matched by their personal email. An office mailbox is reported and skipped.',
+              'Both coordinator cells blank leaves the current coordinators alone.',
+            ]}
+            sampleFileName="department_officers_sample.csv"
+            sampleCsvContent={officerSampleCsv}
+            onImport={handleImport}
+            submitting={importing}
+          />
         </>
       }
     />

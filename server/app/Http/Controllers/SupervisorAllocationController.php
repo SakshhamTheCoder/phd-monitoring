@@ -10,7 +10,6 @@ use App\Http\Controllers\Traits\GeneralFormSubmitter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-use App\Models\BroadAreaSpecialization;
 use App\Models\Faculty;
 use App\Models\Forms;
 use App\Models\Supervisor;
@@ -249,6 +248,7 @@ class SupervisorAllocationController extends Controller
                 $request->validate([
                     'prefrences' => 'required|array',
                     'broad_area_of_research' => 'required|array',
+                    'broad_area_of_research.*' => 'nullable|string|max:255',
                 ]);
                 $prefrences = $request->prefrences;
                 if (count($prefrences) != 6 || count(array_unique($prefrences)) != 6) {
@@ -261,28 +261,24 @@ class SupervisorAllocationController extends Controller
                     }
                 }
                 $formInstance->prefrences = $prefrences;
-                $areas = $request->broad_area_of_research;
-                $formInstance->student->broad_area_specialization()->delete(); // Remove existing associations
-    
+                // The scholar's own words. They are describing what they hope
+                // to work on, so this is not restricted to a list: the whole
+                // point of the step is to find supervisors for whatever they
+                // are interested in. It used to be stored as rows in a shared
+                // table that doubled as every department's area list, which is
+                // how one scholar's typing became everyone else's suggestions.
+                $areas = collect($request->broad_area_of_research)
+                    ->map(fn ($area) => trim(preg_replace('/\s+/', ' ', (string) $area)))
+                    ->filter()
+                    ->unique(fn ($area) => strtolower($area))
+                    ->values();
+
+                $formInstance->student->areaPreferences()->delete();
                 foreach ($areas as $area) {
-                    if (!is_numeric($area)) {
-                        $area = BroadAreaSpecialization::create([
-                            'broad_area' => $area,
-                            'department_id' => $formInstance->student->department_id,
-                        ]);
-                        $formInstance->student->broad_area_specialization()->create([
-                            'specialization_id' => $area->id,
-                            'student_id' => $formInstance->student_id,
-                        ]);
-                    } else {
-                        if (!BroadAreaSpecialization::find($area)) {
-                            throw new \Exception("Invalid broad area selected");
-                        }
-                        $formInstance->student->broad_area_specialization()->create([
-                            'specialization_id' => $area,
-                            'student_id' => $formInstance->student_id,
-                        ]);
-                    }
+                    $formInstance->student->areaPreferences()->create([
+                        'broad_area' => $area,
+                        'student_id' => $formInstance->student_id,
+                    ]);
                 }
             }
         );

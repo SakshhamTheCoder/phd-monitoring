@@ -349,20 +349,12 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
         isOpen={isBulkUpdateOpen}
         onClose={() => setIsBulkUpdateOpen(false)}
         title="Bulk Import Clerks"
-        formatString="email,phone,department_codes,full_name"
-        infoNodes={
-          <>
-            <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
-              <strong>Required:</strong> email
-            </p>
-            <p style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>
-              <strong>Optional:</strong> phone, full_name, department_codes (comma-separated, e.g. "CSED, CHED")
-            </p>
-            <p style={{ margin: '0.25rem 0', fontSize: '0.875rem', color: '#6b7280' }}>
-              Matched by email — existing clerk updated, new clerk created if email not found.
-            </p>
-          </>
-        }
+        required={['email']}
+        rules={[
+              'Matched by email. A clerk is created when the email is not found.',
+              'department_codes is a comma separated list, for example "CSED, CHED".',
+              'A blank department_codes leaves the clerk\'s current departments alone.',
+            ]}
         sampleFileName="clerk_bulk_import_sample.csv"
         sampleCsvContent={clerkSampleCsv}
         onImport={handleBulkUpdate}

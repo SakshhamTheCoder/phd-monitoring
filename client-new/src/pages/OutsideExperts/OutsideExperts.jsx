@@ -194,7 +194,7 @@ const OutsideExperts = () => {
           extraTopbarComponents={
             <div className="top-actions">
               <CustomButton
-                text="Bulk Import CSV"
+                text="Bulk Import"
                 variant="secondary"
                 onClick={() => setShowBulkImportModal(true)}
               />

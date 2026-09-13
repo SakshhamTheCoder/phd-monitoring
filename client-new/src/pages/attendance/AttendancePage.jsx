@@ -40,6 +40,10 @@ const AttendancePage = () => {
   // gets the same choice across their own; a clerk with one is pinned to it.
   const [departmentFilter, setDepartmentFilter] = useState('');
   const [students, setStudents] = useState([]);
+  // Narrows the roster and the monthly table to one scholar. A view filter
+  // only: what is saved is still every scholar loaded for the date, so hiding
+  // a row cannot drop the mark somebody already made on it.
+  const [scholarFilter, setScholarFilter] = useState('');
   const [statuses, setStatuses] = useState({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -150,8 +154,24 @@ const AttendancePage = () => {
   // A scholar on approved leave has no radio to bulk-set — the backend
   // refuses to write their attendance row either way — so bulk actions must
   // leave their entry alone.
-  const markAll = (status) => setStatuses((prev) => applyMarkAll(students, prev, status));
-  const absentCount = useMemo(() => countAbsent(students, statuses), [students, statuses]);
+  const matchesScholar = (scholar, text) => {
+    const needle = text.trim().toLowerCase();
+    if (!needle) return true;
+    return String(scholar.roll_no).includes(needle) || (scholar.name || '').toLowerCase().includes(needle);
+  };
+
+  const visibleStudents = useMemo(
+    () => students.filter((s) => matchesScholar(s, scholarFilter)),
+    [students, scholarFilter]
+  );
+
+  const visibleMonthStudents = useMemo(
+    () => (monthData?.students || []).filter((s) => matchesScholar(s, scholarFilter)),
+    [monthData, scholarFilter]
+  );
+
+  const markAll = (status) => setStatuses((prev) => applyMarkAll(visibleStudents, prev, status));
+  const absentCount = useMemo(() => countAbsent(visibleStudents, statuses), [visibleStudents, statuses]);
 
   const handleSave = async () => {
     if (students.length === 0) { toast.info('Nothing to save'); return; }
@@ -284,6 +304,20 @@ const AttendancePage = () => {
               </select>
             </div>
 
+            {(activeTab === 'mark' || activeTab === 'monthly') && (
+              <div className="input-field-container" style={{ minWidth: '220px' }}>
+                <label className="input-label" htmlFor="attendance-scholar-filter">Scholar</label>
+                <input
+                  id="attendance-scholar-filter"
+                  className="input-field"
+                  type="search"
+                  value={scholarFilter}
+                  onChange={(e) => setScholarFilter(e.target.value)}
+                  placeholder="Roll number or name"
+                />
+              </div>
+            )}
+
             {(activeTab === 'mark' || activeTab === 'history') && (
               <div className="input-field-container" style={{ minWidth: '190px' }}>
                 <label className="input-label">
@@ -321,7 +355,7 @@ const AttendancePage = () => {
             <div className="attendance-filter-meta">
               {activeTab === 'mark' && (
                 <>
-                  <span>{students.length} scholar(s)</span>
+                  <span>{visibleStudents.length} scholar(s){scholarFilter.trim() && ` of ${students.length}`}</span>
                   <span className="badge badge--danger">{absentCount} absent</span>
                 </>
               )}
@@ -337,7 +371,7 @@ const AttendancePage = () => {
       {/* Mark tab */}
       {activeTab === 'mark' && (
         <>
-          {students.length > 0 && !loading && (
+          {visibleStudents.length > 0 && !loading && (
             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
               <CustomButton text="Mark all Present" variant="secondary" onClick={() => markAll('present')} />
               <CustomButton text="Mark all Absent" variant="secondary" onClick={() => markAll('absent')} />
@@ -353,8 +387,8 @@ const AttendancePage = () => {
                 <thead><tr><th>Roll No</th><th>Name</th><th>Department</th><th>Status</th><th>Record</th></tr></thead>
                 <tbody>
                   {loading ? <tr><td colSpan={5} className="no-data-cell">Loading…</td></tr>
-                    : students.length === 0 ? <tr><td colSpan={5} className="no-data-cell">No PhD scholars found for this selection.</td></tr>
-                    : students.map((s) => {
+                    : visibleStudents.length === 0 ? <tr><td colSpan={5} className="no-data-cell">{scholarFilter.trim() ? 'No scholar matches that roll number or name.' : 'No PhD scholars found for this selection.'}</td></tr>
+                    : visibleStudents.map((s) => {
                       const cur = statuses[s.roll_no];
                       return (
                         <tr key={s.roll_no}>
@@ -381,7 +415,7 @@ const AttendancePage = () => {
                     })}
                 </tbody>
               </table>
-              {students.length > 0 && <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}><CustomButton text={saving ? 'Saving…' : 'Save Attendance'} onClick={handleSave} disabled={saving || loading} /></div>}
+              {visibleStudents.length > 0 && <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}><CustomButton text={saving ? 'Saving…' : 'Save Attendance'} onClick={handleSave} disabled={saving || loading} /></div>}
             </div>
           )}
         </>
@@ -469,9 +503,9 @@ const AttendancePage = () => {
               <tbody>
                 {monthLoading ? (
                   <tr><td colSpan={7} className="no-data-cell">Loading…</td></tr>
-                ) : !monthData || monthData.students.length === 0 ? (
-                  <tr><td colSpan={7} className="no-data-cell">No scholars for this selection.</td></tr>
-                ) : monthData.students.map((s) => (
+                ) : !monthData || visibleMonthStudents.length === 0 ? (
+                  <tr><td colSpan={7} className="no-data-cell">{scholarFilter.trim() ? 'No scholar matches that roll number or name.' : 'No scholars for this selection.'}</td></tr>
+                ) : visibleMonthStudents.map((s) => (
                   <tr key={s.roll_no}>
                     <td>{s.roll_no}</td>
                     <td>{s.name}</td>

@@ -4,17 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * One broad research area belonging to one department.
+ *
+ * It exists for one job: the broad area a faculty member is listed under, which
+ * the institute's matrix sheet supplies as a fixed 10 to 13 per department.
+ *
+ * Scholars are not restricted to it. What a scholar types on the allocation and
+ * IRB forms is a description of what they want to work on, so those are their
+ * own words and this list is only offered to them as suggestions.
+ */
 class AreaOfSpecialization extends Model
 {
     protected $fillable = [
         'department_id',
         'name',
-        'expert_name',
-        'expert_email',
-        'expert_phone',
-        'expert_college',
-        'expert_website',
-        'expert_designation'
     ];
 
     public function department()
@@ -22,48 +26,9 @@ class AreaOfSpecialization extends Model
         return $this->belongsTo(Department::class);
     }
 
-    public function students()
+    public function faculty()
     {
-        return $this->hasMany(Student::class, 'area_of_specialization_id');
+        return $this->hasMany(Faculty::class, 'area_of_specialization_id');
     }
 
-    public function getExpertFaculty()
-    {
-        // Check if faculty exists by email
-        $user = \App\Models\User::where('email', $this->expert_email)->first();
-        
-        if ($user && $user->faculty) {
-            return $user->faculty;
-        }
-
-        // Create new user if doesn't exist
-        if (!$user) {
-            $user = \App\Models\User::create([
-                'first_name' => $this->expert_name,
-                'last_name' => '',
-                'email' => $this->expert_email,
-                'phone' => $this->expert_phone,
-                'password' => bcrypt('Password@123'), // Default password
-                'role_id' => 4, // Default role
-                'current_role_id' => 4,
-                'default_role_id' => 4,
-                'status' => 'active',
-            ]);
-        }
-
-        // Create faculty with arbitrary faculty code
-        $facultyCode = '777' . str_pad($user->id, 6, '0', STR_PAD_LEFT);
-        
-        $faculty = \App\Models\Faculty::create([
-            'user_id' => $user->id,
-            'faculty_code' => $facultyCode,
-            'designation' => $this->expert_designation,
-            'department_id' => $this->department_id,
-            'institution'=>$this->expert_college,
-            'type'=>'external',
-            'website_link'=>$this->expert_website
-        ]);
-
-        return $faculty;
-    }
 }

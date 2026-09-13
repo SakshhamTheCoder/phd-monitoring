@@ -29,7 +29,7 @@ class StudentCourseController extends Controller
             $status = $request->query('status'); // 'enrolled' or 'completed'
 
             $query = StudentCourse::with('course.department')
-                ->where('student_id', $student->id);
+                ->where('student_id', $student->roll_no);
 
             if ($status) {
                 $query->where('status', $status);
@@ -63,12 +63,32 @@ class StudentCourseController extends Controller
     }
 
     /**
+     * Tagging a scholar with a course is a write about that scholar, so it is
+     * gated on the same capability as every other one.
+     *
+     * None of these methods checked anything at all, which let any signed-in
+     * user tag anyone with anything, change a grade, or read another scholar's
+     * enrolments.
+     */
+    private function denyUnlessMayManageStudents()
+    {
+        if (!Auth::user()->may('can_manage_students')) {
+            return response()->json([
+                'message' => 'You do not have permission to manage student courses'
+            ], 403);
+        }
+
+        return null;
+    }
+
+    /**
      * Tag student with course (Admin/HOD/Coordinator)
      */
     public function tagStudentWithCourse(Request $request)
     {
         try {
-          
+            if ($denied = $this->denyUnlessMayManageStudents()) return $denied;
+
             $request->validate([
                 'student_id' => 'required|integer',
                 'course_id' => 'required|integer',
@@ -125,6 +145,8 @@ class StudentCourseController extends Controller
     public function updateGrade(Request $request, $id)
     {
         try {
+            if ($denied = $this->denyUnlessMayManageStudents()) return $denied;
+
             $request->validate([
                 'grade' => 'required|string',
                 'status' => 'required|in:enrolled,completed',
@@ -160,12 +182,16 @@ class StudentCourseController extends Controller
     public function getCoursesForStudent($studentId)
     {
         try {
-            $student = Student::find($studentId);
+            $student = Student::with('user')->find($studentId);
             if (!$student) {
                 return response()->json([
                     'message' => 'Student not found'
                 ], 404);
             }
+
+            // A scholar reads their own; anyone else needs the capability.
+            $isOwn = Auth::user()->student?->roll_no === $student->roll_no;
+            if (!$isOwn && ($denied = $this->denyUnlessMayManageStudents())) return $denied;
 
             $courses = StudentCourse::with('course.department')
                 ->where('student_id', $studentId)
@@ -188,8 +214,8 @@ class StudentCourseController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $result,
-                'student_name' => $student->name,
-                'student_code' => $student->student_code,
+                'student_name' => $student->user?->name(),
+                'student_code' => $student->roll_no,
             ], 200);
         } catch (\Exception $e) {
             Log::error('Error fetching courses for student: ' . $e->getMessage());
@@ -205,6 +231,8 @@ class StudentCourseController extends Controller
     public function removeStudentFromCourse($id)
     {
         try {
+            if ($denied = $this->denyUnlessMayManageStudents()) return $denied;
+
             $studentCourse = StudentCourse::find($id);
             if (!$studentCourse) {
                 return response()->json([
@@ -227,97 +255,106 @@ class StudentCourseController extends Controller
     }
 
     /**
-     * Bulk import student-course tagging from CSV
-     * CSV Format: roll_number,course_code,semester,status,grade
+     * Load the institute's coursework sheet.
+     *
+     * One row per scholar per course: the registration number, the course code,
+     * name and credits, the academic year, and the grade once it is in. The
+     * courses themselves are not entered anywhere first; the sheet is where
+     * they come from, so a code the portal does not have is created from the
+     * row and one it does have is reused.
+     *
+     * A grade means the course is finished, a blank one means it is still being
+     * taken. Re-importing updates the row rather than adding a second one.
+     *
+     * Rows arrive already split by the import modal every other page uses, so
+     * the CSV is parsed in one place rather than once per importer.
      */
     public function bulkImportFromCSV(Request $request)
     {
         try {
-            $request->validate([
-                'file' => 'required|file|mimes:csv,txt',
-            ]);
+            if ($denied = $this->denyUnlessMayManageStudents()) return $denied;
 
-            $file = $request->file('file');
-            $csvData = array_map('str_getcsv', file($file->getRealPath()));
-            $header = array_shift($csvData);
+            $request->validate([
+                'rows' => 'required|array',
+                'rows.*' => 'array',
+            ]);
 
             $successCount = 0;
             $errorCount = 0;
             $errors = [];
 
-            foreach ($csvData as $index => $row) {
+            foreach ($request->rows as $data) {
+                $rowNumber = $data['row_number'] ?? '?';
+
                 try {
-                    if (count($row) < 4) {
-                        $errors[] = "Row " . ($index + 2) . ": Insufficient columns";
-                        $errorCount++;
-                        continue;
-                    }
+                    $rollNumber = $this->cell($data, 'Registration Number', 'Roll Number', 'roll_number');
+                    $courseCode = $this->cell($data, 'Subject Code', 'Course Code', 'course_code');
+                    $semester = $this->cell($data, 'Academic Year', 'Semester', 'semester');
+                    $grade = $this->cell($data, 'Grade Earned', 'Grade', 'grade');
 
-                    $rollNumber = trim($row[0]);
-                    $courseCode = trim($row[1]);
-                    $semester = trim($row[2]);
-                    $status = trim($row[3] ?? 'enrolled');
-                    $grade = isset($row[4]) ? trim($row[4]) : null;
-
-                    // Find student by roll number
                     $student = Student::where('roll_no', $rollNumber)->first();
                     if (!$student) {
-                        $errors[] = "Row " . ($index + 2) . ": Student with roll number {$rollNumber} not found";
+                        $errors[] = "Row {$rowNumber}: no scholar with registration number '{$rollNumber}'";
                         $errorCount++;
                         continue;
                     }
 
-                    // Find course by course code
+                    if ($courseCode === '' || $semester === '') {
+                        $errors[] = "Row {$rowNumber}: the subject code and the academic year are both required";
+                        $errorCount++;
+                        continue;
+                    }
+
                     $course = Course::where('course_code', $courseCode)->first();
                     if (!$course) {
-                        $errors[] = "Row " . ($index + 2) . ": Course with code {$courseCode} not found";
-                        $errorCount++;
-                        continue;
-                    }
-
-                    // Validate status
-                    if (!in_array($status, ['enrolled', 'completed'])) {
-                        $errors[] = "Row " . ($index + 2) . ": Invalid status '{$status}'. Must be 'enrolled' or 'completed'";
-                        $errorCount++;
-                        continue;
-                    }
-
-                    // Check if already exists
-                    $existing = StudentCourse::where('student_id', $student->id)
-                        ->where('course_id', $course->id)
-                        ->where('semester', $semester)
-                        ->first();
-
-                    if ($existing) {
-                        // Update existing record
-                        $existing->status = $status;
-                        if ($grade) {
-                            $existing->grade = $grade;
+                        $courseName = $this->cell($data, 'Subject', 'Course Name', 'course_name');
+                        if ($courseName === '') {
+                            $errors[] = "Row {$rowNumber}: '{$courseCode}' is new, so the row needs the subject name";
+                            $errorCount++;
+                            continue;
                         }
-                        $existing->save();
+
+                        // No department: one code is taught to scholars of
+                        // several departments, and the column is nullable.
+                        $course = Course::create([
+                            'course_code' => $courseCode,
+                            'course_name' => $courseName,
+                            'credits' => (float) ($this->cell($data, 'Credits', 'credits') ?: 0),
+                        ]);
                     } else {
-                        // Create student course record
-                        $studentCourse = new StudentCourse();
-                        $studentCourse->student_id = $student->id;
-                        $studentCourse->course_id = $course->id;
-                        $studentCourse->semester = $semester;
-                        $studentCourse->status = $status;
-                        if ($status === 'completed' && $grade) {
-                            $studentCourse->grade = $grade;
+                        $credits = $this->cell($data, 'Credits', 'credits');
+                        if ($credits !== '' && (float) $credits !== (float) $course->credits) {
+                            $errors[] = "Row {$rowNumber}: '{$courseCode}' is worth {$course->credits} credits in the portal, "
+                                . "the sheet says {$credits}. The portal's value is kept.";
                         }
-                        $studentCourse->save();
                     }
+
+                    // A grade is what says the course is over. The status column
+                    // the old template carried said the same thing twice.
+                    $status = $grade !== '' ? 'completed' : 'enrolled';
+
+                    StudentCourse::updateOrCreate(
+                        [
+                            'student_id' => $student->roll_no,
+                            'course_id' => $course->id,
+                            'semester' => $semester,
+                        ],
+                        [
+                            'status' => $status,
+                            'grade' => $grade !== '' ? $grade : null,
+                        ]
+                    );
 
                     $successCount++;
                 } catch (\Exception $e) {
-                    $errors[] = "Row " . ($index + 2) . ": " . $e->getMessage();
+                    $errors[] = "Row {$rowNumber}: " . $e->getMessage();
                     $errorCount++;
                 }
             }
 
             return response()->json([
                 'success' => true,
-                'message' => "Import completed: {$successCount} successful, {$errorCount} errors",
+                'message' => "Import completed: {$successCount} rows, {$errorCount} errors",
                 'data' => [
                     'success_count' => $successCount,
                     'error_count' => $errorCount,
@@ -330,5 +367,39 @@ class StudentCourseController extends Controller
                 'message' => 'An error occurred: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * A cell by any of the names its column goes by, ignoring case, spaces and
+     * punctuation, so the institute's wording and the older template both read.
+     *
+     * The columns used to be read by position, so a sheet with its columns in a
+     * different order imported silently wrong.
+     *
+     * @param  array<string, string|null>  $data
+     */
+    private function cell(array $data, string ...$aliases): string
+    {
+        // A bracketed aside is an instruction to whoever fills the sheet, not
+        // part of the column's name: "Grade Earned (Leave Blank If Enrolled But
+        // Not Cleared Yet)" is the Grade column.
+        $normalise = fn ($name) => strtolower(preg_replace(
+            ['/\([^)]*\)/', '/[^a-z0-9]+/i'],
+            '',
+            (string) $name
+        ));
+
+        $values = [];
+        foreach ($data as $key => $value) {
+            $values[$normalise($key)] = trim((string) $value);
+        }
+
+        foreach ($aliases as $alias) {
+            if (!empty($values[$normalise($alias)])) {
+                return $values[$normalise($alias)];
+            }
+        }
+
+        return '';
     }
 }

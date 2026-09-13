@@ -30,7 +30,7 @@ const Support = () => {
           </h1>
           
           <p className="tw-text-gray-600 tw-mb-8 tw-leading-relaxed">
-            Need assistance with the PhD Portal? We're here to help!
+            Need assistance with the Doctoral, Research and Innovation Management Portal? We're here to help!
           </p>
 
           <section className="tw-mb-8">

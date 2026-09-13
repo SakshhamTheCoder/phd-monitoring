@@ -29,7 +29,6 @@ const Student = ({ formData }) => {
     }
     setBody({
       prefrences: prefrences,
-      broad_area_of_research: formData.broad_area_of_research_id,
     });
     setLock(formData.locks?.student);
     setIsLoaded(true);

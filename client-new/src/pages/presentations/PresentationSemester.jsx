@@ -19,6 +19,8 @@ import FileUploadField from "../../components/forms/fields/FileUploadField";
 import { customFetch } from "../../api/base";
 import { baseURL } from "../../api/urls";
 import { toast } from "react-toastify";
+import UnifiedBulkImportModal from "../../components/bulkImport/UnifiedBulkImportModal";
+import { column } from "../../components/bulkImport/columns";
 import { set } from "react-hook-form";
 
 const PresentationSemester = () => {
@@ -26,6 +28,9 @@ const PresentationSemester = () => {
   const [open, setOpen] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [location, setLocation] = useState(window.location.pathname);
+  const [showProgressImport, setShowProgressImport] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [editForm, setEditForm] = useState({
     semester_name: "",
     start_date: null,
@@ -89,6 +94,41 @@ const PresentationSemester = () => {
 
 
  
+  const PROGRESS_HEADERS = 'Registration Number,Progress for AY,Date of progress,Total Progress %';
+
+  const progressSampleCsv = `${PROGRESS_HEADERS}
+900011,2324ODD,2023-11-04,20
+900011,2324EVEN,2024-04-18,35
+900011,2425ODD,2024-11-06,55`;
+
+  const handleProgressImport = async (preview, reset) => {
+    setImporting(true);
+
+    const rows = preview.data.map((row) => ({
+      roll_no: column(row, 'Registration Number', 'roll_no'),
+      semester: column(row, 'Progress for AY', 'Academic Year', 'semester'),
+      date: column(row, 'Date of progress', 'Date', 'date'),
+      total_progress: column(row, 'Total Progress %', 'Total Progress', 'total_progress'),
+      row_number: row._rowNumber,
+    })).filter((row) => row.roll_no && row.semester);
+
+    const response = await customFetch(`${baseURL}/presentation/import-progress`, 'POST', { rows }, false);
+    setImporting(false);
+
+    if (!response.success) {
+      toast.error(response.response?.message || 'Import failed');
+      return;
+    }
+
+    const { success_count: imported = 0, skipped_count: skipped = 0, errors = [] } = response.response.data || {};
+    toast.success(`${imported} evaluations imported, ${skipped} skipped`);
+    errors.forEach((message) => toast.warn(message));
+
+    reset();
+    setShowProgressImport(false);
+    setRefreshKey((prev) => prev + 1);
+  };
+
   return (
     <Layout
       children={
@@ -96,6 +136,7 @@ const PresentationSemester = () => {
           <PageHeader title="Progress Monitoring" subtitle="Evaluation semesters and their deadlines." />
          <SemesterStatsCard />
          <PagenationTable
+            key={refreshKey}
             endpoint={location}
             enableApproval={false}
             enableSelect={false}
@@ -103,6 +144,11 @@ const PresentationSemester = () => {
             customOpenForm={(semester) => {
                 window.location.href=location+`/semester/${semester.semester_name}`;
             }}
+            extraTopbarComponents={
+              (role === "admin" || role === "dordc") ? (
+                <CustomButton text="Import Progress History" variant="secondary" onClick={() => setShowProgressImport(true)} />
+              ) : null
+            }
             actions={(role === "admin" || role === "dordc") ? [
               {
                 icon: "✏️",
@@ -110,6 +156,23 @@ const PresentationSemester = () => {
                 onClick: handleEditClick,
               },
             ] : []}
+          />
+
+          <UnifiedBulkImportModal
+            isOpen={showProgressImport}
+            onClose={() => setShowProgressImport(false)}
+            title="Import Progress History"
+            required={['Registration Number', 'Progress for AY', 'Total Progress %']}
+            rules={[
+              'One row per scholar per semester. The gain for each period is worked out from the totals.',
+              'Progress for AY is the semester code, for example 2425ODD.',
+              'A blank total means the evaluation has not happened yet, so the row is skipped.',
+              'A semester the scholar already has a presentation for is left to its own workflow.',
+            ]}
+            sampleFileName="progress_history_sample.csv"
+            sampleCsvContent={progressSampleCsv}
+            onImport={handleProgressImport}
+            submitting={importing}
           />
 
           {(role === "admin" || role === "dordc") && (

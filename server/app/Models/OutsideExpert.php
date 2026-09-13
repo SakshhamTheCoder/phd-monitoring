@@ -34,43 +34,50 @@ class OutsideExpert extends Model
 }
 
     /**
-     * Get or create faculty for this outside expert
+     * The expert's faculty record, created on first use.
+     *
+     * An expert has to exist as a faculty row before they can sit on a doctoral
+     * committee, but they are not staff: they never belong to a department, and
+     * they reach their reviews through a signed link rather than by logging in.
+     *
+     * The password is therefore random and never shown to anyone. It used to be
+     * one of two shared literals, and the role used to be a hardcoded id, which
+     * on this install is the admin row. Both are resolved properly here.
      */
     public function getFaculty()
     {
-        // Check if faculty exists by email
         $user = \App\Models\User::where('email', $this->email)->first();
-        
+
         if ($user && $user->faculty) {
             return $user->faculty;
         }
 
-        // Create new user if doesn't exist
         if (!$user) {
+            $roleId = \App\Models\Role::where('role', 'external')->value('id');
+
             $user = \App\Models\User::create([
                 'first_name' => $this->first_name,
                 'last_name' => $this->last_name,
                 'email' => $this->email,
                 'phone' => $this->phone,
-                'password' => bcrypt('password123'), // Default password
-                'role_id' => 1, // Default role
-                'current_role_id' => 1,
-                'default_role_id' => 1,
+                'password' => bcrypt(\Illuminate\Support\Str::password(24)),
+                'role_id' => $roleId,
+                'current_role_id' => $roleId,
+                'default_role_id' => $roleId,
                 'status' => 'active',
             ]);
         }
 
-        // Create faculty with arbitrary faculty code
-        $facultyCode = '777' . str_pad($user->id, 6, '0', STR_PAD_LEFT);
-        
-        $faculty = \App\Models\Faculty::create([
+        // The 777 prefix marks a faculty code that no employee id will collide
+        // with, since employee ids are assigned well below it.
+        return \App\Models\Faculty::create([
             'user_id' => $user->id,
-            'faculty_code' => $facultyCode,
+            'faculty_code' => '777' . str_pad($user->id, 6, '0', STR_PAD_LEFT),
             'designation' => $this->designation,
-            'department_id' => null, // External experts don't belong to a department
+            'department_id' => null,
+            'type' => 'external',
+            'institution' => $this->institution,
+            'website_link' => $this->website,
         ]);
-
-        return $faculty;
     }
-
 }

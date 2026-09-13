@@ -22,6 +22,7 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
     department_id: "",
     date_of_registration: "",
     date_of_irb: "",
+    date_of_synopsis: "",
     date_of_thesis: "",
     phd_title: "",
     fathers_name: "",
@@ -29,6 +30,7 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
     current_status: "",
     gender: "",
     physically_handicapped: false,
+    is_jrf: false,
     overall_progress: 0,
     cgpa: "",
   });
@@ -43,6 +45,7 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
         department_id: studentData.department_id || "",
         date_of_registration: studentData.date_of_registration || "",
         date_of_irb: studentData.date_of_irb || "",
+        date_of_synopsis: studentData.date_of_synopsis || "",
         date_of_thesis: studentData.date_of_thesis || "",
         phd_title: studentData.phd_title || "",
         fathers_name: studentData.fathers_name || "",
@@ -52,6 +55,7 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
         // instead of a broken option, forcing the admin to pick a valid one.
         gender: ["Male", "Female"].includes(studentData.gender) ? studentData.gender : "",
         physically_handicapped: !!studentData.physically_handicapped,
+        is_jrf: !!studentData.is_jrf,
         overall_progress: studentData.overall_progress || 0,
         cgpa: studentData.cgpa || "",
       });
@@ -187,6 +191,11 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
         space={3}
         elements={[
           <DateField
+            label="Date of Synopsis"
+            initialValue={formData.date_of_synopsis}
+            onChange={(val) => handleChange("date_of_synopsis", val)}
+          />,
+          <DateField
             label="Date of Thesis"
             initialValue={formData.date_of_thesis}
             onChange={(val) => handleChange("date_of_thesis", val)}
@@ -195,6 +204,11 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
             label="Physically handicapped"
             isOn={formData.physically_handicapped}
             onToggle={() => handleChange("physically_handicapped", !formData.physically_handicapped)}
+          />,
+          <ToggleSwitch
+            label="JRF"
+            isOn={formData.is_jrf}
+            onToggle={() => handleChange("is_jrf", !formData.is_jrf)}
           />,
         ]}
       />

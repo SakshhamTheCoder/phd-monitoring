@@ -169,12 +169,13 @@ const Student = ({ formData }) => {
 
           <GridContainer
             elements={[
-              <InputSuggestions required={true}
+              <InputSuggestions
+                required={true}
                 label={"Broad Area of Research"}
                 initialValue={formData.broad_area_of_research}
                 apiUrl={baseURL + "/suggestions/specialization"}
                 onSelect={(value) => {
-                  body.broad_area_of_research = value.name;
+                  body.broad_area_of_research = value?.name ?? value ?? '';
                 }}
                 lock={lock}
                 suggestionManadatory={false}

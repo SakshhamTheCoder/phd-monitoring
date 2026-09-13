@@ -15,6 +15,9 @@ import { toast } from "react-toastify";
 
 const Student = ({ formData }) => {
   const apiUrl_suggestion = baseURL + "/suggestions/faculty";
+  // Suggestions, not a list to choose from. The scholar is describing what they
+  // hope to work on, so anything they type is valid; the department's curated
+  // areas are offered as a starting point.
   const apiUrl_broad_suggestion = baseURL + "/suggestions/specialization";
   const [body, setBody] = useState({});
   const [lock, setLock] = useState(formData.locks?.student);
@@ -51,13 +54,13 @@ const Student = ({ formData }) => {
     while (prefrences.length < 6) prefrences.push({ name: '', email: '', department: '', faculty_code: null });
     setBody({
       prefrences: prefrences,
-      broad_area_of_research: formData.broad_area_of_research_id || [],
+      broad_area_of_research: formData.broad_area_of_research || [],
     });
     setLock(formData.locks?.student);
     setIsLoaded(true);
     // initial recs if areas already filled
-    if ((formData.broad_area_of_research_id || []).filter(Boolean).length) {
-      fetchRecs(formData.broad_area_of_research_id);
+    if ((formData.broad_area_of_research || []).filter(Boolean).length) {
+      fetchRecs(formData.broad_area_of_research);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData]);
@@ -76,7 +79,7 @@ const Student = ({ formData }) => {
   };
 
   const handleBroadAreaSelect = (value, index) => {
-    body.broad_area_of_research[index] = value.name || value;
+    body.broad_area_of_research[index] = value?.name ?? value ?? '';
     fetchRecs(body.broad_area_of_research);
   };
 
@@ -161,8 +164,8 @@ const Student = ({ formData }) => {
                 apiUrl={apiUrl_broad_suggestion}
                 onSelect={(value) => handleBroadAreaSelect(value, 1)}
                 lock={lock}
-                suggestionManadatory={false}
                 showLabel={false}
+                suggestionManadatory={false}
               />,
             ]}
             space={2}

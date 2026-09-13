@@ -16,6 +16,7 @@ import './InfoGrid.css';
  *   node      richer output than a string, a link say; wins over `value`
  *   field     the key in `values`; its presence is what makes the row editable
  *   type      input type, default text
+ *   options   {title, value} list; makes the field a dropdown instead of an input
  *   hint      one line under the input, only while editing
  *   disabled  editable in principle, refused right now, with `hint` saying why
  *   span      'all' to run the row across the grid
@@ -31,14 +32,29 @@ const InfoGrid = ({ className = '', rows, editing = false, values = {}, onChange
         <strong>{row.label}:</strong>{' '}
         {editing && row.field ? (
           <>
-            <input
-              className="profile-inline-input"
-              type={row.type || 'text'}
-              aria-label={row.label}
-              value={values[row.field] ?? ''}
-              disabled={row.disabled}
-              onChange={(e) => onChange(row.field, e.target.value)}
-            />
+            {row.options ? (
+              <select
+                className="profile-inline-input"
+                aria-label={row.label}
+                value={values[row.field] ?? ''}
+                disabled={row.disabled}
+                onChange={(e) => onChange(row.field, e.target.value)}
+              >
+                <option value="">Select</option>
+                {row.options.map((option) => (
+                  <option key={option.value} value={option.value}>{option.title}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                className="profile-inline-input"
+                type={row.type || 'text'}
+                aria-label={row.label}
+                value={values[row.field] ?? ''}
+                disabled={row.disabled}
+                onChange={(e) => onChange(row.field, e.target.value)}
+              />
+            )}
             {row.hint && <small className="profile-field-hint">{row.hint}</small>}
           </>
         ) : (

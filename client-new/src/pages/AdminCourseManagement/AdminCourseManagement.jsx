@@ -8,11 +8,12 @@ import PagenationTable from '../../components/pagenationTable/PagenationTable';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import DropdownField from '../../components/forms/fields/DropdownField';
+import InputSuggestions from '../../components/forms/fields/InputSuggestions';
 import InputField from '../../components/forms/fields/InputField';
+import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
 const AdminCourseManagement = () => {
   const [courses, setCourses] = useState([]);
   const [departments, setDepartments] = useState([]);
-  const [students, setStudents] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0);
   const { setLoading } = useLoading();
   const [submitting, setSubmitting] = useState(false);
@@ -35,17 +36,16 @@ const AdminCourseManagement = () => {
   
   const [tagData, setTagData] = useState({
     student_id: '',
+    student_name: '',
     course_id: '',
     semester: '',
     status: 'enrolled',
     grade: '',
   });
 
-  const [csvFile, setCsvFile] = useState(null);
 
   useEffect(() => {
     fetchDepartments();
-    fetchStudents();
     fetchAllCourses();
   }, []);
 
@@ -60,20 +60,6 @@ const AdminCourseManagement = () => {
       }
     } catch (error) {
       console.error('Error fetching departments:', error);
-    }
-  };
-
-  const fetchStudents = async () => {
-    try {
-      const response = await customFetch(`${baseURL}/students/`, 'GET');
-      if (response.success) {
-        setStudents(response?.response?.data?.map(student => ({
-          value: student.database_id || student.id,
-          title: `${student.name} (${student.roll_no})`
-        })));
-      }
-    } catch (error) {
-      console.error('Error fetching students:', error);
     }
   };
 
@@ -203,48 +189,36 @@ const AdminCourseManagement = () => {
     }
   };
 
-  const handleBulkImport = async () => {
-    if (!csvFile) {
-      toast.error('Please select a CSV file');
+  const COURSE_HEADERS = 'Registration Number,Full Name,Email,Academic Year,Subject Code,Subject,Credits,Grade';
+
+  const courseSampleCsv = `${COURSE_HEADERS}
+900011,Scholar One,scholar.one@thapar.edu,2425ODD,PCS101,Research Methodology,4,A
+900011,Scholar One,scholar.one@thapar.edu,2425EVEN,PCS102,Advanced Algorithms,3,`;
+
+  const handleBulkImport = async (preview, reset) => {
+    setSubmitting(true);
+
+    const response = await customFetch(
+      `${baseURL}/courses/student/bulk-import`,
+      'POST',
+      { rows: preview.data.map((row) => ({ ...row, row_number: row._rowNumber })) },
+      false
+    );
+
+    setSubmitting(false);
+
+    if (!response.success) {
+      toast.error(response.response?.message || 'Failed to import');
       return;
     }
 
-    try {
-      setSubmitting(true);
-      setLoading(true);
-      
-      const formData = new FormData();
-      formData.append('file', csvFile);
+    const { success_count: imported = 0, errors = [] } = response.response.data || {};
+    toast.success(`${imported} enrolments imported`);
+    errors.forEach((message) => toast.warn(message));
 
-      const response = await fetch(`${baseURL}/courses/student/bulk-import`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success(data.message);
-        if (data.data.errors.length > 0) {
-          console.log('Import errors:', data.data.errors);
-          toast.info(`Check console for ${data.data.error_count} errors.`);
-        }
-        setShowBulkImportModal(false);
-        setCsvFile(null);
-        setRefreshKey(prev => prev + 1);
-      } else {
-        toast.error(data.message || 'Failed to import.');
-      }
-    } catch (error) {
-      console.error('Error importing CSV:', error);
-      toast.error('Failed to import CSV.');
-    } finally {
-      setLoading(false);
-      setSubmitting(false);
-    }
+    reset();
+    setShowBulkImportModal(false);
+    setRefreshKey((prev) => prev + 1);
   };
 
   const openEditModal = (course) => {
@@ -271,6 +245,7 @@ const AdminCourseManagement = () => {
   const resetTagData = () => {
     setTagData({
       student_id: '',
+      student_name: '',
       course_id: '',
       semester: '',
       status: 'enrolled',
@@ -305,7 +280,7 @@ const AdminCourseManagement = () => {
                 onClick={() => setShowTagModal(true)}
               />
               <CustomButton
-                text="Bulk Import CSV"
+                text="Bulk Import"
                 variant="secondary"
                 onClick={() => setShowBulkImportModal(true)}
               />
@@ -471,11 +446,16 @@ const AdminCourseManagement = () => {
         closeOnOutsideClick={false}
       >
         <div className="modal-form">
-          <DropdownField
+          <InputSuggestions
             label="Student"
-            options={students}
-            initialValue={tagData.student_id}
-            onChange={(value) => handleTagInputChange('student_id', value)}
+            apiUrl={`${baseURL}/suggestions/student`}
+            initialValue={tagData.student_name}
+            fields={["name", "roll_no"]}
+            hint="Type a name or registration number"
+            onSelect={(student) => {
+              handleTagInputChange('student_id', student.roll_no);
+              handleTagInputChange('student_name', student.name);
+            }}
             required
           />
           
@@ -536,71 +516,22 @@ const AdminCourseManagement = () => {
         </div>
       </CustomModal>
 
-      {/* Bulk Import CSV Modal */}
-      <CustomModal
+      <UnifiedBulkImportModal
         isOpen={showBulkImportModal}
-        onClose={() => {
-          setShowBulkImportModal(false);
-          setCsvFile(null);
-        }}
-        title="Bulk Import Student-Course Tagging"
-      >
-        <div className="modal-form">
-          <div className="csv-info">
-            <p><strong>CSV Format:</strong></p>
-            <p>roll_number,course_code,semester,status,grade</p>
-            <p style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem' }}>
-              <strong>Example:</strong><br/>
-              PHD001,CS101,Fall 2024,enrolled,<br/>
-              PHD002,CS102,Spring 2024,completed,A+
-            </p>
-            <p style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem' }}>
-              • Status must be 'enrolled' or 'completed'<br/>
-              • Grade is required only for completed courses<br/>
-              • Existing enrollments will be skipped
-            </p>
-          </div>
-          
-          <div className="file-upload">
-            <input
-              type="file"
-              accept=".csv"
-              onChange={(e) => setCsvFile(e.target.files[0])}
-              style={{
-                padding: '0.75rem',
-                border: '2px dashed #d1d5db',
-                borderRadius: '0.5rem',
-                width: '100%',
-                cursor: 'pointer'
-              }}
-            />
-            {csvFile && (
-              <p style={{ marginTop: '0.5rem', color: 'var(--primary-color)' }}>
-                Selected: {csvFile.name}
-              </p>
-            )}
-          </div>
-          
-          <div className="modal-actions">
-            <button
-              onClick={() => {
-                setShowBulkImportModal(false);
-                setCsvFile(null);
-              }}
-              className="custom-button custom-button--secondary"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleBulkImport}
-              className="custom-button"
-              disabled={submitting || !csvFile}
-            >
-              {submitting ? 'Importing…' : 'Import CSV'}
-            </button>
-          </div>
-        </div>
-      </CustomModal>
+        onClose={() => setShowBulkImportModal(false)}
+        title="Bulk Import Coursework"
+        required={['Registration Number', 'Academic Year', 'Subject Code']}
+        rules={[
+              'A subject code the portal does not have yet is created from the row.',
+              'A grade means the course is finished. Leave it blank while it is still being taken.',
+              'Academic Year is the semester code, for example 2425ODD.',
+              'Importing the same file again updates the enrolments rather than duplicating them.',
+            ]}
+        sampleFileName="coursework_sample.csv"
+        sampleCsvContent={courseSampleCsv}
+        onImport={handleBulkImport}
+        submitting={submitting}
+      />
 
       <style jsx>{`
         .admin-course-management {

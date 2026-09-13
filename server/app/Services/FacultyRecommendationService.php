@@ -26,7 +26,8 @@ class FacultyRecommendationService
 
     public function recommend(array $queryAreas, ?int $departmentId = null, int $limit = 8): array
     {
-        // Resolve numeric specialization ids in one query (N+1 → whereIn)
+        // Resolve numeric specialization ids in one query, for the callers that
+        // still send one. The allocation form sends the scholar's own words.
         $trimmed = array_map(fn($a) => trim((string)$a), $queryAreas);
         $numericIds = array_values(array_filter(array_map(fn($a) => $a !== '' && ctype_digit($a) ? (int)$a : null, $trimmed)));
         if ($numericIds) {
@@ -43,16 +44,21 @@ class FacultyRecommendationService
 
         // Use cursor() to avoid loading all 500+ rows into memory at once; still scores all
         // but streams. Returns only top 8 after scoring.
-        $baseQuery = Faculty::with(['user','department'])->when($departmentId, fn($q) => $q->where('department_id', $departmentId));
+        $baseQuery = Faculty::with(['user','department','areaOfSpecialization'])->when($departmentId, fn($q) => $q->where('department_id', $departmentId));
         $faculties = collect($baseQuery->cursor());
         if ($faculties->filter(fn($f) => !empty($f->expertise))->count() < 3 && $departmentId) {
-            $fallback = Faculty::with(['user','department'])->where('department_id','!=',$departmentId)->cursor();
+            $fallback = Faculty::with(['user','department','areaOfSpecialization'])->where('department_id','!=',$departmentId)->cursor();
             $faculties = $faculties->merge(collect($fallback));
         }
 
+        // A supervisor's broad area describes what they work on just as much as
+        // their expertise list does, so both are scored. Matching on the area id
+        // instead would have been exact but useless here: the scholar is typing
+        // what they hope to pursue, not choosing from the same list.
         $docs = [];
         foreach ($faculties as $f) {
             $text = is_array($f->expertise) ? implode(' ', $f->expertise) : (string)($f->expertise ?? '');
+            $text = trim($text . ' ' . ($f->areaOfSpecialization->name ?? ''));
             if (!$text) $text = $f->department->name ?? '';
             $docs[$f->faculty_code] = $this->tokens($text);
         }

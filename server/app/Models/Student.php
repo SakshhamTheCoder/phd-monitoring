@@ -18,18 +18,18 @@ class Student extends Model
         'user_id',
         'roll_no',
         'department_id',
-        'area_of_specialization_id',
+        'broad_area',
         'date_of_registration',
         'date_of_irb',
         'date_of_synopsis',
         'date_of_thesis',
         'phd_title',
         'tentative_desc',
-        'tentative_broad_area',
         'fathers_name',
         'address',
         'current_status',
         'cgpa',
+        'is_jrf',
         'overall_progress',
     ];
 
@@ -38,6 +38,7 @@ class Student extends Model
         'date_of_irb' => 'date',
         'date_of_synopsis' => 'date',
         'date_of_thesis' => 'date',
+        'is_jrf' => 'boolean',
         'overall_progress' => 'float',
     ];
 
@@ -117,11 +118,6 @@ class Student extends Model
     public function department()
     {
         return $this->belongsTo(Department::class);
-    }
-
-    public function areaOfSpecialization()
-    {
-        return $this->belongsTo(AreaOfSpecialization::class, 'area_of_specialization_id');
     }
 
     public function supervisors()
@@ -232,9 +228,13 @@ class Student extends Model
         return $this->hasOne(SupervisorChangeForm::class, 'student_id', 'roll_no');
     }
 
-    public function broad_area_specialization()
+    /**
+     * The up to three areas the scholar asked to work in, from the allocation
+     * form. Their settled area is area_of_specialization_id, set later.
+     */
+    public function areaPreferences()
     {
-        return $this->hasMany(StudentBroadAreaSpecialization::class, 'student_id', 'roll_no');
+        return $this->hasMany(StudentAreaPreference::class, 'student_id', 'roll_no');
     }
 
     public function subdomains()

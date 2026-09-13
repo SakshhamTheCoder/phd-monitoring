@@ -87,6 +87,8 @@ class FacultyProfileController extends Controller
             'citations' => 'nullable|integer|min:0',
             'h_index' => 'nullable|integer|min:0',
             'expertise' => 'nullable',
+            'area_of_specialization_id' => 'nullable|integer|exists:area_of_specializations,id',
+            'supervised_outside' => 'nullable|integer|min:0',
             'phone' => 'nullable|string|max:20',
         ]);
 
@@ -94,9 +96,17 @@ class FacultyProfileController extends Controller
             if ($request->exists($field)) $faculty->$field = $request->input($field) ?: null;
         }
         if ($request->has('expertise')) {
-            $val = $request->input('expertise');
-            if (is_string($val)) $val = array_values(array_filter(array_map('trim', preg_split('/[,;]+/', $val))));
-            $faculty->expertise = $val;
+            $faculty->expertise = Faculty::normalizeExpertise($request->input('expertise'));
+        }
+        // The broad area is one of the department's research areas; expertise
+        // above is the free-text specifics under it.
+        if ($request->exists('area_of_specialization_id')) {
+            $faculty->area_of_specialization_id = $request->input('area_of_specialization_id') ?: null;
+        }
+        // Scholars guided outside TIET are only known because the supervisor
+        // says so, and they count against the same supervision limit.
+        if ($request->exists('supervised_outside')) {
+            $faculty->supervised_outside = (int) $request->input('supervised_outside');
         }
         // Phone lives on the user, not the faculty record, but it is edited from
         // the same form, so it is written here rather than needing a second
