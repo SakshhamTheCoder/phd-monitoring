@@ -195,9 +195,12 @@ const PagenationTable = ({
                 <td>{(currentPage - 1) * rowsPerPage + index + 1}</td>
                 {fields.map((field, idx) => {
                   const val = form[field];
+                  // Progress monitoring is a percentage everywhere else it is
+                  // shown, so a bare number here reads as a count of something.
+                  const shown = field === 'overall_progress' && val != null ? `${val}%` : val;
                   return (
                     <td key={idx}>
-                      {isFilePath(val) ? <FileLink value={val} /> : (val ?? EMPTY_VALUE)}
+                      {isFilePath(val) ? <FileLink value={val} /> : (shown ?? EMPTY_VALUE)}
                     </td>
                   );
                 })}

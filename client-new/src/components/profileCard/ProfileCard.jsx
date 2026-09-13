@@ -207,6 +207,10 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
       doctoral,
     } = profile;
 
+    // No presentation has been completed yet, which is 0% of the way through,
+    // not a missing figure. Without this the ring printed "null%".
+    const progressPercent = Number(overall_progress) || 0;
+
     // Tentative until the IRB is actually approved. The backend decides; the
     // profile only reports, so no screen can disagree with another about it.
     const titleLabel = profile.irb_completed ? 'PhD Title' : 'Tentative PhD Title';
@@ -388,8 +392,8 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
 
             <div className="student-progress">
               <CircularProgressbar
-                value={overall_progress}
-                text={`${overall_progress}%`}
+                value={progressPercent}
+                text={`${progressPercent}%`}
                 styles={buildStyles({
                   textColor: "#111827",
                   pathColor: "var(--primary-color)",
