@@ -160,9 +160,19 @@ trait GeneralFormList
                 break;
         }
         $formsQuery = $model::where('student_id', $student_id);
+        // The step check answers "has this form reached my desk yet", which is
+        // only a question for a role that appears in the chain. An admin never
+        // does, so searching for them found nothing and every form was filtered
+        // away: the profile's View Forms page came back empty for every scholar.
+        // A role that is not a step is reading, not acting, and has already been
+        // authorised above, so it sees the lot.
         $filteredForms = $formsQuery->get()->filter(function ($form) use ($role) {
             $index = array_search($role, $form->steps);
-            return $index !== false && $index <= $form->maximum_step;
+            if ($index === false) {
+                return true;
+            }
+
+            return $index <= $form->maximum_step;
         });
         return  response()->json($filteredForms, 200);
     }
