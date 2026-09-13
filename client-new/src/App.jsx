@@ -152,6 +152,13 @@ const AppContent = () => {
               <Route path="/students" element={<StudentsPage />} />
               <Route path="/students/:roll_no" element={<StudentProfile />} />
               <Route path="/students/:roll_no/forms" element={<FormsPage />} />
+              {/* Progress Monitoring for one scholar, from their profile. The
+                  pages read the path back as their API endpoint, and the
+                  scholar-scoped endpoints already exist under
+                  /students/{id}/forms/presentation. */}
+              <Route path="/students/:roll_no/forms/presentation" element={<PresentationSemester />} />
+              <Route path="/students/:roll_no/forms/presentation/semester/:semester_id" element={<PresentationListPage />} />
+              <Route path="/students/:roll_no/forms/presentation/semester/:semester_id/:id" element={<Presentation />} />
               <Route path="/students/:roll_no/forms/:form_type" element={<FormListPage />} />
               <Route path="/students/:roll_no/forms/:form_type/:id" element={<MainFormPage />} />
               {(role === 'hod' || role === 'phd_coordinator' || role === 'admin') && (

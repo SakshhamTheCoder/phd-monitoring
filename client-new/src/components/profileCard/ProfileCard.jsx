@@ -146,7 +146,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
   };
 
   const navigateToProgress = () => {
-    navigate(pathname + "/presentation");
+    navigate(pathname + "/forms/presentation");
   };
 
   const startInlineEdit = () => {
@@ -439,7 +439,6 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
                 <CustomButton
                   text="View Progress Monitoring"
                   onClick={navigateToProgress}
-                  disabled={true}
                 />
               </>)}
               {permissions.can_manage && (
