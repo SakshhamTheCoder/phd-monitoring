@@ -8,6 +8,7 @@ node_modules
 # local planning docs & agent scratch (not for VCS)
 /docs/
 /.superpowers/
+/.claude/
 .DS_Store
 *.realbak
 .env.realbak
