@@ -5,6 +5,7 @@ use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\GeneralFormHandler;
 use App\Http\Controllers\Traits\GeneralFormList;
 use App\Http\Controllers\Traits\GeneralFormSubmitter;
+use App\Models\Forms;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Traits\SaveFile;
@@ -40,6 +41,17 @@ class UserController extends Controller{
             case 'external':
             case 'doctoral':
                 $data = $user->faculty->forms($roll_no);
+                break;
+            // Every branch above reads a per-role `<role>_available` column,
+            // and there is no admin one: an admin is not a step in any chain,
+            // which is why they fell through to the 403 below and the profile's
+            // View Forms page refused them. They read the lot instead.
+            case 'admin':
+                if (!$roll_no) {
+                    return response()->json(['message' => 'Open a scholar to read their forms'], 422);
+                }
+                $data = Forms::where('student_id', $roll_no)->get()
+                    ->each(fn ($form) => $form['action_required'] = false);
                 break;
             default:
                 return response()->json(['message' => 'You are not authorized to access this resource'], 403);
