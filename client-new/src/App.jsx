@@ -29,6 +29,7 @@ import ApplicationStatus from './pages/publicOpenings/ApplicationStatus';
 import DepartmentPage from './pages/department/Department';
 import AllNotificationsPage from './components/notificationBox/AllNotificationsPage';
 import PresentationSemester from './pages/presentations/PresentationSemester';
+import StudentProgressMonitoring from './pages/presentations/StudentProgressMonitoring';
 import Logs from './pages/logs/Logs';
 import Team from './pages/team/Team';
 import AdminFormManagement from './pages/admin/AdminFormManagement';
@@ -156,7 +157,7 @@ const AppContent = () => {
                   pages read the path back as their API endpoint, and the
                   scholar-scoped endpoints already exist under
                   /students/{id}/forms/presentation. */}
-              <Route path="/students/:roll_no/forms/presentation" element={<PresentationSemester />} />
+              <Route path="/students/:roll_no/forms/presentation" element={<StudentProgressMonitoring />} />
               <Route path="/students/:roll_no/forms/presentation/semester/:semester_id" element={<PresentationListPage />} />
               <Route path="/students/:roll_no/forms/presentation/semester/:semester_id/:id" element={<Presentation />} />
               <Route path="/students/:roll_no/forms/:form_type" element={<FormListPage />} />

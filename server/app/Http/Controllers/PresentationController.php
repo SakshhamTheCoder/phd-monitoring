@@ -56,9 +56,14 @@ class PresentationController extends Controller
             $filters = json_decode(urldecode($filtersJson), true);
         }
     
-        $validator = $this->validateSemesterCode($semester_id);
-        if (!$validator['valid']) {
-            return response()->json(['message' => 'Invalid Semester Code'], 422);
+        // A scholar's own page asks for every semester at once, so there is no
+        // code to check. Only validate when the path actually names one.
+        $validator = ['valid' => true, 'current' => null, 'semester_id' => null];
+        if ($semester_id) {
+            $validator = $this->validateSemesterCode($semester_id);
+            if (!$validator['valid']) {
+                return response()->json(['message' => 'Invalid Semester Code'], 422);
+            }
         }
 
         if ($user->current_role->role === 'student' && $semester_id && !empty($validator['current'])) {
@@ -235,6 +240,13 @@ class PresentationController extends Controller
         if (!$semester_id) {
             $titles[] = "Semester";
             $fields[] = "period";
+        }
+
+        // One scholar's own page. Their name and roll number on every row say
+        // nothing that the page's heading has not already said.
+        if ($studentId) {
+            $titles = ["Semester", "Date", "Time", "Progress %"];
+            $fields = ["period", "date", "time", "progress"];
         }
     
         return $this->listForms($user, Presentation::class, $request, $filters, true, [
@@ -540,6 +552,12 @@ class PresentationController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
         $cur = $role->role;
+
+        // Opened from a scholar's profile, where the question is what that
+        // scholar has presented, not which semesters the institute has run.
+        if ($request->route('id')) {
+            return $this->listForm($request);
+        }
 
     
             $page = $request->input('page', 1);
