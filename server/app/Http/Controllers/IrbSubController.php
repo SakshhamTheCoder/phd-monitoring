@@ -79,7 +79,7 @@ class IrbSubController extends Controller
 
     public function loadForm(Request $request, $form_id=null)
     {
-        $form_id = $this->formIdFrom($request, $form_id);
+        $form_id = $this->routeParam($request, 'form_id', $form_id);
         $user = Auth::user();
         $role = $user->current_role;
         $model = IrbSubForm::class;
@@ -108,7 +108,7 @@ class IrbSubController extends Controller
 
     public function submit(Request $request, $form_id)
     {
-        $form_id = $this->formIdFrom($request, $form_id);
+        $form_id = $this->routeParam($request, 'form_id', $form_id);
         $user = Auth::user();
         $role = $user->current_role;
 

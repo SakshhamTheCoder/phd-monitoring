@@ -119,6 +119,7 @@ class SemesterController extends Controller
 
     public function notScheduled(Request $request, $semester_id = null)
     {
+        $semester_id = $this->routeParam($request, 'semester_id', $semester_id);
         $user = Auth::user();
         $curr_role = $user->role->role;
         if ($semester_id) {

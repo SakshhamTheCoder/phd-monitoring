@@ -47,8 +47,8 @@ class PresentationController extends Controller
         // route parameter, so the positional argument above is their roll
         // number rather than a semester. Read both by name instead of position,
         // which is right on either path.
-        $studentId = $request->route('id');
-        $semester_id = $request->route('semester_id');
+        $studentId = $this->routeParam($request, 'id');
+        $semester_id = $this->routeParam($request, 'semester_id');
         $filters = $request->input('filters', null);
         $filtersJson = $request->query('filters');
     
@@ -555,7 +555,7 @@ class PresentationController extends Controller
 
         // Opened from a scholar's profile, where the question is what that
         // scholar has presented, not which semesters the institute has run.
-        if ($request->route('id')) {
+        if ($this->routeParam($request, 'id')) {
             return $this->listForm($request);
         }
 
@@ -730,7 +730,7 @@ class PresentationController extends Controller
     public function loadForm(Request $request, $semester_id=null,$form_id = null)
     {
         $user = Auth::user();
-        $form_id = $this->formIdFrom($request, $form_id);
+        $form_id = $this->routeParam($request, 'form_id', $form_id);
         $steps = ['student', 'faculty', 'doctoral', 'hod', 'adordc','dordc', 'complete'];
         $model = Presentation::class;
         $form = Presentation::find($form_id);
@@ -766,6 +766,7 @@ class PresentationController extends Controller
 
     public function submit(Request $request, $semester_id=null,$form_id)
     {
+        $form_id = $this->routeParam($request, 'form_id', $form_id);
         $user = Auth::user();
         $role = $user->current_role;
         $form = Presentation::find($form_id);
@@ -835,6 +836,7 @@ class PresentationController extends Controller
 
     public function linkPublication(Request $request,$semester_id=null, $form_id)
     {
+        $form_id = $this->routeParam($request, 'form_id', $form_id);
         try {
             $user = Auth::user();
             $role = $user->current_role;
@@ -896,6 +898,7 @@ class PresentationController extends Controller
 
     public function unlinkPublication(Request $request,$semester_id=null, $form_id)
     {
+        $form_id = $this->routeParam($request, 'form_id', $form_id);
         $user = Auth::user();
         $role = $user->current_role;
         if ($role->role != 'student') {
