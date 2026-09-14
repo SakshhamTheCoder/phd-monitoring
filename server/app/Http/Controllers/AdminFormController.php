@@ -56,7 +56,7 @@ class AdminFormController extends Controller
         'supervisor-allocation' => [
             'form_name' => 'Supervisor Allocation Form',
             'max_count' => 1,
-            'steps' => ['student', 'phd_coordinator', 'hod']
+            'steps' => ['student', 'phd_coordinator', 'hod', 'complete']
         ],
         'irb-constitution' => [
             'form_name' => 'IRB Constitution',
@@ -92,7 +92,6 @@ class AdminFormController extends Controller
             'form_name' => 'List of Examiners',
             'max_count' => 1,
             'steps' => [            'faculty',
-            'hod',
             'dordc',
             'director',
             'complete']
@@ -100,7 +99,7 @@ class AdminFormController extends Controller
         'synopsis-submission' => [
             'form_name' => 'Synopsis Submission',
             'max_count' => 1,
-            'steps' => ['student', 'faculty',  'phd_coordinator', 'hod', 'dra','adordc' ,'dordc', 'director',  'complete']
+            'steps' => ['student', 'faculty', 'doctoral',  'phd_coordinator', 'hod', 'dra','adordc' ,'dordc', 'director',  'complete']
         ],
         'thesis-submission' => [
             'form_name' => 'Thesis Submission',
