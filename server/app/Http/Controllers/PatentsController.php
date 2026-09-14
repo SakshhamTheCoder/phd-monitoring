@@ -20,7 +20,11 @@ class PatentsController extends Controller
      */
     public function index()
     {
-        $patents = Patent::all();
+        $user = Auth::user();
+        if (!$user->may('can_manage_own_publications')) {
+            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+        }
+        $patents = Patent::where('student_id', $user->student->roll_no)->get();
         return response()->json($patents);
     }
 
@@ -73,6 +77,15 @@ class PatentsController extends Controller
     {
         $patents = Patent::find($id);
         if($patents){
+            $user = Auth::user();
+            if (!$user->may('can_manage_own_publications')) {
+                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            }
+            // Ownership check must run before any field is touched, otherwise a student
+            // could edit or reassign another student's patent by posting its id.
+            if ($patents->student_id != $user->student->roll_no) {
+                return response()->json(['message' => 'You are not authorized to edit this patent'], 403);
+            }
             $validator = Validator::make($request->all(), [
                 'title' => 'required|string|max:255',
                 'authors'=>'required|string',
@@ -82,14 +95,9 @@ class PatentsController extends Controller
                 'year'=>'required|string',
                 'country'=>'required|in:National,International'
             ]);
-            $user = Auth::user();
-            if (!$user->may('can_manage_own_publications')) {
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
-            }
             if ($validator->fails()) {
                 return response()->json(['errors' => $validator->errors()], 400);
             }
-            $patents->student_id = $user->student->roll_no;
             $patents->title = $request->title;
             $patents->authors = $request->authors;
             $patents->doi_link=$request->doi_link;
