@@ -14,7 +14,7 @@ import {
 } from '../../data/projectsData';
 import { formatDate, EMPTY_VALUE } from '../../utils/timeParse';
 import { badgeClass } from '../../data/badges';
-import { apiGetProject, apiUpdateProject, apiAddMilestone, apiUpdateMilestone, apiAddDocument, apiUpdateDocument, apiDeleteDocument, fileUrl, mapMilestone, mapDocument, apiProjectMeta, apiUploadGanttChart } from '../../api/projects';
+import { apiGetProject, apiUpdateProject, apiAddMilestone, apiUpdateMilestone, apiDeleteMilestone, apiAddDocument, apiUpdateDocument, apiDeleteDocument, fileUrl, mapMilestone, mapDocument, apiProjectMeta, apiUploadGanttChart } from '../../api/projects';
 import InputSuggestions from '../../components/forms/fields/InputSuggestions';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import Tabs from '../../components/tabs/Tabs';
@@ -72,6 +72,11 @@ const ProjectDetails = () => {
       setShowAddForm(false);
       toast.success('Milestone added.');
     }
+  };
+  const removeMilestone = async (i) => {
+    const m = milestones[i];
+    const res = await apiDeleteMilestone(project.id, m.id);
+    if (res.success) { setMilestones(prev => prev.filter((_, idx) => idx !== i)); toast.success('Milestone deleted.'); }
   };
 
   // Budget breakdown inline editing (heads + sub-items, kept reconciled).
@@ -791,6 +796,7 @@ const ProjectDetails = () => {
                           <div className="pd-tl-actions">
                             <span className={badgeClass(m.status)}>{m.status}</span>
                             {canEdit && <button className="pd-tl-edit-btn" onClick={() => startEdit(i)} title="Edit milestone"><i className="fa fa-pencil"></i></button>}
+                            {canEdit && <button className="pd-doc-remove" onClick={() => removeMilestone(i)} title="Delete milestone"><i className="fa fa-trash"></i></button>}
                           </div>
                         </div>
                         <p className="pd-tl-deliverable">{m.deliverable}</p>

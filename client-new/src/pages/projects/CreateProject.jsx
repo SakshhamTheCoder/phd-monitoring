@@ -13,7 +13,7 @@ import {
   KEY_MANPOWER, HEAD_MANPOWER, HEAD_EQUIPMENT, HEAD_OTHER,
 } from '../../data/projectsData';
 import { formatDate, EMPTY_VALUE } from '../../utils/timeParse';
-import { apiCreateProject, apiUpdateProjectFromForm, apiUpdateProject, apiCurrentFaculty, apiProjectMeta, apiUploadGanttChart } from '../../api/projects';
+import { apiCreateProject, apiUpdateProjectFromForm, apiUpdateProject, apiCurrentFaculty, apiProjectMeta, apiUploadGanttChart, apiAddMilestone, apiUpdateMilestone, apiDeleteMilestone } from '../../api/projects';
 import InputSuggestions from '../../components/forms/fields/InputSuggestions';
 import FacultyLink from '../../components/facultyLink/FacultyLink';
 import { baseURL } from '../../api/urls';
@@ -170,14 +170,34 @@ const CreateProject = () => {
     return null;
   };
 
+  // Milestones live behind per-row endpoints (no bulk save), so diff the form
+  // against the project as it was before this edit: rows with no id are new,
+  // rows that kept their id are updated in place, and original ids missing
+  // from the form were removed in the wizard and need deleting server-side.
+  const syncMilestones = async (projectId) => {
+    const originalIds = new Set((editProject.milestones || []).map(m => m.id));
+    const keptIds = new Set(form.milestones.filter(m => m.id).map(m => m.id));
+    const removedIds = [...originalIds].filter(id => !keptIds.has(id));
+    const calls = [
+      ...removedIds.map(id => apiDeleteMilestone(projectId, id)),
+      ...form.milestones
+        .filter(m => m.name && m.name.trim())
+        .map(m => (m.id ? apiUpdateMilestone(projectId, m.id, m) : apiAddMilestone(projectId, m))),
+    ];
+    const results = await Promise.all(calls);
+    return results.every(r => r.success);
+  };
+
   const handleSubmit = async () => {
     if (submitting) return;
     setSubmitting(true);
     const res = isEditMode
       ? await apiUpdateProjectFromForm(editProject.id, form)
       : await apiCreateProject(form);
+    let milestonesOk = true;
     if (res.success) {
       const projectId = isEditMode ? editProject.id : res.project.id;
+      if (isEditMode) milestonesOk = await syncMilestones(projectId);
       await saveSanctionLetter(projectId);
       if (form.ganttFile && (res.project?.id || projectId)) {
         await apiUploadGanttChart(res.project?.id || projectId, form.ganttFile);
@@ -185,7 +205,11 @@ const CreateProject = () => {
     }
     setSubmitting(false);
     if (res.success) {
-      toast.success(isEditMode ? 'Project updated.' : 'Project created.');
+      if (milestonesOk) {
+        toast.success(isEditMode ? 'Project updated.' : 'Project created.');
+      } else {
+        toast.warn('Project saved, but some milestones did not save. Check the Milestones step and try again.');
+      }
       navigate('/projects');
     }
   };
