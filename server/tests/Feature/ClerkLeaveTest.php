@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Attendance;
+use App\Models\Role;
 use App\Models\Student;
 use App\Models\StudentLeaveForm;
 use App\Models\User;
@@ -32,6 +33,52 @@ class ClerkLeaveTest extends TestCase
         ]);
 
         return $student;
+    }
+
+    /**
+     * A scholar created fresh for this test, with no attendance history.
+     *
+     * firstOrFail() picks up whatever the dev database already has, which on
+     * this machine already carries attendance rows for that scholar. A count
+     * delta can't be trusted here: save() uses updateOrCreate() keyed on
+     * (roll_no, date, lecture_id), so a broken skip would update a
+     * pre-existing row of the same key in place, leaving the count
+     * unchanged and the assertion blind to it. A scholar with no rows at
+     * all keeps assertNull() meaningful.
+     */
+    private function isolatedStudentOnLeave(): Student
+    {
+        $user = User::create([
+            'first_name' => 'Isolated',
+            'last_name' => 'Scholar',
+            'email' => 'isolated.scholar.leave@example.invalid',
+            'password' => bcrypt('not-used'),
+            'role_id' => Role::where('role', 'student')->firstOrFail()->id,
+            'current_role_id' => Role::where('role', 'student')->firstOrFail()->id,
+            'status' => 'active',
+        ]);
+
+        $student = Student::create([
+            // Derived rather than a fixed constant: dev-database roll numbers
+            // are not confined to a small range reserved for tests.
+            'roll_no' => (int) Student::max('roll_no') + 1,
+            'user_id' => $user->id,
+            'date_of_registration' => now()->subYear()->toDateString(),
+            'current_status' => 'full-time',
+            'overall_progress' => 0,
+        ]);
+
+        StudentLeaveForm::create([
+            'student_id' => $student->roll_no,
+            'leave_type' => 'casual',
+            'from_date' => self::DATE,
+            'to_date' => self::DATE,
+            'day_part' => 'full',
+            'status' => 'approved',
+            'stage' => 'complete',
+        ]);
+
+        return $student->fresh();
     }
 
     private function actingAsAdmin(): void
@@ -68,7 +115,7 @@ class ClerkLeaveTest extends TestCase
 
     public function test_saving_writes_no_row_for_a_scholar_on_leave(): void
     {
-        $student = $this->studentOnLeave();
+        $student = $this->isolatedStudentOnLeave();
         $this->actingAsAdmin();
 
         $response = $this->postJson('/api/clerks/attendance', [
