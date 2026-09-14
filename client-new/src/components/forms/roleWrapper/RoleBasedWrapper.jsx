@@ -8,9 +8,9 @@ const RoleBasedWrapper = ({ roleHierarchy, currentRole, children }) => {
             {React.Children.toArray(children).map((child, index) => {
                 if (!React.isValidElement(child)) return null;
 
-                console.log(index,currentRoleIndex,currentRole)
+                // roleHierarchy is formData.steps, an ordered workflow sequence, not a role hierarchy
                 if (index <= currentRoleIndex || currentRole === "admin") {
-                    return child; // Render the component if allowed by role hierarchy
+                    return child;
                 }
 
                 return null;

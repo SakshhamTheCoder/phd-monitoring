@@ -20,9 +20,6 @@ const StudentsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const can = useCapabilities();
-  // Manage Forms has no capability of its own yet, so it keeps the role
-  // check it always had rather than borrowing an unrelated capability.
-  const role = localStorage.getItem("userRole");
   const handleFilterChange = (newFilter) => {
     setFilter(newFilter);
   };
@@ -209,7 +206,7 @@ const StudentsPage = () => {
                   setIsModalEditStudentOpen(true);
                 },
               }] : []),
-              ...(role === "admin" ? [{
+              ...(can("can_manage_form_levels") ? [{
                 icon: <i className="fa-solid fa-file-lines"></i>,
                 tooltip: "Manage Forms",
                 onClick: (studentData) => {
@@ -240,7 +237,6 @@ const StudentsPage = () => {
             }}
             title={"Add Student Panel"}
           >
-              {/* {role=== "admin" && <AssignPanel roll_no={studentToEdit?.roll_no}/>} */}
             {can("can_propose_supervisor_changes") && (
               <SupervisorDoctoralManager
                 studentId={studentToEdit?.roll_no}

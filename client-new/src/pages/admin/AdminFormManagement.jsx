@@ -11,6 +11,7 @@ import GridContainer from "../../components/forms/fields/GridContainer";
 import InputField from "../../components/forms/fields/InputField";
 import DropdownField from "../../components/forms/fields/DropdownField";
 import CustomModal from "../../components/forms/modal/CustomModal";
+import { getRoleName } from "../../utils/roleName";
 import "./AdminFormManagement.css";
 
 const AdminFormManagement = () => {
@@ -870,7 +871,7 @@ const AdminFormManagement = () => {
                           {lockRoles.map((role) => (
                             <div key={role} className="lock-item-modal">
                               <span className="lock-label">
-                                {role === 'faculty' ? 'Supervisor' : role.replace(/_/g, ' ')}
+                                {getRoleName(role)}
                               </span>
                               <button
                                 className={`lock-toggle-modal ${instance.locks[role] ? "locked" : "unlocked"}`}
@@ -896,7 +897,7 @@ const AdminFormManagement = () => {
                           {Object.entries(instance.approvals).map(([role, approved]) => (
                             <div key={role} className="approval-item-modal">
                               <span className="approval-label">
-                                {role === 'faculty' ? 'Supervisor' : role.replace(/_/g, ' ')}
+                                {getRoleName(role)}
                               </span>
                               <span className={`approval-status-modal ${approved ? "approved" : "pending"}`}>
                                 {approved ? "✓ Approved" : "✗ Pending"}
