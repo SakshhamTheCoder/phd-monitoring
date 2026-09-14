@@ -17,6 +17,7 @@ import IrbExtention from "../../components/forms/irbExtention/IrbExtention";
 import SupervisorChange from "../../components/forms/supervisorChange/SupervisorChange";
 import ListOfExaminers from "../../components/forms/listOfExaminers/ListOfExaminers";
 import ReviseTitle from "../../components/forms/reviseTitle/ReviseTitle";
+import ThesisExtention from "../../components/forms/thesisExtention/ThesisExtention";
 import useScholarInPath from "../../hooks/useScholarInPath";
 const MainFormPage = () => {
   const [formData, setFormData] = useState({});
@@ -78,9 +79,8 @@ const MainFormPage = () => {
                     return <SupervisorChange formData={formData}/>
                   case "list-of-examiners":
                     return <ListOfExaminers formData={formData}/>
-                 //fix yaha p
-                    case "thesis-extension":
-                    return <ThesisSubmission formData={formData} />
+                  case "thesis-extension":
+                    return <ThesisExtention formData={formData} />
                   case "revise-title":
                     return <ReviseTitle formData={formData}/>
                   default:
