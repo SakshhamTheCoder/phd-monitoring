@@ -37,18 +37,22 @@ class ClerkController extends Controller
     }
 
     /**
-     * The department ids this request may touch, or the 403 to return.
+     * The department ids $role may act within, or the 403 to return.
      *
-     * Every attendance endpoint goes through here so the rule is stated once
-     * and cannot drift between read and write paths.
+     * Both resolveDepartmentScope() below (every roster/export/summary
+     * endpoint, which accepts an optional department_id override) and
+     * studentAttendance()'s clerk branch (a single-record lookup with no
+     * department_id parameter of its own, so it always passes null) route
+     * through here, so a future scoping rule cannot apply to one and not
+     * the other.
      *
      * @return array<int, int>|null|\Illuminate\Http\JsonResponse
      */
-    private function resolveDepartmentScope(Request $request, string $role)
+    private function departmentScopeFor(string $role, mixed $requestedDepartmentId)
     {
         $user = Auth::user();
         $allowed = $role === 'admin' ? null : $this->clerkDepartmentIds($user->id);
-        $scope = DepartmentScope::resolve($allowed, $request->input('department_id'));
+        $scope = DepartmentScope::resolve($allowed, $requestedDepartmentId);
 
         if ($scope['denied']) {
             return response()->json([
@@ -59,6 +63,21 @@ class ClerkController extends Controller
         }
 
         return $scope['ids'];
+    }
+
+    /**
+     * The department ids this request may touch, or the 403 to return.
+     *
+     * Every attendance endpoint goes through here (directly, or via
+     * departmentScopeFor() above for the one endpoint with no department_id
+     * parameter) so the rule is stated once and cannot drift between read
+     * and write paths.
+     *
+     * @return array<int, int>|null|\Illuminate\Http\JsonResponse
+     */
+    private function resolveDepartmentScope(Request $request, string $role)
+    {
+        return $this->departmentScopeFor($role, $request->input('department_id'));
     }
 
     /**
@@ -634,9 +653,12 @@ class ClerkController extends Controller
             case 'dra':
             case 'dordc':
             case 'clerk':
-                // clerk allowed if student in their departments
+                // clerk allowed if student in their departments. No department_id
+                // override here: this route is keyed by roll_no, not a roster, so
+                // departmentScopeFor() is always asked for the full set (null).
                 if ($role === 'clerk') {
-                    $deptIds = $this->clerkDepartmentIds($user->id);
+                    $deptIds = $this->departmentScopeFor($role, null);
+                    if ($deptIds instanceof \Illuminate\Http\JsonResponse) return $deptIds;
                     $student = Student::where('roll_no', $roll_no)->whereIn('department_id', $deptIds)->first();
                     if (!$student) return response()->json(['message' => 'You do not have permission to view student'], 403);
                 } else {
