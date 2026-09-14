@@ -44,8 +44,14 @@ class ThesisExtentionForm extends Model
             'initial_status'=>$this->student->initialStatus(),
             'date_of_irb'=>$this->student->date_of_irb,
             'date_of_synopsis'=>$this->student->date_of_synopsis,
-            'previous_extensions'=>$this->student->thesisExtentions(),
-            'date_of_extention' => optional($this->student->thesisExtentions->first())->timestamp,
+            'previous_extensions' => $this->student->thesisExtentions->map(function($extention){
+                return [
+                    'period_of_extention' => $extention->period_of_extention,
+                    'reason' => $extention->reason,
+                ];
+            }),
+            // No dedicated grant-date column exists on thesis_extentions; created_at is the record of when the extension was granted.
+            'date_of_extention' => optional($this->student->thesisExtentions->first())->created_at,
         ]);
     }
 
