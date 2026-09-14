@@ -141,6 +141,7 @@ class IrbSubController extends Controller
         $request->validate([
             'form_ids' => 'required|array',
         ]);
+        // Bulk-approve only, there is no bulk-reject path for this form.
         $request->merge(['approval' => true]);
         $hasFailure = false;
         // A missing form is a per-item failure, not a batch abort: the other bulk
