@@ -122,7 +122,9 @@ const AppContent = () => {
           )}
 
           {/* Dashboard */}
-          <Route path="/home" element={<Dashboard />} />
+          {/* Clerk's only capability is attendance, so /home has nothing for
+              them to land on; send them straight to the page they use. */}
+          <Route path="/home" element={role === 'clerk' ? <Navigate to="/attendance" replace /> : <Dashboard />} />
           {features.project_management && (role === 'faculty' || role === 'hod' || role === 'phd_coordinator' || role === 'dordc' || role === 'adordc' || role === 'dra' || role === 'director' || role === 'admin') && (
             <>
               <Route path="/projects" element={<ProjectsOverview />} />

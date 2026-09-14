@@ -233,11 +233,16 @@ const AttendancePage = () => {
     const token = localStorage.getItem('token');
     const params = new URLSearchParams({ from: exportFrom, to: exportTo, summary: '1' });
     if (exportDept) params.set('department_id', exportDept);
+    // Reuses the same roll number the scholar filter already resolved for
+    // the history tab, so the export narrows only when that filter names
+    // exactly one scholar.
+    if (filteredRoll) params.set('roll_no', filteredRoll);
     const res = await fetch(baseURL + `/clerks/attendance/export?${params.toString()}`, { headers: { Authorization: `Bearer ${token}` } });
     if (!res.ok) { toast.error('Export failed.'); return; }
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `attendance_${exportFrom}_to_${exportTo}.csv`; a.click(); URL.revokeObjectURL(url);
+    const filename = filteredRoll ? `attendance_${filteredRoll}_${exportFrom}_to_${exportTo}.csv` : `attendance_${exportFrom}_to_${exportTo}.csv`;
+    const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
     toast.success('Export downloaded.');
   };
 
@@ -627,14 +632,16 @@ const AttendancePage = () => {
                 </select>
               </div>
               <div style={{ marginLeft: 'auto' }}>
-                <CustomButton text="Download CSV" onClick={confirmExport} disabled={exportFrom > exportTo} />
+                <CustomButton text={filteredRoll ? `Download CSV (roll ${filteredRoll} only)` : 'Download CSV'} onClick={confirmExport} disabled={exportFrom > exportTo} />
               </div>
             </div>
             {exportFrom > exportTo && <div style={{ marginTop: '0.75rem', background: '#FFF1F2', border: '1px solid #FECDD3', color: '#9F1239', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.85rem' }}>From date cannot be after To date.</div>}
           </div>
           <div className="form-list-container">
             <div style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-              {exportDept ? `Exports all scholars in ${departments.find((d) => String(d.id) === String(exportDept))?.name || 'the selected department'} for the chosen range.` : 'Exports all scholars you can access for the chosen range.'} Includes present counts per scholar.
+              {filteredRoll
+                ? `Exports only scholar ${filteredRoll} for the chosen range.`
+                : exportDept ? `Exports all scholars in ${departments.find((d) => String(d.id) === String(exportDept))?.name || 'the selected department'} for the chosen range.` : 'Exports all scholars you can access for the chosen range.'} Includes present counts per scholar.
             </div>
           </div>
         </div>
