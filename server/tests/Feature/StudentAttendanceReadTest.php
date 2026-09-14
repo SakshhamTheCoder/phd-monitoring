@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Attendance;
 use App\Models\Faculty;
+use App\Models\Role;
 use App\Models\Student;
 use App\Models\StudentLeaveForm;
 use App\Models\Supervisor;
@@ -79,6 +80,41 @@ class StudentAttendanceReadTest extends TestCase
     }
 
     /**
+     * A scholar created fresh for this test, with no attendance history.
+     *
+     * firstOrFail() picks up whatever scholar the dev database sorts first,
+     * who already carries attendance rows of their own within September
+     * 2026. Scoping the query's date range narrower wouldn't help either,
+     * since there's no guarantee none of those pre-existing rows land
+     * inside it too. A scholar with no rows at all makes `records` and
+     * `summary` describe only what this test wrote.
+     */
+    private function isolatedStudent(): Student
+    {
+        $user = User::create([
+            'first_name' => 'Isolated',
+            'last_name' => 'Scholar',
+            'email' => 'isolated.scholar.attendance@example.invalid',
+            'password' => bcrypt('not-used'),
+            'role_id' => Role::where('role', 'student')->firstOrFail()->id,
+            'current_role_id' => Role::where('role', 'student')->firstOrFail()->id,
+            'status' => 'active',
+        ]);
+
+        $student = Student::create([
+            // Derived rather than a fixed constant: dev-database roll numbers
+            // are not confined to a small range reserved for tests.
+            'roll_no' => (int) Student::max('roll_no') + 1,
+            'user_id' => $user->id,
+            'date_of_registration' => now()->subYear()->toDateString(),
+            'current_status' => 'full-time',
+            'overall_progress' => 0,
+        ]);
+
+        return $student->fresh();
+    }
+
+    /**
      * FIX 5: nothing ever deletes an attendance row, so a clerk's absent mark
      * from before an HOD's approval can outlive it. The excused day must be
      * derived out of both `records` and `summary` (spec 1.1: not part of the
@@ -86,7 +122,7 @@ class StudentAttendanceReadTest extends TestCase
      */
     public function test_a_day_covered_by_an_approved_leave_is_excluded_from_records_and_summary(): void
     {
-        $student = Student::query()->firstOrFail();
+        $student = $this->isolatedStudent();
 
         Attendance::create([
             'roll_no' => $student->roll_no,
