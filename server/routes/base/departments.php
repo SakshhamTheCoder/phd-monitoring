@@ -19,4 +19,4 @@ Route::post('/add-adordc', [DepartmentController::class, 'addAdordc'])->middlewa
 Route::post('/add-coordinator', [DepartmentController::class, 'addCoordinator'])->middleware('auth:sanctum');
 Route::delete('/remove-coordinator/{id}', [DepartmentController::class, 'removeCoordinator'])->middleware('auth:sanctum');
 Route::post('/phd_coordinator', [DepartmentController::class, 'addCoordinator'])->middleware('auth:sanctum');
-Route::get('/filters', [DepartmentController::class, 'listFilters']);
+Route::get('/filters', [DepartmentController::class, 'listFilters'])->middleware('auth:sanctum');

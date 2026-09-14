@@ -12,7 +12,7 @@ Route::post('/recommend', [FacultyController::class, 'recommend'])->middleware('
 Route::post('/add', [FacultyController::class, 'add'])->middleware('auth:sanctum');
 Route::put('/update/{id}', [FacultyController::class, 'update'])->middleware('auth:sanctum');
 Route::post('/bulk-import', [FacultyController::class, 'upload'])->middleware('auth:sanctum');
-Route::get('/filters', [FacultyController::class, 'listFilters']);
+Route::get('/filters', [FacultyController::class, 'listFilters'])->middleware('auth:sanctum');
 
 // The research profile and its publications sit behind a switch. The faculty
 // directory above does not, because it predates the module. See FeatureFlag.
