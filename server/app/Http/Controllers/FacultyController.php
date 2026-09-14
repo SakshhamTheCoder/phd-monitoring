@@ -404,11 +404,6 @@ class FacultyController extends Controller
     }
     
 
-    public function showUploadForm()
-    {
-        return view('upload-faculty');
-    }
-
     public function upload(Request $request)
     {
         $user = Auth::user();
