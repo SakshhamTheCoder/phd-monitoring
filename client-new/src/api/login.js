@@ -1,5 +1,6 @@
 import { customFetch } from "./base"
 import { ENDPOINTS } from "./urls"
+import { clearCapabilities } from "../hooks/useCapabilities"
 
 export const loginAPI = async (email, password, captchaToken) => {
     const result = await customFetch(ENDPOINTS.LOGIN,"POST",{
@@ -28,5 +29,6 @@ export const logoutAPI = async () => {
     localStorage.removeItem("userRole");
     localStorage.removeItem("available_roles");
     localStorage.removeItem("user");
+    clearCapabilities();
     return true;
 }

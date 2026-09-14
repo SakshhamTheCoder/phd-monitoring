@@ -75,6 +75,9 @@ export const customFetch = async (
           localStorage.clear();
           sessionStorage.clear();
           window.location.href = "/login";
+        } else if (error.status === 403) {
+          if (showToast)
+            toast.error(data.message || "You do not have permission to do that. Contact your administrator if you believe this is a mistake.");
         } else if (error.status === 500) {
           if (showToast)
             toast.error(data.message || data.error || "Internal server error");
