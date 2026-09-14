@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Traits\AuthorizesCapability;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Models\User;
 use App\Models\Role;
@@ -15,10 +16,13 @@ use App\Support\PersonName;
 
 class UserManagementController extends Controller
 {
+    use AuthorizesCapability;
     use FilterLogicTrait;
 
     public function listFilters(Request $request)
     {
+        if ($denied = $this->denyUnlessMay('can_manage_users', 'You do not have permission to manage users. Contact your administrator if you believe this is a mistake.')) return $denied;
+
         return response()->json($this->getAvailableFilters("users"));
     }
 
