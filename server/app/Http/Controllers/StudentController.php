@@ -58,6 +58,14 @@ class StudentController extends Controller {
                 'cgpa' => 'nullable|numeric'
             ]
         );
+
+        $departmentIds = $this->writableDepartmentIds();
+        if ($departmentIds !== null && !in_array((int) $request->department_id, $departmentIds, true)) {
+            return response()->json([
+                'message' => 'You do not have permission to create student'
+            ], 403);
+        }
+
         $password = Str::password(8, true, true, true, false);
         //generated a random password for the new user he will change it later
 
@@ -266,9 +274,10 @@ class StudentController extends Controller {
         $updateCount = 0;
         $failed = 0;
         $errors = [];
+        $departmentIds = $this->writableDepartmentIds();
 
         DB::beginTransaction();
-        
+
         try {
             foreach ($request->students as $index => $studentData) {
                 try {
@@ -299,6 +308,14 @@ class StudentController extends Controller {
                     }
 
                     if ($existingUser && $existingStudent) {
+                        if ($departmentIds !== null && !in_array($existingStudent->department_id, $departmentIds, true)) {
+                            $errors[] = "Row " . ($index + 1) . ": you do not have permission to edit this student";
+                            $failed++; continue;
+                        }
+                        if ($departmentIds !== null && $department && !in_array($department->id, $departmentIds, true)) {
+                            $errors[] = "Row " . ($index + 1) . ": department '{$studentData['department_code']}' is outside your scope";
+                            $failed++; continue;
+                        }
                         // A blank cell means "not supplied", never "clear this".
                         // A spreadsheet carries every column on every row, so
                         // treating a present-but-empty cell as a value emptied
@@ -339,6 +356,10 @@ class StudentController extends Controller {
                     $name = PersonName::fromRow($studentData);
                     if ($name === null || empty($studentData['phone']) || empty($studentData['roll_no']) || empty($studentData['department_code']) || empty($studentData['date_of_registration']) || empty($studentData['current_status'])) {
                         $errors[] = "Row " . ($index + 1) . ": missing required fields for new student (full_name, phone, roll_no, department_code, date_of_registration, current_status)";
+                        $failed++; continue;
+                    }
+                    if ($departmentIds !== null && !in_array($department->id, $departmentIds, true)) {
+                        $errors[] = "Row " . ($index + 1) . ": department '{$studentData['department_code']}' is outside your scope";
                         $failed++; continue;
                     }
                     // Generate random password
@@ -445,6 +466,7 @@ class StudentController extends Controller {
             'students.*.overall_progress' => 'nullable|numeric',
         ]);
         $updated = 0; $failed = 0; $errors = [];
+        $departmentIds = $this->writableDepartmentIds();
         DB::beginTransaction();
         try {
             foreach ($request->students as $index => $data) {
@@ -453,6 +475,11 @@ class StudentController extends Controller {
                     $student = null;
                     if (!empty($data['roll_no'])) $student = Student::where('roll_no', $data['roll_no'])->first();
                     if (!$user && !$student) { $errors[] = "Row ".($index+1).": no matching student for email {$data['email']} or roll {$data['roll_no']}"; $failed++; continue; }
+                    $target = $student ?? Student::where('user_id', $user->id)->first();
+                    if (!$target) { $errors[] = "Row ".($index+1).": student record not found"; $failed++; continue; }
+                    if ($departmentIds !== null && !in_array($target->department_id, $departmentIds, true)) {
+                        $errors[] = "Row ".($index+1).": you do not have permission to edit this student"; $failed++; continue;
+                    }
                     if ($user) {
                         $name = PersonName::fromRow($data);
                         if ($name !== null) {
@@ -462,11 +489,12 @@ class StudentController extends Controller {
                         if (!empty($data['phone'])) $user->phone = $data['phone'];
                         $user->save();
                     }
-                    $target = $student ?? Student::where('user_id', $user->id)->first();
-                    if (!$target) { $errors[] = "Row ".($index+1).": student record not found"; $failed++; continue; }
                     if (!empty($data['department_code'])) {
                         $dept = \App\Support\DepartmentCodes::resolve($data['department_code']);
                         if (!$dept) { $errors[] = "Row ".($index+1).": department code '{$data['department_code']}' not found"; $failed++; continue; }
+                        if ($departmentIds !== null && !in_array($dept->id, $departmentIds, true)) {
+                            $errors[] = "Row ".($index+1).": department '{$data['department_code']}' is outside your scope"; $failed++; continue;
+                        }
                         $target->department_id = $dept->id;
                     }
                     if (isset($data['phd_title'])) $target->phd_title = $data['phd_title'];
@@ -676,6 +704,23 @@ class StudentController extends Controller {
         return optional(Auth::user()?->current_role)->can_manage_students === 'true';
     }
 
+    /**
+     * Department ids the acting adordc may write to, or null when writes are
+     * institute-wide. adordc is the only role with can_manage_students that
+     * lacks can_read_all_students (admin/director/dordc/dra all hold both), so
+     * mirroring the read scoping from list()/get() here is enough to close the
+     * gap without touching any other role.
+     */
+    private function writableDepartmentIds(): ?array
+    {
+        $user = Auth::user();
+        if ($user->current_role->role !== 'adordc') {
+            return null;
+        }
+
+        return $user->faculty->adordcDepartments->pluck('id')->all();
+    }
+
     private function canEditProfile($student): bool
     {
         if ($this->canManageStudents()) {
@@ -700,6 +745,14 @@ class StudentController extends Controller {
         if (!$student) {
             return response()->json(['message' => 'Student not found'], 404);
         }
+
+        $departmentIds = $this->writableDepartmentIds();
+        if ($departmentIds !== null && !in_array($student->department_id, $departmentIds, true)) {
+            return response()->json([
+                'message' => 'You do not have permission to edit student'
+            ], 403);
+        }
+
         $user = $student->user;
 
         $request->validate([
@@ -723,6 +776,14 @@ class StudentController extends Controller {
             'overall_progress' => 'nullable|numeric',
             'cgpa' => 'nullable|numeric',
         ]);
+
+        // Reassigning department is how an adordc could otherwise pull a scholar
+        // into their remit, or move one out of it and lose them from their lists.
+        if ($departmentIds !== null && !in_array((int) $request->department_id, $departmentIds, true)) {
+            return response()->json([
+                'message' => 'You do not have permission to move student to that department'
+            ], 403);
+        }
 
         $name = $request->filled('full_name')
             ? PersonName::split($request->input('full_name'))
