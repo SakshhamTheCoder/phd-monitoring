@@ -13,8 +13,13 @@ import InputField from '../../components/forms/fields/InputField';
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
 import Page from '../../components/page/Page';
 import { currentRole } from '../../auth/access';
+import useCapabilities from '../../context/CapabilitiesContext';
 
 const AdminCourseManagement = () => {
+  // Tagging and the coursework import are refused without can_manage_students,
+  // which the HOD and coordinator do not hold; adding a course is theirs.
+  const can = useCapabilities();
+  const mayTagStudents = can('can_manage_students');
   // Heads and coordinators manage their own department's courses; the server
   // fills the department in for them, so only admin picks one.
   const picksDepartment = currentRole() === 'admin';
@@ -276,20 +281,24 @@ const AdminCourseManagement = () => {
       description="Add courses, tag scholars to them and import coursework."
       actions={
         <>
-          <CustomButton
-            text="Tag student"
-            variant="secondary"
-            onClick={() => {
-              // Courses added since the page loaded must be taggable too.
-              fetchAllCourses();
-              setShowTagModal(true);
-            }}
-          />
-          <CustomButton
-            text="Import from CSV"
-            variant="secondary"
-            onClick={() => setShowBulkImportModal(true)}
-          />
+          {mayTagStudents && (
+            <>
+              <CustomButton
+                text="Tag student"
+                variant="secondary"
+                onClick={() => {
+                  // Courses added since the page loaded must be taggable too.
+                  fetchAllCourses();
+                  setShowTagModal(true);
+                }}
+              />
+              <CustomButton
+                text="Import from CSV"
+                variant="secondary"
+                onClick={() => setShowBulkImportModal(true)}
+              />
+            </>
+          )}
           <CustomButton
             text="Add course"
             onClick={() => setShowAddModal(true)}
