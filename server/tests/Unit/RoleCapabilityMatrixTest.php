@@ -58,11 +58,13 @@ class RoleCapabilityMatrixTest extends TestCase
         'can_manage_supervisor_changes' => ['dordc', 'admin'],
         'can_propose_supervisor_changes' => ['hod', 'phd_coordinator', 'admin', 'doctoral', 'dordc'],
         'can_edit_doctoral_committee' => ['admin', 'doctoral', 'dordc'],
-        'can_edit_supervisors' => ['dordc', 'admin'],
-        'can_read_doctoral_committee' => ['hod', 'phd_coordinator', 'admin', 'doctoral', 'dordc'],
 
         // Admin-only controllers
         'can_manage_users' => ['admin'],
+        // UserManagementController::delete, the cascade guard for a
+        // student-backed or faculty-backed account.
+        'can_delete_students' => ['admin'],
+        'can_delete_faculties' => ['admin'],
         'can_manage_form_levels' => ['admin'],
         'can_manage_supervisor_records' => ['admin'],
         'can_manage_clerks' => ['admin'],
