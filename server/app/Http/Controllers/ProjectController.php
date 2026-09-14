@@ -72,6 +72,8 @@ class ProjectController extends Controller {
     }
 
     public function listFilters(Request $request) {
+        $user = Auth::user();
+        if (!$this->canManage($user)) return response()->json(['message' => 'Not authorized'], 403);
         $rows = $this->getAvailableFilters('projects');
         // Seeded rows may not exist yet where the seeder was never re-run;
         // fall back to the same static list so the dropdown never renders empty.
@@ -108,6 +110,7 @@ class ProjectController extends Controller {
         $this->fill($project, $request);
         $project->save();
         $this->syncCoPis($project);
+        $project->can_edit = $this->owns($user, $project);
         return response()->json($project, 201);
     }
 
@@ -139,6 +142,7 @@ class ProjectController extends Controller {
         $project->save();
         if ($request->exists('co_pis')) $this->syncCoPis($project);
         $this->commitFileDeletions();
+        $project->can_edit = $this->owns($user, $project);
         return response()->json(['message' => 'Project updated', 'project' => $project]);
     }
 
@@ -162,7 +166,7 @@ class ProjectController extends Controller {
 
     private function visibleTo($user) {
         $query = Project::query();
-        if (in_array(optional($user->current_role)->role, $this->privileged)) return $query;
+        if ($user->may('can_manage_all_projects')) return $query;
 
         $code = optional($user->faculty)->faculty_code;
         $department = $this->departmentScope($user);

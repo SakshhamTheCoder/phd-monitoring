@@ -2,8 +2,6 @@
 namespace App\Http\Controllers\Traits;
 
 trait ProjectAuthorizes {
-    protected $privileged = ['dordc','adordc','dra','director','admin'];
-
     protected function canManage($user) {
         return $user->may('can_manage_projects');
     }
