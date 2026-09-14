@@ -142,20 +142,30 @@ class IrbSubController extends Controller
             'form_ids' => 'required|array',
         ]);
         $request->merge(['approval' => true]);
+        $hasFailure = false;
+        // A missing form is a per-item failure, not a batch abort: the other bulk
+        // endpoints already let a missing form fail its own item via submitForm's
+        // 404 and keep going, so this matches rather than stopping the rest early.
         foreach ($form_ids as $id) {
             $form = IrbSubForm::find($id);
             if (!$form) {
-                return response()->json(['message' => 'Form not found'], 404);
+                $hasFailure = true;
+                continue;
             }
             if ($role->role == 'hod') {
-                $this->hodSubmit($user, $request, $id);
+                $response = $this->hodSubmit($user, $request, $id);
             } elseif ($role->role == 'adordc') {
-                $this->adordcSubmit($user, $request, $id);
+                $response = $this->adordcSubmit($user, $request, $id);
             } elseif ($role->role == 'dordc') {
-                $this->dordcSubmit($user, $request, $id);
+                $response = $this->dordcSubmit($user, $request, $id);
+            }
+            if ($response->getStatusCode() >= 400) {
+                $hasFailure = true;
             }
         }
-        return response()->json(['message' => 'Forms submitted successfully'], 200);
+        return response()->json([
+            'message' => $hasFailure ? 'Some forms could not be submitted' : 'Forms submitted successfully',
+        ], $hasFailure ? 422 : 200);
     }
 
     private function studentSubmit($user, $request, $form_id)

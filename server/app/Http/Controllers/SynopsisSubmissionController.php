@@ -73,11 +73,8 @@ class SynopsisSubmissionController extends Controller
         $role = $user->current_role;
         $cur = $role->role;
         $form = SynopsisSubmission::find($form_id);
-        // Only reroute to the doctoral handler when the form is actually at a stage
-        // the doctoral seat serves. Otherwise a committee member who is also, say,
-        // the HOD gets pulled into the doctoral handler while the form is waiting
-        // on the HOD, and the person whose turn it is cannot act.
-        if ($form && in_array($form->stage, ['doctoral', 'external']) && $form->student->checkDoctoralCommittee($user->faculty?->faculty_code)) {
+        // Only reroute a committee member to the doctoral handler when the form is actually waiting on doctoral.
+        if ($form && $form->stage === 'doctoral' && $form->student->checkDoctoralCommittee($user->faculty?->faculty_code)) {
             $cur = 'doctoral';
         }
         $steps=['student','faculty','doctoral','phd_coordinator','hod','dra','adordc','dordc','director','complete'];
@@ -114,9 +111,8 @@ class SynopsisSubmissionController extends Controller
         $role = $user->current_role;
          $cur = $role->role;
         $form = SynopsisSubmission::find($form_id);
-        // See loadForm() above: only reroute when the form is genuinely waiting
-        // on the doctoral seat.
-        if ($form && in_array($form->stage, ['doctoral', 'external']) && $form->student->checkDoctoralCommittee($user->faculty?->faculty_code)) {
+        // See loadForm() above: only reroute when the form is genuinely waiting on doctoral.
+        if ($form && $form->stage === 'doctoral' && $form->student->checkDoctoralCommittee($user->faculty?->faculty_code)) {
             $cur = 'doctoral';
         }
         switch ($cur) {
@@ -156,18 +152,15 @@ class SynopsisSubmissionController extends Controller
             'approval' => 'required|boolean',
         ]);
         $request->merge(['approval' => true]);
-        $results = [];
         $hasFailure = false;
         foreach ($request->form_ids as $form_id) {
             $response = $this->submit($request, $form_id);
-            $results[] = ['form_id' => $form_id] + $response->getData(true);
             if ($response->getStatusCode() >= 400) {
                 $hasFailure = true;
             }
         }
         return response()->json([
             'message' => $hasFailure ? 'Some forms could not be submitted' : 'Forms submitted successfully',
-            'results' => $results,
         ], $hasFailure ? 422 : 200);
     }
 

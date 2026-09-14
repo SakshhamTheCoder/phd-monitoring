@@ -167,10 +167,16 @@ class StatusChangeFormController extends Controller
             'form_ids' => 'required|array',
             'approval' => 'required|boolean',
         ]);
+        $hasFailure = false;
         foreach ($request->form_ids as $form_id) {
-            $this->submit($request, $form_id);
+            $response = $this->submit($request, $form_id);
+            if ($response->getStatusCode() >= 400) {
+                $hasFailure = true;
+            }
         }
-        return response()->json(['message' => 'Forms submitted successfully'], 200);
+        return response()->json([
+            'message' => $hasFailure ? 'Some forms could not be submitted' : 'Forms submitted successfully',
+        ], $hasFailure ? 422 : 200);
 
     }
 
