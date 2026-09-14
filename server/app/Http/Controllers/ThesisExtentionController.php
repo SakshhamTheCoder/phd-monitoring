@@ -117,6 +117,8 @@ class ThesisExtentionController extends Controller
                 return $this->draSubmit($user, $request, $form_id);
             case 'dordc':
                 return $this->dordcSubmit($user, $request, $form_id);
+            case 'director':
+                return $this->directorSubmit($user, $request, $form_id);
             case 'phd_coordinator':
                 return $this->coordinatorSubmit($user, $request, $form_id);
             default:
@@ -172,10 +174,16 @@ class ThesisExtentionController extends Controller
             'form_ids' => 'required|array',
             'approval' => 'required|boolean',
         ]);
-        $request->merge(['approval' => true]);
+        $hasFailure = false;
         foreach ($request->form_ids as $form_id) {
-            $this->submit($request, $form_id);
+            $response = $this->submit($request, $form_id);
+            if ($response->getStatusCode() >= 400) {
+                $hasFailure = true;
+            }
         }
+        return response()->json([
+            'message' => $hasFailure ? 'Some forms could not be submitted' : 'Forms submitted successfully',
+        ], $hasFailure ? 422 : 200);
     }
     private function supervisorSubmit($user, $request, $form_id)
     {
