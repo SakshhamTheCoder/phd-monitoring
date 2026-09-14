@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import LandingPage from './pages/landing/LandingPage';
@@ -65,7 +65,14 @@ const App = () => {
 
 const AppContent = () => {
   const { loading } = useLoading();
-  const role = localStorage.getItem('userRole');
+  const [role, setRole] = useState(localStorage.getItem('userRole'));
+
+  useEffect(() => {
+    const onRoleChange = () => setRole(localStorage.getItem('userRole'));
+    window.addEventListener('rolechange', onRoleChange);
+    return () => window.removeEventListener('rolechange', onRoleChange);
+  }, []);
+
   // A switched-off module leaves no route behind, so its address falls through
   // to the 404 page rather than rendering against an API that answers 404.
   const features = useFeatures();
@@ -145,8 +152,14 @@ const AppContent = () => {
             </>
           )}
 
-          <Route path="/forms/:form_type" element={<FormListPage />} />
-          <Route path="/forms/:form_type/:id" element={<MainFormPage />} />
+          {/* Students reach these from FormGrid's own /forms list, so the gate is the
+              student block plus the faculty-side block below, not just the latter. */}
+          {(role === 'student' || role === 'faculty' || role === 'phd_coordinator' || role === 'hod' || role === 'doctoral' || role === 'external' || role === 'dordc' || role === 'adordc' || role === 'dra' || role === 'director' || role === 'admin') && (
+            <>
+              <Route path="/forms/:form_type" element={<FormListPage />} />
+              <Route path="/forms/:form_type/:id" element={<MainFormPage />} />
+            </>
+          )}
           {(role === 'faculty' || role === 'phd_coordinator' || role === 'hod' || role === 'doctoral' || role === 'external' || role === 'dordc' || role === 'adordc' || role === 'dra' || role === 'director' || role === 'admin') && (
             <>
               <Route path="/forms" element={<FacultyFormsPage />} />
