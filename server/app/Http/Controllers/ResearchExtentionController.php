@@ -158,12 +158,17 @@ class ResearchExtentionController extends Controller
         $request->validate([
             'form_ids' => 'required|array',
             'form_ids.*' => 'exists:research_extentions_forms,id',
+            'approval' => 'required|boolean',
         ]);
-        $request->merge(['approval' => true]);
+        $hasFailure = false;
         foreach ($request->form_ids as $form_id) {
-            $this->submit($request, $form_id);
+            if ($this->submit($request, $form_id)->getStatusCode() >= 400) {
+                $hasFailure = true;
+            }
         }
-        return response()->json(['message' => 'Forms submitted successfully'], 200);
+        return response()->json([
+            'message' => $hasFailure ? 'Some forms could not be submitted' : 'Forms submitted successfully',
+        ], $hasFailure ? 422 : 200);
     }
 
     private function studentSubmit($user,$request,$form_id){

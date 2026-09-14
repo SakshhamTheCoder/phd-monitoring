@@ -151,7 +151,6 @@ class SynopsisSubmissionController extends Controller
             'form_ids' => 'required|array',
             'approval' => 'required|boolean',
         ]);
-        $request->merge(['approval' => true]);
         $hasFailure = false;
         foreach ($request->form_ids as $form_id) {
             $response = $this->submit($request, $form_id);

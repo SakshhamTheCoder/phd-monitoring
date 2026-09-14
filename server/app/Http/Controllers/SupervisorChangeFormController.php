@@ -152,7 +152,6 @@ class SupervisorChangeFormController extends Controller {
         foreach ($request->form_ids as $form_id) {
             $this->submit($request, $form_id);
         }
-        $request->merge(['approval' => true]);
         return response()->json(['message' => 'Forms submitted successfully'], 200);
     }
     
