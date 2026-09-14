@@ -153,11 +153,18 @@ trait GeneralFormList
                 }
                 break;
 
+            // Institute-wide viewers: no scoping, they may read any scholar's forms.
+            case 'dra':
+            case 'dordc':
+            case 'director':
+            case 'admin':
+                break;
+
             case 'student':
                 return response()->json(['message' => 'You are not authorized to access this resource'], 403);
                 break;
             default:
-                break;
+                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
         $formsQuery = $model::where('student_id', $student_id);
         // The step check answers "has this form reached my desk yet", which is
