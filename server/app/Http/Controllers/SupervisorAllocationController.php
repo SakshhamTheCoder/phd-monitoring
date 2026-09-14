@@ -170,7 +170,10 @@ class SupervisorAllocationController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
 
-        if ($role->role != 'phd_coordinator' && $role->role != 'admin') {
+        // Every row runs through coordinatorSubmit, which checks the acting
+        // faculty against the scholar's department coordinator, so only a
+        // phd_coordinator can pass it; admin used to be let in and fail every row.
+        if ($role->role != 'phd_coordinator') {
             return $this->refuse();
         }
 
