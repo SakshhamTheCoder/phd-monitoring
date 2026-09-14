@@ -9,7 +9,10 @@ use Tests\TestCase;
 
 /**
  * Drives the swapped endpoints as every role and checks that the ones refused
- * with 403 are exactly the ones the pre-swap code refused.
+ * with 403 are exactly the ones the pre-swap code refused. Also covers write
+ * endpoints that never had a role list to swap, admin/forms, outside-experts,
+ * courses and patents among them, so a capability regression on those is
+ * caught here too.
  *
  * RoleCapabilityMatrixTest proves the columns hold the old role lists; this
  * proves the endpoints actually read those columns, so the two together cover
@@ -33,6 +36,27 @@ class CapabilityGateParityTest extends TestCase
         'GET /api/clerks/attendance/history' => ['clerk', 'admin'],
         'GET /api/clerks/attendance/template' => ['clerk', 'admin'],
         'GET /api/settings/leave' => ['admin', 'clerk', 'hod', 'student'],
+
+        // Write endpoints and the capabilities this branch fixed. Admitted
+        // sets are the capability grants from RoleCapabilityMatrixTest, not a
+        // guess: can_manage_form_levels, can_edit_external, can_read_external,
+        // can_manage_courses, can_manage_own_publications and can_manage_users
+        // each admit exactly the roles listed there.
+        //
+        // None of these controllers validate the request body before checking
+        // the capability (denyUnlessMay, or an inline may() check, runs first
+        // in every one), so an empty body still reaches the gate. A refused
+        // role gets its 403 either way; an admitted role that then fails
+        // validation gets a 422, which is not 403 and so is correctly read
+        // below as "not refused by the gate" rather than mistaken for either
+        // a pass or a refusal.
+        'POST /api/admin/forms/create' => ['admin'],
+        'POST /api/admin/forms/disable' => ['admin'],
+        'POST /api/outside-experts/add' => ['admin'],
+        'GET /api/outside-experts/list' => ['admin', 'hod', 'phd_coordinator', 'doctoral', 'dordc'],
+        'POST /api/courses/add' => ['hod', 'phd_coordinator', 'admin'],
+        'GET /api/patents' => ['student'],
+        'GET /api/users/filters' => ['admin'],
     ];
 
     /**
