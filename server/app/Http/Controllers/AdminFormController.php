@@ -17,11 +17,25 @@ use App\Models\SynopsisSubmission;
 use App\Models\ThesisExtentionForm;
 use App\Models\ThesisSubmission;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class AdminFormController extends Controller
 {
+    /**
+     * Guard for every endpoint below: same capability FormLevelController
+     * already requires for approval-stage changes, since these routes can do
+     * the same thing (and more) to any student's forms.
+     */
+    private function authorizeAdmin(): ?\Illuminate\Http\JsonResponse
+    {
+        if (!Auth::user()->may('can_manage_form_levels')) {
+            return response()->json(['message' => 'You do not have permission to manage forms'], 403);
+        }
+        return null;
+    }
+
     private $formModels = [
         
         'irb-constitution' => ConstituteOfIRB::class,
@@ -123,6 +137,10 @@ class AdminFormController extends Controller
      */
     public function getStudentForms($student_id)
     {
+        if ($response = $this->authorizeAdmin()) {
+            return $response;
+        }
+
         try {
             $student = Student::find($student_id);
             if (!$student) {
@@ -241,6 +259,10 @@ class AdminFormController extends Controller
      */
     public function createFormInstance(Request $request)
     {
+        if ($response = $this->authorizeAdmin()) {
+            return $response;
+        }
+
         $request->validate([
             'student_id' => 'required|integer|exists:students,roll_no',
             'form_type' => 'required|string',
@@ -346,6 +368,10 @@ class AdminFormController extends Controller
      */
     public function updateFormControl(Request $request)
     {
+        if ($response = $this->authorizeAdmin()) {
+            return $response;
+        }
+
         $request->validate([
             'student_id' => 'required|integer|exists:students,roll_no',
             'form_type' => 'required|string',
@@ -417,6 +443,10 @@ class AdminFormController extends Controller
      */
     public function toggleFormAvailability(Request $request)
     {
+        if ($response = $this->authorizeAdmin()) {
+            return $response;
+        }
+
         $request->validate([
             'student_id' => 'required|integer|exists:students,roll_no',
             'form_type' => 'required|string',
@@ -456,6 +486,10 @@ class AdminFormController extends Controller
      */
     public function updateGeneralFormStage(Request $request)
     {
+        if ($response = $this->authorizeAdmin()) {
+            return $response;
+        }
+
         $request->validate([
             'student_id' => 'required|integer|exists:students,roll_no',
             'form_type' => 'required|string',
@@ -489,6 +523,10 @@ class AdminFormController extends Controller
      */
     public function deleteFormInstance(Request $request)
     {
+        if ($response = $this->authorizeAdmin()) {
+            return $response;
+        }
+
         $request->validate([
             'student_id' => 'required|integer|exists:students,roll_no',
             'form_type' => 'required|string',
@@ -542,6 +580,10 @@ class AdminFormController extends Controller
      */
     public function disableForm(Request $request)
     {
+        if ($response = $this->authorizeAdmin()) {
+            return $response;
+        }
+
         $request->validate([
             'student_id' => 'required|integer|exists:students,roll_no',
             'form_type' => 'required|string',
