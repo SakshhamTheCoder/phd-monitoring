@@ -26,7 +26,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/forms/delete', [AdminFormController::class, 'deleteFormInstance']);
 
 
+    // Provisioning action: it mails a reset link to every address the caller
+    // supplies, so it is gated on the capability that governs account
+    // management rather than on being signed in at all.
     Route::post('/bulk-forgot-password', function (Request $request) {
+        if (!$request->user()->may('can_manage_users')) {
+            return response()->json(['message' => 'You do not have permission to send password resets'], 403);
+        }
+
         $emails = $request->input('emails', []);
 
         Log::info('Queued bulk reset for: ', $emails);
