@@ -44,7 +44,10 @@ class RoleCapabilityMatrixTest extends TestCase
         'can_read_department_faculties' => ['hod', 'phd_coordinator', 'adordc'],
 
         // FacultyController::add/update/upload, StudentController::add/bulk*
-        'can_manage_faculties' => ['admin', 'adordc', 'director', 'dordc', 'dra'],
+        // phd_coordinator was added by 2026_09_11_000001 once FacultyController
+        // scoped these writes to the writer's own department. The grant is
+        // wider than the pre-swap set on purpose.
+        'can_manage_faculties' => ['admin', 'adordc', 'director', 'dordc', 'dra', 'phd_coordinator'],
         'can_manage_students' => ['admin', 'adordc', 'director', 'dordc', 'dra'],
 
         // DepartmentController::authorize
@@ -86,6 +89,14 @@ class RoleCapabilityMatrixTest extends TestCase
 
         // SuggestionController::suggestExaminer
         'can_suggest_examiners' => ['faculty'],
+
+        // CourseController::add/update/delete/importCoursesFromCSV
+        'can_manage_courses' => ['hod', 'phd_coordinator', 'admin'],
+
+        // OutsideExpertController::list/all/listFilters
+        'can_read_external' => ['admin', 'hod', 'phd_coordinator', 'doctoral', 'dordc'],
+        // OutsideExpertController::add/update/delete/bulkImportFromCSV
+        'can_edit_external' => ['admin'],
     ];
 
     public static function capabilities(): array
