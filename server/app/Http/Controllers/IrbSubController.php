@@ -41,6 +41,14 @@ class IrbSubController extends Controller
        $user = Auth::user();
        if($student_id)
          return $this->listFormsStudent($user, IrbSubForm::class, $student_id);
+
+       // The list must match the detail view (loadForm below): phd_coordinator,
+       // dra and external are not steps in this form's chain and loadForm 403s
+       // all three, so they should never see a populated queue either.
+       if (!in_array($user->current_role->role, ['student', 'hod', 'doctoral', 'dordc', 'adordc', 'faculty', 'director', 'admin'], true)) {
+           return response()->json(['message' => 'You do not have permission to view revised IRB forms. Contact your administrator if you believe this is a mistake.'], 403);
+       }
+
        return $this->listForms($user, IrbSubForm::class,$request,null,false,[
         'fields' => [
             "name","roll_no","date_of_irb","supervisors"

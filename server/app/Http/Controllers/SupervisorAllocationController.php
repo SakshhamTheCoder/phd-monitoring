@@ -32,6 +32,15 @@ class SupervisorAllocationController extends Controller
         $user = Auth::user();
         if ($student_id)
             return $this->listFormsStudent($user, SupervisorAllocation::class, $student_id);
+
+        // The list must match the detail view (loadForm below): dra, dordc,
+        // faculty, adordc, doctoral and external are not steps in this form's
+        // chain and loadForm 403s all of them, so they should never see a
+        // populated queue either.
+        if (!in_array($user->current_role->role, ['student', 'hod', 'phd_coordinator', 'director', 'admin'], true)) {
+            return response()->json(['message' => 'You do not have permission to view supervisor allocation forms. Contact your administrator if you believe this is a mistake.'], 403);
+        }
+
         return $this->listForms($user, SupervisorAllocation::class, $request, null, false, [
             'fields' => [
                 "name",

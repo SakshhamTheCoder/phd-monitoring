@@ -30,6 +30,14 @@ class ResearchExtentionController extends Controller
        $user = Auth::user();
        if($student_id)
          return $this->listFormsStudent($user, ResearchExtentionsForm::class, $student_id);
+
+       // The list must match the detail view (loadForm below): adordc,
+       // doctoral and external are not steps in this form's chain and loadForm
+       // 403s all three, so they should never see a populated queue either.
+       if (!in_array($user->current_role->role, ['student', 'hod', 'phd_coordinator', 'dra', 'dordc', 'director', 'faculty', 'admin'], true)) {
+           return response()->json(['message' => 'You do not have permission to view IRB extension forms. Contact your administrator if you believe this is a mistake.'], 403);
+       }
+
        return $this->listForms($user, ResearchExtentionsForm::class,$request,null,false,[
         'fields' => [
             "name","roll_no","date_of_synopsis","supervisors"
