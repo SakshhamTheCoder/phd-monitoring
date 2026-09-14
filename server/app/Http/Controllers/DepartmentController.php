@@ -273,7 +273,17 @@ class DepartmentController extends Controller
     {
         try {
             $loggedInUser = Auth::user();
-            
+
+            // The role check below only scopes hod/phd_coordinator to their own
+            // department, it never refuses anyone. Every other role, student and
+            // external included, fell through it and reached save() unchecked.
+            $role = $loggedInUser->current_role->role;
+            if (!$loggedInUser->may('can_edit_department') && $role !== 'hod' && $role !== 'phd_coordinator') {
+                return response()->json([
+                    'message' => 'You do not have permission to update area of specialization'
+                ], 403);
+            }
+
             $request->validate($this->areaRules());
 
             $area = \App\Models\AreaOfSpecialization::find($id);
@@ -284,7 +294,6 @@ class DepartmentController extends Controller
             }
 
             // Check authorization
-            $role = $loggedInUser->current_role->role;
             if ($role === 'hod' || $role === 'phd_coordinator') {
                 $facultyCode = $loggedInUser->faculty->faculty_code;
                 $allowedDepartmentId = null;
@@ -324,8 +333,19 @@ class DepartmentController extends Controller
     {
         try {
             $loggedInUser = Auth::user();
+
+            // Same default-deny as updateAreaOfSpecialization: the scoping
+            // branch below only narrows hod/phd_coordinator to their own
+            // department, it is not a gate for everybody else.
+            $role = $loggedInUser->current_role->role;
+            if (!$loggedInUser->may('can_edit_department') && $role !== 'hod' && $role !== 'phd_coordinator') {
+                return response()->json([
+                    'message' => 'You do not have permission to delete area of specialization'
+                ], 403);
+            }
+
             $area = \App\Models\AreaOfSpecialization::find($id);
-            
+
             if (!$area) {
                 return response()->json([
                     'message' => 'Area of specialization not found'
@@ -333,7 +353,6 @@ class DepartmentController extends Controller
             }
 
             // Check authorization
-            $role = $loggedInUser->current_role->role;
             if ($role === 'hod' || $role === 'phd_coordinator') {
                 $facultyCode = $loggedInUser->faculty->faculty_code;
                 $allowedDepartmentId = null;
