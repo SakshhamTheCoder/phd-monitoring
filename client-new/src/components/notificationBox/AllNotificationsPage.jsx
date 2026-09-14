@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { APIlistAllNotifications, APImarkNotificationAsRead } from "../../api/notifications";
+import { APIlistAllNotifications, APImarkNotificationAsRead, APImarkAllNotificationsAsRead } from "../../api/notifications";
 import "./AllNotificationsPage.css";
 import { timeAgo } from "../../utils/timeParse";
 import { toast } from "react-toastify";
@@ -9,6 +9,7 @@ import LoadError from "../common/LoadError";
 import StatusNotice from "../common/StatusNotice";
 import Page from "../page/Page";
 import Panel from "../panel/Panel";
+import CustomButton from "../forms/fields/CustomButton";
 
 const AllNotificationsPage = () => {
   const [notifications, setNotifications] = useState([]);
@@ -45,10 +46,20 @@ const AllNotificationsPage = () => {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
+  // The same action the bell's dropdown has, for someone reading the full list.
+  const markAllAsRead = async () => {
+    const result = await APImarkAllNotificationsAsRead();
+    if (result?.success) {
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      toast.success("All notifications marked as read.");
+    }
+  };
+
   return (
     <Page
       title="Notifications"
       meta={unreadCount > 0 && <span className="badge badge--accent">{unreadCount} unread</span>}
+      actions={unreadCount > 0 && <CustomButton text="Mark all as read" variant="secondary" onClick={markAllAsRead} />}
     >
       {status === "loading" ? (
         <Panel><StatusNotice tone="loading" title="Loading notifications" /></Panel>
