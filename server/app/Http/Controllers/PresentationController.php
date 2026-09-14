@@ -736,10 +736,12 @@ class PresentationController extends Controller
         $form = Presentation::find($form_id);
         $role = $user->current_role;
         $cur = $role->role;
-        if ($form) {
-            if ($form->student->checkDoctoralCommittee($user->faculty?->faculty_code)) {
-                $cur = 'doctoral';
-            }
+        // Only reroute to the doctoral handler when the form is actually at a stage
+        // the doctoral seat serves. Otherwise a committee member who is also, say,
+        // the HOD gets pulled into the doctoral handler while the form is waiting
+        // on the HOD, and the person whose turn it is cannot act.
+        if ($form && in_array($form->stage, ['doctoral', 'external']) && $form->student->checkDoctoralCommittee($user->faculty?->faculty_code)) {
+            $cur = 'doctoral';
         }
         switch ($cur) {
             case 'student':
@@ -790,10 +792,10 @@ class PresentationController extends Controller
         }
 
         $cur = $role->role;
-        if ($form) {
-            if ($form->student->checkDoctoralCommittee($user->faculty?->faculty_code)) {
-                $cur = 'doctoral';
-            }
+        // See loadForm() above: only reroute when the form is genuinely waiting
+        // on the doctoral seat.
+        if ($form && in_array($form->stage, ['doctoral', 'external']) && $form->student->checkDoctoralCommittee($user->faculty?->faculty_code)) {
+            $cur = 'doctoral';
         }
         switch ($cur) {
             case 'student':
