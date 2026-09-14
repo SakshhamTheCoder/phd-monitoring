@@ -130,6 +130,13 @@ class ExternalReviewController extends Controller
             return response()->json(['message' => 'Submission not found.'], 404);
         }
 
+        // dordc/admin hold institute-wide authority; phd_coordinator is scoped to the
+        // scholar's department, same check PresentationController::createForm uses.
+        $role = $request->user()->current_role->role;
+        if ($role === 'phd_coordinator' && !$form->student?->department?->checkCoordinates($request->user()->faculty->faculty_code)) {
+            return response()->json(['message' => 'You are not authorized to resend this review.'], 403);
+        }
+
         $existing = Approval::where('model_type', IrbSubForm::class)->where('model_id', $id)->first();
         if ($existing && $existing->consumed_at) {
             return response()->json(['message' => 'The expert has already responded; nothing to resend.'], 409);
