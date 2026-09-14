@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { APIlistAllNotifications, APImarkNotificationAsRead } from "../../api/notifications";
+import { APIlistAllNotifications, APImarkNotificationAsRead, APImarkAllNotificationsAsRead } from "../../api/notifications";
 import "./AllNotificationsPage.css";
 import Layout from "../dashboard/layout";
 import { timeAgo } from "../../utils/timeParse";
@@ -46,13 +46,32 @@ const AllNotificationsPage = () => {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
+  const handleMarkAllAsRead = async () => {
+    const result = await APImarkAllNotificationsAsRead();
+    if (result && result.success) {
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      toast.success("All notifications marked as read");
+    } else {
+      toast.error("Couldn't mark notifications as read");
+    }
+  };
+
   return (
     <Layout>
       <div className="all-notifications-page">
         <div className="notification-page-head">
           <h1 className="page-title">Notifications</h1>
           {unreadCount > 0 && (
-            <span className="notification-unread-pill">{unreadCount} unread</span>
+            <div className="notification_header_actions">
+              <span className="notification-unread-pill">{unreadCount} unread</span>
+              <button
+                type="button"
+                className="notification_mark_all"
+                onClick={handleMarkAllAsRead}
+              >
+                Mark all as read
+              </button>
+            </div>
           )}
         </div>
 
