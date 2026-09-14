@@ -14,6 +14,23 @@ class CourseController extends Controller
 {
     use FilterLogicTrait, PagenationTrait;
 
+    /**
+     * add, update, delete and importCoursesFromCSV checked nothing at all, so
+     * any signed-in user, a student included, could rewrite or delete any
+     * course in the catalog. list, listFilters and getAllCourses stay open:
+     * they are catalog data used by student-facing screens.
+     */
+    private function denyUnlessMayManageCourses()
+    {
+        if (!Auth::user()->may('can_manage_courses')) {
+            return response()->json([
+                'message' => 'You do not have permission to manage courses'
+            ], 403);
+        }
+
+        return null;
+    }
+
     public function listFilters(Request $request)
     {
         return response()->json($this->getAvailableFilters("courses"));
@@ -96,8 +113,10 @@ class CourseController extends Controller
     public function add(Request $request)
     {
         try {
+            if ($denied = $this->denyUnlessMayManageCourses()) return $denied;
+
             $loggedInUser = Auth::user();
-            
+
             $request->validate([
                 'course_code' => 'required|string|unique:courses,course_code',
                 'course_name' => 'required|string',
@@ -131,6 +150,8 @@ class CourseController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            if ($denied = $this->denyUnlessMayManageCourses()) return $denied;
+
             $request->validate([
                 'course_code' => 'required|string|unique:courses,course_code,' . $id,
                 'course_name' => 'required|string',
@@ -170,6 +191,8 @@ class CourseController extends Controller
     public function delete($id)
     {
         try {
+            if ($denied = $this->denyUnlessMayManageCourses()) return $denied;
+
             $course = Course::find($id);
             if (!$course) {
                 return response()->json([
@@ -232,6 +255,8 @@ class CourseController extends Controller
     public function importCoursesFromCSV(Request $request)
     {
         try {
+            if ($denied = $this->denyUnlessMayManageCourses()) return $denied;
+
             $request->validate([
                 'csv_file' => 'required|file|mimes:csv,txt',
             ]);
