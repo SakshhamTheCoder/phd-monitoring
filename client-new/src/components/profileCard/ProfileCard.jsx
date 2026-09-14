@@ -15,6 +15,7 @@ import CustomModal from "../forms/modal/CustomModal";
 import SupervisorDoctoralManager from "../supervisorDoctoralManager/SupervisorDoctoralManager";
 import InfoGrid from "../profileFields/InfoGrid";
 import { toast } from "react-toastify";
+import useCapabilities from "../../hooks/useCapabilities";
 
 /**
  * What the deadline means today. The server owns the dates and the count, so
@@ -45,6 +46,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
   const { state: locationState, pathname } = useLocation();
   const { roll_no } = useParams();
   const navigate = useNavigate();
+  const can = useCapabilities();
 
   const [profile, setProfile] = useState(locationState || dataIP);
   const [loading, setLoading] = useState(!profile);
@@ -442,13 +444,13 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
                 />
               </>)}
               {permissions.can_manage && (
-                <>
-                  <CustomButton text="Tag Course" onClick={() => {
-                    fetchAllCourses();
-                    setIsTagModalOpen(true);
-                  }} />
-                  <CustomButton text="Manage Supervisors/Doctoral" onClick={() => setShowSupervisorDoctoralModal(true)} />
-                </>
+                <CustomButton text="Tag Course" onClick={() => {
+                  fetchAllCourses();
+                  setIsTagModalOpen(true);
+                }} />
+              )}
+              {can("can_propose_supervisor_changes") && (
+                <CustomButton text="Manage Supervisors/Doctoral" onClick={() => setShowSupervisorDoctoralModal(true)} />
               )}
             </div>
           )}
