@@ -53,6 +53,14 @@ import ProjectRecruitment from './pages/projects/ProjectRecruitment';
 import Openings from './pages/projects/Openings';
 
 
+// Roles that reach the faculty-side form routes (line 163 below). The
+// student-facing form list route reuses this array plus 'student', so the
+// two lists cannot drift out of sync.
+const FACULTY_FORM_ROLES = [
+  'faculty', 'phd_coordinator', 'hod', 'doctoral', 'external',
+  'dordc', 'adordc', 'dra', 'director', 'admin',
+];
+
 const App = () => {
   return (
     <LoadingProvider>
@@ -154,13 +162,13 @@ const AppContent = () => {
 
           {/* Students reach these from FormGrid's own /forms list, so the gate is the
               student block plus the faculty-side block below, not just the latter. */}
-          {(role === 'student' || role === 'faculty' || role === 'phd_coordinator' || role === 'hod' || role === 'doctoral' || role === 'external' || role === 'dordc' || role === 'adordc' || role === 'dra' || role === 'director' || role === 'admin') && (
+          {(role === 'student' || FACULTY_FORM_ROLES.includes(role)) && (
             <>
               <Route path="/forms/:form_type" element={<FormListPage />} />
               <Route path="/forms/:form_type/:id" element={<MainFormPage />} />
             </>
           )}
-          {(role === 'faculty' || role === 'phd_coordinator' || role === 'hod' || role === 'doctoral' || role === 'external' || role === 'dordc' || role === 'adordc' || role === 'dra' || role === 'director' || role === 'admin') && (
+          {FACULTY_FORM_ROLES.includes(role) && (
             <>
               <Route path="/forms" element={<FacultyFormsPage />} />
               <Route path="/students" element={<StudentsPage />} />

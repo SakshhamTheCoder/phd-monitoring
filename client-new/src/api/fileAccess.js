@@ -2,6 +2,7 @@
 // artifact that is still meant to be public (job-opening advertisements), and
 // '/app/...' for everything else, which moved off the web-served disk and
 // behind the authenticated /files/download route (see server SaveFile.php).
+import { toast } from "react-toastify";
 import { baseURL, rootURL } from './urls';
 
 const isHttpUrl = (value) => /^https?:\/\//i.test(value);
@@ -33,10 +34,20 @@ export const openStoredFile = async (path) => {
     const response = await fetch(resolveFileUrl(value), {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
     });
-    if (!response.ok) throw new Error(`Download failed with status ${response.status}`);
+    if (!response.ok) {
+      // 401/403 means the session or role can't reach this file; anything
+      // else (404, 500, ...) is a fetch failure the user can only retry.
+      const message =
+        response.status === 401 || response.status === 403
+          ? 'You do not have permission to do that. Contact your administrator if you believe this is a mistake.'
+          : 'Could not open this file. Check your connection and try again.';
+      toast.error(message);
+      return;
+    }
     const blob = await response.blob();
     window.open(URL.createObjectURL(blob), '_blank', 'noopener,noreferrer');
   } catch (error) {
     console.error('Could not open file:', error);
+    toast.error('Could not open this file. Check your connection and try again.');
   }
 };
