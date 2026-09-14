@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Traits\AuthorizesStudentAccess;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\SaveFile;
 use App\Models\Patent;
 use App\Models\Publication;
+use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -19,6 +21,7 @@ class PublicationController extends Controller
      */
     use SaveFile;
     use FilterLogicTrait;
+    use AuthorizesStudentAccess;
 
     public function listFilters(Request $request)
     {
@@ -31,21 +34,50 @@ class PublicationController extends Controller
         if (!$user->may('can_manage_own_publications')) {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
-        $id = $user->student->roll_no;
-        $publicationsQuery = Publication::where('student_id', $id)->where('form_id', null);
-        $patents = Patent::where('student_id', $id)->get()->where('form_id', null);
+        return response()->json($this->publicationsFor($user->student->roll_no));
+    }
 
-        $ret = [
+    /**
+     * A named scholar's publications, for a viewer other than the scholar.
+     *
+     * Gated the same way StudentController::get decides whether the viewer may
+     * open the scholar's profile at all, not by can_manage_students: that
+     * capability is admin/adordc/director/dordc/dra only, which would exclude
+     * the scholar's own supervisor and doctoral committee, the main readers
+     * this endpoint exists for. Whoever may open the profile may read what is
+     * on it.
+     */
+    public function getForStudent($studentId)
+    {
+        $student = Student::find($studentId);
+        if (!$student) {
+            return response()->json(['message' => 'Student not found'], 404);
+        }
+
+        $user = Auth::user();
+        $isOwn = $user->student?->roll_no === $student->roll_no;
+        if (!$isOwn && !$this->canViewStudent($student)) {
+            return response()->json(['message' => 'You do not have permission to view this scholar\'s publications. Contact your administrator if you believe this is a mistake.'], 403);
+        }
+
+        return response()->json($this->publicationsFor($student->roll_no));
+    }
+
+    private function publicationsFor($rollNo): array
+    {
+        $publicationsQuery = Publication::where('student_id', $rollNo)->where('form_id', null);
+        $patents = Patent::where('student_id', $rollNo)->get()->where('form_id', null);
+
+        return [
             'sci' => $publicationsQuery->clone()->where('publication_type', 'journal')->where('type', 'sci')->get(),
             'non_sci' => $publicationsQuery->clone()->where('publication_type', 'journal')->where('type', 'non-sci')->get(),
             'national' => $publicationsQuery->clone()->where('publication_type', 'conference')->where('type', 'national')->get(),
             'international' => $publicationsQuery->clone()->where('publication_type', 'conference')->where('type', 'international')->get(),
             'book' => $publicationsQuery->clone()->where('publication_type', 'book')->get(),
-            'patents' => $patents
+            'patents' => $patents,
         ];
-
-        return response()->json($ret);
     }
+
     /**
      * Store a newly created publication in storage.
      *

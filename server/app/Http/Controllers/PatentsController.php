@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Traits\AuthorizesStudentAccess;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\SaveFile;
 use App\Models\Patent;
+use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -13,6 +15,7 @@ class PatentsController extends Controller
 {
     use SaveFile;
     use FilterLogicTrait;
+    use AuthorizesStudentAccess;
     /**
      * Display a listing of the patents.
      *
@@ -26,6 +29,28 @@ class PatentsController extends Controller
         }
         $patents = Patent::where('student_id', $user->student->roll_no)->get();
         return response()->json($patents);
+    }
+
+    /**
+     * A named scholar's patents, for a viewer other than the scholar. Gating
+     * matches PublicationController::getForStudent: mirrors
+     * StudentController::get's scoping rather than can_manage_students, since
+     * that capability would exclude the scholar's own supervisor.
+     */
+    public function getForStudent($studentId)
+    {
+        $student = Student::find($studentId);
+        if (!$student) {
+            return response()->json(['message' => 'Student not found'], 404);
+        }
+
+        $user = Auth::user();
+        $isOwn = $user->student?->roll_no === $student->roll_no;
+        if (!$isOwn && !$this->canViewStudent($student)) {
+            return response()->json(['message' => 'You do not have permission to view this scholar\'s patents. Contact your administrator if you believe this is a mistake.'], 403);
+        }
+
+        return response()->json(Patent::where('student_id', $student->roll_no)->get());
     }
 
     public function listFilters(Request $request){

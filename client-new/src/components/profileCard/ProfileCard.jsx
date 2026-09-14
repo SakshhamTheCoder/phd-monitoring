@@ -114,11 +114,18 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
     } catch (e) { /* 403 means viewer lacks permission — hide silently */ }
   };
 
-  // PublicationController::get always resolves to the logged-in user's own
-  // roll_no, so this only ever answers for the viewer's own profile.
+  // Self reads through the unscoped endpoint, unchanged from before. Anyone
+  // else needs the named-scholar endpoint, gated the same as the profile
+  // itself (PublicationController::getForStudent mirrors
+  // StudentController::get). A 403 there just leaves publications unset, so
+  // the sections below stay hidden for a viewer who is not authorized.
   const fetchPublications = async () => {
+    const studentId = profile?.database_id || profile?.id;
+    const url = permissions.is_self
+      ? `${baseURL}/publications`
+      : `${baseURL}/publications/student/${studentId}`;
     try {
-      const res = await customFetch(`${baseURL}/publications`, 'GET', {}, false, false);
+      const res = await customFetch(url, 'GET', {}, false, false);
       if (res?.success) setPublications(res.response);
     } catch (error) {
       console.error('Error fetching publications:', error);
@@ -133,7 +140,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
       fetchCourses();
     }
     if (profile?.roll_no) fetchAttendance();
-    if (permissions.is_self && canSeeOwnPublications) fetchPublications();
+    if (permissions.is_self ? canSeeOwnPublications : !!studentId) fetchPublications();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.database_id, profile?.id, profile?.roll_no, permissions.is_self, canSeeOwnPublications]);
 
@@ -570,10 +577,11 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
             space={3}
           />
 
-          {/* Own-profile only: PublicationController::get always answers for
-              the logged-in user's own roll_no, so a viewed scholar's record
-              cannot be shown here. */}
-          {permissions.is_self && canSeeOwnPublications && (
+          {/* Rendered once fetchPublications resolves: for the scholar that
+              needs can_manage_own_publications, for any other viewer it needs
+              the server's relationship check (supervises, sits on the
+              committee, department or institute scope) to have passed. */}
+          {publications && (
             <>
               <GridContainer
                 label="Publications"

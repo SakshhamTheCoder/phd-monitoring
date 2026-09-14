@@ -8,4 +8,5 @@ use Illuminate\Support\Facades\Route;
 Route::post('/', [PatentsController::class, 'store'])->middleware('auth:sanctum');
 Route::post('/{id}', [PatentsController::class, 'update'])->middleware('auth:sanctum');
 Route::get('/', [PatentsController::class, 'index'])->middleware('auth:sanctum');
+Route::get('/student/{studentId}', [PatentsController::class, 'getForStudent'])->middleware('auth:sanctum');
 Route::delete('/{id}', [PatentsController::class, 'destroy'])->middleware('auth:sanctum');
