@@ -12,6 +12,7 @@ use App\Http\Controllers\IrbSubFormController;
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('', [ConstituteOfIRBController::class, 'listForm']);
     Route::post('', [ConstituteOfIRBController::class, 'createForm']);
+    Route::post('/bulk', [ConstituteOfIRBController::class, 'bulkSubmit'])->name('form.bulk.create');
     Route::get('/filters', [ConstituteOfIRBController::class, 'listFilters']);
     Route::get('/{form_id}', [ConstituteOfIRBController::class, 'loadForm']);
     Route::post('/{form_id}', [ConstituteOfIRBController::class, 'submit']);

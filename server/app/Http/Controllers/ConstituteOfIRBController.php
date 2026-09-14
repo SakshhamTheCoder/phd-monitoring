@@ -155,6 +155,33 @@ class ConstituteOfIRBController extends Controller
         }
     }
 
+    public function bulkSubmit(Request $request)
+    {
+        $user = Auth::user();
+        $role = $user->current_role;
+
+        // Reviewer roles only: student and faculty submit their own form
+        // one at a time and have no bulk queue, same as the sibling forms.
+        $allowedRoles = ['hod', 'adordc', 'dordc'];
+        if (!in_array($role->role, $allowedRoles)) {
+            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+        }
+        $request->validate([
+            'form_ids' => 'required|array',
+            'approval' => 'required|boolean',
+        ]);
+        $hasFailure = false;
+        foreach ($request->form_ids as $form_id) {
+            $response = $this->submit($request, $form_id);
+            if ($response->getStatusCode() >= 400) {
+                $hasFailure = true;
+            }
+        }
+        return response()->json([
+            'message' => $hasFailure ? 'Some forms could not be submitted' : 'Forms submitted successfully',
+        ], $hasFailure ? 422 : 200);
+    }
+
     private function studentSubmit($user, Request $request, $form_id)
     {
         $request->validate([

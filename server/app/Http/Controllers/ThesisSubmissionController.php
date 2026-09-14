@@ -290,7 +290,7 @@ class ThesisSubmissionController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
        
-        $allowedRoles = ['hod', 'phd_coordinator', 'dra', 'dordc', 'director','adordc'];
+        $allowedRoles = ['hod', 'phd_coordinator', 'dra', 'dordc', 'adordc'];
         if (!in_array($role->role, $allowedRoles)) {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
