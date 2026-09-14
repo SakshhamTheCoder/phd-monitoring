@@ -148,7 +148,11 @@ class SupervisorAllocationController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
 
-        if ($role->role != 'phd_coordinator' && $role->role != 'admin') {
+        // Every row below runs through coordinatorSubmit, which checks the acting
+        // faculty against the student's department coordinator, so only a
+        // phd_coordinator can ever pass it. Admin was previously let in here but
+        // failed on every row.
+        if ($role->role != 'phd_coordinator') {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
 

@@ -32,8 +32,9 @@ const FormListPage = () => {
 
   // Only the PhD Coordinator allocates supervisors, and only from the
   // department-wide allocation list (not a single student's form list).
+  // Admin can view this form but the write path rejects them on every row.
   const showBulkAllocate =
-    (role === "phd_coordinator" || role === "admin") &&
+    role === "phd_coordinator" &&
     location.pathname === "/forms/supervisor-allocation";
 
   useEffect(() => {
