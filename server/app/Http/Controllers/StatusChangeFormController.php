@@ -202,7 +202,11 @@ class StatusChangeFormController extends Controller
     private function dordcSubmit($user, $request, $form_id)
     {
         $model = StudentStatusChangeForms::class;
-        $student=StudentStatusChangeForms::find($form_id)->student;
+        $form = StudentStatusChangeForms::find($form_id);
+        if (!$form) {
+            return response()->json(['message' => 'No form found'], 404);
+        }
+        $student = $form->student;
         $prevStatusChanges = $student->statusChanges();
         if ($prevStatusChanges->count() > 1) {
             return $this->submitForm($user, $request, $form_id, $model, 'dordc', 'dra', 'director');
