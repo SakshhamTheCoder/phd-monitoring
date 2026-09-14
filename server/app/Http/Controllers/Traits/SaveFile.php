@@ -14,6 +14,13 @@ trait SaveFile
      */
     private $filesPendingDeletion = [];
 
+    /**
+     * The only upload an anonymous applicant needs to see before they log in
+     * or even apply. Everything else is scoped to one scholar or one PI and
+     * has no business on the web-served disk.
+     */
+    private const PUBLIC_FORM = 'project_advertisement';
+
     private function saveUploadedFile($file, $formName, $rollNo)
     {
         // Generate a random 6-digit number
@@ -25,11 +32,15 @@ trait SaveFile
         // Define the folder path for the form type
         $folderPath = "uploads/{$formName}/";
 
-        // Store the file
-        $filePath = $file->storeAs($folderPath, $fileName, 'public');
+        if ($formName === self::PUBLIC_FORM) {
+            $filePath = $file->storeAs($folderPath, $fileName, 'public');
+            return '/app/public/' . $filePath;
+        }
 
-        // Return the relative URL to access the file (starting with /storage/)
-        return '/app/public/' . $filePath; // This ensures the path starts with /storage/
+        // 'local' disk roots at storage/app, outside the storage/public symlink,
+        // so nothing here is reachable without going through an authorized route.
+        $filePath = $file->storeAs($folderPath, $fileName, 'local');
+        return '/app/' . $filePath;
     }
 
     /**
@@ -92,10 +103,20 @@ trait SaveFile
         if (preg_match('#^https?://#i', $storedPath)) {
             return; // external link, not a file we own
         }
-        $relative = preg_replace('#^/?app/public/#', '', $storedPath);
+
+        // The disk lives in the path itself: still-public uploads keep the
+        // '/app/public/' prefix, everything moved private does not.
+        if (preg_match('#^/?app/public/#', $storedPath)) {
+            $disk = 'public';
+            $relative = preg_replace('#^/?app/public/#', '', $storedPath);
+        } else {
+            $disk = 'local';
+            $relative = preg_replace('#^/?app/#', '', $storedPath);
+        }
+
         try {
-            if ($relative && Storage::disk('public')->exists($relative)) {
-                Storage::disk('public')->delete($relative);
+            if ($relative && Storage::disk($disk)->exists($relative)) {
+                Storage::disk($disk)->delete($relative);
             }
         } catch (\Throwable $e) {
             // Cleanup is best-effort; never fail the request over an orphan file.

@@ -246,6 +246,11 @@ Route::prefix('roles')->group(function () {
 });
 Route::get('/home', [HomeController::class, 'getHomeData'])->middleware('auth:sanctum');
 
+// Uploads live on the private 'local' disk; this is the only way to read one back.
+Route::get('/files/download/{path}', [\App\Http\Controllers\FileDownloadController::class, 'download'])
+    ->where('path', '.*')
+    ->middleware('auth:sanctum');
+
 Route::prefix('notifications')->group(function () {
     require base_path('routes/base/notifications.php');
 });

@@ -1,14 +1,13 @@
 // API layer for the Projects module. Wraps customFetch and maps between the
 // backend's snake_case shape and the camelCase shape the React pages expect.
-import { baseURL, rootURL } from './urls';
+import { baseURL } from './urls';
 import { customFetch } from './base';
+import { resolveFileUrl } from './fileAccess';
 
-// Turn a stored `/app/public/...` path into a servable URL; pass links through.
-export const fileUrl = (p) => {
-  if (!p) return '';
-  if (/^https?:\/\//i.test(p)) return p;
-  return rootURL + String(p).replace('app/public', 'storage');
-};
+// Turn a stored path into a servable URL. Only safe for a plain <a href> when
+// the path is public or an external link; private paths need openStoredFile
+// (see fileAccess.js) since a browser navigation cannot send the bearer token.
+export const fileUrl = resolveFileUrl;
 
 // ---- mappers: backend -> frontend ----
 export const mapMilestone = (m) => ({

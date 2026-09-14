@@ -21,6 +21,7 @@ import Tabs from '../../components/tabs/Tabs';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import FacultyLink from '../../components/facultyLink/FacultyLink';
 import { baseURL } from '../../api/urls';
+import { openStoredFile } from '../../api/fileAccess';
 import { toast } from 'react-toastify';
 import './ProjectDetails.css';
 
@@ -28,7 +29,7 @@ import './ProjectDetails.css';
 const sanctionFromProject = (p) => {
   if (!p || !p.sanctionLetterLink || p.sanctionLetterLink === '#') return null;
   const isLink = /^https?:\/\//i.test(p.sanctionLetterLink);
-  return { name: p.sanctionLetterName || 'Sanction Letter', url: fileUrl(p.sanctionLetterLink), isLink };
+  return { name: p.sanctionLetterName || 'Sanction Letter', url: fileUrl(p.sanctionLetterLink), path: p.sanctionLetterLink, isLink };
 };
 
 const TABS = ['Overview', 'Funding & Budget', 'Milestones', 'Project Team', 'Documents'];
@@ -463,7 +464,7 @@ const ProjectDetails = () => {
       if (!sanctionLinkInput.trim()) { toast.error('Please enter a link.'); return; }
       const res = await apiUpdateProject(project.id, { sanction_letter_link: sanctionLinkInput.trim(), sanction_letter_name: 'Sanction Letter' });
       if (res.success) {
-        setSanctionDoc({ name: 'Sanction Letter', url: sanctionLinkInput.trim(), isLink: true });
+        setSanctionDoc({ name: 'Sanction Letter', url: sanctionLinkInput.trim(), path: sanctionLinkInput.trim(), isLink: true });
         setShowSanctionModal(false);
         toast.success('Sanction letter updated.');
       }
@@ -575,7 +576,7 @@ const ProjectDetails = () => {
                 <span>Sanction Letter</span>
                 <div className="pd-sanction-view">
                   {sanctionDoc ? (
-                    <a href={sanctionDoc.url} target="_blank" rel="noopener noreferrer"><i className={`fa ${sanctionDoc.isLink ? 'fa-link' : 'fa-file-pdf-o'}`}></i> {sanctionDoc.name}</a>
+                    <a href={sanctionDoc.url} target="_blank" rel="noopener noreferrer" onClick={(e) => { e.preventDefault(); openStoredFile(sanctionDoc.path); }}><i className={`fa ${sanctionDoc.isLink ? 'fa-link' : 'fa-file-pdf-o'}`}></i> {sanctionDoc.name}</a>
                   ) : (
                     <span className="pd-sanction-none">Not uploaded</span>
                   )}
@@ -955,7 +956,7 @@ const ProjectDetails = () => {
                     <i className="fa fa-file-pdf-o pd-doc-icon"></i>
                     <div className="pd-doc-info"><strong>{d.name}</strong><span>{d.type} &middot; {formatDate(d.date)}</span></div>
                     <div className="pd-doc-actions">
-                      {d.url && <a className="pd-doc-dl" href={d.url} target="_blank" rel="noopener noreferrer" title="View document"><i className="fa fa-eye"></i></a>}
+                      {d.url && <a className="pd-doc-dl" href={d.url} target="_blank" rel="noopener noreferrer" title="View document" onClick={(e) => { e.preventDefault(); openStoredFile(d.file_path || d.link); }}><i className="fa fa-eye"></i></a>}
                       {canEdit && (
                         <>
                           <button className="pd-doc-edit" onClick={() => openEditDoc(i)} title="Edit document"><i className="fa fa-pencil"></i></button>
