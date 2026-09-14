@@ -12,6 +12,7 @@ import GridContainer from "../forms/fields/GridContainer";
 import TableComponent from "../forms/table/TableComponent";
 import CustomButton from "../forms/fields/CustomButton";
 import CustomModal from "../forms/modal/CustomModal";
+import StudentForm from "../studentForm/StudentForm";
 import SupervisorDoctoralManager from "../supervisorDoctoralManager/SupervisorDoctoralManager";
 import InfoGrid from "../profileFields/InfoGrid";
 import { toast } from "react-toastify";
@@ -27,15 +28,27 @@ const deadlineNote = ({ days_remaining: daysLeft, extensions_granted: granted })
   return `(${daysLeft} days left${extended})`;
 };
 
+// Matches the category labels PublicationController::get groups a scholar's
+// own publications into (sci, non_sci, international, national, book).
+const PUBLICATION_CATEGORY_LABELS = {
+  sci: 'SCI/SCIE/SSCI/ABDC/AHCI Journal',
+  non_sci: 'Scopus Journal',
+  international: 'International Conference',
+  national: 'National Conference',
+  book: 'Book/Book Chapter',
+};
+
 const ProfileCard = ({ dataIP = null, link = false }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
+  const [isEditStudentOpen, setIsEditStudentOpen] = useState(false);
   const [isEditingInline, setIsEditingInline] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [showSupervisorDoctoralModal, setShowSupervisorDoctoralModal] = useState(false);
   const [courses, setCourses] = useState([]);
   const [allCourses, setAllCourses] = useState([]);
   const [attendance, setAttendance] = useState(null);
+  const [publications, setPublications] = useState(null);
   const [tagData, setTagData] = useState({
     course_id: '',
     semester: '',
@@ -101,14 +114,28 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
     } catch (e) { /* 403 means viewer lacks permission — hide silently */ }
   };
 
+  // PublicationController::get always resolves to the logged-in user's own
+  // roll_no, so this only ever answers for the viewer's own profile.
+  const fetchPublications = async () => {
+    try {
+      const res = await customFetch(`${baseURL}/publications`, 'GET', {}, false, false);
+      if (res?.success) setPublications(res.response);
+    } catch (error) {
+      console.error('Error fetching publications:', error);
+    }
+  };
+
+  const canSeeOwnPublications = can('can_manage_own_publications');
+
   useEffect(() => {
     const studentId = profile?.database_id || profile?.id;
     if (studentId) {
       fetchCourses();
     }
     if (profile?.roll_no) fetchAttendance();
+    if (permissions.is_self && canSeeOwnPublications) fetchPublications();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.database_id, profile?.id, profile?.roll_no]);
+  }, [profile?.database_id, profile?.id, profile?.roll_no, permissions.is_self, canSeeOwnPublications]);
 
   const fetchAllCourses = async () => {
     try {
@@ -141,6 +168,34 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
       console.error('Error tagging course:', error);
       toast.error('Failed to tag course');
     }
+  };
+
+  // Row id from getCoursesForStudent, not the course id, matches what
+  // removeStudentFromCourse expects. Confirm first: same interaction as
+  // AdminCourseManagement's catalog row delete, since this is the same kind
+  // of irreversible admin write.
+  const handleRemoveCourse = async (course) => {
+    if (!window.confirm(`Remove ${course.course_code} from this scholar's courses?`)) return;
+    const response = await customFetch(`${baseURL}/courses/student/remove/${course.id}`, 'DELETE');
+    if (response?.success) {
+      toast.success('Course removed.');
+      fetchCourses();
+    }
+    // On failure customFetch already toasts the backend's message.
+  };
+
+  const courseActionsColumn = {
+    key: 'actions',
+    component: ({ row }) => (
+      <CustomButton text="Remove" variant="danger" onClick={() => handleRemoveCourse(row)} />
+    ),
+  };
+
+  const handleEditStudentSuccess = () => {
+    setIsEditStudentOpen(false);
+    customFetch(profileUrl, "GET", {}, true, false).then((res) => {
+      if (res?.success) setProfile(res.response.profile);
+    });
   };
 
   const navigateToForms = () => {
@@ -444,6 +499,9 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
                 />
               </>)}
               {permissions.can_manage && (
+                <CustomButton text="Edit Student" onClick={() => setIsEditStudentOpen(true)} />
+              )}
+              {permissions.can_manage && (
                 <CustomButton text="Tag Course" onClick={() => {
                   fetchAllCourses();
                   setIsTagModalOpen(true);
@@ -451,6 +509,9 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
               )}
               {can("can_propose_supervisor_changes") && (
                 <CustomButton text="Manage Supervisors/Doctoral" onClick={() => setShowSupervisorDoctoralModal(true)} />
+              )}
+              {can("can_manage_form_levels") && (
+                <CustomButton text="Manage Forms" onClick={() => navigate(`/forms/manage?roll_no=${profile.roll_no}`)} />
               )}
             </div>
           )}
@@ -488,8 +549,9 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
             elements={[
               <TableComponent
                 data={courses?.filter(c => c.status === 'enrolled')}
-                keys={["course_code", "course_name", "credits", "semester"]}
-                titles={["Course Code", "Course Name", "Credits", "Semester"]}
+                keys={["course_code", "course_name", "credits", "semester", ...(permissions.can_manage ? ["actions"] : [])]}
+                titles={["Course Code", "Course Name", "Credits", "Semester", ...(permissions.can_manage ? ["Actions"] : [])]}
+                components={permissions.can_manage ? [courseActionsColumn] : []}
               />,
             ]}
             space={3}
@@ -500,12 +562,49 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
             elements={[
               <TableComponent
                 data={courses?.filter(c => c.status === 'completed')}
-                keys={["course_code", "course_name", "credits", "semester", "grade"]}
-                titles={["Course Code", "Course Name", "Credits", "Semester", "Grade"]}
+                keys={["course_code", "course_name", "credits", "semester", "grade", ...(permissions.can_manage ? ["actions"] : [])]}
+                titles={["Course Code", "Course Name", "Credits", "Semester", "Grade", ...(permissions.can_manage ? ["Actions"] : [])]}
+                components={permissions.can_manage ? [courseActionsColumn] : []}
               />,
             ]}
             space={3}
           />
+
+          {/* Own-profile only: PublicationController::get always answers for
+              the logged-in user's own roll_no, so a viewed scholar's record
+              cannot be shown here. */}
+          {permissions.is_self && canSeeOwnPublications && (
+            <>
+              <GridContainer
+                label="Publications"
+                elements={[
+                  <TableComponent
+                    data={['sci', 'non_sci', 'international', 'national', 'book'].flatMap(
+                      (category) => (publications?.[category] || []).map((p) => ({
+                        ...p,
+                        category: PUBLICATION_CATEGORY_LABELS[category],
+                      }))
+                    )}
+                    keys={["title", "category", "authors", "year"]}
+                    titles={["Title", "Category", "Author(s)", "Year"]}
+                  />,
+                ]}
+                space={3}
+              />
+
+              <GridContainer
+                label="Patents"
+                elements={[
+                  <TableComponent
+                    data={publications?.patents || []}
+                    keys={["title", "authors", "year", "country"]}
+                    titles={["Title", "Author(s)", "Year", "International/National"]}
+                  />,
+                ]}
+                space={3}
+              />
+            </>
+          )}
 
           {/* Attendance — visible only if viewer can view student (API enforces same as StudentController::get) */}
 
@@ -598,6 +697,23 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
           />
         }
         
+        {/* Privileged edit, distinct from the self-edit button above which only
+            covers the scholar's own limited fields. */}
+        <CustomModal
+          isOpen={isEditStudentOpen}
+          onClose={() => setIsEditStudentOpen(false)}
+          setIsOpen={setIsEditStudentOpen}
+          title="Edit Student"
+          width="80vw"
+        >
+          <StudentForm
+            edit
+            studentData={profile}
+            onClose={() => setIsEditStudentOpen(false)}
+            onSuccess={handleEditStudentSuccess}
+          />
+        </CustomModal>
+
         {/* Tag Course Modal */}
         <CustomModal
           isOpen={isTagModalOpen}
