@@ -162,13 +162,23 @@ class DepartmentController extends Controller
     {
         try {
             $loggedInUser = Auth::user();
-            if(!$loggedInUser->may('can_add_department')){
-                return response()->json([
-                    'message' => 'You do not have permission to add area of specialization'
-                ], 403);
+            $role = $loggedInUser->current_role->role;
+            if ($denied = $this->denyUnlessMayManageDepartment($role, 'You do not have permission to add this area of specialization. Contact your administrator if you believe this is a mistake.')) {
+                return $denied;
             }
 
             $request->validate($this->areaRules());
+
+            // hod/phd_coordinator may only add to their own department, same
+            // resolution importAreasFromCSV uses for the same scoping problem.
+            if ($role === 'hod' || $role === 'phd_coordinator') {
+                $allowedDepartmentId = $this->areaWriteDepartmentId($loggedInUser);
+                if ((int) $request->department_id !== $allowedDepartmentId) {
+                    return response()->json([
+                        'message' => 'You do not have permission to add an area of specialization for this department. Contact your administrator if you believe this is a mistake.'
+                    ], 403);
+                }
+            }
 
             $department = \App\Models\Department::find($request->department_id);
             if(!$department){
@@ -234,18 +244,25 @@ class DepartmentController extends Controller
 
             $query = \App\Models\AreaOfSpecialization::with('department');
 
+            // Scoped in the response too (not just the query), so the client can
+            // default and lock the add/edit form's department field even when
+            // this department has no areas yet to read one back from.
+            $scopedDepartment = null;
+
             // Apply role-based filtering
             if ($role === 'hod') {
                 $facultyCode = $loggedInUser->faculty->faculty_code;
                 $hodDepartment = Department::where('hod_id', $facultyCode)->first();
                 if ($hodDepartment) {
                     $query->where('department_id', $hodDepartment->id);
+                    $scopedDepartment = $hodDepartment;
                 }
             } elseif ($role === 'phd_coordinator') {
                 $facultyCode = $loggedInUser->faculty->faculty_code;
                 $coordinator = \App\Models\PhdCoordinator::where('faculty_id', $facultyCode)->first();
                 if ($coordinator) {
                     $query->where('department_id', $coordinator->department_id);
+                    $scopedDepartment = Department::find($coordinator->department_id);
                 }
             }
 
@@ -276,6 +293,10 @@ class DepartmentController extends Controller
                 'role' => $role,
                 'fields' => ['name', 'department_name'],
                 'fieldsTitles' => ['Area Name', 'Department'],
+                'scoped_department' => $scopedDepartment ? [
+                    'id' => $scopedDepartment->id,
+                    'name' => $scopedDepartment->name,
+                ] : null,
             ], 200);
         } catch(\Exception $e) {
             return response()->json([

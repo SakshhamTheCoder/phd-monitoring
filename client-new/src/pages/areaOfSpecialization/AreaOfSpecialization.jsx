@@ -14,6 +14,7 @@ import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImpor
 import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
 import { toast } from 'react-toastify';
+import useCapabilities from '../../hooks/useCapabilities';
 import './AreaOfSpecialization.css';
 
 const AreaOfSpecialization = () => {
@@ -22,6 +23,7 @@ const AreaOfSpecialization = () => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [editData, setEditData] = useState(null);
   const [departments, setDepartments] = useState([]);
+  const [myDepartment, setMyDepartment] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     department_id: '',
@@ -30,9 +32,21 @@ const AreaOfSpecialization = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const { setLoading } = useLoading();
   const location = useLocation();
+  const can = useCapabilities();
+
+  // hod and phd_coordinator manage only their own department's areas. There is
+  // no can_* capability for this carve-out (DepartmentController admits them
+  // by role, then scopes them, in denyUnlessMayManageDepartment), so this
+  // mirrors that with the same role check rather than inventing a capability.
+  const role = localStorage.getItem('userRole');
+  const isDepartmentScoped = role === 'hod' || role === 'phd_coordinator';
 
   useEffect(() => {
-    fetchDepartments();
+    if (isDepartmentScoped) {
+      fetchMyDepartment();
+    } else {
+      fetchDepartments();
+    }
   }, []);
 
   const fetchDepartments = async () => {
@@ -52,6 +66,27 @@ const AreaOfSpecialization = () => {
     }
   };
 
+  // hod/phd_coordinator cannot read GET /departments (that needs
+  // can_add_department), so their own department comes from the areas list
+  // endpoint instead, which already resolves it to scope that same list.
+  const fetchMyDepartment = async () => {
+    try {
+      const response = await customFetch(
+        `${baseURL}/departments/area-of-specialization/list?rows=1&page=1`,
+        'GET',
+        {},
+        false
+      );
+      const scoped = response.response?.scoped_department;
+      if (scoped) {
+        setMyDepartment(scoped);
+        setDepartments([{ title: scoped.name, value: scoped.id }]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch your department:', error);
+    }
+  };
+
   const handleFilterChange = (newFilter) => {
     setFilter(newFilter);
   };
@@ -67,7 +102,7 @@ const AreaOfSpecialization = () => {
       setEditData(null);
       setFormData({
         name: '',
-        department_id: '',
+        department_id: isDepartmentScoped ? (myDepartment?.id || '') : '',
 
       });
     }
@@ -192,14 +227,16 @@ Data Science,CSED`;
           customOpenForm={openForm}
           extraTopbarComponents={
             <div className="top-actions">
+              {can('can_add_department') && (
+                <CustomButton
+                  text="Bulk Import"
+                  variant="secondary"
+                  onClick={() => setIsUploadModalOpen(true)}
+                />
+              )}
               <CustomButton
-                text="Bulk Import"
-                variant="secondary"
-                onClick={() => setIsUploadModalOpen(true)}
-              />
-              <CustomButton 
-                text="Add Area +" 
-                onClick={() => openForm()} 
+                text="Add Area +"
+                onClick={() => openForm()}
               />
             </div>
           }
@@ -239,6 +276,7 @@ Data Science,CSED`;
                   initialValue={formData.department_id}
                   options={departments}
                   onChange={(value) => setFormData({ ...formData, department_id: value })}
+                  isLocked={isDepartmentScoped}
                 />,
               ]}
             />

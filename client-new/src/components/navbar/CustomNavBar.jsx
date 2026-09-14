@@ -23,7 +23,7 @@ export const buttonConfig = [
     { path: '/logs', icon: <i class="fa-solid fa-history"></i>, text: 'Logs', roles: ['admin'] },
     { path: '/users', icon: <i class="fa-solid fa-users-cog"></i>, text: 'Manage Users', roles: ['admin'] },
     { path: '/notifications', icon: <i class="fa-solid fa-bell"></i>, text: 'Notifications', roles: ['student', 'hod', 'phd_coordinator', 'faculty', 'dordc', 'adordc', 'dra', 'director', 'doctoral', 'external', 'admin'] },
-    { path: '/areasOfSpecialization', icon: <i class="fa fa-list" aria-hidden="true"></i>, text: 'Areas of Specialization', roles: ['admin'] },
+    { path: '/areasOfSpecialization', icon: <i class="fa fa-list" aria-hidden="true"></i>, text: 'Areas of Specialization', roles: ['admin', 'hod', 'phd_coordinator'] },
     { path: '/outside-experts', icon: <i class="fa fa-user-tie" aria-hidden="true"></i>, text: 'Outside Experts', roles: ['admin'] },
 ];
 

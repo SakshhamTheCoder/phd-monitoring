@@ -210,11 +210,14 @@ const AppContent = () => {
           {(role==='clerk' || role==='admin' || role==='student' || role==='hod') && (
             <Route path="/attendance" element={<AttendanceRoute />} />
           )}
+          {/* hod/phd_coordinator manage their own department's areas; DepartmentController scopes them server-side. */}
+          {(role === 'admin' || role === 'hod' || role === 'phd_coordinator') && (
+            <Route path='/areasOfSpecialization' element={<AreaOfSpecialization />} />
+          )}
           {(
             role==='admin') && (
                 <>
                 <Route path="/forms/manage" element={<AdminFormManagement />} />
-                <Route path='/areasOfSpecialization' element={<AreaOfSpecialization />} />
                 <Route path="/courses/manage" element={<AdminCourseManagement />} />
                 <Route path="/outside-experts" element={<OutsideExperts />} />
                 <Route path="/logs" element={<Logs />} />
