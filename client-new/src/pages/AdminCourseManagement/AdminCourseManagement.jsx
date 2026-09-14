@@ -11,7 +11,15 @@ import DropdownField from '../../components/forms/fields/DropdownField';
 import InputSuggestions from '../../components/forms/fields/InputSuggestions';
 import InputField from '../../components/forms/fields/InputField';
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
+import useCapabilities from '../../hooks/useCapabilities';
 const AdminCourseManagement = () => {
+  const can = useCapabilities();
+  // Catalog actions (add/edit/delete/import a course) are gated separately
+  // from student-tagging actions because the backend enforces two different
+  // capabilities: can_manage_courses vs can_manage_students.
+  const mayManageCourses = can('can_manage_courses');
+  const mayManageStudents = can('can_manage_students');
+
   const [courses, setCourses] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -274,23 +282,29 @@ const AdminCourseManagement = () => {
           enableApproval={false}
           extraTopbarComponents={
             <div style={{ display: 'flex', gap: '10px' }}>
-              <CustomButton
-                text="Tag Student"
-                variant="secondary"
-                onClick={() => setShowTagModal(true)}
-              />
-              <CustomButton
-                text="Bulk Import"
-                variant="secondary"
-                onClick={() => setShowBulkImportModal(true)}
-              />
-              <CustomButton
-                text="Add Course +"
-                onClick={() => setShowAddModal(true)}
-              />
+              {mayManageStudents && (
+                <CustomButton
+                  text="Tag Student"
+                  variant="secondary"
+                  onClick={() => setShowTagModal(true)}
+                />
+              )}
+              {mayManageStudents && (
+                <CustomButton
+                  text="Bulk Import"
+                  variant="secondary"
+                  onClick={() => setShowBulkImportModal(true)}
+                />
+              )}
+              {mayManageCourses && (
+                <CustomButton
+                  text="Add Course +"
+                  onClick={() => setShowAddModal(true)}
+                />
+              )}
             </div>
           }
-          actions={[
+          actions={mayManageCourses ? [
             {
               icon: <i className="fa-solid fa-pen-to-square"></i>,
               tooltip: 'Edit',
@@ -301,7 +315,7 @@ const AdminCourseManagement = () => {
               tooltip: 'Delete',
               onClick: (data) => handleDeleteCourse(data.id),
             },
-          ]}
+          ] : []}
         />
 
       {/* Add Course Modal */}
