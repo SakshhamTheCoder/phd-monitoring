@@ -308,9 +308,19 @@ class ThesisSubmissionController extends Controller
             'approval' => 'required|boolean',
         ]);
         $request->merge(['approval' => true]);
+        $results = [];
+        $hasFailure = false;
         foreach ($request->form_ids as $form_id) {
-            $this->submit($request, $form_id);
+            $response = $this->submit($request, $form_id);
+            $results[] = ['form_id' => $form_id] + $response->getData(true);
+            if ($response->getStatusCode() >= 400) {
+                $hasFailure = true;
+            }
         }
+        return response()->json([
+            'message' => $hasFailure ? 'Some forms could not be submitted' : 'Forms submitted successfully',
+            'results' => $results,
+        ], $hasFailure ? 422 : 200);
     }
     private function supervisorSubmit($user, $request, $form_id)
     {
