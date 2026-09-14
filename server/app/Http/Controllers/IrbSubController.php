@@ -149,6 +149,8 @@ class IrbSubController extends Controller
             }
             if ($role->role == 'hod') {
                 $this->hodSubmit($user, $request, $id);
+            } elseif ($role->role == 'adordc') {
+                $this->adordcSubmit($user, $request, $id);
             } elseif ($role->role == 'dordc') {
                 $this->dordcSubmit($user, $request, $id);
             }
