@@ -12,7 +12,22 @@ use Illuminate\Support\Facades\Auth;
 class DepartmentController extends Controller
 {
     use FilterLogicTrait;
-    
+
+    /**
+     * Default-deny for updateAreaOfSpecialization/deleteAreaOfSpecialization:
+     * the department-scoping branch that follows only narrows hod/phd_coordinator
+     * to their own department, it is not a gate for everybody else and never
+     * refuses anyone on its own.
+     */
+    private function denyUnlessMayManageDepartment(string $role, string $message): ?\Illuminate\Http\JsonResponse
+    {
+        if (!Auth::user()->may('can_edit_department') && $role !== 'hod' && $role !== 'phd_coordinator') {
+            return response()->json(['message' => $message], 403);
+        }
+
+        return null;
+    }
+
     public function listFilters(Request $request){
         return response()->json($this->getAvailableFilters("departments"));
     }
@@ -273,15 +288,9 @@ class DepartmentController extends Controller
     {
         try {
             $loggedInUser = Auth::user();
-
-            // The role check below only scopes hod/phd_coordinator to their own
-            // department, it never refuses anyone. Every other role, student and
-            // external included, fell through it and reached save() unchecked.
             $role = $loggedInUser->current_role->role;
-            if (!$loggedInUser->may('can_edit_department') && $role !== 'hod' && $role !== 'phd_coordinator') {
-                return response()->json([
-                    'message' => 'You do not have permission to update area of specialization'
-                ], 403);
+            if ($denied = $this->denyUnlessMayManageDepartment($role, 'You do not have permission to update this area of specialization. Contact your administrator if you believe this is a mistake.')) {
+                return $denied;
             }
 
             $request->validate($this->areaRules());
@@ -333,15 +342,9 @@ class DepartmentController extends Controller
     {
         try {
             $loggedInUser = Auth::user();
-
-            // Same default-deny as updateAreaOfSpecialization: the scoping
-            // branch below only narrows hod/phd_coordinator to their own
-            // department, it is not a gate for everybody else.
             $role = $loggedInUser->current_role->role;
-            if (!$loggedInUser->may('can_edit_department') && $role !== 'hod' && $role !== 'phd_coordinator') {
-                return response()->json([
-                    'message' => 'You do not have permission to delete area of specialization'
-                ], 403);
+            if ($denied = $this->denyUnlessMayManageDepartment($role, 'You do not have permission to delete this area of specialization. Contact your administrator if you believe this is a mistake.')) {
+                return $denied;
             }
 
             $area = \App\Models\AreaOfSpecialization::find($id);

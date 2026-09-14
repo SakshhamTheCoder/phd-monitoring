@@ -2,47 +2,25 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Traits\AuthorizesCapability;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\PagenationTrait;
 use App\Models\OutsideExpert;
 use App\Support\PersonName;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
+/**
+ * None of the seven methods here checked anything, so any signed-in user,
+ * a student included, could add, edit, delete or bulk-import outside
+ * expert records. Reads and writes get their own capability because the
+ * page that picks an external supervisor is open to far more roles than
+ * the page that manages the records.
+ */
 class OutsideExpertController extends Controller
 {
-    use FilterLogicTrait, PagenationTrait;
-
-    /**
-     * None of the seven methods here checked anything, so any signed-in user,
-     * a student included, could add, edit, delete or bulk-import outside
-     * expert records. Reads and writes get their own capability because the
-     * page that picks an external supervisor is open to far more roles than
-     * the page that manages the records.
-     */
-    private function denyUnlessMayReadExternal()
-    {
-        if (!Auth::user()->may('can_read_external')) {
-            return response()->json([
-                'message' => 'You do not have permission to view outside experts'
-            ], 403);
-        }
-
-        return null;
-    }
-
-    private function denyUnlessMayEditExternal()
-    {
-        if (!Auth::user()->may('can_edit_external')) {
-            return response()->json([
-                'message' => 'You do not have permission to manage outside experts'
-            ], 403);
-        }
-
-        return null;
-    }
+    use FilterLogicTrait, PagenationTrait, AuthorizesCapability;
 
     /**
      * Get paginated list of outside experts
@@ -50,7 +28,7 @@ class OutsideExpertController extends Controller
     public function list(Request $request)
     {
         try {
-            if ($denied = $this->denyUnlessMayReadExternal()) return $denied;
+            if ($denied = $this->denyUnlessMay('can_read_external', 'You do not have permission to view outside experts. Contact your administrator if you believe this is a mistake.')) return $denied;
 
             $perPage = $request->input('rows', 15);
             $page = $request->input('page', 1);
@@ -89,7 +67,7 @@ class OutsideExpertController extends Controller
     public function all()
     {
         try {
-            if ($denied = $this->denyUnlessMayReadExternal()) return $denied;
+            if ($denied = $this->denyUnlessMay('can_read_external', 'You do not have permission to view outside experts. Contact your administrator if you believe this is a mistake.')) return $denied;
 
             $experts = OutsideExpert::select('id', 'first_name', 'last_name', 'email', 'institution', 'designation')
                 ->orderBy('first_name')
@@ -113,7 +91,7 @@ class OutsideExpertController extends Controller
     public function add(Request $request)
     {
         try {
-            if ($denied = $this->denyUnlessMayEditExternal()) return $denied;
+            if ($denied = $this->denyUnlessMay('can_edit_external', 'You do not have permission to manage outside experts. Contact your administrator if you believe this is a mistake.')) return $denied;
 
             $validator = Validator::make($request->all(), [
                 'full_name' => 'required_without:first_name|string',
@@ -163,7 +141,7 @@ class OutsideExpertController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            if ($denied = $this->denyUnlessMayEditExternal()) return $denied;
+            if ($denied = $this->denyUnlessMay('can_edit_external', 'You do not have permission to manage outside experts. Contact your administrator if you believe this is a mistake.')) return $denied;
 
             $expert = OutsideExpert::find($id);
             if (!$expert) {
@@ -220,7 +198,7 @@ class OutsideExpertController extends Controller
     public function delete($id)
     {
         try {
-            if ($denied = $this->denyUnlessMayEditExternal()) return $denied;
+            if ($denied = $this->denyUnlessMay('can_edit_external', 'You do not have permission to manage outside experts. Contact your administrator if you believe this is a mistake.')) return $denied;
 
             $expert = OutsideExpert::find($id);
             if (!$expert) {
@@ -248,7 +226,7 @@ class OutsideExpertController extends Controller
      */
     public function listFilters()
     {
-        if ($denied = $this->denyUnlessMayReadExternal()) return $denied;
+        if ($denied = $this->denyUnlessMay('can_read_external', 'You do not have permission to view outside experts. Contact your administrator if you believe this is a mistake.')) return $denied;
 
         return response()->json($this->getAvailableFilters("outside_experts"));
     }
@@ -260,7 +238,7 @@ class OutsideExpertController extends Controller
     public function bulkImportFromCSV(Request $request)
     {
         try {
-            if ($denied = $this->denyUnlessMayEditExternal()) return $denied;
+            if ($denied = $this->denyUnlessMay('can_edit_external', 'You do not have permission to manage outside experts. Contact your administrator if you believe this is a mistake.')) return $denied;
 
             $request->validate([
                 'file' => 'required|file|mimes:csv,txt',

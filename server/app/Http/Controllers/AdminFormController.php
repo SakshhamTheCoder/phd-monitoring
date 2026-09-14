@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Traits\AuthorizesCapability;
 use App\Models\Forms;
 use App\Models\Student;
 use App\Models\ConstituteOfIRB;
@@ -17,27 +18,20 @@ use App\Models\SynopsisSubmission;
 use App\Models\ThesisExtentionForm;
 use App\Models\ThesisSubmission;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Every endpoint below is gated on can_manage_form_levels: the same capability
+ * FormLevelController already requires for approval-stage changes, since these
+ * routes can do the same thing (and more) to any student's forms.
+ */
 class AdminFormController extends Controller
 {
-    /**
-     * Guard for every endpoint below: same capability FormLevelController
-     * already requires for approval-stage changes, since these routes can do
-     * the same thing (and more) to any student's forms.
-     */
-    private function authorizeAdmin(): ?\Illuminate\Http\JsonResponse
-    {
-        if (!Auth::user()->may('can_manage_form_levels')) {
-            return response()->json(['message' => 'You do not have permission to manage forms'], 403);
-        }
-        return null;
-    }
+    use AuthorizesCapability;
 
     private $formModels = [
-        
+
         'irb-constitution' => ConstituteOfIRB::class,
         'irb-submission' => IrbSubForm::class,
         'irb-extension' => ResearchExtentionsForm::class,
@@ -56,6 +50,7 @@ class AdminFormController extends Controller
         'supervisor-allocation' => [
             'form_name' => 'Supervisor Allocation Form',
             'max_count' => 1,
+            // 'complete' added: synced to SupervisorAllocationController's own $steps array.
             'steps' => ['student', 'phd_coordinator', 'hod', 'complete']
         ],
         'irb-constitution' => [
@@ -91,6 +86,7 @@ class AdminFormController extends Controller
         'list-of-examiners' => [
             'form_name' => 'List of Examiners',
             'max_count' => 1,
+            // 'hod' removed: synced to migration 2026_09_13_000001_drop_the_hod_step_from_list_of_examiners.
             'steps' => [            'faculty',
             'dordc',
             'director',
@@ -99,6 +95,7 @@ class AdminFormController extends Controller
         'synopsis-submission' => [
             'form_name' => 'Synopsis Submission',
             'max_count' => 1,
+            // 'doctoral' added: synced to SynopsisSubmissionController's own $steps array.
             'steps' => ['student', 'faculty', 'doctoral',  'phd_coordinator', 'hod', 'dra','adordc' ,'dordc', 'director',  'complete']
         ],
         'thesis-submission' => [
@@ -136,7 +133,7 @@ class AdminFormController extends Controller
      */
     public function getStudentForms($student_id)
     {
-        if ($response = $this->authorizeAdmin()) {
+        if ($response = $this->denyUnlessMay('can_manage_form_levels', 'You do not have permission to manage forms. Contact your administrator if you believe this is a mistake.')) {
             return $response;
         }
 
@@ -258,7 +255,7 @@ class AdminFormController extends Controller
      */
     public function createFormInstance(Request $request)
     {
-        if ($response = $this->authorizeAdmin()) {
+        if ($response = $this->denyUnlessMay('can_manage_form_levels', 'You do not have permission to manage forms. Contact your administrator if you believe this is a mistake.')) {
             return $response;
         }
 
@@ -367,7 +364,7 @@ class AdminFormController extends Controller
      */
     public function updateFormControl(Request $request)
     {
-        if ($response = $this->authorizeAdmin()) {
+        if ($response = $this->denyUnlessMay('can_manage_form_levels', 'You do not have permission to manage forms. Contact your administrator if you believe this is a mistake.')) {
             return $response;
         }
 
@@ -442,7 +439,7 @@ class AdminFormController extends Controller
      */
     public function toggleFormAvailability(Request $request)
     {
-        if ($response = $this->authorizeAdmin()) {
+        if ($response = $this->denyUnlessMay('can_manage_form_levels', 'You do not have permission to manage forms. Contact your administrator if you believe this is a mistake.')) {
             return $response;
         }
 
@@ -485,7 +482,7 @@ class AdminFormController extends Controller
      */
     public function updateGeneralFormStage(Request $request)
     {
-        if ($response = $this->authorizeAdmin()) {
+        if ($response = $this->denyUnlessMay('can_manage_form_levels', 'You do not have permission to manage forms. Contact your administrator if you believe this is a mistake.')) {
             return $response;
         }
 
@@ -522,7 +519,7 @@ class AdminFormController extends Controller
      */
     public function deleteFormInstance(Request $request)
     {
-        if ($response = $this->authorizeAdmin()) {
+        if ($response = $this->denyUnlessMay('can_manage_form_levels', 'You do not have permission to manage forms. Contact your administrator if you believe this is a mistake.')) {
             return $response;
         }
 
@@ -579,7 +576,7 @@ class AdminFormController extends Controller
      */
     public function disableForm(Request $request)
     {
-        if ($response = $this->authorizeAdmin()) {
+        if ($response = $this->denyUnlessMay('can_manage_form_levels', 'You do not have permission to manage forms. Contact your administrator if you believe this is a mistake.')) {
             return $response;
         }
 

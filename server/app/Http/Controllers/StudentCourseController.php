@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Traits\AuthorizesCapability;
 use App\Models\StudentCourse;
 use App\Models\Student;
 use App\Models\Course;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\Log;
 
 class StudentCourseController extends Controller
 {
+    use AuthorizesCapability;
+
     /**
      * Get courses for logged-in student
      */
@@ -62,24 +65,11 @@ class StudentCourseController extends Controller
         }
     }
 
-    /**
-     * Tagging a scholar with a course is a write about that scholar, so it is
-     * gated on the same capability as every other one.
-     *
-     * None of these methods checked anything at all, which let any signed-in
-     * user tag anyone with anything, change a grade, or read another scholar's
-     * enrolments.
-     */
-    private function denyUnlessMayManageStudents()
-    {
-        if (!Auth::user()->may('can_manage_students')) {
-            return response()->json([
-                'message' => 'You do not have permission to manage student courses'
-            ], 403);
-        }
-
-        return null;
-    }
+    // Tagging a scholar with a course is a write about that scholar, so every
+    // method below is gated on can_manage_students, the same capability as
+    // every other write. None of them checked anything at all before, which
+    // let any signed-in user tag anyone with anything, change a grade, or
+    // read another scholar's enrolments.
 
     /**
      * Tag student with course (Admin/HOD/Coordinator)
@@ -87,7 +77,7 @@ class StudentCourseController extends Controller
     public function tagStudentWithCourse(Request $request)
     {
         try {
-            if ($denied = $this->denyUnlessMayManageStudents()) return $denied;
+            if ($denied = $this->denyUnlessMay('can_manage_students', 'You do not have permission to manage student courses')) return $denied;
 
             $request->validate([
                 'student_id' => 'required|integer',
@@ -145,7 +135,7 @@ class StudentCourseController extends Controller
     public function updateGrade(Request $request, $id)
     {
         try {
-            if ($denied = $this->denyUnlessMayManageStudents()) return $denied;
+            if ($denied = $this->denyUnlessMay('can_manage_students', 'You do not have permission to manage student courses')) return $denied;
 
             $request->validate([
                 'grade' => 'required|string',
@@ -191,7 +181,7 @@ class StudentCourseController extends Controller
 
             // A scholar reads their own; anyone else needs the capability.
             $isOwn = Auth::user()->student?->roll_no === $student->roll_no;
-            if (!$isOwn && ($denied = $this->denyUnlessMayManageStudents())) return $denied;
+            if (!$isOwn && ($denied = $this->denyUnlessMay('can_manage_students', 'You do not have permission to manage student courses'))) return $denied;
 
             $courses = StudentCourse::with('course.department')
                 ->where('student_id', $studentId)
@@ -231,7 +221,7 @@ class StudentCourseController extends Controller
     public function removeStudentFromCourse($id)
     {
         try {
-            if ($denied = $this->denyUnlessMayManageStudents()) return $denied;
+            if ($denied = $this->denyUnlessMay('can_manage_students', 'You do not have permission to manage student courses')) return $denied;
 
             $studentCourse = StudentCourse::find($id);
             if (!$studentCourse) {
@@ -272,7 +262,7 @@ class StudentCourseController extends Controller
     public function bulkImportFromCSV(Request $request)
     {
         try {
-            if ($denied = $this->denyUnlessMayManageStudents()) return $denied;
+            if ($denied = $this->denyUnlessMay('can_manage_students', 'You do not have permission to manage student courses')) return $denied;
 
             $request->validate([
                 'rows' => 'required|array',

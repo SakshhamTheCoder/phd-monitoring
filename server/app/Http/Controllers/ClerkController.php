@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Traits\AuthorizesCapability;
 use App\Models\Attendance;
 use App\Models\ClerkDepartment;
 use App\Models\Department;
@@ -26,6 +27,8 @@ use Illuminate\Support\Facades\DB;
  */
 class ClerkController extends Controller
 {
+    use AuthorizesCapability;
+
     /**
      * Department ids the given user is tagged with as clerk.
      *
@@ -66,13 +69,9 @@ class ClerkController extends Controller
     }
 
     /**
-     * The department ids this request may touch, or the 403 to return.
+     * Reads department_id off the request and delegates to departmentScopeFor().
      *
-     * Every attendance endpoint goes through here (directly, or via
-     * departmentScopeFor() above for the one endpoint with no department_id
-     * parameter) so the rule is stated once and cannot drift between read
-     * and write paths.
-     *
+     * @see self::departmentScopeFor() for why this wrapper exists separately.
      * @return array<int, int>|null|\Illuminate\Http\JsonResponse
      */
     private function resolveDepartmentScope(Request $request, string $role)
@@ -831,26 +830,15 @@ class ClerkController extends Controller
     }
 
     // -----------------------------------------------------------------------
-    // Admin-side clerk management
+    // Admin-side clerk management: every endpoint below is admin-only.
     // -----------------------------------------------------------------------
-
-    /**
-     * Guard for the management endpoints below: admins only.
-     */
-    private function authorizeAdmin(): ?\Illuminate\Http\JsonResponse
-    {
-        if (!Auth::user()->may('can_manage_clerks')) {
-            return response()->json(['message' => 'You are not authorized to manage clerks'], 403);
-        }
-        return null;
-    }
 
     /**
      * Every clerk account with its department taggings, for the admin page.
      */
     public function listClerks(Request $request)
     {
-        if ($response = $this->authorizeAdmin()) {
+        if ($response = $this->denyUnlessMay('can_manage_clerks', 'You are not authorized to manage clerks')) {
             return $response;
         }
 
@@ -895,7 +883,7 @@ class ClerkController extends Controller
      */
     public function syncDepartments(Request $request, $userId)
     {
-        if ($response = $this->authorizeAdmin()) {
+        if ($response = $this->denyUnlessMay('can_manage_clerks', 'You are not authorized to manage clerks')) {
             return $response;
         }
 
@@ -937,7 +925,7 @@ class ClerkController extends Controller
      */
     public function detachDepartment(Request $request, $userId, $departmentId)
     {
-        if ($response = $this->authorizeAdmin()) {
+        if ($response = $this->denyUnlessMay('can_manage_clerks', 'You are not authorized to manage clerks')) {
             return $response;
         }
 
@@ -954,7 +942,7 @@ class ClerkController extends Controller
 
     public function bulkUpdate(Request $request)
     {
-        if ($response = $this->authorizeAdmin()) return $response;
+        if ($response = $this->denyUnlessMay('can_manage_clerks', 'You are not authorized to manage clerks')) return $response;
         $request->validate([
             'clerks' => 'required|array',
             'clerks.*.email' => 'required|email',

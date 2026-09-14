@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Traits\AuthorizesCapability;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\PagenationTrait;
 use App\Models\Course;
@@ -10,26 +11,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * add, update, delete and importCoursesFromCSV are gated on can_manage_courses:
+ * before this, any signed-in user, a student included, could rewrite or delete
+ * any course in the catalog. list, listFilters and getAllCourses stay open:
+ * they are catalog data used by student-facing screens.
+ */
 class CourseController extends Controller
 {
-    use FilterLogicTrait, PagenationTrait;
-
-    /**
-     * add, update, delete and importCoursesFromCSV checked nothing at all, so
-     * any signed-in user, a student included, could rewrite or delete any
-     * course in the catalog. list, listFilters and getAllCourses stay open:
-     * they are catalog data used by student-facing screens.
-     */
-    private function denyUnlessMayManageCourses()
-    {
-        if (!Auth::user()->may('can_manage_courses')) {
-            return response()->json([
-                'message' => 'You do not have permission to manage courses'
-            ], 403);
-        }
-
-        return null;
-    }
+    use FilterLogicTrait, PagenationTrait, AuthorizesCapability;
 
     public function listFilters(Request $request)
     {
@@ -113,7 +103,7 @@ class CourseController extends Controller
     public function add(Request $request)
     {
         try {
-            if ($denied = $this->denyUnlessMayManageCourses()) return $denied;
+            if ($denied = $this->denyUnlessMay('can_manage_courses', 'You do not have permission to manage courses. Contact your administrator if you believe this is a mistake.')) return $denied;
 
             $loggedInUser = Auth::user();
 
@@ -150,7 +140,7 @@ class CourseController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            if ($denied = $this->denyUnlessMayManageCourses()) return $denied;
+            if ($denied = $this->denyUnlessMay('can_manage_courses', 'You do not have permission to manage courses. Contact your administrator if you believe this is a mistake.')) return $denied;
 
             $request->validate([
                 'course_code' => 'required|string|unique:courses,course_code,' . $id,
@@ -191,7 +181,7 @@ class CourseController extends Controller
     public function delete($id)
     {
         try {
-            if ($denied = $this->denyUnlessMayManageCourses()) return $denied;
+            if ($denied = $this->denyUnlessMay('can_manage_courses', 'You do not have permission to manage courses. Contact your administrator if you believe this is a mistake.')) return $denied;
 
             $course = Course::find($id);
             if (!$course) {
@@ -255,7 +245,7 @@ class CourseController extends Controller
     public function importCoursesFromCSV(Request $request)
     {
         try {
-            if ($denied = $this->denyUnlessMayManageCourses()) return $denied;
+            if ($denied = $this->denyUnlessMay('can_manage_courses', 'You do not have permission to manage courses. Contact your administrator if you believe this is a mistake.')) return $denied;
 
             $request->validate([
                 'csv_file' => 'required|file|mimes:csv,txt',
