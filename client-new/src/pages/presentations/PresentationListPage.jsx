@@ -7,7 +7,6 @@ import CustomButton from "../../components/forms/fields/CustomButton";
 import GridContainer from "../../components/forms/fields/GridContainer";
 import BulkSchedulePresentation from "../../components/forms/presentations/BulkSchedulePresentation";
 import SchedulePresentation from "../../components/forms/presentations/SchedulePresentation";
-import FormTable from "../../components/forms/formTable/FormTable";
 import FilterBar from "../../components/filterBar/FilterBar";
 import PagenationTable from "../../components/pagenationTable/PagenationTable";
 import SemesterStatsCard from "./SemsterStatsCard";
