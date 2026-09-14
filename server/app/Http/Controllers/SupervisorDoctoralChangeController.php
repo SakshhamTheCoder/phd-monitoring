@@ -123,6 +123,16 @@ class SupervisorDoctoralChangeController extends Controller
                     'message' => 'You can only manage students from your department'
                 ], 403);
             }
+        } elseif ($role === 'doctoral') {
+            // Every faculty-shaped role carries 'doctoral' (User::ROLE_GRANTS) and
+            // RoleRequirements only checks for a Faculty record, so without this a
+            // faculty member could switch to "Doctoral Committee" and apply this
+            // change (below) to any scholar, not just one they sit on.
+            if (!$student->checkDoctoralCommittee($user->faculty?->faculty_code)) {
+                return response()->json([
+                    'message' => 'You can only manage students on your doctoral committee'
+                ], 403);
+            }
         }
 
         // Validate based on change_type
