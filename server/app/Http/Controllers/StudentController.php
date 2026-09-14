@@ -62,7 +62,7 @@ class StudentController extends Controller {
         $departmentIds = $this->writableDepartmentIds();
         if ($departmentIds !== null && !in_array((int) $request->department_id, $departmentIds, true)) {
             return response()->json([
-                'message' => 'You do not have permission to create student'
+                'message' => 'You do not have permission to create a student outside your department. Contact your administrator if you believe this is a mistake.'
             ], 403);
         }
 
@@ -749,7 +749,7 @@ class StudentController extends Controller {
         $departmentIds = $this->writableDepartmentIds();
         if ($departmentIds !== null && !in_array($student->department_id, $departmentIds, true)) {
             return response()->json([
-                'message' => 'You do not have permission to edit student'
+                'message' => 'You do not have permission to edit a student outside your department. Contact your administrator if you believe this is a mistake.'
             ], 403);
         }
 
@@ -781,7 +781,7 @@ class StudentController extends Controller {
         // into their remit, or move one out of it and lose them from their lists.
         if ($departmentIds !== null && !in_array((int) $request->department_id, $departmentIds, true)) {
             return response()->json([
-                'message' => 'You do not have permission to move student to that department'
+                'message' => 'You do not have permission to move this student to that department. Contact your administrator if you believe this is a mistake.'
             ], 403);
         }
 

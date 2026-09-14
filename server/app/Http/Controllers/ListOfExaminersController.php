@@ -75,7 +75,7 @@ class ListOfExaminersController extends Controller
 
         $student = Student::where('roll_no', $request->roll_no)->first();
         if (!$student || !$student->checkSupervises($user->faculty->faculty_code)) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return response()->json(['message' => 'You do not have permission to create a list of examiners for a student you do not supervise. Contact your administrator if you believe this is a mistake.'], 403);
         }
 
         $data = [

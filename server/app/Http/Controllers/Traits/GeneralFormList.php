@@ -164,7 +164,7 @@ trait GeneralFormList
                 return response()->json(['message' => 'You are not authorized to access this resource'], 403);
                 break;
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return response()->json(['message' => 'You do not have permission to view forms for this student. Contact your administrator if you believe this is a mistake.'], 403);
         }
         $formsQuery = $model::where('student_id', $student_id);
         // The step check answers "has this form reached my desk yet", which is

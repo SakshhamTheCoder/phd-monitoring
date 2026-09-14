@@ -172,7 +172,7 @@ class PublicationController extends Controller
         $user = Auth::user();
 
         if (!$user->may('can_manage_own_publications')) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return response()->json(['message' => 'You do not have permission to edit publications. Contact your administrator if you believe this is a mistake.'], 403);
         }
 
         // Check ownership

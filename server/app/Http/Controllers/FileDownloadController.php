@@ -52,7 +52,7 @@ class FileDownloadController extends Controller
 
         $project = Project::find($application->project_id);
         if (!$project || !$this->owns(Auth::user(), $project)) {
-            return response()->json(['message' => 'Not authorized'], 403);
+            return response()->json(['message' => 'You do not have permission to view this resume. Contact your administrator if you believe this is a mistake.'], 403);
         }
 
         if (!$application->resume_path) {

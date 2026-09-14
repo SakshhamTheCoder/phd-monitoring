@@ -47,7 +47,7 @@ class StudentLeaveFormController extends Controller
         // only they should see one in a list. GeneralFormList::listForms is
         // shared by every form type and has no idea leave is narrower.
         if (!in_array($user->current_role->role, ['student', 'hod', 'admin'], true)) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return response()->json(['message' => 'You do not have permission to view leave forms. Contact your administrator if you believe this is a mistake.'], 403);
         }
 
         return $this->listForms($user, StudentLeaveForm::class, $request, null, false, [

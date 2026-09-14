@@ -73,7 +73,7 @@ class ProjectController extends Controller {
 
     public function listFilters(Request $request) {
         $user = Auth::user();
-        if (!$this->canManage($user)) return response()->json(['message' => 'Not authorized'], 403);
+        if (!$this->canManage($user)) return response()->json(['message' => 'You do not have permission to view project filters. Contact your administrator if you believe this is a mistake.'], 403);
         $rows = $this->getAvailableFilters('projects');
         // Seeded rows may not exist yet where the seeder was never re-run;
         // fall back to the same static list so the dropdown never renders empty.

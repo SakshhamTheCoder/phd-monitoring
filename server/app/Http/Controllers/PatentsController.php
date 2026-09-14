@@ -22,7 +22,7 @@ class PatentsController extends Controller
     {
         $user = Auth::user();
         if (!$user->may('can_manage_own_publications')) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return response()->json(['message' => 'You do not have permission to view patents. Contact your administrator if you believe this is a mistake.'], 403);
         }
         $patents = Patent::where('student_id', $user->student->roll_no)->get();
         return response()->json($patents);
@@ -79,12 +79,12 @@ class PatentsController extends Controller
         if($patents){
             $user = Auth::user();
             if (!$user->may('can_manage_own_publications')) {
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return response()->json(['message' => 'You do not have permission to edit patents. Contact your administrator if you believe this is a mistake.'], 403);
             }
             // Ownership check must run before any field is touched, otherwise a student
             // could edit or reassign another student's patent by posting its id.
             if ($patents->student_id != $user->student->roll_no) {
-                return response()->json(['message' => 'You are not authorized to edit this patent'], 403);
+                return response()->json(['message' => 'You do not have permission to edit this patent. Contact your administrator if you believe this is a mistake.'], 403);
             }
             $validator = Validator::make($request->all(), [
                 'title' => 'required|string|max:255',
