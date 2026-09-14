@@ -270,12 +270,15 @@ const AttendancePage = () => {
     const token = localStorage.getItem('token');
     const params = new URLSearchParams({ from: exportFrom, to: exportTo, summary: '1' });
     if (exportDept) params.set('department_id', exportDept);
+    // A scholar named in the filter narrows the export to them, the same way
+    // it narrows the history tab.
+    if (filteredRoll) params.set('roll_no', filteredRoll);
     try {
       const res = await fetch(baseURL + `/clerks/attendance/export?${params.toString()}`, { headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) { toast.error('Export failed.'); return; }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = `attendance_${exportFrom}_to_${exportTo}.csv`; a.click(); URL.revokeObjectURL(url);
+      const a = document.createElement('a'); a.href = url; a.download = `attendance_${filteredRoll ? `${filteredRoll}_` : ''}${exportFrom}_to_${exportTo}.csv`; a.click(); URL.revokeObjectURL(url);
       toast.success('Export downloaded.');
       flashExported();
     } catch (e) { toast.error(isNetworkError(e) ? NETWORK_ERROR_MESSAGE : 'Export failed: ' + e.message); }
@@ -623,7 +626,7 @@ const AttendancePage = () => {
               </select>
             </div>
             <div className="attendance-filters-action">
-              <CustomButton text="Download CSV" onClick={confirmExport} done={exported} disabled={exportFrom > exportTo} />
+              <CustomButton text={filteredRoll ? `Download CSV for ${filteredRoll}` : 'Download CSV'} onClick={confirmExport} done={exported} disabled={exportFrom > exportTo} />
             </div>
           </div>
           {exportFrom > exportTo && (
