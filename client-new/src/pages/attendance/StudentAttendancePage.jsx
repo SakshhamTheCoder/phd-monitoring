@@ -301,7 +301,7 @@ const StudentAttendancePage = () => {
       )}
 
       <CustomModal isOpen={!!openForm} onClose={handleCloseForm} width="90vw" minHeight="300px" maxHeight="85vh">
-        {openForm && <StudentLeave formData={openForm} />}
+        {openForm && <StudentLeave formData={openForm} onDraftDeleted={handleCloseForm} />}
       </CustomModal>
     </Layout>
   );

@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import CustomButton from '../../fields/CustomButton';
 import FileUploadField from '../../fields/FileUploadField';
 import RadioButtonGroup from '../../fields/RadioButtonGroup';
-import { apiLeaveBalance, apiLeaveLoad, apiLeaveSubmit } from '../../../../api/leave';
+import { apiLeaveBalance, apiLeaveLoad, apiLeaveSubmit, apiLeaveDelete } from '../../../../api/leave';
 import { overageOf, formatDays, localDateString } from '../../../../utils/leaveBalance';
 
 const DAY_PART_OPTIONS = [
@@ -40,7 +40,7 @@ const daysBetween = (from, to) => {
  * from the attendance page, so it talks to the leave endpoints directly via
  * apiLeaveSubmit — see client-new/src/api/leave.js.
  */
-const Student = ({ formData }) => {
+const Student = ({ formData, onDraftDeleted }) => {
   const [instance, setInstance] = useState(formData);
   const [leaveType, setLeaveType] = useState(formData?.leave_type || 'casual');
   const [fromDate, setFromDate] = useState(localDateString(formData?.from_date));
@@ -50,6 +50,7 @@ const Student = ({ formData }) => {
   const [file, setFile] = useState(null);
   const [balance, setBalance] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const lock = !!instance?.locks?.student;
 
@@ -111,6 +112,16 @@ const Student = ({ formData }) => {
       const reloaded = await apiLeaveLoad(instance.form_id);
       if (reloaded.success) setInstance(reloaded.response);
     }
+  };
+
+  // Same rule StudentAttendancePage's row delete enforces: destroyForm 422s
+  // once the application leaves draft, so this only ever shows for a draft.
+  const handleDeleteDraft = async () => {
+    if (!window.confirm('Delete this draft application?')) return;
+    setDeleting(true);
+    const res = await apiLeaveDelete(instance.form_id);
+    setDeleting(false);
+    if (res.success) onDraftDeleted?.();
   };
 
   return (
@@ -223,12 +234,20 @@ const Student = ({ formData }) => {
       )}
 
       {instance?.role === 'student' && !lock && (
-        <div className="input-field-container" style={{ marginTop: '0.5rem' }}>
+        <div className="input-field-container" style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem' }}>
           <CustomButton
             text={submitting ? 'Submitting…' : 'Submit'}
             onClick={handleSubmit}
             disabled={submitting}
           />
+          {instance?.status === 'draft' && (
+            <CustomButton
+              text={deleting ? 'Deleting…' : 'Delete Draft'}
+              variant="danger"
+              onClick={handleDeleteDraft}
+              disabled={deleting}
+            />
+          )}
         </div>
       )}
     </div>
