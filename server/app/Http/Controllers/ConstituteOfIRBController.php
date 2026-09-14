@@ -140,37 +140,11 @@ class ConstituteOfIRBController extends Controller
                 return $this->hodSubmit($user, $request, $form_id);
             case 'adordc':
                 return $this->adordcSubmit($user, $request, $form_id);
-                return $this->draSubmit($user, $request, $form_id);
             case 'dordc':
                 return $this->dordcSubmit($user, $request, $form_id);
             default:
                 return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
-    }
-
-    public function bulkSubmit(Request $request)
-    {
-        $user = Auth::user();
-        $role = $user->current_role;
-        $form_id = $request->form_id;
-        if($role->role != 'dra'){
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
-        }
-        $request->validate([
-            'form_ids' => 'required|array',
-        ]);
-        $request->validate([
-            'form_ids.*' => 'integer|exists:constitute_of_irbs,id',
-        ]);
-        $request->merge(['approval' => true]);
-        foreach ($request->form_ids as $formId) {
-            $form = ConstituteOfIRB::find($formId);
-            if (!$form) {
-                return response()->json(['message' => 'Form not found'], 404);
-            }
-            $this->draSubmit($user, $request, $formId);
-        }
-        return response()->json(['message' => 'Forms submitted successfully'], 200);
     }
 
     private function studentSubmit($user, Request $request, $form_id)
@@ -445,18 +419,6 @@ class ConstituteOfIRBController extends Controller
     }
     
     
-    private function draSubmit($user, Request $request, $form_id){
-        return $this->submitForm(
-            $user, 
-            $request, 
-            $form_id, 
-            ConstituteOfIRB::class, 
-            'dra', 
-            'hod', 
-            'adordc',   function ($formInstance, $user) use ($request) {}
-        );
-    }
-
     private function adordcSubmit($user, Request $request, $form_id){
         return $this->submitForm(
             $user, 
