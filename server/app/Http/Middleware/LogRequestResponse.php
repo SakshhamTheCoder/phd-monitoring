@@ -49,7 +49,23 @@ class LogRequestResponse
     // Helper method to conditionally log body
     private function logBody(array $body, bool $isSensitiveRequest)
     {
-        return $isSensitiveRequest ? 'Sensitive Data Skipped' : $body;
+        return $isSensitiveRequest ? 'Sensitive Data Skipped' : $this->redactSensitiveKeys($body);
+    }
+
+    // Redacts by key, not by route, so a field like `password` stays hidden
+    // even on an endpoint nobody thought to add to $sensitiveRoutes.
+    private function redactSensitiveKeys(array $data)
+    {
+        $sensitiveKeys = ['password', 'password_confirmation', 'current_password', 'new_password', 'token', 'captcha_token'];
+        foreach ($data as $key => $value) {
+            if (in_array($key, $sensitiveKeys)) {
+                $data[$key] = '[redacted]';
+            } elseif (is_array($value)) {
+                $data[$key] = $this->redactSensitiveKeys($value);
+            }
+        }
+
+        return $data;
     }
 
     // Helper method to conditionally log response content
