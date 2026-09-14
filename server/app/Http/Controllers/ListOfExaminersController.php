@@ -15,6 +15,7 @@ use App\Models\Faculty;
 use App\Models\Forms;
 use App\Models\ListOfExaminersForm;
 use App\Models\Role;
+use App\Models\Student;
 use App\Models\User;
 use App\Support\ExaminerOverlap;
 
@@ -71,6 +72,12 @@ class ListOfExaminersController extends Controller
         if ($role->role != 'faculty') {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
+
+        $student = Student::where('roll_no', $request->roll_no)->first();
+        if (!$student || !$student->checkSupervises($user->faculty->faculty_code)) {
+            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+        }
+
         $data = [
             'roll_no' => $request->roll_no,
             'steps' => $steps,
