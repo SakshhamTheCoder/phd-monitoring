@@ -48,7 +48,8 @@ class ThesisExtentionForm extends Model
             // form had no way to tell a repeat extension from a first one, which
             // is the difference between needing the previous grant's PDF or not.
             'previous_extensions'=>$this->student->thesisExtentions()->get(),
-            'date_of_extention' => optional($this->student->thesisExtentions->first())->timestamp,
+            // No grant-date column exists on thesis_extentions; created_at is when it was granted.
+            'date_of_extention' => optional($this->student->thesisExtentions->first())->created_at?->toDateString(),
         ]);
     }
 
