@@ -132,8 +132,8 @@ class ThesisSubmissionController extends Controller
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
         $formInstance=ThesisSubmission::find($form_id);
-        if(count($request->publications) != 0){
-            foreach ($request->publications as $publication) {
+        if(count($this->selectedIds($request, 'publications')) != 0){
+            foreach ($this->selectedIds($request, 'publications') as $publication) {
                 $publication = Publication::find($publication);
                 if (!$publication) {
                     throw new \Exception("Invalid publication selected");
@@ -158,8 +158,8 @@ class ThesisSubmissionController extends Controller
                
             }
         }
-        if(count($request->patents) != 0){
-            foreach ($request->patents as $patent) {
+        if(count($this->selectedIds($request, 'patents')) != 0){
+            foreach ($this->selectedIds($request, 'patents') as $patent) {
                 $patent = Patent::find($patent);
                 if (!$patent) {
                     throw new \Exception("Invalid patent selected");
@@ -197,14 +197,14 @@ class ThesisSubmissionController extends Controller
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
         $formInstance=ThesisSubmission::find($form_id);
-        if(count($request->publications) != 0){
-            foreach ($request->publications as $publication) {
+        if(count($this->selectedIds($request, 'publications')) != 0){
+            foreach ($this->selectedIds($request, 'publications') as $publication) {
                 $publication = Publication::where('id',$publication)->where('form_id',$formInstance->id)->where('form_type','thesis');
                 $publication->delete();
             }
         }
-        if(count($request->patents) != 0){
-            foreach ($request->patents as $patent) {
+        if(count($this->selectedIds($request, 'patents')) != 0){
+            foreach ($this->selectedIds($request, 'patents') as $patent) {
                 $patent = Patent::where('id',$patent)->where('form_id',$formInstance->id)->where('form_type','thesis');
                 $patent->delete();
             }

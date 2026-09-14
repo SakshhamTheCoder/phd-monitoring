@@ -21,4 +21,16 @@ abstract class Controller
     {
         return $request->route($name) ?? $fallback;
     }
+
+    /**
+     * The ids a request selected under one field, as a list.
+     *
+     * A body that leaves the field out reads as null, and counting or iterating
+     * null is a TypeError rather than an empty selection. Nothing selected and
+     * nothing sent mean the same thing here.
+     */
+    protected function selectedIds(Request $request, string $field): array
+    {
+        return (array) $request->input($field, []);
+    }
 }
