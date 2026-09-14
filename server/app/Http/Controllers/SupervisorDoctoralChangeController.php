@@ -437,6 +437,12 @@ class SupervisorDoctoralChangeController extends Controller
                     'message' => 'You can only view students from your department'
                 ], 403);
             }
+        } elseif ($role === 'doctoral') {
+            if (!$student->checkDoctoralCommittee($user->faculty?->faculty_code)) {
+                return response()->json([
+                    'message' => 'You can only view students on your doctoral committee'
+                ], 403);
+            }
         } elseif (!$user->may('can_manage_supervisor_changes')) {
             return response()->json([
                 'message' => 'You do not have permission to view changes'
