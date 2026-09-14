@@ -110,7 +110,8 @@ class ClerkController extends Controller
     {
         $user = Auth::user();
 
-        // Admins get read access for oversight; only clerks can write (save()).
+        // This same capability also gates save(): both admin and clerk can write.
+        // The two differ later, save()'s edit-window restriction applies only to role clerk, not admin.
         if (!$user->may('can_mark_attendance')) {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
