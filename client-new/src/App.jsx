@@ -53,7 +53,7 @@ import ProjectRecruitment from './pages/projects/ProjectRecruitment';
 import Openings from './pages/projects/Openings';
 import UrfList from './pages/urf/UrfList';
 import UrfDetails from './pages/urf/UrfDetails';
-import UrfStudent from './pages/urf/UrfStudent';
+import { UrfFormsPage, UrfFormPage } from './pages/urf/UrfStudentForms';
 
 
 const App = () => {
@@ -131,7 +131,11 @@ const AppContent = () => {
           )}
           {role === 'ug_student' && (
             <>
-              <Route path="/urf" element={<UrfStudent />} />
+              {/* Static form paths outrank the shared /forms/:form_type route. */}
+              <Route path="/forms" element={<UrfFormsPage />} />
+              <Route path="/forms/urf-application" element={<UrfFormPage type="application" />} />
+              <Route path="/forms/urf-additional-info" element={<UrfFormPage type="additional" />} />
+              <Route path="/forms/urf-progress-report" element={<UrfFormPage type="report" />} />
               <Route path="/publications" element={<Publications />} />
             </>
           )}

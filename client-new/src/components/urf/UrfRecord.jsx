@@ -33,6 +33,20 @@ export const HeaderLine = ({ label, children, title = false }) => (
   </p>
 );
 
+/** Half-yearly and final reports, newest last. */
+export const ReportsTable = ({ reports }) => (
+  <TableComponent
+    data={reports}
+    keys={['type', 'conference_presentation', 'created_at', 'report']}
+    titles={['Type', 'Conference Presentation', 'Submitted On', 'Report']}
+    components={[
+      { key: 'type', component: ({ data }) => REPORT_TYPES[data] || data },
+      { key: 'conference_presentation', component: ({ data }) => data || EMPTY_VALUE },
+      { key: 'created_at', component: ({ data }) => formatDate(data) },
+    ]}
+  />
+);
+
 /** The students and faculty mentors on a project, listed the way a PhD profile lists supervisors. */
 export const TeamTables = ({ record }) => {
   const students = [1, 2].filter((n) => record[`student${n}_name`]).map((n) => ({
@@ -145,18 +159,7 @@ const UrfRecord = ({ record, actions = null }) => {
       {reportsDue && (
         <GridContainer
           label="Reports"
-          elements={[
-            <TableComponent
-              data={record.reports}
-              keys={['type', 'conference_presentation', 'created_at', 'report']}
-              titles={['Type', 'Conference Presentation', 'Submitted On', 'Report']}
-              components={[
-                { key: 'type', component: ({ data }) => REPORT_TYPES[data] || data },
-                { key: 'conference_presentation', component: ({ data }) => data || EMPTY_VALUE },
-                { key: 'created_at', component: ({ data }) => formatDate(data) },
-              ]}
-            />,
-          ]}
+          elements={[<ReportsTable reports={record.reports} />]}
           space={3}
         />
       )}

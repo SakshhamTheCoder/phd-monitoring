@@ -240,7 +240,7 @@ class UrfController extends Controller
                 $member,
                 "URF project {$data['status']}",
                 "Your URF project \"{$application->project_title}\" is now {$data['status']}.",
-                '/urf'
+                '/forms'
             );
         }
 

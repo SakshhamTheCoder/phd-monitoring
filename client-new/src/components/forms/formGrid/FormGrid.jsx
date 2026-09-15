@@ -13,6 +13,10 @@ const MANDATORY_ORDER = [
     "synopsis-submission",
     "list-of-examiners",
     "thesis-submission",
+    // URF, for UG students
+    "urf-application",
+    "urf-additional-info",
+    "urf-progress-report",
 ];
 const OPTIONAL_ORDER = [
     "status-change",

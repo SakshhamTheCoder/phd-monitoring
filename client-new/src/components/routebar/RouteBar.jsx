@@ -16,6 +16,9 @@ const navLabels = (role) => buttonConfig
 const EXTRA_LABELS = {
   '/projects/create': 'New Project',
   '/forms/manage': 'Manage Forms',
+  '/forms/urf-application': 'URF Application Form',
+  '/forms/urf-additional-info': 'Additional Information Form',
+  '/forms/urf-progress-report': 'Progress Report',
   '/areasOfSpecialization': 'Areas of Specialization',
   '/outside-experts': 'Outside Experts',
   // Reachable but not in the nav, so this is the only source of its name.
