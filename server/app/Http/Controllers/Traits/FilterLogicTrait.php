@@ -72,9 +72,6 @@ public function applyDynamicFilters($query, $filters, $pages = null, array $extr
     if ($mandatoryFilter && is_array($mandatoryFilter)) {
         foreach ($mandatoryFilter as $filter) {
             if (isset($filter['key'], $filter['value'])) {
-                $relationPath = explode('.', $filter['key']);
-                $column = array_pop($relationPath);
-                $relation = implode('.', $relationPath);
                 $op = $filter['op'] ?? '=';
                 $value = $filter['value'];
 
@@ -82,13 +79,7 @@ public function applyDynamicFilters($query, $filters, $pages = null, array $extr
                     $value = "%$value%";
                 }
 
-                if ($relation) {
-                    $query->whereHas($relation, function ($q) use ($column, $op, $value) {
-                        $this->whereColumnMatches($q, $column, $op, $value);
-                    });
-                } else {
-                    $this->whereColumnMatches($query, $column, $op, $value);
-                }
+                $this->applyCondition($query, $filter['key'], $op, $value);
             }
         }
     }
@@ -96,23 +87,14 @@ public function applyDynamicFilters($query, $filters, $pages = null, array $extr
     // Apply other dynamic filters
     $query->where(function ($q) use ($combine, $filterList) {
         foreach ($filterList as $filter) {
-            $relationPath = explode('.', $filter['key']);
-            $column = array_pop($relationPath);
-            $relation = implode('.', $relationPath);
             $op = $filter['op'] ?? '=';
             $value = $filter['value'] ?? null;
 
             if ($op === 'LIKE') {
-                $value = "%$value%"; 
+                $value = "%$value%";
             }
 
-            if ($relation) {
-                $q->{$combine === 'or' ? 'orWhereHas' : 'whereHas'}($relation, function ($subQ) use ($column, $op, $value) {
-                    $this->whereColumnMatches($subQ, $column, $op, $value);
-                });
-            } else {
-                $this->whereColumnMatches($q, $column, $op, $value, $combine === 'or');
-            }
+            $this->applyCondition($q, $filter['key'], $op, $value, $combine === 'or');
         }
     });
 
@@ -181,6 +163,38 @@ public function getAvailableFilters($pageSlug = null)
 
 
 
+
+/**
+ * One condition, applied to the query.
+ *
+ * A key may name two columns separated by "|", for something a row records
+ * twice: the two students on a URF project, say, or its two mentors. Either
+ * column matching is a match, so the parts are grouped rather than narrowed.
+ */
+private function applyCondition($query, string $key, $op, $value, bool $or = false)
+{
+    $parts = explode('|', $key);
+
+    if (count($parts) > 1) {
+        return $query->{$or ? 'orWhere' : 'where'}(function ($group) use ($parts, $op, $value) {
+            foreach ($parts as $part) {
+                $this->applyCondition($group, $part, $op, $value, true);
+            }
+        });
+    }
+
+    $relationPath = explode('.', $key);
+    $column = array_pop($relationPath);
+    $relation = implode('.', $relationPath);
+
+    if ($relation) {
+        return $query->{$or ? 'orWhereHas' : 'whereHas'}($relation, function ($q) use ($column, $op, $value) {
+            $this->whereColumnMatches($q, $column, $op, $value);
+        });
+    }
+
+    return $this->whereColumnMatches($query, $column, $op, $value, $or);
+}
 
 /**
  * One condition on one column.

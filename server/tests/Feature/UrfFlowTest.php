@@ -90,7 +90,7 @@ class UrfFlowTest extends TestCase
         // The admin list filters by stage and by the filter bar's conditions.
         $filters = fn (array $f) => '/api/urf?filters=' . urlencode(json_encode($f));
         $this->actingAs($admin, 'sanctum')
-            ->getJson($filters(['conditions' => [['key' => 'student1_roll_no', 'op' => '=', 'value' => '102203001']], 'mandatory_filter' => [['key' => 'status', 'op' => '=', 'value' => 'applied']]]))
+            ->getJson($filters(['conditions' => [['key' => 'student1_roll_no|student2_roll_no', 'op' => '=', 'value' => '102203001']], 'mandatory_filter' => [['key' => 'status', 'op' => '=', 'value' => 'applied']]]))
             ->assertOk()->assertJsonPath('data.0.id', $id)->assertJsonPath('data.0.session', (int) now()->year);
         $this->getJson($filters(['conditions' => [], 'mandatory_filter' => [['key' => 'status', 'op' => '=', 'value' => 'rejected']]]))
             ->assertOk()->assertJsonMissing(['id' => $id]);
@@ -174,7 +174,7 @@ class UrfFlowTest extends TestCase
         $secondId = $this->getJson('/api/urf/mine')->json('applications.0.id');
         UrfApplication::whereKey($secondId)->update(['session' => now()->year - 2]);
         $this->actingAs($admin, 'sanctum')
-            ->getJson('/api/urf?filters=' . urlencode(json_encode(['conditions' => [['key' => 'student1_roll_no', 'op' => '=', 'value' => '102203001']]])))
+            ->getJson('/api/urf?filters=' . urlencode(json_encode(['conditions' => [['key' => 'student1_roll_no|student2_roll_no', 'op' => '=', 'value' => '102203001']]])))
             ->assertJsonPath('data.0.id', $id)
             ->assertJsonPath('data.1.id', $secondId);
 
@@ -185,18 +185,19 @@ class UrfFlowTest extends TestCase
             ->assertOk()->assertJsonFragment(['id' => $id]);
         $this->getJson($unoffered('project_title'))->assertOk()->assertJsonCount(0, 'data');
 
-        // The search box covers the whole team, whatever case it is typed in.
-        $anyOf = fn (array $keys, string $value) => '/api/urf?filters=' . urlencode(json_encode([
-            'combine' => 'or',
-            'conditions' => array_map(fn ($k) => ['key' => $k, 'op' => 'LIKE', 'value' => $value], $keys),
+        // One filter field covers both students and both mentors, so the second
+        // student is found by name or roll number, whatever case it is typed in.
+        $by = fn (string $key, string $value) => '/api/urf?filters=' . urlencode(json_encode([
+            'conditions' => [['key' => $key, 'op' => 'LIKE', 'value' => $value]],
         ]));
-        $this->getJson($anyOf(['student1_name', 'student2_name'], 'ravi kumar'))->assertOk()->assertJsonFragment(['id' => $id]);
-        $this->getJson($anyOf(['student1_roll_no', 'student2_roll_no'], '102203002'))->assertOk()->assertJsonFragment(['id' => $id]);
+        $this->getJson($by('student1_name|student2_name', 'ravi kumar'))->assertOk()->assertJsonFragment(['id' => $id]);
+        $this->getJson($by('student1_roll_no|student2_roll_no', '102203002'))->assertOk()->assertJsonFragment(['id' => $id]);
+        $this->getJson($by('student1_name|student2_name', 'nobody here'))->assertOk()->assertJsonCount(0, 'data');
 
         // A mentor searched by full name, as the suggestion list writes it.
-        $byName = fn (string $value) => '/api/urf?filters=' . urlencode(json_encode(['conditions' => [['key' => 'mentor1.user.first_name', 'op' => 'LIKE', 'value' => $value]]]));
         $mentorName = $mentor->user->name();
-        $this->getJson($byName($mentorName))->assertOk()->assertJsonFragment(['id' => $id]);
+        $this->getJson($by('mentor1.user.first_name|mentor2.user.first_name', $mentorName))
+            ->assertOk()->assertJsonFragment(['id' => $id]);
 
         // All of a student's publications stay in one library across projects.
         $this->actingAs($applicant, 'sanctum')->getJson('/api/publications')->assertJsonCount(1, 'international');

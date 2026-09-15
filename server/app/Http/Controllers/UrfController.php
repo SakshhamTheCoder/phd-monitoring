@@ -30,11 +30,8 @@ class UrfController extends Controller
     use NotificationManager;
     use SaveFile;
 
-    /**
-     * Keys the URF pages send that are not filter fields of their own: the stage
-     * tab, and the second student and mentor, whom the search box covers too.
-     */
-    private const SEARCH_KEYS = ['status', 'student2_name', 'student2_roll_no', 'mentor2.user.first_name'];
+    /** The stage tab is a filter of the page's own, not one of its fields. */
+    private const SEARCH_KEYS = ['status'];
 
     private const DETAIL = [
         'student1Department', 'student2Department',

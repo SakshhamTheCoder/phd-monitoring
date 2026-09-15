@@ -17,7 +17,7 @@ const operatorFor = (filter) => (filter.options || filter.data_type === 'date' |
  * through untouched, and any filter chosen here joins them, so a search within
  * a filter still narrows rather than widens.
  */
-const SmartSearch = ({ placeholder = 'Search…', mandatory = [], alsoSearch = [], onSearch }) => {
+const SmartSearch = ({ placeholder = 'Search…', mandatory = [], onSearch }) => {
   const [filters, setFilters] = useState([]);
   const [text, setText] = useState('');
   const [open, setOpen] = useState(false);
@@ -40,11 +40,11 @@ const SmartSearch = ({ placeholder = 'Search…', mandatory = [], alsoSearch = [
     () => filters.filter((f) => !f.options && f.data_type !== 'date' && f.data_type !== 'number'),
     [filters],
   );
-  // Every text field of the page, plus the ones the page names itself, such as
-  // the second student on a URF project.
+  // A field's key may name two columns, so one of these searches both students
+  // of a URF project at once.
   const searchFields = useMemo(
-    () => [...searchable.map((f) => ({ key: f.key_name, label: f.label })), ...alsoSearch],
-    [searchable, JSON.stringify(alsoSearch)],
+    () => searchable.map((f) => ({ key: f.key_name, label: f.label })),
+    [searchable],
   );
 
   const conditionsFrom = (picks) => Object.entries(picks)

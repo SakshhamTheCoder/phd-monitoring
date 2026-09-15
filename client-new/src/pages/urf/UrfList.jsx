@@ -61,11 +61,6 @@ const UrfList = () => {
       <SmartSearch
         placeholder="Search projects by title, student, roll no or mentor…"
         mandatory={tabFilter}
-        alsoSearch={[
-          { key: 'student2_name', label: 'Student Name' },
-          { key: 'student2_roll_no', label: 'Roll No' },
-          { key: 'mentor2.user.first_name', label: 'Mentor Name' },
-        ]}
         onSearch={setFilter}
       />
       <div className="urf-list">
