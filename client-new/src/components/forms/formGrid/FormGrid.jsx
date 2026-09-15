@@ -13,11 +13,9 @@ const MANDATORY_ORDER = [
     "synopsis-submission",
     "list-of-examiners",
     "thesis-submission",
-    // URF, for UG students
+    // URF: the application and its additional information on the left...
     "urf-application",
     "urf-additional-info",
-    "urf-half-yearly-report",
-    "urf-final-report",
 ];
 const OPTIONAL_ORDER = [
     "status-change",
@@ -26,6 +24,9 @@ const OPTIONAL_ORDER = [
     "supervisor-change",
     "thesis-extension",
     "revise-title",
+    // ...and the two reports on the right.
+    "urf-half-yearly-report",
+    "urf-final-report",
 ];
 
 // A form may carry its own `path`; `title={null}` leaves out the heading, for a
