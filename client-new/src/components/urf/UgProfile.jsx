@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import PageHeader from '../pageHeader/PageHeader';
+import '../profileCard/ProfileCard.css';
 import CustomButton from '../forms/fields/CustomButton';
 import InfoGrid from '../profileFields/InfoGrid';
-import UrfRecord, { Section } from './UrfRecord';
+import { HeaderLine, StatusBadge, TeamTables } from './UrfRecord';
 import { signedInUser } from './UrfForms';
 import { apiUrfMine } from '../../api/urf';
 
 /**
- * A UG student's home: who they are, and their URF project with its team and
- * mentors. Roll number and department are asked for on the application, so
- * they come from whichever student slot on it is this user.
+ * A UG student's home, laid out like the PhD student profile: their name with
+ * their URF project beside it, their details in the framed grid, then the team
+ * and mentors. Roll number and department are asked for on the application,
+ * so they come from whichever student slot on it is this user.
  */
 const UgProfile = () => {
   const navigate = useNavigate();
@@ -25,38 +26,35 @@ const UgProfile = () => {
   const slot = application?.student2_email?.toLowerCase() === me.email?.toLowerCase() ? 2 : 1;
 
   return (
-    <>
-      <PageHeader
-        title="Profile"
-        subtitle="UG Student"
-        actions={state && (
-          <CustomButton text={application ? 'Open URF' : 'Apply for URF'} onClick={() => navigate('/urf')} />
+    <div className="student-container">
+      <div className="student-header">
+        <div className="student-header-text">
+          <h2>{[me.first_name, me.last_name].filter(Boolean).join(' ')}</h2>
+          <div className="student-research">
+            <HeaderLine label="URF Project" title>{application?.project_title}</HeaderLine>
+            {application && <HeaderLine label="Status"><StatusBadge status={application.status} /></HeaderLine>}
+          </div>
+        </div>
+        {state && (
+          <div className="profile-actions">
+            <CustomButton text={application ? 'Open URF' : 'Apply for URF'} onClick={() => navigate('/urf')} />
+          </div>
         )}
-      />
+      </div>
 
-      <Section title="Personal Details">
-        <InfoGrid rows={[
-          { label: 'Name', value: [me.first_name, me.last_name].filter(Boolean).join(' ') },
-          { label: 'Email', value: me.email },
-          { label: 'Phone Number', value: me.phone },
-          { label: 'Gender', value: me.gender },
+      <div className="student-details">
+        <InfoGrid className="student-info-grid" rows={[
           { label: 'Roll Number', value: application?.[`student${slot}_roll_no`] },
           { label: 'Department', value: application?.[`student${slot}_department`]?.name },
+          { label: 'Email', value: me.email },
+          { label: 'Phone', value: me.phone },
+          { label: 'Gender', value: me.gender },
+          { label: 'Programme', value: 'Undergraduate Research Fellowship' },
         ]} />
-      </Section>
+      </div>
 
-      {state && (application ? (
-        <UrfRecord record={application} summary />
-      ) : (
-        <Section title="URF Project">
-          <p>
-            {state.applications_open
-              ? 'You have not applied for the URF yet.'
-              : 'You have not applied for the URF. Applications are closed right now.'}
-          </p>
-        </Section>
-      ))}
-    </>
+      {application && <TeamTables record={application} />}
+    </div>
   );
 };
 

@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Layout from '../../components/dashboard/layout';
-import PageHeader from '../../components/pageHeader/PageHeader';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import UrfRecord from '../../components/urf/UrfRecord';
@@ -24,7 +23,7 @@ const DECISIONS = {
   completed: [],
 };
 
-/** Admin → URF → one project: its complete record and the decision on it. */
+/** Admin → URF → one project, shown like a scholar's profile, with the decision on it. */
 const UrfDetails = () => {
   const { id } = useParams();
   const [record, setRecord] = useState(null);
@@ -52,14 +51,14 @@ const UrfDetails = () => {
 
   return (
     <Layout>
-      <PageHeader
-        title={record?.project_title || 'URF Project'}
-        subtitle="Undergraduate Research Fellowship"
-        actions={record && DECISIONS[record.status]?.map((d) => (
-          <CustomButton key={d.status} text={d.label} variant={d.variant} onClick={() => setPending(d)} />
-        ))}
-      />
-      {record && <UrfRecord record={record} />}
+      {record && (
+        <UrfRecord
+          record={record}
+          actions={DECISIONS[record.status]?.map((d) => (
+            <CustomButton key={d.status} text={d.label} variant={d.variant} onClick={() => setPending(d)} />
+          ))}
+        />
+      )}
 
       <CustomModal
         isOpen={!!pending}
