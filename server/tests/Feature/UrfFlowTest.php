@@ -109,7 +109,7 @@ class UrfFlowTest extends TestCase
 
         $this->actingAs($applicant, 'sanctum')->postJson("/api/urf/{$id}/reports", $report)->assertCreated();
 
-        // A publication belongs to the project, so both students see it.
+        // A publication belongs to the student who added it, not to the project.
         $this->actingAs($applicant, 'sanctum')->postJson('/api/publications', [
             'title' => 'Low-cost soil sensing', 'publication_type' => 'conference', 'authors' => 'A. Rao, R. Kumar',
             'status' => 'accepted', 'doi_link' => 'https://doi.org/10.1/x', 'year' => '2026', 'name' => 'ICSS',
@@ -117,11 +117,11 @@ class UrfFlowTest extends TestCase
             'mode' => 'online', 'funding' => 'TIET seed grant',
             'first_page' => UploadedFile::fake()->create('p.pdf', 10, 'application/pdf'),
         ])->assertCreated();
-        $this->actingAs($partner, 'sanctum')->getJson('/api/publications')->assertOk()
-            ->assertJsonPath('international.0.mode', 'online');
+        $this->getJson('/api/publications')->assertOk()->assertJsonPath('international.0.mode', 'online');
+        $this->actingAs($partner, 'sanctum')->getJson('/api/publications')->assertOk()->assertJsonCount(0, 'international');
 
         // The final report links it from the library, as a PhD progress form does.
-        $publicationId = $this->getJson('/api/publications')->json('international.0.id');
+        $publicationId = $this->actingAs($applicant, 'sanctum')->getJson('/api/publications')->json('international.0.id');
         $this->actingAs($applicant, 'sanctum')->postJson("/api/urf/{$id}/reports", [
             'type' => 'final',
             'publications' => json_encode([$publicationId]),
@@ -168,13 +168,10 @@ class UrfFlowTest extends TestCase
             ->assertJsonCount(2, 'applications')
             ->assertJsonPath('applications.0.project_title', $secondTitle)
             ->assertJsonPath('applications.1.id', $id);
-        $newId = $this->getJson('/api/urf/mine')->json('applications.0.id');
 
-        // Each project keeps its own publication library; the latest is the default.
-        $this->getJson("/api/publications?urf_application_id={$id}")->assertJsonCount(1, 'international');
-        $this->getJson("/api/publications?urf_application_id={$newId}")->assertJsonCount(0, 'international');
-        $this->getJson('/api/publications')->assertJsonCount(0, 'international');
-        $this->actingAs($outsider, 'sanctum')->getJson("/api/publications?urf_application_id={$id}")->assertJsonCount(0, 'international');
+        // All of a student's publications stay in one library across projects.
+        $this->actingAs($applicant, 'sanctum')->getJson('/api/publications')->assertJsonCount(1, 'international');
+        $this->actingAs($outsider, 'sanctum')->getJson('/api/publications')->assertJsonCount(0, 'international');
 
         $this->assertSame('selected', UrfApplication::find($id)->status);
     }

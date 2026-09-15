@@ -46,9 +46,6 @@ const ShowPublications = ({
     // Whose names are bold among the authors. Defaults to the signed-in account;
     // a page showing someone else's record passes theirs.
     highlightNames = null,
-    // Fields every publication added from here starts with, e.g. which URF
-    // project's library it joins.
-    addDefaults = null,
 }) => {
    const highlighted = highlightNames || [accountName()];
    const authorsCell = { key: 'authors', component: ({ data }) => <Authors text={data} names={highlighted} /> };
@@ -281,7 +278,7 @@ const ShowPublications = ({
                      )}
                 <CustomModal isOpen={open} onClose={closeModal} title={editData ? 'Edit Publication' : 'Add Publication'}
                     minHeight='200px' maxHeight='600px' minWidth='650px' maxWidth='700px' closeOnOutsideClick={false}>
-                 <AddPublication close={closeModal} editData={editData} defaults={addDefaults} />
+                 <AddPublication close={closeModal} editData={editData} />
                  </CustomModal>
                 </>
             )}

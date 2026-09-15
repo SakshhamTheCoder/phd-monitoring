@@ -30,9 +30,9 @@ class PublicationController extends Controller
         if (!$user->may('can_manage_own_publications')) {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
-        [$column, $ownerId] = Publication::ownerOf($user, $request->input('urf_application_id'));
+        [$column, $ownerId] = Publication::ownerOf($user);
 
-        // A UG student who has not applied yet has nothing filed, which is an
+        // A scholar with no student record has nothing filed, which is an
         // empty list rather than an error. 0 matches no owner.
         return response()->json(Publication::groupedFor($column, $ownerId ?? 0));
     }
@@ -63,7 +63,7 @@ class PublicationController extends Controller
         }
 
 
-        [$column, $ownerId] = Publication::ownerOf($user, $request->input('urf_application_id'));
+        [$column, $ownerId] = Publication::ownerOf($user);
         if (!$ownerId) {
             return response()->json(['message' => 'You have no record to file publications against'], 403);
         }
@@ -169,7 +169,7 @@ class PublicationController extends Controller
         $user = Auth::user();
 
         // Check ownership
-        [$column, $ownerId] = Publication::ownerOf($user, $publication->urf_application_id);
+        [$column, $ownerId] = Publication::ownerOf($user);
         if (!$ownerId || $publication->{$column} != $ownerId) {
             return response()->json(['message' => 'You are not authorized to edit this publication'], 403);
         }
@@ -269,7 +269,7 @@ class PublicationController extends Controller
             return response()->json(['error' => 'Publication not found'], 404);
         }
 
-        [$column, $ownerId] = Publication::ownerOf($user, $publication->urf_application_id);
+        [$column, $ownerId] = Publication::ownerOf($user);
         if (!$ownerId || $publication->{$column} != $ownerId) {
             return response()->json(['message' => 'You are not authorized to delete this publication'], 403);
         }

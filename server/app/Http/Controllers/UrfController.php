@@ -314,14 +314,18 @@ class UrfController extends Controller
             $report->save();
 
             // Linked the way a PhD progress form links them: a copy of each chosen
-            // entry, tagged with this report. Only the project's own unlinked
-            // library entries can be chosen.
+            // entry from the student's own library, tagged with this report and
+            // its project. The library entry stays for later reports.
             foreach (['publications' => Publication::class, 'patents' => Patent::class] as $key => $model) {
                 $model::whereIn('id', $linked[$key])
-                    ->where('urf_application_id', $application->id)
+                    ->where('user_id', $user->id)
                     ->whereNull('form_id')
                     ->get()
-                    ->each(fn ($entry) => $entry->replicate()->forceFill(['form_id' => $report->id, 'form_type' => 'urf_report'])->save());
+                    ->each(fn ($entry) => $entry->replicate()->forceFill([
+                        'form_id' => $report->id,
+                        'form_type' => 'urf_report',
+                        'urf_application_id' => $application->id,
+                    ])->save());
             }
 
             return $report;

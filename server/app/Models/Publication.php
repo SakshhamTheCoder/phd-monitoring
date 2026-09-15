@@ -66,19 +66,14 @@ class Publication extends Model
 
     /**
      * The column a user's publications and patents are filed under, and its
-     * value: a scholar's roll number, or a URF fellow's project. The value is
-     * null when the user has neither yet.
+     * value: a scholar's roll number, or a UG student's own account. The value
+     * is null for a scholar with no student record yet.
      */
-    public static function ownerOf(User $user, $applicationId = null): array
+    public static function ownerOf(User $user): array
     {
         if ($user->current_role?->role === 'ug_student') {
-            // Each URF project keeps its own library: the project asked for, if
-            // the student is on it, otherwise their latest.
-            $application = $applicationId
-                ? UrfApplication::forMember($user)->find($applicationId)
-                : UrfApplication::forUser($user);
-
-            return ['urf_application_id', $application?->id];
+            // One library per student, across every URF project they are on.
+            return ['user_id', $user->id];
         }
 
         return ['student_id', $user->student?->roll_no];

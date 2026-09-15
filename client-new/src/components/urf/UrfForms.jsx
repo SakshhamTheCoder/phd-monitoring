@@ -234,8 +234,8 @@ export const FellowForm = ({ applicationId, initial, prefill, onSaved }) => {
 /**
  * The half-yearly progress report or the final report, with the sheet's
  * fields. Who is filing and for which project is filled in from the
- * application; publications are linked from the project's library the way a
- * PhD progress form links them.
+ * application; publications are linked from the student's own library the way
+ * a PhD progress form links them.
  */
 export const ReportForm = ({ application, type, onSaved }) => {
   const me = signedInUser();
@@ -248,7 +248,7 @@ export const ReportForm = ({ application, type, onSaved }) => {
   const slot = application.student2_email?.toLowerCase() === me.email?.toLowerCase() ? 2 : 1;
   const mentors = [application.mentor1, application.mentor2].filter(Boolean);
 
-  const loadLibrary = () => customFetch(`${baseURL}/publications?urf_application_id=${application.id}`, 'GET', {}, true, false, false)
+  const loadLibrary = () => customFetch(`${baseURL}/publications`, 'GET', {}, true, false, false)
     .then((res) => res.success && setLibrary(res.response));
   useEffect(() => { loadLibrary(); }, []);
 
@@ -338,7 +338,6 @@ export const ReportForm = ({ application, type, onSaved }) => {
           enableSubmit
           enableEdit={false}
           canAdd
-          addDefaults={{ urf_application_id: application.id }}
           onSelect={setSelection}
           onSubmit={confirmPicks}
           refetchData={loadLibrary}
