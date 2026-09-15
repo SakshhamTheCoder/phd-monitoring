@@ -72,7 +72,6 @@ const Doctoral = ({ formData }) => {
           <Recommendation
             formData={formData}
             role="doctoral"
-            allowRejection={false}
             moreFields={formData.form_type === "revised"  ? false : (true && !lock)}
             handleRecommendationChange={handleApprovalChange}
           />

@@ -130,7 +130,6 @@ const Supervisor = ({ formData }) => {
           <Recommendation
             formData={formData}
             role="supervisor"
-            allowRejection={false}
             moreFields={true}
             handleRecommendationChange={handleApprovalChange}
             isLocked={lock}

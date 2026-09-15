@@ -21,7 +21,6 @@ const SupervisorAllocation = ({formData}) => {
         <Recommendation
           formData={formData}
           role="hod"
-          allowRejection={false}
         ></Recommendation>
 
 </RoleBasedWrapper>

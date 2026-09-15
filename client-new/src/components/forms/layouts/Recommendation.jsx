@@ -9,7 +9,7 @@ import { useLoading } from '../../../context/LoadingContext';
 import { submitForm } from '../../../api/form';
 import TableComponent from '../table/TableComponent';
 
-const Recommendation = ({formData,allowRejection,role,moreFields,handleRecommendationChange,isLocked,submitPath,decision,title}) => {
+const Recommendation = ({formData,role,moreFields,handleRecommendationChange,isLocked,submitPath,decision,title}) => {
     const [roleName, setRoleName] = useState('');
     const [body, setBody] = useState({});
     const [lock, setLock] = useState(false);
@@ -104,7 +104,7 @@ const Recommendation = ({formData,allowRejection,role,moreFields,handleRecommend
             </>,
             
                  ]}/> */}
-            <RecommendationField role={roleName} allowRejection={allowRejection} onRecommendationChange={(data)=>{onRecommendationChange(data)}} initialValue={body} lock={lock} formData={formData} decision={decision} title={title}/>
+            <RecommendationField role={roleName} onRecommendationChange={(data)=>{onRecommendationChange(data)}} initialValue={body} lock={lock} formData={formData} decision={decision} title={title}/>
             {(!lock || body.comments) && (
                 <GridContainer
                     elements={[

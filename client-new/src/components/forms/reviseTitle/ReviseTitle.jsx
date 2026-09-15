@@ -18,22 +18,18 @@ const ReviseTitle = ({ formData }) => {
           <Recommendation
             formData={formData}
             role="supervisor"
-            allowRejection={false}
           ></Recommendation>
           <Recommendation
             formData={formData}
             role="hod"
-            allowRejection={false}
           ></Recommendation>
           <Recommendation
             formData={formData}
             role="dra"
-            allowRejection={false}
           ></Recommendation>
           <Recommendation
             formData={formData}
             role="dordc"
-            allowRejection={false}
           ></Recommendation>
         </RoleBasedWrapper>
       </div>

@@ -4,11 +4,11 @@ import "./Fields.css";
 import { Table } from 'lucide-react';
 import TableComponent from '../table/TableComponent';
 
-// `decision` collapses the three-way recommend / not recommend / reject into the
-// two answers some forms actually have. Leave is one: an HOD accepts or rejects,
-// and "not recommended" would post the same approval:false as a rejection while
-// reading as a third, different outcome.
-const RecommendationField = ({ role, allowRejection = false, onRecommendationChange, initialValue ,lock=false,formData=null, decision=false, title=null}) => {
+// Two answers only. A separate "rejected" option posted the same approval:false
+// as "not recommended", which the server treats identically, so it read as a
+// third outcome it never was. `decision` relabels the same two answers as
+// Accepted and Rejected for forms that phrase it as a decision, such as leave.
+const RecommendationField = ({ role, onRecommendationChange, initialValue ,lock=false,formData=null, decision=false, title=null}) => {
     const [approval, setApproval] = useState(null);
     const [rejected, setRejected] = useState(false);
 
@@ -89,19 +89,6 @@ const RecommendationField = ({ role, allowRejection = false, onRecommendationCha
                             />
                             Not Recommend
                         </label>
-
-                        {allowRejection && (
-                            <label>
-                                <input
-                                    type="radio"
-                                    name={`recommendation-${role}`}
-                                    checked={rejected}
-                                    onChange={handleRejectionChange}
-                                    disabled={lock}
-                                />
-                                Rejected
-                            </label>
-                        )}
                         </>
                         )}
                     </div>

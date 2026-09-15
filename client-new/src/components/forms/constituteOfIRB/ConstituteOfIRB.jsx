@@ -24,7 +24,6 @@ const ConstituteOfIRB = ({formData}) => {
          <Recommendation
           formData={formData}
           role="adordc"
-          allowRejection={false}
         ></Recommendation>
         <Dordc formData={formData} />
         </RoleBasedWrapper>

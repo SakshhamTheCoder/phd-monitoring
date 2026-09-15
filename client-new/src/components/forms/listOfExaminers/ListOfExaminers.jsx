@@ -26,7 +26,6 @@ const ListOfExaminers = ({formData}) => {
         <Recommendation
           formData={formData}
           role="director"
-          allowRejection={true}
         ></Recommendation>
         
         </RoleBasedWrapper>

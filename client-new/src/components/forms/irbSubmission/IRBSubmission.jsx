@@ -68,27 +68,22 @@ const IRBSubmission = ({ formData }) => {
          <Recommendation
           formData={formData}
           role="external"
-          allowRejection={false}
         ></Recommendation>
          <Recommendation
           formData={formData}
           role="doctoral"
-          allowRejection={false}
         ></Recommendation>
         <Recommendation
           formData={formData}
           role="hod"
-          allowRejection={false}
         ></Recommendation>
         <Recommendation
           formData={formData}
           role="adordc"
-          allowRejection={false}
         ></Recommendation>
         <Recommendation
           formData={formData}
           role="dordc"
-          allowRejection={false}
         ></Recommendation>
         </RoleBasedWrapper>
       </div>

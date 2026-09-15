@@ -37,7 +37,6 @@ const StudentLeave = ({ formData, submitPath, onDraftDeleted }) => {
           <Recommendation
             formData={formData}
             role="hod"
-            allowRejection={true}
             submitPath={submitPath}
             decision
             title="Decision:"

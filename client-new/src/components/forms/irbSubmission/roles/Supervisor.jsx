@@ -72,7 +72,6 @@ const Supervisor = ({ formData }) => {
           <Recommendation
             formData={formData}
             role="supervisor"
-            allowRejection={false}
            
             moreFields={formData.form_type === "revised"  ? false : (true && !lock)}
             handleRecommendationChange={handleApprovalChange}

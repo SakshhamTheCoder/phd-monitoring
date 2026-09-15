@@ -51,7 +51,6 @@ const Dordc = ({ formData }) => {
           <Recommendation
             formData={formData}
             role="dordc"
-            allowRejection={false}
             moreFields={true}
             isLocked={lock}
             handleRecommendationChange={onUpdateApproval}

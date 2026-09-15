@@ -15,32 +15,26 @@ const SemesterOff=({formData}) => {
           <Recommendation
             formData={formData}
             role="supervisor"
-            allowRejection={false}
           ></Recommendation>
           <Recommendation
             formData={formData}
             role="phd_coordinator"
-            allowRejection={false}
           ></Recommendation>
           <Recommendation
             formData={formData}
             role="hod"
-            allowRejection={false}
           ></Recommendation>
           <Recommendation
             formData={formData}
             role="dra"
-            allowRejection={false}
           ></Recommendation>
           <Recommendation
             formData={formData}
             role="dordc"
-            allowRejection={false}
           ></Recommendation>
            <Recommendation
             formData={formData}
             role="director"
-            allowRejection={false}
           ></Recommendation>
         </div>
       </>

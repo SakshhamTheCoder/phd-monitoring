@@ -21,37 +21,30 @@ const SynopsisSubmission=({formData}) => {
            <Recommendation
             formData={formData}
             role="doctoral"
-            allowRejection={false}
           ></Recommendation>
           <Recommendation
             formData={formData}
             role="phd_coordinator"
-            allowRejection={false}
           ></Recommendation>
           <Recommendation
             formData={formData}
             role="hod"
-            allowRejection={false}
           ></Recommendation>
           <Recommendation
             formData={formData}
             role="dra"
-            allowRejection={false}
           ></Recommendation>
           <Recommendation
           formData={formData}
           role="adordc"
-          allowRejection={false}
         ></Recommendation>
           <Recommendation
             formData={formData}
             role="dordc"
-            allowRejection={false}
           ></Recommendation>
           <Recommendation
             formData={formData}
             role="director"
-            allowRejection={false}
           ></Recommendation>
           </RoleBasedWrapper>
         </div>

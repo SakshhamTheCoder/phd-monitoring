@@ -74,7 +74,6 @@ const Hod = ({ formData }) => {
           <Recommendation
             formData={formData}
             role="hod"
-            allowRejection={false}
             moreFields={true}
             handleRecommendationChange={onUpdateApproval}
           ></Recommendation>
