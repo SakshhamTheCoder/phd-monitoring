@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
@@ -11,6 +12,7 @@ import { apiSettings, apiSaveSettings } from '../../api/settings';
 
 /** Admin → URF: every application, by stage, with the filters the students page has. */
 const UrfList = () => {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState({ conditions: [] });
   const [tab, setTab] = useState('all');
   const [open, setOpen] = useState(null);
@@ -49,7 +51,12 @@ const UrfList = () => {
         onChange={setTab}
       />
       <FilterBar onSearch={setFilter} />
-      <PagenationTable endpoint="/urf" filters={filters} enableSelect={false} />
+      <PagenationTable
+        endpoint="/urf"
+        filters={filters}
+        enableSelect={false}
+        customOpenForm={(row) => navigate(`/urf/${row.id}`)}
+      />
     </Layout>
   );
 };
