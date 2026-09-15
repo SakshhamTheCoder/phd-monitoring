@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import '../profileCard/ProfileCard.css';
 import InfoGrid from '../profileFields/InfoGrid';
-import { HeaderLine, StatusBadge, TeamTables } from './UrfRecord';
+import { HeaderLine, StatusBadge, TeamTables, yearLabel } from './UrfRecord';
 import { signedInUser } from './UrfForms';
 import { apiUrfMine } from '../../api/urf';
 
@@ -37,7 +37,8 @@ const UgProfile = () => {
       <div className="student-details">
         <InfoGrid className="student-info-grid" rows={[
           { label: 'Roll Number', value: application?.[`student${slot}_roll_no`] },
-          { label: 'Department', value: application?.[`student${slot}_department`]?.name },
+          { label: 'Branch', value: application?.[`student${slot}_department`]?.name },
+          { label: 'Year', value: yearLabel(application?.[`student${slot}_year`]) },
           { label: 'Email', value: me.email },
           { label: 'Phone', value: me.phone },
           { label: 'Gender', value: me.gender },

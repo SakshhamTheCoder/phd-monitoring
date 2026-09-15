@@ -147,10 +147,14 @@ class UrfFlowTest extends TestCase
         $this->actingAs($admin, 'sanctum')->getJson('/api/urf/urf-additional-info' . $onThisProject)->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.application_id', $id)
-            ->assertJsonPath('data.0.roll_no', '102203002');
+            ->assertJsonPath('data.0.roll_no', '102203002')
+            ->assertJsonPath('data.0.branch', 'URF Test Department')
+            ->assertJsonPath('data.0.year', '2nd Year');
         $this->getJson('/api/urf/urf-half-yearly-report' . $onThisProject)->assertOk()
             ->assertJsonCount(1, 'data')
-            ->assertJsonPath('data.0.application_id', $id);
+            ->assertJsonPath('data.0.application_id', $id)
+            ->assertJsonPath('data.0.roll_no', '102203001')
+            ->assertJsonPath('data.0.year', '3rd Year');
         $this->getJson('/api/urf/urf-final-report' . $onThisProject)->assertOk()->assertJsonCount(1, 'data');
         $this->getJson('/api/urf/urf-application/filters')->assertOk()->assertJsonFragment(['key_name' => 'project_title']);
         $this->actingAs($applicant, 'sanctum')->getJson('/api/urf/urf-final-report')->assertForbidden();

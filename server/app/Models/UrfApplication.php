@@ -69,6 +69,12 @@ class UrfApplication extends Model
             ->first();
     }
 
+    /** 2 when the user is the application's second student, 1 otherwise. */
+    public function slotOf(User $user): int
+    {
+        return strcasecmp((string) $this->student2_email, $user->email) === 0 ? 2 : 1;
+    }
+
     public function hasMember(User $user): bool
     {
         return $this->user_id === $user->id

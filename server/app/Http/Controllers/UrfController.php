@@ -93,11 +93,20 @@ class UrfController extends Controller
         $filters = json_decode((string) $request->query('filters'), true);
         $details = $form === 'urf-additional-info';
         $page = ($details ? UrfFellow::query() : UrfReport::where('type', $form === 'urf-final-report' ? 'final' : 'half_yearly'))
-            ->with(['application', 'user'])
+            ->with(['application.student1Department', 'application.student2Department', 'user'])
             ->when($filters, fn ($q) => $q->whereHas('application', fn ($a) => $this->applyDynamicFilters($a, $filters)))
             ->latest('id')
             ->paginate($request->input('rows', 50), ['*'], 'page', $request->input('page', 1));
 
+        // The row's student, found on the application by their email.
+        $student = function ($row) {
+            $n = $row->application->slotOf($row->user);
+            return [
+                'roll_no' => $row->application->{"student{$n}_roll_no"},
+                'branch' => $row->application->{"student{$n}Department"}?->name,
+                'year' => UrfApplication::yearLabel($row->application->{"student{$n}_year"}),
+            ];
+        };
         $common = fn ($row) => [
             'id' => $row->id,
             'application_id' => $row->urf_application_id,
@@ -106,11 +115,8 @@ class UrfController extends Controller
         ];
 
         return response()->json([
-            'data' => $page->getCollection()->map(fn ($row) => $common($row) + ($details ? [
+            'data' => $page->getCollection()->map(fn ($row) => $common($row) + $student($row) + ($details ? [
                 'student' => $row->full_name,
-                'roll_no' => strcasecmp((string) $row->application->student2_email, $row->user->email) === 0
-                    ? $row->application->student2_roll_no
-                    : $row->application->student1_roll_no,
                 'status' => ucfirst($row->application->status),
             ] : [
                 'submitted_by' => $row->user->name(),
@@ -121,11 +127,11 @@ class UrfController extends Controller
             'totalPages' => $page->lastPage(),
             'role' => $user->current_role->role,
             'fields' => $details
-                ? ['student', 'roll_no', 'project_title', 'status', 'submitted_on']
-                : ['project_title', 'submitted_by', 'conference_presentation', 'submitted_on', 'report'],
+                ? ['student', 'roll_no', 'branch', 'year', 'project_title', 'status', 'submitted_on']
+                : ['project_title', 'submitted_by', 'roll_no', 'branch', 'year', 'conference_presentation', 'submitted_on', 'report'],
             'fieldsTitles' => $details
-                ? ['Student', 'Roll No', 'Project Title', 'Project Status', 'Submitted On']
-                : ['Project Title', 'Submitted By', 'Conference Presentation', 'Submitted On', 'Report'],
+                ? ['Student', 'Roll No', 'Branch', 'Year', 'Project Title', 'Project Status', 'Submitted On']
+                : ['Project Title', 'Submitted By', 'Roll No', 'Branch', 'Year', 'Conference Presentation', 'Submitted On', 'Report'],
         ]);
     }
 
