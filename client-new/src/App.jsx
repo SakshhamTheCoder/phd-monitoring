@@ -136,7 +136,8 @@ const AppContent = () => {
               <Route path="/forms" element={<UrfFormsPage />} />
               <Route path="/forms/urf-application" element={<UrfFormPage type="application" />} />
               <Route path="/forms/urf-additional-info" element={<UrfFormPage type="additional" />} />
-              <Route path="/forms/urf-progress-report" element={<UrfFormPage type="report" />} />
+              <Route path="/forms/urf-half-yearly-report" element={<UrfFormPage type="half_yearly" />} />
+              <Route path="/forms/urf-final-report" element={<UrfFormPage type="final" />} />
               <Route path="/publications" element={<Publications />} />
             </>
           )}
@@ -216,7 +217,8 @@ const AppContent = () => {
                 <Route path="/urf" element={<UrfList />} />
                 <Route path="/urf/urf-application" element={<UrfFormList />} />
                 <Route path="/urf/urf-additional-info" element={<UrfFormList />} />
-                <Route path="/urf/urf-progress-report" element={<UrfFormList />} />
+                <Route path="/urf/urf-half-yearly-report" element={<UrfFormList />} />
+                <Route path="/urf/urf-final-report" element={<UrfFormList />} />
                 <Route path="/urf/:id" element={<UrfDetails />} />
 
               {/* <Route path="/faculty/:roll_no" element={<StudentProfile />} />

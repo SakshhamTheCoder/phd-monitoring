@@ -17,7 +17,8 @@ import './UrfList.css';
 const URF_FORMS = [
   { form_type: 'urf-application', form_name: 'URF Application Form' },
   { form_type: 'urf-additional-info', form_name: 'Additional Information Form' },
-  { form_type: 'urf-progress-report', form_name: 'Progress Report' },
+  { form_type: 'urf-half-yearly-report', form_name: 'Half-yearly Progress Report' },
+  { form_type: 'urf-final-report', form_name: 'Final Report' },
 ];
 
 const UrfList = () => {

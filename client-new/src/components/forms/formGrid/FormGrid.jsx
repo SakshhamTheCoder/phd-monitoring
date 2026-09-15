@@ -16,7 +16,8 @@ const MANDATORY_ORDER = [
     // URF, for UG students
     "urf-application",
     "urf-additional-info",
-    "urf-progress-report",
+    "urf-half-yearly-report",
+    "urf-final-report",
 ];
 const OPTIONAL_ORDER = [
     "status-change",

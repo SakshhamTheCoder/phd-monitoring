@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import FormGrid from '../../components/forms/formGrid/FormGrid';
-import UrfRecord, { ReportsTable, Section } from '../../components/urf/UrfRecord';
+import UrfRecord, { ReportsTable, Section, REPORT_TYPES } from '../../components/urf/UrfRecord';
 import { ApplyForm, FellowForm, ReportForm, signedInUser } from '../../components/urf/UrfForms';
 import { apiUrfMine } from '../../api/urf';
 
@@ -29,7 +29,7 @@ const canApplyAfresh = ({ applications_open: open, application }) =>
 /**
  * Forms, for a UG student: the URF forms open to them, as cards on the same
  * grid the PhD forms page uses. The additional information form appears once
- * the project is selected, the progress report while it is ongoing.
+ * the project is selected; the two reports while it is ongoing.
  */
 export const UrfFormsPage = () => {
   const { state } = useUrf();
@@ -41,7 +41,10 @@ export const UrfFormsPage = () => {
     ...(underWay(status)
       ? [{ form_type: 'urf-additional-info', form_name: 'Additional Information Form', action_required: !application.fellows?.length }]
       : []),
-    ...(status === 'ongoing' ? [{ form_type: 'urf-progress-report', form_name: 'Progress Report' }] : []),
+    ...(status === 'ongoing' ? [
+      { form_type: 'urf-half-yearly-report', form_name: REPORT_TYPES.half_yearly },
+      { form_type: 'urf-final-report', form_name: REPORT_TYPES.final },
+    ] : []),
   ] : [];
 
   return <Layout>{state && <FormGrid forms={forms} />}</Layout>;
@@ -50,7 +53,7 @@ export const UrfFormsPage = () => {
 const TITLES = {
   application: 'URF Application Form',
   additional: 'Additional Information Form',
-  report: 'Progress Report',
+  ...REPORT_TYPES,
 };
 
 /** One URF form. What it offers follows the project's status. */
@@ -78,12 +81,13 @@ export const UrfFormPage = ({ type }) => {
       ? <FellowForm applicationId={application.id} initial={application.fellows?.[0]} onSaved={load} />
       : <p>This form opens once your project is selected.</p>;
   }
-  if (state && type === 'report') {
+  if (state && REPORT_TYPES[type]) {
+    const filed = application?.reports?.filter((report) => report.type === type) || [];
     body = status === 'ongoing' ? (
       <>
-        <ReportForm applicationId={application.id} onSaved={load} />
-        {application.reports?.length > 0 && (
-          <Section title="Submitted Reports"><ReportsTable reports={application.reports} /></Section>
+        <ReportForm application={application} type={type} onSaved={load} />
+        {filed.length > 0 && (
+          <Section title={`Submitted ${REPORT_TYPES[type]}s`}><ReportsTable reports={filed} /></Section>
         )}
       </>
     ) : <p>Reports are filed while your project is ongoing.</p>;

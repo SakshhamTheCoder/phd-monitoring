@@ -13,6 +13,7 @@ const toFormData = (body) => {
 };
 
 export const apiUrfMine = () => customFetch(`${URF}/mine`, 'GET', {}, true, false, false);
+export const apiUrfDepartments = () => customFetch(`${URF}/departments`, 'GET', {}, true);
 export const apiUrfShow = (id) => customFetch(`${URF}/${id}`, 'GET', {}, true, false, false);
 export const apiUrfApply = (body) => customFetch(URF, 'POST', toFormData(body), true, true);
 export const apiUrfFellow = (id, body) => customFetch(`${URF}/${id}/fellow`, 'POST', body, true);

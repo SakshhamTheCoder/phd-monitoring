@@ -9,7 +9,8 @@ import './UrfList.css';
 const TITLES = {
   'urf-application': 'URF Application Form',
   'urf-additional-info': 'Additional Information Form',
-  'urf-progress-report': 'Progress Report',
+  'urf-half-yearly-report': 'Half-yearly Progress Report',
+  'urf-final-report': 'Final Report',
 };
 
 /**

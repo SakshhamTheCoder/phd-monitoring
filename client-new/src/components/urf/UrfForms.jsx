@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import GridContainer from '../forms/fields/GridContainer';
 import InputField from '../forms/fields/InputField';
@@ -7,11 +7,18 @@ import DateField from '../forms/fields/DateField';
 import FileUploadField from '../forms/fields/FileUploadField';
 import InputSuggestions from '../forms/fields/InputSuggestions';
 import CustomButton from '../forms/fields/CustomButton';
+import CustomModal from '../forms/modal/CustomModal';
+import InfoGrid from '../profileFields/InfoGrid';
+import ShowPublications from '../publications/ShowPublications';
 import { baseURL } from '../../api/urls';
-import { apiUrfApply, apiUrfFellow, apiUrfReport } from '../../api/urf';
-import { Section, facultyName } from './UrfRecord';
+import { customFetch } from '../../api/base';
+import { apiUrfApply, apiUrfDepartments, apiUrfFellow, apiUrfReport } from '../../api/urf';
+import { Section, facultyName, yearLabel, REPORT_TYPES } from './UrfRecord';
+import './UrfForms.css';
 
 const GENDERS = [{ title: 'Male', value: 'Male' }, { title: 'Female', value: 'Female' }];
+const YEARS = [1, 2, 3, 4].map((year) => ({ title: yearLabel(year), value: year }));
+const STUDENT_FIELDS = ['name', 'roll_no', 'department_id', 'year', 'gender', 'email', 'phone'];
 
 export const signedInUser = () => {
   try {
@@ -28,6 +35,15 @@ const useBody = (initial) => {
   return [body, set];
 };
 
+// The portal's departments, offered as the student's branch.
+const useBranches = () => {
+  const [branches, setBranches] = useState([]);
+  useEffect(() => {
+    apiUrfDepartments().then((res) => res.success && setBranches(res.response.map((d) => ({ title: d.name, value: d.id }))));
+  }, []);
+  return branches;
+};
+
 const Submit = ({ text, onClick }) => {
   const [saving, setSaving] = useState(false);
   const run = async () => {
@@ -38,31 +54,26 @@ const Submit = ({ text, onClick }) => {
   return <GridContainer elements={[<CustomButton text={saving ? 'Saving…' : text} onClick={run} disabled={saving} />]} />;
 };
 
-const StudentFields = ({ n, body, set, initial }) => {
+/** A student's fields. `account` locks what the signed-in account already knows. */
+const StudentFields = ({ n, body, set, branches, account = {} }) => {
   const key = (field) => `student${n}_${field}`;
-  const required = n === 1;
   return (
     <GridContainer
-      label={n === 1 ? 'First Student' : 'Second Student (if any)'}
       elements={[
-        <InputField label="Name" initialValue={body[key('name')]} onChange={set(key('name'))} required={required} />,
-        <InputField label="Roll Number" initialValue={body[key('roll_no')]} onChange={set(key('roll_no'))} required={required} />,
-        <InputSuggestions
-          apiUrl={`${baseURL}/suggestions/department`}
-          label="Department"
-          initialValue={initial?.[key('department')]?.name}
-          onSelect={(department) => set(key('department_id'))(department.id)}
-          required={required}
-        />,
-        <DropdownField label="Gender" options={GENDERS} initialValue={body[key('gender')]} onChange={set(key('gender'))} required={required} />,
-        <InputField label="Official Email" type="email" initialValue={body[key('email')]} onChange={set(key('email'))} required={required} />,
-        <InputField label="Phone Number" initialValue={body[key('phone')]} onChange={set(key('phone'))} required={required} />,
+        <InputField label="Name" initialValue={body[key('name')]} onChange={set(key('name'))} isLocked={!!account.name} required />,
+        <InputField label="Roll Number" initialValue={body[key('roll_no')]} onChange={set(key('roll_no'))} required />,
+        <DropdownField label="Branch" options={branches} initialValue={body[key('department_id')]} onChange={set(key('department_id'))} required />,
+        <DropdownField label="Year" options={YEARS} initialValue={body[key('year')]} onChange={set(key('year'))} required />,
+        <DropdownField label="Gender" options={GENDERS} initialValue={body[key('gender')]} onChange={set(key('gender'))} isLocked={!!account.gender} required />,
+        <InputField label="Official Email" type="email" initialValue={body[key('email')]} onChange={set(key('email'))} isLocked={!!account.email} required />,
+        <InputField label="Phone Number" initialValue={body[key('phone')]} onChange={set(key('phone'))} isLocked={!!account.phone} required />,
       ]}
     />
   );
 };
 
-const MentorFields = ({ n, initial, onPick }) => {
+/** One faculty mentor on one row: the search, what it fills in, and remove. */
+const MentorRow = ({ initial, onPick, onRemove, required }) => {
   const [picked, setPicked] = useState(null);
   const shown = picked || (initial && {
     name: facultyName(initial),
@@ -71,40 +82,65 @@ const MentorFields = ({ n, initial, onPick }) => {
     department: initial.department?.name,
   });
   return (
-    <GridContainer
-      label={n === 1 ? 'First Mentor' : 'Second Mentor (if any)'}
-      elements={[
-        <InputSuggestions
-          apiUrl={`${baseURL}/suggestions/faculty`}
-          body={{ type: 'internal' }}
-          label="Faculty Name"
-          initialValue={shown?.name}
-          onSelect={(faculty) => { setPicked(faculty); onPick(faculty.id); }}
-          required={n === 1}
-        />,
-        <InputField label="Email" initialValue={shown?.email || ''} isLocked />,
-        <InputField label="Designation" initialValue={shown?.designation || ''} isLocked />,
-        <InputField label="Department" initialValue={shown?.department || ''} isLocked />,
-      ]}
-    />
+    <div className="urf-mentor-row">
+      <InputSuggestions
+        apiUrl={`${baseURL}/suggestions/faculty`}
+        body={{ type: 'internal' }}
+        label="Faculty Name"
+        initialValue={shown?.name}
+        onSelect={(faculty) => { setPicked(faculty); onPick(faculty.id); }}
+        required={required}
+      />
+      <InputField label="Email" initialValue={shown?.email || ''} isLocked />
+      <InputField label="Designation" initialValue={shown?.designation || ''} isLocked />
+      <InputField label="Department" initialValue={shown?.department || ''} isLocked />
+      {onRemove ? (
+        <button type="button" className="urf-remove-btn" onClick={onRemove} title="Remove mentor" aria-label="Remove mentor">
+          <i className="fa fa-trash" aria-hidden="true"></i>
+        </button>
+      ) : <span />}
+    </div>
   );
 };
 
-const APPLICATION_FIELDS = ['project_title', 'mentor1_faculty_code', 'mentor2_faculty_code'].concat(
-  ...[1, 2].map((n) => ['name', 'roll_no', 'department_id', 'gender', 'email', 'phone'].map((f) => `student${n}_${f}`))
-);
+const APPLICATION_FIELDS = ['project_title', 'mentor1_faculty_code', 'mentor2_faculty_code']
+  .concat(...[1, 2].map((n) => STUDENT_FIELDS.map((f) => `student${n}_${f}`)));
 
-/** The URF application. Passing `initial` corrects an application still waiting for a result. */
+/**
+ * The URF application. The signed-in student's own name, email, phone and
+ * gender come from their account; a second student and a second mentor are
+ * added with a button, one of each at most. Passing `initial` corrects an
+ * application still waiting for a result.
+ */
 export const ApplyForm = ({ initial, onSaved }) => {
   const me = signedInUser();
+  const account = {
+    name: [me.first_name, me.last_name].filter(Boolean).join(' '),
+    email: me.email,
+    phone: me.phone,
+    gender: me.gender,
+  };
+  const branches = useBranches();
   const [body, set] = useBody(initial
     ? Object.fromEntries(APPLICATION_FIELDS.map((f) => [f, initial[f]]))
     : {
-      student1_name: [me.first_name, me.last_name].filter(Boolean).join(' '),
-      student1_email: me.email,
-      student1_phone: me.phone,
-      student1_gender: me.gender,
+      student1_name: account.name,
+      student1_email: account.email,
+      student1_phone: account.phone,
+      student1_gender: account.gender,
     });
+  const [teammate, setTeammate] = useState(!!initial?.student2_name);
+  const [secondMentor, setSecondMentor] = useState(!!initial?.mentor2_faculty_code);
+
+  // Removing clears the fields, so the server drops them on save.
+  const removeTeammate = () => {
+    STUDENT_FIELDS.forEach((f) => set(`student2_${f}`)(''));
+    setTeammate(false);
+  };
+  const removeMentor = () => {
+    set('mentor2_faculty_code')('');
+    setSecondMentor(false);
+  };
 
   const submit = async () => {
     const res = await apiUrfApply(body);
@@ -115,14 +151,41 @@ export const ApplyForm = ({ initial, onSaved }) => {
   };
 
   return (
-    <Section title={initial ? 'Edit Application' : 'Apply for URF'}>
+    <Section title={initial ? 'Edit Application' : 'Application'}>
       <GridContainer elements={[
         <InputField label="Project Title" initialValue={body.project_title} onChange={set('project_title')} required />,
       ]} space={3} />
-      <StudentFields n={1} body={body} set={set} initial={initial} />
-      <MentorFields n={1} initial={initial?.mentor1} onPick={set('mentor1_faculty_code')} />
-      <StudentFields n={2} body={body} set={set} initial={initial} />
-      <MentorFields n={2} initial={initial?.mentor2} onPick={set('mentor2_faculty_code')} />
+
+      <div className="urf-subhead"><h3>Your Details</h3></div>
+      <StudentFields n={1} body={body} set={set} branches={branches} account={account} />
+
+      <div className="urf-subhead">
+        <h3>Team Member</h3>
+        {teammate ? (
+          <button type="button" className="urf-remove-btn" onClick={removeTeammate}>
+            <i className="fa fa-trash" aria-hidden="true"></i> Remove Team Member
+          </button>
+        ) : (
+          <button type="button" className="urf-add-btn" onClick={() => setTeammate(true)}>
+            <i className="fa fa-plus" aria-hidden="true"></i> Add Team Member
+          </button>
+        )}
+      </div>
+      {teammate && <StudentFields n={2} body={body} set={set} branches={branches} />}
+
+      <div className="urf-subhead">
+        <h3>Faculty Mentors</h3>
+        {!secondMentor && (
+          <button type="button" className="urf-add-btn" onClick={() => setSecondMentor(true)}>
+            <i className="fa fa-plus" aria-hidden="true"></i> Add Faculty Mentor
+          </button>
+        )}
+      </div>
+      <MentorRow initial={initial?.mentor1} onPick={set('mentor1_faculty_code')} required />
+      {secondMentor && (
+        <MentorRow initial={initial?.mentor2} onPick={set('mentor2_faculty_code')} onRemove={removeMentor} />
+      )}
+
       <GridContainer elements={[
         <FileUploadField
           label={initial ? 'Replace Project Proposal (PDF)' : 'Project Proposal (PDF)'}
@@ -166,32 +229,103 @@ export const FellowForm = ({ applicationId, initial, onSaved }) => {
   );
 };
 
-/** A half-yearly progress report or the final report. Publications come from the Publications page. */
-export const ReportForm = ({ applicationId, onSaved }) => {
-  const [body, set] = useBody({ type: 'half_yearly' });
+/**
+ * The half-yearly progress report or the final report, with the sheet's
+ * fields. Who is filing and for which project is filled in from the
+ * application; publications are linked from the project's library the way a
+ * PhD progress form links them.
+ */
+export const ReportForm = ({ application, type, onSaved }) => {
+  const me = signedInUser();
+  const [body, set] = useBody({ type });
+  const [library, setLibrary] = useState(null);
+  const [picking, setPicking] = useState(false);
+  const [selection, setSelection] = useState({});
+  const [linked, setLinked] = useState({});
+
+  const slot = application.student2_email?.toLowerCase() === me.email?.toLowerCase() ? 2 : 1;
+  const mentors = [application.mentor1, application.mentor2].filter(Boolean);
+
+  const loadLibrary = () => customFetch(`${baseURL}/publications`, 'GET', {}, true, false, false)
+    .then((res) => res.success && setLibrary(res.response));
+  useEffect(() => { loadLibrary(); }, []);
+
+  // The picker reports ticks as { group: { id: true } }; keep the ticked rows per group.
+  const confirmPicks = () => {
+    const chosen = {};
+    Object.entries(selection).forEach(([group, ticks]) => {
+      chosen[group] = (library?.[group] || []).filter((row) => ticks?.[row.id]);
+    });
+    setLinked(chosen);
+    setPicking(false);
+  };
+
+  const idsIn = (wanted) => Object.entries(linked)
+    .filter(([group]) => wanted(group))
+    .flatMap(([, rows]) => rows.map((row) => row.id));
 
   const submit = async () => {
-    const res = await apiUrfReport(applicationId, body);
+    const res = await apiUrfReport(application.id, {
+      ...body,
+      publications: JSON.stringify(idsIn((group) => group !== 'patents')),
+      patents: JSON.stringify(idsIn((group) => group === 'patents')),
+    });
     if (res.success) {
-      toast.success('Report submitted');
+      toast.success(`${REPORT_TYPES[type]} submitted`);
       onSaved();
     }
   };
 
   return (
-    <Section title="Submit a Report">
+    <Section title="Report Details">
+      <div className="student-details">
+        <InfoGrid rows={[
+          { label: 'Name', value: application[`student${slot}_name`] },
+          { label: 'Roll No.', value: application[`student${slot}_roll_no`] },
+          { label: 'Department', value: application[`student${slot}_department`]?.name },
+          { label: 'Email', value: application[`student${slot}_email`] },
+          { label: 'Contact No.', value: application[`student${slot}_phone`] },
+          { label: 'Faculty Mentor Name', value: mentors.map(facultyName).join(', ') },
+          { label: 'Faculty Mentor Department', value: mentors.map((m) => m.department?.name).filter(Boolean).join(', ') },
+          { label: 'Title of Project', value: application.project_title, span: 'all' },
+        ]} />
+      </div>
+
+      <div className="urf-subhead">
+        <h3>Publication Details</h3>
+        <button type="button" className="urf-add-btn" onClick={() => setPicking(true)}>
+          <i className="fa fa-link" aria-hidden="true"></i> Link Publications
+        </button>
+      </div>
+      <ShowPublications formData={linked} enableEdit={false} />
+
       <GridContainer elements={[
-        <DropdownField
-          label="Report"
-          initialValue={body.type}
-          options={[{ title: 'Half-yearly Progress Report', value: 'half_yearly' }, { title: 'Final Report', value: 'final' }]}
-          onChange={set('type')}
-          required
-        />,
         <InputField label="Conference Presentation (if any)" initialValue={body.conference_presentation} onChange={set('conference_presentation')} />,
         <FileUploadField label="Upload the Report (PDF)" onChange={set('report')} maxSizeMB={20} required />,
       ]} />
-      <Submit text="Submit Report" onClick={submit} />
+      <Submit text={`Submit ${REPORT_TYPES[type]}`} onClick={submit} />
+
+      <CustomModal
+        isOpen={picking}
+        onClose={() => setPicking(false)}
+        title="Link Publications"
+        minHeight="200px"
+        maxHeight="600px"
+        minWidth="650px"
+        maxWidth="700px"
+        closeOnOutsideClick={false}
+      >
+        <ShowPublications
+          formData={library}
+          enableSelect
+          enableSubmit
+          enableEdit={false}
+          canAdd
+          onSelect={setSelection}
+          onSubmit={confirmPicks}
+          refetchData={loadLibrary}
+        />
+      </CustomModal>
     </Section>
   );
 };

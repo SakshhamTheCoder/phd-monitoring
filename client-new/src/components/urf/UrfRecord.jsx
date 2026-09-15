@@ -10,10 +10,12 @@ import { badgeClass } from '../../data/badges';
 import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
 
 export const URF_STATUSES = ['applied', 'selected', 'ongoing', 'completed', 'rejected'];
-const REPORT_TYPES = { half_yearly: 'Half-yearly Progress Report', final: 'Final Report' };
+export const REPORT_TYPES = { half_yearly: 'Half-yearly Progress Report', final: 'Final Report' };
 
 export const capitalize = (s) => (s ? s[0].toUpperCase() + s.slice(1) : '');
 export const facultyName = (faculty) => [faculty?.user?.first_name, faculty?.user?.last_name].filter(Boolean).join(' ');
+// "3rd Year" for 3, as the server names it.
+export const yearLabel = (year) => (year ? `${year}${['', 'st', 'nd', 'rd'][year] || 'th'} Year` : EMPTY_VALUE);
 
 // A labelled block, used by the URF forms.
 export const Section = ({ title, children }) => (
@@ -23,7 +25,7 @@ export const Section = ({ title, children }) => (
   </div>
 );
 
-export const StatusBadge =({ status }) => <span className={badgeClass(capitalize(status))}>{capitalize(status)}</span>;
+export const StatusBadge = ({ status }) => <span className={badgeClass(capitalize(status))}>{capitalize(status)}</span>;
 
 // One "Label: value" line under a profile's name, as the PhD profile writes them.
 export const HeaderLine = ({ label, children, title = false }) => (
@@ -33,7 +35,7 @@ export const HeaderLine = ({ label, children, title = false }) => (
   </p>
 );
 
-/** Half-yearly and final reports, newest last. */
+/** Half-yearly and final reports, in the order they were filed. */
 export const ReportsTable = ({ reports }) => (
   <TableComponent
     data={reports}
@@ -53,6 +55,7 @@ export const TeamTables = ({ record }) => {
     name: record[`student${n}_name`],
     roll_no: record[`student${n}_roll_no`],
     department: record[`student${n}_department`]?.name || EMPTY_VALUE,
+    year: yearLabel(record[`student${n}_year`]),
     gender: record[`student${n}_gender`],
     email: record[`student${n}_email`],
     phone: record[`student${n}_phone`],
@@ -72,8 +75,8 @@ export const TeamTables = ({ record }) => {
         elements={[
           <TableComponent
             data={students}
-            keys={['name', 'roll_no', 'department', 'gender', 'email', 'phone']}
-            titles={['Name', 'Roll Number', 'Department', 'Gender', 'Official Email', 'Phone']}
+            keys={['name', 'roll_no', 'department', 'year', 'gender', 'email', 'phone']}
+            titles={['Name', 'Roll Number', 'Branch', 'Year', 'Gender', 'Official Email', 'Phone']}
           />,
         ]}
         space={3}
@@ -94,11 +97,13 @@ export const TeamTables = ({ record }) => {
   );
 };
 
+const hasPublications = (groups) => Object.values(groups || {}).some((rows) => rows?.length > 0);
+
 /**
  * One URF project as a profile card, laid out like the PhD student profile:
- * the title and its status beside the actions, then the team, stipend details,
- * reports and publications. The server leaves out stipend details a student is
- * not entitled to see.
+ * the title and its status beside the actions, then the team, stipend details
+ * and reports, each report with the publications linked to it. The server
+ * leaves out stipend details a student is not entitled to see.
  */
 const UrfRecord = ({ record, actions = null }) => {
   const reportsDue = record.reports?.length > 0 || ['ongoing', 'completed'].includes(record.status);
@@ -157,18 +162,17 @@ const UrfRecord = ({ record, actions = null }) => {
       )}
 
       {reportsDue && (
-        <GridContainer
-          label="Reports"
-          elements={[<ReportsTable reports={record.reports} />]}
-          space={3}
-        />
+        <GridContainer label="Reports" elements={[<ReportsTable reports={record.reports} />]} space={3} />
       )}
 
-      <GridContainer
-        label="Publications"
-        elements={[<ShowPublications formData={record.publications} enableEdit={false} />]}
-        space={3}
-      />
+      {record.reports?.filter((report) => hasPublications(report.publications)).map((report) => (
+        <GridContainer
+          key={report.id}
+          label={`Publications in ${REPORT_TYPES[report.type] || 'Report'} (${formatDate(report.created_at)})`}
+          elements={[<ShowPublications formData={report.publications} enableEdit={false} />]}
+          space={3}
+        />
+      ))}
     </div>
   );
 };
