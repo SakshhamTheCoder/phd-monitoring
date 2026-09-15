@@ -51,6 +51,9 @@ import CreateProject from './pages/projects/CreateProject';
 import ProjectDetails from './pages/projects/ProjectDetails';
 import ProjectRecruitment from './pages/projects/ProjectRecruitment';
 import Openings from './pages/projects/Openings';
+import UrfList from './pages/urf/UrfList';
+import UrfDetails from './pages/urf/UrfDetails';
+import UrfStudent from './pages/urf/UrfStudent';
 
 
 const App = () => {
@@ -126,6 +129,12 @@ const AppContent = () => {
 
             </>
           )}
+          {role === 'ug_student' && (
+            <>
+              <Route path="/urf" element={<UrfStudent />} />
+              <Route path="/publications" element={<Publications />} />
+            </>
+          )}
           <Route path="/notifications" element={<AllNotificationsPage />} />
           {features.research_profile && (
             <>
@@ -199,6 +208,8 @@ const AppContent = () => {
                 <Route path="/clerk-management" element={<ClerkManagement />} />
                 <Route path="/clerks" element={<ClerkManagement />} />
                 <Route path="/configuration" element={<Configuration />} />
+                <Route path="/urf" element={<UrfList />} />
+                <Route path="/urf/:id" element={<UrfDetails />} />
 
               {/* <Route path="/faculty/:roll_no" element={<StudentProfile />} />
               <Route path="/faculty/:roll_no/forms" element={<FormsPage />} />
