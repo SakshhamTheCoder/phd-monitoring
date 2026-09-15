@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import Tabs from '../../components/tabs/Tabs';
-import FilterBar from '../../components/filterBar/FilterBar';
+import SmartSearch from '../../components/search/SmartSearch';
 import PagenationTable from '../../components/pagenationTable/PagenationTable';
 import FormGrid from '../../components/forms/formGrid/FormGrid';
 import CustomButton from '../../components/forms/fields/CustomButton';
@@ -39,12 +39,8 @@ const UrfList = () => {
     }
   };
 
-  // A new object only when the search or the tab changes; the table refetches
-  // whenever it receives a different one.
-  const filters = useMemo(() => ({
-    ...filter,
-    mandatory_filter: tab === 'all' ? [] : [{ key: 'status', op: '=', value: tab }],
-  }), [filter, tab]);
+  // The tab is a filter the search bar keeps applying, whatever is searched.
+  const tabFilter = useMemo(() => (tab === 'all' ? [] : [{ key: 'status', op: '=', value: tab }]), [tab]);
 
   return (
     <Layout>
@@ -62,11 +58,11 @@ const UrfList = () => {
         value={tab}
         onChange={setTab}
       />
-      <FilterBar onSearch={setFilter} />
+      <SmartSearch placeholder="Search projects by title, student, roll no or mentor…" mandatory={tabFilter} onSearch={setFilter} />
       <div className="urf-list">
         <PagenationTable
           endpoint="/urf"
-          filters={filters}
+          filters={filter}
           enableSelect={false}
           customOpenForm={(row) => navigate(`/urf/${row.id}`)}
         />
