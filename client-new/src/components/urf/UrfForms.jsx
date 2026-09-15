@@ -250,15 +250,27 @@ export const ReportForm = ({ application, type, onSaved }) => {
     .then((res) => res.success && setLibrary(res.response));
   useEffect(() => { loadLibrary(); }, []);
 
-  // The picker reports ticks as { group: { id: true } }; keep the ticked rows per group.
+  // The picker reports ticks as { group: { id: true } }. Ticked rows join what is
+  // already linked, so opening the picker again to add more keeps earlier picks.
   const confirmPicks = () => {
-    const chosen = {};
-    Object.entries(selection).forEach(([group, ticks]) => {
-      chosen[group] = (library?.[group] || []).filter((row) => ticks?.[row.id]);
+    setLinked((prev) => {
+      const next = { ...prev };
+      Object.entries(selection).forEach(([group, ticks]) => {
+        const have = new Set((next[group] || []).map((row) => row.id));
+        const picked = (library?.[group] || []).filter((row) => ticks?.[row.id] && !have.has(row.id));
+        next[group] = [...(next[group] || []), ...picked];
+      });
+      return next;
     });
-    setLinked(chosen);
+    setSelection({});
     setPicking(false);
   };
+
+  // Taking a publication off this report leaves it in the library for later reports.
+  const unlink = (id, group) => setLinked((prev) => ({
+    ...prev,
+    [group]: (prev[group] || []).filter((row) => row.id !== id),
+  }));
 
   const idsIn = (wanted) => Object.entries(linked)
     .filter(([group]) => wanted(group))
@@ -294,10 +306,10 @@ export const ReportForm = ({ application, type, onSaved }) => {
       <div className="urf-subhead">
         <h3>Publication Details</h3>
         <button type="button" className="urf-add-btn" onClick={() => setPicking(true)}>
-          <i className="fa fa-link" aria-hidden="true"></i> Link Publications
+          <i className="fa fa-plus" aria-hidden="true"></i> Add Publications
         </button>
       </div>
-      <ShowPublications formData={linked} enableEdit={false} />
+      <ShowPublications formData={linked} enableEdit={false} enableDelete onDelete={unlink} />
 
       <GridContainer elements={[
         <InputField label="Conference Presentation (if any)" initialValue={body.conference_presentation} onChange={set('conference_presentation')} />,
@@ -305,10 +317,12 @@ export const ReportForm = ({ application, type, onSaved }) => {
       ]} />
       <Submit text={`Submit ${REPORT_TYPES[type]}`} onClick={submit} />
 
+      {/* The project's library, as the PhD progress form shows it: add a new
+          publication once with Add New, then pick it for this report or any later one. */}
       <CustomModal
         isOpen={picking}
         onClose={() => setPicking(false)}
-        title="Link Publications"
+        title="Add Publications"
         minHeight="200px"
         maxHeight="600px"
         minWidth="650px"
