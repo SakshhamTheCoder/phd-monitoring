@@ -69,10 +69,16 @@ class Publication extends Model
      * value: a scholar's roll number, or a URF fellow's project. The value is
      * null when the user has neither yet.
      */
-    public static function ownerOf(User $user): array
+    public static function ownerOf(User $user, $applicationId = null): array
     {
         if ($user->current_role?->role === 'ug_student') {
-            return ['urf_application_id', UrfApplication::forUser($user)?->id];
+            // Each URF project keeps its own library: the project asked for, if
+            // the student is on it, otherwise their latest.
+            $application = $applicationId
+                ? UrfApplication::forMember($user)->find($applicationId)
+                : UrfApplication::forUser($user);
+
+            return ['urf_application_id', $application?->id];
         }
 
         return ['student_id', $user->student?->roll_no];

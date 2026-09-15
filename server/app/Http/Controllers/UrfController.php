@@ -58,6 +58,7 @@ class UrfController extends Controller
         return response()->json([
             'data' => $page->getCollection()->map(fn (UrfApplication $a) => [
                 'id' => $a->id,
+                'session' => $a->session,
                 'project_title' => $a->project_title,
                 'students' => collect([$a->student1_name, $a->student2_name])->filter()->join(', '),
                 'roll_no' => collect([$a->student1_roll_no, $a->student2_roll_no])->filter()->join(', '),
@@ -70,8 +71,8 @@ class UrfController extends Controller
             'total' => $page->total(),
             'totalPages' => $page->lastPage(),
             'role' => $user->current_role->role,
-            'fields' => ['project_title', 'students', 'roll_no', 'department', 'year', 'mentors', 'status', 'applied_on'],
-            'fieldsTitles' => ['Project Title', 'Students', 'Roll Nos', 'Branches', 'Years', 'Mentors', 'Status', 'Applied On'],
+            'fields' => ['session', 'project_title', 'students', 'roll_no', 'department', 'year', 'mentors', 'status', 'applied_on'],
+            'fieldsTitles' => ['Session', 'Project Title', 'Students', 'Roll Nos', 'Branches', 'Years', 'Mentors', 'Status', 'Applied On'],
         ]);
     }
 
@@ -110,6 +111,7 @@ class UrfController extends Controller
         $common = fn ($row) => [
             'id' => $row->id,
             'application_id' => $row->urf_application_id,
+            'session' => $row->application->session,
             'project_title' => $row->application->project_title,
             'submitted_on' => $row->created_at?->format('d M Y'),
         ];
@@ -127,11 +129,11 @@ class UrfController extends Controller
             'totalPages' => $page->lastPage(),
             'role' => $user->current_role->role,
             'fields' => $details
-                ? ['student', 'roll_no', 'branch', 'year', 'project_title', 'status', 'submitted_on']
-                : ['project_title', 'submitted_by', 'roll_no', 'branch', 'year', 'conference_presentation', 'submitted_on', 'report'],
+                ? ['session', 'student', 'roll_no', 'branch', 'year', 'project_title', 'status', 'submitted_on']
+                : ['session', 'project_title', 'submitted_by', 'roll_no', 'branch', 'year', 'conference_presentation', 'submitted_on', 'report'],
             'fieldsTitles' => $details
-                ? ['Student', 'Roll No', 'Branch', 'Year', 'Project Title', 'Project Status', 'Submitted On']
-                : ['Project Title', 'Submitted By', 'Roll No', 'Branch', 'Year', 'Conference Presentation', 'Submitted On', 'Report'],
+                ? ['Session', 'Student', 'Roll No', 'Branch', 'Year', 'Project Title', 'Project Status', 'Submitted On']
+                : ['Session', 'Project Title', 'Submitted By', 'Roll No', 'Branch', 'Year', 'Conference Presentation', 'Submitted On', 'Report'],
         ]);
     }
 
@@ -156,7 +158,10 @@ class UrfController extends Controller
         return response()->json(Department::orderBy('name')->get(['id', 'name']));
     }
 
-    /** The student page: their project, if they have one, and whether applications are open. */
+    /**
+     * The student pages: every URF project the student is on, newest first,
+     * whether applications are open, and the session a new one would join.
+     */
     public function mine()
     {
         $user = Auth::user();
@@ -164,11 +169,12 @@ class UrfController extends Controller
             return $this->refuse();
         }
 
-        $application = UrfApplication::forUser($user);
-
         return response()->json([
             'applications_open' => (bool) AppSetting::value('urf', 'applications_open'),
-            'application' => $application ? $this->payload($application->load(self::DETAIL), $user) : null,
+            'session' => (int) now()->year,
+            'applications' => UrfApplication::forMember($user)->with(self::DETAIL)->latest('id')->get()
+                ->map(fn (UrfApplication $application) => $this->payload($application, $user))
+                ->values(),
         ]);
     }
 
@@ -186,9 +192,16 @@ class UrfController extends Controller
             return response()->json(['message' => 'URF applications are closed'], 422);
         }
 
-        $application = UrfApplication::forUser($user);
+        // One application per student per session, the calendar year. A rejected
+        // one leaves the student free to apply again in the same year.
+        $session = (int) now()->year;
+        $application = UrfApplication::forMember($user)
+            ->where('session', $session)
+            ->where('status', '!=', 'rejected')
+            ->latest('id')
+            ->first();
         if ($application?->status === 'selected') {
-            return response()->json(['message' => 'Your URF project is already under way'], 422);
+            return response()->json(['message' => "You already have a URF project for {$session}"], 422);
         }
         $editing = $application?->status === 'applied';
         if ($editing && $application->user_id !== $user->id) {
@@ -222,6 +235,7 @@ class UrfController extends Controller
         if (!$editing) {
             $application = new UrfApplication();
             $application->user_id = $user->id;
+            $application->session = $session;
         }
         // Every field is written, so clearing the second student sticks.
         $application->fill(array_merge(array_fill_keys($application->getFillable(), null), $data));

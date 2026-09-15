@@ -46,7 +46,7 @@ class PatentsController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
         }
-        [$column, $ownerId] = Publication::ownerOf($user);
+        [$column, $ownerId] = Publication::ownerOf($user, $request->input('urf_application_id'));
         if (!$ownerId) {
             return response()->json(['message' => 'You have no record to file publications against'], 403);
         }
@@ -94,7 +94,7 @@ class PatentsController extends Controller
             if ($validator->fails()) {
                 return response()->json(['errors' => $validator->errors()], 400);
             }
-            [$column, $ownerId] = Publication::ownerOf($user);
+            [$column, $ownerId] = Publication::ownerOf($user, $patents->urf_application_id);
             if (!$ownerId || $patents->{$column} != $ownerId) {
                 return response()->json(['message' => 'You are not authorized to edit this patent'], 403);
             }
@@ -129,7 +129,7 @@ class PatentsController extends Controller
             return response()->json(['message' => 'Patent not found'], 404);
         }
 
-        [$column, $ownerId] = Publication::ownerOf($user);
+        [$column, $ownerId] = Publication::ownerOf($user, $patent->urf_application_id);
         if (!$ownerId || $patent->{$column} != $ownerId) {
             return response()->json(['message' => 'You are not authorized to delete this patent'], 403);
         }

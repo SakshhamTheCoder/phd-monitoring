@@ -81,9 +81,9 @@ class UrfFlowTest extends TestCase
             ->assertCreated()->json('id');
 
         // The second student finds the project by email but cannot rewrite it.
-        $this->actingAs($partner, 'sanctum')->getJson('/api/urf/mine')->assertOk()->assertJsonPath('application.id', $id);
+        $this->actingAs($partner, 'sanctum')->getJson('/api/urf/mine')->assertOk()->assertJsonPath('applications.0.id', $id)->assertJsonPath('session', (int) now()->year);
         $this->actingAs($partner, 'sanctum')->postJson('/api/urf', $form)->assertForbidden();
-        $this->actingAs($outsider, 'sanctum')->getJson('/api/urf/mine')->assertOk()->assertJsonPath('application', null);
+        $this->actingAs($outsider, 'sanctum')->getJson('/api/urf/mine')->assertOk()->assertJsonCount(0, 'applications');
         $this->actingAs($outsider, 'sanctum')->getJson("/api/urf/{$id}")->assertForbidden();
         $this->actingAs($outsider, 'sanctum')->getJson('/api/publications')->assertOk()->assertJsonCount(0, 'international');
 
@@ -91,7 +91,7 @@ class UrfFlowTest extends TestCase
         $filters = fn (array $f) => '/api/urf?filters=' . urlencode(json_encode($f));
         $this->actingAs($admin, 'sanctum')
             ->getJson($filters(['conditions' => [['key' => 'student1_roll_no', 'op' => '=', 'value' => '102203001']], 'mandatory_filter' => [['key' => 'status', 'op' => '=', 'value' => 'applied']]]))
-            ->assertOk()->assertJsonPath('data.0.id', $id);
+            ->assertOk()->assertJsonPath('data.0.id', $id)->assertJsonPath('data.0.session', (int) now()->year);
         $this->getJson($filters(['conditions' => [], 'mandatory_filter' => [['key' => 'status', 'op' => '=', 'value' => 'rejected']]]))
             ->assertOk()->assertJsonMissing(['id' => $id]);
 
@@ -139,8 +139,8 @@ class UrfFlowTest extends TestCase
         $this->getJson('/api/urf?filters=' . urlencode(json_encode(['conditions' => [['key' => 'project_title', 'op' => '=', 'value' => $form['project_title']]]])))
             ->assertJsonPath('data.0.roll_no', '102203001, 102203002')
             ->assertJsonPath('data.0.year', '3rd Year, 2nd Year');
-        $this->actingAs($applicant, 'sanctum')->getJson('/api/urf/mine')->assertOk()->assertJsonCount(0, 'application.fellows');
-        $this->actingAs($partner, 'sanctum')->getJson('/api/urf/mine')->assertOk()->assertJsonCount(1, 'application.fellows');
+        $this->actingAs($applicant, 'sanctum')->getJson('/api/urf/mine')->assertOk()->assertJsonCount(0, 'applications.0.fellows');
+        $this->actingAs($partner, 'sanctum')->getJson('/api/urf/mine')->assertOk()->assertJsonCount(1, 'applications.0.fellows');
 
         // The admin's forms grid lists each form's submissions against their project.
         $onThisProject = '?filters=' . urlencode(json_encode(['conditions' => [['key' => 'project_title', 'op' => '=', 'value' => $form['project_title']]]]));
@@ -158,6 +158,23 @@ class UrfFlowTest extends TestCase
         $this->getJson('/api/urf/urf-final-report' . $onThisProject)->assertOk()->assertJsonCount(1, 'data');
         $this->getJson('/api/urf/urf-application/filters')->assertOk()->assertJsonFragment(['key_name' => 'project_title']);
         $this->actingAs($applicant, 'sanctum')->getJson('/api/urf/urf-final-report')->assertForbidden();
+
+        // A selected student cannot apply twice in one session, but can the next.
+        $this->actingAs($applicant, 'sanctum')->postJson('/api/urf', $form + ['proposal' => $proposal()])->assertStatus(422);
+        UrfApplication::whereKey($id)->update(['session' => now()->year - 1]);
+        $secondTitle = 'Second year ' . Str::random(4);
+        $this->postJson('/api/urf', ['project_title' => $secondTitle] + $form + ['proposal' => $proposal()])->assertCreated();
+        $this->actingAs($partner, 'sanctum')->getJson('/api/urf/mine')->assertOk()
+            ->assertJsonCount(2, 'applications')
+            ->assertJsonPath('applications.0.project_title', $secondTitle)
+            ->assertJsonPath('applications.1.id', $id);
+        $newId = $this->getJson('/api/urf/mine')->json('applications.0.id');
+
+        // Each project keeps its own publication library; the latest is the default.
+        $this->getJson("/api/publications?urf_application_id={$id}")->assertJsonCount(1, 'international');
+        $this->getJson("/api/publications?urf_application_id={$newId}")->assertJsonCount(0, 'international');
+        $this->getJson('/api/publications')->assertJsonCount(0, 'international');
+        $this->actingAs($outsider, 'sanctum')->getJson("/api/publications?urf_application_id={$id}")->assertJsonCount(0, 'international');
 
         $this->assertSame('selected', UrfApplication::find($id)->status);
     }

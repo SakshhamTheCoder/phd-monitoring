@@ -63,10 +63,16 @@ class UrfApplication extends Model
      */
     public static function forUser(User $user): ?self
     {
-        return static::where('user_id', $user->id)
-            ->orWhere('student2_email', $user->email)
-            ->latest('id')
-            ->first();
+        return static::forMember($user)->latest('id')->first();
+    }
+
+    /**
+     * Projects the user is on, as the student who applied or the second student.
+     * Grouped, so a further where() narrows the members rather than widening them.
+     */
+    public function scopeForMember($query, User $user)
+    {
+        return $query->where(fn ($q) => $q->where('user_id', $user->id)->orWhere('student2_email', $user->email));
     }
 
     /** 2 when the user is the application's second student, 1 otherwise. */
