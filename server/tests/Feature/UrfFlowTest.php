@@ -63,9 +63,9 @@ class UrfFlowTest extends TestCase
 
         $form = [
             'project_title' => 'Soil sensors ' . Str::random(4),
-            'student1_name' => 'Asha Rao', 'student1_roll_no' => '102203001', 'student1_department_id' => $department->id,
+            'student1_name' => 'Asha Rao', 'student1_roll_no' => '102203001', 'student1_department_id' => $department->id, 'student1_year' => 3,
             'student1_gender' => 'Female', 'student1_email' => $applicant->email, 'student1_phone' => '9800000001',
-            'student2_name' => 'Ravi Kumar', 'student2_roll_no' => '102203002', 'student2_department_id' => $department->id,
+            'student2_name' => 'Ravi Kumar', 'student2_roll_no' => '102203002', 'student2_department_id' => $department->id, 'student2_year' => 2,
             'student2_gender' => 'Male', 'student2_email' => $partner->email, 'student2_phone' => '9800000002',
             'mentor1_faculty_code' => $mentor->faculty_code,
         ];
@@ -75,6 +75,7 @@ class UrfFlowTest extends TestCase
         $this->actingAs($admin, 'sanctum')->postJson('/api/settings/urf', ['applications_open' => 0])->assertOk();
         $this->actingAs($applicant, 'sanctum')->postJson('/api/urf', $form + ['proposal' => $proposal()])->assertStatus(422);
         $this->actingAs($admin, 'sanctum')->postJson('/api/settings/urf', ['applications_open' => 1])->assertOk();
+        $this->actingAs($applicant, 'sanctum')->getJson('/api/urf/departments')->assertOk()->assertJsonFragment(['id' => $department->id]);
 
         $id = $this->actingAs($applicant, 'sanctum')->postJson('/api/urf', $form + ['proposal' => $proposal()])
             ->assertCreated()->json('id');
@@ -118,11 +119,25 @@ class UrfFlowTest extends TestCase
         $this->actingAs($partner, 'sanctum')->getJson('/api/publications')->assertOk()
             ->assertJsonPath('international.0.mode', 'online');
 
+        // The final report links it from the library, as a PhD progress form does.
+        $publicationId = $this->getJson('/api/publications')->json('international.0.id');
+        $this->actingAs($applicant, 'sanctum')->postJson("/api/urf/{$id}/reports", [
+            'type' => 'final',
+            'publications' => json_encode([$publicationId]),
+            'report' => UploadedFile::fake()->create('f.pdf', 10, 'application/pdf'),
+        ])->assertCreated();
+        $this->getJson('/api/publications')->assertJsonCount(1, 'international');
+
         // The admin sees everything; a student sees only their own stipend details.
         $this->actingAs($admin, 'sanctum')->getJson("/api/urf/{$id}")->assertOk()
             ->assertJsonPath('fellows.0.pan', 'ABCDE1234F')
-            ->assertJsonCount(1, 'reports')
-            ->assertJsonPath('publications.international.0.funding', 'TIET seed grant');
+            ->assertJsonCount(2, 'reports')
+            ->assertJsonPath('reports.1.publications.international.0.funding', 'TIET seed grant')
+            ->assertJsonCount(0, 'reports.0.publications.international')
+            ->assertJsonMissingPath('publications');
+        $this->getJson('/api/urf?filters=' . urlencode(json_encode(['conditions' => [['key' => 'project_title', 'op' => '=', 'value' => $form['project_title']]]])))
+            ->assertJsonPath('data.0.roll_no', '102203001, 102203002')
+            ->assertJsonPath('data.0.year', '3rd Year, 2nd Year');
         $this->actingAs($applicant, 'sanctum')->getJson('/api/urf/mine')->assertOk()->assertJsonCount(0, 'application.fellows');
         $this->actingAs($partner, 'sanctum')->getJson('/api/urf/mine')->assertOk()->assertJsonCount(1, 'application.fellows');
 
@@ -132,11 +147,12 @@ class UrfFlowTest extends TestCase
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.application_id', $id)
             ->assertJsonPath('data.0.roll_no', '102203002');
-        $this->getJson('/api/urf/urf-progress-report' . $onThisProject)->assertOk()
-            ->assertJsonPath('data.0.application_id', $id)
-            ->assertJsonPath('data.0.report_type', 'Half-yearly Progress Report');
+        $this->getJson('/api/urf/urf-half-yearly-report' . $onThisProject)->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.application_id', $id);
+        $this->getJson('/api/urf/urf-final-report' . $onThisProject)->assertOk()->assertJsonCount(1, 'data');
         $this->getJson('/api/urf/urf-application/filters')->assertOk()->assertJsonFragment(['key_name' => 'project_title']);
-        $this->actingAs($applicant, 'sanctum')->getJson('/api/urf/urf-progress-report')->assertForbidden();
+        $this->actingAs($applicant, 'sanctum')->getJson('/api/urf/urf-final-report')->assertForbidden();
 
         $this->assertSame('ongoing', UrfApplication::find($id)->status);
     }

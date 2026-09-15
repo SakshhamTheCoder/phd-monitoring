@@ -10,10 +10,16 @@ class UrfApplication extends Model
 
     protected $fillable = [
         'project_title',
-        'student1_name', 'student1_roll_no', 'student1_department_id', 'student1_gender', 'student1_email', 'student1_phone',
-        'student2_name', 'student2_roll_no', 'student2_department_id', 'student2_gender', 'student2_email', 'student2_phone',
+        'student1_name', 'student1_roll_no', 'student1_department_id', 'student1_year', 'student1_gender', 'student1_email', 'student1_phone',
+        'student2_name', 'student2_roll_no', 'student2_department_id', 'student2_year', 'student2_gender', 'student2_email', 'student2_phone',
         'mentor1_faculty_code', 'mentor2_faculty_code',
     ];
+
+    /** "3rd Year" for 3, or null when no year was given. */
+    public static function yearLabel(?int $year): ?string
+    {
+        return $year ? $year . (['', 'st', 'nd', 'rd'][$year] ?? 'th') . ' Year' : null;
+    }
 
     public function user()
     {

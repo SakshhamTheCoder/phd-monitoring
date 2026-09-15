@@ -6,6 +6,8 @@ use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\NotificationManager;
 use App\Http\Controllers\Traits\SaveFile;
 use App\Models\AppSetting;
+use App\Models\Department;
+use App\Models\Patent;
 use App\Models\Publication;
 use App\Models\UrfApplication;
 use App\Models\UrfFellow;
@@ -13,6 +15,7 @@ use App\Models\UrfReport;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 /**
@@ -45,7 +48,7 @@ class UrfController extends Controller
             return $this->refuse();
         }
 
-        $query = UrfApplication::with(['student1Department', 'mentor1.user', 'mentor2.user'])->latest('id');
+        $query = UrfApplication::with(['student1Department', 'student2Department', 'mentor1.user', 'mentor2.user'])->latest('id');
         $filters = json_decode((string) $request->query('filters'), true);
         if ($filters) {
             $query = $this->applyDynamicFilters($query, $filters);
@@ -57,8 +60,9 @@ class UrfController extends Controller
                 'id' => $a->id,
                 'project_title' => $a->project_title,
                 'students' => collect([$a->student1_name, $a->student2_name])->filter()->join(', '),
-                'roll_no' => $a->student1_roll_no,
-                'department' => $a->student1Department?->name,
+                'roll_no' => collect([$a->student1_roll_no, $a->student2_roll_no])->filter()->join(', '),
+                'department' => collect([$a->student1Department?->name, $a->student2Department?->name])->filter()->join(', '),
+                'year' => collect([$a->student1_year, $a->student2_year])->filter()->map(fn ($y) => UrfApplication::yearLabel($y))->join(', '),
                 'mentors' => collect([$a->mentor1, $a->mentor2])->filter()->map(fn ($m) => $m->user?->name())->join(', '),
                 'status' => ucfirst($a->status),
                 'applied_on' => $a->created_at?->format('d M Y'),
@@ -66,8 +70,8 @@ class UrfController extends Controller
             'total' => $page->total(),
             'totalPages' => $page->lastPage(),
             'role' => $user->current_role->role,
-            'fields' => ['project_title', 'students', 'roll_no', 'department', 'mentors', 'status', 'applied_on'],
-            'fieldsTitles' => ['Project Title', 'Students', 'Roll No', 'Department', 'Mentors', 'Status', 'Applied On'],
+            'fields' => ['project_title', 'students', 'roll_no', 'department', 'year', 'mentors', 'status', 'applied_on'],
+            'fieldsTitles' => ['Project Title', 'Students', 'Roll Nos', 'Branches', 'Years', 'Mentors', 'Status', 'Applied On'],
         ]);
     }
 
@@ -88,7 +92,7 @@ class UrfController extends Controller
 
         $filters = json_decode((string) $request->query('filters'), true);
         $details = $form === 'urf-additional-info';
-        $page = ($details ? UrfFellow::query() : UrfReport::query())
+        $page = ($details ? UrfFellow::query() : UrfReport::where('type', $form === 'urf-final-report' ? 'final' : 'half_yearly'))
             ->with(['application', 'user'])
             ->when($filters, fn ($q) => $q->whereHas('application', fn ($a) => $this->applyDynamicFilters($a, $filters)))
             ->latest('id')
@@ -100,7 +104,6 @@ class UrfController extends Controller
             'project_title' => $row->application->project_title,
             'submitted_on' => $row->created_at?->format('d M Y'),
         ];
-        $reportTypes = ['half_yearly' => 'Half-yearly Progress Report', 'final' => 'Final Report'];
 
         return response()->json([
             'data' => $page->getCollection()->map(fn ($row) => $common($row) + ($details ? [
@@ -111,7 +114,6 @@ class UrfController extends Controller
                 'status' => ucfirst($row->application->status),
             ] : [
                 'submitted_by' => $row->user->name(),
-                'report_type' => $reportTypes[$row->type] ?? $row->type,
                 'conference_presentation' => $row->conference_presentation,
                 'report' => $row->report,
             ])),
@@ -120,10 +122,10 @@ class UrfController extends Controller
             'role' => $user->current_role->role,
             'fields' => $details
                 ? ['student', 'roll_no', 'project_title', 'status', 'submitted_on']
-                : ['project_title', 'submitted_by', 'report_type', 'conference_presentation', 'submitted_on', 'report'],
+                : ['project_title', 'submitted_by', 'conference_presentation', 'submitted_on', 'report'],
             'fieldsTitles' => $details
                 ? ['Student', 'Roll No', 'Project Title', 'Project Status', 'Submitted On']
-                : ['Project Title', 'Submitted By', 'Report', 'Conference Presentation', 'Submitted On', 'File'],
+                : ['Project Title', 'Submitted By', 'Conference Presentation', 'Submitted On', 'Report'],
         ]);
     }
 
@@ -135,6 +137,17 @@ class UrfController extends Controller
         }
 
         return response()->json($this->payload(UrfApplication::with(self::DETAIL)->findOrFail($id), $user));
+    }
+
+    /** Branches for the application's dropdown: the portal's departments. */
+    public function departments()
+    {
+        $user = Auth::user();
+        if (!$user->may('can_apply_for_urf') && !$user->may('can_manage_urf')) {
+            return $this->refuse();
+        }
+
+        return response()->json(Department::orderBy('name')->get(['id', 'name']));
     }
 
     /** The student page: their project, if they have one, and whether applications are open. */
@@ -184,12 +197,14 @@ class UrfController extends Controller
             'student1_name' => 'required|string|max:255',
             'student1_roll_no' => 'required|string|max:50',
             'student1_department_id' => 'required|exists:departments,id',
+            'student1_year' => 'required|integer|between:1,4',
             'student1_gender' => 'required|in:Male,Female',
             'student1_email' => 'required|email',
             'student1_phone' => 'required|string|max:20',
             'student2_name' => 'nullable|string|max:255',
             'student2_roll_no' => "$second|string|max:50",
             'student2_department_id' => "$second|exists:departments,id",
+            'student2_year' => "$second|integer|between:1,4",
             'student2_gender' => "$second|in:Male,Female",
             'student2_email' => "$second|email|different:student1_email",
             'student2_phone' => "$second|string|max:20",
@@ -269,10 +284,28 @@ class UrfController extends Controller
             'conference_presentation' => 'nullable|string|max:2000',
             'report' => 'required|file|mimes:pdf|max:20480',
         ]);
+        // The chosen library entries arrive as JSON beside the file in multipart data.
+        $chosen = fn ($value) => is_array($value) ? $value : (json_decode((string) $value, true) ?: []);
+        $linked = ['publications' => $chosen($request->input('publications')), 'patents' => $chosen($request->input('patents'))];
         $data['report'] = $this->saveUploadedFile($request->file('report'), 'urf_report', $user->id);
 
-        $report = (new UrfReport($data))->forceFill(['urf_application_id' => $application->id, 'user_id' => $user->id]);
-        $report->save();
+        $report = DB::transaction(function () use ($data, $application, $user, $linked) {
+            $report = (new UrfReport($data))->forceFill(['urf_application_id' => $application->id, 'user_id' => $user->id]);
+            $report->save();
+
+            // Linked the way a PhD progress form links them: a copy of each chosen
+            // entry, tagged with this report. Only the project's own unlinked
+            // library entries can be chosen.
+            foreach (['publications' => Publication::class, 'patents' => Patent::class] as $key => $model) {
+                $model::whereIn('id', $linked[$key])
+                    ->where('urf_application_id', $application->id)
+                    ->whereNull('form_id')
+                    ->get()
+                    ->each(fn ($entry) => $entry->replicate()->forceFill(['form_id' => $report->id, 'form_type' => 'urf_report'])->save());
+            }
+
+            return $report;
+        });
 
         return response()->json($report, 201);
     }
@@ -310,9 +343,13 @@ class UrfController extends Controller
             $application->setRelation('fellows', $application->fellows->where('user_id', $user->id)->values());
         }
 
-        return $application->toArray() + [
-            'publications' => Publication::groupedFor('urf_application_id', $application->id),
-        ];
+        // Publications belong to the reports they were linked to, not to the application.
+        $data = $application->toArray();
+        foreach ($data['reports'] ?? [] as $i => $report) {
+            $data['reports'][$i]['publications'] = Publication::groupedFor('urf_application_id', $application->id, $report['id'], 'urf_report');
+        }
+
+        return $data;
     }
 
     private function refuse()

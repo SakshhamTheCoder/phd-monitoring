@@ -78,10 +78,17 @@ class Publication extends Model
         return ['student_id', $user->student?->roll_no];
     }
 
-    /** One owner's publications and patents not tied to a form, grouped as the publications page lists them. */
-    public static function groupedFor(string $column, $id): array
+    /**
+     * One owner's publications and patents, grouped as the publications page
+     * lists them: the unlinked library by default, or the copies linked to one
+     * form when a form is named.
+     */
+    public static function groupedFor(string $column, $id, ?int $formId = null, ?string $formType = null): array
     {
-        $publications = static::where($column, $id)->whereNull('form_id');
+        $scope = fn ($query) => $formId === null
+            ? $query->whereNull('form_id')
+            : $query->where('form_id', $formId)->where('form_type', $formType);
+        $publications = $scope(static::where($column, $id));
         $conference = fn ($type) => $publications->clone()->where('publication_type', 'conference')->where('type', $type)->get();
 
         return [
@@ -90,7 +97,7 @@ class Publication extends Model
             'national' => $conference('national'),
             'international' => $conference('international'),
             'book' => $publications->clone()->where('publication_type', 'book')->get(),
-            'patents' => Patent::where($column, $id)->whereNull('form_id')->get(),
+            'patents' => $scope(Patent::where($column, $id))->get(),
         ];
     }
 }

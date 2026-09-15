@@ -9,8 +9,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/', [UrfController::class, 'apply']);
     Route::get('/filters', [UrfController::class, 'listFilters']);
     Route::get('/mine', [UrfController::class, 'mine']);
+    Route::get('/departments', [UrfController::class, 'departments']);
     // The forms grid: one list per form, with the shared filter bar.
-    $forms = ['urf-application', 'urf-additional-info', 'urf-progress-report'];
+    $forms = ['urf-application', 'urf-additional-info', 'urf-half-yearly-report', 'urf-final-report'];
     Route::get('/{form}', [UrfController::class, 'formList'])->whereIn('form', $forms);
     Route::get('/{form}/filters', [UrfController::class, 'listFilters'])->whereIn('form', $forms);
     Route::get('/{id}', [UrfController::class, 'show'])->whereNumber('id');
