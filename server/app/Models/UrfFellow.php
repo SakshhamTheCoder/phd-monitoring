@@ -17,4 +17,14 @@ class UrfFellow extends Model
         'aadhaar' => 'encrypted',
         'account_no' => 'encrypted',
     ];
+
+    public function application()
+    {
+        return $this->belongsTo(UrfApplication::class, 'urf_application_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

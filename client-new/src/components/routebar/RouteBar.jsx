@@ -19,6 +19,9 @@ const EXTRA_LABELS = {
   '/forms/urf-application': 'URF Application Form',
   '/forms/urf-additional-info': 'Additional Information Form',
   '/forms/urf-progress-report': 'Progress Report',
+  '/urf/urf-application': 'URF Application Form',
+  '/urf/urf-additional-info': 'Additional Information Form',
+  '/urf/urf-progress-report': 'Progress Report',
   '/areasOfSpecialization': 'Areas of Specialization',
   '/outside-experts': 'Outside Experts',
   // Reachable but not in the nav, so this is the only source of its name.

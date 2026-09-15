@@ -126,6 +126,18 @@ class UrfFlowTest extends TestCase
         $this->actingAs($applicant, 'sanctum')->getJson('/api/urf/mine')->assertOk()->assertJsonCount(0, 'application.fellows');
         $this->actingAs($partner, 'sanctum')->getJson('/api/urf/mine')->assertOk()->assertJsonCount(1, 'application.fellows');
 
+        // The admin's forms grid lists each form's submissions against their project.
+        $onThisProject = '?filters=' . urlencode(json_encode(['conditions' => [['key' => 'project_title', 'op' => '=', 'value' => $form['project_title']]]]));
+        $this->actingAs($admin, 'sanctum')->getJson('/api/urf/urf-additional-info' . $onThisProject)->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.application_id', $id)
+            ->assertJsonPath('data.0.roll_no', '102203002');
+        $this->getJson('/api/urf/urf-progress-report' . $onThisProject)->assertOk()
+            ->assertJsonPath('data.0.application_id', $id)
+            ->assertJsonPath('data.0.report_type', 'Half-yearly Progress Report');
+        $this->getJson('/api/urf/urf-application/filters')->assertOk()->assertJsonFragment(['key_name' => 'project_title']);
+        $this->actingAs($applicant, 'sanctum')->getJson('/api/urf/urf-progress-report')->assertForbidden();
+
         $this->assertSame('ongoing', UrfApplication::find($id)->status);
     }
 }

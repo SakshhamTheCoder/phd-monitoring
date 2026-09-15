@@ -71,6 +71,62 @@ class UrfController extends Controller
         ]);
     }
 
+    /**
+     * One form's submissions for the forms grid: every application, every set
+     * of stipend details or every report. The filter bar's conditions are on
+     * the project, and each row carries its project so it can open it.
+     */
+    public function formList(Request $request, string $form)
+    {
+        if ($form === 'urf-application') {
+            return $this->list($request);
+        }
+        $user = Auth::user();
+        if (!$user->may('can_manage_urf')) {
+            return $this->refuse();
+        }
+
+        $filters = json_decode((string) $request->query('filters'), true);
+        $details = $form === 'urf-additional-info';
+        $page = ($details ? UrfFellow::query() : UrfReport::query())
+            ->with(['application', 'user'])
+            ->when($filters, fn ($q) => $q->whereHas('application', fn ($a) => $this->applyDynamicFilters($a, $filters)))
+            ->latest('id')
+            ->paginate($request->input('rows', 50), ['*'], 'page', $request->input('page', 1));
+
+        $common = fn ($row) => [
+            'id' => $row->id,
+            'application_id' => $row->urf_application_id,
+            'project_title' => $row->application->project_title,
+            'submitted_on' => $row->created_at?->format('d M Y'),
+        ];
+        $reportTypes = ['half_yearly' => 'Half-yearly Progress Report', 'final' => 'Final Report'];
+
+        return response()->json([
+            'data' => $page->getCollection()->map(fn ($row) => $common($row) + ($details ? [
+                'student' => $row->full_name,
+                'roll_no' => strcasecmp((string) $row->application->student2_email, $row->user->email) === 0
+                    ? $row->application->student2_roll_no
+                    : $row->application->student1_roll_no,
+                'status' => ucfirst($row->application->status),
+            ] : [
+                'submitted_by' => $row->user->name(),
+                'report_type' => $reportTypes[$row->type] ?? $row->type,
+                'conference_presentation' => $row->conference_presentation,
+                'report' => $row->report,
+            ])),
+            'total' => $page->total(),
+            'totalPages' => $page->lastPage(),
+            'role' => $user->current_role->role,
+            'fields' => $details
+                ? ['student', 'roll_no', 'project_title', 'status', 'submitted_on']
+                : ['project_title', 'submitted_by', 'report_type', 'conference_presentation', 'submitted_on', 'report'],
+            'fieldsTitles' => $details
+                ? ['Student', 'Roll No', 'Project Title', 'Project Status', 'Submitted On']
+                : ['Project Title', 'Submitted By', 'Report', 'Conference Presentation', 'Submitted On', 'File'],
+        ]);
+    }
+
     public function show($id)
     {
         $user = Auth::user();

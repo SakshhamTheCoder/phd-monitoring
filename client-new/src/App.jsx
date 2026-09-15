@@ -53,6 +53,7 @@ import ProjectRecruitment from './pages/projects/ProjectRecruitment';
 import Openings from './pages/projects/Openings';
 import UrfList from './pages/urf/UrfList';
 import UrfDetails from './pages/urf/UrfDetails';
+import UrfFormList from './pages/urf/UrfFormList';
 import { UrfFormsPage, UrfFormPage } from './pages/urf/UrfStudentForms';
 
 
@@ -213,6 +214,9 @@ const AppContent = () => {
                 <Route path="/clerks" element={<ClerkManagement />} />
                 <Route path="/configuration" element={<Configuration />} />
                 <Route path="/urf" element={<UrfList />} />
+                <Route path="/urf/urf-application" element={<UrfFormList />} />
+                <Route path="/urf/urf-additional-info" element={<UrfFormList />} />
+                <Route path="/urf/urf-progress-report" element={<UrfFormList />} />
                 <Route path="/urf/:id" element={<UrfDetails />} />
 
               {/* <Route path="/faculty/:roll_no" element={<StudentProfile />} />

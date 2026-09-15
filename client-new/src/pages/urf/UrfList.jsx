@@ -6,12 +6,20 @@ import PageHeader from '../../components/pageHeader/PageHeader';
 import Tabs from '../../components/tabs/Tabs';
 import FilterBar from '../../components/filterBar/FilterBar';
 import PagenationTable from '../../components/pagenationTable/PagenationTable';
+import FormGrid from '../../components/forms/formGrid/FormGrid';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import { URF_STATUSES, capitalize } from '../../components/urf/UrfRecord';
 import { apiSettings, apiSaveSettings } from '../../api/settings';
 import './UrfList.css';
 
 /** Admin → URF: every application, by stage, with the filters the students page has. */
+// The URF forms, as cards like the PhD forms page. Each opens its own list.
+const URF_FORMS = [
+  { form_type: 'urf-application', form_name: 'URF Application Form' },
+  { form_type: 'urf-additional-info', form_name: 'Additional Information Form' },
+  { form_type: 'urf-progress-report', form_name: 'Progress Report' },
+];
+
 const UrfList = () => {
   const navigate = useNavigate();
   const [filter, setFilter] = useState({ conditions: [] });
@@ -46,6 +54,8 @@ const UrfList = () => {
           <CustomButton text={open ? 'Close Applications' : 'Open Applications'} onClick={toggleApplications} />
         )}
       />
+      <FormGrid forms={URF_FORMS} />
+      <div className="grid-label">All Projects</div>
       <Tabs
         items={['all', ...URF_STATUSES].map((s) => ({ value: s, label: capitalize(s) }))}
         value={tab}
