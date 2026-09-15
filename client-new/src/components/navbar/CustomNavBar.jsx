@@ -6,7 +6,9 @@ import './NavBar.css';
 // Exported so the breadcrumb names a route the same way the nav does, instead
 // of keeping a second list that drifts.
 export const buttonConfig = [
-    { path: '/home', icon: <i class="fa fa-home" aria-hidden="true"></i>, text: 'Home', roles: ['student', 'ug_student', 'hod', 'phd_coordinator', 'faculty', 'dordc', 'adordc', 'dra', 'director', 'doctoral', 'external', 'admin'] },
+    // A UG student's home is their profile, so it is named for what it shows.
+    { path: '/home', icon: <i class="fa fa-user" aria-hidden="true"></i>, text: 'Profile', roles: ['ug_student'] },
+    { path: '/home', icon: <i class="fa fa-home" aria-hidden="true"></i>, text: 'Home', roles: ['student', 'hod', 'phd_coordinator', 'faculty', 'dordc', 'adordc', 'dra', 'director', 'doctoral', 'external', 'admin'] },
     { path: '/projects', icon: <i class="fa fa-briefcase" aria-hidden="true"></i>, text: 'Projects', roles: ['faculty', 'hod', 'phd_coordinator', 'dordc', 'adordc', 'dra', 'director', 'admin'], feature: 'project_management' },
     { path: '/forms', icon: <i class="fa fa-file-text" aria-hidden="true"></i>, text: 'Forms', roles: ['student', 'hod', 'phd_coordinator', 'faculty', 'dordc', 'adordc', 'dra', 'director', 'doctoral', 'external', 'admin'] },
     { path: '/presentation', icon: <i class="fa fa-tasks" aria-hidden="true"></i>, text: 'Progress Monitoring', roles: ['student', 'hod', 'phd_coordinator', 'faculty', 'dordc', 'adordc', 'dra', 'director', 'doctoral', 'admin'] },
@@ -46,7 +48,7 @@ const CustomNavBar = () => {
             <div className="icons">
                 {visibleButtons.map(({ path, icon, text }) => (
                     <button
-                        key={path}
+                        key={`${path}-${text}`}
                         className={`menu-button ${location.pathname.startsWith(path) ? 'active' : ''}`}
                         onClick={() => navigate(path)}
                     >

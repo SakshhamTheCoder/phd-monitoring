@@ -22,9 +22,10 @@ export const Section = ({ title, children }) => (
 /**
  * Everything recorded against one URF project, stage by stage. The admin and
  * the students on the project read the same page; the server leaves out the
- * stipend details a student is not entitled to see.
+ * stipend details a student is not entitled to see. `summary` stops at the
+ * project, team and mentors, for the student's profile.
  */
-const UrfRecord = ({ record }) => {
+const UrfRecord = ({ record, summary = false }) => {
   const status = capitalize(record.status);
 
   return (
@@ -62,7 +63,7 @@ const UrfRecord = ({ record }) => {
         </Section>
       ))}
 
-      {record.fellows?.map((fellow) => (
+      {!summary && record.fellows?.map((fellow) => (
         <Section key={fellow.id} title={`Fellowship Details: ${fellow.full_name}`}>
           <InfoGrid rows={[
             { label: 'Full Name (as per PAN)', value: fellow.full_name },
@@ -78,7 +79,7 @@ const UrfRecord = ({ record }) => {
         </Section>
       ))}
 
-      {record.reports?.length > 0 && (
+      {!summary && record.reports?.length > 0 && (
         <Section title="Reports">
           <TableComponent
             data={record.reports}
@@ -92,9 +93,11 @@ const UrfRecord = ({ record }) => {
         </Section>
       )}
 
-      <Section title="Publications">
-        <ShowPublications formData={record.publications} enableEdit={false} />
-      </Section>
+      {!summary && (
+        <Section title="Publications">
+          <ShowPublications formData={record.publications} enableEdit={false} />
+        </Section>
+      )}
     </>
   );
 };

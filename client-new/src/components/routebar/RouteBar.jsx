@@ -5,10 +5,13 @@ import './RouteBar.css';
 
 // Page names come from the nav config, so a route is labelled once. Segments the
 // nav does not know about (an id, a form type) are title-cased from the URL.
-const NAV_LABELS = buttonConfig.reduce((map, item) => {
-  map[item.path] = item.text;
-  return map;
-}, {});
+// Read for the current role, since one path can carry a different name per role.
+const navLabels = (role) => buttonConfig
+  .filter((item) => item.roles.includes(role))
+  .reduce((map, item) => {
+    map[item.path] = item.text;
+    return map;
+  }, {});
 
 const EXTRA_LABELS = {
   '/projects/create': 'New Project',
@@ -19,24 +22,25 @@ const EXTRA_LABELS = {
   '/supervisor-doctoral-approvals': 'Supervisor Approvals',
 };
 
-const labelFor = (path, segment) =>
-  NAV_LABELS[path]
+const labelFor = (labels, path, segment) =>
+  labels[path]
   || EXTRA_LABELS[path]
   || decodeURIComponent(segment).replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
 const RouteBar = () => {
   const { pathname } = useLocation();
+  const labels = navLabels(localStorage.getItem('userRole'));
   const segments = pathname.split('/').filter(Boolean);
 
   const crumbs = segments.map((segment, i) => {
     const path = `/${segments.slice(0, i + 1).join('/')}`;
-    return { path, label: labelFor(path, segment) };
+    return { path, label: labelFor(labels, path, segment) };
   });
 
   return (
     <nav className="route-bar" aria-label="Breadcrumb">
       <ol>
-        <li><Link to="/home">Home</Link></li>
+        <li><Link to="/home">{labels['/home'] || 'Home'}</Link></li>
         {crumbs.map((crumb, i) => (
           <li key={crumb.path}>
             <span className="route-sep" aria-hidden="true">/</span>
