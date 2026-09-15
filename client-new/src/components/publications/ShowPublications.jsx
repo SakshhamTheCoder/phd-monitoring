@@ -46,6 +46,9 @@ const ShowPublications = ({
     // Whose names are bold among the authors. Defaults to the signed-in account;
     // a page showing someone else's record passes theirs.
     highlightNames = null,
+    // Fields every publication added from here starts with, e.g. which URF
+    // project's library it joins.
+    addDefaults = null,
 }) => {
    const highlighted = highlightNames || [accountName()];
    const authorsCell = { key: 'authors', component: ({ data }) => <Authors text={data} names={highlighted} /> };
@@ -110,16 +113,20 @@ const ShowPublications = ({
        ? { keys: [...keys.slice(0, -1), 'mode', 'funding', 'id'], titles: [...titles.slice(0, -1), 'Mode', 'Funding', ' '] }
        : { keys, titles };
 
+   // The selection tick box leads each row, so it is the first thing seen.
+   const selectCell = (publicationType) => (enableSelect
+       ? ({ row }) => (
+           <input
+               type="checkbox"
+               aria-label="Select publication"
+               checked={!!selectedRows[publicationType]?.[row.id]}
+               onChange={() => handleSelect(row.id, publicationType)}
+           />
+       )
+       : null);
+
    const renderActions = (publicationId, publicationType) => (
        <>
-           {enableSelect && (
-               <input
-                   type="checkbox"
-                   checked={!!selectedRows[publicationType]?.[publicationId]}
-                   onChange={() => handleSelect(publicationId, publicationType)}
-                   style={{ marginRight: 10 }}
-               />
-           )}
            {enableEdit && (
                <a onClick={() => handleEdit(publicationId, publicationType)} style={{ cursor: "pointer", marginRight: 10, color: "#991b1b" }}>
                    <i className="fa fa-pencil" ></i>
@@ -152,6 +159,7 @@ const ShowPublications = ({
                             <GridContainer elements={[
                                 <TableComponent
                                     data={formData.sci}
+                                    leading={selectCell('sci')}
                                     keys={['authors', 'year', 'title', 'name', 'impact_factor', 'doi_link', 'id']}
                                     titles={['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of the Journal', 'Impact Factor', 'DOI', '']}
                                     components={[authorsCell, 
@@ -170,6 +178,7 @@ const ShowPublications = ({
                             <GridContainer elements={[
                                 <TableComponent
                                     data={formData.non_sci}
+                                    leading={selectCell('non_sci')}
                                     keys={['authors', 'year', 'title', 'name', 'impact_factor', 'doi_link','id']}
                                     titles={['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of the Journal', 'Impact Factor', 'DOI','']}
                                     components={[authorsCell, 
@@ -188,6 +197,7 @@ const ShowPublications = ({
                             <GridContainer elements={[
                                 <TableComponent
                                     data={formData.international}
+                                    leading={selectCell('international')}
                                     {...urfColumns(formData.international, ['authors', 'year', 'title', 'name', 'country', 'doi_link','id'], ['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of Conference', 'Place of Conference', 'DOI',' '])}
                                     components={[authorsCell, 
                                         { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>{EMPTY_VALUE}</span> },
@@ -206,6 +216,7 @@ const ShowPublications = ({
                             <GridContainer elements={[
                                 <TableComponent
                                     data={formData.national}
+                                    leading={selectCell('national')}
                                     {...urfColumns(formData.national, ['authors', 'year', 'title', 'name', 'city', 'doi_link','id'], ['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of Conference', 'Place of Conference', 'DOI',' '])}
                                     components={[authorsCell, 
                                         { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>{EMPTY_VALUE}</span> },
@@ -223,6 +234,7 @@ const ShowPublications = ({
                             <GridContainer elements={[
                                 <TableComponent
                                     data={formData.book}
+                                    leading={selectCell('book')}
                                     keys={['name', 'title', 'year', 'publisher','id']}
                                     titles={['Name of Book', 'Title of Paper', 'Year of Publication', 'Name of Publisher',' ']}
                                     components={[authorsCell, 
@@ -240,6 +252,7 @@ const ShowPublications = ({
                             <GridContainer elements={[
                                 <TableComponent
                                     data={formData.patents}
+                                    leading={selectCell('patents')}
                                     keys={['authors', 'year', 'status', 'title', 'country','id']}
                                     titles={['Author(s)', 'Year of Award', 'Status', 'Title of Patent', 'International/National',' ']}
                                     components={[authorsCell, 
@@ -268,7 +281,7 @@ const ShowPublications = ({
                      )}
                 <CustomModal isOpen={open} onClose={closeModal} title={editData ? 'Edit Publication' : 'Add Publication'}
                     minHeight='200px' maxHeight='600px' minWidth='650px' maxWidth='700px' closeOnOutsideClick={false}>
-                 <AddPublication close={closeModal} editData={editData} />
+                 <AddPublication close={closeModal} editData={editData} defaults={addDefaults} />
                  </CustomModal>
                 </>
             )}

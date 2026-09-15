@@ -9,8 +9,9 @@ import { APIaddPublication, APIupdatePublication } from "../../api/publication";
 
 // onSave lets a caller send the record somewhere other than the student
 // publication endpoints; the field forms below stay the same either way.
-const AddPublication = ({ close, editData = null, onSave = null }) => {
-  const [body, setBody] = useState(editData || {});
+// defaults seeds a new record, e.g. the URF project it belongs to.
+const AddPublication = ({ close, editData = null, onSave = null, defaults = null }) => {
+  const [body, setBody] = useState(editData || defaults || {});
 
   const handleSelect = (value) => {
     value = JSON.parse(value);

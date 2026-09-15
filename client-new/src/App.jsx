@@ -134,10 +134,11 @@ const AppContent = () => {
             <>
               {/* Static form paths outrank the shared /forms/:form_type route. */}
               <Route path="/forms" element={<UrfFormsPage />} />
-              <Route path="/forms/urf-application" element={<UrfFormPage type="application" />} />
-              <Route path="/forms/urf-additional-info" element={<UrfFormPage type="additional" />} />
-              <Route path="/forms/urf-half-yearly-report" element={<UrfFormPage type="half_yearly" />} />
-              <Route path="/forms/urf-final-report" element={<UrfFormPage type="final" />} />
+              <Route path="/forms/urf-application" element={<UrfFormPage type="new" />} />
+              <Route path="/forms/urf/:id/application" element={<UrfFormPage type="application" />} />
+              <Route path="/forms/urf/:id/additional-info" element={<UrfFormPage type="additional" />} />
+              <Route path="/forms/urf/:id/half-yearly-report" element={<UrfFormPage type="half_yearly" />} />
+              <Route path="/forms/urf/:id/final-report" element={<UrfFormPage type="final" />} />
               <Route path="/publications" element={<Publications />} />
             </>
           )}

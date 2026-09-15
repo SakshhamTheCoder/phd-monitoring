@@ -198,9 +198,12 @@ export const ApplyForm = ({ initial, onSaved }) => {
   );
 };
 
-/** What a selected student gives for the stipend. */
-export const FellowForm = ({ applicationId, initial, onSaved }) => {
-  const [body, set] = useBody(initial || {});
+/**
+ * What a selected student gives for the stipend. `prefill`, the details from
+ * the student's previous project, fills a first submission but stays editable.
+ */
+export const FellowForm = ({ applicationId, initial, prefill, onSaved }) => {
+  const [body, set] = useBody(initial || prefill || {});
 
   const submit = async () => {
     const res = await apiUrfFellow(applicationId, body);
@@ -245,7 +248,7 @@ export const ReportForm = ({ application, type, onSaved }) => {
   const slot = application.student2_email?.toLowerCase() === me.email?.toLowerCase() ? 2 : 1;
   const mentors = [application.mentor1, application.mentor2].filter(Boolean);
 
-  const loadLibrary = () => customFetch(`${baseURL}/publications`, 'GET', {}, true, false, false)
+  const loadLibrary = () => customFetch(`${baseURL}/publications?urf_application_id=${application.id}`, 'GET', {}, true, false, false)
     .then((res) => res.success && setLibrary(res.response));
   useEffect(() => { loadLibrary(); }, []);
 
@@ -335,6 +338,7 @@ export const ReportForm = ({ application, type, onSaved }) => {
           enableSubmit
           enableEdit={false}
           canAdd
+          addDefaults={{ urf_application_id: application.id }}
           onSelect={setSelection}
           onSubmit={confirmPicks}
           refetchData={loadLibrary}

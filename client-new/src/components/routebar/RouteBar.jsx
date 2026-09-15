@@ -16,7 +16,8 @@ const navLabels = (role) => buttonConfig
 const EXTRA_LABELS = {
   '/projects/create': 'New Project',
   '/forms/manage': 'Manage Forms',
-  '/forms/urf-application': 'URF Application Form',
+  '/forms/urf-application': 'Apply for URF',
+  '/forms/urf': 'URF',
   '/forms/urf-additional-info': 'Additional Information Form',
   '/forms/urf-half-yearly-report': 'Half-yearly Progress Report',
   '/forms/urf-final-report': 'Final Report',

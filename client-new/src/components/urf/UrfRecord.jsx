@@ -115,6 +115,7 @@ const UrfRecord = ({ record, actions = null }) => {
           <h2>{record.project_title}</h2>
           <div className="student-research">
             <HeaderLine label="Status" title><StatusBadge status={record.status} /></HeaderLine>
+            <HeaderLine label="Session">{record.session && `URF ${record.session}`}</HeaderLine>
             <HeaderLine label="Applied On">{formatDate(record.created_at)}</HeaderLine>
             {/* Beside the facts, not with the decisions, so it never reads as one of them. */}
             <HeaderLine label="Proposal">
