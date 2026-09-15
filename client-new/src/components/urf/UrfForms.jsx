@@ -8,7 +8,6 @@ import FileUploadField from '../forms/fields/FileUploadField';
 import InputSuggestions from '../forms/fields/InputSuggestions';
 import CustomButton from '../forms/fields/CustomButton';
 import CustomModal from '../forms/modal/CustomModal';
-import InfoGrid from '../profileFields/InfoGrid';
 import ShowPublications from '../publications/ShowPublications';
 import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
@@ -290,18 +289,19 @@ export const ReportForm = ({ application, type, onSaved }) => {
 
   return (
     <Section title="Report Details">
-      <div className="student-details">
-        <InfoGrid rows={[
-          { label: 'Name', value: application[`student${slot}_name`] },
-          { label: 'Roll No.', value: application[`student${slot}_roll_no`] },
-          { label: 'Department', value: application[`student${slot}_department`]?.name },
-          { label: 'Email', value: application[`student${slot}_email`] },
-          { label: 'Contact No.', value: application[`student${slot}_phone`] },
-          { label: 'Faculty Mentor Name', value: mentors.map(facultyName).join(', ') },
-          { label: 'Faculty Mentor Department', value: mentors.map((m) => m.department?.name).filter(Boolean).join(', ') },
-          { label: 'Title of Project', value: application.project_title, span: 'all' },
-        ]} />
-      </div>
+      {/* Filled in from the application and locked: the student cannot change them here. */}
+      <GridContainer elements={[
+        <InputField label="Title of Project" initialValue={application.project_title || ''} isLocked />,
+      ]} space={3} />
+      <GridContainer elements={[
+        <InputField label="Name" initialValue={application[`student${slot}_name`] || ''} isLocked />,
+        <InputField label="Roll No." initialValue={application[`student${slot}_roll_no`] || ''} isLocked />,
+        <InputField label="Department" initialValue={application[`student${slot}_department`]?.name || ''} isLocked />,
+        <InputField label="Email" initialValue={application[`student${slot}_email`] || ''} isLocked />,
+        <InputField label="Contact No." initialValue={application[`student${slot}_phone`] || ''} isLocked />,
+        <InputField label="Faculty Mentor Name" initialValue={mentors.map(facultyName).join(', ')} isLocked />,
+        <InputField label="Faculty Mentor Department" initialValue={mentors.map((m) => m.department?.name).filter(Boolean).join(', ')} isLocked />,
+      ]} />
 
       <div className="urf-subhead">
         <h3>Publication Details</h3>
