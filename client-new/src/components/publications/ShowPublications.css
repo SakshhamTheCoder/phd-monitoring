@@ -1,0 +1,5 @@
+/* body sets font-weight 600 app-wide, so every cell arrived semi-bold. The rows
+   are data; the column titles carry the emphasis, and in Authors only the
+   highlighted name is bold. */
+.publications-tables .custom-table td { font-weight: 400; }
+.publications-tables .custom-table td strong { font-weight: 700; color: #111827; }

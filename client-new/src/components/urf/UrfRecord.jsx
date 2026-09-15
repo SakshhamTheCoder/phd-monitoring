@@ -169,7 +169,13 @@ const UrfRecord = ({ record, actions = null }) => {
         <GridContainer
           key={report.id}
           label={`Publications in ${REPORT_TYPES[report.type] || 'Report'} (${formatDate(report.created_at)})`}
-          elements={[<ShowPublications formData={report.publications} enableEdit={false} />]}
+          elements={[
+            <ShowPublications
+              formData={report.publications}
+              enableEdit={false}
+              highlightNames={[record.student1_name, record.student2_name].filter(Boolean)}
+            />,
+          ]}
           space={3}
         />
       ))}

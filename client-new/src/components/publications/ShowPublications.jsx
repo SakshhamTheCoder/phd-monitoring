@@ -5,6 +5,31 @@ import { formatDate, EMPTY_VALUE } from '../../utils/timeParse';
 import CustomButton from '../forms/fields/CustomButton';
 import AddPublication from './AddPublication';
 import CustomModal from '../forms/modal/CustomModal';
+import './ShowPublications.css';
+
+// The signed-in account's own name, which Authors shows in bold.
+const accountName = () => {
+    try {
+        const user = JSON.parse(localStorage.getItem('user')) || {};
+        return [user.first_name, user.last_name].filter(Boolean).join(' ');
+    } catch {
+        return '';
+    }
+};
+
+const nameTokens = (text) => String(text || '').toLowerCase().replace(/[^a-z\s]/g, ' ').split(/\s+/).filter(Boolean);
+
+// Authors is free text ("A. Rao, Ravi Kumar and ..."), so each author is matched
+// by the words of a highlighted name, in any order and ignoring punctuation.
+const Authors = ({ text, names }) => {
+    if (!text) return EMPTY_VALUE;
+    const wanted = names.map(nameTokens).filter((tokens) => tokens.length > 0);
+    return String(text).split(/(\s*[,;]\s*|\s+and\s+)/i).map((part, i) => {
+        const tokens = nameTokens(part);
+        const isHighlighted = tokens.length > 0 && wanted.some((name) => name.every((token) => tokens.includes(token)));
+        return isHighlighted ? <strong key={i}>{part}</strong> : <React.Fragment key={i}>{part}</React.Fragment>;
+    });
+};
 
 const ShowPublications = ({
     formData,
@@ -18,7 +43,12 @@ const ShowPublications = ({
     onDelete,
     onEdit,
     refetchData = null,
+    // Whose names are bold among the authors. Defaults to the signed-in account;
+    // a page showing someone else's record passes theirs.
+    highlightNames = null,
 }) => {
+   const highlighted = highlightNames || [accountName()];
+   const authorsCell = { key: 'authors', component: ({ data }) => <Authors text={data} names={highlighted} /> };
    const [editData, setEditData] = useState(null);
    const [selectedRows, setSelectedRows] = useState({});
    const [totalPublications, setTotalPublications] = useState(0);
@@ -103,7 +133,7 @@ const ShowPublications = ({
        </>
    );
     return (
-        <>
+        <div className="publications-tables">
             {formData && (
                 <>
                     <GridContainer elements={[]} space={3} />
@@ -124,7 +154,7 @@ const ShowPublications = ({
                                     data={formData.sci}
                                     keys={['authors', 'year', 'title', 'name', 'impact_factor', 'doi_link', 'id']}
                                     titles={['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of the Journal', 'Impact Factor', 'DOI', '']}
-                                    components={[
+                                    components={[authorsCell, 
                                         { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>{EMPTY_VALUE}</span> },
                                           { key: 'id', component: ({ data }) => renderActions(data, 'sci') }
                                     ]}
@@ -142,7 +172,7 @@ const ShowPublications = ({
                                     data={formData.non_sci}
                                     keys={['authors', 'year', 'title', 'name', 'impact_factor', 'doi_link','id']}
                                     titles={['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of the Journal', 'Impact Factor', 'DOI','']}
-                                    components={[
+                                    components={[authorsCell, 
                                         { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>{EMPTY_VALUE}</span> },
                                          { key: 'id', component: ({ data }) => renderActions(data, 'non_sci') }
                                     ]}
@@ -159,7 +189,7 @@ const ShowPublications = ({
                                 <TableComponent
                                     data={formData.international}
                                     {...urfColumns(formData.international, ['authors', 'year', 'title', 'name', 'country', 'doi_link','id'], ['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of Conference', 'Place of Conference', 'DOI',' '])}
-                                    components={[
+                                    components={[authorsCell, 
                                         { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>{EMPTY_VALUE}</span> },
                                          { key: 'country', component: ({ data }) => <span>{data}</span> },
                                         { key: 'id', component: ({ data }) => renderActions(data, 'international') }
@@ -177,7 +207,7 @@ const ShowPublications = ({
                                 <TableComponent
                                     data={formData.national}
                                     {...urfColumns(formData.national, ['authors', 'year', 'title', 'name', 'city', 'doi_link','id'], ['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of Conference', 'Place of Conference', 'DOI',' '])}
-                                    components={[
+                                    components={[authorsCell, 
                                         { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>{EMPTY_VALUE}</span> },
                                          {key: 'id', component: ({ data }) => renderActions(data, 'national') }
                                     ]}
@@ -195,7 +225,7 @@ const ShowPublications = ({
                                     data={formData.book}
                                     keys={['name', 'title', 'year', 'publisher','id']}
                                     titles={['Name of Book', 'Title of Paper', 'Year of Publication', 'Name of Publisher',' ']}
-                                    components={[
+                                    components={[authorsCell, 
                                          {key: 'id', component: ({ data }) => renderActions(data, 'book') }
                                     ]}
                                     getRowStyle={(data) => getRowStyle(data.id, 'book')}
@@ -212,7 +242,7 @@ const ShowPublications = ({
                                     data={formData.patents}
                                     keys={['authors', 'year', 'status', 'title', 'country','id']}
                                     titles={['Author(s)', 'Year of Award', 'Status', 'Title of Patent', 'International/National',' ']}
-                                    components={[
+                                    components={[authorsCell, 
                                         { key: 'year', component: ({ data }) => <span>{formatDate(data)}</span> },
                                        {key: 'id', component: ({ data }) => renderActions(data, 'patents') }
                                     ]}
@@ -242,7 +272,7 @@ const ShowPublications = ({
                  </CustomModal>
                 </>
             )}
-        </>
+        </div>
     );
 };
 
