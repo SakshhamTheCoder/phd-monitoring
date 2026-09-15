@@ -128,6 +128,7 @@ class SuggestionController extends Controller
         $request->validate([
             'text' => 'required|string',
             'department_id' => 'nullable|integer',
+            'type' => 'nullable|in:internal,external',
         ]);
 
         // Mirrors the authorization check in the faculty directory endpoints.
@@ -168,6 +169,11 @@ class SuggestionController extends Controller
                     ->orWhere('faculty_code', 'LIKE', $like)
                     ->orWhere('designation', 'LIKE', $like);
             });
+        }
+
+        // The URF form asks for internal faculty only: a mentor is institute staff.
+        if ($request->filled('type')) {
+            $facultyQuery->where('type', $request->type);
         }
 
         if (!empty($request->department_id)) {

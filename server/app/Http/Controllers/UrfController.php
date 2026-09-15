@@ -121,6 +121,8 @@ class UrfController extends Controller
         }
 
         $second = 'required_with:student2_name|nullable';
+        // Mentors are institute faculty, not outside members of the directory.
+        $internalFaculty = Rule::exists('faculty', 'faculty_code')->where('type', 'internal');
         $data = $request->validate([
             'project_title' => 'required|string|max:255',
             'student1_name' => 'required|string|max:255',
@@ -135,8 +137,8 @@ class UrfController extends Controller
             'student2_gender' => "$second|in:Male,Female",
             'student2_email' => "$second|email|different:student1_email",
             'student2_phone' => "$second|string|max:20",
-            'mentor1_faculty_code' => 'required|exists:faculty,faculty_code',
-            'mentor2_faculty_code' => 'nullable|different:mentor1_faculty_code|exists:faculty,faculty_code',
+            'mentor1_faculty_code' => ['required', $internalFaculty],
+            'mentor2_faculty_code' => ['nullable', 'different:mentor1_faculty_code', $internalFaculty],
             'proposal' => ($editing ? 'nullable' : 'required') . '|file|mimes:pdf|max:20480',
         ]);
 

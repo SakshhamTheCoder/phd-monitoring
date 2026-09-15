@@ -76,6 +76,7 @@ const MentorFields = ({ n, initial, onPick }) => {
       elements={[
         <InputSuggestions
           apiUrl={`${baseURL}/suggestions/faculty`}
+          body={{ type: 'internal' }}
           label="Faculty Name"
           initialValue={shown?.name}
           onSelect={(faculty) => { setPicked(faculty); onPick(faculty.id); }}

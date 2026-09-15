@@ -58,6 +58,7 @@ class UrfFlowTest extends TestCase
             'user_id' => $this->userAs('faculty')->id,
             'designation' => 'Professor',
             'department_id' => $department->id,
+            'type' => 'internal',
         ]);
 
         $form = [
