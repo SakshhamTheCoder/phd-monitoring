@@ -169,6 +169,15 @@ class UrfFlowTest extends TestCase
             ->assertJsonPath('applications.0.project_title', $secondTitle)
             ->assertJsonPath('applications.1.id', $id);
 
+        // The admin list puts the newest session first, whatever order the
+        // applications were made in.
+        $secondId = $this->getJson('/api/urf/mine')->json('applications.0.id');
+        UrfApplication::whereKey($secondId)->update(['session' => now()->year - 2]);
+        $this->actingAs($admin, 'sanctum')
+            ->getJson('/api/urf?filters=' . urlencode(json_encode(['conditions' => [['key' => 'student1_roll_no', 'op' => '=', 'value' => '102203001']]])))
+            ->assertJsonPath('data.0.id', $id)
+            ->assertJsonPath('data.1.id', $secondId);
+
         // All of a student's publications stay in one library across projects.
         $this->actingAs($applicant, 'sanctum')->getJson('/api/publications')->assertJsonCount(1, 'international');
         $this->actingAs($outsider, 'sanctum')->getJson('/api/publications')->assertJsonCount(0, 'international');

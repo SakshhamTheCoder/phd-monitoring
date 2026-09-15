@@ -48,7 +48,10 @@ class UrfController extends Controller
             return $this->refuse();
         }
 
-        $query = UrfApplication::with(['student1Department', 'student2Department', 'mentor1.user', 'mentor2.user'])->latest('id');
+        // Newest session first, and within a session the latest application first.
+        $query = UrfApplication::with(['student1Department', 'student2Department', 'mentor1.user', 'mentor2.user'])
+            ->orderByDesc('session')
+            ->latest('id');
         $filters = json_decode((string) $request->query('filters'), true);
         if ($filters) {
             $query = $this->applyDynamicFilters($query, $filters);
