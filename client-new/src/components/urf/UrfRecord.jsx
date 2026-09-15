@@ -1,7 +1,7 @@
 import React from 'react';
 import InfoGrid from '../profileFields/InfoGrid';
 import TableComponent from '../forms/table/TableComponent';
-import FileLink from '../common/FileLink';
+import FileLink, { fileUrlFrom } from '../common/FileLink';
 import ShowPublications from '../publications/ShowPublications';
 import { badgeClass } from '../../data/badges';
 import { formatDate } from '../../utils/timeParse';
@@ -62,6 +62,16 @@ const UrfRecord = ({ record, summary = false }) => {
           ]} />
         </Section>
       ))}
+
+      {!summary && record.proposal && (
+        <Section title="Project Proposal">
+          <iframe
+            title="Project proposal"
+            src={fileUrlFrom(record.proposal)}
+            style={{ width: '100%', height: '640px', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+          />
+        </Section>
+      )}
 
       {!summary && record.fellows?.map((fellow) => (
         <Section key={fellow.id} title={`Fellowship Details: ${fellow.full_name}`}>
