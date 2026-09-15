@@ -1,0 +1,70 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class UrfApplication extends Model
+{
+    public const STATUSES = ['applied', 'selected', 'rejected', 'ongoing', 'completed'];
+
+    protected $fillable = [
+        'project_title',
+        'student1_name', 'student1_roll_no', 'student1_department_id', 'student1_gender', 'student1_email', 'student1_phone',
+        'student2_name', 'student2_roll_no', 'student2_department_id', 'student2_gender', 'student2_email', 'student2_phone',
+        'mentor1_faculty_code', 'mentor2_faculty_code',
+    ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function student1Department()
+    {
+        return $this->belongsTo(Department::class, 'student1_department_id');
+    }
+
+    public function student2Department()
+    {
+        return $this->belongsTo(Department::class, 'student2_department_id');
+    }
+
+    public function mentor1()
+    {
+        return $this->belongsTo(Faculty::class, 'mentor1_faculty_code', 'faculty_code');
+    }
+
+    public function mentor2()
+    {
+        return $this->belongsTo(Faculty::class, 'mentor2_faculty_code', 'faculty_code');
+    }
+
+    public function fellows()
+    {
+        return $this->hasMany(UrfFellow::class);
+    }
+
+    public function reports()
+    {
+        return $this->hasMany(UrfReport::class);
+    }
+
+    /**
+     * The latest project a UG student is on, whether they filled the
+     * application in or were named on it as the second student.
+     */
+    public static function forUser(User $user): ?self
+    {
+        return static::where('user_id', $user->id)
+            ->orWhere('student2_email', $user->email)
+            ->latest('id')
+            ->first();
+    }
+
+    public function hasMember(User $user): bool
+    {
+        return $this->user_id === $user->id
+            || strcasecmp((string) $this->student2_email, $user->email) === 0;
+    }
+}
