@@ -11,7 +11,7 @@ class RelocateUploadsToPrivateDisk extends Command
 {
     protected $signature = 'uploads:relocate-to-private {--dry-run : Report what would move without touching anything}';
 
-    protected $description = 'Move private uploads off the public disk and onto the private local disk (audit D12)';
+    protected $description = 'Move private uploads off the public disk and onto the private local disk';
 
     private const PATH_COLUMNS = [
         ['constitute_of_irb', 'irb_pdf'],
