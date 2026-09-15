@@ -185,6 +185,14 @@ class UrfFlowTest extends TestCase
             ->assertOk()->assertJsonFragment(['id' => $id]);
         $this->getJson($unoffered('project_title'))->assertOk()->assertJsonCount(0, 'data');
 
+        // The search box covers the whole team, whatever case it is typed in.
+        $anyOf = fn (array $keys, string $value) => '/api/urf?filters=' . urlencode(json_encode([
+            'combine' => 'or',
+            'conditions' => array_map(fn ($k) => ['key' => $k, 'op' => 'LIKE', 'value' => $value], $keys),
+        ]));
+        $this->getJson($anyOf(['student1_name', 'student2_name'], 'ravi kumar'))->assertOk()->assertJsonFragment(['id' => $id]);
+        $this->getJson($anyOf(['student1_roll_no', 'student2_roll_no'], '102203002'))->assertOk()->assertJsonFragment(['id' => $id]);
+
         // A mentor searched by full name, as the suggestion list writes it.
         $byName = fn (string $value) => '/api/urf?filters=' . urlencode(json_encode(['conditions' => [['key' => 'mentor1.user.first_name', 'op' => 'LIKE', 'value' => $value]]]));
         $mentorName = $mentor->user->name();

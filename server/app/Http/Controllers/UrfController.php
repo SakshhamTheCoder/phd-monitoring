@@ -30,6 +30,12 @@ class UrfController extends Controller
     use NotificationManager;
     use SaveFile;
 
+    /**
+     * Keys the URF pages send that are not filter fields of their own: the stage
+     * tab, and the second student and mentor, whom the search box covers too.
+     */
+    private const SEARCH_KEYS = ['status', 'student2_name', 'student2_roll_no', 'mentor2.user.first_name'];
+
     private const DETAIL = [
         'student1Department', 'student2Department',
         'mentor1.user', 'mentor1.department', 'mentor2.user', 'mentor2.department',
@@ -54,7 +60,7 @@ class UrfController extends Controller
             ->latest('id');
         $filters = json_decode((string) $request->query('filters'), true);
         if ($filters) {
-            $query = $this->applyDynamicFilters($query, $filters, 'urf', ['status']);
+            $query = $this->applyDynamicFilters($query, $filters, 'urf', self::SEARCH_KEYS);
         }
         $page = $query->paginate($request->input('rows', 50), ['*'], 'page', $request->input('page', 1));
 
@@ -98,7 +104,7 @@ class UrfController extends Controller
         $details = $form === 'urf-additional-info';
         $page = ($details ? UrfFellow::query() : UrfReport::where('type', $form === 'urf-final-report' ? 'final' : 'half_yearly'))
             ->with(['application.student1Department', 'application.student2Department', 'user'])
-            ->when($filters, fn ($q) => $q->whereHas('application', fn ($a) => $this->applyDynamicFilters($a, $filters, 'urf', ['status'])))
+            ->when($filters, fn ($q) => $q->whereHas('application', fn ($a) => $this->applyDynamicFilters($a, $filters, 'urf', self::SEARCH_KEYS)))
             ->latest('id')
             ->paginate($request->input('rows', 50), ['*'], 'page', $request->input('page', 1));
 

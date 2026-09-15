@@ -17,12 +17,11 @@ const operatorFor = (filter) => (filter.options || filter.data_type === 'date' |
  * through untouched, and any filter chosen here joins them, so a search within
  * a filter still narrows rather than widens.
  */
-const SmartSearch = ({ placeholder = 'Search…', mandatory = [], onSearch }) => {
+const SmartSearch = ({ placeholder = 'Search…', mandatory = [], alsoSearch = [], onSearch }) => {
   const [filters, setFilters] = useState([]);
   const [text, setText] = useState('');
   const [open, setOpen] = useState(false);
   const [chosen, setChosen] = useState({});
-  const debounce = useRef(null);
   const onSearchRef = useRef(onSearch);
   onSearchRef.current = onSearch;
 
@@ -41,11 +40,12 @@ const SmartSearch = ({ placeholder = 'Search…', mandatory = [], onSearch }) =>
     () => filters.filter((f) => !f.options && f.data_type !== 'date' && f.data_type !== 'number'),
     [filters],
   );
-  // A search is debounced, so it can run from a render that was made before the
-  // page's filters arrived. Reading them through a ref keeps the first search
-  // from going out with no fields to look in.
-  const searchableRef = useRef(searchable);
-  searchableRef.current = searchable;
+  // Every text field of the page, plus the ones the page names itself, such as
+  // the second student on a URF project.
+  const searchFields = useMemo(
+    () => [...searchable.map((f) => ({ key: f.key_name, label: f.label })), ...alsoSearch],
+    [searchable, JSON.stringify(alsoSearch)],
+  );
 
   const conditionsFrom = (picks) => Object.entries(picks)
     .filter(([, entry]) => entry.value !== '' && entry.value !== null && entry.value !== undefined)
@@ -59,7 +59,7 @@ const SmartSearch = ({ placeholder = 'Search…', mandatory = [], onSearch }) =>
     onSearchRef.current(query
       ? {
         combine: 'or',
-        conditions: searchableRef.current.map((f) => ({ label: f.label, key: f.key_name, op: 'LIKE', value: query })),
+        conditions: searchFields.map((f) => ({ label: f.label, key: f.key, op: 'LIKE', value: query })),
         mandatory_filter: [...mandatory, ...picked],
       }
       : { combine: 'and', conditions: picked, mandatory_filter: mandatory });
@@ -68,18 +68,17 @@ const SmartSearch = ({ placeholder = 'Search…', mandatory = [], onSearch }) =>
   // Re-run when the page's own filters change, e.g. a tab.
   useEffect(() => { emit(text, chosen); }, [JSON.stringify(mandatory)]);
 
-  const type = (value) => {
-    setText(value);
-    clearTimeout(debounce.current);
-    debounce.current = setTimeout(() => emit(value, chosen), 400);
-  };
+  const runSearch = () => emit(text, chosen);
 
-  const choose = (filter, value) => {
+  // Setting a filter fills it in; the search itself waits for Enter or Search,
+  // so nothing runs half-typed. Clearing one searches at once, so the table
+  // never keeps a filter that is no longer on screen.
+  const choose = (filter, value, andSearch = false) => {
     const next = { ...chosen };
     if (value === '' || value === null || value === undefined) delete next[filter.key_name];
     else next[filter.key_name] = { label: filter.label, op: operatorFor(filter), value };
     setChosen(next);
-    emit(text, next);
+    if (andSearch || value === '' || value === null || value === undefined) emit(text, next);
   };
 
   const clearAll = () => {
@@ -96,7 +95,7 @@ const SmartSearch = ({ placeholder = 'Search…', mandatory = [], onSearch }) =>
           label={filter.label}
           options={filter.options.map((o) => (typeof o === 'string' ? { title: o, value: o } : o))}
           initialValue={value}
-          onChange={(v) => choose(filter, v)}
+          onChange={(v) => choose(filter, v, true)}
         />
       );
     }
@@ -107,7 +106,7 @@ const SmartSearch = ({ placeholder = 'Search…', mandatory = [], onSearch }) =>
           apiUrl={baseURL + filter.api_url}
           initialValue={value}
           suggestionManadatory={false}
-          onSelect={(picked) => choose(filter, picked?.name ?? '')}
+          onSelect={(picked) => choose(filter, picked?.name ?? '', true)}
         />
       );
     }
@@ -120,6 +119,7 @@ const SmartSearch = ({ placeholder = 'Search…', mandatory = [], onSearch }) =>
           value={value}
           placeholder={`Any ${filter.label.toLowerCase()}`}
           onChange={(e) => choose(filter, e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && runSearch()}
         />
       </div>
     );
@@ -137,9 +137,10 @@ const SmartSearch = ({ placeholder = 'Search…', mandatory = [], onSearch }) =>
           value={text}
           placeholder={placeholder}
           aria-label={placeholder}
-          onChange={(e) => type(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && emit(text, chosen)}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && runSearch()}
         />
+        <button type="button" className="smart-search-go" onClick={runSearch}>Search</button>
         {filters.length > 0 && (
           <button type="button" className="smart-search-toggle" onClick={() => setOpen(!open)}>
             <i className="fa fa-sliders" aria-hidden="true"></i> Filters{chips.length ? ` (${chips.length})` : ''}

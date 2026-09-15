@@ -26,7 +26,15 @@ const UrfFormList = () => {
   return (
     <Layout>
       <PageHeader title={TITLES[pathname.split('/').pop()]} subtitle="Undergraduate Research Fellowship" />
-      <SmartSearch placeholder="Search by project, student, roll no or mentor…" onSearch={setFilters} />
+      <SmartSearch
+        placeholder="Search by project, student, roll no or mentor…"
+        alsoSearch={[
+          { key: 'student2_name', label: 'Student Name' },
+          { key: 'student2_roll_no', label: 'Roll No' },
+          { key: 'mentor2.user.first_name', label: 'Mentor Name' },
+        ]}
+        onSearch={setFilters}
+      />
       <div className="urf-list">
         <PagenationTable
           endpoint={pathname}

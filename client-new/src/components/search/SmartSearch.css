@@ -38,6 +38,21 @@
   box-shadow: 0 0 0 3px var(--primary-tint);
 }
 
+.smart-search-go {
+  height: 40px;
+  padding: 0 1.2rem;
+  border: none;
+  border-radius: 6px;
+  background-color: var(--primary-color);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.smart-search-go:hover { background-color: var(--hover-color); }
+
 .smart-search-toggle,
 .smart-search-clear {
   height: 40px;
