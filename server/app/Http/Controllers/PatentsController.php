@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\SaveFile;
 use App\Models\Patent;
+use App\Models\Publication;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -45,15 +46,19 @@ class PatentsController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
         }
+        [$column, $ownerId] = Publication::ownerOf($user);
+        if (!$ownerId) {
+            return response()->json(['message' => 'You have no record to file publications against'], 403);
+        }
         $patents = new Patent();
-        $patents->student_id = $user->student->roll_no;
+        $patents->{$column} = $ownerId;
         $patents->title = $request->title;
         $patents->authors = $request->authors;
         $patents->doi_link=$request->doi_link;
         $patents->year=$request->year;
         $patents->country=$request->country;
         $patents->status=$request->status;
-        $file=$this->saveUploadedFile($request->file('first_page'),'patents',$patents->student_id);
+        $file=$this->saveUploadedFile($request->file('first_page'),'patents',$ownerId);
         $patents->first_page=$file;
         $patents->save();
         return response()->json(['message' => 'Patent added successfully'], 201);
@@ -89,7 +94,10 @@ class PatentsController extends Controller
             if ($validator->fails()) {
                 return response()->json(['errors' => $validator->errors()], 400);
             }
-            $patents->student_id = $user->student->roll_no;
+            [$column, $ownerId] = Publication::ownerOf($user);
+            if (!$ownerId || $patents->{$column} != $ownerId) {
+                return response()->json(['message' => 'You are not authorized to edit this patent'], 403);
+            }
             $patents->title = $request->title;
             $patents->authors = $request->authors;
             $patents->doi_link=$request->doi_link;
@@ -98,7 +106,7 @@ class PatentsController extends Controller
             $patents->status=$request->status;
 
             if ($request->hasFile('first_page')) {
-                $file = $this->replaceUploadedFile($patents->first_page, $request->file('first_page'), 'patents', $patents->student_id);
+                $file = $this->replaceUploadedFile($patents->first_page, $request->file('first_page'), 'patents', $ownerId);
                 $patents->first_page = $file;
             }
 
@@ -121,7 +129,8 @@ class PatentsController extends Controller
             return response()->json(['message' => 'Patent not found'], 404);
         }
 
-        if ($patent->student_id != $user->student->roll_no) {
+        [$column, $ownerId] = Publication::ownerOf($user);
+        if (!$ownerId || $patent->{$column} != $ownerId) {
             return response()->json(['message' => 'You are not authorized to delete this patent'], 403);
         }
 

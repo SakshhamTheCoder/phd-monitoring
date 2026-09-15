@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\SaveFile;
-use App\Models\Patent;
 use App\Models\Publication;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -31,20 +30,12 @@ class PublicationController extends Controller
         if (!$user->may('can_manage_own_publications')) {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
-        $id = $user->student->roll_no;
-        $publicationsQuery = Publication::where('student_id', $id)->where('form_id', null);
-        $patents = Patent::where('student_id', $id)->get()->where('form_id', null);
+        [$column, $ownerId] = Publication::ownerOf($user);
+        if (!$ownerId) {
+            return response()->json(['message' => 'You have no record to file publications against'], 403);
+        }
 
-        $ret = [
-            'sci' => $publicationsQuery->clone()->where('publication_type', 'journal')->where('type', 'sci')->get(),
-            'non_sci' => $publicationsQuery->clone()->where('publication_type', 'journal')->where('type', 'non-sci')->get(),
-            'national' => $publicationsQuery->clone()->where('publication_type', 'conference')->where('type', 'national')->get(),
-            'international' => $publicationsQuery->clone()->where('publication_type', 'conference')->where('type', 'international')->get(),
-            'book' => $publicationsQuery->clone()->where('publication_type', 'book')->get(),
-            'patents' => $patents
-        ];
-
-        return response()->json($ret);
+        return response()->json(Publication::groupedFor($column, $ownerId));
     }
     /**
      * Store a newly created publication in storage.
@@ -73,10 +64,13 @@ class PublicationController extends Controller
         }
 
 
-        $authors = $request->authors;
+        [$column, $ownerId] = Publication::ownerOf($user);
+        if (!$ownerId) {
+            return response()->json(['message' => 'You have no record to file publications against'], 403);
+        }
 
         $publication = new Publication();
-        $publication->student_id = $user->student->roll_no;
+        $publication->{$column} = $ownerId;
 
         $publication->title = $request->title;
         $publication->authors = $request->authors;
@@ -85,7 +79,7 @@ class PublicationController extends Controller
         $publication->year = (int)$request->year;
         $publication->name = $request->name;
 
-        $link = $this->saveUploadedFile($request->first_page, 'publication', $user->student->roll_no);
+        $link = $this->saveUploadedFile($request->first_page, 'publication', $ownerId);
         $publication->first_page = $link;
         $publication->status = $request->status;
 
@@ -111,7 +105,9 @@ class PublicationController extends Controller
                     'country' => 'required|string',
                     'state' => 'required|string',
                     'city' => 'required|string',
-                    'type' => 'required|in:national,international'
+                    'type' => 'required|in:national,international',
+                    'mode' => 'nullable|in:offline,online',
+                    'funding' => 'nullable|string|max:255',
                 ]
                 );
 
@@ -119,6 +115,8 @@ class PublicationController extends Controller
                 $publication->state = $request->state;
                 $publication->publication_type = 'conference';
                 $publication->city = $request->city;
+                $publication->mode = $request->mode;
+                $publication->funding = $request->funding;
                 $publication->type = $request->type;
                 break;
             case 'book':
@@ -172,7 +170,8 @@ class PublicationController extends Controller
         $user = Auth::user();
 
         // Check ownership
-        if ($publication->student_id != $user->student->roll_no) {
+        [$column, $ownerId] = Publication::ownerOf($user);
+        if (!$ownerId || $publication->{$column} != $ownerId) {
             return response()->json(['message' => 'You are not authorized to edit this publication'], 403);
         }
 
@@ -200,7 +199,7 @@ class PublicationController extends Controller
         $publication->status = $request->status;
 
         if ($request->hasFile('first_page')) {
-            $link = $this->replaceUploadedFile($publication->first_page, $request->first_page, 'publication', $user->student->roll_no);
+            $link = $this->replaceUploadedFile($publication->first_page, $request->first_page, 'publication', $ownerId);
             $publication->first_page = $link;
         }
 
@@ -223,12 +222,16 @@ class PublicationController extends Controller
                     'country' => 'required|string',
                     'state' => 'required|string',
                     'city' => 'required|string',
-                    'type' => 'required|in:national,international'
+                    'type' => 'required|in:national,international',
+                    'mode' => 'nullable|in:offline,online',
+                    'funding' => 'nullable|string|max:255',
                 ]);
                 $publication->country = $request->country;
                 $publication->state = $request->state;
                 $publication->publication_type = 'conference';
                 $publication->city = $request->city;
+                $publication->mode = $request->mode;
+                $publication->funding = $request->funding;
                 $publication->type = $request->type;
                 break;
             case 'book':
@@ -267,7 +270,8 @@ class PublicationController extends Controller
             return response()->json(['error' => 'Publication not found'], 404);
         }
 
-        if ($publication->student_id != $user->student->roll_no) {
+        [$column, $ownerId] = Publication::ownerOf($user);
+        if (!$ownerId || $publication->{$column} != $ownerId) {
             return response()->json(['message' => 'You are not authorized to delete this publication'], 403);
         }
 

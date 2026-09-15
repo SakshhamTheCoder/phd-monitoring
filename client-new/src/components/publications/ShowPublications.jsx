@@ -75,6 +75,11 @@ const ShowPublications = ({
         setTotalPublications(groups.reduce((total, group) => total + (formData[group]?.length || 0), 0));
    }, [formData]);
 
+   // Only URF projects record funding and mode, so the columns appear when a row has them.
+   const urfColumns = (rows, keys, titles) => rows.some((row) => row.mode || row.funding)
+       ? { keys: [...keys.slice(0, -1), 'mode', 'funding', 'id'], titles: [...titles.slice(0, -1), 'Mode', 'Funding', ' '] }
+       : { keys, titles };
+
    const renderActions = (publicationId, publicationType) => (
        <>
            {enableSelect && (
@@ -153,8 +158,7 @@ const ShowPublications = ({
                             <GridContainer elements={[
                                 <TableComponent
                                     data={formData.international}
-                                    keys={['authors', 'year', 'title', 'name', 'country', 'doi_link','id']}
-                                    titles={['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of Conference', 'Place of Conference', 'DOI',' ']}
+                                    {...urfColumns(formData.international, ['authors', 'year', 'title', 'name', 'country', 'doi_link','id'], ['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of Conference', 'Place of Conference', 'DOI',' '])}
                                     components={[
                                         { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>{EMPTY_VALUE}</span> },
                                          { key: 'country', component: ({ data }) => <span>{data}</span> },
@@ -172,8 +176,7 @@ const ShowPublications = ({
                             <GridContainer elements={[
                                 <TableComponent
                                     data={formData.national}
-                                    keys={['authors', 'year', 'title', 'name', 'city', 'doi_link','id']}
-                                    titles={['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of Conference', 'Place of Conference', 'DOI',' ']}
+                                    {...urfColumns(formData.national, ['authors', 'year', 'title', 'name', 'city', 'doi_link','id'], ['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of Conference', 'Place of Conference', 'DOI',' '])}
                                     components={[
                                         { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>{EMPTY_VALUE}</span> },
                                          {key: 'id', component: ({ data }) => renderActions(data, 'national') }
