@@ -3,7 +3,7 @@ import '../profileCard/ProfileCard.css';
 import InfoGrid from '../profileFields/InfoGrid';
 import GridContainer from '../forms/fields/GridContainer';
 import TableComponent from '../forms/table/TableComponent';
-import { HeaderLine, StatusBadge, TeamTables, facultyName, yearLabel } from './UrfRecord';
+import { HeaderLine, StatusText, TeamTables, facultyName, yearLabel } from './UrfRecord';
 import { signedInUser } from './UrfForms';
 import { apiUrfMine } from '../../api/urf';
 
@@ -43,7 +43,7 @@ const UgProfile = () => {
             <HeaderLine label="Latest URF Project" title>
               {latest && `URF ${latest.session} · ${latest.project_title}`}
             </HeaderLine>
-            {latest && <HeaderLine label="Status"><StatusBadge status={latest.status} /></HeaderLine>}
+            {latest && <HeaderLine label="Status"><StatusText status={latest.status} /></HeaderLine>}
           </div>
         </div>
       </div>
@@ -68,7 +68,7 @@ const UgProfile = () => {
               data={projects}
               keys={['session', 'project_title', 'status', 'team', 'mentors']}
               titles={['Session', 'Project Title', 'Status', 'Team Members', 'Faculty Mentors']}
-              components={[{ key: 'status', component: ({ data }) => <StatusBadge status={data} /> }]}
+              components={[{ key: 'status', component: ({ data }) => <StatusText status={data} /> }]}
             />,
           ]}
           space={3}

@@ -6,7 +6,6 @@ import TableComponent from '../forms/table/TableComponent';
 import ShowPublications from '../publications/ShowPublications';
 import { facultyNameCell } from '../facultyLink/FacultyLink';
 import { fileUrlFrom } from '../common/FileLink';
-import { badgeClass } from '../../data/badges';
 import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
 
 export const URF_STATUSES = ['applied', 'selected', 'rejected'];
@@ -25,7 +24,8 @@ export const Section = ({ title, children }) => (
   </div>
 );
 
-export const StatusBadge = ({ status }) => <span className={badgeClass(capitalize(status))}>{capitalize(status)}</span>;
+// Plain text, as statuses read elsewhere in the portal.
+export const StatusText = ({ status }) => <span>{capitalize(status)}</span>;
 
 // One "Label: value" line under a profile's name, as the PhD profile writes them.
 export const HeaderLine = ({ label, children, title = false }) => (
@@ -114,7 +114,7 @@ const UrfRecord = ({ record, actions = null }) => {
         <div className="student-header-text">
           <h2>{record.project_title}</h2>
           <div className="student-research">
-            <HeaderLine label="Status" title><StatusBadge status={record.status} /></HeaderLine>
+            <HeaderLine label="Status" title><StatusText status={record.status} /></HeaderLine>
             <HeaderLine label="Session">{record.session && `URF ${record.session}`}</HeaderLine>
             <HeaderLine label="Applied On">{formatDate(record.created_at)}</HeaderLine>
             {/* Beside the facts, not with the decisions, so it never reads as one of them. */}

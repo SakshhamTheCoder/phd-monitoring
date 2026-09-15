@@ -4,7 +4,7 @@ import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import FormGrid from '../../components/forms/formGrid/FormGrid';
 import CustomButton from '../../components/forms/fields/CustomButton';
-import UrfRecord, { ReportsTable, Section, StatusBadge, REPORT_TYPES } from '../../components/urf/UrfRecord';
+import UrfRecord, { ReportsTable, Section, StatusText, REPORT_TYPES } from '../../components/urf/UrfRecord';
 import { ApplyForm, FellowForm, ReportForm, signedInUser } from '../../components/urf/UrfForms';
 import { apiUrfMine } from '../../api/urf';
 import '../../components/urf/UrfForms.css';
@@ -68,7 +68,7 @@ export const UrfFormsPage = () => {
         <div key={application.id}>
           <div className="urf-subhead">
             <h3>URF {application.session} · {application.project_title}</h3>
-            <StatusBadge status={application.status} />
+            <StatusText status={application.status} />
           </div>
           <FormGrid forms={formsFor(application)} title={null} />
         </div>
