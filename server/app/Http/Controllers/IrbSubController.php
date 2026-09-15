@@ -281,6 +281,12 @@ class IrbSubController extends Controller
                     'form_name' => 'Thesis Submission',
                     'max_count' => 1,
                     'stage' => 'student',
+                ],
+                [
+                    'form_type' => 'revise-title',
+                    'form_name' => 'Revise Title or Objectives',
+                    'max_count' => 10,
+                    'stage' => 'student',
                 ]
             ];
             // $student = $formInstance->student;

@@ -44,7 +44,7 @@ Route::prefix('synopsis-submission')->group(function () {
     require base_path('routes/base/synopsis_submission.php');
 });
 Route::prefix('revise-title')->group(function () {
-    require base_path('routes/base/synopsis_submission.php');
+    require base_path('routes/base/revise_title.php');
 });
 Route::prefix('semester-off')->group(function () {
     require base_path('routes/base/semester_off.php');

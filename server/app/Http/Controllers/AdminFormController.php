@@ -10,6 +10,7 @@ use App\Models\IrbSubForm;
 use App\Models\ResearchExtentionsForm;
 use App\Models\ListOfExaminersForm;
 use App\Models\Presentation;
+use App\Models\ReviseTitleForm;
 use App\Models\StudentSemesterOffForm;
 use App\Models\SupervisorChangeForm;
 use App\Models\SupervisorAllocation;
@@ -37,6 +38,7 @@ class AdminFormController extends Controller
         'irb-extension' => ResearchExtentionsForm::class,
         'list-of-examiners' => ListOfExaminersForm::class,
         'presentation' => Presentation::class,
+        'revise-title' => ReviseTitleForm::class,
         'semester-off' => StudentSemesterOffForm::class,
         'status-change' => StudentStatusChangeForms::class,
         'supervisor-allocation' => SupervisorAllocation::class,
@@ -108,6 +110,13 @@ class AdminFormController extends Controller
             // One ordinary extension, then one special extension. Nothing after.
             'max_count' => 2,
             'steps' => ["student","faculty","phd_coordinator","hod","dra","dordc","complete"]
+        ],
+        'revise-title' => [
+            'form_name' => 'Revise Title or Objectives',
+            // No cap specified by product; matches the other situational
+            // (as-needed) forms rather than a mandatory once-only submission.
+            'max_count' => 10,
+            'steps' => ['student', 'faculty', 'hod', 'dra', 'dordc', 'complete']
         ],
         // 'presentation' => [
         //     'form_name' => 'Presentation',

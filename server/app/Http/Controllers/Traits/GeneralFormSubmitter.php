@@ -486,6 +486,7 @@ trait GeneralFormSubmitter
             'ThesisSubmission' => 'thesis-submission',
             'ThesisExtentionForm' => 'thesis-extension',
             'ListOfExaminersForm' => 'list-of-examiners',
+            'ReviseTitleForm' => 'revise-title',
             'SynopsisSubmission' => 'synopsis-submission',
             'Presentation' => 'presentation',
             'StudentLeaveForm' => 'student-leave',
