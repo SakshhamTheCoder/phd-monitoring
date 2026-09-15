@@ -45,7 +45,7 @@ class UrfController extends Controller
             return $this->refuse();
         }
 
-        $query = UrfApplication::with(['student1Department', 'mentor1.user'])->latest('id');
+        $query = UrfApplication::with(['student1Department', 'mentor1.user', 'mentor2.user'])->latest('id');
         $filters = json_decode((string) $request->query('filters'), true);
         if ($filters) {
             $query = $this->applyDynamicFilters($query, $filters);
@@ -59,15 +59,15 @@ class UrfController extends Controller
                 'students' => collect([$a->student1_name, $a->student2_name])->filter()->join(', '),
                 'roll_no' => $a->student1_roll_no,
                 'department' => $a->student1Department?->name,
-                'mentor' => $a->mentor1?->user?->name(),
+                'mentors' => collect([$a->mentor1, $a->mentor2])->filter()->map(fn ($m) => $m->user?->name())->join(', '),
                 'status' => ucfirst($a->status),
                 'applied_on' => $a->created_at?->format('d M Y'),
             ]),
             'total' => $page->total(),
             'totalPages' => $page->lastPage(),
             'role' => $user->current_role->role,
-            'fields' => ['project_title', 'students', 'roll_no', 'department', 'mentor', 'status', 'applied_on'],
-            'fieldsTitles' => ['Project Title', 'Students', 'Roll No', 'Department', 'Mentor', 'Status', 'Applied On'],
+            'fields' => ['project_title', 'students', 'roll_no', 'department', 'mentors', 'status', 'applied_on'],
+            'fieldsTitles' => ['Project Title', 'Students', 'Roll No', 'Department', 'Mentors', 'Status', 'Applied On'],
         ]);
     }
 

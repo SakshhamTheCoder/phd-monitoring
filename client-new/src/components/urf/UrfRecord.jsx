@@ -3,7 +3,6 @@ import '../profileCard/ProfileCard.css';
 import InfoGrid from '../profileFields/InfoGrid';
 import GridContainer from '../forms/fields/GridContainer';
 import TableComponent from '../forms/table/TableComponent';
-import CustomButton from '../forms/fields/CustomButton';
 import ShowPublications from '../publications/ShowPublications';
 import { facultyNameCell } from '../facultyLink/FacultyLink';
 import { fileUrlFrom } from '../common/FileLink';
@@ -98,18 +97,21 @@ const UrfRecord = ({ record, actions = null }) => {
           <div className="student-research">
             <HeaderLine label="Status" title><StatusBadge status={record.status} /></HeaderLine>
             <HeaderLine label="Applied On">{formatDate(record.created_at)}</HeaderLine>
+            {/* Beside the facts, not with the decisions, so it never reads as one of them. */}
+            <HeaderLine label="Proposal">
+              {record.proposal && (
+                <button
+                  type="button"
+                  className="profile-edit-small"
+                  onClick={() => window.open(fileUrlFrom(record.proposal), '_blank', 'noopener,noreferrer')}
+                >
+                  <i className="fa fa-file-pdf-o" aria-hidden="true"></i> View Proposal
+                </button>
+              )}
+            </HeaderLine>
           </div>
         </div>
-        <div className="profile-actions">
-          {record.proposal && (
-            <CustomButton
-              text="View Proposal"
-              variant="secondary"
-              onClick={() => window.open(fileUrlFrom(record.proposal), '_blank', 'noopener,noreferrer')}
-            />
-          )}
-          {actions}
-        </div>
+        {actions && <div className="profile-actions">{actions}</div>}
       </div>
 
       <TeamTables record={record} />

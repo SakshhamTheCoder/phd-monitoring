@@ -9,6 +9,7 @@ import PagenationTable from '../../components/pagenationTable/PagenationTable';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import { URF_STATUSES, capitalize } from '../../components/urf/UrfRecord';
 import { apiSettings, apiSaveSettings } from '../../api/settings';
+import './UrfList.css';
 
 /** Admin → URF: every application, by stage, with the filters the students page has. */
 const UrfList = () => {
@@ -51,12 +52,14 @@ const UrfList = () => {
         onChange={setTab}
       />
       <FilterBar onSearch={setFilter} />
-      <PagenationTable
-        endpoint="/urf"
-        filters={filters}
-        enableSelect={false}
-        customOpenForm={(row) => navigate(`/urf/${row.id}`)}
-      />
+      <div className="urf-list">
+        <PagenationTable
+          endpoint="/urf"
+          filters={filters}
+          enableSelect={false}
+          customOpenForm={(row) => navigate(`/urf/${row.id}`)}
+        />
+      </div>
     </Layout>
   );
 };

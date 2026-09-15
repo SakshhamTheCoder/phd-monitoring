@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import '../profileCard/ProfileCard.css';
-import CustomButton from '../forms/fields/CustomButton';
 import InfoGrid from '../profileFields/InfoGrid';
 import { HeaderLine, StatusBadge, TeamTables } from './UrfRecord';
 import { signedInUser } from './UrfForms';
@@ -14,7 +12,6 @@ import { apiUrfMine } from '../../api/urf';
  * so they come from whichever student slot on it is this user.
  */
 const UgProfile = () => {
-  const navigate = useNavigate();
   const [state, setState] = useState(null);
 
   useEffect(() => {
@@ -35,11 +32,6 @@ const UgProfile = () => {
             {application && <HeaderLine label="Status"><StatusBadge status={application.status} /></HeaderLine>}
           </div>
         </div>
-        {state && (
-          <div className="profile-actions">
-            <CustomButton text={application ? 'Open URF' : 'Apply for URF'} onClick={() => navigate('/urf')} />
-          </div>
-        )}
       </div>
 
       <div className="student-details">
