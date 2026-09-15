@@ -178,6 +178,18 @@ class UrfFlowTest extends TestCase
             ->assertJsonPath('data.0.id', $id)
             ->assertJsonPath('data.1.id', $secondId);
 
+        // A filter on a key the page never offered is ignored, not run: the key
+        // arrives from the client, and any column would include password hashes.
+        $unoffered = fn (string $key) => '/api/urf?filters=' . urlencode(json_encode(['conditions' => [['key' => $key, 'op' => 'LIKE', 'value' => 'zzzzzzzz']]]));
+        $this->actingAs($admin, 'sanctum')->getJson($unoffered('user.password'))
+            ->assertOk()->assertJsonFragment(['id' => $id]);
+        $this->getJson($unoffered('project_title'))->assertOk()->assertJsonCount(0, 'data');
+
+        // A mentor searched by full name, as the suggestion list writes it.
+        $byName = fn (string $value) => '/api/urf?filters=' . urlencode(json_encode(['conditions' => [['key' => 'mentor1.user.first_name', 'op' => 'LIKE', 'value' => $value]]]));
+        $mentorName = $mentor->user->name();
+        $this->getJson($byName($mentorName))->assertOk()->assertJsonFragment(['id' => $id]);
+
         // All of a student's publications stay in one library across projects.
         $this->actingAs($applicant, 'sanctum')->getJson('/api/publications')->assertJsonCount(1, 'international');
         $this->actingAs($outsider, 'sanctum')->getJson('/api/publications')->assertJsonCount(0, 'international');

@@ -53,7 +53,7 @@ class CourseController extends Controller
 
             // Apply dynamic filters
             if ($filters) {
-                $query = $this->applyDynamicFilters($query, $filters);
+                $query = $this->applyDynamicFilters($query, $filters, 'courses');
             }
 
             $courses = $query->paginate($perPage, ['*'], 'page', $page);

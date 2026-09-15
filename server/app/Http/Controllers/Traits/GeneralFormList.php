@@ -194,7 +194,7 @@ trait GeneralFormList
         $formsQuery = $model::where('student_id', $student->roll_no);
 
         if ($filters) {
-            $formsQuery = $this->applyDynamicFilters($formsQuery, $filters);
+            $formsQuery = $this->applyDynamicFilters($formsQuery, $filters, ['forms', 'presentation'], ['action', 'upcoming', 'missed']);
         }
 
 
@@ -206,7 +206,7 @@ trait GeneralFormList
         $formsQuery = $model::query();
 
         if ($filters) {
-            $formsQuery = $this->applyDynamicFilters($formsQuery, $filters);
+            $formsQuery = $this->applyDynamicFilters($formsQuery, $filters, ['forms', 'presentation'], ['action', 'upcoming', 'missed']);
         }
 
 
@@ -222,7 +222,7 @@ trait GeneralFormList
         $formsQuery = $model::whereIn('student_id', $studentIds);
 
         if ($filters) {
-            $formsQuery = $this->applyDynamicFilters($formsQuery, $filters);
+            $formsQuery = $this->applyDynamicFilters($formsQuery, $filters, ['forms', 'presentation'], ['action', 'upcoming', 'missed']);
         }
 
 
@@ -237,7 +237,7 @@ trait GeneralFormList
         $formsQuery = $model::whereIn('student_id', $students);
 
         if ($filters) {
-            $formsQuery = $this->applyDynamicFilters($formsQuery, $filters);
+            $formsQuery = $this->applyDynamicFilters($formsQuery, $filters, ['forms', 'presentation'], ['action', 'upcoming', 'missed']);
         }
 
         return $this->paginateAndMap($formsQuery, $page, $fields, $rows, $user);
@@ -267,7 +267,7 @@ trait GeneralFormList
         $formsQuery = $model::whereIn('student_id', $studentIds);
 
         if ($filters) {
-            $formsQuery = $this->applyDynamicFilters($formsQuery, $filters);
+            $formsQuery = $this->applyDynamicFilters($formsQuery, $filters, ['forms', 'presentation'], ['action', 'upcoming', 'missed']);
         }
 
         return $this->paginateAndMap($formsQuery, $page, $fields, $rows, $user);
@@ -282,7 +282,7 @@ trait GeneralFormList
         $formsQuery = $model::whereIn('student_id', $studentIds);
 
         if ($filters) {
-            $formsQuery = $this->applyDynamicFilters($formsQuery, $filters);
+            $formsQuery = $this->applyDynamicFilters($formsQuery, $filters, ['forms', 'presentation'], ['action', 'upcoming', 'missed']);
         }
 
 

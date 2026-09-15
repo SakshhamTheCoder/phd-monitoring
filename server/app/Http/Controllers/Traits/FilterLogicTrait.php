@@ -48,11 +48,19 @@ trait FilterLogicTrait
 
 //working
 
-public function applyDynamicFilters($query, $filters)
+/**
+ * Applies the filter bar's conditions.
+ *
+ * $pages names the page (or pages) the request belongs to, and $extraKeys the
+ * keys its own code sends. Anything else is dropped: the keys arrive from the
+ * client, and an unrestricted key is a query over any column in the database,
+ * which includes password hashes.
+ */
+public function applyDynamicFilters($query, $filters, $pages = null, array $extraKeys = [])
 {
     $combine = strtolower($filters['combine'] ?? 'and');
-    $filterList = $filters['conditions'] ?? [];
-    $mandatoryFilter = $filters['mandatory_filter'] ?? null;
+    $filterList = $this->allowedFilters($filters['conditions'] ?? [], $pages, $extraKeys);
+    $mandatoryFilter = $this->allowedFilters($filters['mandatory_filter'] ?? null, $pages, $extraKeys) ?: null;
 
     Log::info('Applying dynamic filters', [
         'combine' => $combine,
@@ -76,10 +84,10 @@ public function applyDynamicFilters($query, $filters)
 
                 if ($relation) {
                     $query->whereHas($relation, function ($q) use ($column, $op, $value) {
-                        $q->where($column, $op, $value);
+                        $this->whereColumnMatches($q, $column, $op, $value);
                     });
                 } else {
-                    $query->where($column, $op, $value);
+                    $this->whereColumnMatches($query, $column, $op, $value);
                 }
             }
         }
@@ -100,10 +108,10 @@ public function applyDynamicFilters($query, $filters)
 
             if ($relation) {
                 $q->{$combine === 'or' ? 'orWhereHas' : 'whereHas'}($relation, function ($subQ) use ($column, $op, $value) {
-                    $subQ->where($column, $op, $value);
+                    $this->whereColumnMatches($subQ, $column, $op, $value);
                 });
             } else {
-                $q->{$combine === 'or' ? 'orWhere' : 'where'}($column, $op, $value);
+                $this->whereColumnMatches($q, $column, $op, $value, $combine === 'or');
             }
         }
     });
@@ -119,6 +127,40 @@ public function applyDynamicFilters($query, $filters)
 
 //new 
 
+
+/**
+ * The conditions whose key the page actually offers. A key the page never
+ * defined is dropped with a warning rather than run.
+ */
+private function allowedFilters($conditions, $pages, array $extraKeys)
+{
+    if (!is_array($conditions) || !$conditions) {
+        return $conditions === null ? null : [];
+    }
+
+    $allowed = DB::table('filters')
+        ->when($pages, fn ($q) => $q->where(function ($inner) use ($pages) {
+            foreach ((array) $pages as $page) {
+                $inner->orWhereJsonContains('applicable_pages', $page);
+            }
+        }))
+        ->pluck('key_name')
+        ->merge($extraKeys)
+        ->flip();
+
+    return collect($conditions)
+        ->filter(function ($condition) use ($allowed) {
+            $key = $condition['key'] ?? null;
+            if ($key !== null && $allowed->has($key)) {
+                return true;
+            }
+            Log::warning('Ignored a filter on a key this page does not offer', ['key' => $key]);
+
+            return false;
+        })
+        ->values()
+        ->all();
+}
 
 public function getAvailableFilters($pageSlug = null)
 {
@@ -139,6 +181,26 @@ public function getAvailableFilters($pageSlug = null)
 
 
 
+
+/**
+ * One condition on one column.
+ *
+ * Names are stored as first_name and last_name, so a search for "Arun Mehta"
+ * matches neither on its own. A value with a space is matched against the two
+ * joined, which is how the suggestion lists and the tables show a name.
+ */
+private function whereColumnMatches($query, $column, $op, $value, $or = false)
+{
+    $where = $or ? 'orWhere' : 'where';
+
+    if ($column === 'first_name' && is_string($value) && str_contains(trim($value, '%'), ' ')) {
+        $name = '%' . trim($value, '% ') . '%';
+
+        return $query->{$where . 'Raw'}("CONCAT(first_name, ' ', last_name) LIKE ?", [$name]);
+    }
+
+    return $query->{$where}($column, $op, $value);
+}
 
 //     public function evaluateFilter($form, $filterKey, $input)
 //     {

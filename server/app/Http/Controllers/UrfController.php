@@ -54,7 +54,7 @@ class UrfController extends Controller
             ->latest('id');
         $filters = json_decode((string) $request->query('filters'), true);
         if ($filters) {
-            $query = $this->applyDynamicFilters($query, $filters);
+            $query = $this->applyDynamicFilters($query, $filters, 'urf', ['status']);
         }
         $page = $query->paginate($request->input('rows', 50), ['*'], 'page', $request->input('page', 1));
 
@@ -98,7 +98,7 @@ class UrfController extends Controller
         $details = $form === 'urf-additional-info';
         $page = ($details ? UrfFellow::query() : UrfReport::where('type', $form === 'urf-final-report' ? 'final' : 'half_yearly'))
             ->with(['application.student1Department', 'application.student2Department', 'user'])
-            ->when($filters, fn ($q) => $q->whereHas('application', fn ($a) => $this->applyDynamicFilters($a, $filters)))
+            ->when($filters, fn ($q) => $q->whereHas('application', fn ($a) => $this->applyDynamicFilters($a, $filters, 'urf', ['status'])))
             ->latest('id')
             ->paginate($request->input('rows', 50), ['*'], 'page', $request->input('page', 1));
 
