@@ -25,8 +25,6 @@ const TONES = {
   'Interview Scheduled': 'blue',
   'Selected': 'success',
   'Rejected': 'danger',
-  // URF project status, after Selected
-  'Ongoing': 'blue',
 
   // Milestone status
   'Not Started': 'neutral',

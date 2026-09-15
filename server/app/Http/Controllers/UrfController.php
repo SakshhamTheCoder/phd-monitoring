@@ -168,7 +168,7 @@ class UrfController extends Controller
 
     /**
      * Applies, or corrects an application that is still waiting for a result.
-     * A rejected or completed project leaves the student free to apply afresh.
+     * A rejected application leaves the student free to apply afresh.
      */
     public function apply(Request $request)
     {
@@ -181,7 +181,7 @@ class UrfController extends Controller
         }
 
         $application = UrfApplication::forUser($user);
-        if ($application && in_array($application->status, ['selected', 'ongoing'], true)) {
+        if ($application?->status === 'selected') {
             return response()->json(['message' => 'Your URF project is already under way'], 422);
         }
         $editing = $application?->status === 'applied';
@@ -238,7 +238,7 @@ class UrfController extends Controller
         if (!$user->may('can_apply_for_urf') || !$application->hasMember($user)) {
             return $this->refuse();
         }
-        if (!in_array($application->status, ['selected', 'ongoing'], true)) {
+        if ($application->status !== 'selected') {
             return response()->json(['message' => 'These details are asked for once the project is selected'], 422);
         }
 
@@ -275,8 +275,8 @@ class UrfController extends Controller
         if (!$user->may('can_apply_for_urf') || !$application->hasMember($user)) {
             return $this->refuse();
         }
-        if ($application->status !== 'ongoing') {
-            return response()->json(['message' => 'Reports are filed while the project is ongoing'], 422);
+        if ($application->status !== 'selected') {
+            return response()->json(['message' => 'Reports are filed once the project is selected'], 422);
         }
 
         $data = $request->validate([

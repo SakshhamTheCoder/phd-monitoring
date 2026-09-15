@@ -22,14 +22,14 @@ const useUrf = () => {
   return { state, version, load };
 };
 
-const underWay = (status) => ['selected', 'ongoing'].includes(status);
+const underWay = (status) => status === 'selected';
 const canApplyAfresh = ({ applications_open: open, application }) =>
-  open && (!application || ['rejected', 'completed'].includes(application.status));
+  open && (!application || application.status === 'rejected');
 
 /**
  * Forms, for a UG student: the URF forms open to them, as cards on the same
  * grid the PhD forms page uses. The additional information form appears once
- * the project is selected; the two reports while it is ongoing.
+ * the project is selected, and so do the two reports.
  */
 export const UrfFormsPage = () => {
   const { state } = useUrf();
@@ -41,7 +41,7 @@ export const UrfFormsPage = () => {
     ...(underWay(status)
       ? [{ form_type: 'urf-additional-info', form_name: 'Additional Information Form', action_required: !application.fellows?.length }]
       : []),
-    ...(status === 'ongoing' ? [
+    ...(underWay(status) ? [
       { form_type: 'urf-half-yearly-report', form_name: REPORT_TYPES.half_yearly },
       { form_type: 'urf-final-report', form_name: REPORT_TYPES.final },
     ] : []),
@@ -83,14 +83,14 @@ export const UrfFormPage = ({ type }) => {
   }
   if (state && REPORT_TYPES[type]) {
     const filed = application?.reports?.filter((report) => report.type === type) || [];
-    body = status === 'ongoing' ? (
+    body = underWay(status) ? (
       <>
         <ReportForm application={application} type={type} onSaved={load} />
         {filed.length > 0 && (
           <Section title={`Submitted ${REPORT_TYPES[type]}s`}><ReportsTable reports={filed} /></Section>
         )}
       </>
-    ) : <p>Reports are filed while your project is ongoing.</p>;
+    ) : <p>Reports open once your project is selected.</p>;
   }
 
   return (

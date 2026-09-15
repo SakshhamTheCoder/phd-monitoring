@@ -9,7 +9,7 @@ import { fileUrlFrom } from '../common/FileLink';
 import { badgeClass } from '../../data/badges';
 import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
 
-export const URF_STATUSES = ['applied', 'selected', 'ongoing', 'completed', 'rejected'];
+export const URF_STATUSES = ['applied', 'selected', 'rejected'];
 export const REPORT_TYPES = { half_yearly: 'Half-yearly Progress Report', final: 'Final Report' };
 
 export const capitalize = (s) => (s ? s[0].toUpperCase() + s.slice(1) : '');
@@ -106,7 +106,7 @@ const hasPublications = (groups) => Object.values(groups || {}).some((rows) => r
  * leaves out stipend details a student is not entitled to see.
  */
 const UrfRecord = ({ record, actions = null }) => {
-  const reportsDue = record.reports?.length > 0 || ['ongoing', 'completed'].includes(record.status);
+  const reportsDue = record.reports?.length > 0 || record.status === 'selected';
 
   return (
     <div className="student-container">

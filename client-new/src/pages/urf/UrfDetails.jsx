@@ -7,20 +7,13 @@ import CustomModal from '../../components/forms/modal/CustomModal';
 import UrfRecord from '../../components/urf/UrfRecord';
 import { apiUrfShow, apiUrfStatus } from '../../api/urf';
 
-// The decisions open to the admin at each stage. The server accepts any stage,
-// but these are the moves the fellowship actually makes.
+// An application is decided once: selected or rejected. A decided project
+// offers no further decision.
 const DECISIONS = {
   applied: [
     { status: 'selected', label: 'Select' },
     { status: 'rejected', label: 'Reject', variant: 'secondary' },
   ],
-  selected: [
-    { status: 'ongoing', label: 'Mark Ongoing' },
-    { status: 'rejected', label: 'Reject', variant: 'secondary' },
-  ],
-  ongoing: [{ status: 'completed', label: 'Mark Completed' }],
-  rejected: [{ status: 'applied', label: 'Reconsider', variant: 'secondary' }],
-  completed: [],
 };
 
 /** Admin → URF → one project, shown like a scholar's profile, with the decision on it. */

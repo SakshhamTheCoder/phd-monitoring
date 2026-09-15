@@ -92,10 +92,14 @@ class UrfFlowTest extends TestCase
         $this->actingAs($admin, 'sanctum')
             ->getJson($filters(['conditions' => [['key' => 'student1_roll_no', 'op' => '=', 'value' => '102203001']], 'mandatory_filter' => [['key' => 'status', 'op' => '=', 'value' => 'applied']]]))
             ->assertOk()->assertJsonPath('data.0.id', $id);
-        $this->getJson($filters(['conditions' => [], 'mandatory_filter' => [['key' => 'status', 'op' => '=', 'value' => 'ongoing']]]))
+        $this->getJson($filters(['conditions' => [], 'mandatory_filter' => [['key' => 'status', 'op' => '=', 'value' => 'rejected']]]))
             ->assertOk()->assertJsonMissing(['id' => $id]);
 
-        // Reports wait for an ongoing project; stipend details for a selected one.
+        // Stipend details and reports both wait for the project to be selected,
+        // which is the one decision there is besides rejecting it.
+        $report = ['type' => 'half_yearly', 'conference_presentation' => 'Poster at ICSS', 'report' => UploadedFile::fake()->create('r.pdf', 10, 'application/pdf')];
+        $this->actingAs($applicant, 'sanctum')->postJson("/api/urf/{$id}/reports", $report)->assertStatus(422);
+        $this->actingAs($admin, 'sanctum')->postJson("/api/urf/{$id}/status", ['status' => 'ongoing'])->assertStatus(422);
         $this->actingAs($admin, 'sanctum')->postJson("/api/urf/{$id}/status", ['status' => 'selected'])->assertOk();
         $this->actingAs($partner, 'sanctum')->postJson("/api/urf/{$id}/fellow", [
             'full_name' => 'Ravi Kumar', 'dob' => '2004-05-06', 'gender' => 'Male', 'father_name' => 'Mohan Kumar',
@@ -103,9 +107,6 @@ class UrfFlowTest extends TestCase
         ])->assertOk();
         $this->assertNotSame('ABCDE1234F', DB::table('urf_fellows')->where('user_id', $partner->id)->value('pan'));
 
-        $report = ['type' => 'half_yearly', 'conference_presentation' => 'Poster at ICSS', 'report' => UploadedFile::fake()->create('r.pdf', 10, 'application/pdf')];
-        $this->actingAs($applicant, 'sanctum')->postJson("/api/urf/{$id}/reports", $report)->assertStatus(422);
-        $this->actingAs($admin, 'sanctum')->postJson("/api/urf/{$id}/status", ['status' => 'ongoing'])->assertOk();
         $this->actingAs($applicant, 'sanctum')->postJson("/api/urf/{$id}/reports", $report)->assertCreated();
 
         // A publication belongs to the project, so both students see it.
@@ -154,6 +155,6 @@ class UrfFlowTest extends TestCase
         $this->getJson('/api/urf/urf-application/filters')->assertOk()->assertJsonFragment(['key_name' => 'project_title']);
         $this->actingAs($applicant, 'sanctum')->getJson('/api/urf/urf-final-report')->assertForbidden();
 
-        $this->assertSame('ongoing', UrfApplication::find($id)->status);
+        $this->assertSame('selected', UrfApplication::find($id)->status);
     }
 }

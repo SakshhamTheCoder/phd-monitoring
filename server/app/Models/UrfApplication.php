@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class UrfApplication extends Model
 {
-    public const STATUSES = ['applied', 'selected', 'rejected', 'ongoing', 'completed'];
+    // An application is decided once: selected or rejected.
+    public const STATUSES = ['applied', 'selected', 'rejected'];
 
     protected $fillable = [
         'project_title',
