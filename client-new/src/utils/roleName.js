@@ -2,6 +2,8 @@ export const getRoleName = (role) => {
     switch (role) {
         case 'student':
            return 'Student'
+        case 'ug_student':
+           return 'UG Student'
        case 'supervisor':
            return 'Supervisor';
         case 'faculty':

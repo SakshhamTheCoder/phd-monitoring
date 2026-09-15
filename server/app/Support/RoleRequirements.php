@@ -29,14 +29,14 @@ class RoleRequirements
     /**
      * Roles that need no linkage at all, pure permission roles.
      */
-    private const UNRESTRICTED = ['admin', 'dra', 'dordc', 'director'];
+    private const UNRESTRICTED = ['admin', 'dra', 'dordc', 'director', 'ug_student'];
 
     /**
      * Every role the system knows about, so callers can audit exhaustively.
      */
     public const ALL = [
         'admin', 'adordc', 'clerk', 'director', 'doctoral', 'dordc', 'dra',
-        'external', 'faculty', 'hod', 'phd_coordinator', 'student',
+        'external', 'faculty', 'hod', 'phd_coordinator', 'student', 'ug_student',
     ];
 
     /**
