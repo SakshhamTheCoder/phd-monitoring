@@ -10,6 +10,12 @@ trait NotificationManager
 {
     public function sendNotification($user, $title, $body, $link, $role_id = null, $email_req = false)
     {
+        // A missing recipient means the seat is vacant or the account was never
+        // provisioned. Dropping the notification is right, taking the whole form
+        // submission down with it is not.
+        if(!$user){
+            return;
+        }
         if(!$role_id){
             $role_id=$user->role_id;
         }
@@ -75,7 +81,7 @@ trait NotificationManager
         $role_id=Role::where('role','faculty')->first()->id;
         foreach ($supervisors as $supervisor) {
             $faculty=Faculty::where('faculty_code',$supervisor->faculty_code)->first();
-            $user=$faculty->user;
+            $user=$faculty?->user;
             $this->sendNotification($user,$title,$body,$link,$role_id,$email_req);
         }
     }
@@ -84,22 +90,25 @@ trait NotificationManager
         $role_id=Role::where('role','doctoral')->first()->id;
         foreach ($doctoral as $doctoral) {
             $faculty=Faculty::where('faculty_code',$doctoral->faculty_code)->first();
-            $user=$faculty->user;
+            $user=$faculty?->user;
             $this->sendNotification($user,$title,$body,$link,$role_id,$email_req);
         }
     }
     private function sendHodNotification($student,$title,$body,$link,$email_req=false){
-        $hod=$student->department->hod;
-        $user=$hod->user;
-        $this->sendNotification($user,$title,$body,$link,null,$email_req);
+        $hod=$student->department?->hod;
+        if(!$hod || !$hod->user){
+            return;
+        }
+        $this->sendNotification($hod->user,$title,$body,$link,null,$email_req);
     }
     private function phdCoordinatorNotification($student,$title,$body,$link,$email_req=false){
-        $phdCoordinator=$student->department->phdCoordinators;
-      
+        $phdCoordinator=$student->department?->phdCoordinators;
+        if(!$phdCoordinator){
+            return;
+        }
         foreach ($phdCoordinator as $phdCoordinator) {
             $faculty=Faculty::where('faculty_code',$phdCoordinator->faculty_id)->first();
-            $user= $faculty->user;
-            $this->sendNotification($user,$title,$body,$link,null,$email_req);
+            $this->sendNotification($faculty?->user,$title,$body,$link,null,$email_req);
         }
     }
     
