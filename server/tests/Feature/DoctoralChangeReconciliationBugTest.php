@@ -17,17 +17,10 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 /**
- * Bug tests for SupervisorDoctoralChangeController::applyDoctoralChange: it
- * writes doctoral_commitee only and never reconciles the approval rows IRB
- * submissions and Presentations seed off the committee at the time. Every test
- * here is EXPECTED TO FAIL until that reconciliation lands - each docblock says
- * so explicitly. When the fix ships, these should start passing with no
- * change to the assertions.
- *
- * Fixture helpers are deliberately duplicated from
- * DoctoralChangeReconciliationPreserveTest rather than shared: each file
- * builds its own scholars, faculty and forms, as this codebase's tests do
- * elsewhere (see ExaminerListOverlapTest::makeStudent).
+ * Guards SupervisorDoctoralChangeController::applyDoctoralChange: adding or
+ * removing a committee member must reconcile the approval rows that IRB
+ * submissions and Presentations seed off the committee, not just
+ * doctoral_commitee.
  */
 class DoctoralChangeReconciliationBugTest extends TestCase
 {
@@ -145,10 +138,6 @@ class DoctoralChangeReconciliationBugTest extends TestCase
         ])->assertStatus(201);
     }
 
-    // ------------------------------------------------------------------
-    // IRB submission fixtures
-    // ------------------------------------------------------------------
-
     private const IRB_STEPS = ['student', 'faculty', 'external', 'doctoral', 'hod', 'adordc', 'dordc', 'complete'];
 
     /** @param  array<int, Faculty>  $members */
@@ -202,10 +191,6 @@ class DoctoralChangeReconciliationBugTest extends TestCase
         ]);
     }
 
-    // ------------------------------------------------------------------
-    // Presentation fixtures
-    // ------------------------------------------------------------------
-
     private const PRESENTATION_STEPS = ['student', 'faculty', 'doctoral', 'hod', 'adordc', 'dordc', 'complete'];
 
     /** @param  array<int, Faculty>  $members */
@@ -248,26 +233,10 @@ class DoctoralChangeReconciliationBugTest extends TestCase
         ]);
     }
 
-    // ------------------------------------------------------------------
-    // B1: IRB, member added after seeding, form becomes unadvanceable.
-    // ------------------------------------------------------------------
-
     /**
-     * EXPECTED TO FAIL until applyDoctoralChange reconciles irb_doctoral_approvals.
-     *
-     * IrbSubController::handleDoctoralSubmitForm keys every step off
-     * doctoral_commitee live count vs. approved-row count. A member added
-     * after the doctoral stage was seeded has no approval row.
-     *
-     * Verified against the running code rather than assumed: a missing
-     * approval row is not silently skipped. handleDoctoralSubmitForm reads
-     * ->status off doctoralApprovals()->first(), which is null for this
-     * member, and Laravel's error handler promotes that property-read warning
-     * to a thrown ErrorException. So the observable symptom is not a quiet
-     * no-op - it is the newly added member getting a 403 with a raw PHP
-     * warning as its message every time they try to approve, while the two
-     * original members are stuck at "waiting for others" forever because the
-     * live count can never reach 3 on only 2 approval rows.
+     * A committee member added after the IRB doctoral stage was seeded must
+     * get an approval row of their own, and their approval must count
+     * toward the live committee.
      */
     public function test_irb_member_added_after_seeding_leaves_the_form_stuck(): void
     {
@@ -287,11 +256,8 @@ class DoctoralChangeReconciliationBugTest extends TestCase
         $this->submitIrbDoctoral($form, $second)->assertStatus(201);
         $thirdResponse = $this->submitIrbDoctoral($form, $third);
 
-        // The observable symptom: the third member cannot register an
-        // approval at all - they get a crash-shaped 403, not even a normal
-        // "you're not authorized". Once reconciled, their approval is the
-        // third and last the live committee needs, and it should carry the
-        // form on to 'hod' like anyone else's would.
+        // Third is the last live member needed; their approval should carry
+        // the form on to 'hod' like anyone else's would.
         $thirdResponse->assertStatus(200, 'a committee member in good standing should be able to cast an approval, not crash on a missing row');
         $this->assertSame(
             'hod',
@@ -305,27 +271,10 @@ class DoctoralChangeReconciliationBugTest extends TestCase
         );
     }
 
-    // ------------------------------------------------------------------
-    // B2: IRB, member removed after approving, form advances on a minority
-    // of the live committee.
-    // ------------------------------------------------------------------
-
     /**
-     * EXPECTED TO FAIL until applyDoctoralChange reconciles irb_doctoral_approvals.
-     *
-     * Removing a member leaves their already-'approved' irb_doctoral_approvals
-     * row in place (applyDoctoralChange only touches doctoral_commitee), while
-     * the live committee shrinks by one.
-     *
-     * Verified against the running code rather than assumed, and the result
-     * is the opposite of "stuck": the stale approved row and the shrunk live
-     * count cancel out, so the very next live member to approve makes
-     * approved-count == live-count and the form advances immediately - one
-     * live member short of everyone who is actually still on the committee.
-     * The member who never got a turn (third) then finds doctoral_lock
-     * already true and cannot approve at all. The promise this stage makes
-     * (every live member signed off before it moves on) is broken either way;
-     * this is the concrete way it breaks here.
+     * Removing a committee member after they approved must not leave a
+     * stale approval row that lets the stage complete without every live
+     * member signing off.
      */
     public function test_irb_member_removed_after_approving_lets_the_form_advance_without_every_live_member(): void
     {
@@ -356,21 +305,10 @@ class DoctoralChangeReconciliationBugTest extends TestCase
         $this->assertSame('hod', $form->fresh()->stage);
     }
 
-    // ------------------------------------------------------------------
-    // B3: Presentation, member removed before voting, form becomes unadvanceable.
-    // ------------------------------------------------------------------
-
     /**
-     * EXPECTED TO FAIL until applyDoctoralChange reconciles presentation_reviews.
-     *
-     * PresentationController::doctoralSubmit's completion check only asks
-     * "are there any pending presentation_reviews left", never comparing
-     * against the live committee. Removing a member before they vote leaves
-     * their row 'pending' forever: nothing ever updates it (they can no longer
-     * reach the form to vote) and nothing ever excludes it from the pending
-     * count. Reconciled, removing them should clear their now-meaningless
-     * pending row so the two remaining live members can actually finish the
-     * stage.
+     * Removing a committee member before they vote on a presentation must
+     * clear their pending review row, not leave it blocking completion
+     * forever.
      */
     public function test_presentation_member_removed_before_voting_leaves_an_orphan_pending_row(): void
     {
@@ -408,25 +346,10 @@ class DoctoralChangeReconciliationBugTest extends TestCase
         $this->getJson("/api/presentation/semester/1/{$form->id}")->assertStatus(403);
     }
 
-    // ------------------------------------------------------------------
-    // B4: Presentation, member added after seeding, vote silently discarded.
-    // ------------------------------------------------------------------
-
     /**
-     * EXPECTED TO FAIL until applyDoctoralChange reconciles presentation_reviews.
-     *
-     * A member added after the doctoral stage was seeded has no
-     * presentation_reviews row.
-     *
-     * Verified against the running code rather than assumed: doctoralSubmit
-     * reads ->review_status off PresentationReview::first(), which is null for
-     * this member, and that null-property read is promoted to a thrown
-     * ErrorException the same way it is in IrbSubController. So the newly
-     * added member's own submit crashes with a 403 first, before the "vote is
-     * silently discarded" half of the story even gets a chance to run: the
-     * doctoralSubmit completion check only counts pending rows, never the live
-     * committee, so once the two original members finish, the stage completes
-     * without the new member ever having had a working way to vote at all.
+     * A committee member added after the presentation doctoral stage was
+     * seeded must get a review row of their own and have their vote
+     * counted.
      */
     public function test_presentation_member_added_after_seeding_has_no_say(): void
     {
@@ -442,9 +365,8 @@ class DoctoralChangeReconciliationBugTest extends TestCase
         $this->addDoctoralMemberViaAdmin($student, $third);
         $this->assertSame(3, $student->fresh()->doctoralCommittee->count());
 
-        // Third acts first, before the two original members: reconciled,
-        // their approval should register and wait for the rest, exactly like
-        // a seeded member's would.
+        // Third acts before the two original members; their vote should
+        // register and wait for the rest, like a seeded member's would.
         $thirdResponse = $this->submitPresentationDoctoral($form, $third);
         $thirdResponse->assertStatus(201, 'a newly added committee member should be able to cast an approval and wait for the rest, not crash');
         $this->assertSame(

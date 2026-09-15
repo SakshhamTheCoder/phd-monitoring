@@ -128,10 +128,6 @@ class DoctoralChangeReconciliationPreserveTest extends TestCase
         $this->actingAs($user->fresh(), 'sanctum');
     }
 
-    // ------------------------------------------------------------------
-    // 1. dordcSubmit on IRB Constitution seeds doctoral_commitee, firstOrCreate
-    // ------------------------------------------------------------------
-
     public function test_irb_constitution_dordc_submit_seeds_doctoral_committee_with_internal_type(): void
     {
         $department = $this->makeDepartment();
@@ -224,11 +220,6 @@ class DoctoralChangeReconciliationPreserveTest extends TestCase
             'type' => 'internal',
         ]);
     }
-
-    // ------------------------------------------------------------------
-    // 2 & 3. A committee member can act on the doctoral step of Presentation
-    // and IRB submission regardless of their doctoral_commitee.type.
-    // ------------------------------------------------------------------
 
     public function test_a_committee_member_can_act_on_the_presentation_doctoral_step_regardless_of_type(): void
     {
@@ -325,10 +316,6 @@ class DoctoralChangeReconciliationPreserveTest extends TestCase
         $this->assertSame('hod', $form->fresh()->stage);
     }
 
-    // ------------------------------------------------------------------
-    // 4. admin, doctoral and dordc apply a change immediately.
-    // ------------------------------------------------------------------
-
     private function assertProposeAppliesImmediately(string $role): void
     {
         $department = $this->makeDepartment();
@@ -377,10 +364,6 @@ class DoctoralChangeReconciliationPreserveTest extends TestCase
     {
         $this->assertProposeAppliesImmediately('doctoral');
     }
-
-    // ------------------------------------------------------------------
-    // 5. hod and phd_coordinator create a pending row, needing approveChange.
-    // ------------------------------------------------------------------
 
     private function assertProposeIsQueuedPending(string $role): User
     {
@@ -441,10 +424,6 @@ class DoctoralChangeReconciliationPreserveTest extends TestCase
         $this->assertProposeIsQueuedPending('phd_coordinator');
     }
 
-    // ------------------------------------------------------------------
-    // 6. Scope: doctoral to their own committee, hod to their own department.
-    // ------------------------------------------------------------------
-
     public function test_a_doctoral_committee_member_may_not_propose_for_a_scholar_off_their_committee(): void
     {
         $department = $this->makeDepartment();
@@ -500,10 +479,7 @@ class DoctoralChangeReconciliationPreserveTest extends TestCase
         ])->assertStatus(403);
     }
 
-    // ------------------------------------------------------------------
-    // 7. Student::outsideExpert() reads irb_committees(type=outside) only.
-    // ------------------------------------------------------------------
-
+    // Student::outsideExpert() reads irb_committees(type=outside) only.
     public function test_outside_expert_is_unaffected_by_doctoral_committee_changes(): void
     {
         $department = $this->makeDepartment();
@@ -535,10 +511,6 @@ class DoctoralChangeReconciliationPreserveTest extends TestCase
 
         $this->assertSame($expert->email, $student->fresh()->outsideExpert()->email);
     }
-
-    // ------------------------------------------------------------------
-    // 8. Removing a member removes their access.
-    // ------------------------------------------------------------------
 
     public function test_removing_a_committee_member_revokes_their_form_access(): void
     {
