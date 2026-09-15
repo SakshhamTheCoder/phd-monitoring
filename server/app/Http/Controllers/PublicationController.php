@@ -31,11 +31,10 @@ class PublicationController extends Controller
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
         [$column, $ownerId] = Publication::ownerOf($user);
-        if (!$ownerId) {
-            return response()->json(['message' => 'You have no record to file publications against'], 403);
-        }
 
-        return response()->json(Publication::groupedFor($column, $ownerId));
+        // A UG student who has not applied yet has nothing filed, which is an
+        // empty list rather than an error. 0 matches no owner.
+        return response()->json(Publication::groupedFor($column, $ownerId ?? 0));
     }
     /**
      * Store a newly created publication in storage.

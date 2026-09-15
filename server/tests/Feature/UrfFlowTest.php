@@ -71,6 +71,7 @@ class UrfFlowTest extends TestCase
         $proposal = fn () => UploadedFile::fake()->create('proposal.pdf', 10, 'application/pdf');
 
         // The window is shut until the admin opens it.
+        $this->actingAs($admin, 'sanctum')->postJson('/api/settings/urf', ['applications_open' => 0])->assertOk();
         $this->actingAs($applicant, 'sanctum')->postJson('/api/urf', $form + ['proposal' => $proposal()])->assertStatus(422);
         $this->actingAs($admin, 'sanctum')->postJson('/api/settings/urf', ['applications_open' => 1])->assertOk();
 
@@ -82,6 +83,7 @@ class UrfFlowTest extends TestCase
         $this->actingAs($partner, 'sanctum')->postJson('/api/urf', $form)->assertForbidden();
         $this->actingAs($outsider, 'sanctum')->getJson('/api/urf/mine')->assertOk()->assertJsonPath('application', null);
         $this->actingAs($outsider, 'sanctum')->getJson("/api/urf/{$id}")->assertForbidden();
+        $this->actingAs($outsider, 'sanctum')->getJson('/api/publications')->assertOk()->assertJsonCount(0, 'international');
 
         // The admin list filters by stage and by the filter bar's conditions.
         $filters = fn (array $f) => '/api/urf?filters=' . urlencode(json_encode($f));
