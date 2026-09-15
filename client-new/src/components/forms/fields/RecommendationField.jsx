@@ -11,7 +11,6 @@ const RecommendationField = ({ role, onRecommendationChange, initialValue ,lock=
 
     // Set initial values based on `initialValue` prop
     useEffect(() => {
-        console.log('init', initialValue);
         if (initialValue) {
             const approvalValue = initialValue.approval === 1 ? true : initialValue.approval === 0 ? false : initialValue.approval;
             setApproval(approvalValue);
