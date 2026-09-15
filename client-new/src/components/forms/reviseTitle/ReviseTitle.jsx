@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
-import Student from "./roles/Student";
+import React from "react";
+
 import FormTitleBar from "../formTitleBar/FormTitleBar";
-// import Supervisor from "./roles/Supervisor";
 import Recommendation from "../layouts/Recommendation";
-// import Dordc from "./roles/Dordc";
+import Student from "./roles/Student";
 import RoleBasedWrapper from "../roleWrapper/RoleBasedWrapper";
 
 const ReviseTitle = ({ formData }) => {
@@ -11,24 +10,21 @@ const ReviseTitle = ({ formData }) => {
     <>
       <FormTitleBar formName="Revise Title or Objectives" formData={formData} />
       <div className="form-container">
-        <Student formData={formData}></Student>
         <RoleBasedWrapper
           roleHierarchy={formData.steps}
           currentRole={formData.role}
         >
-          {/* <Supervisor formData={formData}></Supervisor> */}
+          <Student formData={formData} />
           <Recommendation
             formData={formData}
             role="supervisor"
             allowRejection={false}
           ></Recommendation>
-
           <Recommendation
             formData={formData}
             role="hod"
             allowRejection={false}
           ></Recommendation>
-
           <Recommendation
             formData={formData}
             role="dra"
