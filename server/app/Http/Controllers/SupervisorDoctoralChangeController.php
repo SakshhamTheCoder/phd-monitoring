@@ -6,7 +6,11 @@ use App\Models\SupervisorDoctoralChange;
 use App\Models\Supervisor;
 use App\Models\DoctoralCommittee;
 use App\Models\Faculty;
+use App\Models\IrbDoctoralApproval;
+use App\Models\IrbSubForm;
 use App\Models\OutsideExpert;
+use App\Models\Presentation;
+use App\Models\PresentationReview;
 use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -375,10 +379,12 @@ class SupervisorDoctoralChangeController extends Controller
                 'faculty_id' => $facultyCode,
                 'type' => $change->faculty_type,
             ]);
+            $this->reconcileDoctoralApprovals($change->student_id, $facultyCode, null);
         } elseif ($change->change_type === 'remove') {
             DoctoralCommittee::where('student_id', $change->student_id)
                 ->where('faculty_id', $change->old_faculty_code)
                 ->delete();
+            $this->reconcileDoctoralApprovals($change->student_id, null, $change->old_faculty_code);
         } elseif ($change->change_type === 'replace') {
             $doctoral = DoctoralCommittee::where('student_id', $change->student_id)
                 ->where('faculty_id', $change->old_faculty_code)
@@ -386,9 +392,76 @@ class SupervisorDoctoralChangeController extends Controller
 
             if ($doctoral) {
                 $facultyCode = $this->getFacultyCode($change);
+                $oldFacultyCode = $doctoral->faculty_id;
                 $doctoral->faculty_id = $facultyCode;
                 $doctoral->type = $change->faculty_type;
                 $doctoral->save();
+                $this->reconcileDoctoralApprovals($change->student_id, $facultyCode, $oldFacultyCode);
+            }
+        }
+    }
+
+    /**
+     * IRB submissions and Presentations each seed one pending approval row per
+     * doctoral committee member the moment their doctoral stage is entered, and
+     * then decide the stage is done by comparing the approved-row count against
+     * the *live* committee count. If the committee changes afterwards and these
+     * rows are left alone, that comparison goes wrong in both directions: an
+     * added member has no row to vote through (their submit reads a null row),
+     * and a removed member's row keeps being counted (or keeps blocking) for
+     * someone no longer on the committee. This keeps the rows a true mirror of
+     * who is actually seated, for every doctoral-stage form still in flight for
+     * the student, not just one of them - a scholar can have several
+     * presentations open at once, one per semester.
+     */
+    private function reconcileDoctoralApprovals($studentId, $addFacultyCode, $removeFacultyCode)
+    {
+        $irbForms = IrbSubForm::where('student_id', $studentId)
+            ->where('stage', 'doctoral')
+            ->where('completion', '!=', 'complete')
+            ->get();
+
+        foreach ($irbForms as $form) {
+            $seeded = IrbDoctoralApproval::where('irb_sub_form_id', $form->id)->exists();
+            if (!$seeded) {
+                continue;
+            }
+            if ($removeFacultyCode) {
+                IrbDoctoralApproval::where('irb_sub_form_id', $form->id)
+                    ->where('doctoral_id', $removeFacultyCode)
+                    ->delete();
+            }
+            if ($addFacultyCode) {
+                IrbDoctoralApproval::firstOrCreate(
+                    ['irb_sub_form_id' => $form->id, 'doctoral_id' => $addFacultyCode],
+                    ['status' => 'pending']
+                );
+            }
+        }
+
+        $presentations = Presentation::where('student_id', $studentId)
+            ->where('stage', 'doctoral')
+            ->where('completion', '!=', 'complete')
+            ->get();
+
+        foreach ($presentations as $presentation) {
+            $seeded = PresentationReview::where('presentation_id', $presentation->id)
+                ->where('is_supervisor', 0)
+                ->exists();
+            if (!$seeded) {
+                continue;
+            }
+            if ($removeFacultyCode) {
+                PresentationReview::where('presentation_id', $presentation->id)
+                    ->where('is_supervisor', 0)
+                    ->where('faculty_id', $removeFacultyCode)
+                    ->delete();
+            }
+            if ($addFacultyCode) {
+                PresentationReview::firstOrCreate(
+                    ['presentation_id' => $presentation->id, 'is_supervisor' => 0, 'faculty_id' => $addFacultyCode],
+                    ['comments' => '', 'review_status' => 'pending']
+                );
             }
         }
     }
