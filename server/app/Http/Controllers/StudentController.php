@@ -704,13 +704,7 @@ class StudentController extends Controller {
         return optional(Auth::user()?->current_role)->can_manage_students === 'true';
     }
 
-    /**
-     * Department ids the acting adordc may write to, or null when writes are
-     * institute-wide. adordc is the only role with can_manage_students that
-     * lacks can_read_all_students (admin/director/dordc/dra all hold both), so
-     * mirroring the read scoping from list()/get() here is enough to close the
-     * gap without touching any other role.
-     */
+    // Only adordc is scoped here; every other can_manage_students role already holds can_read_all_students.
     private function writableDepartmentIds(): ?array
     {
         $user = Auth::user();
@@ -777,8 +771,7 @@ class StudentController extends Controller {
             'cgpa' => 'nullable|numeric',
         ]);
 
-        // Reassigning department is how an adordc could otherwise pull a scholar
-        // into their remit, or move one out of it and lose them from their lists.
+        // Blocks an adordc from reassigning a scholar into or out of their own scope.
         if ($departmentIds !== null && !in_array((int) $request->department_id, $departmentIds, true)) {
             return response()->json([
                 'message' => 'You do not have permission to move this student to that department. Contact your administrator if you believe this is a mistake.'

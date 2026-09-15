@@ -53,9 +53,6 @@ import ProjectRecruitment from './pages/projects/ProjectRecruitment';
 import Openings from './pages/projects/Openings';
 
 
-// Roles that reach the faculty-side form routes (line 163 below). The
-// student-facing form list route reuses this array plus 'student', so the
-// two lists cannot drift out of sync.
 const FACULTY_FORM_ROLES = [
   'faculty', 'phd_coordinator', 'hod', 'doctoral', 'external',
   'dordc', 'adordc', 'dra', 'director', 'admin',
@@ -122,8 +119,6 @@ const AppContent = () => {
           )}
 
           {/* Dashboard */}
-          {/* Clerk's only capability is attendance, so /home has nothing for
-              them to land on; send them straight to the page they use. */}
           <Route path="/home" element={role === 'clerk' ? <Navigate to="/attendance" replace /> : <Dashboard />} />
           {features.project_management && (role === 'faculty' || role === 'hod' || role === 'phd_coordinator' || role === 'dordc' || role === 'adordc' || role === 'dra' || role === 'director' || role === 'admin') && (
             <>
@@ -162,8 +157,6 @@ const AppContent = () => {
             </>
           )}
 
-          {/* Students reach these from FormGrid's own /forms list, so the gate is the
-              student block plus the faculty-side block below, not just the latter. */}
           {(role === 'student' || FACULTY_FORM_ROLES.includes(role)) && (
             <>
               <Route path="/forms/:form_type" element={<FormListPage />} />
@@ -210,7 +203,6 @@ const AppContent = () => {
           {(role==='clerk' || role==='admin' || role==='student' || role==='hod') && (
             <Route path="/attendance" element={<AttendanceRoute />} />
           )}
-          {/* hod/phd_coordinator manage their own department's areas; DepartmentController scopes them server-side. */}
           {(role === 'admin' || role === 'hod' || role === 'phd_coordinator') && (
             <Route path='/areasOfSpecialization' element={<AreaOfSpecialization />} />
           )}

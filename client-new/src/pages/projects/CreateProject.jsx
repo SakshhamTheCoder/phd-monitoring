@@ -170,10 +170,6 @@ const CreateProject = () => {
     return null;
   };
 
-  // Milestones live behind per-row endpoints (no bulk save), so diff the form
-  // against the project as it was before this edit: rows with no id are new,
-  // rows that kept their id are updated in place, and original ids missing
-  // from the form were removed in the wizard and need deleting server-side.
   const syncMilestones = async (projectId) => {
     const originalIds = new Set((editProject.milestones || []).map(m => m.id));
     const keptIds = new Set(form.milestones.filter(m => m.id).map(m => m.id));

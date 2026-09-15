@@ -42,9 +42,7 @@ class IrbSubController extends Controller
        if($student_id)
          return $this->listFormsStudent($user, IrbSubForm::class, $student_id);
 
-       // The list must match the detail view (loadForm below): phd_coordinator,
-       // dra and external are not steps in this form's chain and loadForm 403s
-       // all three, so they should never see a populated queue either.
+       // Must match loadForm's role set below, phd_coordinator/dra/external 403 there too.
        if (!in_array($user->current_role->role, ['student', 'hod', 'doctoral', 'dordc', 'adordc', 'faculty', 'director', 'admin'], true)) {
            return response()->json(['message' => 'You do not have permission to view revised IRB forms. Contact your administrator if you believe this is a mistake.'], 403);
        }
@@ -149,12 +147,8 @@ class IrbSubController extends Controller
         $request->validate([
             'form_ids' => 'required|array',
         ]);
-        // Bulk-approve only, there is no bulk-reject path for this form.
         $request->merge(['approval' => true]);
         $hasFailure = false;
-        // A missing form is a per-item failure, not a batch abort: the other bulk
-        // endpoints already let a missing form fail its own item via submitForm's
-        // 404 and keep going, so this matches rather than stopping the rest early.
         foreach ($form_ids as $id) {
             $form = IrbSubForm::find($id);
             if (!$form) {

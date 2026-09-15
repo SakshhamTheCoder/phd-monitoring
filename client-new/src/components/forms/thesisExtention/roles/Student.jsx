@@ -17,10 +17,7 @@ const Student = ({ formData }) => {
   const location = useLocation();
   const { setLoading } = useLoading();
 
-  // A second request needs the previous grant attached. The steps array
-  // already carries this: createForm only adds 'director' when the student
-  // has an earlier granted extension, the same check studentSubmit repeats
-  // server side when it decides whether previous_extention_pdf is required.
+  // 'director' in steps means a repeat request; createForm only adds it after an earlier granted extension.
   const isRepeatRequest = formData?.steps?.includes("director");
 
   useEffect(() => {

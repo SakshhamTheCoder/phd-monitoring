@@ -41,10 +41,7 @@ class ListOfExaminersController extends Controller
         if ($student_id)
             return $this->listFormsStudent($user, ListOfExaminersForm::class, $student_id);
 
-        // The list must match the detail view (loadForm below): hod,
-        // phd_coordinator, dra, adordc, doctoral and external are not steps in
-        // this form's chain and loadForm 403s all of them, so they should
-        // never see a populated queue either.
+        // Must match loadForm's role set below, hod/phd_coordinator/dra/adordc/doctoral/external 403 there too.
         if (!in_array($user->current_role->role, ['student', 'dordc', 'director', 'faculty', 'admin'], true)) {
             return response()->json(['message' => 'You do not have permission to view list of examiners forms. Contact your administrator if you believe this is a mistake.'], 403);
         }

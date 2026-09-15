@@ -11,13 +11,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
-/**
- * None of the seven methods here checked anything, so any signed-in user,
- * a student included, could add, edit, delete or bulk-import outside
- * expert records. Reads and writes get their own capability because the
- * page that picks an external supervisor is open to far more roles than
- * the page that manages the records.
- */
 class OutsideExpertController extends Controller
 {
     use FilterLogicTrait, PagenationTrait, AuthorizesCapability;

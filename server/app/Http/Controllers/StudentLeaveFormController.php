@@ -42,10 +42,7 @@ class StudentLeaveFormController extends Controller
     {
         $user = Auth::user();
 
-        // The list must match the detail view (loadForm below): only this
-        // form's own two-step chain plus admin can open a leave record, so
-        // only they should see one in a list. GeneralFormList::listForms is
-        // shared by every form type and has no idea leave is narrower.
+        // Keep in sync with loadForm below, GeneralFormList::listForms doesn't know leave is narrower.
         if (!in_array($user->current_role->role, ['student', 'hod', 'admin'], true)) {
             return response()->json(['message' => 'You do not have permission to view leave forms. Contact your administrator if you believe this is a mistake.'], 403);
         }

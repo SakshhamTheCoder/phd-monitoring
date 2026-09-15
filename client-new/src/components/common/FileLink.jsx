@@ -10,12 +10,8 @@ const DOC_RE = /\.(pdf|docx?|pptx?|xlsx?|odt|txt)$/i;
 export const isFilePath = (val) =>
   typeof val === "string" && DOC_RE.test(val.trim());
 
-// Kept for callers that only need the URL string, not a click handler.
 export const fileUrlFrom = (val) => resolveFileUrl(String(val).trim());
 
-// Red PDF-icon link used wherever a document path is shown in a table. Private
-// paths need a fetch carrying the bearer token, so the click is handled in JS
-// rather than left to plain <a href> navigation.
 const FileLink = ({ value, label = "View" }) => (
   <a
     className="file-cell-link"

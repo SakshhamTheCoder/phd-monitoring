@@ -14,11 +14,7 @@ trait SaveFile
      */
     private $filesPendingDeletion = [];
 
-    /**
-     * The only upload an anonymous applicant needs to see before they log in
-     * or even apply. Everything else is scoped to one scholar or one PI and
-     * has no business on the web-served disk.
-     */
+    // Only public-facing upload; everything else must stay off the web-served disk.
     private const PUBLIC_FORM = 'project_advertisement';
 
     private function saveUploadedFile($file, $formName, $rollNo)
@@ -37,8 +33,6 @@ trait SaveFile
             return '/app/public/' . $filePath;
         }
 
-        // 'local' disk roots at storage/app, outside the storage/public symlink,
-        // so nothing here is reachable without going through an authorized route.
         $filePath = $file->storeAs($folderPath, $fileName, 'local');
         return '/app/' . $filePath;
     }
@@ -104,8 +98,6 @@ trait SaveFile
             return; // external link, not a file we own
         }
 
-        // The disk lives in the path itself: still-public uploads keep the
-        // '/app/public/' prefix, everything moved private does not.
         if (preg_match('#^/?app/public/#', $storedPath)) {
             $disk = 'public';
             $relative = preg_replace('#^/?app/public/#', '', $storedPath);

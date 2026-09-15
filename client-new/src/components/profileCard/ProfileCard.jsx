@@ -28,8 +28,7 @@ const deadlineNote = ({ days_remaining: daysLeft, extensions_granted: granted })
   return `(${daysLeft} days left${extended})`;
 };
 
-// Matches the category labels PublicationController::get groups a scholar's
-// own publications into (sci, non_sci, international, national, book).
+// Keys must match PublicationController::get's grouping keys.
 const PUBLICATION_CATEGORY_LABELS = {
   sci: 'SCI/SCIE/SSCI/ABDC/AHCI Journal',
   non_sci: 'Scopus Journal',
@@ -111,14 +110,9 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
       } else if (res?.response?.message?.includes?.('permission')) {
         setAttendance(null);
       }
-    } catch (e) { /* 403 means viewer lacks permission — hide silently */ }
+    } catch (e) { /* 403 means viewer lacks permission, hide silently */ }
   };
 
-  // Self reads through the unscoped endpoint, unchanged from before. Anyone
-  // else needs the named-scholar endpoint, gated the same as the profile
-  // itself (PublicationController::getForStudent mirrors
-  // StudentController::get). A 403 there just leaves publications unset, so
-  // the sections below stay hidden for a viewer who is not authorized.
   const fetchPublications = async () => {
     const studentId = profile?.database_id || profile?.id;
     const url = permissions.is_self
@@ -177,10 +171,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
     }
   };
 
-  // Row id from getCoursesForStudent, not the course id, matches what
-  // removeStudentFromCourse expects. Confirm first: same interaction as
-  // AdminCourseManagement's catalog row delete, since this is the same kind
-  // of irreversible admin write.
+  // course.id here is the enrollment row id, not the course id.
   const handleRemoveCourse = async (course) => {
     if (!window.confirm(`Remove ${course.course_code} from this scholar's courses?`)) return;
     const response = await customFetch(`${baseURL}/courses/student/remove/${course.id}`, 'DELETE');
@@ -188,7 +179,6 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
       toast.success('Course removed.');
       fetchCourses();
     }
-    // On failure customFetch already toasts the backend's message.
   };
 
   const courseActionsColumn = {
@@ -577,10 +567,6 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
             space={3}
           />
 
-          {/* Rendered once fetchPublications resolves: for the scholar that
-              needs can_manage_own_publications, for any other viewer it needs
-              the server's relationship check (supervises, sits on the
-              committee, department or institute scope) to have passed. */}
           {publications && (
             <>
               <GridContainer
@@ -705,8 +691,6 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
           />
         }
         
-        {/* Privileged edit, distinct from the self-edit button above which only
-            covers the scholar's own limited fields. */}
         <CustomModal
           isOpen={isEditStudentOpen}
           onClose={() => setIsEditStudentOpen(false)}

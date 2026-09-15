@@ -21,18 +21,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
-/**
- * Characterisation tests for SupervisorDoctoralChangeController::applyDoctoralChange
- * and the two forms that seed approval rows off the committee (IRB submission,
- * Presentation), written before applyDoctoralChange is changed to reconcile
- * those seeded rows. Everything here must hold both before and after that fix:
- * it is the safety net, not the thing being changed.
- *
- * Every fixture is built fresh in each test (own department, faculty, student).
- * Reaching into whatever the dev database happens to already contain, keyed on
- * row order, is what broke ClerkLeaveTest and AdordcStudentUpdateScopeTest for
- * months; nothing here repeats that.
- */
 class DoctoralChangeReconciliationPreserveTest extends TestCase
 {
     use DatabaseTransactions;
@@ -91,14 +79,7 @@ class DoctoralChangeReconciliationPreserveTest extends TestCase
         ]);
     }
 
-    /**
-     * A faculty member with a login, made HOD of the department.
-     *
-     * Advancing a form off the doctoral stage notifies the next stage's role
-     * (sendHodNotification reads department->hod->user unguarded), so any test
-     * that lets a doctoral submission succeed needs a real HOD in place or that
-     * notification step throws on a null department->hod.
-     */
+    // Required: sendHodNotification reads department->hod->user unguarded once a form leaves the doctoral stage.
     private function makeHod(Department $department): Faculty
     {
         $hod = $this->makeFaculty($this->makeUser('faculty'), $department);
@@ -108,7 +89,6 @@ class DoctoralChangeReconciliationPreserveTest extends TestCase
         return $hod;
     }
 
-    /** A faculty member with a login, seated on the committee. */
     private function makeCommitteeMember(Student $student, Department $department, string $type = 'internal'): Faculty
     {
         $member = $this->makeFaculty($this->makeUser('faculty'), $department);
@@ -133,9 +113,6 @@ class DoctoralChangeReconciliationPreserveTest extends TestCase
         $department = $this->makeDepartment();
         $student = $this->makeStudent($this->makeUser('student'), $department);
 
-        // The cognate expert already sits on the committee (e.g. nominated twice
-        // across revisions) so firstOrCreate's no-op path is actually exercised,
-        // not just its happy path.
         $cognate = $this->makeFaculty($this->makeUser('faculty'), $department);
         DoctoralCommittee::create([
             'student_id' => $student->roll_no,
@@ -200,8 +177,6 @@ class DoctoralChangeReconciliationPreserveTest extends TestCase
 
         $response->assertOk();
 
-        // firstOrCreate on the cognate is a no-op: still exactly one row, not a
-        // duplicate-key error and not two rows.
         $this->assertSame(
             1,
             DoctoralCommittee::where('student_id', $student->roll_no)
@@ -213,7 +188,6 @@ class DoctoralChangeReconciliationPreserveTest extends TestCase
             'type' => 'internal',
         ]);
 
-        // The chairman expert is newly seeded, also typed internal.
         $this->assertDatabaseHas('doctoral_commitee', [
             'student_id' => $student->roll_no,
             'faculty_id' => $chairman->faculty_code,
@@ -227,7 +201,6 @@ class DoctoralChangeReconciliationPreserveTest extends TestCase
         $this->makeHod($department);
         $student = $this->makeStudent($this->makeUser('student'), $department);
 
-        // type is 'external', which checkDoctoralCommittee does not filter on.
         $member = $this->makeCommitteeMember($student, $department, 'external');
 
         $steps = ['student', 'faculty', 'doctoral', 'hod', 'adordc', 'dordc', 'complete'];
@@ -255,8 +228,6 @@ class DoctoralChangeReconciliationPreserveTest extends TestCase
 
         $this->getJson("/api/presentation/semester/1/{$form->id}")->assertOk();
 
-        // Solo member, so their approval alone satisfies the pending count and
-        // the form leaves the doctoral stage.
         $this->postJson("/api/presentation/semester/1/{$form->id}", [
             'approval' => true,
             'comments' => 'satisfactory',
@@ -325,7 +296,6 @@ class DoctoralChangeReconciliationPreserveTest extends TestCase
         $actorUser = $this->makeUser($role === 'doctoral' ? 'faculty' : $role);
         $actorFaculty = $this->makeFaculty($actorUser, $department);
         if ($role === 'doctoral') {
-            // A committee seat is required for the doctoral-role scope check.
             DoctoralCommittee::create([
                 'student_id' => $student->roll_no,
                 'faculty_id' => $actorFaculty->faculty_code,
@@ -437,7 +407,6 @@ class DoctoralChangeReconciliationPreserveTest extends TestCase
             'faculty_id' => $member->faculty_code,
             'type' => 'internal',
         ]);
-        // Not seated on strangerStudent's committee.
 
         $this->loginAsRole($memberUser, 'doctoral');
 
@@ -449,7 +418,6 @@ class DoctoralChangeReconciliationPreserveTest extends TestCase
             'old_faculty_code' => $member->faculty_code,
         ])->assertStatus(403);
 
-        // Their own committee is untouched by the refused attempt.
         $this->assertDatabaseHas('doctoral_commitee', [
             'student_id' => $ownStudent->roll_no,
             'faculty_id' => $member->faculty_code,
@@ -479,7 +447,6 @@ class DoctoralChangeReconciliationPreserveTest extends TestCase
         ])->assertStatus(403);
     }
 
-    // Student::outsideExpert() reads irb_committees(type=outside) only.
     public function test_outside_expert_is_unaffected_by_doctoral_committee_changes(): void
     {
         $department = $this->makeDepartment();
@@ -503,8 +470,6 @@ class DoctoralChangeReconciliationPreserveTest extends TestCase
         $committeeMember = $this->makeCommitteeMember($student, $department);
         $this->assertSame($expert->email, $student->outsideExpert()->email);
 
-        // Changing doctoral_commitee has nothing to do with who the outside
-        // expert is.
         DoctoralCommittee::where('student_id', $student->roll_no)
             ->where('faculty_id', $committeeMember->faculty_code)->delete();
         $another = $this->makeCommitteeMember($student, $department);

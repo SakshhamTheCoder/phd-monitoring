@@ -10,18 +10,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
-/**
- * adordc is the one role with can_manage_students that lacks can_read_all_students
- * (StudentController::writableDepartmentIds), so before this fix an adordc
- * could provision any scholar in the institute through adminUpdate, not just
- * the departments they administer, the same gap list()/get() had already
- * closed on the read side.
- *
- * departments.adordc_id has no unique constraint, so pointing it at a faculty
- * code for the duration of one transaction is a cheap, realistic fixture: it
- * is exactly how the column is meant to be set, just done directly instead of
- * through the officer CSV import.
- */
 class AdordcStudentUpdateScopeTest extends TestCase
 {
     use DatabaseTransactions;
@@ -49,8 +37,7 @@ class AdordcStudentUpdateScopeTest extends TestCase
 
         $department->adordc_id = $faculty->faculty_code;
         $department->save();
-        // Belt and braces: make sure the faculty picked is not also the
-        // outsider department's adordc by coincidence of seed data.
+        // Guard against seed data coincidentally making this faculty the outsider department's adordc too.
         if ($notFor->adordc_id === $faculty->faculty_code) {
             $notFor->adordc_id = null;
             $notFor->save();

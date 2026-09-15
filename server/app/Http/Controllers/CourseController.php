@@ -11,12 +11,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
-/**
- * add, update, delete and importCoursesFromCSV are gated on can_manage_courses:
- * before this, any signed-in user, a student included, could rewrite or delete
- * any course in the catalog. list, listFilters and getAllCourses stay open:
- * they are catalog data used by student-facing screens.
- */
 class CourseController extends Controller
 {
     use FilterLogicTrait, PagenationTrait, AuthorizesCapability;

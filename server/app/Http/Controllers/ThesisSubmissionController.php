@@ -31,9 +31,7 @@ class ThesisSubmissionController extends Controller
        if($student_id)
          return $this->listFormsStudent($user, ThesisSubmission::class, $student_id);
 
-       // The list must match the detail view (loadForm below): doctoral and
-       // external are not steps in this form's chain and loadForm 403s both,
-       // so they should never see a populated queue either.
+       // Keep in sync with loadForm below, it 403s doctoral/external.
        if (!in_array($user->current_role->role, ['student', 'hod', 'phd_coordinator', 'adordc', 'dra', 'dordc', 'faculty', 'director', 'admin'], true)) {
            return response()->json(['message' => 'You do not have permission to view thesis submission forms. Contact your administrator if you believe this is a mistake.'], 403);
        }

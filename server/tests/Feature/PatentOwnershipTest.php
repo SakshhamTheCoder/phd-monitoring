@@ -9,14 +9,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
-/**
- * PatentsController::index and ::update both trusted the caller's student
- * relation for reads but, before the fix, update() never checked it before
- * writing: a student could post another scholar's patent id and either edit
- * it or hand it to themselves by including student_id in the body. The
- * ownership check now runs before any field is touched, so the takeover
- * itself is the thing to prove stays closed, not just that the write 403s.
- */
 class PatentOwnershipTest extends TestCase
 {
     use DatabaseTransactions;
@@ -42,8 +34,7 @@ class PatentOwnershipTest extends TestCase
 
     private function patentFor(Student $owner): Patent
     {
-        // 'authors' is not in Patent::$fillable, so it has to be set as a
-        // direct property assignment rather than through create().
+        // authors isn't fillable on Patent, so it must be set after create() as a direct property assignment.
         $patent = Patent::create([
             'student_id' => $owner->roll_no,
             'title' => 'Parity test patent ' . uniqid(),
@@ -107,8 +98,6 @@ class PatentOwnershipTest extends TestCase
             'doi_link' => 'https://example.invalid/hijacked',
             'year' => '2025',
             'country' => 'National',
-            // The takeover attempt: reassigning the patent to the attacker's
-            // own roll number.
             'student_id' => $attacker->roll_no,
         ])->assertStatus(403);
 

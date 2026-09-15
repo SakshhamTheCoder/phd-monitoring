@@ -16,12 +16,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
-/**
- * Guards SupervisorDoctoralChangeController::applyDoctoralChange: adding or
- * removing a committee member must reconcile the approval rows that IRB
- * submissions and Presentations seed off the committee, not just
- * doctoral_commitee.
- */
 class DoctoralChangeReconciliationBugTest extends TestCase
 {
     use DatabaseTransactions;
@@ -80,8 +74,7 @@ class DoctoralChangeReconciliationBugTest extends TestCase
         ]);
     }
 
-    /** HOD is needed once a form leaves the doctoral stage: the move-on
-     * notification reads department->hod->user unguarded. */
+    // Required: the move-on notification reads department->hod->user unguarded.
     private function makeHod(Department $department): Faculty
     {
         $hod = $this->makeFaculty($this->makeUser('faculty'), $department);
@@ -233,11 +226,6 @@ class DoctoralChangeReconciliationBugTest extends TestCase
         ]);
     }
 
-    /**
-     * A committee member added after the IRB doctoral stage was seeded must
-     * get an approval row of their own, and their approval must count
-     * toward the live committee.
-     */
     public function test_irb_member_added_after_seeding_leaves_the_form_stuck(): void
     {
         $department = $this->makeDepartment();
@@ -256,8 +244,6 @@ class DoctoralChangeReconciliationBugTest extends TestCase
         $this->submitIrbDoctoral($form, $second)->assertStatus(201);
         $thirdResponse = $this->submitIrbDoctoral($form, $third);
 
-        // Third is the last live member needed; their approval should carry
-        // the form on to 'hod' like anyone else's would.
         $thirdResponse->assertStatus(200, 'a committee member in good standing should be able to cast an approval, not crash on a missing row');
         $this->assertSame(
             'hod',
@@ -271,11 +257,6 @@ class DoctoralChangeReconciliationBugTest extends TestCase
         );
     }
 
-    /**
-     * Removing a committee member after they approved must not leave a
-     * stale approval row that lets the stage complete without every live
-     * member signing off.
-     */
     public function test_irb_member_removed_after_approving_lets_the_form_advance_without_every_live_member(): void
     {
         $department = $this->makeDepartment();
@@ -292,24 +273,16 @@ class DoctoralChangeReconciliationBugTest extends TestCase
         $this->removeDoctoralMemberViaAdmin($student, $first);
         $this->assertSame(2, $student->fresh()->doctoralCommittee->count());
 
-        // second is only one of the two live members left (second, third).
-        // Their approval alone must not be enough to complete the stage.
         $this->submitIrbDoctoral($form, $second)->assertStatus(
             201,
             'second is one of two live members; the stale approval from the removed member must not count towards completion'
         );
         $this->assertSame('doctoral', $form->fresh()->stage);
 
-        // Only once third also approves should the stage complete.
         $this->submitIrbDoctoral($form, $third)->assertOk();
         $this->assertSame('hod', $form->fresh()->stage);
     }
 
-    /**
-     * Removing a committee member before they vote on a presentation must
-     * clear their pending review row, not leave it blocking completion
-     * forever.
-     */
     public function test_presentation_member_removed_before_voting_leaves_an_orphan_pending_row(): void
     {
         $department = $this->makeDepartment();
@@ -339,18 +312,11 @@ class DoctoralChangeReconciliationBugTest extends TestCase
             'the stage should complete once every live member has approved, unblocked by a removed member\'s stale row'
         );
 
-        // Access is already correctly revoked today (see the preserve test for
-        // this); it stays revoked after the fix too.
         $secondUser = User::findOrFail($second->user_id);
         $this->loginAsRole($secondUser, 'doctoral');
         $this->getJson("/api/presentation/semester/1/{$form->id}")->assertStatus(403);
     }
 
-    /**
-     * A committee member added after the presentation doctoral stage was
-     * seeded must get a review row of their own and have their vote
-     * counted.
-     */
     public function test_presentation_member_added_after_seeding_has_no_say(): void
     {
         $department = $this->makeDepartment();
@@ -365,8 +331,6 @@ class DoctoralChangeReconciliationBugTest extends TestCase
         $this->addDoctoralMemberViaAdmin($student, $third);
         $this->assertSame(3, $student->fresh()->doctoralCommittee->count());
 
-        // Third acts before the two original members; their vote should
-        // register and wait for the rest, like a seeded member's would.
         $thirdResponse = $this->submitPresentationDoctoral($form, $third);
         $thirdResponse->assertStatus(201, 'a newly added committee member should be able to cast an approval and wait for the rest, not crash');
         $this->assertSame(
@@ -379,8 +343,6 @@ class DoctoralChangeReconciliationBugTest extends TestCase
         $this->submitPresentationDoctoral($form, $first);
         $this->submitPresentationDoctoral($form, $second);
 
-        // The step must only complete once all three live members --
-        // including the one added after seeding -- have actually voted.
         $this->assertSame(
             'hod',
             $form->fresh()->stage,

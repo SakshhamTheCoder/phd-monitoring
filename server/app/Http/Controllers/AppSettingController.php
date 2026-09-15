@@ -10,8 +10,7 @@ use Illuminate\Support\Facades\Auth;
 /**
  * Read and write one group of settings. Both endpoints are group-agnostic:
  * what a group contains, who may read it and what a write must pass all come
- * from AppSetting::GROUPS, except 'leave', which has its own capability
- * column (can_read_leave_settings) and is checked through that instead.
+ * from AppSetting::GROUPS, except 'leave' (checked via can_read_leave_settings).
  */
 class AppSettingController extends Controller
 {

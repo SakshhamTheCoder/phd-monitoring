@@ -8,14 +8,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
-/**
- * Every AdminFormController endpoint used to have no authorization check at
- * all: the only gate was a localStorage flag the browser sent, which any
- * authenticated user could set. That made every scholar's form state
- * (stage, locks, availability, instance count) writable by anyone signed in,
- * the widest hole on this branch. It is fixed with can_manage_form_levels,
- * admin only, via the AuthorizesCapability trait.
- */
 class AdminFormAuthorizationTest extends TestCase
 {
     use DatabaseTransactions;
@@ -48,11 +40,6 @@ class AdminFormAuthorizationTest extends TestCase
             ->assertStatus(200);
     }
 
-    /**
-     * The same gate on a second endpoint, so a fix scoped to one route in the
-     * controller (as the original bug fix for D19 was) cannot hide a sibling
-     * left open.
-     */
     public function test_a_faculty_member_cannot_disable_a_students_form(): void
     {
         $student = Student::query()->firstOrFail();
@@ -74,9 +61,7 @@ class AdminFormAuthorizationTest extends TestCase
             'form_type' => 'irb-constitution',
         ]);
 
-        // "Form not found" (404) is a legitimate outcome when the scholar has
-        // no irb-constitution entry yet; what matters is that the capability
-        // gate itself, a 403, never fires for the admitted role.
+        // 404 is fine here, a missing form record; only the 403 gate matters.
         $this->assertNotSame(403, $response->getStatusCode());
     }
 }

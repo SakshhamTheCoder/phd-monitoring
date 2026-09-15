@@ -22,11 +22,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-/**
- * Every endpoint below is gated on can_manage_form_levels: the same capability
- * FormLevelController already requires for approval-stage changes, since these
- * routes can do the same thing (and more) to any student's forms.
- */
 class AdminFormController extends Controller
 {
     use AuthorizesCapability;
@@ -52,7 +47,7 @@ class AdminFormController extends Controller
         'supervisor-allocation' => [
             'form_name' => 'Supervisor Allocation Form',
             'max_count' => 1,
-            // 'complete' added: synced to SupervisorAllocationController's own $steps array.
+            // keep in sync with SupervisorAllocationController's $steps
             'steps' => ['student', 'phd_coordinator', 'hod', 'complete']
         ],
         'irb-constitution' => [
@@ -88,7 +83,7 @@ class AdminFormController extends Controller
         'list-of-examiners' => [
             'form_name' => 'List of Examiners',
             'max_count' => 1,
-            // 'hod' removed: synced to migration 2026_09_13_000001_drop_the_hod_step_from_list_of_examiners.
+            // keep in sync with the list-of-examiners step config
             'steps' => [            'faculty',
             'dordc',
             'director',
@@ -97,7 +92,7 @@ class AdminFormController extends Controller
         'synopsis-submission' => [
             'form_name' => 'Synopsis Submission',
             'max_count' => 1,
-            // 'doctoral' added: synced to SynopsisSubmissionController's own $steps array.
+            // keep in sync with SynopsisSubmissionController's $steps
             'steps' => ['student', 'faculty', 'doctoral',  'phd_coordinator', 'hod', 'dra','adordc' ,'dordc', 'director',  'complete']
         ],
         'thesis-submission' => [
@@ -113,8 +108,6 @@ class AdminFormController extends Controller
         ],
         'revise-title' => [
             'form_name' => 'Revise Title or Objectives',
-            // No cap specified by product; matches the other situational
-            // (as-needed) forms rather than a mandatory once-only submission.
             'max_count' => 10,
             'steps' => ['student', 'faculty', 'hod', 'dra', 'dordc', 'complete']
         ],

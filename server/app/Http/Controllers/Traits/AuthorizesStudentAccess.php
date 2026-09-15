@@ -5,12 +5,7 @@ namespace App\Http\Controllers\Traits;
 use App\Models\Student;
 use Illuminate\Support\Facades\Auth;
 
-/**
- * PublicationController and PatentsController both hand-wrote the same
- * canViewStudent() to mirror StudentController::get's scoping: whoever may
- * open a scholar's profile may read what is on it. One copy means the two
- * endpoints cannot drift apart the way list() and get() once did.
- */
+// Must mirror StudentController::get's scoping, or student data visibility drifts between endpoints.
 trait AuthorizesStudentAccess
 {
     private function canViewStudent(Student $student): bool

@@ -30,9 +30,7 @@ class Role extends Model
         'can_add_department',
         'can_read_external',
         'can_edit_external',
-        // Everything below was added after this table's original 28 columns.
-        // Listed here in the order their migrations introduced them, so a mass
-        // assignment through this model no longer silently drops them.
+        // Every capability column must be listed here, a missing one silently drops on mass assignment.
         'can_read_committee_students',
         'can_manage_users',
         'can_manage_form_levels',

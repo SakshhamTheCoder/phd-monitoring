@@ -237,9 +237,7 @@ class UserManagementController extends Controller
             return response()->json(['message' => 'Cannot delete your own account'], 403);
         }
 
-        // student.user_id/faculty.user_id are onDelete('cascade'), so deleting
-        // this user also deletes the linked scholar or faculty record. That
-        // consequence needs its own capability, on top of can_manage_users.
+        // Deleting a user cascades to their student/faculty record, so it needs its own capability check.
         if ($user->student && ($denied = $this->denyUnlessMay('can_delete_students', 'You do not have permission to delete a student. Contact your administrator if you believe this is a mistake.'))) return $denied;
 
         if ($user->faculty && ($denied = $this->denyUnlessMay('can_delete_faculties', 'You do not have permission to delete a faculty member. Contact your administrator if you believe this is a mistake.'))) return $denied;

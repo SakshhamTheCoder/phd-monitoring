@@ -34,9 +34,6 @@ class ReviseTitleForm extends Model
         parent::__construct($attributes);
     }
 
-    /**
-     * Get the full form data including common fields.
-     */
     public function fullForm($user)
     {
         $commonJSON = $this->fullCommonForm($user);

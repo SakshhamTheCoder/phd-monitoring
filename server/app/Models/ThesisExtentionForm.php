@@ -50,7 +50,7 @@ class ThesisExtentionForm extends Model
                     'reason' => $extention->reason,
                 ];
             }),
-            // No dedicated grant-date column exists on thesis_extentions; created_at is the record of when the extension was granted.
+            // No grant-date column exists; created_at stands in for it.
             'date_of_extention' => optional($this->student->thesisExtentions->first())->created_at,
         ]);
     }

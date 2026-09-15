@@ -33,10 +33,7 @@ class SupervisorAllocationController extends Controller
         if ($student_id)
             return $this->listFormsStudent($user, SupervisorAllocation::class, $student_id);
 
-        // The list must match the detail view (loadForm below): dra, dordc,
-        // faculty, adordc, doctoral and external are not steps in this form's
-        // chain and loadForm 403s all of them, so they should never see a
-        // populated queue either.
+        // Keep in sync with loadForm below, it 403s dra/dordc/faculty/adordc/doctoral/external.
         if (!in_array($user->current_role->role, ['student', 'hod', 'phd_coordinator', 'director', 'admin'], true)) {
             return response()->json(['message' => 'You do not have permission to view supervisor allocation forms. Contact your administrator if you believe this is a mistake.'], 403);
         }
@@ -157,10 +154,7 @@ class SupervisorAllocationController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
 
-        // Every row below runs through coordinatorSubmit, which checks the acting
-        // faculty against the student's department coordinator, so only a
-        // phd_coordinator can ever pass it. Admin was previously let in here but
-        // failed on every row.
+        // Admin removed on purpose, coordinatorSubmit below would fail it on every row anyway.
         if ($role->role != 'phd_coordinator') {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }

@@ -40,15 +40,6 @@ class ClerkController extends Controller
     }
 
     /**
-     * The department ids $role may act within, or the 403 to return.
-     *
-     * Both resolveDepartmentScope() below (every roster/export/summary
-     * endpoint, which accepts an optional department_id override) and
-     * studentAttendance()'s clerk branch (a single-record lookup with no
-     * department_id parameter of its own, so it always passes null) route
-     * through here, so a future scoping rule cannot apply to one and not
-     * the other.
-     *
      * @return array<int, int>|null|\Illuminate\Http\JsonResponse
      */
     private function departmentScopeFor(string $role, mixed $requestedDepartmentId)
@@ -69,9 +60,6 @@ class ClerkController extends Controller
     }
 
     /**
-     * Reads department_id off the request and delegates to departmentScopeFor().
-     *
-     * @see self::departmentScopeFor() for why this wrapper exists separately.
      * @return array<int, int>|null|\Illuminate\Http\JsonResponse
      */
     private function resolveDepartmentScope(Request $request, string $role)
@@ -109,8 +97,7 @@ class ClerkController extends Controller
     {
         $user = Auth::user();
 
-        // This same capability also gates save(): both admin and clerk can write.
-        // The two differ later, save()'s edit-window restriction applies only to role clerk, not admin.
+        // can_mark_attendance also gates save(); its edit-window restriction applies only to clerk, not admin.
         if (!$user->may('can_mark_attendance')) {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
@@ -653,9 +640,6 @@ class ClerkController extends Controller
             case 'dra':
             case 'dordc':
             case 'clerk':
-                // clerk allowed if student in their departments. No department_id
-                // override here: this route is keyed by roll_no, not a roster, so
-                // departmentScopeFor() is always asked for the full set (null).
                 if ($role === 'clerk') {
                     $deptIds = $this->departmentScopeFor($role, null);
                     if ($deptIds instanceof \Illuminate\Http\JsonResponse) return $deptIds;
@@ -830,7 +814,7 @@ class ClerkController extends Controller
     }
 
     // -----------------------------------------------------------------------
-    // Admin-side clerk management: every endpoint below is admin-only.
+    // Admin-side clerk management
     // -----------------------------------------------------------------------
 
     /**

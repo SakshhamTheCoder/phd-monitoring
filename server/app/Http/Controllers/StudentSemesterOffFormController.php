@@ -39,9 +39,7 @@ class StudentSemesterOffFormController extends Controller
        if($student_id)
          return $this->listFormsStudent($user, StudentSemesterOffForm::class, $student_id);
 
-       // The list must match the detail view (loadForm below): adordc,
-       // doctoral and external are not steps in this form's chain and loadForm
-       // 403s all three, so they should never see a populated queue either.
+       // Keep in sync with loadForm below, it 403s adordc/doctoral/external.
        if (!in_array($user->current_role->role, ['student', 'hod', 'phd_coordinator', 'dra', 'dordc', 'director', 'faculty', 'admin'], true)) {
            return response()->json(['message' => 'You do not have permission to view semester off forms. Contact your administrator if you believe this is a mistake.'], 403);
        }

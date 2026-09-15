@@ -5,10 +5,6 @@ namespace Tests\Unit;
 use App\Http\Middleware\LogRequestResponse;
 use Tests\TestCase;
 
-/**
- * logBody is private, so reach it through a reflection helper rather than
- * loosening the middleware's visibility for a test.
- */
 class LogRequestResponseTest extends TestCase
 {
     private function logBody(array $body)

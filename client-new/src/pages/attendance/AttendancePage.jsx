@@ -233,9 +233,6 @@ const AttendancePage = () => {
     const token = localStorage.getItem('token');
     const params = new URLSearchParams({ from: exportFrom, to: exportTo, summary: '1' });
     if (exportDept) params.set('department_id', exportDept);
-    // Reuses the same roll number the scholar filter already resolved for
-    // the history tab, so the export narrows only when that filter names
-    // exactly one scholar.
     if (filteredRoll) params.set('roll_no', filteredRoll);
     const res = await fetch(baseURL + `/clerks/attendance/export?${params.toString()}`, { headers: { Authorization: `Bearer ${token}` } });
     if (!res.ok) { toast.error('Export failed.'); return; }

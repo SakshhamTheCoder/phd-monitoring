@@ -323,11 +323,7 @@ trait GeneralFormSubmitter
                 break;
 
             case 'external':
-                // The token flow (ExternalReviewController::submit -> IrbSubForm::handleApproval)
-                // already matches the token's email to the assigned expert before this runs, so this
-                // is redundant for that path today. It exists for any future caller that reaches
-                // submitForm(..., 'external', ...) without going through that token check: fail
-                // closed unless the acting identity is the student's registered outside expert.
+                // Looks redundant with the token check upstream, but stays as a fail-closed guard for other callers.
                 $expertEmail = $formInstance->student?->outsideExpert()?->email;
                 if (!$expertEmail || strcasecmp($expertEmail, (string) $user->email) !== 0) {
                     throw new \Exception('You are not authorized to access this resource');

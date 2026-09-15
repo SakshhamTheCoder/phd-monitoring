@@ -4,9 +4,6 @@ import { baseURL } from './urls';
 import { customFetch } from './base';
 import { resolveFileUrl } from './fileAccess';
 
-// Turn a stored path into a servable URL. Only safe for a plain <a href> when
-// the path is public or an external link; private paths need openStoredFile
-// (see fileAccess.js) since a browser navigation cannot send the bearer token.
 export const fileUrl = resolveFileUrl;
 
 // ---- mappers: backend -> frontend ----

@@ -44,9 +44,6 @@ class RoleCapabilityMatrixTest extends TestCase
         'can_read_department_faculties' => ['hod', 'phd_coordinator', 'adordc'],
 
         // FacultyController::add/update/upload, StudentController::add/bulk*
-        // phd_coordinator was added by 2026_09_11_000001 once FacultyController
-        // scoped these writes to the writer's own department. The grant is
-        // wider than the pre-swap set on purpose.
         'can_manage_faculties' => ['admin', 'adordc', 'director', 'dordc', 'dra', 'phd_coordinator'],
         'can_manage_students' => ['admin', 'adordc', 'director', 'dordc', 'dra'],
 
@@ -61,8 +58,7 @@ class RoleCapabilityMatrixTest extends TestCase
 
         // Admin-only controllers
         'can_manage_users' => ['admin'],
-        // UserManagementController::delete, the cascade guard for a
-        // student-backed or faculty-backed account.
+        // UserManagementController::delete
         'can_delete_students' => ['admin'],
         'can_delete_faculties' => ['admin'],
         'can_manage_form_levels' => ['admin'],

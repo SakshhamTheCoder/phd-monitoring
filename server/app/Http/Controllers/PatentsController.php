@@ -31,12 +31,7 @@ class PatentsController extends Controller
         return response()->json($patents);
     }
 
-    /**
-     * A named scholar's patents, for a viewer other than the scholar. Gating
-     * matches PublicationController::getForStudent: mirrors
-     * StudentController::get's scoping rather than can_manage_students, since
-     * that capability would exclude the scholar's own supervisor.
-     */
+    // Scoping mirrors StudentController::get, not can_manage_students, or the supervisor loses access.
     public function getForStudent($studentId)
     {
         $student = Student::find($studentId);
@@ -106,8 +101,7 @@ class PatentsController extends Controller
             if (!$user->may('can_manage_own_publications')) {
                 return response()->json(['message' => 'You do not have permission to edit patents. Contact your administrator if you believe this is a mistake.'], 403);
             }
-            // Ownership check must run before any field is touched, otherwise a student
-            // could edit or reassign another student's patent by posting its id.
+            // Check ownership before touching fields, or a student could reassign another student's patent by id.
             if ($patents->student_id != $user->student->roll_no) {
                 return response()->json(['message' => 'You do not have permission to edit this patent. Contact your administrator if you believe this is a mistake.'], 403);
             }

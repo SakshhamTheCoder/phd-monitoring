@@ -79,16 +79,7 @@ class StudentAttendanceReadTest extends TestCase
         $this->assertSame('approved', $leave['status']);
     }
 
-    /**
-     * A scholar created fresh for this test, with no attendance history.
-     *
-     * firstOrFail() picks up whatever scholar the dev database sorts first,
-     * who already carries attendance rows of their own within September
-     * 2026. Scoping the query's date range narrower wouldn't help either,
-     * since there's no guarantee none of those pre-existing rows land
-     * inside it too. A scholar with no rows at all makes `records` and
-     * `summary` describe only what this test wrote.
-     */
+    // Needs a scholar with no pre-existing attendance rows, or records/summary would include them.
     private function isolatedStudent(): Student
     {
         $user = User::create([
@@ -102,8 +93,6 @@ class StudentAttendanceReadTest extends TestCase
         ]);
 
         $student = Student::create([
-            // Derived rather than a fixed constant: dev-database roll numbers
-            // are not confined to a small range reserved for tests.
             'roll_no' => (int) Student::max('roll_no') + 1,
             'user_id' => $user->id,
             'date_of_registration' => now()->subYear()->toDateString(),

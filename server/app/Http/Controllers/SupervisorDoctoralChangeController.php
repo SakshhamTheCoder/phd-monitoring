@@ -128,10 +128,7 @@ class SupervisorDoctoralChangeController extends Controller
                 ], 403);
             }
         } elseif ($role === 'doctoral') {
-            // Every faculty-shaped role carries 'doctoral' (User::ROLE_GRANTS) and
-            // RoleRequirements only checks for a Faculty record, so without this a
-            // faculty member could switch to "Doctoral Committee" and apply this
-            // change (below) to any scholar, not just one they sit on.
+            // Without this, any faculty member could switch to Doctoral Committee and manage a scholar they don't sit on.
             if (!$student->checkDoctoralCommittee($user->faculty?->faculty_code)) {
                 return response()->json([
                     'message' => 'You can only manage students on your doctoral committee'
@@ -401,19 +398,7 @@ class SupervisorDoctoralChangeController extends Controller
         }
     }
 
-    /**
-     * IRB submissions and Presentations each seed one pending approval row per
-     * doctoral committee member the moment their doctoral stage is entered, and
-     * then decide the stage is done by comparing the approved-row count against
-     * the *live* committee count. If the committee changes afterwards and these
-     * rows are left alone, that comparison goes wrong in both directions: an
-     * added member has no row to vote through (their submit reads a null row),
-     * and a removed member's row keeps being counted (or keeps blocking) for
-     * someone no longer on the committee. This keeps the rows a true mirror of
-     * who is actually seated, for every doctoral-stage form still in flight for
-     * the student, not just one of them - a scholar can have several
-     * presentations open at once, one per semester.
-     */
+    // Keeps IRB/presentation approval rows in sync with the live committee, a stale row breaks the approved-count check either way.
     private function reconcileDoctoralApprovals($studentId, $addFacultyCode, $removeFacultyCode)
     {
         $irbForms = IrbSubForm::where('student_id', $studentId)

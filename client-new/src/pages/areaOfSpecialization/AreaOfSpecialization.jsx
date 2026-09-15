@@ -34,10 +34,7 @@ const AreaOfSpecialization = () => {
   const location = useLocation();
   const can = useCapabilities();
 
-  // hod and phd_coordinator manage only their own department's areas. There is
-  // no can_* capability for this carve-out (DepartmentController admits them
-  // by role, then scopes them, in denyUnlessMayManageDepartment), so this
-  // mirrors that with the same role check rather than inventing a capability.
+  // No can_* capability covers this scoping, so it's a role check on purpose, not an oversight.
   const role = localStorage.getItem('userRole');
   const isDepartmentScoped = role === 'hod' || role === 'phd_coordinator';
 
@@ -66,9 +63,7 @@ const AreaOfSpecialization = () => {
     }
   };
 
-  // hod/phd_coordinator cannot read GET /departments (that needs
-  // can_add_department), so their own department comes from the areas list
-  // endpoint instead, which already resolves it to scope that same list.
+  // hod/phd_coordinator can't call GET /departments, so this reads the scoped department off the areas list endpoint instead.
   const fetchMyDepartment = async () => {
     try {
       const response = await customFetch(

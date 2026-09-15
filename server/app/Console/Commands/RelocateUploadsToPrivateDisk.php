@@ -6,23 +6,13 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
-/**
- * Moves everything under storage/app/public/uploads (web-served, the D12 hole)
- * to the private 'local' disk, and rewrites the DB columns that hold the old
- * '/app/public/...' paths to the new '/app/...' shape. Advertisement uploads
- * are excluded: PublicOpeningController::advertisement serves them to
- * anonymous applicants on purpose, so they stay put.
- *
- * Safe to run twice: a file already at its destination is left alone, and the
- * DB rewrite only touches rows still holding the old prefix.
- */
+// Advertisement uploads stay excluded, PublicOpeningController::advertisement serves them publicly on purpose.
 class RelocateUploadsToPrivateDisk extends Command
 {
     protected $signature = 'uploads:relocate-to-private {--dry-run : Report what would move without touching anything}';
 
     protected $description = 'Move private uploads off the public disk and onto the private local disk (audit D12)';
 
-    /** [table, column] pairs holding a SaveFile-produced path. advertisement_path is deliberately absent. */
     private const PATH_COLUMNS = [
         ['constitute_of_irb', 'irb_pdf'],
         ['irb_sub_forms', 'revised_irb_pdf'],

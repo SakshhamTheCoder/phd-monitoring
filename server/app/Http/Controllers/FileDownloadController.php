@@ -8,25 +8,11 @@ use App\Models\Project;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
-/**
- * Streams uploads off the private 'local' disk. Every route here sits behind
- * auth:sanctum: the reported hole was anonymous access, and closing that is
- * this pass's job. See download() for what auth:sanctum alone does not cover.
- */
 class FileDownloadController extends Controller
 {
     use ProjectAuthorizes;
 
-    /**
-     * GET /api/files/download/{path}: generic form-attachment download.
-     *
-     * ponytail: auth:sanctum proves the requester is logged in, not that they
-     * own this particular record. A logged-in user who knows or guesses another
-     * scholar's path can still fetch it. Ceiling: acceptable for this pass,
-     * since it removes the anonymous internet-wide exposure the audit flagged.
-     * Upgrade path: short-lived signed URLs minted by the endpoint that already
-     * authorizes the form (URL::temporarySignedRoute), replacing this route.
-     */
+    // ponytail: auth:sanctum only proves login, not ownership; upgrade to signed URLs (URL::temporarySignedRoute) if that's not tight enough.
     public function download($path)
     {
         $relative = $this->resolvePrivateUploadPath($path);
@@ -37,12 +23,6 @@ class FileDownloadController extends Controller
         return Storage::disk('local')->response($relative);
     }
 
-    /**
-     * GET /api/applications/{applicationId}/resume: the worst case in the
-     * audit (a resume, contact details and a cover note), so this reuses the
-     * exact owns() check PositionApplicationController::index already applies
-     * to the same data instead of falling back to the generic gate above.
-     */
     public function resume($applicationId)
     {
         $application = PositionApplication::find($applicationId);
@@ -67,13 +47,7 @@ class FileDownloadController extends Controller
         return Storage::disk('local')->response($relative);
     }
 
-    /**
-     * Reduce a stored path (or a requested one) to a path relative to the
-     * 'local' disk root, refusing anything that is not really inside its
-     * uploads/ folder. realpath() collapses '..' and symlinks, so a traversal
-     * attempt or an absolute path smuggled in resolves outside the uploads
-     * root and gets rejected here rather than trusted.
-     */
+    // realpath() collapses '..'/symlinks so traversal attempts resolve outside uploads/ and get rejected.
     private function resolvePrivateUploadPath($path)
     {
         $relative = ltrim((string) preg_replace('#^/?app/#', '', $path), '/');
@@ -87,8 +61,7 @@ class FileDownloadController extends Controller
             return null;
         }
 
-        // Return the realpath-derived relative path, not the raw input, so a
-        // harmless-but-unresolved '..' segment can never reach Storage/Flysystem.
+        // Uses the realpath-derived path, not raw input, so a stray '..' can't reach Storage/Flysystem.
         return 'uploads' . str_replace(DIRECTORY_SEPARATOR, '/', substr($full, strlen($root)));
     }
 }

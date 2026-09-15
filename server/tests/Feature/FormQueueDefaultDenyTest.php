@@ -8,16 +8,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
-/**
- * D15: a scholar's form list is built by a per-role switch (GeneralFormList
- * and UserController::listForms both have one), and neither had a case for
- * clerk or any other unmapped role, so before the fix the switch fell through
- * to no branch at all rather than a default refusal. This exercises three
- * different code paths behind /students/{roll_no}/forms/{type} to prove the
- * default-deny holds across the ones that route through GeneralFormList's
- * listForms (presentation), listFormsStudent (irb-constitution), and the one
- * that isn't a form type at all, the bare form list in UserController.
- */
 class FormQueueDefaultDenyTest extends TestCase
 {
     use DatabaseTransactions;

@@ -32,10 +32,7 @@ class ReviseTitleController extends Controller
         if ($student_id)
             return $this->listFormsStudent($user, ReviseTitleForm::class, $student_id);
 
-        // The list must match the detail view (loadForm below): phd_coordinator,
-        // director, adordc, doctoral and external are not steps in this form's
-        // chain and loadForm 403s all of them, so they should never see a
-        // populated queue either.
+        // Keep in sync with loadForm below, it 403s phd_coordinator/director/adordc/doctoral/external.
         if (!in_array($user->current_role->role, ['student', 'faculty', 'hod', 'dra', 'dordc', 'admin'], true)) {
             return response()->json(['message' => 'You do not have permission to view revise title forms. Contact your administrator if you believe this is a mistake.'], 403);
         }
@@ -60,8 +57,6 @@ class ReviseTitleController extends Controller
             'role' => $role->role,
             'name' => $user->first_name . ' ' . $user->last_name,
         ];
-        // Snapshot what is currently on record, so the request still shows what
-        // is being changed even after the student's own profile moves on.
         return $this->createForms(ReviseTitleForm::class, $data, function ($form) use ($user) {
             $form->current_title = $user->student->phd_title;
             $form->current_objectives = $user->student->objectives()
@@ -149,8 +144,6 @@ class ReviseTitleController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
 
-        // Matches the sibling forms: the supervisor reviews their own scholars
-        // one at a time, so bulk approval is left to the committee-style roles.
         $allowedRoles = ['hod', 'dra', 'dordc'];
         if (!in_array($role->role, $allowedRoles)) {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);
@@ -229,10 +222,6 @@ class ReviseTitleController extends Controller
                     $formInstance->completion = 'complete';
                     $formInstance->status = 'approved';
 
-                    // The form's whole purpose is to change these two things on
-                    // the student's record. Completion is where that change
-                    // actually takes effect, same as the title/objectives update
-                    // IrbSubController makes at its own completion step.
                     $student = $formInstance->student;
                     $student->phd_title = $formInstance->proposed_title;
                     $student->save();

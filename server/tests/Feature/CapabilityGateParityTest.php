@@ -7,18 +7,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
-/**
- * Drives the swapped endpoints as every role and checks that the ones refused
- * with 403 are exactly the ones the pre-swap code refused. Also covers write
- * endpoints that never had a role list to swap, admin/forms, outside-experts,
- * courses and patents among them, so a capability regression on those is
- * caught here too.
- *
- * RoleCapabilityMatrixTest proves the columns hold the old role lists; this
- * proves the endpoints actually read those columns, so the two together cover
- * the swap end to end. Only the refusal is asserted: what a permitted role then
- * sees is the endpoint's own business and is covered elsewhere.
- */
 class CapabilityGateParityTest extends TestCase
 {
     use DatabaseTransactions;
@@ -26,9 +14,6 @@ class CapabilityGateParityTest extends TestCase
     /** endpoint => the roles the code admitted before the swap. */
     private const GATES = [
         'GET /api/users' => ['admin'],
-        // Deliberately widened when the faculty directory opened: everyone
-        // except clerk may browse it. Was admin, director, dra, dordc, hod,
-        // phd_coordinator, adordc.
         'GET /api/faculty' => ['admin', 'director', 'dra', 'dordc', 'hod', 'phd_coordinator', 'adordc', 'faculty', 'doctoral', 'external', 'student'],
         'GET /api/students' => ['admin', 'director', 'dra', 'dordc', 'hod', 'phd_coordinator', 'adordc', 'faculty', 'doctoral', 'external', 'student'],
         'GET /api/clerks/my-departments' => ['clerk'],
@@ -37,19 +22,7 @@ class CapabilityGateParityTest extends TestCase
         'GET /api/clerks/attendance/template' => ['clerk', 'admin'],
         'GET /api/settings/leave' => ['admin', 'clerk', 'hod', 'student'],
 
-        // Write endpoints and the capabilities this branch fixed. Admitted
-        // sets are the capability grants from RoleCapabilityMatrixTest, not a
-        // guess: can_manage_form_levels, can_edit_external, can_read_external,
-        // can_manage_courses, can_manage_own_publications and can_manage_users
-        // each admit exactly the roles listed there.
-        //
-        // None of these controllers validate the request body before checking
-        // the capability (denyUnlessMay, or an inline may() check, runs first
-        // in every one), so an empty body still reaches the gate. A refused
-        // role gets its 403 either way; an admitted role that then fails
-        // validation gets a 422, which is not 403 and so is correctly read
-        // below as "not refused by the gate" rather than mistaken for either
-        // a pass or a refusal.
+        // Empty bodies are fine here, the capability check runs before validation, so admitted roles get 422 not 403.
         'POST /api/admin/forms/create' => ['admin'],
         'POST /api/admin/forms/disable' => ['admin'],
         'POST /api/outside-experts/add' => ['admin'],
@@ -59,10 +32,6 @@ class CapabilityGateParityTest extends TestCase
         'GET /api/users/filters' => ['admin'],
     ];
 
-    /**
-     * One signed-in user per role. Roles with no account in this database are
-     * skipped rather than silently passing.
-     */
     private function userActingAs(string $role): ?User
     {
         $user = User::query()->whereNotNull('role_id')->first();
@@ -99,8 +68,6 @@ class CapabilityGateParityTest extends TestCase
 
             $this->actingAs($user, 'sanctum');
             $response = $this->json($method, $path);
-            // Only a 403 carries a message worth reading, and some of these
-            // endpoints answer with a file rather than JSON when they succeed.
             $refusedByGate = false;
             if ($response->getStatusCode() === 403) {
                 $message = (string) $response->json('message');

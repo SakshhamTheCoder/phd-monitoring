@@ -52,8 +52,6 @@ class LogRequestResponse
         return $isSensitiveRequest ? 'Sensitive Data Skipped' : $this->redactSensitiveKeys($body);
     }
 
-    // Redacts by key, not by route, so a field like `password` stays hidden
-    // even on an endpoint nobody thought to add to $sensitiveRoutes.
     private function redactSensitiveKeys(array $data)
     {
         $sensitiveKeys = ['password', 'password_confirmation', 'current_password', 'new_password', 'token', 'captcha_token'];

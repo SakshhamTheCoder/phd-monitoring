@@ -73,7 +73,6 @@ class SynopsisSubmissionController extends Controller
         $role = $user->current_role;
         $cur = $role->role;
         $form = SynopsisSubmission::find($form_id);
-        // Only reroute a committee member to the doctoral handler when the form is actually waiting on doctoral.
         if ($form && $form->stage === 'doctoral' && $form->student->checkDoctoralCommittee($user->faculty?->faculty_code)) {
             $cur = 'doctoral';
         }
@@ -111,7 +110,6 @@ class SynopsisSubmissionController extends Controller
         $role = $user->current_role;
          $cur = $role->role;
         $form = SynopsisSubmission::find($form_id);
-        // See loadForm() above: only reroute when the form is genuinely waiting on doctoral.
         if ($form && $form->stage === 'doctoral' && $form->student->checkDoctoralCommittee($user->faculty?->faculty_code)) {
             $cur = 'doctoral';
         }

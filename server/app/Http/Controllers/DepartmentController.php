@@ -13,12 +13,7 @@ class DepartmentController extends Controller
 {
     use FilterLogicTrait;
 
-    /**
-     * Default-deny for updateAreaOfSpecialization/deleteAreaOfSpecialization:
-     * the department-scoping branch that follows only narrows hod/phd_coordinator
-     * to their own department, it is not a gate for everybody else and never
-     * refuses anyone on its own.
-     */
+    // Only denies non-managers; hod/phd_coordinator dept-scoping happens separately below.
     private function denyUnlessMayManageDepartment(string $role, string $message): ?\Illuminate\Http\JsonResponse
     {
         if (!Auth::user()->may('can_edit_department') && $role !== 'hod' && $role !== 'phd_coordinator') {
@@ -169,8 +164,7 @@ class DepartmentController extends Controller
 
             $request->validate($this->areaRules());
 
-            // hod/phd_coordinator may only add to their own department, same
-            // resolution importAreasFromCSV uses for the same scoping problem.
+            // Same scoping resolution importAreasFromCSV uses.
             if ($role === 'hod' || $role === 'phd_coordinator') {
                 $allowedDepartmentId = $this->areaWriteDepartmentId($loggedInUser);
                 if ((int) $request->department_id !== $allowedDepartmentId) {
@@ -244,9 +238,6 @@ class DepartmentController extends Controller
 
             $query = \App\Models\AreaOfSpecialization::with('department');
 
-            // Scoped in the response too (not just the query), so the client can
-            // default and lock the add/edit form's department field even when
-            // this department has no areas yet to read one back from.
             $scopedDepartment = null;
 
             // Apply role-based filtering

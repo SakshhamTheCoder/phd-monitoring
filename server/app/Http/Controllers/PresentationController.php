@@ -736,7 +736,6 @@ class PresentationController extends Controller
         $form = Presentation::find($form_id);
         $role = $user->current_role;
         $cur = $role->role;
-        // Only reroute a committee member to the doctoral handler when the form is actually waiting on doctoral.
         if ($form && $form->stage === 'doctoral' && $form->student->checkDoctoralCommittee($user->faculty?->faculty_code)) {
             $cur = 'doctoral';
         }
@@ -789,7 +788,6 @@ class PresentationController extends Controller
         }
 
         $cur = $role->role;
-        // See loadForm() above: only reroute when the form is genuinely waiting on doctoral.
         if ($form && $form->stage === 'doctoral' && $form->student->checkDoctoralCommittee($user->faculty?->faculty_code)) {
             $cur = 'doctoral';
         }

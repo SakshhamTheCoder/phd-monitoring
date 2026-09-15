@@ -246,7 +246,6 @@ Route::prefix('roles')->group(function () {
 });
 Route::get('/home', [HomeController::class, 'getHomeData'])->middleware('auth:sanctum');
 
-// Uploads live on the private 'local' disk; this is the only way to read one back.
 Route::get('/files/download/{path}', [\App\Http\Controllers\FileDownloadController::class, 'download'])
     ->where('path', '.*')
     ->middleware('auth:sanctum');
@@ -332,7 +331,6 @@ Route::middleware('feature:job_openings')->group(function () {
             ->middleware('throttle:5,60');
     });
     Route::prefix('public/applications')->group(function () {
-        // An applicant may refresh this a handful of times while waiting on a decision.
         Route::get('/{token}', [\App\Http\Controllers\PublicOpeningController::class, 'status'])
             ->middleware('throttle:30,60');
         Route::post('/{token}/verify', [\App\Http\Controllers\PublicOpeningController::class, 'verify'])
@@ -342,12 +340,10 @@ Route::middleware('feature:job_openings')->group(function () {
 
 // Secure external-expert review (public, token-authenticated, the token is the credential).
 Route::prefix('external-review')->group(function () {
-    // A reviewer reloads the page and re-fetches the PDF repeatedly while reading it.
     Route::get('/{token}', [\App\Http\Controllers\ExternalReviewController::class, 'show'])
         ->middleware('throttle:60,60');
     Route::get('/{token}/pdf', [\App\Http\Controllers\ExternalReviewController::class, 'pdf'])
         ->middleware('throttle:60,60');
-    // The decision is submitted once, so this stays as tight as the sibling /apply route.
     Route::post('/{token}', [\App\Http\Controllers\ExternalReviewController::class, 'submit'])
         ->middleware('throttle:5,60');
 });

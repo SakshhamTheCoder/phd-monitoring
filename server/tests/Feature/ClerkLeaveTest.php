@@ -14,9 +14,7 @@ class ClerkLeaveTest extends TestCase
 {
     use DatabaseTransactions;
 
-    // save() rejects any date after "today"; keep this on or before the
-    // machine's current date so the save() test doesn't fail validation
-    // before ever reaching the leave-skip logic under test.
+    // Must stay on or before today, save() rejects future dates before reaching leave-skip logic.
     private const DATE = '2026-09-01';
 
     private function studentOnLeave(): Student
@@ -35,17 +33,7 @@ class ClerkLeaveTest extends TestCase
         return $student;
     }
 
-    /**
-     * A scholar created fresh for this test, with no attendance history.
-     *
-     * firstOrFail() picks up whatever the dev database already has, which on
-     * this machine already carries attendance rows for that scholar. A count
-     * delta can't be trusted here: save() uses updateOrCreate() keyed on
-     * (roll_no, date, lecture_id), so a broken skip would update a
-     * pre-existing row of the same key in place, leaving the count
-     * unchanged and the assertion blind to it. A scholar with no rows at
-     * all keeps assertNull() meaningful.
-     */
+    // Fresh scholar with no attendance rows, a pre-existing row would hide a broken skip via updateOrCreate().
     private function isolatedStudentOnLeave(): Student
     {
         $user = User::create([
@@ -59,8 +47,6 @@ class ClerkLeaveTest extends TestCase
         ]);
 
         $student = Student::create([
-            // Derived rather than a fixed constant: dev-database roll numbers
-            // are not confined to a small range reserved for tests.
             'roll_no' => (int) Student::max('roll_no') + 1,
             'user_id' => $user->id,
             'date_of_registration' => now()->subYear()->toDateString(),
@@ -128,7 +114,6 @@ class ClerkLeaveTest extends TestCase
             ->where('date', self::DATE)->first());
     }
 
-    /** FIX 6: spec 4.6 scopes the leave-quota read to admin, clerk, hod, student. */
     public function test_leave_settings_are_readable_by_an_allowed_role(): void
     {
         $this->actingAsAdmin();
@@ -144,7 +129,6 @@ class ClerkLeaveTest extends TestCase
         $this->getJson('/api/settings/leave')->assertStatus(403);
     }
 
-    /** Reading is open to four roles; writing is admin only. */
     public function test_leave_settings_are_not_writable_by_a_reader_who_is_not_an_admin(): void
     {
         $student = Student::query()->firstOrFail();

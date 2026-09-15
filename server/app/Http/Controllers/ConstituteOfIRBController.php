@@ -45,9 +45,7 @@ class ConstituteOfIRBController extends Controller
        if($student_id)
          return $this->listFormsStudent($user, ConstituteOfIRB::class, $student_id);
 
-       // The list must match the detail view (loadForm below): phd_coordinator,
-       // doctoral and external are not steps in this form's chain and loadForm
-       // 403s all three, so they should never see a populated queue either.
+       // Must match loadForm's role set below, phd_coordinator/doctoral/external 403 there too.
        if (!in_array($user->current_role->role, ['student', 'hod', 'dra', 'dordc', 'adordc', 'faculty', 'director', 'admin'], true)) {
            return response()->json(['message' => 'You do not have permission to view IRB constitution forms. Contact your administrator if you believe this is a mistake.'], 403);
        }
@@ -160,8 +158,6 @@ class ConstituteOfIRBController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
 
-        // Reviewer roles only: student and faculty submit their own form
-        // one at a time and have no bulk queue, same as the sibling forms.
         $allowedRoles = ['hod', 'adordc', 'dordc'];
         if (!in_array($role->role, $allowedRoles)) {
             return response()->json(['message' => 'You are not authorized to access this resource'], 403);

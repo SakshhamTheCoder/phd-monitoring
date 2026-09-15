@@ -14,9 +14,6 @@ import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImpor
 import useCapabilities from '../../hooks/useCapabilities';
 const AdminCourseManagement = () => {
   const can = useCapabilities();
-  // Catalog actions (add/edit/delete/import a course) are gated separately
-  // from student-tagging actions because the backend enforces two different
-  // capabilities: can_manage_courses vs can_manage_students.
   const mayManageCourses = can('can_manage_courses');
   const mayManageStudents = can('can_manage_students');
 

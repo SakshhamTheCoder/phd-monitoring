@@ -5,14 +5,6 @@ namespace Tests\Feature;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
-/**
- * These five endpoints required no authentication at all: an unauthenticated
- * caller could create an account, mint a role, or trigger a welcome email for
- * any address. The fix was deletion, not a gate, so the regression to watch
- * for is the route coming back at all, gated or not. No signed-in user is
- * used here on purpose: the point is that the route itself is gone, not that
- * some role is refused it.
- */
 class DeletedRoutesStayDeletedTest extends TestCase
 {
     /** 405 covers a URI that still matches a route, just not this verb. */

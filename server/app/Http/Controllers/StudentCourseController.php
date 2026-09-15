@@ -65,12 +65,6 @@ class StudentCourseController extends Controller
         }
     }
 
-    // Tagging a scholar with a course is a write about that scholar, so every
-    // method below is gated on can_manage_students, the same capability as
-    // every other write. None of them checked anything at all before, which
-    // let any signed-in user tag anyone with anything, change a grade, or
-    // read another scholar's enrolments.
-
     /**
      * Tag student with course (Admin/HOD/Coordinator)
      */

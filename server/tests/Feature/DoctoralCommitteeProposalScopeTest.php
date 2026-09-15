@@ -9,22 +9,10 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
-/**
- * Every faculty-shaped account carries the 'doctoral' role in User::ROLE_GRANTS,
- * and RoleRequirements only checked for a Faculty record to allow the switch,
- * so before this fix any faculty member could switch into "Doctoral Committee"
- * and propose a supervisor or committee change for any scholar, not just one
- * they actually sit on. can_propose_supervisor_changes alone does not catch
- * this: doctoral holds that capability institute-wide, so the committee
- * membership check inside proposeChange is the only thing standing between a
- * self-elevated faculty member and any scholar's supervisor record. That is
- * what this test targets, not the capability gate itself.
- */
 class DoctoralCommitteeProposalScopeTest extends TestCase
 {
     use DatabaseTransactions;
 
-    /** A student with a doctoral committee member who has a login. */
     private function studentWithCommittee(): array
     {
         $student = Student::query()->get()->first(
@@ -53,9 +41,7 @@ class DoctoralCommitteeProposalScopeTest extends TestCase
         [$student, $member] = $this->studentWithCommittee();
         $this->actingAsDoctoral($member);
 
-        // 'doctoral' also holds can_edit_doctoral_committee, so this applies
-        // immediately rather than queuing for DORDC approval; either way a
-        // 403 never fires for a member proposing on their own committee.
+        // 201 not 202/pending: 'doctoral' also holds can_edit_doctoral_committee, so this applies immediately.
         $this->postJson('/api/supervisor-doctoral-changes/propose', [
             'student_id' => $student->roll_no,
             'change_type' => 'remove',

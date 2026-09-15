@@ -114,8 +114,7 @@ const Student = ({ formData, onDraftDeleted }) => {
     }
   };
 
-  // Same rule StudentAttendancePage's row delete enforces: destroyForm 422s
-  // once the application leaves draft, so this only ever shows for a draft.
+  // Only shown for drafts: destroyForm 422s once the application leaves draft.
   const handleDeleteDraft = async () => {
     if (!window.confirm('Delete this draft application?')) return;
     setDeleting(true);

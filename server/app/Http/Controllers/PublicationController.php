@@ -37,16 +37,7 @@ class PublicationController extends Controller
         return response()->json($this->publicationsFor($user->student->roll_no));
     }
 
-    /**
-     * A named scholar's publications, for a viewer other than the scholar.
-     *
-     * Gated the same way StudentController::get decides whether the viewer may
-     * open the scholar's profile at all, not by can_manage_students: that
-     * capability is admin/adordc/director/dordc/dra only, which would exclude
-     * the scholar's own supervisor and doctoral committee, the main readers
-     * this endpoint exists for. Whoever may open the profile may read what is
-     * on it.
-     */
+    // Gated like StudentController::get, not can_manage_students, or the supervisor and committee lose access.
     public function getForStudent($studentId)
     {
         $student = Student::find($studentId);

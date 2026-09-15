@@ -10,9 +10,7 @@ trait NotificationManager
 {
     public function sendNotification($user, $title, $body, $link, $role_id = null, $email_req = false)
     {
-        // A missing recipient means the seat is vacant or the account was never
-        // provisioned. Dropping the notification is right, taking the whole form
-        // submission down with it is not.
+        // A missing recipient (vacant seat) should drop the notification, not fail the whole submission.
         if(!$user){
             return;
         }
