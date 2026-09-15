@@ -82,7 +82,8 @@ const ProfileBox = () => {
             >
               <h4>Profile</h4>
             </div>
-            {role !== "Student" && (
+            {/* Single-role accounts have nothing to switch to. */}
+            {!["Student", "UG Student"].includes(role) && (
               <>
                 <div
                   className="profile_item"
