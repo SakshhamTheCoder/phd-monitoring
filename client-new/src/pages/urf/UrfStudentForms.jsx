@@ -8,6 +8,7 @@ import UrfRecord, { ReportsTable, Section, StatusText, REPORT_TYPES } from '../.
 import { ApplyForm, FellowForm, ReportForm, signedInUser } from '../../components/urf/UrfForms';
 import { UrfApprovalTrail } from '../../components/urf/UrfApproval';
 import { apiUrfMine } from '../../api/urf';
+import { formatDate } from '../../utils/timeParse';
 import '../../components/urf/UrfForms.css';
 
 // The student's URF projects (newest first), the application window and the
@@ -31,16 +32,64 @@ const useUrf = () => {
 const canApply = ({ applications_open: open, session, applications }) =>
   open && !applications.some((a) => a.session === session && a.status !== 'rejected');
 
-const formsFor = (application) => {
+// The round a report belongs to, if the office has opened one.
+const windowFor = (windows, application, type) => (windows || [])
+  .find((w) => w.type === type && Number(w.session) === Number(application.session));
+
+/**
+ * The forms a project offers right now.
+ *
+ * The application is always there. The rest wait on selection, and a report
+ * waits on its round being open as well, the way progress monitoring waits on
+ * a scheduled semester.
+ */
+const formsFor = (application, windows) => {
   const base = `/forms/urf/${application.id}`;
+  const report = (type, path) => {
+    const round = windowFor(windows, application, type);
+    const filed = application.reports?.some((r) => r.type === type);
+    if (!round?.is_open && !filed) return [];
+
+    return [{
+      form_type: type === 'final' ? 'urf-final-report' : 'urf-half-yearly-report',
+      form_name: REPORT_TYPES[type],
+      path: `${base}/${path}`,
+      action_required: round?.is_open && !filed,
+    }];
+  };
+
   return [
     { form_type: 'urf-application', form_name: 'URF Application Form', path: `${base}/application` },
     ...(application.status === 'selected' ? [
       { form_type: 'urf-additional-info', form_name: 'Additional Information Form', path: `${base}/additional-info`, action_required: !application.fellows?.length },
-      { form_type: 'urf-half-yearly-report', form_name: REPORT_TYPES.half_yearly, path: `${base}/half-yearly-report` },
-      { form_type: 'urf-final-report', form_name: REPORT_TYPES.final, path: `${base}/final-report` },
+      ...report('half_yearly', 'half-yearly-report'),
+      ...report('final', 'final-report'),
     ] : []),
   ];
+};
+
+/** What a fellow is waiting for, when there is no report to file yet. */
+const RoundNotice = ({ application, windows }) => {
+  if (application.status !== 'selected') return null;
+
+  const upcoming = ['half_yearly', 'final']
+    .map((type) => ({ type, round: windowFor(windows, application, type) }))
+    .filter(({ type, round }) => round && !round.is_open && !application.reports?.some((r) => r.type === type));
+
+  if (!upcoming.length) return null;
+
+  return (
+    <div className="urf-round-notice">
+      {upcoming.map(({ type, round }) => (
+        <p key={type}>
+          {REPORT_TYPES[type]}: {new Date(round.opens_on) > new Date()
+            ? `opens ${formatDate(round.opens_on)}`
+            : `closed ${formatDate(round.closes_on)}`}
+          {round.notes ? ` · ${round.notes}` : ''}
+        </p>
+      ))}
+    </div>
+  );
 };
 
 /**
@@ -74,7 +123,8 @@ export const UrfFormsPage = () => {
           {/* Where the application has reached, and what anyone who sent it
               back asked for. */}
           <UrfApprovalTrail form={application} />
-          <FormGrid forms={formsFor(application)} title={null} />
+          <RoundNotice application={application} windows={state.report_windows} />
+          <FormGrid forms={formsFor(application, state.report_windows)} title={null} />
           {application.reports?.filter((report) => report.mentor_comments || report.adordc_comments || report.dordc_comments).map((report) => (
             <div key={report.id} className="urf-report-approval">
               <div className="urf-subhead">
@@ -123,15 +173,30 @@ export const UrfFormPage = ({ type }) => {
       ? <FellowForm applicationId={application.id} initial={application.fellows?.[0]} prefill={previous} onSaved={load} />
       : <p>This form opens once your project is selected.</p>;
   } else if (application && REPORT_TYPES[type]) {
+    const round = windowFor(state.report_windows, application, type);
     const filed = application.reports?.filter((report) => report.type === type) || [];
-    body = application.status === 'selected' ? (
-      <>
-        <ReportForm application={application} type={type} onSaved={load} />
-        {filed.length > 0 && (
-          <Section title={`Submitted ${REPORT_TYPES[type]}s`}><ReportsTable reports={filed} /></Section>
-        )}
-      </>
-    ) : <p>Reports open once your project is selected.</p>;
+    const submitted = filed.length > 0 && (
+      <Section title={`Submitted ${REPORT_TYPES[type]}s`}><ReportsTable reports={filed} /></Section>
+    );
+
+    if (application.status !== 'selected') {
+      body = <p>Reports open once your project is selected.</p>;
+    } else if (round?.is_open) {
+      body = <><ReportForm application={application} type={type} onSaved={load} />{submitted}</>;
+    } else {
+      // The round decides when this is filed, so say which it is rather than
+      // offering a form the server would refuse.
+      body = (
+        <>
+          <p>
+            {!round && 'This report has not been scheduled yet.'}
+            {round && new Date(round.opens_on) > new Date() && `This report can be filed from ${formatDate(round.opens_on)} to ${formatDate(round.closes_on)}.`}
+            {round && new Date(round.opens_on) <= new Date() && `This report closed on ${formatDate(round.closes_on)}.`}
+          </p>
+          {submitted}
+        </>
+      );
+    }
   }
 
   return (

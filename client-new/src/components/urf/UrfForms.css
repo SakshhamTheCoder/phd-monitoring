@@ -94,3 +94,14 @@
 .urf-report-approval {
   margin-top: 1.5rem;
 }
+
+/* What a fellow is waiting for, when a report round is not open yet. */
+.urf-round-notice {
+  margin: 0.25rem 0 0.75rem;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.urf-report-schedule {
+  margin-bottom: 1.5rem;
+}

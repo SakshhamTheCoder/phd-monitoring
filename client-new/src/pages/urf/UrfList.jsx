@@ -18,6 +18,7 @@ import useCapabilities from '../../hooks/useCapabilities';
 import TableComponent from '../../components/forms/table/TableComponent';
 import GridContainer from '../../components/forms/fields/GridContainer';
 import { apiUrfQueue } from '../../api/urf';
+import UrfReportSchedule from '../../components/urf/UrfReportSchedule';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import { apiUrfSessions, apiUrfStatus } from '../../api/urf';
 import './UrfList.css';
@@ -198,6 +199,13 @@ const UrfList = () => {
       {/* The forms grid reads every submission of a form, which is the office's
           view of the module rather than a mentor's. */}
       {can('can_manage_urf') && <FormGrid forms={URF_FORMS} />}
+
+      {can('can_manage_urf') && (
+        <>
+          <div className="grid-label">Report Rounds</div>
+          <UrfReportSchedule session={Number(session) || new Date().getFullYear()} />
+        </>
+      )}
       {queue.length > 0 && (
         <GridContainer
           label={`Waiting on you (${queue.length})`}

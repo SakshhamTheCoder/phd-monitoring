@@ -31,6 +31,11 @@ export const apiUrfStatus = (id, status) => customFetch(`${URF}/${id}/status`, '
 export const apiUrfDecide = (form, id, body) => customFetch(`${URF}/${form}/${id}/decision`, 'POST', body, true);
 export const apiUrfQueue = () => customFetch(`${URF}/queue`, 'GET', {}, true, false, false);
 
+// When a report round opens and closes, as the office schedules it.
+export const apiUrfReportWindows = () => customFetch(`${URF}/report-windows`, 'GET', {}, true, false, false);
+export const apiUrfSaveReportWindow = (body) => customFetch(`${URF}/report-windows`, 'POST', body, true);
+export const apiUrfDeleteReportWindow = (id) => customFetch(`${URF}/report-windows/${id}`, 'DELETE', {}, true);
+
 // Sign-up, before there is an account. The toast is left to the page, which
 // says what went wrong field by field.
 export const apiUrfSignup = (body) => customFetch(`${URF}/signup`, 'POST', body, false);
