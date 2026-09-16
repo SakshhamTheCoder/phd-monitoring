@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\UgStudent;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -36,6 +37,17 @@ class GoogleAuthController extends Controller
             $user = User::where('email', $googleUser->getEmail())->first();
 
             if (!$user) {
+                // An undergraduate address with no account yet is someone who
+                // came here to sign up, so they are sent on to the form with
+                // the address Google vouched for rather than turned away.
+                if (UgStudent::eligibleEmail($googleUser->getEmail())) {
+                    return redirect(env('FRONTEND_URL', 'https://phdportal.thapar.edu') . '/google/callback?' . http_build_query([
+                        'signup' => UgSignupController::issueGoogleTicket($googleUser->getEmail(), $googleUser->getName()),
+                        'email' => $googleUser->getEmail(),
+                        'name' => $googleUser->getName(),
+                    ]));
+                }
+
                 // User does not exist, redirect with error
                 return redirect(env('FRONTEND_URL', 'https://phdportal.thapar.edu') . '/google/callback?error=' . urlencode('No account found with this email. Please contact administrator.'));
             }
@@ -142,6 +154,17 @@ class GoogleAuthController extends Controller
             $user = User::where('email', $payload['email'])->first();
 
             if (!$user) {
+                // As above: an undergraduate address with no account is a
+                // sign-up waiting to happen, so the answer carries the ticket.
+                if (UgStudent::eligibleEmail($payload['email'])) {
+                    return response()->json([
+                        'success' => false,
+                        'signup' => UgSignupController::issueGoogleTicket($payload['email'], $payload['name'] ?? null),
+                        'email' => $payload['email'],
+                        'name' => $payload['name'] ?? null,
+                    ], 404);
+                }
+
                 // User does not exist, return error
                 return response()->json([
                     'success' => false,
