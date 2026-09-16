@@ -203,6 +203,16 @@ const AppContent = () => {
           {role !== 'clerk' && (
             <Route path="/faculty" element={<FacultyPage />} />
           )}
+          {/* The URF list and one project: an admin reads every project, a
+              mentor the ones they are on, an ADORDC and the DORDC what is
+              waiting on them. The server decides which, so the routes only
+              have to be reachable. */}
+          {['admin', 'faculty', 'hod', 'phd_coordinator', 'adordc', 'dordc', 'dra', 'director'].includes(role) && (
+            <>
+              <Route path="/urf" element={<UrfList />} />
+              <Route path="/urf/:id" element={<UrfDetails />} />
+            </>
+          )}
           {(role==='clerk' || role==='admin' || role==='student' || role==='hod') && (
             <Route path="/attendance" element={<AttendanceRoute />} />
           )}
@@ -218,12 +228,10 @@ const AppContent = () => {
                 <Route path="/clerk-management" element={<ClerkManagement />} />
                 <Route path="/clerks" element={<ClerkManagement />} />
                 <Route path="/configuration" element={<Configuration />} />
-                <Route path="/urf" element={<UrfList />} />
                 <Route path="/urf/urf-application" element={<UrfFormList />} />
                 <Route path="/urf/urf-additional-info" element={<UrfFormList />} />
                 <Route path="/urf/urf-half-yearly-report" element={<UrfFormList />} />
                 <Route path="/urf/urf-final-report" element={<UrfFormList />} />
-                <Route path="/urf/:id" element={<UrfDetails />} />
 
               {/* <Route path="/faculty/:roll_no" element={<StudentProfile />} />
               <Route path="/faculty/:roll_no/forms" element={<FormsPage />} />
