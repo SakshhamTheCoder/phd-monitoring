@@ -43,11 +43,11 @@ Route::post('/login', function (Request $request) {
         /** @var \App\Models\MyUserModel $user **/
         $user = Auth::user();
 
-        // A UG student signs themselves up, so the address is only theirs once
-        // they answer the link. Every other account is created by an admin who
-        // already knows who they are, and most predate this check, so the rule
-        // is the UG one alone.
-        if (($user->current_role?->role ?? $user->role?->role) === 'ug_student' && !$user->email_verified_at) {
+        if ($user->isDeactivated()) {
+            return response()->json(['error' => 'This account has been deactivated. Contact the office.'], 403);
+        }
+
+        if ($user->needsEmailConfirmation()) {
             return response()->json([
                 'error' => "Confirm your email first. We sent a link to {$user->email}.",
                 'unverified' => true,

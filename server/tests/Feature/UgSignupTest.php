@@ -138,6 +138,27 @@ class UgSignupTest extends TestCase
         $this->postJson('/api/login', ['email' => $user->email, 'password' => 'a-good-password'])->assertOk();
     }
 
+    public function test_a_deactivated_account_cannot_sign_in(): void
+    {
+        $roleId = Role::where('role', 'student')->value('id');
+        $user = new User();
+        $user->forceFill([
+            'first_name' => 'Left',
+            'last_name' => 'Institute',
+            'email' => Str::lower(Str::random(10)) . '@thapar.edu',
+            'password' => bcrypt('a-good-password'),
+            'role_id' => $roleId,
+            'current_role_id' => $roleId,
+            'status' => 'inactive',
+        ])->save();
+
+        $this->postJson('/api/login', ['email' => $user->email, 'password' => 'a-good-password'])
+            ->assertStatus(403);
+
+        $user->forceFill(['status' => 'active'])->save();
+        $this->postJson('/api/login', ['email' => $user->email, 'password' => 'a-good-password'])->assertOk();
+    }
+
     public function test_the_application_takes_the_roll_number_from_the_account(): void
     {
         Mail::fake();

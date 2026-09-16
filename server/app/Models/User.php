@@ -94,6 +94,27 @@ class User extends Authenticatable
         return $this->hasOne(Student::class, 'user_id');
     }
 
+    /**
+     * An admin can mark an account inactive, which until now only changed how
+     * it was listed. Sign-in reads it, so the switch means what it says.
+     */
+    public function isDeactivated(): bool
+    {
+        return $this->status === 'inactive';
+    }
+
+    /**
+     * A UG student signs themselves up, so the address is theirs only once they
+     * answer the link. Every other account is created by an admin who already
+     * knows who they are, and most were made before addresses were confirmed
+     * at all, so the rule is the UG one alone.
+     */
+    public function needsEmailConfirmation(): bool
+    {
+        return ($this->current_role?->role ?? $this->role?->role) === 'ug_student'
+            && !$this->email_verified_at;
+    }
+
     /** Set when the account was made through URF sign-up, absent otherwise. */
     public function ugStudent()
     {

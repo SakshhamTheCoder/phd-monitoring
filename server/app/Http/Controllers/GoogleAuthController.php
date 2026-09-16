@@ -40,6 +40,12 @@ class GoogleAuthController extends Controller
                 return redirect(env('FRONTEND_URL', 'https://phdportal.thapar.edu') . '/google/callback?error=' . urlencode('No account found with this email. Please contact administrator.'));
             }
 
+            if ($user->isDeactivated()) {
+                return redirect(env('FRONTEND_URL', 'https://phdportal.thapar.edu') . '/google/callback?error=' . urlencode('This account has been deactivated. Contact the office.'));
+            }
+
+            $this->recordGoogleProof($user, $googleUser->user['email_verified'] ?? false);
+
             // User exists, log them in
             Auth::login($user);
 
@@ -82,6 +88,19 @@ class GoogleAuthController extends Controller
         } catch (\Exception $e) {
             // Redirect to frontend with error
             return redirect(env('FRONTEND_URL', 'https://phdportal.thapar.edu') . '/google/callback?error=' . urlencode('Failed to authenticate with Google: ' . $e->getMessage()));
+        }
+    }
+
+    /**
+     * Signing in with Google is Google saying it holds this mailbox, which is
+     * exactly what the confirmation link asks a UG student to prove. So the
+     * proof is recorded rather than asked for twice. Google only counts when it
+     * says the address is verified, which a Workspace address always is.
+     */
+    private function recordGoogleProof(User $user, $emailVerified): void
+    {
+        if ($emailVerified && !$user->email_verified_at) {
+            $user->forceFill(['email_verified_at' => now()])->save();
         }
     }
 
@@ -129,6 +148,15 @@ class GoogleAuthController extends Controller
                     'error' => 'No account found with this email. Please contact administrator.'
                 ], 404);
             }
+
+            if ($user->isDeactivated()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'This account has been deactivated. Contact the office.'
+                ], 403);
+            }
+
+            $this->recordGoogleProof($user, $payload['email_verified'] ?? false);
 
             // User exists, log them in
             Auth::login($user);
