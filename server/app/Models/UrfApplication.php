@@ -2,10 +2,21 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\UrfApprovable;
 use Illuminate\Database\Eloquent\Model;
 
 class UrfApplication extends Model
 {
+    use UrfApprovable;
+
+    protected $casts = ['history' => 'array'];
+
+    /** The application a step is about is this one. */
+    public function approvalApplication()
+    {
+        return $this;
+    }
+
     // An application is decided once: selected or rejected.
     public const STATUSES = ['applied', 'selected', 'rejected'];
 

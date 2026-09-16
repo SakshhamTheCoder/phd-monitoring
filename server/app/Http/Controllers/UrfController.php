@@ -82,6 +82,9 @@ class UrfController extends Controller
                     'name' => $m->user?->name(),
                 ])->values(),
                 'status' => ucfirst($a->status),
+                // Where the application has reached, which is not the same as
+                // whether the project is on.
+                'stage' => $a->isComplete() ? 'Approved' : 'With ' . ucfirst($a->stage),
                 'applied_on' => $a->created_at?->format('d M Y'),
                 // Not a column of its own: the title opens it.
                 'proposal' => $a->proposal,
@@ -89,8 +92,8 @@ class UrfController extends Controller
             'total' => $page->total(),
             'totalPages' => $page->lastPage(),
             'role' => $user->current_role->role,
-            'fields' => ['session', 'project_title', 'students', 'branch', 'year', 'mentors', 'status', 'applied_on'],
-            'fieldsTitles' => ['Session', 'Project Title', 'Students', 'Branches', 'Years', 'Mentors', 'Status', 'Applied On'],
+            'fields' => ['session', 'project_title', 'students', 'branch', 'year', 'mentors', 'stage', 'status', 'applied_on'],
+            'fieldsTitles' => ['Session', 'Project Title', 'Students', 'Branches', 'Years', 'Mentors', 'Waiting On', 'Status', 'Applied On'],
         ]);
     }
 
@@ -298,6 +301,9 @@ class UrfController extends Controller
             );
         }
         $application->save();
+        // Filed or corrected, the reading starts again at the mentor: what the
+        // later steps saw is not what is in front of them now.
+        $application->backToTheStartOfTheChain($user);
         $this->commitFileDeletions();
 
         return response()->json($application, $editing ? 200 : 201);
@@ -336,6 +342,7 @@ class UrfController extends Controller
         $keys = ['urf_application_id' => $application->id, 'user_id' => $user->id];
         $fellow = UrfFellow::where($keys)->first() ?? (new UrfFellow())->forceFill($keys);
         $fellow->fill($data)->save();
+        $fellow->backToTheStartOfTheChain($user);
 
         return response()->json($fellow);
     }
@@ -363,7 +370,14 @@ class UrfController extends Controller
         $data['report'] = $this->saveUploadedFile($request->file('report'), 'urf_report', $user->id);
 
         $report = DB::transaction(function () use ($data, $application, $user, $linked) {
-            $report = (new UrfReport($data))->forceFill(['urf_application_id' => $application->id, 'user_id' => $user->id]);
+            // A report sent back is replaced rather than filed twice: the
+            // student is answering what was said about this one.
+            $report = UrfReport::where('urf_application_id', $application->id)
+                ->where('user_id', $user->id)
+                ->where('type', $data['type'])
+                ->where('stage', 'student')
+                ->first() ?? (new UrfReport())->forceFill(['urf_application_id' => $application->id, 'user_id' => $user->id]);
+            $report->fill($data);
             $report->save();
 
             // Linked the way a PhD progress form links them: a copy of each chosen
@@ -383,6 +397,8 @@ class UrfController extends Controller
 
             return $report;
         });
+
+        $report->backToTheStartOfTheChain($user);
 
         return response()->json($report, 201);
     }

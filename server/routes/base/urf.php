@@ -3,6 +3,7 @@
 use App\Http\Controllers\UgSignupController;
 use App\Http\Controllers\UgStudentController;
 use App\Http\Controllers\UrfController;
+use App\Http\Controllers\UrfDecisionController;
 use Illuminate\Support\Facades\Route;
 
 // Signing up is how a UG student gets an account, so nobody is logged in yet.
@@ -23,6 +24,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/sessions', [UrfController::class, 'sessions']);
     // The forms grid: one list per form, with the shared filter bar.
     $forms = ['urf-application', 'urf-additional-info', 'urf-half-yearly-report', 'urf-final-report'];
+    // What is waiting on whoever is asking, and what they decide about it.
+    Route::get('/queue', [UrfDecisionController::class, 'queue']);
+    Route::post('/{form}/{id}/decision', [UrfDecisionController::class, 'decide'])
+        ->whereIn('form', $forms)->whereNumber('id');
     Route::get('/{form}', [UrfController::class, 'formList'])->whereIn('form', $forms);
     Route::get('/{form}/filters', [UrfController::class, 'listFilters'])->whereIn('form', $forms);
     Route::get('/{id}', [UrfController::class, 'show'])->whereNumber('id');
