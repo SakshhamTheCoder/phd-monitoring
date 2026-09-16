@@ -145,7 +145,7 @@ class UserManagementController extends Controller
             // Was 'string', which let a typo or a crafted request store a role
             // name matching no roles row, an unswitchable, invisible dead role.
             'available_roles.*' => 'string|exists:roles,role',
-            'status' => 'nullable|in:active,inactive,suspended',
+            'status' => 'nullable|in:active,inactive',
         ];
 
         if ($isUpdate) {
