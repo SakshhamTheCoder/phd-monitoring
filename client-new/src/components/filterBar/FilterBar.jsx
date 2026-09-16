@@ -18,8 +18,11 @@ const inputTypes = { date: 'date', time: 'time', number: 'number' };
  * re-runs the search. The page's own mandatory filters (a tab, say) are passed
  * through untouched, and any filter chosen here joins them, so a search within
  * a filter still narrows rather than widens.
+ *
+ * `exclude` names filters the page already drives itself, so they are not
+ * offered here a second time to be set to something that contradicts it.
  */
-const FilterBar = ({ placeholder = 'Search…', mandatory = [], onSearch }) => {
+const FilterBar = ({ placeholder = 'Search…', mandatory = [], exclude = [], onSearch }) => {
   // null until the page's filter definitions arrive.
   const [filters, setFilters] = useState(null);
   const [text, setText] = useState('');
@@ -164,7 +167,9 @@ const FilterBar = ({ placeholder = 'Search…', mandatory = [], onSearch }) => {
 
       {open && (
         <div className="filter-bar-fields">
-          {filters.map((filter) => <div key={filter.key_name} className="filter-bar-field">{control(filter)}</div>)}
+          {filters
+            .filter((filter) => !exclude.includes(filter.key_name))
+            .map((filter) => <div key={filter.key_name} className="filter-bar-field">{control(filter)}</div>)}
         </div>
       )}
 
