@@ -236,6 +236,12 @@ class PresentationController extends Controller
             $filters['mandatory_filter'] = array_merge($parsedFilters, $mandatoryFilters);
             $request->merge(['filters' => $filters]);    
         }
+
+        // The filters built above are this page's own, not the client's, and
+        // they are what scopes the list: the scholar whose page it is, the
+        // forms waiting on this reviewer, the semester. Named here so the
+        // filter bar's allow list keeps them.
+        $trusted = array_values(array_unique(array_column($mandatoryFilters, 'key')));
      
         if (!$semester_id) {
             $titles[] = "Semester";
@@ -280,7 +286,7 @@ class PresentationController extends Controller
                     return $form->venue;
                 },
             ],
-        ]);
+        ], $trusted);
     }
     
 

@@ -11,7 +11,20 @@ trait GeneralFormList
 {
     use FilterLogicTrait;
     use PagenationTrait;
-    private function listForms($user, $model, $request, $filters = null, $override = false, $fields = [])
+    /**
+     * The filter bar's conditions, applied to a forms list.
+     *
+     * A key the pages do not define is dropped, so a filter cannot name a
+     * column of its own choosing. $trusted names the keys the controller built
+     * itself, which the client never sent and which scope the list: the scholar
+     * whose page this is, say, or the reviewer's pending forms.
+     */
+    private function applyFormFilters($query, $filters, array $trusted = [])
+    {
+        return $this->applyDynamicFilters($query, $filters, ['forms', 'presentation'], array_merge(['action', 'upcoming', 'missed'], $trusted));
+    }
+
+    private function listForms($user, $model, $request, $filters = null, $override = false, $fields = [], array $trusted = [])
     {
         $role = $user->current_role->role;
         $page = $request->input('page', 1);
@@ -29,22 +42,22 @@ trait GeneralFormList
 
         switch ($role) {
             case 'student':
-                return $this->listStudentForms($user, $model, $filters, $page, $rows, $fields);
+                return $this->listStudentForms($user, $model, $filters, $page, $rows, $fields, $trusted);
             case 'hod':
             case 'phd_coordinator':
-                return $this->listHodForms($user, $model, $filters, false, $page, $rows, $fields,);
+                return $this->listHodForms($user, $model, $filters, false, $page, $rows, $fields, $trusted);
             case 'dra':
             case 'dordc':
             case 'director':
             case 'admin':
-                return $this->listAdminForms($user, $model, $filters, $page, $rows, $fields,);
+                return $this->listAdminForms($user, $model, $filters, $page, $rows, $fields, $trusted);
             case 'faculty':
-                return $this->listFacultyForms($user, $model, $filters, $override, $page, $rows, $fields);
+                return $this->listFacultyForms($user, $model, $filters, $override, $page, $rows, $fields, $trusted);
             case 'adordc':
-                return $this->listAdordcForms($user, $model, $filters, $page, $rows, $fields);
+                return $this->listAdordcForms($user, $model, $filters, $page, $rows, $fields, $trusted);
             case 'doctoral':
             case 'external':
-                return $this->listDoctoralForms($user, $model, $filters, $override, $page, $rows, $fields,);
+                return $this->listDoctoralForms($user, $model, $filters, $override, $page, $rows, $fields, $trusted);
             default:
                 return response()->json(['message' => 'You are not authorized to access this resource'], 403);
         }
@@ -187,33 +200,33 @@ trait GeneralFormList
     }
 
 
-    private function listStudentForms($user, $model, $filters = null, $page = 1, $rows = 50, $fields = [])
+    private function listStudentForms($user, $model, $filters = null, $page = 1, $rows = 50, $fields = [], array $trusted = [])
     {
         $student = $user->student;
         $role = $user->current_role->role;
         $formsQuery = $model::where('student_id', $student->roll_no);
 
         if ($filters) {
-            $formsQuery = $this->applyDynamicFilters($formsQuery, $filters, ['forms', 'presentation'], ['action', 'upcoming', 'missed']);
+            $formsQuery = $this->applyFormFilters($formsQuery, $filters, $trusted);
         }
 
 
         return $this->paginateAndMap($formsQuery, $page, $fields, $rows, $user);
     }
 
-    private function listAdminForms($user, $model, $filters = null, $page = 1, $rows = 50, $fields = [])
+    private function listAdminForms($user, $model, $filters = null, $page = 1, $rows = 50, $fields = [], array $trusted = [])
     {
         $formsQuery = $model::query();
 
         if ($filters) {
-            $formsQuery = $this->applyDynamicFilters($formsQuery, $filters, ['forms', 'presentation'], ['action', 'upcoming', 'missed']);
+            $formsQuery = $this->applyFormFilters($formsQuery, $filters, $trusted);
         }
 
 
         return $this->paginateAndMap($formsQuery, $page, $fields, $rows, $user);
     }
 
-    private function listFacultyForms($user, $model, $filters = null, $override = false, $page = 1, $rows = 50, $fields = [])
+    private function listFacultyForms($user, $model, $filters = null, $override = false, $page = 1, $rows = 50, $fields = [], array $trusted = [])
     {
         $faculty = $user->faculty;
         $supervisedStudents = $faculty->supervisedStudents();
@@ -222,14 +235,14 @@ trait GeneralFormList
         $formsQuery = $model::whereIn('student_id', $studentIds);
 
         if ($filters) {
-            $formsQuery = $this->applyDynamicFilters($formsQuery, $filters, ['forms', 'presentation'], ['action', 'upcoming', 'missed']);
+            $formsQuery = $this->applyFormFilters($formsQuery, $filters, $trusted);
         }
 
 
         return $this->paginateAndMap($formsQuery, $page, $fields, $rows, $user);
     }
 
-    private function listHodForms($user, $model, $filters = null, $override = false, $page = 1, $rows = 50, $fields = [])
+    private function listHodForms($user, $model, $filters = null, $override = false, $page = 1, $rows = 50, $fields = [], array $trusted = [])
     {
         $department = $user->faculty->department;
         $students = Student::where('department_id', $department->id)->pluck('roll_no');
@@ -237,12 +250,12 @@ trait GeneralFormList
         $formsQuery = $model::whereIn('student_id', $students);
 
         if ($filters) {
-            $formsQuery = $this->applyDynamicFilters($formsQuery, $filters, ['forms', 'presentation'], ['action', 'upcoming', 'missed']);
+            $formsQuery = $this->applyFormFilters($formsQuery, $filters, $trusted);
         }
 
         return $this->paginateAndMap($formsQuery, $page, $fields, $rows, $user);
     }
-    private function listAdordcForms($user, $model, $filters = null, $page = 1, $rows = 50, $fields = [])
+    private function listAdordcForms($user, $model, $filters = null, $page = 1, $rows = 50, $fields = [], array $trusted = [])
     {
         $faculty = $user->faculty;
 
@@ -267,13 +280,13 @@ trait GeneralFormList
         $formsQuery = $model::whereIn('student_id', $studentIds);
 
         if ($filters) {
-            $formsQuery = $this->applyDynamicFilters($formsQuery, $filters, ['forms', 'presentation'], ['action', 'upcoming', 'missed']);
+            $formsQuery = $this->applyFormFilters($formsQuery, $filters, $trusted);
         }
 
         return $this->paginateAndMap($formsQuery, $page, $fields, $rows, $user);
     }
 
-    private function listDoctoralForms($user, $model, $filters = null, $override = false, $page = 1, $rows = 50, $fields = [])
+    private function listDoctoralForms($user, $model, $filters = null, $override = false, $page = 1, $rows = 50, $fields = [], array $trusted = [])
     {
         $faculty = $user->faculty;
         $doctoralStudents = $faculty->doctoredStudents();
@@ -282,7 +295,7 @@ trait GeneralFormList
         $formsQuery = $model::whereIn('student_id', $studentIds);
 
         if ($filters) {
-            $formsQuery = $this->applyDynamicFilters($formsQuery, $filters, ['forms', 'presentation'], ['action', 'upcoming', 'missed']);
+            $formsQuery = $this->applyFormFilters($formsQuery, $filters, $trusted);
         }
 
 
