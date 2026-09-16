@@ -7,6 +7,7 @@ import ShowPublications from '../publications/ShowPublications';
 import { facultyNameCell } from '../facultyLink/FacultyLink';
 import { fileUrlFrom } from '../common/FileLink';
 import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
+import UrfApproval, { UrfApprovalTrail, stageLine } from './UrfApproval';
 
 export const URF_STATUSES = ['applied', 'selected', 'rejected'];
 export const REPORT_TYPES = { half_yearly: 'Half-yearly Progress Report', final: 'Final Report' };
@@ -105,7 +106,7 @@ const hasPublications = (groups) => Object.values(groups || {}).some((rows) => r
  * and reports, each report with the publications linked to it. The server
  * leaves out stipend details a student is not entitled to see.
  */
-const UrfRecord = ({ record, actions = null }) => {
+const UrfRecord = ({ record, actions = null, onDecided = () => {} }) => {
   const reportsDue = record.reports?.length > 0 || record.status === 'selected';
 
   return (
@@ -117,6 +118,7 @@ const UrfRecord = ({ record, actions = null }) => {
             <HeaderLine label="Status" title><StatusText status={record.status} /></HeaderLine>
             <HeaderLine label="Session">{record.session && `URF ${record.session}`}</HeaderLine>
             <HeaderLine label="Applied On">{formatDate(record.created_at)}</HeaderLine>
+            <HeaderLine label="Approval">{stageLine(record)}</HeaderLine>
             {/* Beside the facts, not with the decisions, so it never reads as one of them. */}
             <HeaderLine label="Proposal">
               {record.proposal && (
@@ -133,6 +135,15 @@ const UrfRecord = ({ record, actions = null }) => {
         </div>
         {actions && <div className="profile-actions">{actions}</div>}
       </div>
+
+      {/* The application itself, read in turn like every other URF form. */}
+      <UrfApproval
+        form={record}
+        formKey="urf-application"
+        applicationId={record.id}
+        onDecided={onDecided}
+      />
+      <UrfApprovalTrail form={record} />
 
       <TeamTables record={record} />
 
@@ -165,6 +176,31 @@ const UrfRecord = ({ record, actions = null }) => {
       {reportsDue && (
         <GridContainer label="Reports" elements={[<ReportsTable reports={record.reports} />]} space={3} />
       )}
+
+      {record.reports?.filter((report) => report.awaiting_me || report.mentor_comments).map((report) => (
+        <div key={`approval-${report.id}`} className="urf-report-approval">
+          <div className="urf-subhead"><h3>{report.type === 'final' ? 'Final Report' : 'Half-yearly Report'}</h3></div>
+          <UrfApproval
+            form={report}
+            formKey={report.type === 'final' ? 'urf-final-report' : 'urf-half-yearly-report'}
+            applicationId={record.id}
+            onDecided={onDecided}
+          />
+          <UrfApprovalTrail form={report} />
+        </div>
+      ))}
+
+      {record.fellows?.filter((fellow) => fellow.awaiting_me).map((fellow) => (
+        <div key={`approval-fellow-${fellow.id}`} className="urf-report-approval">
+          <div className="urf-subhead"><h3>Additional Information Form</h3></div>
+          <UrfApproval
+            form={fellow}
+            formKey="urf-additional-info"
+            applicationId={record.id}
+            onDecided={onDecided}
+          />
+        </div>
+      ))}
 
       {record.reports?.filter((report) => hasPublications(report.publications)).map((report) => (
         <GridContainer

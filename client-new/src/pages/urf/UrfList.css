@@ -31,3 +31,18 @@
 .urf-stage-bar {
   margin-bottom: 1.5rem;
 }
+
+/* A cell that opens what it names, drawn as the link it behaves like. */
+.urf-link-cell {
+  border: none;
+  background: none;
+  padding: 0;
+  color: #991b1b;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.urf-link-cell:hover {
+  text-decoration: underline;
+}

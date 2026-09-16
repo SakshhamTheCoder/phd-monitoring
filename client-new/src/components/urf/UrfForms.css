@@ -65,3 +65,32 @@
 @media (max-width: 900px) {
   .urf-mentor-row { grid-template-columns: 1fr 1fr; }
 }
+
+/* Reading a form: the line that says who has it, and what each reader said. */
+.urf-approval {
+  margin: 1rem 0;
+}
+
+.urf-approval-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #f9f9f9;
+}
+
+.urf-approval-trail {
+  margin: 0.5rem 0 1rem;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.urf-approval-stage {
+  color: #6b7280;
+}
+
+.urf-report-approval {
+  margin-top: 1.5rem;
+}

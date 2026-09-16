@@ -47,6 +47,7 @@ const UrfDetails = () => {
       {record && (
         <UrfRecord
           record={record}
+          onDecided={load}
           actions={DECISIONS[record.status]?.map((d) => (
             <CustomButton key={d.status} text={d.label} variant={d.variant} onClick={() => setPending(d)} />
           ))}

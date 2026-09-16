@@ -443,6 +443,16 @@ class UrfController extends Controller
             $data['reports'][$i]['publications'] = Publication::groupedFor('urf_application_id', $application->id, $report['id'], 'urf_report');
         }
 
+        // Whether each form is waiting on whoever is reading, which is what
+        // decides if they are offered the decision on it.
+        $data['awaiting_me'] = $application->awaits($user);
+        foreach ($application->reports as $i => $report) {
+            $data['reports'][$i]['awaiting_me'] = $report->awaits($user);
+        }
+        foreach ($application->fellows as $i => $fellow) {
+            $data['fellows'][$i]['awaiting_me'] = $fellow->awaits($user);
+        }
+
         return $data;
     }
 

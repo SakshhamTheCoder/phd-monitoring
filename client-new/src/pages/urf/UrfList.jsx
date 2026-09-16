@@ -15,12 +15,23 @@ import { EMPTY_VALUE } from '../../utils/timeParse';
 import { URF_STATUSES, capitalize } from '../../components/urf/UrfRecord';
 import { apiSettings, apiSaveSettings } from '../../api/settings';
 import useCapabilities from '../../hooks/useCapabilities';
+import TableComponent from '../../components/forms/table/TableComponent';
+import GridContainer from '../../components/forms/fields/GridContainer';
+import { apiUrfQueue } from '../../api/urf';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import { apiUrfSessions, apiUrfStatus } from '../../api/urf';
 import './UrfList.css';
 
 /** Admin → URF: every application, by stage, with the filters the students page has. */
 // The URF forms, as cards like the PhD forms page. Each opens its own list.
+// The four forms, as a reader would say them rather than as a path spells them.
+const FORM_NAMES = {
+  'urf-application': 'Application',
+  'urf-additional-info': 'Additional Information',
+  'urf-half-yearly-report': 'Half-yearly Report',
+  'urf-final-report': 'Final Report',
+};
+
 const URF_FORMS = [
   { form_type: 'urf-application', form_name: 'URF Application Form' },
   { form_type: 'urf-additional-info', form_name: 'Additional Information Form' },
@@ -57,6 +68,9 @@ const UrfList = () => {
   const navigate = useNavigate();
   const [filter, setFilter] = useState({ conditions: [] });
   const can = useCapabilities();
+  // What is waiting on whoever is reading: a mentor's projects, an ADORDC's
+  // department, the DORDC's desk. The office has the stage column instead.
+  const [queue, setQueue] = useState([]);
   const [tab, setTab] = useState(URF_STATUSES[0]);
   const [open, setOpen] = useState(null);
   // null until the sessions arrive: the table waits for them rather than
@@ -165,6 +179,11 @@ const UrfList = () => {
   // reads the projects they are on; deciding them is the office's.
   const decidable = tab === 'applied' && can('can_manage_urf');
 
+  useEffect(() => {
+    if (can('can_manage_urf')) return;
+    apiUrfQueue().then((res) => res.success && setQueue(res.response.data || []));
+  }, [refreshKey]);
+
   return (
     <Layout>
       <PageHeader
@@ -179,7 +198,33 @@ const UrfList = () => {
       {/* The forms grid reads every submission of a form, which is the office's
           view of the module rather than a mentor's. */}
       {can('can_manage_urf') && <FormGrid forms={URF_FORMS} />}
-      <div className="grid-label">All Projects</div>
+      {queue.length > 0 && (
+        <GridContainer
+          label={`Waiting on you (${queue.length})`}
+          elements={[
+            <TableComponent
+              data={queue}
+              keys={['session', 'project_title', 'students', 'form', 'waiting_since']}
+              titles={['Session', 'Project Title', 'Students', 'Form', 'Waiting Since']}
+              components={[{
+                // The title opens the project, which is where it is read.
+                key: 'project_title',
+                component: ({ row, data }) => (
+                  <button type="button" className="urf-link-cell" onClick={() => navigate(`/urf/${row.application_id}`)}>
+                    {data}
+                  </button>
+                ),
+              }, {
+                key: 'form',
+                component: ({ data }) => FORM_NAMES[data] || data,
+              }]}
+            />,
+          ]}
+          space={3}
+        />
+      )}
+
+      <div className="grid-label">{can('can_manage_urf') ? 'All Projects' : 'Projects You Mentor'}</div>
       <div className="urf-stage-bar">
         <Tabs
           items={URF_STATUSES.map((s) => ({ value: s, label: capitalize(s) }))}

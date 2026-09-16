@@ -27,6 +27,9 @@ export const apiUrfApply = (body) => customFetch(URF, 'POST', toFormData(body), 
 export const apiUrfFellow = (id, body) => customFetch(`${URF}/${id}/fellow`, 'POST', body, true);
 export const apiUrfReport = (id, body) => customFetch(`${URF}/${id}/reports`, 'POST', toFormData(body), true, true);
 export const apiUrfStatus = (id, status) => customFetch(`${URF}/${id}/status`, 'POST', { status }, true);
+// Reading a form and saying yes or no, and what is waiting on you.
+export const apiUrfDecide = (form, id, body) => customFetch(`${URF}/${form}/${id}/decision`, 'POST', body, true);
+export const apiUrfQueue = () => customFetch(`${URF}/queue`, 'GET', {}, true, false, false);
 
 // Sign-up, before there is an account. The toast is left to the page, which
 // says what went wrong field by field.
