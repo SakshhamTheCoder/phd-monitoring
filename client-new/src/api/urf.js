@@ -15,6 +15,12 @@ const toFormData = (body) => {
 export const apiUrfMine = () => customFetch(`${URF}/mine`, 'GET', {}, true, false, false);
 export const apiUrfBranches = () => customFetch(`${URF}/branches`, 'GET', {}, true);
 export const apiUrfUpdateMine = (body) => customFetch(`${URF}/me`, 'PATCH', body, true);
+
+// The office's list of UG students, and the records behind it.
+const UG_STUDENTS = `${baseURL}/ug-students`;
+export const apiUgStudentCreate = (body) => customFetch(UG_STUDENTS, 'POST', body, true);
+export const apiUgStudentUpdate = (id, body) => customFetch(`${UG_STUDENTS}/${id}`, 'PATCH', body, true);
+export const apiUgStudentImport = (rows) => customFetch(`${UG_STUDENTS}/import`, 'POST', { rows }, false);
 export const apiUrfSessions = () => customFetch(`${URF}/sessions`, 'GET', {}, true);
 export const apiUrfShow = (id) => customFetch(`${URF}/${id}`, 'GET', {}, true, false, false);
 export const apiUrfApply = (body) => customFetch(URF, 'POST', toFormData(body), true, true);

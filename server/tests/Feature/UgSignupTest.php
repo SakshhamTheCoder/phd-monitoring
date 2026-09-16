@@ -33,6 +33,17 @@ class UgSignupTest extends TestCase
         );
     }
 
+    private function admin(): User
+    {
+        $roleId = Role::where('role', 'admin')->value('id');
+        DB::table('roles')->where('id', $roleId)->update([
+            'can_manage_urf' => 'true',
+            'can_manage_app_settings' => 'true',
+        ]);
+
+        return User::where('current_role_id', $roleId)->first();
+    }
+
     private function form(array $overrides = []): array
     {
         return array_merge([
@@ -348,6 +359,66 @@ class UgSignupTest extends TestCase
             ->assertJsonPath('data.0.projects', 0);
 
         $this->actingAs($student, 'sanctum')->getJson('/api/ug-students')->assertForbidden();
+    }
+
+    public function test_the_office_adds_and_corrects_a_ug_student(): void
+    {
+        Mail::fake();
+        $branch = $this->branch();
+        $admin = $this->admin();
+
+        $created = $this->actingAs($admin, 'sanctum')->postJson('/api/ug-students', [
+            'first_name' => 'Office',
+            'last_name' => 'Made',
+            'email' => 'office_be22@thapar.edu',
+            'roll_no' => '102201234',
+            'branch_id' => $branch->id,
+        ])->assertCreated()->json();
+
+        $account = User::where('email', 'office_be22@thapar.edu')->first();
+        $this->assertSame('ug_student', $account->current_role->role);
+        $this->assertNull($account->password_set_at, 'they choose it from the email');
+        $this->assertNotNull($account->email_verified_at, 'the office vouched for the address');
+        $this->assertSame(2022, (int) $account->ugStudent->admission_year);
+
+        $this->actingAs($admin, 'sanctum')->patchJson("/api/ug-students/{$account->id}", [
+            'first_name' => 'Office',
+            'last_name' => 'Corrected',
+            'email' => 'office_be22@thapar.edu',
+            'roll_no' => '102201299',
+            'branch_id' => $branch->id,
+            'year' => 4,
+        ])->assertOk();
+
+        $this->assertSame('102201299', $account->fresh()->ugStudent->roll_no);
+        $this->assertSame(4, (int) $account->fresh()->ugStudent->year);
+    }
+
+    public function test_a_years_intake_arrives_in_one_import(): void
+    {
+        Mail::fake();
+        $branch = $this->branch();
+        $admin = $this->admin();
+
+        $rows = [
+            ['_rowNumber' => 2, 'full_name' => 'Intake One', 'email' => 'intake1_be23@thapar.edu', 'roll_no' => '102309001', 'programme' => 'BE', 'branch_code' => $branch->code],
+            ['_rowNumber' => 3, 'full_name' => 'Intake Two', 'email' => 'intake2_be23@thapar.edu', 'roll_no' => '102309002', 'programme' => 'BE', 'branch_code' => 'NOSUCH'],
+            ['_rowNumber' => 4, 'full_name' => 'No Roll', 'email' => 'intake3_be23@thapar.edu', 'roll_no' => '', 'programme' => 'BE', 'branch_code' => $branch->code],
+        ];
+
+        $this->actingAs($admin, 'sanctum')->postJson('/api/ug-students/import', ['rows' => $rows])
+            ->assertOk()
+            ->assertJsonPath('added', 1)
+            ->assertJsonCount(2, 'errors');
+
+        // The same file again corrects rather than duplicates.
+        $rows[0]['full_name'] = 'Intake Renamed';
+        $this->actingAs($admin, 'sanctum')->postJson('/api/ug-students/import', ['rows' => $rows])
+            ->assertOk()
+            ->assertJsonPath('added', 0)
+            ->assertJsonPath('updated', 1);
+
+        $this->assertSame('Renamed', User::where('email', 'intake1_be23@thapar.edu')->first()->last_name);
     }
 
     public function test_only_an_admin_manages_the_branch_list(): void
