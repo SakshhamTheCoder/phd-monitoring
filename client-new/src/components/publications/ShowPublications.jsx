@@ -159,7 +159,7 @@ const ShowPublications = ({
                                     leading={selectCell('sci')}
                                     keys={['authors', 'year', 'title', 'name', 'impact_factor', 'doi_link', 'id']}
                                     titles={['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of the Journal', 'Impact Factor', 'DOI', '']}
-                                    components={[authorsCell, 
+                                    components={[authorsCell,
                                         { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>{EMPTY_VALUE}</span> },
                                           { key: 'id', component: ({ data }) => renderActions(data, 'sci') }
                                     ]}
@@ -178,7 +178,7 @@ const ShowPublications = ({
                                     leading={selectCell('non_sci')}
                                     keys={['authors', 'year', 'title', 'name', 'impact_factor', 'doi_link','id']}
                                     titles={['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of the Journal', 'Impact Factor', 'DOI','']}
-                                    components={[authorsCell, 
+                                    components={[authorsCell,
                                         { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>{EMPTY_VALUE}</span> },
                                          { key: 'id', component: ({ data }) => renderActions(data, 'non_sci') }
                                     ]}
@@ -196,7 +196,7 @@ const ShowPublications = ({
                                     data={formData.international}
                                     leading={selectCell('international')}
                                     {...urfColumns(formData.international, ['authors', 'year', 'title', 'name', 'country', 'doi_link','id'], ['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of Conference', 'Place of Conference', 'DOI',' '])}
-                                    components={[authorsCell, 
+                                    components={[authorsCell,
                                         { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>{EMPTY_VALUE}</span> },
                                          { key: 'country', component: ({ data }) => <span>{data}</span> },
                                         { key: 'id', component: ({ data }) => renderActions(data, 'international') }
@@ -215,7 +215,7 @@ const ShowPublications = ({
                                     data={formData.national}
                                     leading={selectCell('national')}
                                     {...urfColumns(formData.national, ['authors', 'year', 'title', 'name', 'city', 'doi_link','id'], ['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of Conference', 'Place of Conference', 'DOI',' '])}
-                                    components={[authorsCell, 
+                                    components={[authorsCell,
                                         { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>{EMPTY_VALUE}</span> },
                                          {key: 'id', component: ({ data }) => renderActions(data, 'national') }
                                     ]}
@@ -234,7 +234,7 @@ const ShowPublications = ({
                                     leading={selectCell('book')}
                                     keys={['name', 'title', 'year', 'publisher','id']}
                                     titles={['Name of Book', 'Title of Paper', 'Year of Publication', 'Name of Publisher',' ']}
-                                    components={[authorsCell, 
+                                    components={[
                                          {key: 'id', component: ({ data }) => renderActions(data, 'book') }
                                     ]}
                                     getRowStyle={(data) => getRowStyle(data.id, 'book')}
@@ -252,7 +252,7 @@ const ShowPublications = ({
                                     leading={selectCell('patents')}
                                     keys={['authors', 'year', 'status', 'title', 'country','id']}
                                     titles={['Author(s)', 'Year of Award', 'Status', 'Title of Patent', 'International/National',' ']}
-                                    components={[authorsCell, 
+                                    components={[authorsCell,
                                         { key: 'year', component: ({ data }) => <span>{formatDate(data)}</span> },
                                        {key: 'id', component: ({ data }) => renderActions(data, 'patents') }
                                     ]}
