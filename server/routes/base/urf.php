@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 // Signing up is how a UG student gets an account, so nobody is logged in yet.
 // The branch list is out here with it, since the sign-up form offers it.
 // Everything after these needs a session.
-Route::get('/departments', [UrfController::class, 'departments']);
+Route::get('/branches', [UrfController::class, 'branches']);
 Route::post('/signup', [UgSignupController::class, 'signup'])->middleware('throttle:10,1');
 Route::get('/verify-email/{id}', [UgSignupController::class, 'verify'])->name('urf.verify-email')->middleware('signed');
 Route::post('/resend-verification', [UgSignupController::class, 'resend'])->middleware('throttle:6,1');

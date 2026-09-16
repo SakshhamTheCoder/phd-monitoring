@@ -11,8 +11,8 @@ class UrfApplication extends Model
 
     protected $fillable = [
         'project_title',
-        'student1_name', 'student1_roll_no', 'student1_department_id', 'student1_year', 'student1_gender', 'student1_email', 'student1_phone',
-        'student2_name', 'student2_roll_no', 'student2_department_id', 'student2_year', 'student2_gender', 'student2_email', 'student2_phone',
+        'student1_name', 'student1_roll_no', 'student1_branch_id', 'student1_year', 'student1_gender', 'student1_email', 'student1_phone',
+        'student2_name', 'student2_roll_no', 'student2_branch_id', 'student2_year', 'student2_gender', 'student2_email', 'student2_phone',
         'mentor1_faculty_code', 'mentor2_faculty_code',
     ];
 
@@ -27,14 +27,14 @@ class UrfApplication extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function student1Department()
+    public function student1Branch()
     {
-        return $this->belongsTo(Department::class, 'student1_department_id');
+        return $this->belongsTo(UgBranch::class, 'student1_branch_id');
     }
 
-    public function student2Department()
+    public function student2Branch()
     {
-        return $this->belongsTo(Department::class, 'student2_department_id');
+        return $this->belongsTo(UgBranch::class, 'student2_branch_id');
     }
 
     public function mentor1()

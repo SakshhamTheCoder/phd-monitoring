@@ -6,7 +6,7 @@ use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\NotificationManager;
 use App\Http\Controllers\Traits\SaveFile;
 use App\Models\AppSetting;
-use App\Models\Department;
+use App\Models\UgBranch;
 use App\Models\Patent;
 use App\Models\Publication;
 use App\Models\UrfApplication;
@@ -34,7 +34,7 @@ class UrfController extends Controller
     private const SEARCH_KEYS = ['status'];
 
     private const DETAIL = [
-        'student1Department', 'student2Department',
+        'student1Branch', 'student2Branch',
         'mentor1.user', 'mentor1.department', 'mentor2.user', 'mentor2.department',
         'fellows', 'reports',
     ];
@@ -52,7 +52,7 @@ class UrfController extends Controller
         }
 
         // Newest session first, and within a session the latest application first.
-        $query = UrfApplication::with(['student1Department', 'student2Department', 'mentor1.user', 'mentor2.user'])
+        $query = UrfApplication::with(['student1Branch', 'student2Branch', 'mentor1.user', 'mentor2.user'])
             ->orderByDesc('session')
             ->latest('id');
         $filters = json_decode((string) $request->query('filters'), true);
@@ -68,7 +68,7 @@ class UrfController extends Controller
                 'project_title' => $a->project_title,
                 'students' => collect([$a->student1_name, $a->student2_name])->filter()->join(', '),
                 // Two students of the same branch or year say it once.
-                'department' => collect([$a->student1Department?->name, $a->student2Department?->name])->filter()->unique()->join(', '),
+                'branch' => collect([$a->student1Branch?->name, $a->student2Branch?->name])->filter()->unique()->join(', '),
                 'year' => collect([$a->student1_year, $a->student2_year])->filter()->map(fn ($y) => UrfApplication::yearLabel($y))->unique()->join(', '),
                 'mentors' => collect([$a->mentor1, $a->mentor2])->filter()->map(fn ($m) => $m->user?->name())->join(', '),
                 // Not a column of its own: the mentors cell links each name.
@@ -84,7 +84,7 @@ class UrfController extends Controller
             'total' => $page->total(),
             'totalPages' => $page->lastPage(),
             'role' => $user->current_role->role,
-            'fields' => ['session', 'project_title', 'students', 'department', 'year', 'mentors', 'status', 'applied_on'],
+            'fields' => ['session', 'project_title', 'students', 'branch', 'year', 'mentors', 'status', 'applied_on'],
             'fieldsTitles' => ['Session', 'Project Title', 'Students', 'Branches', 'Years', 'Mentors', 'Status', 'Applied On'],
         ]);
     }
@@ -107,7 +107,7 @@ class UrfController extends Controller
         $filters = json_decode((string) $request->query('filters'), true);
         $details = $form === 'urf-additional-info';
         $page = ($details ? UrfFellow::query() : UrfReport::where('type', $form === 'urf-final-report' ? 'final' : 'half_yearly'))
-            ->with(['application.student1Department', 'application.student2Department', 'user'])
+            ->with(['application.student1Branch', 'application.student2Branch', 'user'])
             ->when($filters, fn ($q) => $q->whereHas('application', fn ($a) => $this->applyDynamicFilters($a, $filters, 'urf', self::SEARCH_KEYS)))
             ->latest('id')
             ->paginate($request->input('rows', 50), ['*'], 'page', $request->input('page', 1));
@@ -117,7 +117,7 @@ class UrfController extends Controller
             $n = $row->application->slotOf($row->user);
             return [
                 'roll_no' => $row->application->{"student{$n}_roll_no"},
-                'branch' => $row->application->{"student{$n}Department"}?->name,
+                'branch' => $row->application->{"student{$n}Branch"}?->name,
                 'year' => UrfApplication::yearLabel($row->application->{"student{$n}_year"}),
             ];
         };
@@ -162,12 +162,12 @@ class UrfController extends Controller
 
     /**
      * Branches for the application's dropdown, and for sign-up. Public: a
-     * student picking their branch has no account yet, and the list of
-     * departments is not something the portal keeps to itself.
+     * student picking their branch has no account yet, and which branches the
+     * institute teaches is not something the portal keeps to itself.
      */
-    public function departments()
+    public function branches()
     {
-        return response()->json(Department::orderBy('name')->get(['id', 'name']));
+        return response()->json(UgBranch::ordered()->get(['id', 'programme', 'code', 'name']));
     }
 
     /** The sessions that have projects, newest first, for the year picker. */
@@ -200,7 +200,7 @@ class UrfController extends Controller
             // What the student gave at sign-up, so the application form asks for
             // it once rather than every year. Absent for an account an admin
             // created, and then the form asks for all three as it used to.
-            'student' => $user->ugStudent()->with('department:id,name')->first(),
+            'student' => $user->ugStudent()->with('branch:id,programme,code,name')->first(),
             'applications' => UrfApplication::forMember($user)->with(self::DETAIL)->orderByDesc('session')->latest('id')->get()
                 ->map(fn (UrfApplication $application) => $this->payload($application, $user))
                 ->values(),
@@ -244,14 +244,14 @@ class UrfController extends Controller
             'project_title' => 'required|string|max:255',
             'student1_name' => 'required|string|max:255',
             'student1_roll_no' => 'required|string|max:50',
-            'student1_department_id' => 'required|exists:departments,id',
+            'student1_branch_id' => 'required|exists:ug_branches,id',
             'student1_year' => 'required|integer|between:1,4',
             'student1_gender' => 'required|in:Male,Female',
             'student1_email' => 'required|email',
             'student1_phone' => 'required|string|max:20',
             'student2_name' => 'nullable|string|max:255',
             'student2_roll_no' => "$second|string|max:50",
-            'student2_department_id' => "$second|exists:departments,id",
+            'student2_branch_id' => "$second|exists:ug_branches,id",
             'student2_year' => "$second|integer|between:1,4",
             'student2_gender' => "$second|in:Male,Female",
             'student2_email' => "$second|email|different:student1_email",
@@ -267,8 +267,11 @@ class UrfController extends Controller
         // application's answer updates the account instead.
         if ($record = $user->ugStudent) {
             $data['student1_roll_no'] = $record->roll_no;
-            $data['student1_department_id'] = $record->department_id;
-            if ((int) $data['student1_year'] !== (int) $record->year) {
+            $data['student1_branch_id'] = $record->branch_id;
+            // The application records the year they are in this session. Where
+            // that is not the year counted from their admission, it is the
+            // correction their account carries from here on.
+            if ((int) $data['student1_year'] !== (int) $record->year_of_study) {
                 $record->update(['year' => $data['student1_year']]);
             }
         }

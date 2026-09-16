@@ -377,6 +377,10 @@ Route::prefix('urf')->group(function () {
     require base_path('routes/base/urf.php');
 });
 
+Route::prefix('ug-branches')->group(function () {
+    require base_path('routes/base/ug_branches.php');
+});
+
 Route::prefix('settings')->group(function () {
     require base_path('routes/base/settings.php');
 });
