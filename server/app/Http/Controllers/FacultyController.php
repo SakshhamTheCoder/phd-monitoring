@@ -323,7 +323,7 @@ class FacultyController extends Controller
                 : [$loggedInUser->faculty->department_id];
             $facultyQuery->whereIn('department_id', $departments);
         } elseif (!$loggedInUser->may('can_read_faculty_directory')) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
     
         if ($filters) {
@@ -615,6 +615,7 @@ class FacultyController extends Controller
                         'email' => $email,
                         'phone' => $phone,
                         'password' => bcrypt($password),
+                        'password_set_at' => now(),
                         'role_id' => $role_id,
                         'current_role_id' => $role_id,
                         'default_role_id' => $role_id,

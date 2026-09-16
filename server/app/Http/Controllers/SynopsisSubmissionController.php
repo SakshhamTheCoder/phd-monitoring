@@ -52,7 +52,7 @@ class SynopsisSubmissionController extends Controller
         $role = $user->current_role;
         $steps=['student','faculty','doctoral','phd_coordinator','hod','dra','adordc','dordc','director','complete'];
         if($role->role != 'student'){
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $data=[
             'roll_no'=>$user->student->roll_no,
@@ -101,7 +101,7 @@ class SynopsisSubmissionController extends Controller
                 return $this->handleAdminForm($user, $form_id, $model,true);
            
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -137,7 +137,7 @@ class SynopsisSubmissionController extends Controller
             case 'director':
                 return $this->directorSubmit($user, $request, $form_id);
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
     public function bulkSubmit(Request $request)
@@ -147,7 +147,7 @@ class SynopsisSubmissionController extends Controller
        
         $allowedRoles = ['hod', 'phd_coordinator', 'dra', 'dordc', 'director','adordc'];
         if (!in_array($role->role, $allowedRoles)) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $request->validate([
             'form_ids' => 'required|array',
@@ -166,7 +166,7 @@ class SynopsisSubmissionController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
         if($role->role!='student'){
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $formInstance=SynopsisSubmission::find($form_id);
         if(count($this->selectedIds($request, 'publications')) != 0){
@@ -231,7 +231,7 @@ class SynopsisSubmissionController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
         if($role->role!='student'){
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $formInstance=SynopsisSubmission::find($form_id);
         if(count($this->selectedIds($request, 'publications')) != 0){

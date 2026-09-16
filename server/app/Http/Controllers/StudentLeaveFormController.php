@@ -67,7 +67,7 @@ class StudentLeaveFormController extends Controller
     {
         $user = Auth::user();
         if (!$user->may('can_apply_for_leave')) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
 
         $form = StudentLeaveForm::create([
@@ -95,7 +95,7 @@ class StudentLeaveFormController extends Controller
         $form_id = $this->routeParam($request, 'form_id', $form_id);
         $user = Auth::user();
         if (!$user->may('can_apply_for_leave')) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
 
         $form = StudentLeaveForm::find($form_id);
@@ -104,7 +104,7 @@ class StudentLeaveFormController extends Controller
         }
 
         if ($form->student_id != $user->student->roll_no) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
 
         if ($form->status !== 'draft') {
@@ -132,7 +132,7 @@ class StudentLeaveFormController extends Controller
             case 'admin':
                 return $this->handleAdminForm($user, $form_id, StudentLeaveForm::class, true);
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -147,7 +147,7 @@ class StudentLeaveFormController extends Controller
             case 'hod':
                 return $this->hodSubmit($user, $request, $form_id);
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -156,7 +156,7 @@ class StudentLeaveFormController extends Controller
     {
         $user = Auth::user();
         if (!$user->may('can_read_own_leave_balance')) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
 
         return response()->json(

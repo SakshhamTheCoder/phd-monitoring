@@ -328,11 +328,11 @@ class PresentationController extends Controller
             }
             if ($cur == 'student') {
                 if ($student->roll_no !== $user->student->roll_no) {
-                    return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                    return $this->refuse();
                 }
             } else {
                 if (!$student->checkSupervises($user->faculty->faculty_code) && !$student->department->checkCoordinates($user->faculty->faculty_code)) {
-                    return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                    return $this->refuse();
                 }
             }
             $old = Presentation::where('student_id', $request->student_id)->where('semester_id', $validator['semester_id'])->get();
@@ -364,7 +364,7 @@ class PresentationController extends Controller
             $form->addHistoryEntry("Presentation Scheduled by $actionBy", $user->first_name);
             return response()->json($form);
         }
-        return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+        return $this->refuse();
     }
 
     /**
@@ -644,7 +644,7 @@ class PresentationController extends Controller
                 ]);
             }
         } else {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
     }
 
@@ -655,7 +655,7 @@ class PresentationController extends Controller
         $cur = $role->role;
 
         if ($cur != 'faculty' && $cur != 'phd_coordinator') {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
 
         $request->validate([
@@ -766,7 +766,7 @@ class PresentationController extends Controller
                 return $this->handleAdminForm($user, $form_id, $model, true);
 
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -815,7 +815,7 @@ class PresentationController extends Controller
             case 'doctoral':
                 return $this->doctoralSubmit($user, $request, $form_id);
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -825,7 +825,7 @@ class PresentationController extends Controller
         $role = $user->current_role;
         $allowedRoles = ['hod', 'dordc', 'doctoral','adordc'];
         if (!in_array($role->role, $allowedRoles)) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $request->validate([
             'form_ids' => 'required|array',
@@ -847,7 +847,7 @@ class PresentationController extends Controller
             $user = Auth::user();
             $role = $user->current_role;
             if ($role->role != 'student') {
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
             }
             $formInstance = Presentation::find($form_id);
             if (count($this->selectedIds($request, 'publications')) != 0) {
@@ -908,7 +908,7 @@ class PresentationController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
         if ($role->role != 'student') {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $formInstance = Presentation::find($form_id);
         if (count($this->selectedIds($request, 'publications')) != 0) {

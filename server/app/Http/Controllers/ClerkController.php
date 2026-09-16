@@ -85,7 +85,7 @@ class ClerkController extends Controller
     {
         $user = Auth::user();
         if (!$user->may('can_read_own_clerk_departments')) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
 
         $departments = Department::whereIn('id', $this->clerkDepartmentIds($user->id))
@@ -110,7 +110,7 @@ class ClerkController extends Controller
 
         // Admins get read access for oversight; only clerks can write (save()).
         if (!$user->may('can_mark_attendance')) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
 
         $request->validate([

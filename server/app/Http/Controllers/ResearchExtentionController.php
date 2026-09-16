@@ -62,7 +62,7 @@ class ResearchExtentionController extends Controller
             'complete'
         ];
         if($role->role != 'student'){
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $changes=$user->student->researchExtentions();
         if($changes->count()>0){
@@ -118,7 +118,7 @@ class ResearchExtentionController extends Controller
                 return $this->handleAdminForm($user, $form_id, $model,true);
         
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -144,7 +144,7 @@ class ResearchExtentionController extends Controller
             case 'director':
                 return $this->directorSubmit($user, $request, $form_id);
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
     public function bulkSubmit(Request $request)
@@ -153,7 +153,7 @@ class ResearchExtentionController extends Controller
         $role = $user->current_role;
         $allowedRoles = ['hod', 'phd_coordinator', 'dra', 'dordc', 'director'];
         if (!in_array($role->role, $allowedRoles)) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $request->validate([
             'form_ids' => 'required|array',

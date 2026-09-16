@@ -48,7 +48,7 @@ class UrfDecisionController extends Controller
 
         $step = $instance->stepFor($user);
         if (!$step || $step === 'student' || !in_array($step, $instance::APPROVERS, true)) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
 
         if ($instance->stage !== $step) {

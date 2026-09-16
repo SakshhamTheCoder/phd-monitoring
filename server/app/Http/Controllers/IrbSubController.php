@@ -65,7 +65,7 @@ class IrbSubController extends Controller
         $role = $user->current_role;
         $steps=['student','faculty','external','doctoral','hod','adordc','dordc','complete'];
         if($role->role != 'student'){
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $data=[
             'roll_no'=>$user->student->roll_no,
@@ -102,7 +102,7 @@ class IrbSubController extends Controller
                     return $this->handleAdminForm($user, $form_id, $model,true);
            
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -126,7 +126,7 @@ class IrbSubController extends Controller
             case 'dordc':
                 return $this->dordcSubmit($user, $request, $form_id);
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
     public function bulkSubmit(Request $request)
@@ -136,7 +136,7 @@ class IrbSubController extends Controller
         $form_ids = $request->input('form_ids');
         $allowed_roles = ['hod', 'dordc','adordc'];
         if (!in_array($role->role, $allowed_roles)) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $request->validate([
             'form_ids' => 'required|array',

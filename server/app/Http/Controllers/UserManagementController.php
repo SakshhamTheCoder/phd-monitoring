@@ -195,13 +195,11 @@ class UserManagementController extends Controller
         } else {
             $user = new User();
             // Generate password if not provided
-            if (!$request->password) {
-                $password = Str::password(8, true, true, true, false);
-                $user->password = Hash::make($password);
-            } else {
-                $password = $request->password;
-                $user->password = Hash::make($password);
-            }
+            $password = $request->password ?: Str::password(8, true, true, true, false);
+            $user->password = Hash::make($password);
+            // The admin is handed this password, so one exists that somebody
+            // knows: Change Password asks for it rather than skipping it.
+            $user->password_set_at = now();
         }
 
         $name = $request->filled('full_name')
@@ -401,6 +399,7 @@ class UserManagementController extends Controller
                         'phone' => !empty($data['phone']) ? trim($data['phone']) : '',
                         'gender' => !empty($data['gender']) ? $data['gender'] : null,
                         'password' => Hash::make($password),
+                        'password_set_at' => now(),
                         'role_id' => $role->id,
                         'current_role_id' => $role->id,
                         'default_role_id' => $role->id,

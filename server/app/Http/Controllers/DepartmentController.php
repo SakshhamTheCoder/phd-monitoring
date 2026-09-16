@@ -33,7 +33,7 @@ class DepartmentController extends Controller
         $page = $request->input('page', 1);
     
         if (!$loggedInUser->may('can_edit_department')) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
     
         $facultyQuery = Department::with(['hod.user', 'adordc.user', 'phdCoordinators.faculty.user']);

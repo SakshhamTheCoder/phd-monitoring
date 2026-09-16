@@ -69,7 +69,7 @@ class ListOfExaminersController extends Controller
             'complete'
         ];
         if ($role->role != 'faculty') {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $data = [
             'roll_no' => $request->roll_no,
@@ -87,7 +87,7 @@ class ListOfExaminersController extends Controller
        
         $allowedRoles = ['director'];
         if (!in_array($role->role, $allowedRoles)) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $request->validate([
             'form_ids' => 'required|array',
@@ -114,7 +114,7 @@ class ListOfExaminersController extends Controller
                 return $this->handleAdminForm($user, $form_id, $model,true);
            
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -133,7 +133,7 @@ class ListOfExaminersController extends Controller
         $recommendation_id = $this->routeParam($request, 'recommendation_id', $recommendation_id);
         $user = Auth::user();
         if ($user->current_role->role !== 'faculty') {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
 
         $form = ListOfExaminersForm::find($form_id);
@@ -142,7 +142,7 @@ class ListOfExaminersController extends Controller
         }
 
         if (!$form->student->checkSupervises($user->faculty->faculty_code)) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
 
         if ($form->supervisor_lock || $form->stage !== 'supervisor') {
@@ -186,7 +186,7 @@ class ListOfExaminersController extends Controller
             case 'director':
                 return $this->directorSubmit($user, $request, $form_id);
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 

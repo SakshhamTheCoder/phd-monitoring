@@ -54,7 +54,7 @@ class UserController extends Controller{
                     ->each(fn ($form) => $form['action_required'] = false);
                 break;
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
         return response()->json($data, 200);
     }

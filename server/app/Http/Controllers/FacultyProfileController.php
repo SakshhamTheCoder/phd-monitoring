@@ -30,7 +30,7 @@ class FacultyProfileController extends Controller
     {
         $user = Auth::user();
         if (!$user?->may('can_read_faculty_directory')) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
 
         $faculty = Faculty::with(['user', 'department'])->find($facultyCode);

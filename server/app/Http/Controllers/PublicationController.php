@@ -28,7 +28,7 @@ class PublicationController extends Controller
     {
         $user = Auth::user();
         if (!$user->may('can_manage_own_publications')) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         [$column, $ownerId] = Publication::ownerOf($user);
 
@@ -56,7 +56,7 @@ class PublicationController extends Controller
         ]);
         $user = Auth::user();
         if (!$user->may('can_manage_own_publications')) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
@@ -261,7 +261,7 @@ class PublicationController extends Controller
     {
         $user = Auth::user();
         if (!$user->may('can_manage_own_publications')) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
 
         $publication = Publication::find($id);

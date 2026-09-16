@@ -59,7 +59,7 @@ trait GeneralFormList
             case 'external':
                 return $this->listDoctoralForms($user, $model, $filters, $override, $page, $rows, $fields, $trusted);
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -146,28 +146,28 @@ trait GeneralFormList
             case 'hod':
             case 'phd_coordinator':
                 if ($student->department_id != $user->faculty->department_id) {
-                    return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                    return $this->refuse();
                 }
                 break;
             case 'faculty':
                 if (!$user->faculty->supervisedStudents->contains('roll_no', $student_id)) {
-                    return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                    return $this->refuse();
                 }
                 break;
             case 'doctoral':
             case 'external':
                 if (!$student->checkDoctoralCommittee($user->faculty->faculty_code)) {
-                    return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                    return $this->refuse();
                 }
                 break;
             case 'adordc':
                 if (!$user->faculty->adordcDepartments->pluck('id')->contains($student->department_id)) {
-                    return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                    return $this->refuse();
                 }
                 break;
 
             case 'student':
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
                 break;
             default:
                 break;

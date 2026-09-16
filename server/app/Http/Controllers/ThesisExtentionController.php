@@ -55,7 +55,7 @@ class ThesisExtentionController extends Controller
         $role = $user->current_role;
         $steps=['student','faculty','phd_coordinator','hod','dra','dordc','complete'];
         if($role->role != 'student'){
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         // The first extension ends at DoRDC. A second one is the special
         // extension, so it needs the Director's approval on top.
@@ -96,7 +96,7 @@ class ThesisExtentionController extends Controller
                 return $this->handleAdminForm($user, $form_id, $model,true);
            
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -120,7 +120,7 @@ class ThesisExtentionController extends Controller
             case 'phd_coordinator':
                 return $this->coordinatorSubmit($user, $request, $form_id);
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -166,7 +166,7 @@ class ThesisExtentionController extends Controller
        
         $allowedRoles = ['hod', 'phd_coordinator', 'dra', 'dordc', 'director'];
         if (!in_array($role->role, $allowedRoles)) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $request->validate([
             'form_ids' => 'required|array',

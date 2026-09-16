@@ -63,7 +63,7 @@ class SupervisorChangeFormController extends Controller {
         $steps=['student','phd_coordinator','hod','dordc','dra','complete'];
         
         if($role->role != 'student'){
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $data=[
             'roll_no'=>$user->student->roll_no,
@@ -111,7 +111,7 @@ class SupervisorChangeFormController extends Controller {
                 return $this->handleAdminForm($user, $form_id, $model,true);
            
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -133,7 +133,7 @@ class SupervisorChangeFormController extends Controller {
             case 'dra':
                 return $this->draSubmit($user, $request, $form_id);
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
     public function bulkSubmit(Request $request)
@@ -143,7 +143,7 @@ class SupervisorChangeFormController extends Controller {
 
         $allowedRoles = ['hod', 'phd_coordinator', 'dra', 'dordc', 'director'];
         if (!in_array($role->role, $allowedRoles)) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $request->validate([
             'form_ids' => 'required|array',

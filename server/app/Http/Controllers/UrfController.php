@@ -505,8 +505,4 @@ class UrfController extends Controller
         return $code && in_array($code, [$application->mentor1_faculty_code, $application->mentor2_faculty_code], false);
     }
 
-    private function refuse()
-    {
-        return response()->json(['message' => 'You are not authorized to access this resource'], 403);
-    }
 }

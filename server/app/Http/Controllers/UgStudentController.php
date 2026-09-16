@@ -272,8 +272,4 @@ class UgStudentController extends Controller
         ];
     }
 
-    private function refuse()
-    {
-        return response()->json(['message' => 'You are not authorized to access this resource'], 403);
-    }
 }

@@ -71,7 +71,7 @@ class StudentSemesterOffFormController extends Controller
         $role = $user->current_role;
         $steps=['student','faculty','phd_coordinator','hod','dra','dordc','director','complete'];
         if($role->role != 'student'){
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $data=[
             'roll_no'=>$user->student->roll_no,
@@ -107,7 +107,7 @@ class StudentSemesterOffFormController extends Controller
                 return $this->handleAdminForm($user, $form_id, $model,true);
            
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -133,7 +133,7 @@ class StudentSemesterOffFormController extends Controller
             case 'director':
                 return $this->directorSubmit($user, $request, $form_id);
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -194,7 +194,7 @@ class StudentSemesterOffFormController extends Controller
         $form_ids = $request->input('form_ids', []);
         $allowedRoles = ['hod', 'phd_coordinator', 'dra', 'dordc', 'director'];
         if (!in_array($role->role, $allowedRoles)) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         if (empty($form_ids)) {
             return response()->json(['message' => 'No form IDs provided'], 400);

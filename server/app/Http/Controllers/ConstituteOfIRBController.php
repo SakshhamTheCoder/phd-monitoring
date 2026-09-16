@@ -81,7 +81,7 @@ class ConstituteOfIRBController extends Controller
             'complete'
         ];
         if($role->role != 'student'){
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $data=[
             'roll_no'=>$user->student->roll_no,
@@ -121,7 +121,7 @@ class ConstituteOfIRBController extends Controller
             case 'admin':
                 return $this->handleAdminForm($user, $form_id, $model,true);
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -144,7 +144,7 @@ class ConstituteOfIRBController extends Controller
             case 'dordc':
                 return $this->dordcSubmit($user, $request, $form_id);
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -154,7 +154,7 @@ class ConstituteOfIRBController extends Controller
         $role = $user->current_role;
         $form_id = $request->form_id;
         if($role->role != 'dra'){
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $request->validate([
             'form_ids' => 'required|array',

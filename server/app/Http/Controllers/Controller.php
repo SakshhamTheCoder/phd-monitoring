@@ -23,6 +23,16 @@ abstract class Controller
     }
 
     /**
+     * The answer to someone asking for what they may not have. Written once
+     * here because the same line was copied into 98 places, and a refusal that
+     * differs by a word between endpoints reads as a different problem.
+     */
+    protected function refuse(string $message = 'You are not authorized to access this resource')
+    {
+        return response()->json(['message' => $message], 403);
+    }
+
+    /**
      * The ids a request selected under one field, as a list.
      *
      * A body that leaves the field out reads as null, and counting or iterating

@@ -62,7 +62,7 @@ class SupervisorAllocationController extends Controller
             'complete'
         ];
         if ($role->role != 'student') {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $data = [
             'roll_no' => $user->student->roll_no,
@@ -96,7 +96,7 @@ class SupervisorAllocationController extends Controller
                 return $this->handleAdminForm($user, $form_id, $model, true);
 
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -114,7 +114,7 @@ class SupervisorAllocationController extends Controller
             case 'phd_coordinator':
                 return $this->coordinatorSubmit($user, $request, $form_id);
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -126,7 +126,7 @@ class SupervisorAllocationController extends Controller
             'form_ids' => 'array|required',
         ]);
         if ($role->role != 'hod') {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $request->merge(['approval' => true]);
         foreach ($request->form_ids as $form_id) {
@@ -149,7 +149,7 @@ class SupervisorAllocationController extends Controller
         $role = $user->current_role;
 
         if ($role->role != 'phd_coordinator' && $role->role != 'admin') {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
 
         $request->validate([
