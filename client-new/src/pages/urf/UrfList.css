@@ -1,3 +1,33 @@
 /* body sets font-weight 600 app-wide, so the rows arrived semi-bold. The column
    titles carry the emphasis; the rows are data. */
 .urf-list .form-table td { font-weight: 400; }
+
+/* The stage tabs and the session they apply to, on one line. The tab bar
+   already carries the bottom margin, so the picker matches it. */
+.urf-stage-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+/* Three tabs never need to scroll. The shared rule sets overflow-x, which makes
+   overflow-y compute to auto as well, and that showed as a stub scrollbar. */
+.urf-stage-bar .tabs {
+  flex: 1;
+  margin-bottom: 0;
+  overflow: visible;
+}
+
+.urf-session-picker {
+  min-width: 9rem;
+}
+
+/* The row carries the spacing. The picker's own field must not, or flex-end
+   would line up the margin boxes and leave the dropdown riding high. */
+.urf-session-picker .input-field-container {
+  margin-bottom: 0;
+}
+
+.urf-stage-bar {
+  margin-bottom: 1.5rem;
+}

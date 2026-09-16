@@ -137,7 +137,7 @@ class UrfFlowTest extends TestCase
             ->assertJsonCount(0, 'reports.0.publications.international')
             ->assertJsonMissingPath('publications');
         $this->getJson('/api/urf?filters=' . urlencode(json_encode(['conditions' => [['key' => 'project_title', 'op' => '=', 'value' => $form['project_title']]]])))
-            ->assertJsonPath('data.0.roll_no', '102203001, 102203002')
+            ->assertJsonPath('data.0.students', 'Asha Rao, Ravi Kumar')
             ->assertJsonPath('data.0.year', '3rd Year, 2nd Year');
         $this->actingAs($applicant, 'sanctum')->getJson('/api/urf/mine')->assertOk()->assertJsonCount(0, 'applications.0.fellows');
         $this->actingAs($partner, 'sanctum')->getJson('/api/urf/mine')->assertOk()->assertJsonCount(1, 'applications.0.fellows');

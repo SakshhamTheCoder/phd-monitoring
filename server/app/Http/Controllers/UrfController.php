@@ -67,18 +67,25 @@ class UrfController extends Controller
                 'session' => $a->session,
                 'project_title' => $a->project_title,
                 'students' => collect([$a->student1_name, $a->student2_name])->filter()->join(', '),
-                'roll_no' => collect([$a->student1_roll_no, $a->student2_roll_no])->filter()->join(', '),
-                'department' => collect([$a->student1Department?->name, $a->student2Department?->name])->filter()->join(', '),
-                'year' => collect([$a->student1_year, $a->student2_year])->filter()->map(fn ($y) => UrfApplication::yearLabel($y))->join(', '),
+                // Two students of the same branch or year say it once.
+                'department' => collect([$a->student1Department?->name, $a->student2Department?->name])->filter()->unique()->join(', '),
+                'year' => collect([$a->student1_year, $a->student2_year])->filter()->map(fn ($y) => UrfApplication::yearLabel($y))->unique()->join(', '),
                 'mentors' => collect([$a->mentor1, $a->mentor2])->filter()->map(fn ($m) => $m->user?->name())->join(', '),
+                // Not a column of its own: the mentors cell links each name.
+                'mentor_list' => collect([$a->mentor1, $a->mentor2])->filter()->map(fn ($m) => [
+                    'code' => $m->faculty_code,
+                    'name' => $m->user?->name(),
+                ])->values(),
                 'status' => ucfirst($a->status),
                 'applied_on' => $a->created_at?->format('d M Y'),
+                // Not a column of its own: the title opens it.
+                'proposal' => $a->proposal,
             ]),
             'total' => $page->total(),
             'totalPages' => $page->lastPage(),
             'role' => $user->current_role->role,
-            'fields' => ['session', 'project_title', 'students', 'roll_no', 'department', 'year', 'mentors', 'status', 'applied_on'],
-            'fieldsTitles' => ['Session', 'Project Title', 'Students', 'Roll Nos', 'Branches', 'Years', 'Mentors', 'Status', 'Applied On'],
+            'fields' => ['session', 'project_title', 'students', 'department', 'year', 'mentors', 'status', 'applied_on'],
+            'fieldsTitles' => ['Session', 'Project Title', 'Students', 'Branches', 'Years', 'Mentors', 'Status', 'Applied On'],
         ]);
     }
 
@@ -164,6 +171,19 @@ class UrfController extends Controller
         return response()->json(Department::orderBy('name')->get(['id', 'name']));
     }
 
+    /** The sessions that have projects, newest first, for the year picker. */
+    public function sessions()
+    {
+        $user = Auth::user();
+        if (!$user->may('can_manage_urf')) {
+            return $this->refuse();
+        }
+
+        return response()->json(
+            UrfApplication::distinct()->orderByDesc('session')->pluck('session')->values()
+        );
+    }
+
     /**
      * The student pages: every URF project the student is on, newest first,
      * whether applications are open, and the session a new one would join.
@@ -178,7 +198,7 @@ class UrfController extends Controller
         return response()->json([
             'applications_open' => (bool) AppSetting::value('urf', 'applications_open'),
             'session' => (int) now()->year,
-            'applications' => UrfApplication::forMember($user)->with(self::DETAIL)->latest('id')->get()
+            'applications' => UrfApplication::forMember($user)->with(self::DETAIL)->orderByDesc('session')->latest('id')->get()
                 ->map(fn (UrfApplication $application) => $this->payload($application, $user))
                 ->values(),
         ]);
