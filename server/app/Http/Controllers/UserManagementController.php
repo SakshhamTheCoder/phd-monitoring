@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Models\User;
 use App\Models\Role;
-use App\Models\UgStudent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -131,7 +130,7 @@ class UserManagementController extends Controller
      */
     private function saveUgStudentRecord(User $user, Request $request): void
     {
-        if (!$request->hasAny(['roll_no', 'branch_id', 'admission_year', 'year'])) {
+        if (!$request->hasAny(['roll_no', 'branch_id', 'year'])) {
             return;
         }
 
@@ -143,10 +142,8 @@ class UserManagementController extends Controller
         $record->fill(array_filter([
             'roll_no' => $request->roll_no,
             'branch_id' => $request->branch_id,
-            'admission_year' => $request->admission_year ?: UgStudent::admissionYearFrom($user->email),
+            'year' => $request->year,
         ]));
-        // Blank means the year counted from the admission year stands.
-        $record->year = $request->year ?: null;
         $user->ugStudent()->save($record);
     }
 
@@ -180,7 +177,6 @@ class UserManagementController extends Controller
             // only until they apply.
             'roll_no' => 'nullable|string|max:50',
             'branch_id' => 'nullable|exists:ug_branches,id',
-            'admission_year' => 'nullable|integer|min:2000',
             'year' => 'nullable|integer|between:1,4',
         ];
 

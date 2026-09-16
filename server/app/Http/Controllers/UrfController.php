@@ -278,10 +278,9 @@ class UrfController extends Controller
         if ($record = $user->ugStudent) {
             $data['student1_roll_no'] = $record->roll_no;
             $data['student1_branch_id'] = $record->branch_id;
-            // The application records the year they are in this session. Where
-            // that is not the year counted from their admission, it is the
-            // correction their account carries from here on.
-            if ((int) $data['student1_year'] !== (int) $record->year_of_study) {
+            // The application records the year they are in this session, so a
+            // student who has moved up says so here and their account follows.
+            if ((int) $data['student1_year'] !== (int) $record->year) {
                 $record->update(['year' => $data['student1_year']]);
             }
         }

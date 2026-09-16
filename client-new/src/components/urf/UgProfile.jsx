@@ -96,7 +96,7 @@ const UgProfile = () => {
         <InfoGrid className="student-info-grid" rows={[
           { label: 'Roll Number', value: state?.student?.roll_no || current?.[`student${slot}_roll_no`] },
           { label: 'Branch', value: state?.student?.branch?.name || current?.[`student${slot}_branch`]?.name },
-          { label: 'Year', value: yearLabel(state?.student?.year_of_study || current?.[`student${slot}_year`]) },
+          { label: 'Year', value: yearLabel(state?.student?.year || current?.[`student${slot}_year`]) },
           { label: 'Semester', value: state?.student?.semester_of_study },
           { label: 'Email', value: me.email },
           { label: 'Phone', value: me.phone },

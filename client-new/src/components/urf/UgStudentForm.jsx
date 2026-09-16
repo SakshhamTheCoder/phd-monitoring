@@ -14,8 +14,7 @@ const GENDERS = [{ title: 'Male', value: 'Male' }, { title: 'Female', value: 'Fe
  * The office adding or correcting a UG student.
  *
  * A new account is made without a password and sent the link to choose one, the
- * way Manage Users does it. Year of study is counted from the year of
- * admission, so it is asked for only where that count is wrong.
+ * way Manage Users does it.
  */
 const UgStudentForm = ({ student, onClose, onSaved }) => {
   const [branches, setBranches] = useState([]);
@@ -37,24 +36,17 @@ const UgStudentForm = ({ student, onClose, onSaved }) => {
       gender: student?.gender || '',
       roll_no: student?.roll_no || '',
       branch_id: student?.branch_id || '',
-      admission_year: student?.admission_year || '',
-      year: student?.year_override || '',
+      year: student?.year_of_study || '',
     });
   }, [student]);
 
   const set = (key) => (value) => setBody((prev) => ({ ...prev, [key]: value }));
 
   const save = async () => {
-    const payload = {
-      ...body,
-      admission_year: body.admission_year || null,
-      year: body.year || null,
-    };
-
     setSaving(true);
     const res = student
-      ? await apiUgStudentUpdate(student.id, payload)
-      : await apiUgStudentCreate(payload);
+      ? await apiUgStudentUpdate(student.id, body)
+      : await apiUgStudentCreate(body);
     setSaving(false);
     if (!res.success) return;
 
@@ -76,18 +68,12 @@ const UgStudentForm = ({ student, onClose, onSaved }) => {
           <DropdownField label="Branch" options={branches} initialValue={body.branch_id} onChange={set('branch_id')} required />,
           <InputField label="Phone Number" initialValue={body.phone} onChange={set('phone')} />,
           <DropdownField label="Gender" options={GENDERS} initialValue={body.gender} onChange={set('gender')} />,
-          <InputField
-            label="Year of Admission"
-            type="number"
-            hint="Blank reads it from the roll number, like 2023 from be23."
-            initialValue={body.admission_year}
-            onChange={set('admission_year')}
-          />,
           <DropdownField
-            label="Year of Study (blank counts from admission)"
-            options={[{ title: 'Counted from admission', value: '' }, ...YEARS]}
+            label="Year of Study"
+            options={YEARS}
             initialValue={body.year}
             onChange={set('year')}
+            required
           />,
         ]}
       />

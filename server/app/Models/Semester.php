@@ -50,26 +50,6 @@ class Semester extends Model
     }
 
     /**
-     * Which year of the degree a student admitted in $admissionYear is in now,
-     * and which semester of it. Four year degrees, so a fifth year is held at
-     * the fourth: someone that far along is not applying for a fellowship.
-     */
-    public static function yearOfStudy(int $admissionYear, ?Carbon $now = null): int
-    {
-        $term = self::currentTerm($now);
-
-        return max(1, min(4, $term['year'] - $admissionYear + 1));
-    }
-
-    /** The semester of the degree, 1 to 8, for a student admitted that year. */
-    public static function semesterOfStudy(int $admissionYear, ?Carbon $now = null): int
-    {
-        $term = self::currentTerm($now);
-
-        return (self::yearOfStudy($admissionYear, $now) - 1) * 2 + $term['semester'];
-    }
-
-    /**
      * Create or update a semester using a semester code.
      */
     public static function createOrUpdateFromCode(string $semesterCode, ?string $startDate = null, ?string $endDate = null): ?self

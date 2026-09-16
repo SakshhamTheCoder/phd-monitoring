@@ -43,7 +43,7 @@ const UgDetailsForm = ({ student, isOpen, onClose, onSaved }) => {
 
   const save = async () => {
     setSaving(true);
-    const res = await apiUrfUpdateMine({ ...body, year: body.year || null });
+    const res = await apiUrfUpdateMine(body);
     setSaving(false);
     if (!res.success) return;
 
@@ -70,10 +70,11 @@ const UgDetailsForm = ({ student, isOpen, onClose, onSaved }) => {
             required
           />,
           <DropdownField
-            label={`Year of Study (${yearLabel(student?.year_of_study) || 'from your roll number'})`}
-            options={[{ title: 'From my roll number', value: '' }, ...YEARS]}
+            label="Year of Study"
+            options={YEARS}
             initialValue={body.year}
             onChange={set('year')}
+            required
           />,
         ]}
       />

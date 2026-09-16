@@ -14,45 +14,26 @@ class UgStudent extends Model
      * and the two digits say when they started. A scholar or a member of staff
      * has no such address and is given an account by the office as before.
      */
-    private const ELIGIBLE_EMAIL = '/(?:^|[^a-z])(?:be|btech)(\d{2})@thapar\.edu$/i';
+    private const ELIGIBLE_EMAIL = '/(?:^|[^a-z])(?:be|btech)\d{2}@thapar\.edu$/i';
 
-    protected $fillable = ['roll_no', 'branch_id', 'admission_year', 'year'];
+    protected $fillable = ['roll_no', 'branch_id', 'year'];
 
-    /** Worked out rather than stored, so they are right in every session. */
-    protected $appends = ['year_of_study', 'semester_of_study'];
+    /** The one thing that follows from the year, so it is not stored twice. */
+    protected $appends = ['semester_of_study'];
 
     public static function eligibleEmail(?string $email): bool
     {
-        return self::admissionYearFrom($email) !== null;
-    }
-
-    /** The year the address says they were admitted: be23 is 2023. */
-    public static function admissionYearFrom(?string $email): ?int
-    {
-        return preg_match(self::ELIGIBLE_EMAIL, (string) $email, $matches)
-            ? 2000 + (int) $matches[1]
-            : null;
+        return (bool) preg_match(self::ELIGIBLE_EMAIL, (string) $email);
     }
 
     /**
-     * Which year of the degree they are in now: what they corrected it to if
-     * they did, otherwise counted from the year they were admitted.
+     * Which semester of the degree they are in: their year, and whether the
+     * term running now is the odd or the even one. A third year in an odd term
+     * is in the fifth semester, and in the even one the sixth.
      */
-    public function getYearOfStudyAttribute(): ?int
-    {
-        if ($this->year) {
-            return $this->year;
-        }
-
-        return $this->admission_year ? Semester::yearOfStudy($this->admission_year) : null;
-    }
-
-    /** Which semester of the degree that year is in, 1 to 8. */
     public function getSemesterOfStudyAttribute(): ?int
     {
-        $year = $this->year_of_study;
-
-        return $year ? ($year - 1) * 2 + Semester::currentTerm()['semester'] : null;
+        return $this->year ? ($this->year - 1) * 2 + Semester::currentTerm()['semester'] : null;
     }
 
     public function user()

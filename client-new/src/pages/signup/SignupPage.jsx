@@ -13,35 +13,8 @@ const YEARS = [
   { value: 4, label: '4th Year' },
 ];
 
-// The address carries the year of admission, so the year of study follows from
-// the term we are in: July to June, odd until December. The same sum the server
-// does, shown here so nobody is asked for something already known.
-const yearOfStudy = (email) => {
-  const admitted = /(?:^|[^a-z])(?:be|btech)(\d{2})@thapar\.edu$/i.exec(String(email || ''));
-  if (!admitted) return null;
-
-  const now = new Date();
-  const termYear = now.getMonth() + 1 >= 7 ? now.getFullYear() : now.getFullYear() - 1;
-  return Math.max(1, Math.min(4, termYear - (2000 + Number(admitted[1])) + 1));
-};
-
-const field = 'tw-w-full tw-rounded tw-border tw-border-slate-400 tw-px-3 tw-py-2 tw-text-black focus:tw-ring-2 focus:tw-ring-brand tw-outline-none';
-
-const Field = ({ id, label, error, children }) => (
-  <div>
-    <label htmlFor={id} className="tw-block tw-text-sm tw-text-gray-700 tw-mb-1">{label}</label>
-    {children}
-    {error && <p className="tw-text-red-600 tw-text-xs tw-mt-1">{error}</p>}
-  </div>
-);
-
-/**
- * Sign-up for undergraduates applying to the URF. Everyone else is given an
- * account by an admin, so this asks only for what a fellowship application
- * needs and hands the student on to the confirmation email.
- */
 const SignupPage = () => {
-  const { register, handleSubmit, reset, watch } = useForm();
+  const { register, handleSubmit, reset } = useForm();
   const [branches, setBranches] = useState([]);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -163,7 +136,6 @@ const SignupPage = () => {
     (groups[branch.programme] = groups[branch.programme] || []).push(branch);
     return groups;
   }, {});
-  const derivedYear = yearOfStudy(google ? google.email : watch('email'));
 
   const resend = async () => {
     const result = await apiUrfResendVerification(sentTo);
@@ -274,13 +246,9 @@ const SignupPage = () => {
                     ))}
                   </select>
                 </Field>
-                <Field
-                  id="year"
-                  label={derivedYear ? `Year of study (${YEARS[derivedYear - 1].label})` : 'Year of study'}
-                  error={errors.year}
-                >
-                  <select id="year" className={field} defaultValue="" {...register('year')}>
-                    <option value="">{derivedYear ? 'Taken from your roll number' : 'Select'}</option>
+                <Field id="year" label="Year of study" error={errors.year}>
+                  <select id="year" className={field} defaultValue="" {...register('year', { required: true })}>
+                    <option value="" disabled>Select</option>
                     {YEARS.map((year) => <option key={year.value} value={year.value}>{year.label}</option>)}
                   </select>
                 </Field>

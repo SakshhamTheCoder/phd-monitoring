@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Role;
-use App\Models\Semester;
 use App\Http\Controllers\UgSignupController;
 use App\Models\UgBranch;
 use App\Models\UgStudent;
@@ -56,6 +55,7 @@ class UgSignupTest extends TestCase
             'password_confirmation' => 'a-good-password',
             'roll_no' => (string) random_int(102200000, 102299999),
             'branch_id' => $this->branch()->id,
+            'year' => 2,
         ], $overrides);
     }
 
@@ -75,10 +75,7 @@ class UgSignupTest extends TestCase
         $record = $user->ugStudent;
         $this->assertSame($form['roll_no'], $record->roll_no);
         $this->assertSame($form['branch_id'], $record->branch_id);
-        // Counted from the address rather than asked for.
-        $this->assertSame(2023, (int) $record->admission_year);
-        $this->assertNull($record->year, 'nothing to correct');
-        $this->assertSame(Semester::yearOfStudy(2023), $record->year_of_study);
+        $this->assertSame(2, (int) $record->year);
     }
 
     public function test_it_refuses_an_outside_address_a_taken_one_and_a_taken_roll_number(): void
@@ -224,7 +221,7 @@ class UgSignupTest extends TestCase
 
         $record = $student->fresh()->ugStudent;
         $this->assertSame($other->id, $record->branch_id);
-        $this->assertSame(4, (int) $record->year, 'the correction sticks');
+        $this->assertSame(4, (int) $record->year, 'the new year sticks');
         $this->assertSame('9000000000', $student->fresh()->phone);
 
         // Once there is an application the details belong to a record the
@@ -243,6 +240,7 @@ class UgSignupTest extends TestCase
             'gender' => 'Male',
             'roll_no' => '102288888',
             'branch_id' => $other->id,
+            'year' => 3,
         ])->assertStatus(422);
 
         $this->assertSame('102299999', $student->fresh()->ugStudent->roll_no);
@@ -333,7 +331,7 @@ class UgSignupTest extends TestCase
             ->assertOk()
             ->assertJsonPath('student.roll_no', $form['roll_no'])
             ->assertJsonPath('student.branch.name', 'Signup Test Branch')
-            ->assertJsonPath('student.year_of_study', Semester::yearOfStudy(2023));
+            ->assertJsonPath('student.year', 2);
     }
 
     public function test_the_students_page_lists_everyone_who_signed_up(): void
@@ -373,13 +371,14 @@ class UgSignupTest extends TestCase
             'email' => 'office_be22@thapar.edu',
             'roll_no' => '102201234',
             'branch_id' => $branch->id,
+            'year' => 3,
         ])->assertCreated()->json();
 
         $account = User::where('email', 'office_be22@thapar.edu')->first();
         $this->assertSame('ug_student', $account->current_role->role);
         $this->assertNull($account->password_set_at, 'they choose it from the email');
         $this->assertNotNull($account->email_verified_at, 'the office vouched for the address');
-        $this->assertSame(2022, (int) $account->ugStudent->admission_year);
+        $this->assertSame(3, (int) $account->ugStudent->year);
 
         $this->actingAs($admin, 'sanctum')->patchJson("/api/ug-students/{$account->id}", [
             'first_name' => 'Office',
@@ -401,9 +400,9 @@ class UgSignupTest extends TestCase
         $admin = $this->admin();
 
         $rows = [
-            ['_rowNumber' => 2, 'full_name' => 'Intake One', 'email' => 'intake1_be23@thapar.edu', 'roll_no' => '102309001', 'programme' => 'BE', 'branch_code' => $branch->code],
-            ['_rowNumber' => 3, 'full_name' => 'Intake Two', 'email' => 'intake2_be23@thapar.edu', 'roll_no' => '102309002', 'programme' => 'BE', 'branch_code' => 'NOSUCH'],
-            ['_rowNumber' => 4, 'full_name' => 'No Roll', 'email' => 'intake3_be23@thapar.edu', 'roll_no' => '', 'programme' => 'BE', 'branch_code' => $branch->code],
+            ['_rowNumber' => 2, 'full_name' => 'Intake One', 'email' => 'intake1_be23@thapar.edu', 'roll_no' => '102309001', 'programme' => 'BE', 'branch_code' => $branch->code, 'year' => 2],
+            ['_rowNumber' => 3, 'full_name' => 'Intake Two', 'email' => 'intake2_be23@thapar.edu', 'roll_no' => '102309002', 'programme' => 'BE', 'branch_code' => 'NOSUCH', 'year' => 2],
+            ['_rowNumber' => 4, 'full_name' => 'No Roll', 'email' => 'intake3_be23@thapar.edu', 'roll_no' => '', 'programme' => 'BE', 'branch_code' => $branch->code, 'year' => 2],
         ];
 
         $this->actingAs($admin, 'sanctum')->postJson('/api/ug-students/import', ['rows' => $rows])

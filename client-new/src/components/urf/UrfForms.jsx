@@ -140,8 +140,7 @@ export const ApplyForm = ({ initial, student, onSaved }) => {
       student1_gender: account.gender,
       student1_roll_no: account.roll_no,
       student1_branch_id: account.branch_id,
-      // Counted from the year they were admitted, and correctable here.
-      student1_year: student?.year_of_study,
+      student1_year: student?.year,
     });
   const [teammate, setTeammate] = useState(!!initial?.student2_name);
   const [secondMentor, setSecondMentor] = useState(!!initial?.mentor2_faculty_code);

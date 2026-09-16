@@ -64,9 +64,8 @@ class UgStudentController extends Controller
                     'roll_no' => $student->roll_no,
                     'branch' => $student->branch ? "{$student->branch->programme} {$student->branch->name}" : null,
                     'branch_id' => $student->branch_id,
-                    'admission_year' => $student->admission_year,
-                    'year_override' => $student->year,
-                    'year' => UrfApplication::yearLabel($student->year_of_study),
+                    'year_of_study' => $student->year,
+                    'year' => UrfApplication::yearLabel($student->year),
                     'semester' => $student->semester_of_study,
                     'email' => $student->user?->email,
                     'phone' => $student->user?->phone,
@@ -120,7 +119,7 @@ class UgStudentController extends Controller
             $account->default_role_id = $role->id;
             $account->save();
 
-            $account->ugStudent()->create($this->record($data, $account->email));
+            $account->ugStudent()->create($this->record($data));
 
             return $account;
         });
@@ -151,7 +150,7 @@ class UgStudentController extends Controller
         ])->save();
 
         $record = $account->ugStudent ?: $account->ugStudent()->make();
-        $record->fill($this->record($data, $account->email));
+        $record->fill($this->record($data));
         $account->ugStudent()->save($record);
 
         return response()->json($account->load('ugStudent.branch'));
@@ -184,9 +183,15 @@ class UgStudentController extends Controller
             $name = trim((string) ($row['full_name'] ?? ''));
             $code = trim((string) ($row['branch_code'] ?? ''));
             $programme = trim((string) ($row['programme'] ?? ''));
+            $year = (int) trim((string) ($row['year'] ?? ''));
 
             if ($email === '' || $rollNo === '' || $name === '') {
                 $errors[] = "Row {$line}: full_name, email and roll_no are all needed.";
+                continue;
+            }
+
+            if ($year < 1 || $year > 4) {
+                $errors[] = "Row {$line}: year has to be 1, 2, 3 or 4.";
                 continue;
             }
 
@@ -208,7 +213,7 @@ class UgStudentController extends Controller
             $existed = (bool) $account;
             $parts = preg_split('/\s+/', $name, 2);
 
-            DB::transaction(function () use ($row, $email, $rollNo, $parts, $branch, $role, $account) {
+            DB::transaction(function () use ($row, $email, $rollNo, $parts, $branch, $role, $account, $year) {
                 $account = $account ?: new User();
                 $account->first_name = $parts[0];
                 $account->last_name = $parts[1] ?? '';
@@ -230,8 +235,7 @@ class UgStudentController extends Controller
                 $record->fill([
                     'roll_no' => $rollNo,
                     'branch_id' => $branch->id,
-                    'admission_year' => trim((string) ($row['admission_year'] ?? '')) ?: UgStudent::admissionYearFrom($email),
-                    'year' => trim((string) ($row['year'] ?? '')) ?: null,
+                    'year' => $year,
                 ]);
                 $account->ugStudent()->save($record);
             });
@@ -268,15 +272,14 @@ class UgStudentController extends Controller
             'gender' => 'required|in:Male,Female',
             'roll_no' => ['required', 'string', 'max:50', Rule::unique('ug_students')->ignore($record->id)],
             'branch_id' => 'required|exists:ug_branches,id',
-            // Blank means the year counted from their admission year stands.
-            'year' => 'nullable|integer|between:1,4',
+            'year' => 'required|integer|between:1,4',
         ]);
 
         $user->fill(['phone' => $data['phone'], 'gender' => $data['gender']])->save();
         $record->fill([
             'roll_no' => $data['roll_no'],
             'branch_id' => $data['branch_id'],
-            'year' => $data['year'] ?? null,
+            'year' => $data['year'],
         ])->save();
 
         return response()->json($record->fresh()->load('branch:id,programme,code,name'));
@@ -293,20 +296,16 @@ class UgStudentController extends Controller
             'gender' => 'nullable|in:Male,Female',
             'roll_no' => ['required', 'string', 'max:50', Rule::unique('ug_students')->ignore($account?->ugStudent?->id)],
             'branch_id' => 'required|exists:ug_branches,id',
-            'admission_year' => 'nullable|integer|min:2000',
-            'year' => 'nullable|integer|between:1,4',
+            'year' => 'required|integer|between:1,4',
         ];
     }
 
-    private function record(array $data, string $email): array
+    private function record(array $data): array
     {
         return [
             'roll_no' => $data['roll_no'],
             'branch_id' => $data['branch_id'],
-            // The address says when they were admitted, unless the office knows
-            // better: an account made for a student whose address says nothing.
-            'admission_year' => $data['admission_year'] ?? UgStudent::admissionYearFrom($email),
-            'year' => $data['year'] ?? null,
+            'year' => $data['year'],
         ];
     }
 

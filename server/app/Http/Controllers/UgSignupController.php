@@ -90,9 +90,7 @@ class UgSignupController extends Controller
             'password' => ($vouchedFor ? 'nullable' : 'required') . '|string|min:8|confirmed',
             'roll_no' => 'required|string|max:50|unique:ug_students,roll_no',
             'branch_id' => 'required|exists:ug_branches,id',
-            // Year of study is counted from the address, so it is asked for
-            // only as a correction: a year out, a transfer, a repeated year.
-            'year' => 'nullable|integer|between:1,4',
+            'year' => 'required|integer|between:1,4',
         ]);
 
         $role = Role::where('role', 'ug_student')->firstOrFail();
@@ -119,10 +117,7 @@ class UgSignupController extends Controller
             $user->ugStudent()->create([
                 'roll_no' => $data['roll_no'],
                 'branch_id' => $data['branch_id'],
-                'admission_year' => UgStudent::admissionYearFrom($data['email']),
-                // Null unless they said otherwise, and then the derived year
-                // gives way to what they said.
-                'year' => $data['year'] ?? null,
+                'year' => $data['year'],
             ]);
 
             return $user;

@@ -46,9 +46,9 @@ const StudentsPage = () => {
   const [ugImportOpen, setUgImportOpen] = useState(false);
   const [ugRefreshKey, setUgRefreshKey] = useState(0);
 
-  const UG_SAMPLE_CSV = `full_name,email,roll_no,programme,branch_code,phone,gender,admission_year,year
-Nikhil Verma,nverma_be23@thapar.edu,102303001,BE,COE,9876500000,Male,2023,
-Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,9876500001,Female,,3`;
+  const UG_SAMPLE_CSV = `full_name,email,roll_no,programme,branch_code,year,phone,gender
+Nikhil Verma,nverma_be23@thapar.edu,102303001,BE,COE,2,9876500000,Male
+Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
 
   const importUgStudents = async (preview, reset) => {
     setSubmitting(true);
@@ -318,11 +318,11 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,9876500001,Female,,3`;
             isOpen={ugImportOpen}
             onClose={() => setUgImportOpen(false)}
             title="Bulk Import UG Students"
-            required={['full_name', 'email', 'roll_no', 'branch_code']}
+            required={['full_name', 'email', 'roll_no', 'branch_code', 'year']}
             rules={[
               'Matched on email, so importing a corrected file updates rather than duplicates.',
               'branch_code is the code from Configuration, and programme narrows it when two degrees share one.',
-              'admission_year is read from the address when left blank; year only overrides what that counts to.',
+              'year is the year of study, 1 to 4.',
               'A new student is emailed a link to set their password.',
             ]}
             sampleFileName="ug_students_sample.csv"
