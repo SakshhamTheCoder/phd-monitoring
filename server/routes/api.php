@@ -14,6 +14,7 @@ use App\Models\Student;
 use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -71,6 +72,9 @@ Route::post('/login', function (Request $request) {
         $ret['phone'] = $user->phone;
         $ret['gender'] = $user->gender;
         $ret['role']['role'] = $user->current_role->role;
+        // False for an account made through Google sign-up, which has a random
+        // password nobody chose. Change Password reads it.
+        $ret['password_set'] = $user->password_set_at !== null;
         $token = $user->createToken('auth_token', ['server:access'], now()->addDays(10))->plainTextToken;
         return response()->json([
             "user" => $ret,
@@ -122,6 +126,50 @@ Route::post('/forgot-password', function (Request $request) {
     ], 500);
 });
 
+/**
+ * The signed-in user changing their own password.
+ *
+ * Asks for the current one, except where there is no current one to give: an
+ * account made through Google sign-up holds a random password nobody was told,
+ * and until the holder chooses one there is nothing to check against. Being
+ * signed in is the proof in that case.
+ */
+Route::post('/change-password', function (Request $request) {
+    /** @var \App\Models\User $user */
+    $user = $request->user();
+    $chosenBefore = $user->password_set_at !== null;
+
+    $request->validate([
+        'password' => ['required', 'min:8', 'confirmed'],
+    ]);
+
+    // Checked here rather than with the current_password rule, which reads the
+    // default guard while this request is authenticated by a token.
+    if ($chosenBefore && !Hash::check((string) $request->current_password, $user->password)) {
+        throw ValidationException::withMessages([
+            'current_password' => 'That is not your current password.',
+        ]);
+    }
+
+    if (Hash::check($request->password, $user->password)) {
+        throw ValidationException::withMessages([
+            'password' => 'Your new password has to be different from the old one.',
+        ]);
+    }
+
+    $user->forceFill([
+        'password' => Hash::make($request->password),
+        'password_set_at' => now(),
+        'first_activation' => $user->first_activation ?? now(),
+    ])->save();
+
+    // Every other session keeps a token of its own, so signing out elsewhere is
+    // what makes a changed password mean anything.
+    $user->tokens()->where('id', '!=', optional($user->currentAccessToken())->id)->delete();
+
+    return response()->json(['message' => 'Your password is changed.']);
+})->middleware('auth:sanctum');
+
 Route::post('/reset-password', function (Request $request) {
     $validator = Validator::make($request->all(), [
         'token' => 'required|string',
@@ -140,6 +188,7 @@ Route::post('/reset-password', function (Request $request) {
         function (User $user, string $password) {
             $user->forceFill([
                 'password' => Hash::make($password),
+                'password_set_at' => now(),
                 'remember_token' => Str::random(60),
             ])->save();
 

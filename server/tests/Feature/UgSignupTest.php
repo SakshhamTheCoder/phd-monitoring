@@ -237,6 +237,58 @@ class UgSignupTest extends TestCase
         $this->assertSame('102299999', $student->fresh()->ugStudent->roll_no);
     }
 
+    public function test_a_google_account_sets_a_password_without_being_asked_for_one(): void
+    {
+        Mail::fake();
+        $email = Str::lower(Str::random(10)) . '_be23@thapar.edu';
+        $form = $this->form(['google_ticket' => UgSignupController::issueGoogleTicket($email, 'Nikhil Verma')]);
+        unset($form['password'], $form['password_confirmation']);
+        $this->postJson('/api/urf/signup', $form)->assertCreated();
+
+        $user = User::where('email', $email)->first();
+        $this->assertNull($user->password_set_at, 'nobody chose that password');
+
+        $this->actingAs($user, 'sanctum')->postJson('/api/change-password', [
+            'password' => 'a-chosen-password',
+            'password_confirmation' => 'a-chosen-password',
+        ])->assertOk();
+
+        $this->assertNotNull($user->fresh()->password_set_at);
+        $this->app['auth']->shouldUse('web');
+        $this->postJson('/api/login', ['email' => $email, 'password' => 'a-chosen-password'])
+            ->assertOk()
+            ->assertJsonPath('user.password_set', true);
+    }
+
+    public function test_an_account_with_a_password_has_to_give_the_old_one(): void
+    {
+        Mail::fake();
+        $form = $this->form();
+        $this->postJson('/api/urf/signup', $form)->assertCreated();
+        $user = User::where('email', $form['email'])->first();
+        $user->forceFill(['email_verified_at' => now()])->save();
+
+        $this->actingAs($user, 'sanctum')->postJson('/api/change-password', [
+            'password' => 'another-password',
+            'password_confirmation' => 'another-password',
+        ])->assertStatus(422)->assertJsonValidationErrors('current_password');
+
+        $this->actingAs($user, 'sanctum')->postJson('/api/change-password', [
+            'current_password' => 'wrong-one',
+            'password' => 'another-password',
+            'password_confirmation' => 'another-password',
+        ])->assertStatus(422)->assertJsonValidationErrors('current_password');
+
+        $this->actingAs($user, 'sanctum')->postJson('/api/change-password', [
+            'current_password' => $form['password'],
+            'password' => 'another-password',
+            'password_confirmation' => 'another-password',
+        ])->assertOk();
+
+        $this->app['auth']->shouldUse('web');
+        $this->postJson('/api/login', ['email' => $form['email'], 'password' => 'another-password'])->assertOk();
+    }
+
     public function test_a_deactivated_account_cannot_sign_in(): void
     {
         $roleId = Role::where('role', 'student')->value('id');

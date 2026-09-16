@@ -107,6 +107,9 @@ class UgSignupController extends Controller
             // A Google sign-up sets no password: that account signs in the way
             // it was made, and Forgot Password can still give it one.
             $user->password = Hash::make($data['password'] ?? Str::random(40));
+            // A Google sign-up chose no password, so Change Password lets them
+            // set one without asking for a current one they never had.
+            $user->password_set_at = $vouchedFor ? null : now();
             $user->email_verified_at = $vouchedFor ? now() : null;
             $user->role_id = $role->id;
             $user->current_role_id = $role->id;

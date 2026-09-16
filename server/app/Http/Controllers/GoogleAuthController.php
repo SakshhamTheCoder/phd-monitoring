@@ -85,7 +85,8 @@ class GoogleAuthController extends Controller
                 'gender' => $user->gender,
                 'role' => [
                     'role' => $user->current_role->role
-                ]
+                ],
+                'password_set' => $user->password_set_at !== null,
             ];
 
             // Redirect to frontend callback with data
@@ -208,7 +209,8 @@ class GoogleAuthController extends Controller
                 'gender' => $user->gender,
                 'role' => [
                     'role' => $user->current_role->role
-                ]
+                ],
+                'password_set' => $user->password_set_at !== null,
             ];
 
             return response()->json([

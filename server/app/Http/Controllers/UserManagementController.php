@@ -295,6 +295,7 @@ class UserManagementController extends Controller
         }
 
         $user->password = Hash::make($request->password);
+        $user->password_set_at = now();
         $user->save();
 
         return response()->json(['message' => 'Password reset successfully']);
