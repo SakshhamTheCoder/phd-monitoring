@@ -29,6 +29,7 @@ class RoleCapabilityMatrixTest extends TestCase
     private const ALL_ROLES = [
         'admin', 'adordc', 'clerk', 'director', 'doctoral', 'dordc',
         'dra', 'external', 'faculty', 'hod', 'phd_coordinator', 'student',
+        'ug_student',
     ];
 
     /** capability => exactly the roles the pre-swap code admitted. */
@@ -79,7 +80,8 @@ class RoleCapabilityMatrixTest extends TestCase
         'can_manage_all_projects' => ['dordc', 'adordc', 'dra', 'director', 'admin'],
 
         // Student-only endpoints
-        'can_manage_own_publications' => ['student'],
+        // A URF fellow keeps their own publication list, as a scholar does.
+        'can_manage_own_publications' => ['student', 'ug_student'],
         'can_edit_own_student_profile' => ['student'],
         'can_read_own_leave_balance' => ['student'],
         'can_apply_for_leave' => ['student'],
