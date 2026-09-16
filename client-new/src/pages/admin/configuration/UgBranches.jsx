@@ -3,15 +3,17 @@ import { toast } from 'react-toastify';
 import CustomButton from '../../../components/forms/fields/CustomButton';
 import TableComponent from '../../../components/forms/table/TableComponent';
 import GridContainer from '../../../components/forms/fields/GridContainer';
+import InputSuggestions from '../../../components/forms/fields/InputSuggestions';
 import UnifiedBulkImportModal from '../../../components/bulkImport/UnifiedBulkImportModal';
+import { baseURL } from '../../../api/urls';
 import { apiBranchCreate, apiBranchDelete, apiBranchImport, apiBranchList, apiBranchUpdate } from '../../../api/urf';
 
-const EMPTY = { programme: '', code: '', name: '' };
+const EMPTY = { programme: '', code: '', name: '', department_id: '', department: '' };
 
-const SAMPLE_CSV = `programme,code,name
-BE,COE,Computer Engineering
-BE,ECE,Electronics and Communication Engineering
-BTech,CSE,Computer Science and Engineering`;
+const SAMPLE_CSV = `programme,code,name,department_code
+BE,COE,Computer Engineering,CSED
+BE,ECE,Electronics and Communication Engineering,ECED
+BTech,CSE,Computer Science and Engineering,CSED`;
 
 /**
  * The branches a UG student can be on, offered on sign-up and on the URF
@@ -39,6 +41,8 @@ const UgBranches = () => {
       programme: form.programme.trim(),
       code: form.code.trim(),
       name: form.name.trim(),
+      // Which ADORDC reads this branch's URF forms.
+      department_id: form.department_id || null,
     };
     if (!body.programme || !body.code || !body.name) {
       toast.error('A branch needs a programme, a code and a name.');
@@ -85,10 +89,20 @@ const UgBranches = () => {
 
   const edit = (branch) => {
     setEditing(branch.id);
-    setForm({ programme: branch.programme, code: branch.code, name: branch.name });
+    setForm({
+      programme: branch.programme,
+      code: branch.code,
+      name: branch.name,
+      department_id: branch.department_id || '',
+      department: branch.department?.name || '',
+    });
   };
 
-  const rows = branches.map((branch) => ({ ...branch, students: branch.students_count }));
+  const rows = branches.map((branch) => ({
+    ...branch,
+    students: branch.students_count,
+    department_name: branch.department?.name || 'Not set',
+  }));
 
   return (
     <div style={{ marginTop: '1rem' }}>
@@ -124,6 +138,19 @@ const UgBranches = () => {
               onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
             />
           </div>
+          <div className="input-field-container" style={{ minWidth: '240px' }}>
+            <InputSuggestions
+              label="Department"
+              apiUrl={`${baseURL}/suggestions/department`}
+              initialValue={form.department}
+              suggestionManadatory={false}
+              onSelect={(picked) => setForm((prev) => ({
+                ...prev,
+                department_id: picked?.id || '',
+                department: picked?.name || '',
+              }))}
+            />
+          </div>
           <CustomButton text={editing ? 'Save changes' : 'Add branch'} onClick={save} disabled={busy} />
           {!editing && <CustomButton text="Import CSV" onClick={() => setImportOpen(true)} />}
           {editing && (
@@ -140,8 +167,8 @@ const UgBranches = () => {
         elements={[
           <TableComponent
             data={rows}
-            keys={['programme', 'code', 'name', 'students', 'id']}
-            titles={['Programme', 'Code', 'Branch', 'Students', ' ']}
+            keys={['programme', 'code', 'name', 'department_name', 'students', 'id']}
+            titles={['Programme', 'Code', 'Branch', 'Department', 'Students', ' ']}
             components={[{
               key: 'id',
               component: ({ row }) => (
