@@ -55,7 +55,9 @@ class User extends Authenticatable
 
     public function name()
     {
-        return $this->first_name . ' ' . $this->last_name;
+        // A missing last name, or one padded in the imported data, would
+        // otherwise leave the name trailing a space wherever it is shown.
+        return trim($this->first_name . ' ' . $this->last_name);
     }
 
     /**
