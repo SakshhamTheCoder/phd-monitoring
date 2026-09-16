@@ -67,6 +67,17 @@ class UrfApplication extends Model
     }
 
     /**
+     * Projects a faculty member mentors, either of the two places a mentor is
+     * named. Grouped for the same reason as scopeForMember.
+     */
+    public function scopeMentoredBy($query, ?int $facultyCode)
+    {
+        return $query->where(fn ($q) => $q
+            ->where('mentor1_faculty_code', $facultyCode)
+            ->orWhere('mentor2_faculty_code', $facultyCode));
+    }
+
+    /**
      * Projects the user is on, as the student who applied or the second student.
      * Grouped, so a further where() narrows the members rather than widening them.
      */

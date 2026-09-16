@@ -206,5 +206,35 @@ class UrfFlowTest extends TestCase
         $this->actingAs($outsider, 'sanctum')->getJson('/api/publications')->assertJsonCount(0, 'international');
 
         $this->assertSame('selected', UrfApplication::find($id)->status);
+
+        // A mentor reads the projects they are named on, and only those.
+        DB::table('roles')->where('role', 'faculty')->update(['can_read_urf_mentees' => 'true']);
+        $mentorAccount = $mentor->user;
+        $this->actingAs($mentorAccount, 'sanctum')->getJson('/api/urf')
+            ->assertOk()
+            ->assertJsonFragment(['id' => $id]);
+        $this->actingAs($mentorAccount, 'sanctum')->getJson("/api/urf/{$id}")
+            ->assertOk()
+            ->assertJsonPath('id', $id)
+            // Bank details are the student's own, whoever else is reading.
+            ->assertJsonCount(0, 'fellows');
+
+        // Another faculty member mentors nothing, so there is nothing to read.
+        $stranger = Faculty::create([
+            // A code of its own, since the dev database already holds 990002.
+            'faculty_code' => 990042,
+            'user_id' => $this->userAs('faculty')->id,
+            'designation' => 'Professor',
+            'department_id' => $department->id,
+            'type' => 'internal',
+        ]);
+        $this->actingAs($stranger->user, 'sanctum')->getJson('/api/urf')->assertOk()->assertJsonCount(0, 'data');
+        $this->actingAs($stranger->user, 'sanctum')->getJson("/api/urf/{$id}")->assertForbidden();
+
+        // And the nav item follows the fact, not the role.
+        $this->actingAs($mentorAccount, 'sanctum')->getJson('/api/my-roles')
+            ->assertJsonPath('capabilities.can_read_urf_mentees', true);
+        $this->actingAs($stranger->user, 'sanctum')->getJson('/api/my-roles')
+            ->assertJsonPath('capabilities.can_read_urf_mentees', false);
     }
 }

@@ -226,6 +226,13 @@ Route::get('/my-roles', function () {
         ->map(fn ($value) => $value === 'true')
         ->all();
 
+    // Mentoring is a fact about this person, not about the role, so the
+    // capability is true only while they actually mentor something. That keeps
+    // the URF nav item off the screen of every faculty member who does not.
+    $capabilities['can_read_urf_mentees'] = !empty($capabilities['can_manage_urf'])
+        || (!empty($capabilities['can_read_urf_mentees'])
+            && \App\Models\UrfApplication::mentoredBy($user->faculty?->faculty_code)->exists());
+
     return response()->json([
         'available_roles' => $user->availableRoles(),
         'current_role' => $user->current_role?->role,

@@ -14,6 +14,7 @@ import FacultyLink from '../../components/facultyLink/FacultyLink';
 import { EMPTY_VALUE } from '../../utils/timeParse';
 import { URF_STATUSES, capitalize } from '../../components/urf/UrfRecord';
 import { apiSettings, apiSaveSettings } from '../../api/settings';
+import useCapabilities from '../../hooks/useCapabilities';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import { apiUrfSessions, apiUrfStatus } from '../../api/urf';
 import './UrfList.css';
@@ -55,6 +56,7 @@ const isApplied = (row) => String(row.status).toLowerCase() === 'applied';
 const UrfList = () => {
   const navigate = useNavigate();
   const [filter, setFilter] = useState({ conditions: [] });
+  const can = useCapabilities();
   const [tab, setTab] = useState(URF_STATUSES[0]);
   const [open, setOpen] = useState(null);
   // null until the sessions arrive: the table waits for them rather than
@@ -159,19 +161,24 @@ const UrfList = () => {
   const ready = scopedToOneSession || sessions?.length === 0;
 
   // Only an applied project is still to be decided, so the tick boxes, the
-  // select-all and the decisions themselves belong to that tab alone.
-  const decidable = tab === 'applied';
+  // select-all and the decisions themselves belong to that tab alone. A mentor
+  // reads the projects they are on; deciding them is the office's.
+  const decidable = tab === 'applied' && can('can_manage_urf');
 
   return (
     <Layout>
       <PageHeader
         title="URF"
-        subtitle={`Undergraduate Research Fellowship. Applications are ${open ? 'open' : 'closed'}.`}
-        actions={open !== null && (
+        subtitle={can('can_manage_urf')
+          ? `Undergraduate Research Fellowship. Applications are ${open ? 'open' : 'closed'}.`
+          : 'The Undergraduate Research Fellowship projects you mentor.'}
+        actions={can('can_manage_urf') && open !== null && (
           <CustomButton text={open ? 'Close Applications' : 'Open Applications'} onClick={toggleApplications} />
         )}
       />
-      <FormGrid forms={URF_FORMS} />
+      {/* The forms grid reads every submission of a form, which is the office's
+          view of the module rather than a mentor's. */}
+      {can('can_manage_urf') && <FormGrid forms={URF_FORMS} />}
       <div className="grid-label">All Projects</div>
       <div className="urf-stage-bar">
         <Tabs

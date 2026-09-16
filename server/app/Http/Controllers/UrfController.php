@@ -47,7 +47,7 @@ class UrfController extends Controller
     public function list(Request $request)
     {
         $user = Auth::user();
-        if (!$user->may('can_manage_urf')) {
+        if (!$this->mayRead($user)) {
             return $this->refuse();
         }
 
@@ -55,6 +55,11 @@ class UrfController extends Controller
         $query = UrfApplication::with(['student1Branch', 'student2Branch', 'mentor1.user', 'mentor2.user'])
             ->orderByDesc('session')
             ->latest('id');
+
+        // A mentor reads the projects they are named on, and nothing else.
+        if (!$user->may('can_manage_urf')) {
+            $query->mentoredBy($user->faculty?->faculty_code);
+        }
         $filters = json_decode((string) $request->query('filters'), true);
         if ($filters) {
             $query = $this->applyDynamicFilters($query, $filters, 'urf', self::SEARCH_KEYS);
@@ -153,11 +158,16 @@ class UrfController extends Controller
     public function show($id)
     {
         $user = Auth::user();
-        if (!$user->may('can_manage_urf')) {
+        if (!$this->mayRead($user)) {
             return $this->refuse();
         }
 
-        return response()->json($this->payload(UrfApplication::with(self::DETAIL)->findOrFail($id), $user));
+        $application = UrfApplication::with(self::DETAIL)->findOrFail($id);
+        if (!$user->may('can_manage_urf') && !$this->mentors($user, $application)) {
+            return $this->refuse();
+        }
+
+        return response()->json($this->payload($application, $user));
     }
 
     /**
@@ -406,7 +416,8 @@ class UrfController extends Controller
 
     private function payload(UrfApplication $application, User $user): array
     {
-        // Stipend details are personal: a student sees only their own.
+        // Stipend details are personal: a student sees only their own, and a
+        // mentor has no business with anyone's bank account.
         if (!$user->may('can_manage_urf')) {
             $application->setRelation('fellows', $application->fellows->where('user_id', $user->id)->values());
         }
@@ -418,6 +429,20 @@ class UrfController extends Controller
         }
 
         return $data;
+    }
+
+    /** The office reads every project; a mentor reads the ones they are on. */
+    private function mayRead(User $user): bool
+    {
+        return $user->may('can_manage_urf')
+            || ($user->may('can_read_urf_mentees') && $user->faculty?->faculty_code);
+    }
+
+    private function mentors(User $user, UrfApplication $application): bool
+    {
+        $code = $user->faculty?->faculty_code;
+
+        return $code && in_array($code, [$application->mentor1_faculty_code, $application->mentor2_faculty_code], false);
     }
 
     private function refuse()
