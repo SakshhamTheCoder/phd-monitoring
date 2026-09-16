@@ -200,14 +200,15 @@ private function applyCondition($query, string $key, $op, $value, bool $or = fal
  * One condition on one column.
  *
  * Names are stored as first_name and last_name, so a search for "Arun Mehta"
- * matches neither on its own. A value with a space is matched against the two
- * joined, which is how the suggestion lists and the tables show a name.
+ * matches neither on its own. A search value with a space is matched against
+ * the two joined, which is how the suggestion lists and the tables show a
+ * name. Only a search: an exact condition still means the column it names.
  */
 private function whereColumnMatches($query, $column, $op, $value, $or = false)
 {
     $where = $or ? 'orWhere' : 'where';
 
-    if ($column === 'first_name' && is_string($value) && str_contains(trim($value, '%'), ' ')) {
+    if ($op === 'LIKE' && $column === 'first_name' && is_string($value) && str_contains(trim($value, '%'), ' ')) {
         $name = '%' . trim($value, '% ') . '%';
 
         return $query->{$where . 'Raw'}("CONCAT(first_name, ' ', last_name) LIKE ?", [$name]);
