@@ -13,7 +13,7 @@ const toFormData = (body) => {
 };
 
 export const apiUrfMine = () => customFetch(`${URF}/mine`, 'GET', {}, true, false, false);
-export const apiUrfDepartments = () => customFetch(`${URF}/departments`, 'GET', {}, true);
+export const apiUrfBranches = () => customFetch(`${URF}/branches`, 'GET', {}, true);
 export const apiUrfSessions = () => customFetch(`${URF}/sessions`, 'GET', {}, true);
 export const apiUrfShow = (id) => customFetch(`${URF}/${id}`, 'GET', {}, true, false, false);
 export const apiUrfApply = (body) => customFetch(URF, 'POST', toFormData(body), true, true);
@@ -25,3 +25,10 @@ export const apiUrfStatus = (id, status) => customFetch(`${URF}/${id}/status`, '
 // says what went wrong field by field.
 export const apiUrfSignup = (body) => customFetch(`${URF}/signup`, 'POST', body, false);
 export const apiUrfResendVerification = (email) => customFetch(`${URF}/resend-verification`, 'POST', { email }, false);
+
+// The branch list as the admin manages it, with how many students are on each.
+const BRANCHES = `${baseURL}/ug-branches`;
+export const apiBranchList = () => customFetch(BRANCHES, 'GET', {}, true, false, false);
+export const apiBranchCreate = (body) => customFetch(BRANCHES, 'POST', body, true);
+export const apiBranchUpdate = (id, body) => customFetch(`${BRANCHES}/${id}`, 'PATCH', body, true);
+export const apiBranchDelete = (id) => customFetch(`${BRANCHES}/${id}`, 'DELETE', {}, true);
