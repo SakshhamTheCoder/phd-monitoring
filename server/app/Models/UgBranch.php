@@ -11,12 +11,18 @@ use Illuminate\Database\Eloquent\Model;
  */
 class UgBranch extends Model
 {
-    protected $fillable = ['programme', 'code', 'name'];
+    protected $fillable = ['programme', 'code', 'name', 'department_id'];
 
     /** Branches as the dropdowns want them: by programme, then by name. */
     public function scopeOrdered($query)
     {
         return $query->orderBy('programme')->orderBy('name');
+    }
+
+    /** Which department teaches it, and so which ADORDC reads its forms. */
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
     }
 
     public function students()
