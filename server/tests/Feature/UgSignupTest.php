@@ -325,6 +325,31 @@ class UgSignupTest extends TestCase
             ->assertJsonPath('student.year_of_study', Semester::yearOfStudy(2023));
     }
 
+    public function test_the_students_page_lists_everyone_who_signed_up(): void
+    {
+        Mail::fake();
+        $form = $this->form();
+        $this->postJson('/api/urf/signup', $form)->assertCreated();
+        $student = User::where('email', $form['email'])->first();
+
+        $adminRole = Role::where('role', 'admin')->value('id');
+        DB::table('roles')->where('id', $adminRole)->update(['can_manage_urf' => 'true']);
+        $admin = User::where('current_role_id', $adminRole)->first();
+
+        // A student who has not applied is still on the list, which is the
+        // question the URF projects tab cannot answer.
+        $this->actingAs($admin, 'sanctum')->getJson('/api/ug-students?filters=' . urlencode(json_encode([
+            'conditions' => [['key' => 'roll_no', 'op' => '=', 'value' => $form['roll_no']]],
+        ])))
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.roll_no', $form['roll_no'])
+            ->assertJsonPath('data.0.branch', 'BE Signup Test Branch')
+            ->assertJsonPath('data.0.projects', 0);
+
+        $this->actingAs($student, 'sanctum')->getJson('/api/ug-students')->assertForbidden();
+    }
+
     public function test_only_an_admin_manages_the_branch_list(): void
     {
         Mail::fake();
