@@ -80,19 +80,30 @@ const UgProfile = () => {
             <HeaderLine label="Current URF Project" title>
               {current && `URF ${current.session} · ${current.project_title}`}
             </HeaderLine>
-            {current && <HeaderLine label="Status"><StatusText status={current.status} /></HeaderLine>}
+            <HeaderLine label="Status">
+              {current && <StatusText status={current.status} />}
+            </HeaderLine>
+            <HeaderLine label="Faculty Mentors">
+              {current && [current.mentor1, current.mentor2].filter(Boolean).map((mentor, index) => (
+                <React.Fragment key={mentor.faculty_code ?? index}>
+                  {index > 0 && ', '}
+                  <FacultyLink code={mentor.faculty_code} name={facultyName(mentor)} />
+                </React.Fragment>
+              ))}
+            </HeaderLine>
           </div>
         </div>
-      </div>
 
-      <div className="student-details">
-        {/* Their own to correct until they apply; after that the details are
-            part of a record the admin reads, so the office makes the change. */}
+        {/* Their own to correct until they apply; after that the office makes
+            the change. Sits on the name's line, as the scholar's edit does. */}
         {state?.student && applications.length === 0 && (
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
+          <div className="profile-actions">
             <CustomButton text="Edit details" onClick={() => setEditing(true)} />
           </div>
         )}
+      </div>
+
+      <div className="student-details">
         <InfoGrid className="student-info-grid" rows={[
           { label: 'Roll Number', value: state?.student?.roll_no || current?.[`student${slot}_roll_no`] },
           { label: 'Branch', value: state?.student?.branch?.name || current?.[`student${slot}_branch`]?.name },
@@ -101,6 +112,7 @@ const UgProfile = () => {
           { label: 'Email', value: me.email },
           { label: 'Phone', value: me.phone },
           { label: 'Gender', value: me.gender },
+          { label: 'Programme', value: state?.student?.branch?.programme },
         ]} />
       </div>
 
