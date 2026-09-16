@@ -66,16 +66,10 @@
   .urf-mentor-row { grid-template-columns: 1fr 1fr; }
 }
 
-/* Reading a form: the line that says who has it, and what each reader said. */
+/* Reading a form: the recommendation, the remarks and what earlier readers said. */
 .urf-approval {
-  margin: 1rem 0;
-}
-
-.urf-approval-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  margin: 1rem 0 1.5rem;
+  padding: 1rem;
   border: 1px solid #ddd;
   border-radius: 10px;
   background: #f9f9f9;

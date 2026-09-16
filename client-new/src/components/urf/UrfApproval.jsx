@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import CustomButton from '../forms/fields/CustomButton';
-import CustomModal from '../forms/modal/CustomModal';
+import GridContainer from '../forms/fields/GridContainer';
+import InputField from '../forms/fields/InputField';
+import RecommendationField from '../forms/fields/RecommendationField';
 import { apiUrfDecide } from '../../api/urf';
 import './UrfForms.css';
 
@@ -15,113 +17,94 @@ const STEP_NAMES = {
 
 const STEPS = ['student', 'mentor', 'adordc', 'dordc'];
 
+const ROLE_LABELS = { mentor: 'Faculty Mentor', adordc: 'ADORDC', dordc: 'DORDC' };
+
 /** Where a form has reached, written as a line anyone can read. */
 export const stageLine = (form) => (form?.stage === 'complete'
   ? 'Approved by the mentor, the ADORDC and the DORDC.'
   : `Waiting on ${STEP_NAMES[form?.stage] || 'the student'}.`);
 
-// What each answer means, and what it says once it is sent.
-const DECISIONS = {
-  approve: {
-    label: 'Approve',
-    title: 'Approve this form',
-    blurb: 'It passes to the next reader, and the students are told.',
-    prompt: 'Comments (optional)',
-    done: 'Approved and passed on',
-  },
-  send_back: {
-    label: 'Send back',
-    title: 'Send this form back',
-    blurb: 'Not as it stands. It goes back to the students to correct, and the reading starts again from the mentor once they resubmit.',
-    prompt: 'What needs fixing',
-    done: 'Sent back to the student',
-  },
-  reject: {
-    label: 'Reject project',
-    title: 'Reject this project',
-    blurb: 'The project is over. The students are told why, and they can apply again in a later session.',
-    prompt: 'Why the project is rejected',
-    done: 'Project rejected',
-  },
+// The radio field answers with { approval, rejected }; the chain reads those
+// three combinations as its three decisions.
+const decisionFrom = ({ approval, rejected }) => {
+  if (rejected) return 'reject';
+  return approval ? 'approve' : 'send_back';
+};
+
+const SENT = {
+  approve: 'Recommended and passed on',
+  send_back: 'Sent back to the student',
+  reject: 'Project rejected',
 };
 
 /**
- * Reading a URF form and answering it.
+ * Reading a URF form and answering it, on the same recommendation field the
+ * PhD forms use.
  *
- * Shown to whoever the form is waiting on. Approving passes it to the next
- * reader. Sending it back returns it to the student to correct. Rejecting ends
- * the project, which is the DORDC's alone, so the button is only there for
- * them. Anything but an approval has to say why, since the student reads it.
+ * Recommend passes it to the next reader. Not recommended sends it back to the
+ * student to correct, and the reading starts again from the mentor. Rejected
+ * ends the project, which is the DORDC's alone, so the third radio is offered
+ * to nobody else. Either of the last two has to say why, since the student
+ * reads it.
  */
-const UrfApproval = ({ form, formKey, applicationId, onDecided }) => {
-  const [pending, setPending] = useState(null);
+const UrfApproval = ({ form, formKey, onDecided }) => {
+  const [answer, setAnswer] = useState(null);
   const [comments, setComments] = useState('');
   const [saving, setSaving] = useState(false);
 
   if (!form?.awaiting_me) return null;
 
-  const choice = DECISIONS[pending];
+  const decision = answer && decisionFrom(answer);
 
-  const send = async () => {
-    if (pending !== 'approve' && !comments.trim()) {
+  const submit = async () => {
+    if (!decision) {
+      toast.error('Choose a recommendation first.');
+      return;
+    }
+    if (decision !== 'approve' && !comments.trim()) {
       toast.error('Say why, so the students can read it.');
       return;
     }
 
     setSaving(true);
     const res = await apiUrfDecide(formKey, form.id, {
-      decision: pending,
+      decision,
       comments: comments.trim() || null,
     });
     setSaving(false);
     if (!res.success) return;
 
-    toast.success(choice.done);
-    setPending(null);
+    toast.success(SENT[decision]);
+    setAnswer(null);
     setComments('');
     onDecided();
   };
 
   return (
     <div className="urf-approval">
-      <div className="urf-approval-row">
-        <span>This form is with you.</span>
-        <CustomButton text="Approve" onClick={() => setPending('approve')} />
-        <CustomButton text="Send back" variant="secondary" onClick={() => setPending('send_back')} />
-        {form.may_reject && (
-          <CustomButton text="Reject project" variant="secondary" onClick={() => setPending('reject')} />
-        )}
-      </div>
+      <RecommendationField
+        role={ROLE_LABELS[form.stage] || form.stage}
+        title={`Recommendation of ${ROLE_LABELS[form.stage] || 'the reader'}:`}
+        allowRejection={!!form.may_reject}
+        onRecommendationChange={setAnswer}
+      />
 
-      <CustomModal
-        isOpen={!!pending}
-        onClose={() => setPending(null)}
-        title={choice?.title}
-        minHeight="220px"
-        maxWidth="520px"
-      >
-        <p>{choice?.blurb}</p>
-        <div className="input-field-container">
-          <label className="input-label" htmlFor="urf-decision-comments">
-            {choice?.prompt}
-          </label>
-          <textarea
-            id="urf-decision-comments"
-            className="input-field"
-            rows={4}
-            value={comments}
-            onChange={(e) => setComments(e.target.value)}
-          />
-        </div>
-        <div className="modal-actions">
-          <CustomButton text="Cancel" variant="secondary" onClick={() => setPending(null)} />
-          <CustomButton
-            text={saving ? 'Saving…' : choice?.label}
-            onClick={send}
-            disabled={saving}
-          />
-        </div>
-      </CustomModal>
+      <GridContainer
+        elements={[
+          <InputField
+            label={decision === 'approve' ? 'Remarks (if any)' : 'Remarks'}
+            initialValue={comments}
+            hint="Enter Comments.."
+            onChange={setComments}
+          />,
+        ]}
+      />
+
+      <GridContainer
+        elements={[
+          <CustomButton text={saving ? 'Submitting…' : 'Submit'} onClick={submit} disabled={saving} />,
+        ]}
+      />
     </div>
   );
 };

@@ -140,7 +140,6 @@ const UrfRecord = ({ record, actions = null, onDecided = () => {} }) => {
       <UrfApproval
         form={record}
         formKey="urf-application"
-        applicationId={record.id}
         onDecided={onDecided}
       />
       <UrfApprovalTrail form={record} />
@@ -183,7 +182,6 @@ const UrfRecord = ({ record, actions = null, onDecided = () => {} }) => {
           <UrfApproval
             form={report}
             formKey={report.type === 'final' ? 'urf-final-report' : 'urf-half-yearly-report'}
-            applicationId={record.id}
             onDecided={onDecided}
           />
           <UrfApprovalTrail form={report} />
@@ -196,7 +194,6 @@ const UrfRecord = ({ record, actions = null, onDecided = () => {} }) => {
           <UrfApproval
             form={fellow}
             formKey="urf-additional-info"
-            applicationId={record.id}
             onDecided={onDecided}
           />
         </div>
