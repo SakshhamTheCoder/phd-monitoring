@@ -1,0 +1,3 @@
+/* body sets font-weight 600 app-wide, so the rows arrived semi-bold. The column
+   titles carry the emphasis; the rows are data. */
+.urf-list .form-table td { font-weight: 400; }

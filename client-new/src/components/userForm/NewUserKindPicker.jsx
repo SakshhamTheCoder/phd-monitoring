@@ -36,7 +36,7 @@ const KINDS = [
     icon: 'fa-user-shield',
     title: 'Office / Admin',
     description:
-      'A login with no student or faculty record, for Admin, Director, DRA or DORDC. These roles need no linked record.',
+      'A login with no student or faculty record, for Admin, Director, DRA, DORDC or a UG Student on the URF. These roles need no linked record.',
   },
 ];
 

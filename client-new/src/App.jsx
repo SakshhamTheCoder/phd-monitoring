@@ -51,6 +51,10 @@ import CreateProject from './pages/projects/CreateProject';
 import ProjectDetails from './pages/projects/ProjectDetails';
 import ProjectRecruitment from './pages/projects/ProjectRecruitment';
 import Openings from './pages/projects/Openings';
+import UrfList from './pages/urf/UrfList';
+import UrfDetails from './pages/urf/UrfDetails';
+import UrfFormList from './pages/urf/UrfFormList';
+import { UrfFormsPage, UrfFormPage } from './pages/urf/UrfStudentForms';
 
 
 const App = () => {
@@ -126,6 +130,18 @@ const AppContent = () => {
 
             </>
           )}
+          {role === 'ug_student' && (
+            <>
+              {/* Static form paths outrank the shared /forms/:form_type route. */}
+              <Route path="/forms" element={<UrfFormsPage />} />
+              <Route path="/forms/urf-application" element={<UrfFormPage type="new" />} />
+              <Route path="/forms/urf/:id/application" element={<UrfFormPage type="application" />} />
+              <Route path="/forms/urf/:id/additional-info" element={<UrfFormPage type="additional" />} />
+              <Route path="/forms/urf/:id/half-yearly-report" element={<UrfFormPage type="half_yearly" />} />
+              <Route path="/forms/urf/:id/final-report" element={<UrfFormPage type="final" />} />
+              <Route path="/publications" element={<Publications />} />
+            </>
+          )}
           <Route path="/notifications" element={<AllNotificationsPage />} />
           {features.research_profile && (
             <>
@@ -199,6 +215,12 @@ const AppContent = () => {
                 <Route path="/clerk-management" element={<ClerkManagement />} />
                 <Route path="/clerks" element={<ClerkManagement />} />
                 <Route path="/configuration" element={<Configuration />} />
+                <Route path="/urf" element={<UrfList />} />
+                <Route path="/urf/urf-application" element={<UrfFormList />} />
+                <Route path="/urf/urf-additional-info" element={<UrfFormList />} />
+                <Route path="/urf/urf-half-yearly-report" element={<UrfFormList />} />
+                <Route path="/urf/urf-final-report" element={<UrfFormList />} />
+                <Route path="/urf/:id" element={<UrfDetails />} />
 
               {/* <Route path="/faculty/:roll_no" element={<StudentProfile />} />
               <Route path="/faculty/:roll_no/forms" element={<FormsPage />} />

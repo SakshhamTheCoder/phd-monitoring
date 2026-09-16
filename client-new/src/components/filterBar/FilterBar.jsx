@@ -11,7 +11,9 @@ const FilterBar = ({ onSearch, default_filter,mandatory_filter }) => {
   const [selectedFilter, setSelectedFilter] = useState(null);
 
   const [value, setValue] = useState("");
-  const [operator, setOperator] = useState("=");
+  // Contains, not equals: a search for "Edge" should find "Edge ML…", which is
+  // what people expect and what EQUAL silently failed to do.
+  const [operator, setOperator] = useState("LIKE");
   const [combinator, setCombinator] = useState("AND");
   const [activeFilters, setActiveFilters] = useState([]);
 
@@ -54,8 +56,8 @@ const FilterBar = ({ onSearch, default_filter,mandatory_filter }) => {
   }, [default_filter]);
 
   const addFilter = () => {
-    if (!selectedFilter || !value) return;
-    setActiveFilters([
+    if (!selectedFilter || !value) return activeFilters;
+    const added = [
       ...activeFilters,
       {
         label: selectedFilter.label,
@@ -63,22 +65,30 @@ const FilterBar = ({ onSearch, default_filter,mandatory_filter }) => {
         op: operator,
         value,
       },
-    ]);
+    ];
+    setActiveFilters(added);
     setValue("");
+    return added;
   };
 
-  const removeFilter = (index) => {
-    setActiveFilters(activeFilters.filter((_, i) => i !== index));
-  };
-
-  const handleSearch = () => {
-    const query = {
+  const search = (conditions) => {
+    onSearch({
       combine: combinator,
-      conditions: activeFilters,
+      conditions,
       mandatory_filter: mandatory_filter || [],
-    };
-    onSearch(query);
+    });
   };
+
+  // Removing a filter searches again, so the table matches the chips on screen.
+  const removeFilter = (index) => {
+    const left = activeFilters.filter((_, i) => i !== index);
+    setActiveFilters(left);
+    search(left);
+  };
+
+  // A typed value that was never added used to be dropped without a word, so
+  // Search adds it first. Enter in the value box does the same.
+  const handleSearch = () => search(addFilter());
 
   return (
     <div className="filter-bar">
@@ -162,6 +172,7 @@ const FilterBar = ({ onSearch, default_filter,mandatory_filter }) => {
             className="filter-input"
             value={value}
             onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             placeholder="Enter value"
           />
         )}

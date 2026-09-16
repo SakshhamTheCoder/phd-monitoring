@@ -39,7 +39,7 @@ class DepartmentController extends Controller
         $facultyQuery = Department::with(['hod.user', 'adordc.user', 'phdCoordinators.faculty.user']);
     
         if ($filters) {
-            $facultyQuery = $this->applyDynamicFilters($facultyQuery, $filters);
+            $facultyQuery = $this->applyDynamicFilters($facultyQuery, $filters, 'departments');
         }
     
         $faculties = $facultyQuery->orderBy('name')->paginate($perPage, ['*'], 'page', $page);
@@ -236,7 +236,7 @@ class DepartmentController extends Controller
 
             // Apply dynamic filters
             if ($filters) {
-                $query = $this->applyDynamicFilters($query, $filters);
+                $query = $this->applyDynamicFilters($query, $filters, 'area_of_specialization');
             }
 
             $areas = $query->orderBy('name')->paginate($perPage, ['*'], 'page', $page);

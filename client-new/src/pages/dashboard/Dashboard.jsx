@@ -7,6 +7,7 @@ import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
 import FacultyProfile from '../admin/ResearchProfile';
 import AdminHome from '../../components/profileCard/AdminHome';
+import UgProfile from '../../components/urf/UgProfile';
 
 const Dashboard = () => {
   const userRole = localStorage.getItem('userRole');
@@ -21,6 +22,12 @@ const Dashboard = () => {
     // overview built from what we already have in localStorage.
     if (userRole === 'admin' || userRole === 'clerk') {
       setView('admin');
+      setIsLoaded(true);
+      return;
+    }
+    // A UG student's profile is built from their URF project, which it fetches itself.
+    if (userRole === 'ug_student') {
+      setView('ug_student');
       setIsLoaded(true);
       return;
     }
@@ -59,6 +66,8 @@ const Dashboard = () => {
         <>
           {view === 'student' ? (
             <ProfileCard data={data} />
+          ) : view === 'ug_student' ? (
+            <UgProfile />
           ) : view === 'admin' ? (
             <AdminHome data={data} />
           ) : (

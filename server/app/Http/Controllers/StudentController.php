@@ -538,7 +538,7 @@ class StudentController extends Controller {
     }
 
     if ($filters) {
-        $studentsQuery = $this->applyDynamicFilters($studentsQuery, $filters);
+        $studentsQuery = $this->applyDynamicFilters($studentsQuery, $filters, 'student');
     }
 
     // Sort alphabetically by the student's name. Ordered via a correlated subquery

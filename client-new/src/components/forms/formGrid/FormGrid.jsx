@@ -13,6 +13,9 @@ const MANDATORY_ORDER = [
     "synopsis-submission",
     "list-of-examiners",
     "thesis-submission",
+    // URF: the application and its additional information on the left...
+    "urf-application",
+    "urf-additional-info",
 ];
 const OPTIONAL_ORDER = [
     "status-change",
@@ -21,9 +24,14 @@ const OPTIONAL_ORDER = [
     "supervisor-change",
     "thesis-extension",
     "revise-title",
+    // ...and the two reports on the right.
+    "urf-half-yearly-report",
+    "urf-final-report",
 ];
 
-const FormGrid = ({ forms }) => {
+// A form may carry its own `path`; `title={null}` leaves out the heading, for a
+// page that shows several grids under headings of its own.
+const FormGrid = ({ forms, title = "Available Forms" }) => {
     const location = useLocation();
 
     const handleClick = (form) => {
@@ -32,7 +40,7 @@ const FormGrid = ({ forms }) => {
             path = path.slice(0, -1);
         }
         const newUrl = `${path}/${form.form_type}`;
-        window.location.href = newUrl;
+        window.location.href = form.path || newUrl;
     };
 
     const pick = (order) =>
@@ -67,8 +75,9 @@ const FormGrid = ({ forms }) => {
 
     return (
         <>
+            {title && (
             <div className="forms-list-header">
-                <h1 className="page-title">Available Forms</h1>
+                <h1 className="page-title">{title}</h1>
                 {forms.length > 0 && (
                     <div className="form-legend">
                         <span className="legend-item"><span className="legend-dot green"></span>Action required</span>
@@ -76,6 +85,7 @@ const FormGrid = ({ forms }) => {
                     </div>
                 )}
             </div>
+            )}
             {forms.length > 0 ? (
                 <div className="form-grid-container">
                     <div className="form-grid-column">{mandatory.map(renderCard)}</div>

@@ -327,7 +327,7 @@ class FacultyController extends Controller
         }
     
         if ($filters) {
-            $facultyQuery = $this->applyDynamicFilters($facultyQuery, $filters);
+            $facultyQuery = $this->applyDynamicFilters($facultyQuery, $filters, 'faculty');
         }
 
         // Sort alphabetically by the faculty member's name.

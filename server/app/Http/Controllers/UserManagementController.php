@@ -43,7 +43,7 @@ class UserManagementController extends Controller
         $usersQuery = User::with(['role', 'current_role', 'default_role', 'student', 'faculty']);
 
         if ($filters) {
-            $usersQuery = $this->applyDynamicFilters($usersQuery, $filters);
+            $usersQuery = $this->applyDynamicFilters($usersQuery, $filters, 'users');
         }
 
         $users = $usersQuery->paginate($perPage, ['*'], 'page', $page);

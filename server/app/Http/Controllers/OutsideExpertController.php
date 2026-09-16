@@ -27,7 +27,7 @@ class OutsideExpertController extends Controller
             $query = OutsideExpert::query();
 
             if ($filters) {
-                $query = $this->applyDynamicFilters($query, $filters);
+                $query = $this->applyDynamicFilters($query, $filters, 'outside_experts');
             }
 
             $experts = $query->orderBy('first_name')

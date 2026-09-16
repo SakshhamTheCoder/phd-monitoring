@@ -391,6 +391,10 @@ Route::prefix('users')->group(function () {
     require base_path('routes/base/users.php');
 });
 
+Route::prefix('urf')->group(function () {
+    require base_path('routes/base/urf.php');
+});
+
 Route::prefix('settings')->group(function () {
     require base_path('routes/base/settings.php');
 });

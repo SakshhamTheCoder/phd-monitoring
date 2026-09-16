@@ -1,0 +1,67 @@
+/* A heading with its add button on the same line, as the project form's
+   Co-Investigators section lays out "Add External Co-PI". */
+.urf-subhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1.75rem 0 0.75rem;
+}
+
+.urf-subhead h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* Same look as .cp-add-btn on the project form. */
+.urf-add-btn {
+  background: var(--primary-color);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.urf-add-btn:hover { background: var(--hover-color); }
+
+.urf-remove-btn {
+  background: #fff;
+  color: #991b1b;
+  border: 1px solid #991b1b;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.urf-remove-btn:hover { background: #991b1b; color: #fff; }
+
+/* One mentor per row: the faculty search, then what it fills in, then remove. */
+.urf-mentor-row {
+  display: grid;
+  grid-template-columns: 1.3fr 1.3fr 1fr 1.3fr 2.75rem;
+  gap: 1rem;
+  align-items: end;
+  margin-bottom: 1rem;
+}
+
+.urf-mentor-row .urf-remove-btn {
+  padding: 0.6rem;
+  justify-content: center;
+  margin-bottom: 0.1rem;
+}
+
+@media (max-width: 900px) {
+  .urf-mentor-row { grid-template-columns: 1fr 1fr; }
+}

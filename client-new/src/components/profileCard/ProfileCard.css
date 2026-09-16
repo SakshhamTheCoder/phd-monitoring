@@ -240,3 +240,8 @@
 /* Edit button */
 .profile-deadline-due { color: #b91c1c; font-weight: 600; }
 .profile-deadline-note { color: #6b7280; }
+
+/* body sets font-weight 600 app-wide, so table cells arrived semi-bold. On a
+   profile the column titles carry the emphasis; the rows are data, as in the
+   InfoGrid above them. */
+.student-container .custom-table td { font-weight: 400; }

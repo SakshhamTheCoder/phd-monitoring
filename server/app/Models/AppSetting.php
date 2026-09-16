@@ -70,6 +70,16 @@ class AppSetting extends Model
             // so only the page that edits these numbers has to read them.
             'readers' => ['admin'],
         ],
+        'urf' => [
+            // 1 while the URF application window is open.
+            'defaults' => [
+                'applications_open' => 0,
+            ],
+            'rules' => [
+                'applications_open' => 'required|integer|in:0,1',
+            ],
+            'readers' => ['admin', 'ug_student'],
+        ],
     ];
 
     public static function isGroup(string $group): bool

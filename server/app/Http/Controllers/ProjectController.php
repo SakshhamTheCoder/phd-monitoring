@@ -28,7 +28,7 @@ class ProjectController extends Controller {
             $filters = json_decode(urldecode($json), true);
         }
         if ($filters) {
-            $query = $this->applyDynamicFilters($query, $filters);
+            $query = $this->applyDynamicFilters($query, $filters, 'projects');
         }
 
         $projects = $query->orderByDesc('id')->get();

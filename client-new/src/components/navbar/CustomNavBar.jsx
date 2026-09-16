@@ -6,15 +6,18 @@ import './NavBar.css';
 // Exported so the breadcrumb names a route the same way the nav does, instead
 // of keeping a second list that drifts.
 export const buttonConfig = [
+    // A UG student's home is their profile, so it is named for what it shows.
+    { path: '/home', icon: <i class="fa fa-user" aria-hidden="true"></i>, text: 'Profile', roles: ['ug_student'] },
     { path: '/home', icon: <i class="fa fa-home" aria-hidden="true"></i>, text: 'Home', roles: ['student', 'hod', 'phd_coordinator', 'faculty', 'dordc', 'adordc', 'dra', 'director', 'doctoral', 'external', 'admin'] },
     { path: '/projects', icon: <i class="fa fa-briefcase" aria-hidden="true"></i>, text: 'Projects', roles: ['faculty', 'hod', 'phd_coordinator', 'dordc', 'adordc', 'dra', 'director', 'admin'], feature: 'project_management' },
-    { path: '/forms', icon: <i class="fa fa-file-text" aria-hidden="true"></i>, text: 'Forms', roles: ['student', 'hod', 'phd_coordinator', 'faculty', 'dordc', 'adordc', 'dra', 'director', 'doctoral', 'external', 'admin'] },
+    { path: '/forms', icon: <i class="fa fa-file-text" aria-hidden="true"></i>, text: 'Forms', roles: ['student', 'ug_student', 'hod', 'phd_coordinator', 'faculty', 'dordc', 'adordc', 'dra', 'director', 'doctoral', 'external', 'admin'] },
     { path: '/presentation', icon: <i class="fa fa-tasks" aria-hidden="true"></i>, text: 'Progress Monitoring', roles: ['student', 'hod', 'phd_coordinator', 'faculty', 'dordc', 'adordc', 'dra', 'director', 'doctoral', 'admin'] },
-    { path: '/publications', icon: <i class="fa fa-book" aria-hidden="true"></i>, text: 'Publications', roles: ['student'] },
+    { path: '/publications', icon: <i class="fa fa-book" aria-hidden="true"></i>, text: 'Publications', roles: ['student', 'ug_student'] },
+    { path: '/urf', icon: <i class="fa fa-flask" aria-hidden="true"></i>, text: 'URF', roles: ['admin'] },
     { path: '/openings', icon: <i class="fa fa-bullhorn" aria-hidden="true"></i>, text: 'Openings', roles: ['student'], feature: 'job_openings' },
     { path: '/courses', icon: <i class="fa fa-graduation-cap" aria-hidden="true"></i>, text: 'Courses', roles: ['student', 'hod', 'phd_coordinator', 'admin'] },
     { path: '/students', icon: <i class="fa fa-users" aria-hidden="true"></i>, text: 'Students', roles: ['hod', 'phd_coordinator', 'faculty', 'dordc', 'adordc', 'dra', 'director', 'doctoral', 'external', 'admin'] },
-    { path: '/faculty', icon: <i class="fa-solid fa-person-chalkboard"></i>, text: 'Faculty', roles: ['student', 'faculty', 'doctoral', 'external', 'hod', 'phd_coordinator', 'dordc', 'adordc', 'dra', 'director', 'admin'] },
+    { path: '/faculty', icon: <i class="fa-solid fa-person-chalkboard"></i>, text: 'Faculty', roles: ['student', 'ug_student', 'faculty', 'doctoral', 'external', 'hod', 'phd_coordinator', 'dordc', 'adordc', 'dra', 'director', 'admin'] },
     { path: '/clerks', icon: <i class="fa fa-id-card-o" aria-hidden="true"></i>, text: 'Clerks', roles: ['admin'] },
     { path: '/departments', icon: <i class="fa-solid fa-building"></i>, text: 'Departments', roles: ['dordc', 'dra', 'director', 'admin'] },
     { path: '/supervisor-doctoral-approvals', icon: <i class="fa-solid fa-user-check"></i>, text: 'Supervisor Approvals', roles: ['dordc', 'admin'] },
@@ -22,7 +25,7 @@ export const buttonConfig = [
     { path: '/configuration', icon: <i class="fa-solid fa-sliders"></i>, text: 'Configuration', roles: ['admin'] },
     { path: '/logs', icon: <i class="fa-solid fa-history"></i>, text: 'Logs', roles: ['admin'] },
     { path: '/users', icon: <i class="fa-solid fa-users-cog"></i>, text: 'Manage Users', roles: ['admin'] },
-    { path: '/notifications', icon: <i class="fa-solid fa-bell"></i>, text: 'Notifications', roles: ['student', 'hod', 'phd_coordinator', 'faculty', 'dordc', 'adordc', 'dra', 'director', 'doctoral', 'external', 'admin'] },
+    { path: '/notifications', icon: <i class="fa-solid fa-bell"></i>, text: 'Notifications', roles: ['student', 'ug_student', 'hod', 'phd_coordinator', 'faculty', 'dordc', 'adordc', 'dra', 'director', 'doctoral', 'external', 'admin'] },
     { path: '/areasOfSpecialization', icon: <i class="fa fa-list" aria-hidden="true"></i>, text: 'Areas of Specialization', roles: ['admin'] },
     { path: '/outside-experts', icon: <i class="fa fa-user-tie" aria-hidden="true"></i>, text: 'Outside Experts', roles: ['admin'] },
 ];
@@ -45,7 +48,7 @@ const CustomNavBar = () => {
             <div className="icons">
                 {visibleButtons.map(({ path, icon, text }) => (
                     <button
-                        key={path}
+                        key={`${path}-${text}`}
                         className={`menu-button ${location.pathname.startsWith(path) ? 'active' : ''}`}
                         onClick={() => navigate(path)}
                     >
