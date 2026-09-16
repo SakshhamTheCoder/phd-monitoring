@@ -45,7 +45,10 @@ class RoleCapabilityMatrixTest extends TestCase
         'can_read_department_faculties' => ['hod', 'phd_coordinator', 'adordc'],
 
         // FacultyController::add/update/upload, StudentController::add/bulk*
-        'can_manage_faculties' => ['admin', 'adordc', 'director', 'dordc', 'dra'],
+        // A coordinator writes their own department's faculty records, which the
+        // controller scopes for them: 2026_09_11_000001_let_coordinators_manage_
+        // their_department_faculty.
+        'can_manage_faculties' => ['admin', 'adordc', 'director', 'dordc', 'dra', 'phd_coordinator'],
         'can_manage_students' => ['admin', 'adordc', 'director', 'dordc', 'dra'],
 
         // DepartmentController::authorize
