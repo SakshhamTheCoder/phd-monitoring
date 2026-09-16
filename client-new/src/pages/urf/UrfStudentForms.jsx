@@ -93,7 +93,7 @@ export const UrfFormPage = ({ type }) => {
   let body = null;
   if (state && type === 'new') {
     body = canApply(state)
-      ? <ApplyForm onSaved={() => navigate('/forms')} />
+      ? <ApplyForm student={state.student} onSaved={() => navigate('/forms')} />
       : <p>{state.applications_open ? `You have already applied for URF ${state.session}.` : 'URF applications are closed right now.'}</p>;
   } else if (state && !application) {
     body = <p>This URF project was not found.</p>;
@@ -103,7 +103,7 @@ export const UrfFormPage = ({ type }) => {
       && application.status === 'applied'
       && application.session === state.session
       && application.student2_email?.toLowerCase() !== me.email?.toLowerCase();
-    body = editable ? <ApplyForm initial={application} onSaved={load} /> : <UrfRecord record={application} />;
+    body = editable ? <ApplyForm initial={application} student={state.student} onSaved={load} /> : <UrfRecord record={application} />;
   } else if (application && type === 'additional') {
     // Prefilled from the student's most recent other project, and still editable.
     const previous = state.applications.find((a) => a.id !== application.id && a.fellows?.length)?.fellows[0];

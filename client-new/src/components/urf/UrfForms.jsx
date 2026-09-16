@@ -53,15 +53,19 @@ const Submit = ({ text, onClick }) => {
   return <GridContainer elements={[<CustomButton text={saving ? 'Saving…' : text} onClick={run} disabled={saving} />]} />;
 };
 
-/** A student's fields. `account` locks what the signed-in account already knows. */
+/**
+ * A student's fields. `account` locks what the signed-in account already knows.
+ * Year is not locked: it moves with the student, and an application is per
+ * session, so a fellow applying again next year corrects it here.
+ */
 const StudentFields = ({ n, body, set, branches, account = {} }) => {
   const key = (field) => `student${n}_${field}`;
   return (
     <GridContainer
       elements={[
         <InputField label="Name" initialValue={body[key('name')]} onChange={set(key('name'))} isLocked={!!account.name} required />,
-        <InputField label="Roll Number" initialValue={body[key('roll_no')]} onChange={set(key('roll_no'))} required />,
-        <DropdownField label="Branch" options={branches} initialValue={body[key('department_id')]} onChange={set(key('department_id'))} required />,
+        <InputField label="Roll Number" initialValue={body[key('roll_no')]} onChange={set(key('roll_no'))} isLocked={!!account.roll_no} required />,
+        <DropdownField label="Branch" options={branches} initialValue={body[key('department_id')]} onChange={set(key('department_id'))} isLocked={!!account.department_id} required />,
         <DropdownField label="Year" options={YEARS} initialValue={body[key('year')]} onChange={set(key('year'))} required />,
         <DropdownField label="Gender" options={GENDERS} initialValue={body[key('gender')]} onChange={set(key('gender'))} isLocked={!!account.gender} required />,
         <InputField label="Official Email" type="email" initialValue={body[key('email')]} onChange={set(key('email'))} isLocked={!!account.email} required />,
@@ -111,13 +115,17 @@ const APPLICATION_FIELDS = ['project_title', 'mentor1_faculty_code', 'mentor2_fa
  * added with a button, one of each at most. Passing `initial` corrects an
  * application still waiting for a result.
  */
-export const ApplyForm = ({ initial, onSaved }) => {
+export const ApplyForm = ({ initial, student, onSaved }) => {
   const me = signedInUser();
+  // `student` is what they gave at sign-up. An account an admin created has
+  // none, and then roll number and branch are asked for here as before.
   const account = {
     name: [me.first_name, me.last_name].filter(Boolean).join(' '),
     email: me.email,
     phone: me.phone,
     gender: me.gender,
+    roll_no: student?.roll_no,
+    department_id: student?.department_id,
   };
   const branches = useBranches();
   const [body, set] = useBody(initial
@@ -127,6 +135,9 @@ export const ApplyForm = ({ initial, onSaved }) => {
       student1_email: account.email,
       student1_phone: account.phone,
       student1_gender: account.gender,
+      student1_roll_no: account.roll_no,
+      student1_department_id: account.department_id,
+      student1_year: student?.year,
     });
   const [teammate, setTeammate] = useState(!!initial?.student2_name);
   const [secondMentor, setSecondMentor] = useState(!!initial?.mentor2_faculty_code);

@@ -29,8 +29,9 @@ const PROJECT_CELLS = [
 /**
  * A UG student's home, laid out like the PhD student profile: their name with
  * their current URF project beside it, their details in the framed grid, then
- * that project and the ones behind it. Roll number, branch and year are asked
- * for on the application, so they come from the current one.
+ * that project and the ones behind it. Roll number, branch and year come from
+ * what they gave at sign-up, falling back to the current application for an
+ * account an admin created.
  */
 const UgProfile = () => {
   const [state, setState] = useState(null);
@@ -83,9 +84,9 @@ const UgProfile = () => {
 
       <div className="student-details">
         <InfoGrid className="student-info-grid" rows={[
-          { label: 'Roll Number', value: current?.[`student${slot}_roll_no`] },
-          { label: 'Branch', value: current?.[`student${slot}_department`]?.name },
-          { label: 'Year', value: yearLabel(current?.[`student${slot}_year`]) },
+          { label: 'Roll Number', value: state?.student?.roll_no || current?.[`student${slot}_roll_no`] },
+          { label: 'Branch', value: state?.student?.department?.name || current?.[`student${slot}_department`]?.name },
+          { label: 'Year', value: yearLabel(state?.student?.year || current?.[`student${slot}_year`]) },
           { label: 'Email', value: me.email },
           { label: 'Phone', value: me.phone },
           { label: 'Gender', value: me.gender },
