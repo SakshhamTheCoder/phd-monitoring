@@ -1,210 +1,183 @@
-import React, { useEffect, useState } from "react";
-// import axios from 'axios';
-import "./FilterBar.css"; // Import external CSS
-import DropdownField from "../forms/fields/DropdownField";
-import InputSuggestions from "../forms/fields/InputSuggestions";
-import { baseURL } from "../../api/urls";
-import { customFetch } from "../../api/base";
-import { useLoading } from "../../context/LoadingContext";
-const FilterBar = ({ onSearch, default_filter,mandatory_filter }) => {
-  const [filtersMeta, setFiltersMeta] = useState([]);
-  const [selectedFilter, setSelectedFilter] = useState(null);
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import DropdownField from '../forms/fields/DropdownField';
+import InputSuggestions from '../forms/fields/InputSuggestions';
+import { baseURL } from '../../api/urls';
+import { customFetch } from '../../api/base';
+import './FilterBar.css';
 
-  const [value, setValue] = useState("");
-  // Contains, not equals: a search for "Edge" should find "Edge ML…", which is
-  // what people expect and what EQUAL silently failed to do.
-  const [operator, setOperator] = useState("LIKE");
-  const [combinator, setCombinator] = useState("AND");
-  const [activeFilters, setActiveFilters] = useState([]);
+// What a field is matched with, decided per field instead of asked for.
+const operatorFor = (filter) => (filter.options || filter.data_type === 'date' || filter.data_type === 'number' ? '=' : 'LIKE');
+
+const inputTypes = { date: 'date', time: 'time', number: 'number' };
+
+/**
+ * One search box, and the page's filters behind "Filters".
+ *
+ * Typing searches every text field of the page at once (an OR), so nothing has
+ * to be picked first; a filter applies the moment it is set, and removing one
+ * re-runs the search. The page's own mandatory filters (a tab, say) are passed
+ * through untouched, and any filter chosen here joins them, so a search within
+ * a filter still narrows rather than widens.
+ */
+const FilterBar = ({ placeholder = 'Search…', mandatory = [], onSearch }) => {
+  // null until the page's filter definitions arrive.
+  const [filters, setFilters] = useState(null);
+  const [text, setText] = useState('');
+  const [open, setOpen] = useState(false);
+  const [chosen, setChosen] = useState({});
+  const onSearchRef = useRef(onSearch);
+  onSearchRef.current = onSearch;
 
   useEffect(() => {
-    const fetchFilters = async () => {
-      try {
-        let location = window.location;
-        let data = await customFetch(
-          baseURL + location.pathname + "/filters",
-          "GET",
-          null,
-          false
-        );
-        const raw = data?.response;
-        // Guard: /filters may 404, return object, or non-array on pages without a
-        // dedicated filter definition (e.g. /clerk-management). Never store
-        // a non-array otherwise .map/.find crashes the whole page.
-        if (Array.isArray(raw)) setFiltersMeta(raw);
-        else if (Array.isArray(raw?.data)) setFiltersMeta(raw.data);
-        else setFiltersMeta([]);
-      } catch (error) {
-        console.error("Error fetching filters:", error);
-        setFiltersMeta([]);
-      }
-    };
-    fetchFilters();
+    // /filters may 404 or answer with an object on a page that defines none.
+    // Never store a non-array: the render maps over it.
+    customFetch(`${baseURL}${window.location.pathname}/filters`, 'GET', null, false)
+      .then((res) => {
+        const raw = res?.response;
+        setFilters(Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : []);
+      })
+      .catch(() => setFilters([]));
   }, []);
 
+  // The box searches the fields that are free text; a dropdown or a date is not
+  // something anyone types into a search box.
+  const searchable = useMemo(
+    () => (filters || []).filter((f) => !f.options && f.data_type !== 'date' && f.data_type !== 'number'),
+    [filters],
+  );
+  // A field's key may name two columns, so one of these searches both students
+  // of a URF project at once.
+  const searchFields = useMemo(
+    () => searchable.map((f) => ({ key: f.key_name, label: f.label })),
+    [searchable],
+  );
+
+  const conditionsFrom = (picks) => Object.entries(picks)
+    .filter(([, entry]) => entry.value !== '' && entry.value !== null && entry.value !== undefined)
+    .map(([key, entry]) => ({ label: entry.label, key, op: entry.op, value: entry.value }));
+
+  // A search across fields is an OR, so anything else has to be a mandatory
+  // filter to keep narrowing the result rather than widening it.
+  const emit = (nextText, picks) => {
+    const query = nextText.trim();
+    const picked = conditionsFrom(picks);
+    onSearchRef.current(query
+      ? {
+        combine: 'or',
+        conditions: searchFields.map((f) => ({ label: f.label, key: f.key, op: 'LIKE', value: query })),
+        mandatory_filter: [...mandatory, ...picked],
+      }
+      : { combine: 'and', conditions: picked, mandatory_filter: mandatory });
+  };
+
+  // Re-run when the page's own filters change, e.g. a tab. Not on the first
+  // render: the page loads its own list, and the field list is still on its way.
+  const mounted = useRef(false);
   useEffect(() => {
-    if (!default_filter || default_filter.length === 0) return;
-    // Always clear old filters and apply new ones
-    const newDefaults = default_filter?.map((filter) => ({
-      label: filter.label,
-      key: filter.key_name,
-      op: filter.op || "=",
-      value: filter.value || "",
-    }));
+    if (mounted.current) emit(text, chosen);
+    else mounted.current = true;
+  }, [JSON.stringify(mandatory)]);
 
-    setActiveFilters(newDefaults);
-  }, [default_filter]);
+  const runSearch = () => emit(text, chosen);
 
-  const addFilter = () => {
-    if (!selectedFilter || !value) return activeFilters;
-    const added = [
-      ...activeFilters,
-      {
-        label: selectedFilter.label,
-        key: selectedFilter.key_name,
-        op: operator,
-        value,
-      },
-    ];
-    setActiveFilters(added);
-    setValue("");
-    return added;
+  // Setting a filter fills it in; the search itself waits for Enter or Search,
+  // so nothing runs half-typed. Clearing one searches at once, so the table
+  // never keeps a filter that is no longer on screen.
+  const choose = (filter, value, andSearch = false) => {
+    const next = { ...chosen };
+    if (value === '' || value === null || value === undefined) delete next[filter.key_name];
+    else next[filter.key_name] = { label: filter.label, op: operatorFor(filter), value };
+    setChosen(next);
+    if (andSearch || value === '' || value === null || value === undefined) emit(text, next);
   };
 
-  const search = (conditions) => {
-    onSearch({
-      combine: combinator,
-      conditions,
-      mandatory_filter: mandatory_filter || [],
-    });
+  const clearAll = () => {
+    setText('');
+    setChosen({});
+    emit('', {});
   };
 
-  // Removing a filter searches again, so the table matches the chips on screen.
-  const removeFilter = (index) => {
-    const left = activeFilters.filter((_, i) => i !== index);
-    setActiveFilters(left);
-    search(left);
+  const control = (filter) => {
+    const value = chosen[filter.key_name]?.value ?? '';
+    if (filter.options) {
+      return (
+        <DropdownField
+          label={filter.label}
+          options={filter.options.map((o) => (typeof o === 'string' ? { title: o, value: o } : o))}
+          initialValue={value}
+          onChange={(v) => choose(filter, v, true)}
+        />
+      );
+    }
+    if (filter.api_url) {
+      return (
+        <InputSuggestions
+          label={filter.label}
+          apiUrl={baseURL + filter.api_url}
+          initialValue={value}
+          suggestionManadatory={false}
+          onSelect={(picked) => choose(filter, picked?.name ?? '', true)}
+        />
+      );
+    }
+    return (
+      <div className="input-field-container">
+        <label className="input-label">{filter.label}</label>
+        <input
+          className="input-field"
+          type={inputTypes[filter.data_type] || 'text'}
+          value={value}
+          placeholder={`Any ${filter.label.toLowerCase()}`}
+          onChange={(e) => choose(filter, e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && runSearch()}
+        />
+      </div>
+    );
   };
 
-  // A typed value that was never added used to be dropped without a word, so
-  // Search adds it first. Enter in the value box does the same.
-  const handleSearch = () => search(addFilter());
+  const chips = conditionsFrom(chosen);
+
+  // A page that defines no filters has nothing to search, so it gets no bar.
+  if (!filters || filters.length === 0) return null;
 
   return (
     <div className="filter-bar">
-      <div className="filter-row">
-        <select
-          className="filter-select"
-          value={selectedFilter?.key_name || ""}
-          onChange={(e) => {
-            const list = Array.isArray(filtersMeta) ? filtersMeta : [];
-            const meta = list.find((f) => f.key_name === e.target.value);
-            setSelectedFilter(meta || null);
-            setValue("");
-          }}
-        >
-          <option value="">Select Filter</option>
-          {(Array.isArray(filtersMeta) ? filtersMeta : []).map((f) => (
-            <option key={f.key_name} value={f.key_name}>
-              {f.label}
-            </option>
-          ))}
-        </select>
-
-        <select
-          className="filter-operator"
-          value={operator}
-          onChange={(e) => setOperator(e.target.value)}
-        >
-          <option value="=">EQUAL</option>
-          <option value="LIKE">LIKE</option>
-          <option value="!=">NOT EQUAL</option>
-          <option value="<">SMALLER THAN</option>
-          <option value=">">GREATER THAN</option>
-          <option value="<=">SMALLER THAN EQUAL TO</option>
-          <option value=">=">GREATER THAN EQUAL TO</option>
-        </select>
-
-        {selectedFilter && selectedFilter.options ? (
-          <DropdownField
-            label=""
-            style={{ width: "100px" }}
-            options={selectedFilter?.options?.map((opt) =>
-              typeof opt === "string" ? { value: opt, title: opt } : opt
-            )}
-            isLocked={false}
-            onChange={(val) => setValue(val)}
-          />
-        ) : selectedFilter && selectedFilter.api_url ? (
-          <div className="filter-input-container">
-            <InputSuggestions
-              label=""
-              apiUrl={baseURL + selectedFilter.api_url}
-              onSelect={(val) => setValue(val.name || "")}
-              showLabel={false}
-              suggestionManadatory={false}
-            />
-          </div>
-        ) : selectedFilter && selectedFilter.data_type === "date" ? (
-          <input
-            type="date"
-            className="filter-input"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-          />
-        ) : selectedFilter && selectedFilter.data_type === "time" ? (
-          <input
-            type="time"
-            className="filter-input"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-          />
-        ) : selectedFilter && selectedFilter.data_type === "number" ? (
-          <input
-            type="number"
-            className="filter-input"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-          />
-        ) : (
-          <input
-            type="text"
-            className="filter-input"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            placeholder="Enter value"
-          />
+      <div className="filter-bar-row">
+        <span className="filter-bar-icon"><i className="fa fa-search" aria-hidden="true"></i></span>
+        <input
+          className="filter-bar-input"
+          type="search"
+          value={text}
+          placeholder={placeholder}
+          aria-label={placeholder}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && runSearch()}
+        />
+        <button type="button" className="filter-bar-go" onClick={runSearch}>Search</button>
+        <button type="button" className="filter-bar-toggle" onClick={() => setOpen(!open)}>
+          <i className="fa fa-sliders" aria-hidden="true"></i> Filters{chips.length ? ` (${chips.length})` : ''}
+        </button>
+        {(text || chips.length > 0) && (
+          <button type="button" className="filter-bar-clear" onClick={clearAll}>Clear</button>
         )}
-
-        <button className="filter-add" onClick={addFilter}>
-          Add Filter
-        </button>
-
-        <select
-          className="filter-combinator"
-          value={combinator}
-          onChange={(e) => setCombinator(e.target.value)}
-        >
-          <option value="AND">AND</option>
-          <option value="OR">OR</option>
-        </select>
-
-        <button className="filter-search" onClick={handleSearch}>
-          Search
-        </button>
       </div>
 
-      <div className="active-filters">
-        {activeFilters?.map((f, i) => (
-          <div key={i} className="filter-chip">
-            {`${f.label} ${f.op} ${f.value}`}
-            <span className="remove-filter" onClick={() => removeFilter(i)}>
-              &times;
+      {open && (
+        <div className="filter-bar-fields">
+          {filters.map((filter) => <div key={filter.key_name} className="filter-bar-field">{control(filter)}</div>)}
+        </div>
+      )}
+
+      {chips.length > 0 && (
+        <div className="filter-bar-chips">
+          {chips.map((chip) => (
+            <span key={chip.key} className="filter-chip">
+              {chip.label}: {String(chip.value)}
+              <button type="button" aria-label={`Remove ${chip.label} filter`} onClick={() => choose({ key_name: chip.key }, '')}>&times;</button>
             </span>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

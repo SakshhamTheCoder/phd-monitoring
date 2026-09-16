@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import Tabs from '../../components/tabs/Tabs';
-import SmartSearch from '../../components/search/SmartSearch';
+import FilterBar from '../../components/filterBar/FilterBar';
 import PagenationTable from '../../components/pagenationTable/PagenationTable';
 import FormGrid from '../../components/forms/formGrid/FormGrid';
 import CustomButton from '../../components/forms/fields/CustomButton';
@@ -58,7 +58,7 @@ const UrfList = () => {
         value={tab}
         onChange={setTab}
       />
-      <SmartSearch
+      <FilterBar
         placeholder="Search projects by title, student, roll no or mentor…"
         mandatory={tabFilter}
         onSearch={setFilter}

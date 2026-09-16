@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
-import SmartSearch from '../../components/search/SmartSearch';
+import FilterBar from '../../components/filterBar/FilterBar';
 import PagenationTable from '../../components/pagenationTable/PagenationTable';
 import './UrfList.css';
 
@@ -26,7 +26,7 @@ const UrfFormList = () => {
   return (
     <Layout>
       <PageHeader title={TITLES[pathname.split('/').pop()]} subtitle="Undergraduate Research Fellowship" />
-      <SmartSearch
+      <FilterBar
         placeholder="Search by project, student, roll no or mentor…"
         onSearch={setFilters}
       />
