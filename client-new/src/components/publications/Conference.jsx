@@ -61,8 +61,8 @@ const Conference = ({callback,updateValue,data={}}) => {
 
             {isUrf && (
                 <GridContainer elements={[
-                    <InputField label={"Funding"} hint={"Funding source, if any"} initialValue={data.funding} onChange={(value)=>{setBodyValue("funding",value)}} />,
-                    <DropdownField label={"Mode"} initialValue={data.mode} options={[{title:"Offline",value:"offline"},{title:"Online",value:"online"}]} onChange={(value)=>{setBodyValue("mode",value)}} />,
+                    <DropdownField label={"Mode of Conference"} initialValue={data.mode} options={[{title:"Offline",value:"offline"},{title:"Online",value:"online"}]} onChange={(value)=>{setBodyValue("mode",value)}} />,
+                    <InputField label={"Funding Received"} hint={"Funding source, if any"} initialValue={data.funding} onChange={(value)=>{setBodyValue("funding",value)}} />,
                 ]} />
             )}
 
