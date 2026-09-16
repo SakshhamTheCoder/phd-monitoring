@@ -13,6 +13,9 @@ const PagenationTable = ({
   enableApproval = false,
   customOpenForm, // function(id)
   rowClickable = true,
+  linkField = null, // a column that opens something of its own, not the row
+  onLinkClick = null, // what that column opens; the row still opens the row
+  components = [], // [{ key, component }] to draw a cell itself, as TableComponent takes
   customBulkAction, // function(formIds)
   extraTopbarComponents = null,
   enableSelect=true,
@@ -32,6 +35,8 @@ const PagenationTable = ({
   const [openMenu, setOpenMenu] = useState(null);
 
   const { setLoading } = useLoading();
+
+  const componentMap = components.reduce((all, one) => ({ ...all, [one.key]: one.component }), {});
 
   // Close the open row-actions menu on any outside click
   useEffect(() => {
@@ -198,9 +203,27 @@ const PagenationTable = ({
                   // Progress monitoring is a percentage everywhere else it is
                   // shown, so a bare number here reads as a count of something.
                   const shown = field === 'overall_progress' && val != null ? `${val}%` : val;
+                  const Custom = componentMap[field];
+                  const content = Custom
+                    ? <Custom row={form} data={val} />
+                    : isFilePath(val) ? <FileLink value={val} /> : (shown ?? EMPTY_VALUE);
+
                   return (
-                    <td key={idx}>
-                      {isFilePath(val) ? <FileLink value={val} /> : (shown ?? EMPTY_VALUE)}
+                    // The field name rides along as a class so a page can style
+                    // one of its own columns.
+                    <td key={idx} className={`cell-${field}`}>
+                      {linkField === field && !selectMode ? (
+                        <button
+                          type="button"
+                          className="cell-link"
+                          onClick={(e) => { e.stopPropagation(); (onLinkClick || openForm)(form); }}
+                          // Enter on the button activates it; without this the
+                          // same keypress also reaches the row and opens both.
+                          onKeyDown={(e) => e.key === "Enter" && e.stopPropagation()}
+                        >
+                          {content}
+                        </button>
+                      ) : content}
                     </td>
                   );
                 })}

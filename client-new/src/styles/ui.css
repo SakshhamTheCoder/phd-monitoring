@@ -467,3 +467,20 @@
 .row-link:focus-visible .row-go { color: var(--primary-color); }
 
 .row-link:hover .row-go i { transform: translateX(3px); }
+
+/* A column that opens something of its own, while the row still opens the row.
+   It is a button so it keeps a keyboard tab stop, and is stripped back to read
+   as a link. */
+.cell-link {
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    text-align: left;
+    color: var(--primary-color);
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.cell-link:hover,
+.cell-link:focus-visible { text-decoration: underline; }
