@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Department;
 use App\Models\Role;
+use App\Http\Controllers\UgSignupController;
 use App\Models\UgStudent;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -31,7 +32,7 @@ class UgSignupTest extends TestCase
         return array_merge([
             'first_name' => 'Nikhil',
             'last_name' => 'Verma',
-            'email' => Str::lower(Str::random(10)) . '@thapar.edu',
+            'email' => Str::lower(Str::random(10)) . '_be23@thapar.edu',
             'phone' => '9876500000',
             'gender' => 'Male',
             'password' => 'a-good-password',
@@ -68,6 +69,13 @@ class UgSignupTest extends TestCase
         $this->postJson('/api/urf/signup', $form)->assertCreated();
 
         $this->postJson('/api/urf/signup', $this->form(['email' => 'someone@gmail.com']))
+            ->assertStatus(422)->assertJsonValidationErrors('email');
+
+        // An institute address that is not an undergraduate's: a scholar or a
+        // member of staff is given an account by the office.
+        $this->postJson('/api/urf/signup', $this->form(['email' => 'arun_phd21@thapar.edu']))
+            ->assertStatus(422)->assertJsonValidationErrors('email');
+        $this->postJson('/api/urf/signup', $this->form(['email' => 'arun.mehta@thapar.edu']))
             ->assertStatus(422)->assertJsonValidationErrors('email');
 
         $this->postJson('/api/urf/signup', $this->form(['email' => $form['email']]))
@@ -128,7 +136,7 @@ class UgSignupTest extends TestCase
         $user->forceFill([
             'first_name' => 'Old',
             'last_name' => 'Account',
-            'email' => Str::lower(Str::random(10)) . '@thapar.edu',
+            'email' => Str::lower(Str::random(10)) . '_be23@thapar.edu',
             'password' => bcrypt('a-good-password'),
             'role_id' => $roleId,
             'current_role_id' => $roleId,
@@ -138,6 +146,46 @@ class UgSignupTest extends TestCase
         $this->postJson('/api/login', ['email' => $user->email, 'password' => 'a-good-password'])->assertOk();
     }
 
+    public function test_a_google_signup_needs_no_password_and_no_confirmation(): void
+    {
+        Mail::fake();
+        $email = Str::lower(Str::random(10)) . '_btech23@thapar.edu';
+        $form = $this->form([
+            'email' => 'someone.else@thapar.edu',
+            'google_ticket' => UgSignupController::issueGoogleTicket($email, 'Nikhil Verma'),
+        ]);
+        unset($form['password'], $form['password_confirmation']);
+
+        $this->postJson('/api/urf/signup', $form)->assertCreated()->assertJsonPath('verified', true);
+
+        // The ticket names the address, so what the form said is beside the point.
+        $user = User::where('email', $email)->first();
+        $this->assertNotNull($user);
+        $this->assertNotNull($user->email_verified_at, 'Google already asked who this is');
+        $this->assertNull(User::where('email', 'someone.else@thapar.edu')->first());
+        Mail::assertNothingSent();
+    }
+
+    public function test_a_forged_or_stale_google_ticket_creates_nobody(): void
+    {
+        Mail::fake();
+        $form = $this->form(['google_ticket' => 'not-a-real-ticket']);
+        unset($form['password'], $form['password_confirmation']);
+
+        $this->postJson('/api/urf/signup', $form)->assertStatus(422);
+        $this->assertSame(0, User::where('email', $form['email'])->count());
+
+        $this->travel(16)->minutes();
+        $stale = $this->form([
+            'google_ticket' => UgSignupController::issueGoogleTicket('late_be23@thapar.edu', 'Late Arrival'),
+        ]);
+        unset($stale['password'], $stale['password_confirmation']);
+        $this->travel(16)->minutes();
+
+        $this->postJson('/api/urf/signup', $stale)->assertStatus(422);
+        $this->assertSame(0, User::where('email', 'late_be23@thapar.edu')->count());
+    }
+
     public function test_a_deactivated_account_cannot_sign_in(): void
     {
         $roleId = Role::where('role', 'student')->value('id');
@@ -145,7 +193,7 @@ class UgSignupTest extends TestCase
         $user->forceFill([
             'first_name' => 'Left',
             'last_name' => 'Institute',
-            'email' => Str::lower(Str::random(10)) . '@thapar.edu',
+            'email' => Str::lower(Str::random(10)) . '_be23@thapar.edu',
             'password' => bcrypt('a-good-password'),
             'role_id' => $roleId,
             'current_role_id' => $roleId,

@@ -7,11 +7,13 @@ use App\Models\Role;
 use App\Models\UgStudent;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 
 /**
  * Sign-up for undergraduates applying to the Undergraduate Research Fellowship.
@@ -26,20 +28,66 @@ class UgSignupController extends Controller
     /** How long a confirmation link stays good for. */
     private const LINK_DAYS = 3;
 
+    /**
+     * A ticket saying Google vouched for this address, handed to the sign-up
+     * page and handed back with the rest of the form. Encrypted with the app
+     * key, so it cannot be written by hand into the page's URL, and short
+     * lived, so it is no use later.
+     */
+    public static function issueGoogleTicket(string $email, ?string $name): string
+    {
+        return Crypt::encryptString(json_encode([
+            'email' => $email,
+            'name' => $name,
+            'expires' => now()->addMinutes(15)->timestamp,
+        ]));
+    }
+
+    /** The address a ticket vouches for, or null if it is forged or stale. */
+    private function readGoogleTicket(?string $ticket): ?string
+    {
+        if (!$ticket) {
+            return null;
+        }
+
+        try {
+            $payload = json_decode(Crypt::decryptString($ticket), true);
+        } catch (\Exception $e) {
+            return null;
+        }
+
+        return ($payload['expires'] ?? 0) >= now()->timestamp ? ($payload['email'] ?? null) : null;
+    }
+
     public function signup(Request $request)
     {
-        if ($request->captcha_token && !CloudflareHelper::verifyCaptcha($request->captcha_token)) {
+        // Google has already asked who this is, so that sign-up needs no
+        // captcha, no password and no confirmation email.
+        $vouchedFor = $this->readGoogleTicket($request->google_ticket);
+        if ($request->google_ticket && !$vouchedFor) {
+            return response()->json(['error' => 'That Google sign-in has expired. Try again.'], 422);
+        }
+
+        if (!$vouchedFor && $request->captcha_token && !CloudflareHelper::verifyCaptcha($request->captcha_token)) {
             return response()->json(['error' => 'Captcha verification failed'], 422);
+        }
+
+        if ($vouchedFor) {
+            $request->merge(['email' => $vouchedFor]);
         }
 
         $data = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            // Institute addresses only, which is what ties an account to a student.
-            'email' => 'required|email|max:255|ends_with:@thapar.edu|unique:users,email',
+            // An undergraduate's institute address, which is who this is for.
+            'email' => ['required', 'email', 'max:255', 'unique:users,email', function ($attribute, $value, $fail) {
+                if (!UgStudent::eligibleEmail($value)) {
+                    $fail('Use your institute address, the one carrying your programme and year, like name_be23@thapar.edu.');
+                }
+            }],
             'phone' => 'required|string|max:20',
             'gender' => 'required|in:Male,Female',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => ($vouchedFor ? 'nullable' : 'required') . '|string|min:8|confirmed',
             'roll_no' => 'required|string|max:50|unique:ug_students,roll_no',
             'department_id' => 'required|exists:departments,id',
             'year' => 'required|integer|between:1,4',
@@ -47,14 +95,17 @@ class UgSignupController extends Controller
 
         $role = Role::where('role', 'ug_student')->firstOrFail();
 
-        $user = DB::transaction(function () use ($data, $role) {
+        $user = DB::transaction(function () use ($data, $role, $vouchedFor) {
             $user = new User();
             $user->first_name = $data['first_name'];
             $user->last_name = $data['last_name'];
             $user->email = $data['email'];
             $user->phone = $data['phone'];
             $user->gender = $data['gender'];
-            $user->password = Hash::make($data['password']);
+            // A Google sign-up sets no password: that account signs in the way
+            // it was made, and Forgot Password can still give it one.
+            $user->password = Hash::make($data['password'] ?? Str::random(40));
+            $user->email_verified_at = $vouchedFor ? now() : null;
             $user->role_id = $role->id;
             $user->current_role_id = $role->id;
             $user->default_role_id = $role->id;
@@ -69,10 +120,18 @@ class UgSignupController extends Controller
             return $user;
         });
 
+        if ($vouchedFor) {
+            return response()->json([
+                'message' => 'Account created. Sign in with Google to apply.',
+                'verified' => true,
+            ], 201);
+        }
+
         $this->sendVerificationEmail($user);
 
         return response()->json([
             'message' => "Account created. Confirm your email at {$user->email} to sign in.",
+            'verified' => false,
         ], 201);
     }
 
