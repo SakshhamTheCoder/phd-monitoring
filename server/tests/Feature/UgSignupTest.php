@@ -7,6 +7,7 @@ use App\Models\Semester;
 use App\Http\Controllers\UgSignupController;
 use App\Models\UgBranch;
 use App\Models\UgStudent;
+use App\Models\UrfApplication;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
@@ -191,6 +192,49 @@ class UgSignupTest extends TestCase
 
         $this->postJson('/api/urf/signup', $stale)->assertStatus(422);
         $this->assertSame(0, User::where('email', 'late_be23@thapar.edu')->count());
+    }
+
+    public function test_a_student_corrects_their_own_details_until_they_apply(): void
+    {
+        Mail::fake();
+        $form = $this->form();
+        $this->postJson('/api/urf/signup', $form)->assertCreated();
+        $student = User::where('email', $form['email'])->first();
+        $student->forceFill(['email_verified_at' => now()])->save();
+        $other = UgBranch::create(['programme' => 'BTech', 'code' => 'SGNT2', 'name' => 'Second Branch']);
+
+        $this->actingAs($student, 'sanctum')->patchJson('/api/urf/me', [
+            'phone' => '9000000000',
+            'gender' => 'Female',
+            'roll_no' => '102299999',
+            'branch_id' => $other->id,
+            'year' => 4,
+        ])->assertOk()->assertJsonPath('roll_no', '102299999');
+
+        $record = $student->fresh()->ugStudent;
+        $this->assertSame($other->id, $record->branch_id);
+        $this->assertSame(4, (int) $record->year, 'the correction sticks');
+        $this->assertSame('9000000000', $student->fresh()->phone);
+
+        // Once there is an application the details belong to a record the
+        // admin is reading, so they are the office's to change.
+        (new UrfApplication())->forceFill([
+            'user_id' => $student->id,
+            'session' => (int) now()->year,
+            'project_title' => 'Anything',
+            'student1_name' => $student->name(),
+            'student1_email' => $student->email,
+            'proposal' => 'x.pdf',
+        ])->save();
+
+        $this->actingAs($student, 'sanctum')->patchJson('/api/urf/me', [
+            'phone' => '9111111111',
+            'gender' => 'Male',
+            'roll_no' => '102288888',
+            'branch_id' => $other->id,
+        ])->assertStatus(422);
+
+        $this->assertSame('102299999', $student->fresh()->ugStudent->roll_no);
     }
 
     public function test_a_deactivated_account_cannot_sign_in(): void

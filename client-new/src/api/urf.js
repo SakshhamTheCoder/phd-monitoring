@@ -14,6 +14,7 @@ const toFormData = (body) => {
 
 export const apiUrfMine = () => customFetch(`${URF}/mine`, 'GET', {}, true, false, false);
 export const apiUrfBranches = () => customFetch(`${URF}/branches`, 'GET', {}, true);
+export const apiUrfUpdateMine = (body) => customFetch(`${URF}/me`, 'PATCH', body, true);
 export const apiUrfSessions = () => customFetch(`${URF}/sessions`, 'GET', {}, true);
 export const apiUrfShow = (id) => customFetch(`${URF}/${id}`, 'GET', {}, true, false, false);
 export const apiUrfApply = (body) => customFetch(URF, 'POST', toFormData(body), true, true);

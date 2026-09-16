@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\UgSignupController;
+use App\Http\Controllers\UgStudentController;
 use App\Http\Controllers\UrfController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,6 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/', [UrfController::class, 'apply']);
     Route::get('/filters', [UrfController::class, 'listFilters']);
     Route::get('/mine', [UrfController::class, 'mine']);
+    Route::patch('/me', [UgStudentController::class, 'updateMine']);
     Route::get('/sessions', [UrfController::class, 'sessions']);
     // The forms grid: one list per form, with the shared filter bar.
     $forms = ['urf-application', 'urf-additional-info', 'urf-half-yearly-report', 'urf-final-report'];

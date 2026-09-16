@@ -7,6 +7,8 @@ import FacultyLink from '../facultyLink/FacultyLink';
 import { HeaderLine, StatusText, facultyName, yearLabel } from './UrfRecord';
 import { signedInUser } from './UrfForms';
 import { apiUrfMine } from '../../api/urf';
+import CustomButton from '../forms/fields/CustomButton';
+import UgDetailsForm from './UgDetailsForm';
 import { EMPTY_VALUE } from '../../utils/timeParse';
 
 const PROJECT_KEYS = ['session', 'project_title', 'status', 'teammate', 'teammate_branch', 'teammate_year', 'mentors'];
@@ -35,10 +37,11 @@ const PROJECT_CELLS = [
  */
 const UgProfile = () => {
   const [state, setState] = useState(null);
+  const [editing, setEditing] = useState(false);
 
-  useEffect(() => {
-    apiUrfMine().then((res) => res.success && setState(res.response));
-  }, []);
+  const load = () => apiUrfMine().then((res) => res.success && setState(res.response));
+
+  useEffect(() => { load(); }, []);
 
   const me = signedInUser();
   const applications = state?.applications || [];
@@ -83,6 +86,13 @@ const UgProfile = () => {
       </div>
 
       <div className="student-details">
+        {/* Their own to correct until they apply; after that the details are
+            part of a record the admin reads, so the office makes the change. */}
+        {state?.student && applications.length === 0 && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.5rem' }}>
+            <CustomButton text="Edit details" onClick={() => setEditing(true)} />
+          </div>
+        )}
         <InfoGrid className="student-info-grid" rows={[
           { label: 'Roll Number', value: state?.student?.roll_no || current?.[`student${slot}_roll_no`] },
           { label: 'Branch', value: state?.student?.branch?.name || current?.[`student${slot}_branch`]?.name },
@@ -123,6 +133,12 @@ const UgProfile = () => {
           space={3}
         />
       )}
+      <UgDetailsForm
+        student={state?.student}
+        isOpen={editing}
+        onClose={() => setEditing(false)}
+        onSaved={load}
+      />
     </div>
   );
 };
