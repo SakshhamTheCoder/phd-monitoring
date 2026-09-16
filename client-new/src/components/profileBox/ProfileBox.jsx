@@ -3,6 +3,7 @@ import "./ProfileBox.css";
 import { generateAvatar } from "../../utils/profileImage";
 import CustomModal from "../forms/modal/CustomModal";
 import SwitchRole from "../switchRole/SwitchRole";
+import ChangePassword from "./ChangePassword";
 import { getRoleName } from "../../utils/roleName";
 import { logoutAPI } from "../../api/login";
 import { toast } from "react-toastify";
@@ -26,6 +27,7 @@ const ProfileBox = () => {
   }, []);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
@@ -103,6 +105,9 @@ const ProfileBox = () => {
                 </CustomModal>
               </>
             )}
+            <div className="profile_item" onClick={() => setPasswordOpen(true)}>
+              <h4>{user.password_set === false ? "Set Password" : "Change Password"}</h4>
+            </div>
             <div className="profile_item" onClick={() => {
               logoutAPI();
               toast.success("Logged out");
@@ -113,6 +118,15 @@ const ProfileBox = () => {
           </div>
         </div>
       )}
+
+      <CustomModal
+        isOpen={passwordOpen}
+        onClose={() => setPasswordOpen(false)}
+        minWidth="400px"
+        maxWidth="520px"
+      >
+        <ChangePassword onDone={() => { setPasswordOpen(false); setIsOpen(false); }} />
+      </CustomModal>
     </div>
   );
 };
