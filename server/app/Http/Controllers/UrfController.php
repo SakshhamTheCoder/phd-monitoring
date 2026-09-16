@@ -160,14 +160,13 @@ class UrfController extends Controller
         return response()->json($this->payload(UrfApplication::with(self::DETAIL)->findOrFail($id), $user));
     }
 
-    /** Branches for the application's dropdown: the portal's departments. */
+    /**
+     * Branches for the application's dropdown, and for sign-up. Public: a
+     * student picking their branch has no account yet, and the list of
+     * departments is not something the portal keeps to itself.
+     */
     public function departments()
     {
-        $user = Auth::user();
-        if (!$user->may('can_apply_for_urf') && !$user->may('can_manage_urf')) {
-            return $this->refuse();
-        }
-
         return response()->json(Department::orderBy('name')->get(['id', 'name']));
     }
 
@@ -198,6 +197,10 @@ class UrfController extends Controller
         return response()->json([
             'applications_open' => (bool) AppSetting::value('urf', 'applications_open'),
             'session' => (int) now()->year,
+            // What the student gave at sign-up, so the application form asks for
+            // it once rather than every year. Absent for an account an admin
+            // created, and then the form asks for all three as it used to.
+            'student' => $user->ugStudent()->with('department:id,name')->first(),
             'applications' => UrfApplication::forMember($user)->with(self::DETAIL)->orderByDesc('session')->latest('id')->get()
                 ->map(fn (UrfApplication $application) => $this->payload($application, $user))
                 ->values(),
@@ -257,6 +260,18 @@ class UrfController extends Controller
             'mentor2_faculty_code' => ['nullable', 'different:mentor1_faculty_code', $internalFaculty],
             'proposal' => ($editing ? 'nullable' : 'required') . '|file|mimes:pdf|max:20480',
         ]);
+
+        // The applicant's own roll number and branch come from their account, so
+        // the form cannot post something else and they cannot drift between
+        // applications. Year of study moves with the student, so the
+        // application's answer updates the account instead.
+        if ($record = $user->ugStudent) {
+            $data['student1_roll_no'] = $record->roll_no;
+            $data['student1_department_id'] = $record->department_id;
+            if ((int) $data['student1_year'] !== (int) $record->year) {
+                $record->update(['year' => $data['student1_year']]);
+            }
+        }
 
         if (!$editing) {
             $application = new UrfApplication();
