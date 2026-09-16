@@ -84,17 +84,30 @@ public function applyDynamicFilters($query, $filters, $pages = null, array $extr
         }
     }
 
-    // Apply other dynamic filters
+    // Apply other dynamic filters.
+    //
+    // The search box sends one value across every field at once, which is an
+    // OR. The filter panel sends a value per field, and may send several for
+    // the same field: two departments mean either department, while a roll
+    // number as well as a department means both. So conditions are grouped by
+    // the key they name, each group an OR, and the groups narrow each other.
     $query->where(function ($q) use ($combine, $filterList) {
-        foreach ($filterList as $filter) {
-            $op = $filter['op'] ?? '=';
-            $value = $filter['value'] ?? null;
-
-            if ($op === 'LIKE') {
-                $value = "%$value%";
+        if ($combine === 'or') {
+            foreach ($filterList as $filter) {
+                [$op, $value] = $this->conditionParts($filter);
+                $this->applyCondition($q, $filter['key'], $op, $value, true);
             }
 
-            $this->applyCondition($q, $filter['key'], $op, $value, $combine === 'or');
+            return;
+        }
+
+        foreach (collect($filterList)->groupBy('key') as $conditions) {
+            $q->where(function ($group) use ($conditions) {
+                foreach ($conditions as $filter) {
+                    [$op, $value] = $this->conditionParts($filter);
+                    $this->applyCondition($group, $filter['key'], $op, $value, true);
+                }
+            });
         }
     });
 
@@ -109,6 +122,15 @@ public function applyDynamicFilters($query, $filters, $pages = null, array $extr
 
 //new 
 
+
+/** A condition's operator and value, with a search value wrapped for matching. */
+private function conditionParts(array $filter): array
+{
+    $op = $filter['op'] ?? '=';
+    $value = $filter['value'] ?? null;
+
+    return [$op, $op === 'LIKE' ? "%$value%" : $value];
+}
 
 /**
  * The conditions whose key the page actually offers. A key the page never

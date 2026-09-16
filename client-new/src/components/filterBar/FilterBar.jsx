@@ -19,6 +19,10 @@ const inputTypes = { date: 'date', time: 'time', number: 'number' };
  * through untouched, and any filter chosen here joins them, so a search within
  * a filter still narrows rather than widens.
  *
+ * A field holds more than one value: two departments mean either department,
+ * while a department and a roll number mean both. Each value is a chip of its
+ * own, and removing one leaves the rest of that field standing.
+ *
  * `exclude` names filters the page already drives itself, so they are not
  * offered here a second time to be set to something that contradicts it.
  *
@@ -30,7 +34,11 @@ const FilterBar = ({ placeholder = 'Search…', mandatory = [], exclude = [], pa
   const [filters, setFilters] = useState(null);
   const [text, setText] = useState('');
   const [open, setOpen] = useState(false);
+  // key_name -> { label, op, values: [] }. A field holds every value chosen for
+  // it, not just the last one.
   const [chosen, setChosen] = useState({});
+  // What is being typed into each field, cleared once it becomes a chip.
+  const [drafts, setDrafts] = useState({});
   const onSearchRef = useRef(onSearch);
   onSearchRef.current = onSearch;
 
@@ -59,9 +67,10 @@ const FilterBar = ({ placeholder = 'Search…', mandatory = [], exclude = [], pa
     [searchable],
   );
 
+  // One condition per value: the server reads several on one key as "either of
+  // these", and keys against each other as "and".
   const conditionsFrom = (picks) => Object.entries(picks)
-    .filter(([, entry]) => entry.value !== '' && entry.value !== null && entry.value !== undefined)
-    .map(([key, entry]) => ({ label: entry.label, key, op: entry.op, value: entry.value }));
+    .flatMap(([key, entry]) => entry.values.map((value) => ({ label: entry.label, key, op: entry.op, value })));
 
   // A search across fields is an OR, so anything else has to be a mandatory
   // filter to keep narrowing the result rather than widening it.
@@ -87,32 +96,58 @@ const FilterBar = ({ placeholder = 'Search…', mandatory = [], exclude = [], pa
 
   const runSearch = () => emit(text, chosen);
 
-  // Setting a filter fills it in; the search itself waits for Enter or Search,
-  // so nothing runs half-typed. Clearing one searches at once, so the table
-  // never keeps a filter that is no longer on screen.
-  const choose = (filter, value, andSearch = false) => {
-    const next = { ...chosen };
-    if (value === '' || value === null || value === undefined) delete next[filter.key_name];
-    else next[filter.key_name] = { label: filter.label, op: operatorFor(filter), value };
+  // A value joins the ones already chosen for its field rather than replacing
+  // them, so two departments mean either department. Picking one searches at
+  // once; a typed one waits for Enter, so nothing runs half-typed.
+  const addValue = (filter, value) => {
+    if (value === '' || value === null || value === undefined) return;
+
+    const key = filter.key_name;
+    const entry = chosen[key] ?? { label: filter.label, op: operatorFor(filter), values: [] };
+
+    // The same value twice is the same filter, and reads as a duplicate chip.
+    if (entry.values.some((held) => String(held).toLowerCase() === String(value).toLowerCase())) {
+      setDrafts((all) => ({ ...all, [key]: '' }));
+      return;
+    }
+
+    const next = { ...chosen, [key]: { ...entry, values: [...entry.values, value] } };
     setChosen(next);
-    if (andSearch || value === '' || value === null || value === undefined) emit(text, next);
+    setDrafts((all) => ({ ...all, [key]: '' }));
+    emit(text, next);
+  };
+
+  // Removing a chip searches at once, so the table never keeps a filter that is
+  // no longer on screen. The field's other values stay.
+  const removeValue = (key, value) => {
+    const entry = chosen[key];
+    if (!entry) return;
+
+    const values = entry.values.filter((held) => held !== value);
+    const next = { ...chosen };
+    if (values.length) next[key] = { ...entry, values };
+    else delete next[key];
+
+    setChosen(next);
+    emit(text, next);
   };
 
   const clearAll = () => {
     setText('');
     setChosen({});
+    setDrafts({});
     emit('', {});
   };
 
   const control = (filter) => {
-    const value = chosen[filter.key_name]?.value ?? '';
+    const draft = drafts[filter.key_name] ?? '';
     if (filter.options) {
       return (
         <DropdownField
           label={filter.label}
           options={filter.options.map((o) => (typeof o === 'string' ? { title: o, value: o } : o))}
-          initialValue={value}
-          onChange={(v) => choose(filter, v, true)}
+          initialValue=""
+          onChange={(v) => addValue(filter, v)}
         />
       );
     }
@@ -121,9 +156,9 @@ const FilterBar = ({ placeholder = 'Search…', mandatory = [], exclude = [], pa
         <InputSuggestions
           label={filter.label}
           apiUrl={baseURL + filter.api_url}
-          initialValue={value}
+          initialValue=""
           suggestionManadatory={false}
-          onSelect={(picked) => choose(filter, picked?.name ?? '', true)}
+          onSelect={(picked) => addValue(filter, picked?.name ?? '')}
         />
       );
     }
@@ -133,10 +168,16 @@ const FilterBar = ({ placeholder = 'Search…', mandatory = [], exclude = [], pa
         <input
           className="input-field"
           type={inputTypes[filter.data_type] || 'text'}
-          value={value}
+          value={draft}
           placeholder={`Any ${filter.label.toLowerCase()}`}
-          onChange={(e) => choose(filter, e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && runSearch()}
+          onChange={(e) => setDrafts((all) => ({ ...all, [filter.key_name]: e.target.value }))}
+          onKeyDown={(e) => {
+            if (e.key !== 'Enter') return;
+            // Enter adds what was typed as a chip, rather than searching the
+            // box, so a second value can follow it into the same field.
+            e.preventDefault();
+            addValue(filter, draft);
+          }}
         />
       </div>
     );
@@ -180,9 +221,14 @@ const FilterBar = ({ placeholder = 'Search…', mandatory = [], exclude = [], pa
       {chips.length > 0 && (
         <div className="filter-bar-chips">
           {chips.map((chip) => (
-            <span key={chip.key} className="filter-chip">
+            // A field can hold several values, so a chip is known by both.
+            <span key={`${chip.key}:${chip.value}`} className="filter-chip">
               {chip.label}: {String(chip.value)}
-              <button type="button" aria-label={`Remove ${chip.label} filter`} onClick={() => choose({ key_name: chip.key }, '')}>&times;</button>
+              <button
+                type="button"
+                aria-label={`Remove ${chip.label} ${chip.value} filter`}
+                onClick={() => removeValue(chip.key, chip.value)}
+              >&times;</button>
             </span>
           ))}
         </div>
