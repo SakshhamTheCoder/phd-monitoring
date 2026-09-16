@@ -2,9 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\Department;
 use App\Models\Role;
+use App\Models\Semester;
 use App\Http\Controllers\UgSignupController;
+use App\Models\UgBranch;
 use App\Models\UgStudent;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -22,9 +23,13 @@ class UgSignupTest extends TestCase
 {
     use DatabaseTransactions;
 
-    private function department(): Department
+    private function branch(): UgBranch
     {
-        return Department::create(['name' => 'Signup Test Department', 'code' => 'SGNTD']);
+        // One branch for the whole test, however many forms are built from it.
+        return UgBranch::firstOrCreate(
+            ['programme' => 'BE', 'code' => 'SGNTB'],
+            ['name' => 'Signup Test Branch'],
+        );
     }
 
     private function form(array $overrides = []): array
@@ -38,8 +43,7 @@ class UgSignupTest extends TestCase
             'password' => 'a-good-password',
             'password_confirmation' => 'a-good-password',
             'roll_no' => (string) random_int(102200000, 102299999),
-            'department_id' => $this->department()->id,
-            'year' => 2,
+            'branch_id' => $this->branch()->id,
         ], $overrides);
     }
 
@@ -58,8 +62,11 @@ class UgSignupTest extends TestCase
 
         $record = $user->ugStudent;
         $this->assertSame($form['roll_no'], $record->roll_no);
-        $this->assertSame($form['department_id'], $record->department_id);
-        $this->assertSame(2, (int) $record->year);
+        $this->assertSame($form['branch_id'], $record->branch_id);
+        // Counted from the address rather than asked for.
+        $this->assertSame(2023, (int) $record->admission_year);
+        $this->assertNull($record->year, 'nothing to correct');
+        $this->assertSame(Semester::yearOfStudy(2023), $record->year_of_study);
     }
 
     public function test_it_refuses_an_outside_address_a_taken_one_and_a_taken_roll_number(): void
@@ -218,14 +225,45 @@ class UgSignupTest extends TestCase
         $this->actingAs($user, 'sanctum')->getJson('/api/urf/mine')
             ->assertOk()
             ->assertJsonPath('student.roll_no', $form['roll_no'])
-            ->assertJsonPath('student.department.name', 'Signup Test Department');
+            ->assertJsonPath('student.branch.name', 'Signup Test Branch')
+            ->assertJsonPath('student.year_of_study', Semester::yearOfStudy(2023));
+    }
+
+    public function test_only_an_admin_manages_the_branch_list(): void
+    {
+        Mail::fake();
+        $branch = $this->branch();
+        $form = $this->form();
+        $this->postJson('/api/urf/signup', $form)->assertCreated();
+        $student = User::where('email', $form['email'])->first();
+        $student->forceFill(['email_verified_at' => now()])->save();
+
+        $this->actingAs($student, 'sanctum')->postJson('/api/ug-branches', [
+            'programme' => 'BE', 'code' => 'NOPE', 'name' => 'Not For Students',
+        ])->assertForbidden();
+
+        $adminRole = Role::where('role', 'admin')->value('id');
+        DB::table('roles')->where('id', $adminRole)->update(['can_manage_app_settings' => 'true']);
+        $admin = User::where('current_role_id', $adminRole)->first();
+
+        $this->actingAs($admin, 'sanctum')->postJson('/api/ug-branches', [
+            'programme' => 'BTech', 'code' => 'SGNTB', 'name' => 'Another Branch',
+        ])->assertCreated();
+
+        // The same code under the same programme is the one clash that matters.
+        $this->actingAs($admin, 'sanctum')->postJson('/api/ug-branches', [
+            'programme' => 'BE', 'code' => 'SGNTB', 'name' => 'Clashing Branch',
+        ])->assertStatus(422)->assertJsonValidationErrors('code');
+
+        // A branch students are on stays where it is.
+        $this->actingAs($admin, 'sanctum')->deleteJson("/api/ug-branches/{$branch->id}")->assertStatus(422);
     }
 
     public function test_the_branch_list_is_open_to_a_student_with_no_account_yet(): void
     {
-        $this->department();
+        $this->branch();
 
-        $this->getJson('/api/urf/departments')->assertOk()->assertJsonStructure([['id', 'name']]);
+        $this->getJson('/api/urf/branches')->assertOk()->assertJsonStructure([['id', 'programme', 'code', 'name']]);
     }
 
     public function test_asking_for_the_link_again_says_nothing_about_who_has_an_account(): void

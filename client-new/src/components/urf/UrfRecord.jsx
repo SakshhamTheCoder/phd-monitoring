@@ -54,7 +54,7 @@ export const TeamTables = ({ record }) => {
   const students = [1, 2].filter((n) => record[`student${n}_name`]).map((n) => ({
     name: record[`student${n}_name`],
     roll_no: record[`student${n}_roll_no`],
-    department: record[`student${n}_department`]?.name || EMPTY_VALUE,
+    branch: record[`student${n}_branch`]?.name || EMPTY_VALUE,
     year: yearLabel(record[`student${n}_year`]),
     gender: record[`student${n}_gender`],
     email: record[`student${n}_email`],
@@ -75,7 +75,7 @@ export const TeamTables = ({ record }) => {
         elements={[
           <TableComponent
             data={students}
-            keys={['name', 'roll_no', 'department', 'year', 'gender', 'email', 'phone']}
+            keys={['name', 'roll_no', 'branch', 'year', 'gender', 'email', 'phone']}
             titles={['Name', 'Roll Number', 'Branch', 'Year', 'Gender', 'Official Email', 'Phone']}
           />,
         ]}

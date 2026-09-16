@@ -59,7 +59,7 @@ const UgProfile = () => {
       project_title: application.project_title,
       status: application.status,
       teammate: teammate || EMPTY_VALUE,
-      teammate_branch: (teammate && application[`student${other}_department`]?.name) || EMPTY_VALUE,
+      teammate_branch: (teammate && application[`student${other}_branch`]?.name) || EMPTY_VALUE,
       teammate_year: (teammate && yearLabel(application[`student${other}_year`])) || EMPTY_VALUE,
       mentors: [application.mentor1, application.mentor2].filter(Boolean).map((mentor) => ({
         code: mentor.faculty_code,
@@ -85,8 +85,9 @@ const UgProfile = () => {
       <div className="student-details">
         <InfoGrid className="student-info-grid" rows={[
           { label: 'Roll Number', value: state?.student?.roll_no || current?.[`student${slot}_roll_no`] },
-          { label: 'Branch', value: state?.student?.department?.name || current?.[`student${slot}_department`]?.name },
-          { label: 'Year', value: yearLabel(state?.student?.year || current?.[`student${slot}_year`]) },
+          { label: 'Branch', value: state?.student?.branch?.name || current?.[`student${slot}_branch`]?.name },
+          { label: 'Year', value: yearLabel(state?.student?.year_of_study || current?.[`student${slot}_year`]) },
+          { label: 'Semester', value: state?.student?.semester_of_study },
           { label: 'Email', value: me.email },
           { label: 'Phone', value: me.phone },
           { label: 'Gender', value: me.gender },

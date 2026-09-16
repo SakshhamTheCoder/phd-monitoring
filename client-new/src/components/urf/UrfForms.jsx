@@ -11,13 +11,13 @@ import CustomModal from '../forms/modal/CustomModal';
 import ShowPublications from '../publications/ShowPublications';
 import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
-import { apiUrfApply, apiUrfDepartments, apiUrfFellow, apiUrfReport } from '../../api/urf';
+import { apiUrfApply, apiUrfBranches, apiUrfFellow, apiUrfReport } from '../../api/urf';
 import { Section, facultyName, yearLabel, REPORT_TYPES } from './UrfRecord';
 import './UrfForms.css';
 
 const GENDERS = [{ title: 'Male', value: 'Male' }, { title: 'Female', value: 'Female' }];
 const YEARS = [1, 2, 3, 4].map((year) => ({ title: yearLabel(year), value: year }));
-const STUDENT_FIELDS = ['name', 'roll_no', 'department_id', 'year', 'gender', 'email', 'phone'];
+const STUDENT_FIELDS = ['name', 'roll_no', 'branch_id', 'year', 'gender', 'email', 'phone'];
 
 export const signedInUser = () => {
   try {
@@ -34,11 +34,14 @@ const useBody = (initial) => {
   return [body, set];
 };
 
-// The portal's departments, offered as the student's branch.
+// The branches the institute teaches, named with their programme so the two
+// Computer Science branches of different degrees are told apart.
 const useBranches = () => {
   const [branches, setBranches] = useState([]);
   useEffect(() => {
-    apiUrfDepartments().then((res) => res.success && setBranches(res.response.map((d) => ({ title: d.name, value: d.id }))));
+    apiUrfBranches().then((res) => res.success && setBranches(
+      res.response.map((branch) => ({ title: `${branch.programme} ${branch.name}`, value: branch.id })),
+    ));
   }, []);
   return branches;
 };
@@ -65,7 +68,7 @@ const StudentFields = ({ n, body, set, branches, account = {} }) => {
       elements={[
         <InputField label="Name" initialValue={body[key('name')]} onChange={set(key('name'))} isLocked={!!account.name} required />,
         <InputField label="Roll Number" initialValue={body[key('roll_no')]} onChange={set(key('roll_no'))} isLocked={!!account.roll_no} required />,
-        <DropdownField label="Branch" options={branches} initialValue={body[key('department_id')]} onChange={set(key('department_id'))} isLocked={!!account.department_id} required />,
+        <DropdownField label="Branch" options={branches} initialValue={body[key('branch_id')]} onChange={set(key('branch_id'))} isLocked={!!account.branch_id} required />,
         <DropdownField label="Year" options={YEARS} initialValue={body[key('year')]} onChange={set(key('year'))} required />,
         <DropdownField label="Gender" options={GENDERS} initialValue={body[key('gender')]} onChange={set(key('gender'))} isLocked={!!account.gender} required />,
         <InputField label="Official Email" type="email" initialValue={body[key('email')]} onChange={set(key('email'))} isLocked={!!account.email} required />,
@@ -125,7 +128,7 @@ export const ApplyForm = ({ initial, student, onSaved }) => {
     phone: me.phone,
     gender: me.gender,
     roll_no: student?.roll_no,
-    department_id: student?.department_id,
+    branch_id: student?.branch_id,
   };
   const branches = useBranches();
   const [body, set] = useBody(initial
@@ -136,8 +139,9 @@ export const ApplyForm = ({ initial, student, onSaved }) => {
       student1_phone: account.phone,
       student1_gender: account.gender,
       student1_roll_no: account.roll_no,
-      student1_department_id: account.department_id,
-      student1_year: student?.year,
+      student1_branch_id: account.branch_id,
+      // Counted from the year they were admitted, and correctable here.
+      student1_year: student?.year_of_study,
     });
   const [teammate, setTeammate] = useState(!!initial?.student2_name);
   const [secondMentor, setSecondMentor] = useState(!!initial?.mentor2_faculty_code);
@@ -310,7 +314,7 @@ export const ReportForm = ({ application, type, onSaved }) => {
       <GridContainer elements={[
         <InputField label="Name" initialValue={application[`student${slot}_name`] || ''} isLocked />,
         <InputField label="Roll No." initialValue={application[`student${slot}_roll_no`] || ''} isLocked />,
-        <InputField label="Department" initialValue={application[`student${slot}_department`]?.name || ''} isLocked />,
+        <InputField label="Branch" initialValue={application[`student${slot}_branch`]?.name || ''} isLocked />,
         <InputField label="Email" initialValue={application[`student${slot}_email`] || ''} isLocked />,
         <InputField label="Contact No." initialValue={application[`student${slot}_phone`] || ''} isLocked />,
         <InputField label="Faculty Mentor Name" initialValue={mentors.map(facultyName).join(', ')} isLocked />,

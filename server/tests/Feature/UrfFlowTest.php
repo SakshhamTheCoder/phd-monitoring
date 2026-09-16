@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Department;
+use App\Models\UgBranch;
 use App\Models\Faculty;
 use App\Models\Role;
 use App\Models\UrfApplication;
@@ -53,6 +54,7 @@ class UrfFlowTest extends TestCase
         $outsider = $this->userAs('ug_student');
 
         $department = Department::create(['name' => 'URF Test Department', 'code' => 'URFTD']);
+        $branch = UgBranch::create(['programme' => 'BE', 'code' => 'URFTB', 'name' => 'URF Test Branch']);
         $mentor = Faculty::create([
             'faculty_code' => 990001,
             'user_id' => $this->userAs('faculty')->id,
@@ -63,9 +65,9 @@ class UrfFlowTest extends TestCase
 
         $form = [
             'project_title' => 'Soil sensors ' . Str::random(4),
-            'student1_name' => 'Asha Rao', 'student1_roll_no' => '102203001', 'student1_department_id' => $department->id, 'student1_year' => 3,
+            'student1_name' => 'Asha Rao', 'student1_roll_no' => '102203001', 'student1_branch_id' => $branch->id, 'student1_year' => 3,
             'student1_gender' => 'Female', 'student1_email' => $applicant->email, 'student1_phone' => '9800000001',
-            'student2_name' => 'Ravi Kumar', 'student2_roll_no' => '102203002', 'student2_department_id' => $department->id, 'student2_year' => 2,
+            'student2_name' => 'Ravi Kumar', 'student2_roll_no' => '102203002', 'student2_branch_id' => $branch->id, 'student2_year' => 2,
             'student2_gender' => 'Male', 'student2_email' => $partner->email, 'student2_phone' => '9800000002',
             'mentor1_faculty_code' => $mentor->faculty_code,
         ];
@@ -75,7 +77,7 @@ class UrfFlowTest extends TestCase
         $this->actingAs($admin, 'sanctum')->postJson('/api/settings/urf', ['applications_open' => 0])->assertOk();
         $this->actingAs($applicant, 'sanctum')->postJson('/api/urf', $form + ['proposal' => $proposal()])->assertStatus(422);
         $this->actingAs($admin, 'sanctum')->postJson('/api/settings/urf', ['applications_open' => 1])->assertOk();
-        $this->actingAs($applicant, 'sanctum')->getJson('/api/urf/departments')->assertOk()->assertJsonFragment(['id' => $department->id]);
+        $this->actingAs($applicant, 'sanctum')->getJson('/api/urf/branches')->assertOk()->assertJsonFragment(['id' => $branch->id]);
 
         $id = $this->actingAs($applicant, 'sanctum')->postJson('/api/urf', $form + ['proposal' => $proposal()])
             ->assertCreated()->json('id');
@@ -148,7 +150,7 @@ class UrfFlowTest extends TestCase
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.application_id', $id)
             ->assertJsonPath('data.0.roll_no', '102203002')
-            ->assertJsonPath('data.0.branch', 'URF Test Department')
+            ->assertJsonPath('data.0.branch', 'URF Test Branch')
             ->assertJsonPath('data.0.year', '2nd Year');
         $this->getJson('/api/urf/urf-half-yearly-report' . $onThisProject)->assertOk()
             ->assertJsonCount(1, 'data')
