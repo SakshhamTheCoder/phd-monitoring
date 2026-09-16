@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import './App.css';
 import LandingPage from './pages/landing/LandingPage';
 import LoginPage from './pages/login/Login';
+import SignupPage from './pages/signup/SignupPage';
 import GoogleCallback from './pages/login/GoogleCallback';
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -95,6 +96,8 @@ const AppContent = () => {
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/support" element={<Support />} />
           <Route path="/login" element={<LoginPage />} />
+          {/* UG students applying for the URF make their own account. */}
+          <Route path="/signup" element={<SignupPage />} />
           <Route path="/google/callback" element={<GoogleCallback />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />

@@ -16,10 +16,13 @@ export const loginAPI = async (email, password, captchaToken) => {
         return { success: true };
     }
     
-    // Return error information
+    // Return error information. `unverified` marks the one refusal the user can
+    // clear themselves, so the page can offer the link again.
     return { 
         success: false, 
-        error: result?.response?.error || result?.response?.message || 'Login failed'
+        error: result?.response?.error || result?.response?.message || 'Login failed',
+        unverified: result?.response?.unverified === true,
+        email: result?.response?.email
     };
 }
 

@@ -20,3 +20,8 @@ export const apiUrfApply = (body) => customFetch(URF, 'POST', toFormData(body), 
 export const apiUrfFellow = (id, body) => customFetch(`${URF}/${id}/fellow`, 'POST', body, true);
 export const apiUrfReport = (id, body) => customFetch(`${URF}/${id}/reports`, 'POST', toFormData(body), true, true);
 export const apiUrfStatus = (id, status) => customFetch(`${URF}/${id}/status`, 'POST', { status }, true);
+
+// Sign-up, before there is an account. The toast is left to the page, which
+// says what went wrong field by field.
+export const apiUrfSignup = (body) => customFetch(`${URF}/signup`, 'POST', body, false);
+export const apiUrfResendVerification = (email) => customFetch(`${URF}/resend-verification`, 'POST', { email }, false);
