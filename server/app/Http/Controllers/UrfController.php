@@ -12,6 +12,7 @@ use App\Models\Publication;
 use App\Models\UrfApplication;
 use App\Models\UrfFellow;
 use App\Models\UrfReport;
+use App\Models\UrfReportWindow;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -196,6 +197,53 @@ class UrfController extends Controller
         );
     }
 
+    /** The rounds, newest session first, for the page that schedules them. */
+    public function reportWindows()
+    {
+        if (!Auth::user()->may('can_manage_urf')) {
+            return $this->refuse();
+        }
+
+        return response()->json(UrfReportWindow::orderByDesc('session')->orderBy('type')->get());
+    }
+
+    /**
+     * Open a round, or correct one already open. One per session per kind of
+     * report, so scheduling the same round twice moves its dates rather than
+     * leaving fellows with two of them.
+     */
+    public function saveReportWindow(Request $request)
+    {
+        if (!Auth::user()->may('can_manage_urf')) {
+            return $this->refuse();
+        }
+
+        $data = $request->validate([
+            'session' => 'required|integer|min:2000',
+            'type' => 'required|in:half_yearly,final',
+            'opens_on' => 'required|date',
+            'closes_on' => 'required|date|after_or_equal:opens_on',
+            'notes' => 'nullable|string|max:255',
+        ]);
+
+        $window = UrfReportWindow::for($data['session'], $data['type'])->first() ?? new UrfReportWindow();
+        $window->fill($data)->save();
+
+        return response()->json($window, 201);
+    }
+
+    /** Call off a round. Reports already filed stay where they are. */
+    public function deleteReportWindow($id)
+    {
+        if (!Auth::user()->may('can_manage_urf')) {
+            return $this->refuse();
+        }
+
+        UrfReportWindow::findOrFail($id)->delete();
+
+        return response()->json(['message' => 'Round removed']);
+    }
+
     /**
      * The student pages: every URF project the student is on, newest first,
      * whether applications are open, and the session a new one would join.
@@ -214,6 +262,9 @@ class UrfController extends Controller
             // it once rather than every year. Absent for an account an admin
             // created, and then the form asks for all three as it used to.
             'student' => $user->ugStudent()->with('branch:id,programme,code,name')->first(),
+            // Which report rounds are open, so a fellow is offered a report
+            // when there is one to file and told when there is not.
+            'report_windows' => UrfReportWindow::orderByDesc('session')->get(),
             'applications' => UrfApplication::forMember($user)->with(self::DETAIL)->orderByDesc('session')->latest('id')->get()
                 ->map(fn (UrfApplication $application) => $this->payload($application, $user))
                 ->values(),
@@ -364,6 +415,15 @@ class UrfController extends Controller
             'conference_presentation' => 'nullable|string|max:2000',
             'report' => 'required|file|mimes:pdf|max:20480',
         ]);
+
+        $window = UrfReportWindow::for((int) $application->session, $data['type'])->first();
+        if (!$window || !$window->is_open) {
+            return response()->json([
+                'message' => $window
+                    ? 'This report was due between ' . $window->opens_on->format('d M Y') . ' and ' . $window->closes_on->format('d M Y') . '.'
+                    : 'This report has not been scheduled yet.',
+            ], 422);
+        }
         // The chosen library entries arrive as JSON beside the file in multipart data.
         $chosen = fn ($value) => is_array($value) ? $value : (json_decode((string) $value, true) ?: []);
         $linked = ['publications' => $chosen($request->input('publications')), 'patents' => $chosen($request->input('patents'))];

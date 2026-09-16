@@ -22,6 +22,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/mine', [UrfController::class, 'mine']);
     Route::patch('/me', [UgStudentController::class, 'updateMine']);
     Route::get('/sessions', [UrfController::class, 'sessions']);
+    // When a report round opens and closes, as the office schedules it.
+    Route::get('/report-windows', [UrfController::class, 'reportWindows']);
+    Route::post('/report-windows', [UrfController::class, 'saveReportWindow']);
+    Route::delete('/report-windows/{id}', [UrfController::class, 'deleteReportWindow'])->whereNumber('id');
     // The forms grid: one list per form, with the shared filter bar.
     $forms = ['urf-application', 'urf-additional-info', 'urf-half-yearly-report', 'urf-final-report'];
     // What is waiting on whoever is asking, and what they decide about it.

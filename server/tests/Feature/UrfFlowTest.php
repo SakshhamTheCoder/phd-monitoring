@@ -7,6 +7,7 @@ use App\Models\UgBranch;
 use App\Models\Faculty;
 use App\Models\Role;
 use App\Models\UrfApplication;
+use App\Models\UrfReportWindow;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\UploadedFile;
@@ -99,6 +100,15 @@ class UrfFlowTest extends TestCase
 
         // Stipend details and reports both wait for the project to be selected,
         // which is the one decision there is besides rejecting it.
+        // A report also waits on its round, which the office opens.
+        foreach (['half_yearly', 'final'] as $type) {
+            UrfReportWindow::create([
+                'session' => (int) now()->year,
+                'type' => $type,
+                'opens_on' => now()->subDay()->toDateString(),
+                'closes_on' => now()->addMonth()->toDateString(),
+            ]);
+        }
         $report = ['type' => 'half_yearly', 'conference_presentation' => 'Poster at ICSS', 'report' => UploadedFile::fake()->create('r.pdf', 10, 'application/pdf')];
         $this->actingAs($applicant, 'sanctum')->postJson("/api/urf/{$id}/reports", $report)->assertStatus(422);
         $this->actingAs($admin, 'sanctum')->postJson("/api/urf/{$id}/status", ['status' => 'ongoing'])->assertStatus(422);

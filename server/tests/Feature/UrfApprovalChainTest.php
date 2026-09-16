@@ -7,6 +7,7 @@ use App\Models\Faculty;
 use App\Models\Role;
 use App\Models\UgBranch;
 use App\Models\UrfApplication;
+use App\Models\UrfReportWindow;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\UploadedFile;
@@ -142,6 +143,76 @@ class UrfApprovalChainTest extends TestCase
 
         // And nothing more is read on a form that is through.
         $decide($dordc, ['approval' => true])->assertStatus(422);
+    }
+
+    public function test_a_report_is_filed_only_while_its_round_is_open(): void
+    {
+        Storage::fake('public');
+
+        $admin = $this->userAs('admin', ['can_manage_urf' => 'true', 'can_manage_app_settings' => 'true']);
+        $student = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
+        $department = Department::create(['name' => 'Round Test Department', 'code' => 'RNDTD']);
+        $branch = UgBranch::create(['programme' => 'BE', 'code' => 'RNDTB', 'name' => 'Round Test Branch', 'department_id' => $department->id]);
+        $mentor = $this->faculty(990121, $department);
+
+        $this->actingAs($admin, 'sanctum')->postJson('/api/settings/urf', ['applications_open' => 1])->assertOk();
+        $id = $this->actingAs($student, 'sanctum')->postJson('/api/urf', [
+            'project_title' => 'Round project ' . Str::random(4),
+            'student1_name' => 'Round Student',
+            'student1_roll_no' => '10230' . random_int(1000, 9999),
+            'student1_branch_id' => $branch->id,
+            'student1_year' => 2,
+            'student1_gender' => 'Male',
+            'student1_email' => $student->email,
+            'student1_phone' => '9800000013',
+            'mentor1_faculty_code' => $mentor->faculty_code,
+            'proposal' => UploadedFile::fake()->create('proposal.pdf', 10, 'application/pdf'),
+        ])->assertCreated()->json('id');
+
+        $this->actingAs($admin, 'sanctum')->postJson("/api/urf/{$id}/status", ['status' => 'selected'])->assertOk();
+
+        $file = fn () => ['type' => 'half_yearly', 'report' => UploadedFile::fake()->create('r.pdf', 10, 'application/pdf')];
+
+        // Nothing is scheduled, so there is nothing to file.
+        $this->actingAs($student, 'sanctum')->postJson("/api/urf/{$id}/reports", $file())
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'This report has not been scheduled yet.');
+
+        // A round that has closed is no better.
+        $this->actingAs($admin, 'sanctum')->postJson('/api/urf/report-windows', [
+            'session' => (int) now()->year,
+            'type' => 'half_yearly',
+            'opens_on' => now()->subMonth()->toDateString(),
+            'closes_on' => now()->subWeek()->toDateString(),
+        ])->assertCreated();
+        $this->actingAs($student, 'sanctum')->postJson("/api/urf/{$id}/reports", $file())->assertStatus(422);
+
+        // Scheduling it again moves the dates rather than opening a second round.
+        $this->actingAs($admin, 'sanctum')->postJson('/api/urf/report-windows', [
+            'session' => (int) now()->year,
+            'type' => 'half_yearly',
+            'opens_on' => now()->subDay()->toDateString(),
+            'closes_on' => now()->addWeek()->toDateString(),
+            'notes' => 'Two pages at most.',
+        ])->assertCreated();
+        $this->assertSame(1, UrfReportWindow::for((int) now()->year, 'half_yearly')->count());
+
+        $this->actingAs($student, 'sanctum')->postJson("/api/urf/{$id}/reports", $file())->assertCreated();
+
+        // And the round reaches the student's own page.
+        $this->actingAs($student, 'sanctum')->getJson('/api/urf/mine')
+            ->assertOk()
+            ->assertJsonPath('report_windows.0.is_open', true)
+            ->assertJsonPath('report_windows.0.notes', 'Two pages at most.');
+
+        // Only the office schedules them.
+        $this->actingAs($student, 'sanctum')->getJson('/api/urf/report-windows')->assertForbidden();
+        $this->actingAs($student, 'sanctum')->postJson('/api/urf/report-windows', [
+            'session' => (int) now()->year,
+            'type' => 'final',
+            'opens_on' => now()->toDateString(),
+            'closes_on' => now()->addWeek()->toDateString(),
+        ])->assertForbidden();
     }
 
     public function test_each_reader_sees_only_what_waits_on_them(): void
