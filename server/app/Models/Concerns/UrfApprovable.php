@@ -12,9 +12,11 @@ use App\Models\User;
  * cursor: it names who the form is waiting on, and becomes 'complete' when
  * nobody is left.
  *
- * A rejection is not a verdict on the project. It sends the form back to the
- * student with the reason, and resubmitting starts the reading again from the
- * mentor, because what the ADORDC and DORDC read has changed.
+ * Three answers, not two. Approving passes the form on. Sending it back is
+ * "not recommended as it stands": the student gets the reason and resubmits,
+ * and the reading starts again from the mentor, because what the later steps
+ * read has changed. Rejecting ends the project, and only the DORDC, the last
+ * reader, can do that.
  *
  * The vocabulary is the PhD forms': stage, approvals, comments and a history of
  * every hop. The machinery is not, because a mentor is a relationship rather
@@ -93,17 +95,19 @@ trait UrfApprovable
     }
 
     /**
-     * Record a decision and move the cursor. An approval passes the form on; a
-     * rejection sends it back to the student, whose next submission starts the
-     * reading again.
+     * Record a decision and move the cursor: 'approve' passes the form on,
+     * 'send_back' returns it to the student, 'reject' ends it.
      */
-    public function recordDecision(User $user, string $step, bool $approved, ?string $comments): void
+    public function recordDecision(User $user, string $step, string $decision, ?string $comments): void
     {
-        $this->{$step . '_approval'} = $approved;
+        $this->{$step . '_approval'} = $decision === 'approve';
         $this->{$step . '_comments'} = $comments;
 
-        if ($approved) {
+        if ($decision === 'approve') {
             $this->stage = self::stageAfter($step);
+        } elseif ($decision === 'reject') {
+            // Nothing further is read on a project that is not going ahead.
+            $this->stage = self::COMPLETE;
         } else {
             $this->stage = 'student';
             // What the later steps approved was the form as it stood. The
@@ -113,7 +117,15 @@ trait UrfApprovable
             }
         }
 
-        $this->addHistory($user, $step, $approved, $comments);
+        $this->addHistory($user, $step, $decision, $comments);
+        $this->save();
+    }
+
+    /** Ending a project without reading it, which is the office's override. */
+    public function closeChain(User $user, string $decision): void
+    {
+        $this->stage = self::COMPLETE;
+        $this->addHistory($user, 'office', $decision, null);
         $this->save();
     }
 
@@ -121,17 +133,17 @@ trait UrfApprovable
     public function backToTheStartOfTheChain(User $user): void
     {
         $this->stage = 'mentor';
-        $this->addHistory($user, 'student', true, null);
+        $this->addHistory($user, 'student', 'submitted', null);
         $this->save();
     }
 
-    private function addHistory(User $user, string $step, bool $approved, ?string $comments): void
+    private function addHistory(User $user, string $step, string $decision, ?string $comments): void
     {
         $history = $this->history ?? [];
         $history[] = [
             'step' => $step,
             'by' => $user->name(),
-            'approved' => $approved,
+            'decision' => $decision,
             'comments' => $comments,
             'at' => now()->toIso8601String(),
         ];

@@ -14,13 +14,15 @@ use Illuminate\Support\Facades\Auth;
  * Reading a URF form and saying yes or no.
  *
  * The student files it, their mentor reads it, then the ADORDC of their
- * branch's department, then the DORDC. Approving passes the form on; rejecting
- * sends it back to the student with the reason, and their next submission
- * starts the reading again, because what the later steps read has changed.
+ * branch's department, then the DORDC.
  *
- * Approving an application at the last step is what selects the project: the
- * chain is the decision, and the office's Select and Reject stay as the
- * override for anything the chain cannot settle.
+ * Three answers. Approving passes the form on. Sending it back means not as it
+ * stands: the student gets the reason and resubmits, and the reading starts
+ * again. Rejecting ends the project, which only the DORDC can do, since they
+ * are also the one whose approval selects it.
+ *
+ * The office's Select and Reject stay as an override for anything the chain
+ * cannot settle, and closing a project that way closes its reading too.
  */
 class UrfDecisionController extends Controller
 {
@@ -40,9 +42,9 @@ class UrfDecisionController extends Controller
         [$model, $label] = self::FORMS[$form];
 
         $data = $request->validate([
-            'approval' => 'required|boolean',
-            // A rejection sends the form back, so it has to say what to fix.
-            'comments' => 'required_if:approval,false|nullable|string|max:2000',
+            'decision' => 'required|in:approve,send_back,reject',
+            // Anything but a yes has to say why, since the student reads it.
+            'comments' => 'required_unless:decision,approve|nullable|string|max:2000',
         ]);
 
         $instance = $model::findOrFail($id);
@@ -63,15 +65,29 @@ class UrfDecisionController extends Controller
             ], 403);
         }
 
-        $instance->recordDecision($user, $step, (bool) $data['approval'], $data['comments'] ?? null);
-
-        // The last approval on an application is the project being selected.
-        if ($instance instanceof UrfApplication && $instance->isComplete() && $application->status === 'applied') {
-            $application->status = 'selected';
-            $application->save();
+        // Ending a project is the DORDC's, the same reader whose approval
+        // starts it. Everyone before them may say not as it stands.
+        if ($data['decision'] === 'reject' && ($step !== 'dordc' || !$instance instanceof UrfApplication)) {
+            return response()->json([
+                'message' => 'Only the DORDC ends a project. Send it back if it needs work.',
+            ], 403);
         }
 
-        $this->tell($application, $instance, $label, $user, (bool) $data['approval'], $data['comments'] ?? null);
+        $instance->recordDecision($user, $step, $data['decision'], $data['comments'] ?? null);
+
+        // The DORDC's answer on an application is the project's: approved is
+        // selected, rejected is rejected.
+        if ($instance instanceof UrfApplication && $application->status === 'applied') {
+            if ($instance->isComplete() && $data['decision'] === 'approve') {
+                $application->status = 'selected';
+                $application->save();
+            } elseif ($data['decision'] === 'reject') {
+                $application->status = 'rejected';
+                $application->save();
+            }
+        }
+
+        $this->tell($application, $instance, $label, $user, $data['decision'], $data['comments'] ?? null);
 
         return response()->json([
             'stage' => $instance->stage,
@@ -141,18 +157,25 @@ class UrfDecisionController extends Controller
      * Everyone who needs to know: the students when their form moves or comes
      * back, and whoever it now waits on.
      */
-    private function tell(UrfApplication $application, $instance, string $label, User $actor, bool $approved, ?string $comments): void
+    private function tell(UrfApplication $application, $instance, string $label, User $actor, string $decision, ?string $comments): void
     {
-        $title = $approved ? "URF {$label} approved" : "URF {$label} sent back";
-        $body = $approved
-            ? "{$actor->name()} approved the {$label} for \"{$application->project_title}\"."
-            : "{$actor->name()} sent the {$label} for \"{$application->project_title}\" back: {$comments}";
+        $title = [
+            'approve' => "URF {$label} approved",
+            'send_back' => "URF {$label} sent back",
+            'reject' => 'URF project rejected',
+        ][$decision];
+
+        $body = [
+            'approve' => "{$actor->name()} approved the {$label} for \"{$application->project_title}\".",
+            'send_back' => "{$actor->name()} sent the {$label} for \"{$application->project_title}\" back: {$comments}",
+            'reject' => "{$actor->name()} rejected \"{$application->project_title}\": {$comments}",
+        ][$decision];
 
         foreach ($this->students($application) as $student) {
             $this->sendNotification($student, $title, $body, '/forms');
         }
 
-        if ($approved && !$instance->isComplete()) {
+        if ($decision === 'approve' && !$instance->isComplete()) {
             foreach ($this->nextReaders($application, $instance->stage) as $reader) {
                 $this->sendNotification(
                     $reader,

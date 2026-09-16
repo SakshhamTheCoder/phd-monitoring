@@ -20,12 +20,38 @@ export const stageLine = (form) => (form?.stage === 'complete'
   ? 'Approved by the mentor, the ADORDC and the DORDC.'
   : `Waiting on ${STEP_NAMES[form?.stage] || 'the student'}.`);
 
+// What each answer means, and what it says once it is sent.
+const DECISIONS = {
+  approve: {
+    label: 'Approve',
+    title: 'Approve this form',
+    blurb: 'It passes to the next reader, and the students are told.',
+    prompt: 'Comments (optional)',
+    done: 'Approved and passed on',
+  },
+  send_back: {
+    label: 'Send back',
+    title: 'Send this form back',
+    blurb: 'Not as it stands. It goes back to the students to correct, and the reading starts again from the mentor once they resubmit.',
+    prompt: 'What needs fixing',
+    done: 'Sent back to the student',
+  },
+  reject: {
+    label: 'Reject project',
+    title: 'Reject this project',
+    blurb: 'The project is over. The students are told why, and they can apply again in a later session.',
+    prompt: 'Why the project is rejected',
+    done: 'Project rejected',
+  },
+};
+
 /**
- * Reading a URF form and saying yes or no.
+ * Reading a URF form and answering it.
  *
  * Shown to whoever the form is waiting on. Approving passes it to the next
- * reader; sending it back returns it to the student, who has to be told why,
- * so the reason is required.
+ * reader. Sending it back returns it to the student to correct. Rejecting ends
+ * the project, which is the DORDC's alone, so the button is only there for
+ * them. Anything but an approval has to say why, since the student reads it.
  */
 const UrfApproval = ({ form, formKey, applicationId, onDecided }) => {
   const [pending, setPending] = useState(null);
@@ -34,22 +60,23 @@ const UrfApproval = ({ form, formKey, applicationId, onDecided }) => {
 
   if (!form?.awaiting_me) return null;
 
+  const choice = DECISIONS[pending];
+
   const send = async () => {
-    const approving = pending === 'approve';
-    if (!approving && !comments.trim()) {
-      toast.error('Say what needs fixing, so the student can answer it.');
+    if (pending !== 'approve' && !comments.trim()) {
+      toast.error('Say why, so the students can read it.');
       return;
     }
 
     setSaving(true);
     const res = await apiUrfDecide(formKey, form.id, {
-      approval: approving,
+      decision: pending,
       comments: comments.trim() || null,
     });
     setSaving(false);
     if (!res.success) return;
 
-    toast.success(approving ? 'Approved and passed on' : 'Sent back to the student');
+    toast.success(choice.done);
     setPending(null);
     setComments('');
     onDecided();
@@ -60,24 +87,23 @@ const UrfApproval = ({ form, formKey, applicationId, onDecided }) => {
       <div className="urf-approval-row">
         <span>This form is with you.</span>
         <CustomButton text="Approve" onClick={() => setPending('approve')} />
-        <CustomButton text="Send back" variant="secondary" onClick={() => setPending('reject')} />
+        <CustomButton text="Send back" variant="secondary" onClick={() => setPending('send_back')} />
+        {form.may_reject && (
+          <CustomButton text="Reject project" variant="secondary" onClick={() => setPending('reject')} />
+        )}
       </div>
 
       <CustomModal
         isOpen={!!pending}
         onClose={() => setPending(null)}
-        title={pending === 'approve' ? 'Approve this form' : 'Send this form back'}
+        title={choice?.title}
         minHeight="220px"
         maxWidth="520px"
       >
-        <p>
-          {pending === 'approve'
-            ? 'It passes to the next reader, and the students are told.'
-            : 'It goes back to the students to correct. Reading starts again from the mentor once they resubmit.'}
-        </p>
+        <p>{choice?.blurb}</p>
         <div className="input-field-container">
           <label className="input-label" htmlFor="urf-decision-comments">
-            {pending === 'approve' ? 'Comments (optional)' : 'What needs fixing'}
+            {choice?.prompt}
           </label>
           <textarea
             id="urf-decision-comments"
@@ -90,7 +116,7 @@ const UrfApproval = ({ form, formKey, applicationId, onDecided }) => {
         <div className="modal-actions">
           <CustomButton text="Cancel" variant="secondary" onClick={() => setPending(null)} />
           <CustomButton
-            text={saving ? 'Saving…' : (pending === 'approve' ? 'Approve' : 'Send back')}
+            text={saving ? 'Saving…' : choice?.label}
             onClick={send}
             disabled={saving}
           />

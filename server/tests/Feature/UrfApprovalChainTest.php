@@ -108,13 +108,16 @@ class UrfApprovalChainTest extends TestCase
             ->postJson("/api/urf/urf-application/{$id}/decision", $body);
 
         // Nobody reads it out of turn.
-        $decide($adordc, ['approval' => true])->assertStatus(403);
-        $decide($dordc, ['approval' => true])->assertStatus(403);
+        $decide($adordc, ['decision' => 'approve'])->assertStatus(403);
+        $decide($dordc, ['decision' => 'approve'])->assertStatus(403);
 
-        // A rejection has to say what to fix.
-        $decide($mentor->user, ['approval' => false])->assertStatus(422);
+        // Sending it back has to say what to fix.
+        $decide($mentor->user, ['decision' => 'send_back'])->assertStatus(422);
 
-        $decide($mentor->user, ['approval' => false, 'comments' => 'Narrow the scope.'])->assertOk();
+        // And ending the project is not the mentor's to do.
+        $decide($mentor->user, ['decision' => 'reject', 'comments' => 'No.'])->assertStatus(403);
+
+        $decide($mentor->user, ['decision' => 'send_back', 'comments' => 'Narrow the scope.'])->assertOk();
         $application->refresh();
         $this->assertSame('student', $application->stage, 'it goes back to the student');
         $this->assertSame('Narrow the scope.', $application->mentor_comments);
@@ -126,12 +129,12 @@ class UrfApprovalChainTest extends TestCase
         $this->assertSame('mentor', $application->stage);
         $this->assertFalse((bool) $application->mentor_approval, 'the old answer is spent');
 
-        $decide($mentor->user, ['approval' => true])->assertOk()->assertJsonPath('stage', 'adordc');
-        $decide($mentor->user, ['approval' => true])->assertStatus(403);
-        $decide($adordc, ['approval' => true])->assertOk()->assertJsonPath('stage', 'dordc');
+        $decide($mentor->user, ['decision' => 'approve'])->assertOk()->assertJsonPath('stage', 'adordc');
+        $decide($mentor->user, ['decision' => 'approve'])->assertStatus(403);
+        $decide($adordc, ['decision' => 'approve'])->assertOk()->assertJsonPath('stage', 'dordc');
 
         // The last approval is the project being selected.
-        $decide($dordc, ['approval' => true])
+        $decide($dordc, ['decision' => 'approve'])
             ->assertOk()
             ->assertJsonPath('stage', 'complete')
             ->assertJsonPath('status', 'selected');
@@ -142,7 +145,107 @@ class UrfApprovalChainTest extends TestCase
         $this->assertCount(6, $application->history, 'every hop is on the record');
 
         // And nothing more is read on a form that is through.
-        $decide($dordc, ['approval' => true])->assertStatus(422);
+        $decide($dordc, ['decision' => 'approve'])->assertStatus(422);
+    }
+
+    public function test_the_dordc_ends_a_project_and_the_student_may_apply_again(): void
+    {
+        Storage::fake('public');
+
+        $admin = $this->userAs('admin', ['can_manage_urf' => 'true', 'can_manage_app_settings' => 'true']);
+        $student = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
+        $department = Department::create(['name' => 'Reject Test Department', 'code' => 'REJTD']);
+        $branch = UgBranch::create(['programme' => 'BE', 'code' => 'REJTB', 'name' => 'Reject Test Branch', 'department_id' => $department->id]);
+        $mentor = $this->faculty(990131, $department);
+        $adordcFaculty = $this->faculty(990132, $department);
+        $adordc = $adordcFaculty->user;
+        $adordc->forceFill(['current_role_id' => Role::where('role', 'adordc')->value('id')])->save();
+        $department->adordc_id = $adordcFaculty->faculty_code;
+        $department->save();
+        $dordc = $this->userAs('dordc');
+
+        $this->actingAs($admin, 'sanctum')->postJson('/api/settings/urf', ['applications_open' => 1])->assertOk();
+
+        $form = [
+            'project_title' => 'Doomed project ' . Str::random(4),
+            'student1_name' => 'Reject Student',
+            'student1_roll_no' => '10230' . random_int(1000, 9999),
+            'student1_branch_id' => $branch->id,
+            'student1_year' => 2,
+            'student1_gender' => 'Male',
+            'student1_email' => $student->email,
+            'student1_phone' => '9800000014',
+            'mentor1_faculty_code' => $mentor->faculty_code,
+        ];
+
+        $id = $this->actingAs($student, 'sanctum')
+            ->postJson('/api/urf', $form + ['proposal' => UploadedFile::fake()->create('p.pdf', 10, 'application/pdf')])
+            ->assertCreated()->json('id');
+
+        $decide = fn (User $actor, array $body) => $this->actingAs($actor, 'sanctum')
+            ->postJson("/api/urf/urf-application/{$id}/decision", $body);
+
+        $decide($mentor->user, ['decision' => 'approve'])->assertOk();
+        $decide($adordc, ['decision' => 'approve'])->assertOk();
+
+        // Ending it has to say why, and then it is over.
+        $decide($dordc, ['decision' => 'reject'])->assertStatus(422);
+        $decide($dordc, ['decision' => 'reject', 'comments' => 'Outside the fellowship.'])
+            ->assertOk()
+            ->assertJsonPath('status', 'rejected')
+            ->assertJsonPath('stage', 'complete');
+
+        $application = UrfApplication::find($id);
+        $this->assertSame('rejected', $application->status);
+        $this->assertSame('Outside the fellowship.', $application->dordc_comments);
+
+        // A rejected project closes the forms behind it.
+        $this->actingAs($student, 'sanctum')->postJson("/api/urf/{$id}/fellow", [
+            'full_name' => 'Reject Student', 'dob' => '2004-01-01', 'gender' => 'Male', 'father_name' => 'A Parent',
+            'pan' => 'ABCDE1234F', 'aadhaar' => '123456789012', 'bank_name' => 'SBI',
+            'account_no' => '123456789012', 'ifsc' => 'SBIN0001234',
+        ])->assertStatus(422);
+
+        // And leaves the student free to apply again.
+        $this->actingAs($student, 'sanctum')
+            ->postJson('/api/urf', $form + [
+                'project_title' => 'Second attempt',
+                'proposal' => UploadedFile::fake()->create('p2.pdf', 10, 'application/pdf'),
+            ])
+            ->assertCreated();
+    }
+
+    public function test_the_office_override_closes_the_reading_as_well(): void
+    {
+        Storage::fake('public');
+
+        $admin = $this->userAs('admin', ['can_manage_urf' => 'true', 'can_manage_app_settings' => 'true']);
+        $student = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
+        $department = Department::create(['name' => 'Override Test Department', 'code' => 'OVRTD']);
+        $branch = UgBranch::create(['programme' => 'BE', 'code' => 'OVRTB', 'name' => 'Override Test Branch', 'department_id' => $department->id]);
+        $mentor = $this->faculty(990141, $department);
+
+        $this->actingAs($admin, 'sanctum')->postJson('/api/settings/urf', ['applications_open' => 1])->assertOk();
+        $id = $this->actingAs($student, 'sanctum')->postJson('/api/urf', [
+            'project_title' => 'Override project ' . Str::random(4),
+            'student1_name' => 'Override Student',
+            'student1_roll_no' => '10230' . random_int(1000, 9999),
+            'student1_branch_id' => $branch->id,
+            'student1_year' => 2,
+            'student1_gender' => 'Female',
+            'student1_email' => $student->email,
+            'student1_phone' => '9800000015',
+            'mentor1_faculty_code' => $mentor->faculty_code,
+            'proposal' => UploadedFile::fake()->create('p.pdf', 10, 'application/pdf'),
+        ])->assertCreated()->json('id');
+
+        $this->assertSame('mentor', UrfApplication::find($id)->stage);
+
+        $this->actingAs($admin, 'sanctum')->postJson("/api/urf/{$id}/status", ['status' => 'selected'])->assertOk();
+
+        $application = UrfApplication::find($id);
+        $this->assertSame('selected', $application->status);
+        $this->assertSame('complete', $application->stage, 'nothing is left waiting on anyone');
     }
 
     public function test_a_report_is_filed_only_while_its_round_is_open(): void

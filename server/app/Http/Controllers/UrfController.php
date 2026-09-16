@@ -474,6 +474,12 @@ class UrfController extends Controller
         $application->status = $data['status'];
         $application->save();
 
+        // The office settling a project settles its reading too, so the two
+        // cannot disagree about whether anything is still waiting.
+        if (!$application->isComplete()) {
+            $application->closeChain(Auth::user(), $data['status']);
+        }
+
         $members = User::where('id', $application->user_id)
             ->when($application->student2_email, fn ($q, $email) => $q->orWhere('email', $email))
             ->get();
@@ -506,6 +512,9 @@ class UrfController extends Controller
         // Whether each form is waiting on whoever is reading, which is what
         // decides if they are offered the decision on it.
         $data['awaiting_me'] = $application->awaits($user);
+        // Ending a project is the DORDC's alone, so the page offers it to
+        // nobody else.
+        $data['may_reject'] = $application->awaits($user) && $application->stepFor($user) === 'dordc';
         foreach ($application->reports as $i => $report) {
             $data['reports'][$i]['awaiting_me'] = $report->awaits($user);
         }
