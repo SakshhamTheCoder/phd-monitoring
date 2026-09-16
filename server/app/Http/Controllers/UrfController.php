@@ -53,7 +53,12 @@ class UrfController extends Controller
         }
 
         // Newest session first, and within a session the latest application first.
-        $query = UrfApplication::with(['student1Branch', 'student2Branch', 'mentor1.user', 'mentor2.user'])
+        $query = UrfApplication::with([
+            'student1Branch', 'student2Branch',
+            // The department comes along for the mentor's code beside their
+            // name: one more query for the page, not one per row.
+            'mentor1.user', 'mentor1.department:id,code', 'mentor2.user', 'mentor2.department:id,code',
+        ])
             ->orderByDesc('session')
             ->latest('id');
 
@@ -73,14 +78,21 @@ class UrfController extends Controller
                 'session' => $a->session,
                 'project_title' => $a->project_title,
                 'students' => collect([$a->student1_name, $a->student2_name])->filter()->join(', '),
-                // Two students of the same branch or year say it once.
-                'branch' => collect([$a->student1Branch?->name, $a->student2Branch?->name])->filter()->unique()->join(', '),
-                'year' => collect([$a->student1_year, $a->student2_year])->filter()->map(fn ($y) => UrfApplication::yearLabel($y))->unique()->join(', '),
-                'mentors' => collect([$a->mentor1, $a->mentor2])->filter()->map(fn ($m) => $m->user?->name())->join(', '),
+                // Branch and year are one answer about a student, so they read
+                // as one. Two students of the same branch and year say it once.
+                'branch' => collect([
+                    [$a->student1Branch?->name, $a->student1_year],
+                    [$a->student2Branch?->name, $a->student2_year],
+                ])->map(fn ($pair) => collect([$pair[0], UrfApplication::yearLabel($pair[1])])->filter()->join(', '))
+                    ->filter()->unique()->join(' · '),
+                'mentors' => collect([$a->mentor1, $a->mentor2])->filter()
+                    ->map(fn ($m) => collect([$m->user?->name(), $m->department?->code])->filter()->join(' · '))
+                    ->join(', '),
                 // Not a column of its own: the mentors cell links each name.
                 'mentor_list' => collect([$a->mentor1, $a->mentor2])->filter()->map(fn ($m) => [
                     'code' => $m->faculty_code,
                     'name' => $m->user?->name(),
+                    'department' => $m->department?->code,
                 ])->values(),
                 'status' => ucfirst($a->status),
                 // Where the application has reached, which is not the same as
@@ -93,8 +105,8 @@ class UrfController extends Controller
             'total' => $page->total(),
             'totalPages' => $page->lastPage(),
             'role' => $user->current_role->role,
-            'fields' => ['session', 'project_title', 'students', 'branch', 'year', 'mentors', 'stage', 'status', 'applied_on'],
-            'fieldsTitles' => ['Session', 'Project Title', 'Students', 'Branches', 'Years', 'Mentors', 'Waiting On', 'Status', 'Applied On'],
+            'fields' => ['session', 'project_title', 'students', 'branch', 'mentors', 'stage', 'status', 'applied_on'],
+            'fieldsTitles' => ['Session', 'Project Title', 'Students', 'Branch and Year', 'Mentors', 'Waiting On', 'Status', 'Applied On'],
         ]);
     }
 
@@ -121,13 +133,15 @@ class UrfController extends Controller
             ->latest('id')
             ->paginate($request->input('rows', 50), ['*'], 'page', $request->input('page', 1));
 
-        // The row's student, found on the application by their email.
+        // The row's student, found on the application by their email. Branch
+        // and year read as one answer, the way the projects table shows them.
         $student = function ($row) {
             $n = $row->application->slotOf($row->user);
             return [
-                'roll_no' => $row->application->{"student{$n}_roll_no"},
-                'branch' => $row->application->{"student{$n}Branch"}?->name,
-                'year' => UrfApplication::yearLabel($row->application->{"student{$n}_year"}),
+                'branch' => collect([
+                    $row->application->{"student{$n}Branch"}?->name,
+                    UrfApplication::yearLabel($row->application->{"student{$n}_year"}),
+                ])->filter()->join(', '),
             ];
         };
         $common = fn ($row) => [
@@ -151,11 +165,11 @@ class UrfController extends Controller
             'totalPages' => $page->lastPage(),
             'role' => $user->current_role->role,
             'fields' => $details
-                ? ['session', 'student', 'roll_no', 'branch', 'year', 'project_title', 'status', 'submitted_on']
-                : ['session', 'project_title', 'submitted_by', 'roll_no', 'branch', 'year', 'conference_presentation', 'submitted_on', 'report'],
+                ? ['session', 'student', 'branch', 'project_title', 'status', 'submitted_on']
+                : ['session', 'project_title', 'submitted_by', 'branch', 'conference_presentation', 'submitted_on', 'report'],
             'fieldsTitles' => $details
-                ? ['Session', 'Student', 'Roll No', 'Branch', 'Year', 'Project Title', 'Project Status', 'Submitted On']
-                : ['Session', 'Project Title', 'Submitted By', 'Roll No', 'Branch', 'Year', 'Conference Presentation', 'Submitted On', 'Report'],
+                ? ['Session', 'Student', 'Branch and Year', 'Project Title', 'Project Status', 'Submitted On']
+                : ['Session', 'Project Title', 'Submitted By', 'Branch and Year', 'Conference Presentation', 'Submitted On', 'Report'],
         ]);
     }
 

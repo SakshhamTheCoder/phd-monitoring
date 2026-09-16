@@ -50,6 +50,7 @@ const MENTOR_CELL = [{
         <React.Fragment key={mentor.code ?? index}>
           {index > 0 && ', '}
           <FacultyLink code={mentor.code} name={mentor.name} />
+          {mentor.department ? ` · ${mentor.department}` : ''}
         </React.Fragment>
       ))}
     </span>
