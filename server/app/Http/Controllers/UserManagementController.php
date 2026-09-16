@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Models\User;
 use App\Models\Role;
+use App\Models\UgStudent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -63,6 +64,7 @@ class UserManagementController extends Controller
                 'default_role' => $user->default_role ? $user->default_role->role : 'N/A',
                 'available_roles' => $user->available_roles ?? [],
                 'status' => $user->status ?? 'active',
+            'ug_student' => $user->ugStudent,
                 'student_info' => $user->student ? [
                     'roll_number' => $user->student->roll_number,
                     'department' => $user->student->department->name ?? null,
@@ -116,9 +118,36 @@ class UserManagementController extends Controller
             'default_role' => $user->default_role ? $user->default_role->role : null,
             'available_roles' => $user->available_roles ?? [],
             'status' => $user->status ?? 'active',
+            'ug_student' => $user->ugStudent,
             'student_info' => $user->student,
             'faculty_info' => $user->faculty,
         ]);
+    }
+
+    /**
+     * The URF details behind a ug_student account: roll number, branch and the
+     * year they were admitted. Written only when the form sends them, so
+     * saving any other kind of user leaves the record alone.
+     */
+    private function saveUgStudentRecord(User $user, Request $request): void
+    {
+        if (!$request->hasAny(['roll_no', 'branch_id', 'admission_year', 'year'])) {
+            return;
+        }
+
+        if (optional(Role::find($request->role_id))->role !== 'ug_student') {
+            return;
+        }
+
+        $record = $user->ugStudent ?: $user->ugStudent()->make();
+        $record->fill(array_filter([
+            'roll_no' => $request->roll_no,
+            'branch_id' => $request->branch_id,
+            'admission_year' => $request->admission_year ?: UgStudent::admissionYearFrom($user->email),
+        ]));
+        // Blank means the year counted from the admission year stands.
+        $record->year = $request->year ?: null;
+        $user->ugStudent()->save($record);
     }
 
     public function createOrUpdate(Request $request)
@@ -146,6 +175,13 @@ class UserManagementController extends Controller
             // name matching no roles row, an unswitchable, invisible dead role.
             'available_roles.*' => 'string|exists:roles,role',
             'status' => 'nullable|in:active,inactive',
+            // A UG student on the URF carries a record of their own, which the
+            // office can correct at any time. A student corrects it themselves
+            // only until they apply.
+            'roll_no' => 'nullable|string|max:50',
+            'branch_id' => 'nullable|exists:ug_branches,id',
+            'admission_year' => 'nullable|integer|min:2000',
+            'year' => 'nullable|integer|between:1,4',
         ];
 
         if ($isUpdate) {
@@ -194,6 +230,8 @@ class UserManagementController extends Controller
         $user->status = $request->status ?? 'active';
 
         $user->save();
+
+        $this->saveUgStudentRecord($user, $request);
 
         // Granting a role before its linkage exists is a supported workflow (an
         // admin creates the user shell, then attaches the faculty/student record

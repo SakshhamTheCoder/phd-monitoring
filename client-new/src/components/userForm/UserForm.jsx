@@ -7,6 +7,7 @@ import InputField from '../forms/fields/InputField';
 import DropdownField from '../forms/fields/DropdownField';
 import GridContainer from '../forms/fields/GridContainer';
 import ToggleSwitch from '../forms/fields/ToggleSwitch';
+import { apiUrfBranches } from '../../api/urf';
 import './UserForm.css';
 
 const UserForm = ({ edit, userData, onClose }) => {
@@ -31,9 +32,14 @@ const UserForm = ({ edit, userData, onClose }) => {
   const [customPassword, setCustomPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [rolesLoaded, setRolesLoaded] = useState(false);
+  // The URF details behind a ug_student account, which only that role has.
+  const [branches, setBranches] = useState([]);
 
   useEffect(() => {
     fetchRoles();
+    apiUrfBranches().then((res) => res.success && setBranches(
+      res.response.map((branch) => ({ title: `${branch.programme} ${branch.name}`, value: branch.id })),
+    ));
   }, []);
 
   useEffect(() => {
@@ -51,6 +57,9 @@ const UserForm = ({ edit, userData, onClose }) => {
         available_roles: userData.available_roles || [],
         status: userData.status || 'active',
         password: '',
+        roll_no: userData.ug_student?.roll_no || '',
+        branch_id: userData.ug_student?.branch_id || '',
+        year: userData.ug_student?.year || '',
       });
     } else if (!edit) {
       // Reset form for new user
@@ -313,6 +322,38 @@ const UserForm = ({ edit, userData, onClose }) => {
           ]}
           space={2}
         />
+
+        {roles.find(r => r.value === formData.role_id)?.role_name === 'ug_student' && (
+          <>
+            <label style={{ fontWeight: '600', margin: '1rem 0 0.5rem', display: 'block' }}>
+              URF Details
+            </label>
+            <GridContainer
+              elements={[
+                <InputField
+                  label="Roll Number"
+                  initialValue={formData.roll_no || ''}
+                  onChange={(value) => setFormData({ ...formData, roll_no: value })}
+                />,
+                <DropdownField
+                  label="Branch"
+                  options={branches}
+                  initialValue={formData.branch_id || ''}
+                  onChange={(value) => setFormData({ ...formData, branch_id: value })}
+                  key={`branch_${formData.id || 'new'}`}
+                />,
+                <DropdownField
+                  label="Year of Study (blank counts from the roll number)"
+                  options={[1, 2, 3, 4].map((year) => ({ title: `${year} Year`, value: year }))}
+                  initialValue={formData.year || ''}
+                  onChange={(value) => setFormData({ ...formData, year: value })}
+                  key={`ug_year_${formData.id || 'new'}`}
+                />,
+              ]}
+              space={3}
+            />
+          </>
+        )}
 
         <div style={{ marginTop: '1rem', marginBottom: '1rem' }}>
           <label style={{ fontWeight: '600', marginBottom: '0.5rem', display: 'block' }}>
