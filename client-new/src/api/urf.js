@@ -33,3 +33,5 @@ export const apiBranchList = () => customFetch(BRANCHES, 'GET', {}, true, false,
 export const apiBranchCreate = (body) => customFetch(BRANCHES, 'POST', body, true);
 export const apiBranchUpdate = (id, body) => customFetch(`${BRANCHES}/${id}`, 'PATCH', body, true);
 export const apiBranchDelete = (id) => customFetch(`${BRANCHES}/${id}`, 'DELETE', {}, true);
+// The whole list at once, which is how it arrives the first time.
+export const apiBranchImport = (rows) => customFetch(`${BRANCHES}/import`, 'POST', { rows }, false);

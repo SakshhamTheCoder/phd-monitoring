@@ -355,6 +355,35 @@ class UgSignupTest extends TestCase
         $this->actingAs($admin, 'sanctum')->deleteJson("/api/ug-branches/{$branch->id}")->assertStatus(422);
     }
 
+    public function test_the_whole_branch_list_arrives_in_one_import(): void
+    {
+        $adminRole = Role::where('role', 'admin')->value('id');
+        DB::table('roles')->where('id', $adminRole)->update(['can_manage_app_settings' => 'true']);
+        $admin = User::where('current_role_id', $adminRole)->first();
+
+        $rows = [
+            ['_rowNumber' => 2, 'programme' => 'BE', 'code' => 'IMPC1', 'name' => 'Imported Engineering'],
+            ['_rowNumber' => 3, 'programme' => 'BTech', 'code' => 'IMPC2', 'name' => 'Imported Technology'],
+            ['_rowNumber' => 4, 'programme' => '', 'code' => 'IMPC3', 'name' => 'No Programme'],
+        ];
+
+        $this->actingAs($admin, 'sanctum')->postJson('/api/ug-branches/import', ['rows' => $rows])
+            ->assertOk()
+            ->assertJsonPath('added', 2)
+            ->assertJsonPath('updated', 0)
+            ->assertJsonCount(1, 'errors');
+
+        // The same file again renames rather than duplicates.
+        $rows[0]['name'] = 'Renamed Engineering';
+        $this->actingAs($admin, 'sanctum')->postJson('/api/ug-branches/import', ['rows' => $rows])
+            ->assertOk()
+            ->assertJsonPath('added', 0)
+            ->assertJsonPath('updated', 2);
+
+        $this->assertSame('Renamed Engineering', UgBranch::where('code', 'IMPC1')->value('name'));
+        $this->assertSame(0, UgBranch::where('code', 'IMPC3')->count());
+    }
+
     public function test_the_branch_list_is_open_to_a_student_with_no_account_yet(): void
     {
         $this->branch();

@@ -55,6 +55,50 @@ class UgBranchController extends Controller
         return response()->json(['message' => 'Branch removed']);
     }
 
+    /**
+     * The whole list at once, which is how it arrives the first time.
+     *
+     * A row is matched on its programme and code, so importing the same file
+     * twice renames rather than duplicates, and a bad row is reported by its
+     * line number instead of stopping the ones around it.
+     */
+    public function import(Request $request)
+    {
+        $this->authorizeAdmin();
+
+        $rows = $request->validate([
+            'rows' => 'required|array|min:1',
+        ])['rows'];
+
+        $added = 0;
+        $updated = 0;
+        $errors = [];
+
+        foreach ($rows as $index => $row) {
+            $line = $row['_rowNumber'] ?? $index + 2;
+            $programme = trim((string) ($row['programme'] ?? ''));
+            $code = trim((string) ($row['code'] ?? ''));
+            $name = trim((string) ($row['name'] ?? ''));
+
+            if ($programme === '' || $code === '' || $name === '') {
+                $errors[] = "Row {$line}: programme, code and name are all needed.";
+                continue;
+            }
+
+            $branch = UgBranch::firstOrNew(['programme' => $programme, 'code' => $code]);
+            $existed = $branch->exists;
+            $branch->name = $name;
+            $branch->save();
+            $existed ? $updated++ : $added++;
+        }
+
+        return response()->json([
+            'added' => $added,
+            'updated' => $updated,
+            'errors' => $errors,
+        ]);
+    }
+
     private function validated(Request $request, ?UgBranch $branch = null): array
     {
         return $request->validate([

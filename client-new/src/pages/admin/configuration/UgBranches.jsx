@@ -3,9 +3,15 @@ import { toast } from 'react-toastify';
 import CustomButton from '../../../components/forms/fields/CustomButton';
 import TableComponent from '../../../components/forms/table/TableComponent';
 import GridContainer from '../../../components/forms/fields/GridContainer';
-import { apiBranchCreate, apiBranchDelete, apiBranchList, apiBranchUpdate } from '../../../api/urf';
+import UnifiedBulkImportModal from '../../../components/bulkImport/UnifiedBulkImportModal';
+import { apiBranchCreate, apiBranchDelete, apiBranchImport, apiBranchList, apiBranchUpdate } from '../../../api/urf';
 
 const EMPTY = { programme: '', code: '', name: '' };
+
+const SAMPLE_CSV = `programme,code,name
+BE,COE,Computer Engineering
+BE,ECE,Electronics and Communication Engineering
+BTech,CSE,Computer Science and Engineering`;
 
 /**
  * The branches a UG student can be on, offered on sign-up and on the URF
@@ -18,6 +24,8 @@ const UgBranches = () => {
   const [form, setForm] = useState(EMPTY);
   const [editing, setEditing] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const load = useCallback(async () => {
     const res = await apiBranchList();
@@ -55,6 +63,24 @@ const UgBranches = () => {
       toast.success('Branch removed');
       load();
     }
+  };
+
+  const importRows = async (preview, reset) => {
+    setImporting(true);
+    const res = await apiBranchImport(preview.data);
+    setImporting(false);
+
+    if (!res.success) {
+      toast.error(res.response?.message || 'Could not import the branches.');
+      return;
+    }
+
+    const { added = 0, updated = 0, errors = [] } = res.response || {};
+    toast.success(`${added} branches added, ${updated} updated`);
+    errors.forEach((message) => toast.warn(message, { autoClose: 10000 }));
+    reset();
+    setImportOpen(false);
+    load();
   };
 
   const edit = (branch) => {
@@ -99,6 +125,7 @@ const UgBranches = () => {
             />
           </div>
           <CustomButton text={editing ? 'Save changes' : 'Add branch'} onClick={save} disabled={busy} />
+          {!editing && <CustomButton text="Import CSV" onClick={() => setImportOpen(true)} />}
           {editing && (
             <CustomButton
               text="Cancel"
@@ -139,6 +166,22 @@ const UgBranches = () => {
           />,
         ]}
         space={3}
+      />
+
+      <UnifiedBulkImportModal
+        isOpen={importOpen}
+        onClose={() => setImportOpen(false)}
+        title="Import Branches"
+        required={['programme', 'code', 'name']}
+        rules={[
+          'Matched on programme and code, so importing the same file twice renames rather than duplicates.',
+          'programme is the degree as the institute writes it, BE or BTech.',
+          'Nothing is removed: a branch that leaves the file stays, and students on it keep their record.',
+        ]}
+        sampleFileName="ug_branches_sample.csv"
+        sampleCsvContent={SAMPLE_CSV}
+        onImport={importRows}
+        submitting={importing}
       />
     </div>
   );
