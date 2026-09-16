@@ -19,6 +19,15 @@ use Illuminate\Support\Facades\Validator;
 use App\Support\PersonName;
 
 class StudentController extends Controller {
+    /**
+     * What the listing's mapper reads. Loaded here, or it asks per student:
+     * the profile was costing about six queries a row.
+     */
+    private const LIST_RELATIONS = [
+        'user', 'department', 'supervisors.user', 'doctoralCommittee.user',
+        'irbForms', 'areaPreferences', 'thesisExtentions',
+    ];
+
     use FilterLogicTrait;
     use PagenationTrait;
     use GeneralFormList;
@@ -512,12 +521,12 @@ class StudentController extends Controller {
           $filters = json_decode(urldecode($filtersJson), true);
     }
 
-    $studentsQuery = Student::with(['user', 'department', 'supervisors.user', 'doctoralCommittee.user']);
+    $studentsQuery = Student::with(self::LIST_RELATIONS);
 
     // The capability decides whether a role may read at all; the role still
     // decides which records that means, because "their department" is one
     // department for a HOD and a list of them for an ADORDC.
-    $with = ['user', 'department', 'supervisors.user', 'doctoralCommittee.user'];
+    $with = self::LIST_RELATIONS;
 
     if ($loggedInUser->may('can_read_all_students')) {
         // No scoping.
