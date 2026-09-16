@@ -242,36 +242,6 @@ Route::post('/switch-role', function (Request $request) {
     }
 })->middleware('auth:sanctum');
 
-Route::post('register', function (Request $request) {
-    $request->validate([
-        'first_name' => 'required|string',
-        'last_name' => 'required|string',
-        'phone' => 'required|string',
-        'email' => 'required|email|unique:users',
-        'password' => 'required|string',
-        'gender' => 'required|string',
-    ]);
-    $user = new \App\Models\User();
-    $user->first_name = $request->first_name;
-    $user->last_name = $request->last_name;
-    $user->phone = $request->phone;
-    $user->email = $request->email;
-    $user->password = bcrypt($request->password);
-    $user->gender = $request->gender;
-    $user->role_id = 1;
-    $user->save();
-    return response()->json($user, 200);
-});
-
-Route::post('create-role', function (Request $request) {
-    $request->validate([
-        'role' => 'required|string',
-    ]);
-    $role = new \App\Models\Role();
-    $role->role = 'Default';
-    $role->save();
-    return response()->json($role, 200);
-});
 Route::prefix('roles')->group(function () {
     require base_path('routes/base/roles.php');
 });

@@ -35,7 +35,6 @@ class EnsureCurrentRoleIsBacked
         'api/switch-role',
         'api/logout',
         'api/login',
-        'api/register',
         'api/user',
         'api/roles',
         // Public, token-authenticated flows. The token is the credential and no
