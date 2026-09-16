@@ -16,6 +16,9 @@ const PagenationTable = ({
   linkField = null, // a column that opens something of its own, not the row
   onLinkClick = null, // what that column opens; the row still opens the row
   components = [], // [{ key, component }] to draw a cell itself, as TableComponent takes
+  persistentSelect = false, // tick boxes on every row, with no mode to enter first
+  inlineActions = false, // draw the row actions as buttons rather than behind a menu
+  bulkActions = [], // [{ label, danger, onClick(ids, done) }] offered while selecting
   customBulkAction, // function(formIds)
   extraTopbarComponents = null,
   enableSelect=true,
@@ -37,6 +40,12 @@ const PagenationTable = ({
   const { setLoading } = useLoading();
 
   const componentMap = components.reduce((all, one) => ({ ...all, [one.key]: one.component }), {});
+
+  // The tick boxes can be on permanently. There is then no mode to enter, the
+  // box itself does the ticking, and the row click still opens the row.
+  const selecting = persistentSelect || selectMode;
+  const allSelected = forms.length > 0 && selectedForms.size === forms.length;
+  const toggleAll = () => setSelectedForms(allSelected ? new Set() : new Set(forms.map((form) => form.id)));
 
   // Close the open row-actions menu on any outside click
   useEffect(() => {
@@ -131,7 +140,12 @@ const PagenationTable = ({
           <div className="top-actions">
           {extraTopbarComponents && (
                <div className="extra-components">{extraTopbarComponents}</div> )}
-               {enableSelect && (enableApproval || customBulkAction) && (
+               {enableSelect && persistentSelect && (
+            <button className="select-btn" onClick={toggleAll}>
+              {allSelected ? "Deselect All" : "Select All"}
+            </button>
+            )}
+               {enableSelect && !persistentSelect && (enableApproval || customBulkAction || bulkActions.length > 0) && (
             <button className="select-btn" onClick={() => {
               setSelectMode(!selectMode);
               setSelectedForms(new Set());
@@ -145,6 +159,21 @@ const PagenationTable = ({
                 Approve Selected Rows: {selectedForms.size}
               </button>
             )}
+            {/* One button per bulk action, offered once something is ticked. */}
+            {selecting && selectedForms.size > 0 && bulkActions.map((action, actionIndex) => (
+              <button
+                key={actionIndex}
+                className={`bulk-action-btn${action.danger ? " danger" : ""}`}
+                disabled={selectedForms.size === 0}
+                onClick={() => action.onClick(
+                  Array.from(selectedForms),
+                  () => { setSelectedForms(new Set()); setSelectMode(false); },
+                  forms.filter((row) => selectedForms.has(row.id)),
+                )}
+              >
+                {action.label} ({selectedForms.size})
+              </button>
+            ))}
           </div>
         </div>
       )}
@@ -153,14 +182,11 @@ const PagenationTable = ({
       <table className="form-table">
         <thead>
           <tr>
-            {selectMode && <th><input
+            {selecting && <th><input
               type="checkbox"
-              checked={selectedForms.size === forms.length && forms.length > 0}
-              onChange={(e) => {
-                if (e.target.checked) {
-                  setSelectedForms(new Set(forms.map(f => f.id || f.id)));
-                } else setSelectedForms(new Set());
-              }}
+              aria-label={allSelected ? "Deselect all rows" : "Select all rows"}
+              checked={allSelected}
+              onChange={toggleAll}
             /></th>}
             <th>S.No</th>
             {fieldsTitle.map((title, index) => <th key={index}>{title}</th>)}
@@ -172,7 +198,12 @@ const PagenationTable = ({
         <tbody>
         {forms.length === 0 && (
   <tr className="no-data-row">
-    <td colSpan={fields.length + 3} className="no-data-cell">
+    {/* S.No, the fields, and whichever of the tick box, actions and chevron
+        columns this table is drawing. */}
+    <td
+      colSpan={fields.length + 1 + (selecting ? 1 : 0) + (actions.length > 0 ? 1 : 0) + (!selectMode ? 1 : 0)}
+      className="no-data-cell"
+    >
       {hasFilters ? "No results match your filters." : "No results yet."}
     </td>
   </tr>
@@ -183,17 +214,20 @@ const PagenationTable = ({
             return (
               <tr
                 key={formId}
-                className={`form-row ${clickable ? "row-link" : ""} ${selectMode && selectedForms.has(formId) ? "selected-row" : ""}`}
+                className={`form-row ${clickable ? "row-link" : ""} ${selecting && selectedForms.has(formId) ? "selected-row" : ""}`}
                 tabIndex={clickable ? 0 : -1}
                 onClick={clickable ? () => selectMode ? toggleSelectOne(formId) : openForm(form) : undefined}
                 onKeyDown={clickable ? (e) => e.key === "Enter" && (selectMode ? toggleSelectOne(formId) : openForm(form)) : undefined}
               >
-                {selectMode && (
+                {selecting && (
                   <td>
                     <input
                       type="checkbox"
+                      aria-label="Select row"
                       checked={selectedForms.has(formId)}
-                      onChange={(e) => e.stopPropagation()}
+                      onChange={() => toggleSelectOne(formId)}
+                      // The row opens the row; ticking it must not do that too.
+                      onClick={(e) => e.stopPropagation()}
                     />
                   </td>
                 )}
@@ -229,39 +263,69 @@ const PagenationTable = ({
                 })}
                 {actions.length > 0 && (
                   <td>
-                    <div className="row-actions">
-                      <button
-                        className="row-actions-trigger"
-                        title="Actions"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setOpenMenu(openMenu === index ? null : index);
-                        }}
-                      >
-                        <i className="fa-solid fa-ellipsis-vertical"></i>
-                      </button>
-                      {openMenu === index && (
-                        <div className="row-actions-menu" onClick={(e) => e.stopPropagation()}>
-                          {actions.map((action, index) => {
-                            const danger = action.danger || /delete|remove/i.test(action.tooltip || "");
-                            return (
+                    {/* An action may name the rows it applies to, so a decided
+                        row is not offered a decision again. */}
+                    {(() => {
+                      const rowActions = actions.filter((action) => !action.show || action.show(form));
+
+                      if (rowActions.length === 0) return null;
+
+                      if (inlineActions) {
+                        return (
+                          <div className="row-actions-inline">
+                            {rowActions.map((action, actionIndex) => (
                               <button
-                                key={index}
-                                className={`row-actions-item${danger ? " danger" : ""}`}
+                                key={actionIndex}
+                                className={`row-action-btn${action.danger ? " danger" : ""}`}
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setOpenMenu(null);
                                   action.onClick(form);
                                 }}
                               >
-                                <span className="ra-icon">{action.icon}</span>
-                                <span>{action.tooltip || "Action"}</span>
+                                {action.icon}
+                                {action.tooltip && <span>{action.tooltip}</span>}
                               </button>
-                            );
-                          })}
+                            ))}
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="row-actions">
+                          <button
+                            className="row-actions-trigger"
+                            title="Actions"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenMenu(openMenu === index ? null : index);
+                            }}
+                          >
+                            <i className="fa-solid fa-ellipsis-vertical"></i>
+                          </button>
+                          {openMenu === index && (
+                            <div className="row-actions-menu" onClick={(e) => e.stopPropagation()}>
+                              {rowActions.map((action, actionIndex) => {
+                                const danger = action.danger || /delete|remove/i.test(action.tooltip || "");
+                                return (
+                                  <button
+                                    key={actionIndex}
+                                    className={`row-actions-item${danger ? " danger" : ""}`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setOpenMenu(null);
+                                      action.onClick(form);
+                                    }}
+                                  >
+                                    <span className="ra-icon">{action.icon}</span>
+                                    <span>{action.tooltip || "Action"}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
+                      );
+                    })()}
                   </td>
                 )}
                 {!selectMode && (

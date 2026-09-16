@@ -122,6 +122,73 @@
     background-color: #1e7e34;
   }
 
+  /* A bulk action stands beside Select, and is dead until something is ticked. */
+  .bulk-action-btn {
+    padding: 10px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 500;
+    font-family: inherit;
+    font-size: 14px;
+    background-color: #28a745;
+    color: #fff;
+    border: 1px solid #28a745;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  .bulk-action-btn:hover:not(:disabled) { background-color: #1e7e34; }
+
+  .bulk-action-btn.danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+  }
+
+  .bulk-action-btn.danger:hover:not(:disabled) { background-color: #b02a37; }
+
+  .bulk-action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Actions drawn in the row itself, for a decision taken often enough that a
+     menu would be one click too many. */
+  .row-actions-inline {
+    display: flex;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .row-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    background: #fff;
+    color: #28a745;
+    border: 1px solid #28a745;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  .row-action-btn:hover {
+    background: #28a745;
+    color: #fff;
+  }
+
+  .row-action-btn.danger {
+    color: #dc3545;
+    border-color: #dc3545;
+  }
+
+  .row-action-btn.danger:hover {
+    background: #dc3545;
+    color: #fff;
+  }
+
   /* Row actions — compact kebab trigger + dropdown menu (prevents cramped icons / misclicks) */
   .row-actions {
     position: relative;
