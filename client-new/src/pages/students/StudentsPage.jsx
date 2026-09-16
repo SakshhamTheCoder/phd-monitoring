@@ -14,6 +14,7 @@ import { toast } from "react-toastify";
 import { baseURL } from "../../api/urls";
 import { customFetch } from "../../api/base";
 import useCapabilities from "../../hooks/useCapabilities";
+import Tabs from "../../components/tabs/Tabs";
 
 const StudentsPage = () => {
   const [filter, setFilter] = useState([]);
@@ -34,6 +35,10 @@ const StudentsPage = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(null);
+  // PhD scholars have a students record; a UG fellow on the URF has one of
+  // their own, so the two lists are read from different places.
+  const [tab, setTab] = useState('phd');
+  const [ugFilter, setUgFilter] = useState({ conditions: [] });
 
   const STUDENT_HEADERS = "Registration Number,Full Name,Email,Phone,Department Code,Father Name,Gender,Enrollment Type,Date of Admission,Date of IRB,Date of Synopsis,Date of Thesis,CGPA,Overall Progress,PhD Title,JRF?,Permanent Address,Supervisor 1 Name,Supervisor 1 Email,Supervisor 2 Name,Supervisor 2 Email,Supervisor 3 Name,Supervisor 3 Email,Committee Member 1 Name,Committee Member 1 Email,Committee Member 2 Name,Committee Member 2 Email,Committee Member 3 Name,Committee Member 3 Email";
 
@@ -171,6 +176,34 @@ const StudentsPage = () => {
       children={
         <>
           <PageHeader title="Students" subtitle="All PhD scholars and their current stage." />
+
+          {can("can_manage_urf") && (
+            <Tabs
+              value={tab}
+              onChange={setTab}
+              items={[
+                { value: 'phd', label: 'PhD Scholars' },
+                { value: 'ug', label: 'UG Students' },
+              ]}
+            />
+          )}
+
+          {tab === 'ug' ? (
+            <>
+              <FilterBar
+                path="/ug-students"
+                placeholder="Search by name, roll number or branch…"
+                onSearch={setUgFilter}
+              />
+              <PagenationTable
+                endpoint="/ug-students"
+                filters={ugFilter}
+                enableApproval={false}
+                enableSelect={false}
+              />
+            </>
+          ) : (
+          <>
           <FilterBar onSearch={handleFilterChange} />
 
           <PagenationTable
@@ -218,6 +251,9 @@ const StudentsPage = () => {
               }] : []),
             ]}
           />
+          </>
+          )}
+
           <CustomModal
             isOpen={isModalOpen}
             onClose={closeForm}

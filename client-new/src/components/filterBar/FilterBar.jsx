@@ -21,8 +21,11 @@ const inputTypes = { date: 'date', time: 'time', number: 'number' };
  *
  * `exclude` names filters the page already drives itself, so they are not
  * offered here a second time to be set to something that contradicts it.
+ *
+ * `path` names the list being filtered, for a page holding more than one. It
+ * defaults to the page's own path, which is where the filters usually live.
  */
-const FilterBar = ({ placeholder = 'Search…', mandatory = [], exclude = [], onSearch }) => {
+const FilterBar = ({ placeholder = 'Search…', mandatory = [], exclude = [], path, onSearch }) => {
   // null until the page's filter definitions arrive.
   const [filters, setFilters] = useState(null);
   const [text, setText] = useState('');
@@ -34,13 +37,14 @@ const FilterBar = ({ placeholder = 'Search…', mandatory = [], exclude = [], on
   useEffect(() => {
     // /filters may 404 or answer with an object on a page that defines none.
     // Never store a non-array: the render maps over it.
-    customFetch(`${baseURL}${window.location.pathname}/filters`, 'GET', null, false)
+    // The page's own path, unless it holds more than one list and says which.
+    customFetch(`${baseURL}${path || window.location.pathname}/filters`, 'GET', null, false)
       .then((res) => {
         const raw = res?.response;
         setFilters(Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : []);
       })
       .catch(() => setFilters([]));
-  }, []);
+  }, [path]);
 
   // The box searches the fields that are free text; a dropdown or a date is not
   // something anyone types into a search box.
