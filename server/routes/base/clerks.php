@@ -21,6 +21,7 @@ Route::middleware('auth:sanctum')->group(function () {
 // Admin-side clerk management (tagging clerks with departments).
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/', [ClerkController::class, 'listClerks']);
+    Route::get('/filters', [ClerkController::class, 'listFilters']);
     Route::post('/bulk-update', [ClerkController::class, 'bulkUpdate']);
     Route::post('/{userId}/departments', [ClerkController::class, 'syncDepartments']);
     Route::delete('/{userId}/departments/{departmentId}', [ClerkController::class, 'detachDepartment']);

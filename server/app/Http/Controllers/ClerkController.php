@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Models\Attendance;
 use App\Models\ClerkDepartment;
 use App\Models\Department;
@@ -26,6 +27,22 @@ use Illuminate\Support\Facades\DB;
  */
 class ClerkController extends Controller
 {
+    use FilterLogicTrait;
+
+    /**
+     * The fields Clerk Management offers. The page holds its clerks in one
+     * small unpaginated list and matches them in the browser, so this names
+     * the fields rather than backing a query of its own.
+     */
+    public function listFilters()
+    {
+        if ($response = $this->authorizeAdmin()) {
+            return $response;
+        }
+
+        return response()->json($this->getAvailableFilters('clerks'));
+    }
+
     /**
      * Department ids the given user is tagged with as clerk.
      *
