@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Loader from '../../components/loader/loader';
-import { apiUrfDepartments, apiUrfResendVerification, apiUrfSignup } from '../../api/urf';
+import { apiUrfBranches, apiUrfResendVerification, apiUrfSignup } from '../../api/urf';
 import { CLOUDFLARE_SITE_KEY, rootURL } from '../../api/urls';
 
 const YEARS = [
@@ -12,6 +12,18 @@ const YEARS = [
   { value: 3, label: '3rd Year' },
   { value: 4, label: '4th Year' },
 ];
+
+// The address carries the year of admission, so the year of study follows from
+// the term we are in: July to June, odd until December. The same sum the server
+// does, shown here so nobody is asked for something already known.
+const yearOfStudy = (email) => {
+  const admitted = /(?:^|[^a-z])(?:be|btech)(\d{2})@thapar\.edu$/i.exec(String(email || ''));
+  if (!admitted) return null;
+
+  const now = new Date();
+  const termYear = now.getMonth() + 1 >= 7 ? now.getFullYear() : now.getFullYear() - 1;
+  return Math.max(1, Math.min(4, termYear - (2000 + Number(admitted[1])) + 1));
+};
 
 const field = 'tw-w-full tw-rounded tw-border tw-border-slate-400 tw-px-3 tw-py-2 tw-text-black focus:tw-ring-2 focus:tw-ring-brand tw-outline-none';
 
@@ -29,7 +41,7 @@ const Field = ({ id, label, error, children }) => (
  * needs and hands the student on to the confirmation email.
  */
 const SignupPage = () => {
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, reset, watch } = useForm();
   const [branches, setBranches] = useState([]);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -40,7 +52,7 @@ const SignupPage = () => {
   const [google, setGoogle] = useState(null);
 
   useEffect(() => {
-    apiUrfDepartments().then((res) => res.success && setBranches(res.response));
+    apiUrfBranches().then((res) => res.success && setBranches(res.response));
 
     // Where the callback lands when it could not reach an opener.
     const params = new URLSearchParams(window.location.search);
@@ -145,6 +157,14 @@ const SignupPage = () => {
     if (window.turnstile && !google) window.turnstile.reset();
   };
 
+  // Grouped so BE Computer Engineering and BTech Computer Engineering are not
+  // two identical lines in one long list.
+  const byProgramme = branches.reduce((groups, branch) => {
+    (groups[branch.programme] = groups[branch.programme] || []).push(branch);
+    return groups;
+  }, {});
+  const derivedYear = yearOfStudy(google ? google.email : watch('email'));
+
   const resend = async () => {
     const result = await apiUrfResendVerification(sentTo);
     toast.info(result.response?.message || 'The link is on its way.');
@@ -180,9 +200,7 @@ const SignupPage = () => {
             <>
               <h1 className="tw-text-xl tw-font-semibold tw-text-center">Create your URF account</h1>
               <p className="tw-text-sm tw-text-gray-600 tw-text-center tw-mt-1 tw-mb-6">
-                For undergraduates applying to the Undergraduate Research Fellowship, using the
-                institute address that carries your programme and year, like name_be23@thapar.edu.
-                PhD scholars are given an account by the office.
+                For undergraduates applying to the Undergraduate Research Fellowship.
               </p>
 
               {google ? (
@@ -246,15 +264,23 @@ const SignupPage = () => {
                   </select>
                 </Field>
 
-                <Field id="department_id" label="Branch" error={errors.department_id}>
-                  <select id="department_id" className={field} defaultValue="" {...register('department_id', { required: true })}>
+                <Field id="branch_id" label="Branch" error={errors.branch_id}>
+                  <select id="branch_id" className={field} defaultValue="" {...register('branch_id', { required: true })}>
                     <option value="" disabled>Select</option>
-                    {branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
+                    {Object.entries(byProgramme).map(([programme, list]) => (
+                      <optgroup key={programme} label={programme}>
+                        {list.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
+                      </optgroup>
+                    ))}
                   </select>
                 </Field>
-                <Field id="year" label="Year of study" error={errors.year}>
-                  <select id="year" className={field} defaultValue="" {...register('year', { required: true })}>
-                    <option value="" disabled>Select</option>
+                <Field
+                  id="year"
+                  label={derivedYear ? `Year of study (${YEARS[derivedYear - 1].label})` : 'Year of study'}
+                  error={errors.year}
+                >
+                  <select id="year" className={field} defaultValue="" {...register('year')}>
+                    <option value="">{derivedYear ? 'Taken from your roll number' : 'Select'}</option>
                     {YEARS.map((year) => <option key={year.value} value={year.value}>{year.label}</option>)}
                   </select>
                 </Field>
