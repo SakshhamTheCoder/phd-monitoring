@@ -94,6 +94,12 @@ class User extends Authenticatable
         return $this->hasOne(Student::class, 'user_id');
     }
 
+    /** Set when the account was made through URF sign-up, absent otherwise. */
+    public function ugStudent()
+    {
+        return $this->hasOne(UgStudent::class, 'user_id');
+    }
+
     public function faculty()
     {
         return $this->hasOne(Faculty::class, 'user_id');
