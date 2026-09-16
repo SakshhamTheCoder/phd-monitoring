@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import CustomButton from '../forms/fields/CustomButton';
 import InputField from '../forms/fields/InputField';
-import GridContainer from '../forms/fields/GridContainer';
 import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
+import './ChangePassword.css';
 
 /**
  * Changing your own password, whatever your role.
@@ -53,44 +53,41 @@ const ChangePassword = ({ onDone }) => {
         </p>
       )}
 
-      <GridContainer
-        elements={[
-          ...(hasPassword ? [
-            <InputField
-              label="Current password"
-              type="password"
-              initialValue={body.current_password}
-              onChange={set('current_password')}
-              required
-            />,
-          ] : []),
+      {/* One field per row: the shared grid is three columns wide, which a
+          modal this narrow cannot carry. */}
+      <div className="change-password-fields">
+        {hasPassword && (
           <InputField
-            label="New password"
+            label="Current password"
             type="password"
-            initialValue={body.password}
-            onChange={set('password')}
+            initialValue={body.current_password}
+            onChange={set('current_password')}
             required
-          />,
-          <InputField
-            label="Confirm new password"
-            type="password"
-            initialValue={body.password_confirmation}
-            onChange={set('password_confirmation')}
-            required
-          />,
-        ]}
-        space={1}
-      />
+          />
+        )}
+        <InputField
+          label="New password"
+          type="password"
+          initialValue={body.password}
+          onChange={set('password')}
+          required
+        />
+        <InputField
+          label="Confirm new password"
+          type="password"
+          initialValue={body.password_confirmation}
+          onChange={set('password_confirmation')}
+          required
+        />
+      </div>
 
-      <GridContainer
-        elements={[
-          <CustomButton
-            text={saving ? 'Saving…' : (hasPassword ? 'Change password' : 'Set password')}
-            onClick={save}
-            disabled={saving}
-          />,
-        ]}
-      />
+      <div className="change-password-actions">
+        <CustomButton
+          text={saving ? 'Saving…' : (hasPassword ? 'Change password' : 'Set password')}
+          onClick={save}
+          disabled={saving}
+        />
+      </div>
     </div>
   );
 };
