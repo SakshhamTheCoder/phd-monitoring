@@ -4,11 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-/**
- * The round in which a URF report is filed: when it opens, when it closes, and
- * anything the office wants the fellows to know. One per session per kind of
- * report.
- */
+/** When a URF report can be filed. One round per session per kind of report. */
 class UrfReportWindow extends Model
 {
     protected $fillable = ['session', 'type', 'opens_on', 'closes_on', 'notes'];
@@ -21,7 +17,7 @@ class UrfReportWindow extends Model
 
     protected $appends = ['is_open'];
 
-    /** Open today, inclusive of both ends: a round closes at the end of its last day. */
+    /** Inclusive of both ends: a round closes at the end of its last day. */
     public function getIsOpenAttribute(): bool
     {
         return $this->opens_on

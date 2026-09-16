@@ -11,24 +11,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 /**
- * Reading a URF form and saying yes or no.
+ * Answering a URF form: the student files it, the mentor reads it, then the
+ * ADORDC of their branch's department, then the DORDC.
  *
- * The student files it, their mentor reads it, then the ADORDC of their
- * branch's department, then the DORDC.
- *
- * Three answers. Approving passes the form on. Sending it back means not as it
- * stands: the student gets the reason and resubmits, and the reading starts
- * again. Rejecting ends the project, which only the DORDC can do, since they
- * are also the one whose approval selects it.
- *
- * The office's Select and Reject stay as an override for anything the chain
- * cannot settle, and closing a project that way closes its reading too.
+ * Rejecting ends the project and is the DORDC's alone, since theirs is also
+ * the approval that selects it. The office's Select and Reject override both.
  */
 class UrfDecisionController extends Controller
 {
     use NotificationManager;
 
-    /** The form a path names, and how to say it in a sentence. */
     private const FORMS = [
         'urf-application' => [UrfApplication::class, 'URF application'],
         'urf-additional-info' => [UrfFellow::class, 'additional information form'],
@@ -43,7 +35,7 @@ class UrfDecisionController extends Controller
 
         $data = $request->validate([
             'decision' => 'required|in:approve,send_back,reject',
-            // Anything but a yes has to say why, since the student reads it.
+            // The student reads the reason, so anything but a yes needs one.
             'comments' => 'required_unless:decision,approve|nullable|string|max:2000',
         ]);
 
@@ -65,8 +57,6 @@ class UrfDecisionController extends Controller
             ], 403);
         }
 
-        // Ending a project is the DORDC's, the same reader whose approval
-        // starts it. Everyone before them may say not as it stands.
         if ($data['decision'] === 'reject' && ($step !== 'dordc' || !$instance instanceof UrfApplication)) {
             return response()->json([
                 'message' => 'Only the DORDC ends a project. Send it back if it needs work.',
@@ -75,8 +65,7 @@ class UrfDecisionController extends Controller
 
         $instance->recordDecision($user, $step, $data['decision'], $data['comments'] ?? null);
 
-        // The DORDC's answer on an application is the project's: approved is
-        // selected, rejected is rejected.
+        // The DORDC's answer on an application is the project's.
         if ($instance instanceof UrfApplication && $application->status === 'applied') {
             if ($instance->isComplete() && $data['decision'] === 'approve') {
                 $application->status = 'selected';
@@ -95,7 +84,7 @@ class UrfDecisionController extends Controller
         ]);
     }
 
-    /** Everything waiting on whoever is asking, across the three forms. */
+    /** Everything waiting on whoever is asking. */
     public function queue()
     {
         $user = Auth::user();
@@ -129,7 +118,6 @@ class UrfDecisionController extends Controller
         ]);
     }
 
-    /** Which of the four forms a row is, written the way the paths are. */
     private function formKey($row): string
     {
         if ($row instanceof UrfApplication) {
@@ -153,10 +141,7 @@ class UrfDecisionController extends Controller
         ][$stage] ?? $stage;
     }
 
-    /**
-     * Everyone who needs to know: the students when their form moves or comes
-     * back, and whoever it now waits on.
-     */
+    /** The students, and whoever the form now waits on. */
     private function tell(UrfApplication $application, $instance, string $label, User $actor, string $decision, ?string $comments): void
     {
         $title = [
@@ -194,7 +179,6 @@ class UrfDecisionController extends Controller
             ->get();
     }
 
-    /** Who a form now waits on, so they hear about it rather than find it. */
     private function nextReaders(UrfApplication $application, string $stage)
     {
         if ($stage === 'mentor') {

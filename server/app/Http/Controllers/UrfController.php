@@ -20,10 +20,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 /**
- * The Undergraduate Research Fellowship. A UG student applies while the window
- * is open, gives their stipend details once selected and files reports while
- * the project runs. The admin reads every application and moves it between
- * stages; each stage is set by hand, so nothing advances on its own.
+ * The Undergraduate Research Fellowship: a UG student applies while the window
+ * is open, gives their stipend details once selected, and files reports.
  */
 class UrfController extends Controller
 {
@@ -31,7 +29,6 @@ class UrfController extends Controller
     use NotificationManager;
     use SaveFile;
 
-    /** The stage tab is a filter of the page's own, not one of its fields. */
     private const SEARCH_KEYS = ['status'];
 
     private const DETAIL = [
@@ -52,17 +49,13 @@ class UrfController extends Controller
             return $this->refuse();
         }
 
-        // Newest session first, and within a session the latest application first.
         $query = UrfApplication::with([
             'student1Branch', 'student2Branch',
-            // The department comes along for the mentor's code beside their
-            // name: one more query for the page, not one per row.
             'mentor1.user', 'mentor1.department:id,code', 'mentor2.user', 'mentor2.department:id,code',
         ])
             ->orderByDesc('session')
             ->latest('id');
 
-        // A mentor reads the projects they are named on, and nothing else.
         if (!$user->may('can_manage_urf')) {
             $query->mentoredBy($user->faculty?->faculty_code);
         }
@@ -78,8 +71,7 @@ class UrfController extends Controller
                 'session' => $a->session,
                 'project_title' => $a->project_title,
                 'students' => collect([$a->student1_name, $a->student2_name])->filter()->join(', '),
-                // Branch and year are one answer about a student, so they read
-                // as one. Two students of the same branch and year say it once.
+                // Two students of the same branch and year say it once.
                 'branch' => collect([
                     [$a->student1Branch?->name, $a->student1_year],
                     [$a->student2Branch?->name, $a->student2_year],
@@ -88,15 +80,13 @@ class UrfController extends Controller
                 'mentors' => collect([$a->mentor1, $a->mentor2])->filter()
                     ->map(fn ($m) => collect([$m->user?->name(), $m->department?->code])->filter()->join(' · '))
                     ->join(', '),
-                // Not a column of its own: the mentors cell links each name.
                 'mentor_list' => collect([$a->mentor1, $a->mentor2])->filter()->map(fn ($m) => [
                     'code' => $m->faculty_code,
                     'name' => $m->user?->name(),
                     'department' => $m->department?->code,
                 ])->values(),
                 'status' => ucfirst($a->status),
-                // Where the application has reached, which is not the same as
-                // whether the project is on.
+                // Where it has reached, which is not whether the project is on.
                 'stage' => $a->isComplete() ? 'Approved' : 'With ' . ucfirst($a->stage),
                 'applied_on' => $a->created_at?->format('d M Y'),
                 // Not a column of its own: the title opens it.
@@ -110,11 +100,7 @@ class UrfController extends Controller
         ]);
     }
 
-    /**
-     * One form's submissions for the forms grid: every application, every set
-     * of stipend details or every report. The filter bar's conditions are on
-     * the project, and each row carries its project so it can open it.
-     */
+    /** One form's submissions, each row carrying the project it belongs to. */
     public function formList(Request $request, string $form)
     {
         if ($form === 'urf-application') {
@@ -133,8 +119,7 @@ class UrfController extends Controller
             ->latest('id')
             ->paginate($request->input('rows', 50), ['*'], 'page', $request->input('page', 1));
 
-        // The row's student, found on the application by their email. Branch
-        // and year read as one answer, the way the projects table shows them.
+        // The row's student, found on the application by their email.
         $student = function ($row) {
             $n = $row->application->slotOf($row->user);
             return [
@@ -188,17 +173,13 @@ class UrfController extends Controller
         return response()->json($this->payload($application, $user));
     }
 
-    /**
-     * Branches for the application's dropdown, and for sign-up. Public: a
-     * student picking their branch has no account yet, and which branches the
-     * institute teaches is not something the portal keeps to itself.
-     */
+    /** Public: a student picking their branch at sign-up has no account yet. */
     public function branches()
     {
         return response()->json(UgBranch::ordered()->get(['id', 'programme', 'code', 'name']));
     }
 
-    /** The sessions that have projects, newest first, for the year picker. */
+    /** The sessions that have projects, for the year picker. */
     public function sessions()
     {
         $user = Auth::user();
@@ -211,7 +192,6 @@ class UrfController extends Controller
         );
     }
 
-    /** The rounds, newest session first, for the page that schedules them. */
     public function reportWindows()
     {
         if (!Auth::user()->may('can_manage_urf')) {
@@ -221,11 +201,7 @@ class UrfController extends Controller
         return response()->json(UrfReportWindow::orderByDesc('session')->orderBy('type')->get());
     }
 
-    /**
-     * Open a round, or correct one already open. One per session per kind of
-     * report, so scheduling the same round twice moves its dates rather than
-     * leaving fellows with two of them.
-     */
+    /** One round per session per report, so scheduling it twice moves its dates. */
     public function saveReportWindow(Request $request)
     {
         if (!Auth::user()->may('can_manage_urf')) {
@@ -246,7 +222,7 @@ class UrfController extends Controller
         return response()->json($window, 201);
     }
 
-    /** Call off a round. Reports already filed stay where they are. */
+    /** Reports already filed stay where they are. */
     public function deleteReportWindow($id)
     {
         if (!Auth::user()->may('can_manage_urf')) {
@@ -258,10 +234,7 @@ class UrfController extends Controller
         return response()->json(['message' => 'Round removed']);
     }
 
-    /**
-     * The student pages: every URF project the student is on, newest first,
-     * whether applications are open, and the session a new one would join.
-     */
+    /** Every project the student is on, and whether applications are open. */
     public function mine()
     {
         $user = Auth::user();
@@ -272,12 +245,9 @@ class UrfController extends Controller
         return response()->json([
             'applications_open' => (bool) AppSetting::value('urf', 'applications_open'),
             'session' => (int) now()->year,
-            // What the student gave at sign-up, so the application form asks for
-            // it once rather than every year. Absent for an account an admin
-            // created, and then the form asks for all three as it used to.
+            // What they gave at sign-up. Absent for an account the office made,
+            // and then the application form asks for it.
             'student' => $user->ugStudent()->with('branch:id,programme,code,name')->first(),
-            // Which report rounds are open, so a fellow is offered a report
-            // when there is one to file and told when there is not.
             'report_windows' => UrfReportWindow::orderByDesc('session')->get(),
             'applications' => UrfApplication::forMember($user)->with(self::DETAIL)->orderByDesc('session')->latest('id')->get()
                 ->map(fn (UrfApplication $application) => $this->payload($application, $user))
@@ -285,10 +255,7 @@ class UrfController extends Controller
         ]);
     }
 
-    /**
-     * Applies, or corrects an application that is still waiting for a result.
-     * A rejected application leaves the student free to apply afresh.
-     */
+    /** A rejected application leaves the student free to apply afresh. */
     public function apply(Request $request)
     {
         $user = Auth::user();
@@ -299,8 +266,7 @@ class UrfController extends Controller
             return response()->json(['message' => 'URF applications are closed'], 422);
         }
 
-        // One application per student per session, the calendar year. A rejected
-        // one leaves the student free to apply again in the same year.
+        // One application per student per session, the calendar year.
         $session = (int) now()->year;
         $application = UrfApplication::forMember($user)
             ->where('session', $session)
@@ -339,15 +305,11 @@ class UrfController extends Controller
             'proposal' => ($editing ? 'nullable' : 'required') . '|file|mimes:pdf|max:20480',
         ]);
 
-        // The applicant's own roll number and branch come from their account, so
-        // the form cannot post something else and they cannot drift between
-        // applications. Year of study moves with the student, so the
-        // application's answer updates the account instead.
+        // Roll number and branch come from the account, not the form, so they
+        // cannot drift between applications.
         if ($record = $user->ugStudent) {
             $data['student1_roll_no'] = $record->roll_no;
             $data['student1_branch_id'] = $record->branch_id;
-            // The application records the year they are in this session, so a
-            // student who has moved up says so here and their account follows.
             if ((int) $data['student1_year'] !== (int) $record->year) {
                 $record->update(['year' => $data['student1_year']]);
             }
@@ -366,15 +328,14 @@ class UrfController extends Controller
             );
         }
         $application->save();
-        // Filed or corrected, the reading starts again at the mentor: what the
-        // later steps saw is not what is in front of them now.
+        // Filed or corrected, the reading starts again at the mentor.
         $application->backToTheStartOfTheChain($user);
         $this->commitFileDeletions();
 
         return response()->json($application, $editing ? 200 : 201);
     }
 
-    /** The details a selected student gives for the stipend, one set per student. */
+    /** The stipend details, one set per selected student. */
     public function saveFellow(Request $request, $id)
     {
         $user = Auth::user();
@@ -438,14 +399,12 @@ class UrfController extends Controller
                     : 'This report has not been scheduled yet.',
             ], 422);
         }
-        // The chosen library entries arrive as JSON beside the file in multipart data.
         $chosen = fn ($value) => is_array($value) ? $value : (json_decode((string) $value, true) ?: []);
         $linked = ['publications' => $chosen($request->input('publications')), 'patents' => $chosen($request->input('patents'))];
         $data['report'] = $this->saveUploadedFile($request->file('report'), 'urf_report', $user->id);
 
         $report = DB::transaction(function () use ($data, $application, $user, $linked) {
-            // A report sent back is replaced rather than filed twice: the
-            // student is answering what was said about this one.
+            // A report sent back is replaced rather than filed twice.
             $report = UrfReport::where('urf_application_id', $application->id)
                 ->where('user_id', $user->id)
                 ->where('type', $data['type'])
@@ -454,9 +413,8 @@ class UrfController extends Controller
             $report->fill($data);
             $report->save();
 
-            // Linked the way a PhD progress form links them: a copy of each chosen
-            // entry from the student's own library, tagged with this report and
-            // its project. The library entry stays for later reports.
+            // As a PhD progress form links them: a copy of each chosen entry,
+            // tagged with this report. The library entry stays for later ones.
             foreach (['publications' => Publication::class, 'patents' => Patent::class] as $key => $model) {
                 $model::whereIn('id', $linked[$key])
                     ->where('user_id', $user->id)
@@ -488,8 +446,7 @@ class UrfController extends Controller
         $application->status = $data['status'];
         $application->save();
 
-        // The office settling a project settles its reading too, so the two
-        // cannot disagree about whether anything is still waiting.
+        // Settling a project settles its reading, so the two cannot disagree.
         if (!$application->isComplete()) {
             $application->closeChain(Auth::user(), $data['status']);
         }
@@ -511,8 +468,7 @@ class UrfController extends Controller
 
     private function payload(UrfApplication $application, User $user): array
     {
-        // Stipend details are personal: a student sees only their own, and a
-        // mentor has no business with anyone's bank account.
+        // Stipend details are personal: a student sees only their own.
         if (!$user->may('can_manage_urf')) {
             $application->setRelation('fellows', $application->fellows->where('user_id', $user->id)->values());
         }
@@ -523,11 +479,7 @@ class UrfController extends Controller
             $data['reports'][$i]['publications'] = Publication::groupedFor('urf_application_id', $application->id, $report['id'], 'urf_report');
         }
 
-        // Whether each form is waiting on whoever is reading, which is what
-        // decides if they are offered the decision on it.
         $data['awaiting_me'] = $application->awaits($user);
-        // Ending a project is the DORDC's alone, so the page offers it to
-        // nobody else.
         $data['may_reject'] = $application->awaits($user) && $application->stepFor($user) === 'dordc';
         foreach ($application->reports as $i => $report) {
             $data['reports'][$i]['awaiting_me'] = $report->awaits($user);
@@ -539,7 +491,7 @@ class UrfController extends Controller
         return $data;
     }
 
-    /** The office reads every project; a mentor reads the ones they are on. */
+    /** The office reads every project, a mentor the ones they are on. */
     private function mayRead(User $user): bool
     {
         return $user->may('can_manage_urf')

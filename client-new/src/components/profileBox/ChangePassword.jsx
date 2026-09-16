@@ -7,15 +7,11 @@ import { baseURL } from '../../api/urls';
 import './ChangePassword.css';
 
 /**
- * Changing your own password, whatever your role.
- *
- * An account made through Google sign-up holds a random password nobody chose,
- * so there is no current one to ask for and being signed in is the proof. The
- * server decides that, and says so through `password_set` at sign-in.
+ * A Google sign-up holds a password nobody chose, so there is no current one to
+ * ask for. The server says so through `password_set` at sign-in.
  */
 const ChangePassword = ({ onDone }) => {
   const user = JSON.parse(localStorage.getItem('user')) || {};
-  // Anything but an explicit false means the account has a password already.
   const hasPassword = user.password_set !== false;
 
   const [body, setBody] = useState({ current_password: '', password: '', password_confirmation: '' });

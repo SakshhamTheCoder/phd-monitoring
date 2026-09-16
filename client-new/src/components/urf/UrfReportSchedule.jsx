@@ -14,11 +14,8 @@ const TYPES = Object.entries(REPORT_TYPES).map(([value, title]) => ({ value, tit
 const empty = (session) => ({ session, type: 'half_yearly', opens_on: '', closes_on: '', notes: '' });
 
 /**
- * When a URF report round opens and closes.
- *
- * A fellow is offered the half-yearly report, and later the final one, only
- * while its round is open, the way a PhD scholar is offered progress
- * monitoring once the semester is scheduled. One round per session per report.
+ * When a report round opens and closes: a fellow is offered the form only
+ * while its round is open. One round per session per report.
  */
 const UrfReportSchedule = ({ session }) => {
   const [windows, setWindows] = useState([]);

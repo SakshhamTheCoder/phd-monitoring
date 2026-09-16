@@ -96,7 +96,6 @@ const AppContent = () => {
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/support" element={<Support />} />
           <Route path="/login" element={<LoginPage />} />
-          {/* UG students applying for the URF make their own account. */}
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/google/callback" element={<GoogleCallback />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -203,9 +202,7 @@ const AppContent = () => {
           {role !== 'clerk' && (
             <Route path="/faculty" element={<FacultyPage />} />
           )}
-          {/* The URF list and one project: an admin reads every project, a
-              mentor the ones they are on, an ADORDC and the DORDC what is
-              waiting on them. The server decides which, so the routes only
+          {/* The server decides what each of them reads, so the routes only
               have to be reachable. */}
           {['admin', 'faculty', 'hod', 'phd_coordinator', 'adordc', 'dordc', 'dra', 'director'].includes(role) && (
             <>

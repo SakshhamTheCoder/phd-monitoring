@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Loader from '../../components/loader/loader';
-import { apiUrfBranches, apiUrfResendVerification, apiUrfSignup } from '../../api/urf';
+import { apiUrfResendVerification, apiUrfSignup } from '../../api/urf';
+import { useBranches } from '../../hooks/useBranches';
 import { CLOUDFLARE_SITE_KEY, rootURL } from '../../api/urls';
 
 const YEARS = [
@@ -15,26 +16,21 @@ const YEARS = [
 
 const SignupPage = () => {
   const { register, handleSubmit, reset } = useForm();
-  const [branches, setBranches] = useState([]);
+  const branches = useBranches();
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [captchaToken, setCaptchaToken] = useState(null);
   const [sentTo, setSentTo] = useState(null);
-  // Set once Google has vouched for an address: the form then knows who this
-  // is, so it asks only for what Google cannot tell it.
+  // Set once Google has vouched for an address.
   const [google, setGoogle] = useState(null);
 
   useEffect(() => {
-    apiUrfBranches().then((res) => res.success && setBranches(res.response));
-
-    // Where the callback lands when it could not reach an opener.
     const params = new URLSearchParams(window.location.search);
     if (params.get('ticket')) {
       setGoogle({ ticket: params.get('ticket'), email: params.get('email'), name: params.get('name') });
     }
   }, []);
 
-  // Google gives a display name, which the two name fields start from.
   useEffect(() => {
     if (!google) return;
     const [first, ...rest] = String(google.name || '').trim().split(' ');
@@ -74,7 +70,6 @@ const SignupPage = () => {
     window.addEventListener('message', listener);
   };
 
-  // The same widget the login page mounts, while the form is on screen.
   useEffect(() => {
     if (sentTo || google) return undefined;
     let widgetId = null;
@@ -108,7 +103,6 @@ const SignupPage = () => {
     setLoading(false);
 
     if (result.success) {
-      // Google already proved the address, so that account can sign in at once.
       if (result.response?.verified) {
         toast.success(result.response.message);
         window.location.href = '/login';
@@ -118,7 +112,7 @@ const SignupPage = () => {
       return;
     }
 
-    // A 422 names the field it refused, so each message sits under its input.
+    // A 422 names the field, so each message sits under its own input.
     const refused = result.response?.errors;
     if (refused) {
       setErrors(Object.fromEntries(Object.entries(refused).map(([key, messages]) => [key, messages[0]])));
@@ -130,8 +124,7 @@ const SignupPage = () => {
     if (window.turnstile && !google) window.turnstile.reset();
   };
 
-  // Grouped so BE Computer Engineering and BTech Computer Engineering are not
-  // two identical lines in one long list.
+  // Grouped, or the two Computer Engineering branches read as duplicates.
   const byProgramme = branches.reduce((groups, branch) => {
     (groups[branch.programme] = groups[branch.programme] || []).push(branch);
     return groups;

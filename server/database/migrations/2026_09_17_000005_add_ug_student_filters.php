@@ -3,10 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
-/**
- * The filters the UG students list offers. Its own page, so the keys it
- * accepts are its own: a filter on any other column is refused.
- */
+/** Its own page, so a filter on any other column is refused. */
 return new class extends Migration
 {
     private const FILTERS = [

@@ -6,17 +6,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * The branches an undergraduate can be on.
- *
- * A branch is not a department: Computer Engineering and Computer Science and
- * Business Systems are both taught by one department, and each programme (BE,
- * BTech and the rest) carries its own list. The URF application asked for a
- * department because nothing better existed, which is why a branch now has a
- * table of its own and the application points at it.
- *
- * Existing applications keep their year and their student, but not a branch:
- * the department they named cannot be turned into one of these. The admin
- * fills the list in, and applications made after that carry a branch.
+ * A branch is not a department: several branches are taught by one, and each
+ * programme has its own list. Existing applications lose their department,
+ * since it cannot be turned into a branch.
  */
 return new class extends Migration
 {
@@ -24,7 +16,6 @@ return new class extends Migration
     {
         Schema::create('ug_branches', function (Blueprint $table) {
             $table->increments('id');
-            // The degree the branch belongs to: BE, BTech, and whatever follows.
             $table->string('programme', 20)->index();
             $table->string('code', 20);
             $table->string('name');

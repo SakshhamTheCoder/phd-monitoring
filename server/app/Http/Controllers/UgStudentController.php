@@ -17,21 +17,16 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 /**
- * UG students: the office's list of them, and a student's own details.
+ * UG students: the office's list, and a student's own details.
  *
- * A student corrects their own only until they apply. From the first
- * application the details are part of a record the admin is reading, so a
- * change goes through the office, which can edit them at any time.
+ * A student corrects their own only until they apply; after that it goes
+ * through the office, which can edit them at any time.
  */
 class UgStudentController extends Controller
 {
     use FilterLogicTrait;
 
-    /**
-     * Everyone who has signed up, whether or not they have applied. The URF
-     * tab lists projects, which answers a different question: this one says
-     * who is here.
-     */
+    /** Everyone who signed up, applied or not. The URF tab lists projects instead. */
     public function list(Request $request)
     {
         $user = Auth::user();
@@ -46,7 +41,6 @@ class UgStudentController extends Controller
         }
         $page = $query->paginate($request->input('rows', 50), ['*'], 'page', $request->input('page', 1));
 
-        // One query for the whole page rather than one per row.
         $applied = UrfApplication::query()
             ->whereIn('user_id', $page->getCollection()->pluck('user_id'))
             ->orWhereIn('student2_email', $page->getCollection()->pluck('user.email')->filter())
@@ -87,11 +81,7 @@ class UgStudentController extends Controller
         return response()->json($this->getAvailableFilters('ug_students'));
     }
 
-    /**
-     * The office creating an account for a student who cannot sign up: an
-     * address carrying no programme, or a student who should not wait. The
-     * account has no password until they choose one from the email it sends.
-     */
+    /** For a student who cannot sign up: an address carrying no programme, say. */
     public function store(Request $request)
     {
         $user = Auth::user();
@@ -100,37 +90,21 @@ class UgStudentController extends Controller
         }
 
         $data = $request->validate($this->rules());
-        $role = Role::where('role', 'ug_student')->firstOrFail();
 
-        $created = DB::transaction(function () use ($data, $role) {
-            $account = new User();
-            $account->first_name = $data['first_name'];
-            $account->last_name = $data['last_name'] ?? '';
-            $account->email = $data['email'];
-            $account->phone = $data['phone'] ?? null;
-            $account->gender = $data['gender'] ?? null;
-            $account->password = Hash::make(Str::random(40));
-            // Nobody chose it, so Set Password asks for no current one. The
-            // office vouched for the address by typing it in.
-            $account->password_set_at = null;
-            $account->email_verified_at = now();
-            $account->role_id = $role->id;
-            $account->current_role_id = $role->id;
-            $account->default_role_id = $role->id;
-            $account->save();
-
+        // Verified because the office typed the address in, and passwordless,
+        // so the link below is how they get in.
+        $created = DB::transaction(function () use ($data) {
+            $account = UgStudent::registerAccount($data, null, true);
             $account->ugStudent()->create($this->record($data));
 
             return $account;
         });
 
-        // How they get in: the same link Manage Users sends.
         Password::sendResetLink(['email' => $created->email]);
 
         return response()->json($created->load('ugStudent.branch'), 201);
     }
 
-    /** The office correcting a UG student, at any time. */
     public function update(Request $request, $userId)
     {
         $user = Auth::user();
@@ -157,9 +131,8 @@ class UgStudentController extends Controller
     }
 
     /**
-     * A year's intake at once. A row is matched on its email, so importing a
-     * corrected file updates rather than duplicates, and a bad row is named by
-     * its line instead of stopping the ones around it.
+     * A year's intake at once. Rows are matched on email, so a corrected file
+     * updates rather than duplicates, and a bad row is named by its line.
      */
     public function bulkImport(Request $request)
     {
@@ -212,31 +185,23 @@ class UgStudentController extends Controller
 
             $existed = (bool) $account;
             $parts = preg_split('/\s+/', $name, 2);
+            $details = [
+                'first_name' => $parts[0],
+                'last_name' => $parts[1] ?? '',
+                'email' => $email,
+                'phone' => trim((string) ($row['phone'] ?? '')) ?: null,
+                'gender' => trim((string) ($row['gender'] ?? '')) ?: null,
+            ];
 
-            DB::transaction(function () use ($row, $email, $rollNo, $parts, $branch, $role, $account, $year) {
-                $account = $account ?: new User();
-                $account->first_name = $parts[0];
-                $account->last_name = $parts[1] ?? '';
-                $account->email = $email;
-                $account->phone = trim((string) ($row['phone'] ?? '')) ?: $account->phone;
-                $account->gender = trim((string) ($row['gender'] ?? '')) ?: $account->gender;
-
-                if (!$account->exists) {
-                    $account->password = Hash::make(Str::random(40));
-                    $account->password_set_at = null;
-                    $account->email_verified_at = now();
-                    $account->role_id = $role->id;
-                    $account->current_role_id = $role->id;
-                    $account->default_role_id = $role->id;
+            DB::transaction(function () use ($details, $rollNo, $branch, $account, $year) {
+                if ($account) {
+                    $account->fill(array_filter($details))->save();
+                } else {
+                    $account = UgStudent::registerAccount($details, null, true);
                 }
-                $account->save();
 
                 $record = $account->ugStudent ?: $account->ugStudent()->make();
-                $record->fill([
-                    'roll_no' => $rollNo,
-                    'branch_id' => $branch->id,
-                    'year' => $year,
-                ]);
+                $record->fill(['roll_no' => $rollNo, 'branch_id' => $branch->id, 'year' => $year]);
                 $account->ugStudent()->save($record);
             });
 
@@ -244,7 +209,6 @@ class UgStudentController extends Controller
                 $updated++;
             } else {
                 $added++;
-                // Their way in, since the account was made without a password.
                 Password::sendResetLink(['email' => $email]);
             }
         }
@@ -285,7 +249,6 @@ class UgStudentController extends Controller
         return response()->json($record->fresh()->load('branch:id,programme,code,name'));
     }
 
-    /** The fields both the create and the edit form send. */
     private function rules(?User $account = null): array
     {
         return [

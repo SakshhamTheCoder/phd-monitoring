@@ -25,7 +25,6 @@ import './UrfList.css';
 
 /** Admin → URF: every application, by stage, with the filters the students page has. */
 // The URF forms, as cards like the PhD forms page. Each opens its own list.
-// The four forms, as a reader would say them rather than as a path spells them.
 const FORM_NAMES = {
   'urf-application': 'Application',
   'urf-additional-info': 'Additional Information',
@@ -70,8 +69,7 @@ const UrfList = () => {
   const navigate = useNavigate();
   const [filter, setFilter] = useState({ conditions: [] });
   const can = useCapabilities();
-  // What is waiting on whoever is reading: a mentor's projects, an ADORDC's
-  // department, the DORDC's desk. The office has the stage column instead.
+  // What is waiting on whoever is reading. The office has the stage column.
   const [queue, setQueue] = useState([]);
   const [tab, setTab] = useState(URF_STATUSES[0]);
   const [open, setOpen] = useState(null);
@@ -197,8 +195,6 @@ const UrfList = () => {
           <CustomButton text={open ? 'Close Applications' : 'Open Applications'} onClick={toggleApplications} />
         )}
       />
-      {/* The forms grid reads every submission of a form, which is the office's
-          view of the module rather than a mentor's. */}
       {can('can_manage_urf') && <FormGrid forms={URF_FORMS} />}
 
       {can('can_manage_urf') && (
@@ -216,7 +212,6 @@ const UrfList = () => {
               keys={['session', 'project_title', 'students', 'form', 'waiting_since']}
               titles={['Session', 'Project Title', 'Students', 'Form', 'Waiting Since']}
               components={[{
-                // The title opens the project, which is where it is read.
                 key: 'project_title',
                 component: ({ row, data }) => (
                   <button type="button" className="urf-link-cell" onClick={() => navigate(`/urf/${row.application_id}`)}>

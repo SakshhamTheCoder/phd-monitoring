@@ -5,13 +5,8 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Which department a branch is taught by.
- *
- * A URF form is approved by the student's mentor, then their ADORDC, then the
- * DORDC. An ADORDC holds departments, so the form has to name one, and a branch
- * is what a UG student gives. Nullable, because the list can be filled in
- * before the departments are matched up, and a branch with none sits with every
- * ADORDC rather than with none of them.
+ * An ADORDC holds departments, so a form has to name one, and a branch is what
+ * a UG student gives. A branch with none sits with every ADORDC.
  */
 return new class extends Migration
 {

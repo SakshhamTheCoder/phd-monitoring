@@ -11,7 +11,8 @@ import CustomModal from '../forms/modal/CustomModal';
 import ShowPublications from '../publications/ShowPublications';
 import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
-import { apiUrfApply, apiUrfBranches, apiUrfFellow, apiUrfReport } from '../../api/urf';
+import { apiUrfApply, apiUrfFellow, apiUrfReport } from '../../api/urf';
+import useBranches from '../../hooks/useBranches';
 import { Section, facultyName, yearLabel, REPORT_TYPES } from './UrfRecord';
 import './UrfForms.css';
 
@@ -32,18 +33,6 @@ const useBody = (initial) => {
   const [body, setBody] = useState(initial);
   const set = (key) => (value) => setBody((prev) => ({ ...prev, [key]: value }));
   return [body, set];
-};
-
-// The branches the institute teaches, named with their programme so the two
-// Computer Science branches of different degrees are told apart.
-const useBranches = () => {
-  const [branches, setBranches] = useState([]);
-  useEffect(() => {
-    apiUrfBranches().then((res) => res.success && setBranches(
-      res.response.map((branch) => ({ title: `${branch.programme} ${branch.name}`, value: branch.id })),
-    ));
-  }, []);
-  return branches;
 };
 
 const Submit = ({ text, onClick }) => {

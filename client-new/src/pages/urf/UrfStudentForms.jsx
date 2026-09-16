@@ -32,17 +32,10 @@ const useUrf = () => {
 const canApply = ({ applications_open: open, session, applications }) =>
   open && !applications.some((a) => a.session === session && a.status !== 'rejected');
 
-// The round a report belongs to, if the office has opened one.
 const windowFor = (windows, application, type) => (windows || [])
   .find((w) => w.type === type && Number(w.session) === Number(application.session));
 
-/**
- * The forms a project offers right now.
- *
- * The application is always there. The rest wait on selection, and a report
- * waits on its round being open as well, the way progress monitoring waits on
- * a scheduled semester.
- */
+/** The rest wait on selection, and a report on its round being open as well. */
 const formsFor = (application, windows) => {
   const base = `/forms/urf/${application.id}`;
   const report = (type, path) => {
@@ -68,7 +61,6 @@ const formsFor = (application, windows) => {
   ];
 };
 
-/** What a fellow is waiting for, when there is no report to file yet. */
 const RoundNotice = ({ application, windows }) => {
   if (application.status !== 'selected') return null;
 
@@ -120,8 +112,6 @@ export const UrfFormsPage = () => {
             <h3>URF {application.session} · {application.project_title}</h3>
             <StatusText status={application.status} />
           </div>
-          {/* Where the application has reached, and what anyone who sent it
-              back asked for. */}
           <UrfApprovalTrail form={application} />
           <RoundNotice application={application} windows={state.report_windows} />
           <FormGrid forms={formsFor(application, state.report_windows)} title={null} />
@@ -184,8 +174,7 @@ export const UrfFormPage = ({ type }) => {
     } else if (round?.is_open) {
       body = <><ReportForm application={application} type={type} onSaved={load} />{submitted}</>;
     } else {
-      // The round decides when this is filed, so say which it is rather than
-      // offering a form the server would refuse.
+      // Say which round it is rather than offer a form the server would refuse.
       body = (
         <>
           <p>

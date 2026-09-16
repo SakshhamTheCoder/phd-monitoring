@@ -16,23 +16,16 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
 /**
- * Sign-up for undergraduates applying to the Undergraduate Research Fellowship.
- *
- * This is the only way an account is created from outside: PhD scholars, staff
- * and faculty are still created by an admin. The account is useless until the
- * address is confirmed, which is what keeps the roll number honest, and it can
- * do nothing beyond the URF pages its role allows.
+ * Sign-up for undergraduates applying to the URF, the only account made from
+ * outside. It is useless until the address is confirmed.
  */
 class UgSignupController extends Controller
 {
-    /** How long a confirmation link stays good for. */
     private const LINK_DAYS = 3;
 
     /**
-     * A ticket saying Google vouched for this address, handed to the sign-up
-     * page and handed back with the rest of the form. Encrypted with the app
-     * key, so it cannot be written by hand into the page's URL, and short
-     * lived, so it is no use later.
+     * A ticket saying Google vouched for this address. Encrypted with the app
+     * key, so it cannot be written by hand into the page's URL.
      */
     public static function issueGoogleTicket(string $email, ?string $name): string
     {
@@ -43,7 +36,6 @@ class UgSignupController extends Controller
         ]));
     }
 
-    /** The address a ticket vouches for, or null if it is forged or stale. */
     private function readGoogleTicket(?string $ticket): ?string
     {
         if (!$ticket) {
@@ -61,8 +53,6 @@ class UgSignupController extends Controller
 
     public function signup(Request $request)
     {
-        // Google has already asked who this is, so that sign-up needs no
-        // captcha, no password and no confirmation email.
         $vouchedFor = $this->readGoogleTicket($request->google_ticket);
         if ($request->google_ticket && !$vouchedFor) {
             return response()->json(['error' => 'That Google sign-in has expired. Try again.'], 422);
@@ -79,7 +69,6 @@ class UgSignupController extends Controller
         $data = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            // An undergraduate's institute address, which is who this is for.
             'email' => ['required', 'email', 'max:255', 'unique:users,email', function ($attribute, $value, $fail) {
                 if (!UgStudent::eligibleEmail($value)) {
                     $fail('Use your institute address, the one carrying your programme and year, like name_be23@thapar.edu.');
@@ -93,26 +82,10 @@ class UgSignupController extends Controller
             'year' => 'required|integer|between:1,4',
         ]);
 
-        $role = Role::where('role', 'ug_student')->firstOrFail();
-
-        $user = DB::transaction(function () use ($data, $role, $vouchedFor) {
-            $user = new User();
-            $user->first_name = $data['first_name'];
-            $user->last_name = $data['last_name'];
-            $user->email = $data['email'];
-            $user->phone = $data['phone'];
-            $user->gender = $data['gender'];
-            // A Google sign-up sets no password: that account signs in the way
-            // it was made, and Forgot Password can still give it one.
-            $user->password = Hash::make($data['password'] ?? Str::random(40));
-            // A Google sign-up chose no password, so Change Password lets them
-            // set one without asking for a current one they never had.
-            $user->password_set_at = $vouchedFor ? null : now();
-            $user->email_verified_at = $vouchedFor ? now() : null;
-            $user->role_id = $role->id;
-            $user->current_role_id = $role->id;
-            $user->default_role_id = $role->id;
-            $user->save();
+        // A Google sign-up chose no password and needs no confirmation: Google
+        // already answered for the address.
+        $user = DB::transaction(function () use ($data, $vouchedFor) {
+            $user = UgStudent::registerAccount($data, $vouchedFor ? null : $data['password'], (bool) $vouchedFor);
 
             $user->ugStudent()->create([
                 'roll_no' => $data['roll_no'],
@@ -138,11 +111,7 @@ class UgSignupController extends Controller
         ], 201);
     }
 
-    /**
-     * The link from the email. Signed by Laravel, so the address is proven
-     * without a token column of its own, and the student lands on the login
-     * page rather than on a bare JSON response.
-     */
+    /** Signed by Laravel, so the address is proven without a token column. */
     public function verify(Request $request, $id)
     {
         $login = rtrim(config('app.frontend_url'), '/') . '/login';
@@ -159,10 +128,7 @@ class UgSignupController extends Controller
         return redirect($login . '?verified=1');
     }
 
-    /**
-     * Another copy of the link. The answer never says whether the address is
-     * one we hold, so this cannot be used to find out who has an account.
-     */
+    /** The answer never says whether we hold the address, so it cannot be fished. */
     public function resend(Request $request)
     {
         $data = $request->validate(['email' => 'required|email']);
@@ -191,8 +157,7 @@ class UgSignupController extends Controller
                 $message->to($user->email)->subject('Confirm your email - PhD Portal');
             });
         } catch (\Exception $e) {
-            // The account is saved either way. The student can ask for the link
-            // again rather than lose what they just filled in.
+            // The account is saved either way; they can ask for the link again.
             Log::error('UG sign-up verification email failed: ' . $e->getMessage());
         }
     }

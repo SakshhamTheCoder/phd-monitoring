@@ -11,7 +11,6 @@ class UrfApplication extends Model
 
     protected $casts = ['history' => 'array'];
 
-    /** The application a step is about is this one. */
     public function approvalApplication()
     {
         return $this;
@@ -77,10 +76,7 @@ class UrfApplication extends Model
         return static::forMember($user)->latest('id')->first();
     }
 
-    /**
-     * Projects a faculty member mentors, either of the two places a mentor is
-     * named. Grouped for the same reason as scopeForMember.
-     */
+    /** Grouped for the same reason as scopeForMember. */
     public function scopeMentoredBy($query, ?int $facultyCode)
     {
         return $query->where(fn ($q) => $q

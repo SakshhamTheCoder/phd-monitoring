@@ -19,13 +19,11 @@ const STEPS = ['student', 'mentor', 'adordc', 'dordc'];
 
 const ROLE_LABELS = { mentor: 'Faculty Mentor', adordc: 'ADORDC', dordc: 'DORDC' };
 
-/** Where a form has reached, written as a line anyone can read. */
 export const stageLine = (form) => (form?.stage === 'complete'
   ? 'Approved by the mentor, the ADORDC and the DORDC.'
   : `Waiting on ${STEP_NAMES[form?.stage] || 'the student'}.`);
 
-// The radio field answers with { approval, rejected }; the chain reads those
-// three combinations as its three decisions.
+// The radio field answers with { approval, rejected }.
 const decisionFrom = ({ approval, rejected }) => {
   if (rejected) return 'reject';
   return approval ? 'approve' : 'send_back';
@@ -38,14 +36,8 @@ const SENT = {
 };
 
 /**
- * Reading a URF form and answering it, on the same recommendation field the
- * PhD forms use.
- *
- * Recommend passes it to the next reader. Not recommended sends it back to the
- * student to correct, and the reading starts again from the mentor. Rejected
- * ends the project, which is the DORDC's alone, so the third radio is offered
- * to nobody else. Either of the last two has to say why, since the student
- * reads it.
+ * Answering a URF form. Rejected ends the project and is the DORDC's alone, so
+ * the third radio is offered to nobody else.
  */
 const UrfApproval = ({ form, formKey, onDecided }) => {
   const [answer, setAnswer] = useState(null);
@@ -109,7 +101,6 @@ const UrfApproval = ({ form, formKey, onDecided }) => {
   );
 };
 
-/** What each reader said, in the order they said it. */
 export const UrfApprovalTrail = ({ form }) => {
   const said = STEPS.filter((step) => form?.[`${step}_comments`]);
   if (!form || (!said.length && !form.stage)) return null;

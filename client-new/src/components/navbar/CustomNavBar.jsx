@@ -14,9 +14,7 @@ export const buttonConfig = [
     { path: '/forms', icon: <i class="fa fa-file-text" aria-hidden="true"></i>, text: 'Forms', roles: ['student', 'ug_student', 'hod', 'phd_coordinator', 'faculty', 'dordc', 'adordc', 'dra', 'director', 'doctoral', 'external', 'admin'] },
     { path: '/presentation', icon: <i class="fa fa-tasks" aria-hidden="true"></i>, text: 'Progress Monitoring', roles: ['student', 'hod', 'phd_coordinator', 'faculty', 'dordc', 'adordc', 'dra', 'director', 'doctoral', 'admin'] },
     { path: '/publications', icon: <i class="fa fa-book" aria-hidden="true"></i>, text: 'Publications', roles: ['student', 'ug_student'] },
-    // Mentors reach it too, but only while they mentor something: the server
-    // answers can_read_urf_mentees false for a faculty member who mentors
-    // nothing, so the item stays off their nav.
+    // Mentors reach it too, but only while they mentor something.
     { path: '/urf', icon: <i class="fa fa-flask" aria-hidden="true"></i>, text: 'URF', roles: ['admin', 'faculty', 'hod', 'phd_coordinator', 'adordc', 'dordc', 'dra', 'director'], capability: 'can_read_urf_mentees' },
     { path: '/openings', icon: <i class="fa fa-bullhorn" aria-hidden="true"></i>, text: 'Openings', roles: ['student'], feature: 'job_openings' },
     { path: '/courses', icon: <i class="fa fa-graduation-cap" aria-hidden="true"></i>, text: 'Courses', roles: ['student', 'hod', 'phd_coordinator', 'admin'] },
@@ -41,8 +39,7 @@ const CustomNavBar = () => {
     const userRole = localStorage.getItem('userRole');
     const features = useFeatures();
     const can = useCapabilities();
-    // A `capability` on an item is for a page a role may reach only sometimes:
-    // the answer depends on the account, not the role, so the server decides.
+    // `capability` is for a page a role may reach only sometimes; the server decides.
     const visibleButtons = buttonConfig.filter(
         button => button.roles.includes(userRole)
             && (!button.feature || features[button.feature])

@@ -3,9 +3,7 @@
 use App\Http\Controllers\UgBranchController;
 use Illuminate\Support\Facades\Route;
 
-// The branch list, as the admin manages it. Reading the list for a dropdown is
-// public and lives at /urf/branches, since sign-up needs it before there is an
-// account.
+// Managing the list. Reading it is public at /urf/branches, for sign-up.
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/', [UgBranchController::class, 'index']);
     Route::post('/', [UgBranchController::class, 'store']);

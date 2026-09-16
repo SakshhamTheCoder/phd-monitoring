@@ -6,11 +6,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Year of study is the answer people actually give, so it is the one that is
- * kept. Deriving it from a year of admission meant storing a second fact to
- * infer the first, and left two places for the same answer to disagree.
- *
- * Anyone whose year was being counted keeps the year that count produced.
+ * Year of study is the answer people give, so it is the one kept. Deriving it
+ * from a year of admission left two places for the same answer to disagree.
  */
 return new class extends Migration
 {

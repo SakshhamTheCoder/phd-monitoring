@@ -72,8 +72,7 @@ Route::post('/login', function (Request $request) {
         $ret['phone'] = $user->phone;
         $ret['gender'] = $user->gender;
         $ret['role']['role'] = $user->current_role->role;
-        // False for an account made through Google sign-up, which has a random
-        // password nobody chose. Change Password reads it.
+        // False for a Google sign-up, which has a password nobody chose.
         $ret['password_set'] = $user->password_set_at !== null;
         $token = $user->createToken('auth_token', ['server:access'], now()->addDays(10))->plainTextToken;
         return response()->json([
@@ -127,12 +126,8 @@ Route::post('/forgot-password', function (Request $request) {
 });
 
 /**
- * The signed-in user changing their own password.
- *
- * Asks for the current one, except where there is no current one to give: an
- * account made through Google sign-up holds a random password nobody was told,
- * and until the holder chooses one there is nothing to check against. Being
- * signed in is the proof in that case.
+ * Asks for the current password, except where there is none to give: a Google
+ * sign-up holds one nobody was told, and being signed in is the proof.
  */
 Route::post('/change-password', function (Request $request) {
     /** @var \App\Models\User $user */
@@ -143,8 +138,8 @@ Route::post('/change-password', function (Request $request) {
         'password' => ['required', 'min:8', 'confirmed'],
     ]);
 
-    // Checked here rather than with the current_password rule, which reads the
-    // default guard while this request is authenticated by a token.
+    // Not the current_password rule: it reads the default guard, and this
+    // request is authenticated by a token.
     if ($chosenBefore && !Hash::check((string) $request->current_password, $user->password)) {
         throw ValidationException::withMessages([
             'current_password' => 'That is not your current password.',
@@ -163,8 +158,7 @@ Route::post('/change-password', function (Request $request) {
         'first_activation' => $user->first_activation ?? now(),
     ])->save();
 
-    // Every other session keeps a token of its own, so signing out elsewhere is
-    // what makes a changed password mean anything.
+    // Signing out elsewhere is what makes a changed password mean anything.
     $user->tokens()->where('id', '!=', optional($user->currentAccessToken())->id)->delete();
 
     return response()->json(['message' => 'Your password is changed.']);
@@ -226,9 +220,8 @@ Route::get('/my-roles', function () {
         ->map(fn ($value) => $value === 'true')
         ->all();
 
-    // Mentoring is a fact about this person, not about the role, so the
-    // capability is true only while they actually mentor something. That keeps
-    // the URF nav item off the screen of every faculty member who does not.
+    // Mentoring is a fact about the person, not the role: true only while they
+    // mentor something, so the nav item stays off everyone else's screen.
     $capabilities['can_read_urf_mentees'] = !empty($capabilities['can_manage_urf'])
         || (!empty($capabilities['can_read_urf_mentees'])
             && \App\Models\UrfApplication::mentoredBy($user->faculty?->faculty_code)->exists());

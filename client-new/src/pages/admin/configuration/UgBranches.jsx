@@ -16,10 +16,8 @@ BE,ECE,Electronics and Communication Engineering,ECED
 BTech,CSE,Computer Science and Engineering,CSED`;
 
 /**
- * The branches a UG student can be on, offered on sign-up and on the URF
- * application. A branch belongs to a programme (BE, BTech), and several
- * branches can be taught by one department, which is why this is its own list
- * rather than the departments page.
+ * The branches a UG student can be on. Several can be taught by one
+ * department, which is why this is not the departments page.
  */
 const UgBranches = () => {
   const [branches, setBranches] = useState([]);
@@ -41,7 +39,6 @@ const UgBranches = () => {
       programme: form.programme.trim(),
       code: form.code.trim(),
       name: form.name.trim(),
-      // Which ADORDC reads this branch's URF forms.
       department_id: form.department_id || null,
     };
     if (!body.programme || !body.code || !body.name) {

@@ -123,11 +123,7 @@ class UserManagementController extends Controller
         ]);
     }
 
-    /**
-     * The URF details behind a ug_student account: roll number, branch and the
-     * year they were admitted. Written only when the form sends them, so
-     * saving any other kind of user leaves the record alone.
-     */
+    /** Written only when the form sends them, so other users are untouched. */
     private function saveUgStudentRecord(User $user, Request $request): void
     {
         if (!$request->hasAny(['roll_no', 'branch_id', 'year'])) {
@@ -172,9 +168,7 @@ class UserManagementController extends Controller
             // name matching no roles row, an unswitchable, invisible dead role.
             'available_roles.*' => 'string|exists:roles,role',
             'status' => 'nullable|in:active,inactive',
-            // A UG student on the URF carries a record of their own, which the
-            // office can correct at any time. A student corrects it themselves
-            // only until they apply.
+            // The UG student record, which the office may correct at any time.
             'roll_no' => 'nullable|string|max:50',
             'branch_id' => 'nullable|exists:ug_branches,id',
             'year' => 'nullable|integer|between:1,4',

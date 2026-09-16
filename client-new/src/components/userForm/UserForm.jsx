@@ -7,7 +7,7 @@ import InputField from '../forms/fields/InputField';
 import DropdownField from '../forms/fields/DropdownField';
 import GridContainer from '../forms/fields/GridContainer';
 import ToggleSwitch from '../forms/fields/ToggleSwitch';
-import { apiUrfBranches } from '../../api/urf';
+import useBranches from '../../hooks/useBranches';
 import './UserForm.css';
 
 const UserForm = ({ edit, userData, onClose }) => {
@@ -33,13 +33,10 @@ const UserForm = ({ edit, userData, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [rolesLoaded, setRolesLoaded] = useState(false);
   // The URF details behind a ug_student account, which only that role has.
-  const [branches, setBranches] = useState([]);
+  const branches = useBranches();
 
   useEffect(() => {
     fetchRoles();
-    apiUrfBranches().then((res) => res.success && setBranches(
-      res.response.map((branch) => ({ title: `${branch.programme} ${branch.name}`, value: branch.id })),
-    ));
   }, []);
 
   useEffect(() => {

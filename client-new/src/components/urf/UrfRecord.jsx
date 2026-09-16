@@ -136,7 +136,6 @@ const UrfRecord = ({ record, actions = null, onDecided = () => {} }) => {
         {actions && <div className="profile-actions">{actions}</div>}
       </div>
 
-      {/* The application itself, read in turn like every other URF form. */}
       <UrfApproval
         form={record}
         formKey="urf-application"

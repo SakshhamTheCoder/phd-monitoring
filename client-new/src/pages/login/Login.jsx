@@ -12,8 +12,7 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [captchaToken, setCaptchaToken] = useState(null);
   const [showEmailForm, setShowEmailForm] = useState(false);
-  // Set when the account exists but its email is still unconfirmed, so the
-  // student is offered the link again instead of being told to try harder.
+  // Set when the account exists but its email is unconfirmed.
   const [unverifiedEmail, setUnverifiedEmail] = useState(null);
   const { register, handleSubmit } = useForm();
 
@@ -24,7 +23,6 @@ const LoginPage = () => {
       window.location.href = "/home";
     }
 
-    // Where a confirmation link lands.
     const verified = new URLSearchParams(window.location.search).get("verified");
     if (verified === "1") {
       toast.success("Email confirmed. Sign in to apply.");
@@ -319,7 +317,6 @@ const LoginPage = () => {
             </>
           )}
           
-          {/* Applying for the URF is the one account a user makes themselves. */}
           <p className="tw-text-center tw-text-sm tw-mt-5">
             Applying for the Undergraduate Research Fellowship?{" "}
             <Link to="/signup" className="tw-text-brand hover:tw-underline">

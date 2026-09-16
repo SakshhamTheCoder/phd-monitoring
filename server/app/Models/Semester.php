@@ -29,12 +29,8 @@ class Semester extends Model
     ];
 
     /**
-     * The term we are in now, worked out from the date rather than looked up.
-     *
-     * An academic year runs July to June and is written as the two years it
-     * spans: July 2025 to June 2026 is 2526, odd until December and even from
-     * January. Reading it from the calendar means it is never wrong because
-     * nobody remembered to add a row.
+     * The term we are in, read from the date rather than looked up: an academic
+     * year runs July to June, written as 2526, odd until December.
      */
     public static function currentTerm(?Carbon $now = null): array
     {

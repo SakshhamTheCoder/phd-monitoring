@@ -6,15 +6,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Whether the account holder has ever chosen their own password.
- *
- * Signing up with Google sets a random one nobody knows, and an admin creating
- * an account generates one and reads it out. Changing a password asks for the
- * current one, which neither of those people can give, so this says when a
- * password was last chosen and is null when it never was.
- *
- * Every account that exists today has a password someone was told, so they are
- * all marked as chosen.
+ * Null when nobody ever chose the password: a Google sign-up holds a random
+ * one. Change Password reads this to know whether to ask for the current one.
  */
 return new class extends Migration
 {

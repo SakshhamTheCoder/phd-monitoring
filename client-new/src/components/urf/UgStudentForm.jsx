@@ -4,28 +4,18 @@ import GridContainer from '../forms/fields/GridContainer';
 import InputField from '../forms/fields/InputField';
 import DropdownField from '../forms/fields/DropdownField';
 import CustomButton from '../forms/fields/CustomButton';
-import { apiUgStudentCreate, apiUgStudentUpdate, apiUrfBranches } from '../../api/urf';
+import { apiUgStudentCreate, apiUgStudentUpdate } from '../../api/urf';
+import useBranches from '../../hooks/useBranches';
 import { yearLabel } from './UrfRecord';
 
 const YEARS = [1, 2, 3, 4].map((year) => ({ title: yearLabel(year), value: year }));
 const GENDERS = [{ title: 'Male', value: 'Male' }, { title: 'Female', value: 'Female' }];
 
-/**
- * The office adding or correcting a UG student.
- *
- * A new account is made without a password and sent the link to choose one, the
- * way Manage Users does it.
- */
+/** A new account is made without a password and sent the link to choose one. */
 const UgStudentForm = ({ student, onClose, onSaved }) => {
-  const [branches, setBranches] = useState([]);
+  const branches = useBranches();
   const [body, setBody] = useState({});
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    apiUrfBranches().then((res) => res.success && setBranches(
-      res.response.map((branch) => ({ title: `${branch.programme} ${branch.name}`, value: branch.id })),
-    ));
-  }, []);
 
   useEffect(() => {
     setBody({

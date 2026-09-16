@@ -16,8 +16,7 @@ export const loginAPI = async (email, password, captchaToken) => {
         return { success: true };
     }
     
-    // Return error information. `unverified` marks the one refusal the user can
-    // clear themselves, so the page can offer the link again.
+    // `unverified` is the one refusal the user can clear themselves.
     return { 
         success: false, 
         error: result?.response?.error || result?.response?.message || 'Login failed',

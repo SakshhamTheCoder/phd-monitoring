@@ -45,7 +45,6 @@ const FilterBar = ({ placeholder = 'Search…', mandatory = [], exclude = [], pa
   useEffect(() => {
     // /filters may 404 or answer with an object on a page that defines none.
     // Never store a non-array: the render maps over it.
-    // The page's own path, unless it holds more than one list and says which.
     customFetch(`${baseURL}${path || window.location.pathname}/filters`, 'GET', null, false)
       .then((res) => {
         const raw = res?.response;

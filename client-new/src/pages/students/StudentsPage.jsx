@@ -37,8 +37,7 @@ const StudentsPage = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(null);
-  // PhD scholars have a students record; a UG fellow on the URF has one of
-  // their own, so the two lists are read from different places.
+  // The two lists are read from different places.
   const [tab, setTab] = useState('phd');
   const [ugFilter, setUgFilter] = useState({ conditions: [] });
   const [ugStudent, setUgStudent] = useState(null);

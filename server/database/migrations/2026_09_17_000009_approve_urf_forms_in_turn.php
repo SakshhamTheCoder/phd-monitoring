@@ -6,17 +6,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Every URF form is approved in turn: the student files it, their mentor reads
- * it, then the ADORDC, then the DORDC, and then it is done.
- *
- * The columns follow the PhD forms so the two read alike: `stage` says whose
- * turn it is, an approval and a comment per participant record what they did,
- * and `history` keeps the whole account of it. A rejection sends the form back
- * to the student with the reason, which is why comments are kept per step
- * rather than one field overwritten each time.
- *
- * Forms already filed start with the student's step done and the mentor next,
- * which is where they would be had the chain existed when they were submitted.
+ * Every URF form is read in turn: student, mentor, ADORDC, DORDC. The columns
+ * follow the PhD forms so the two read alike. Forms already filed start at the
+ * mentor, where they would be had the chain existed.
  */
 return new class extends Migration
 {

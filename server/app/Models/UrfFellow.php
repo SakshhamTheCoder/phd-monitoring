@@ -22,7 +22,6 @@ class UrfFellow extends Model
         'account_no' => 'encrypted',
     ];
 
-    /** Every step on this form is about the project it belongs to. */
     public function approvalApplication()
     {
         return $this->application;

@@ -8,10 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
 /**
- * The branch list behind Configuration.
- *
- * Reading it is public and lives on the URF controller, since a student
- * signing up has no account yet. Changing it is an admin's job and lives here.
+ * Changing the branch list. Reading it is public and lives on UrfController,
+ * since a student signing up has no account yet.
  */
 class UgBranchController extends Controller
 {
@@ -38,7 +36,7 @@ class UgBranchController extends Controller
         return response()->json($branch);
     }
 
-    /** A branch students are on stays: deleting it would strand their record. */
+    /** A branch students are on stays, or their record is stranded. */
     public function destroy($id)
     {
         $this->authorizeAdmin();
@@ -56,11 +54,8 @@ class UgBranchController extends Controller
     }
 
     /**
-     * The whole list at once, which is how it arrives the first time.
-     *
-     * A row is matched on its programme and code, so importing the same file
-     * twice renames rather than duplicates, and a bad row is reported by its
-     * line number instead of stopping the ones around it.
+     * The whole list at once. Rows are matched on programme and code, so the
+     * same file twice renames rather than duplicates.
      */
     public function import(Request $request)
     {
@@ -112,7 +107,6 @@ class UgBranchController extends Controller
     private function validated(Request $request, ?UgBranch $branch = null): array
     {
         return $request->validate([
-            // The degree, written as the institute writes it: BE, BTech.
             'programme' => 'required|string|max:20',
             'code' => [
                 'required', 'string', 'max:20',

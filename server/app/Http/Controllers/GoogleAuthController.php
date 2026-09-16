@@ -37,9 +37,7 @@ class GoogleAuthController extends Controller
             $user = User::where('email', $googleUser->getEmail())->first();
 
             if (!$user) {
-                // An undergraduate address with no account yet is someone who
-                // came here to sign up, so they are sent on to the form with
-                // the address Google vouched for rather than turned away.
+                // An undergraduate address with no account came here to sign up.
                 if (UgStudent::eligibleEmail($googleUser->getEmail())) {
                     return redirect(env('FRONTEND_URL', 'https://phdportal.thapar.edu') . '/google/callback?' . http_build_query([
                         'signup' => UgSignupController::issueGoogleTicket($googleUser->getEmail(), $googleUser->getName()),
@@ -105,10 +103,8 @@ class GoogleAuthController extends Controller
     }
 
     /**
-     * Signing in with Google is Google saying it holds this mailbox, which is
-     * exactly what the confirmation link asks a UG student to prove. So the
-     * proof is recorded rather than asked for twice. Google only counts when it
-     * says the address is verified, which a Workspace address always is.
+     * Google holding the mailbox is what the confirmation link asks a student
+     * to prove, so it is recorded rather than asked for twice.
      */
     private function recordGoogleProof(User $user, $emailVerified): void
     {
@@ -155,8 +151,7 @@ class GoogleAuthController extends Controller
             $user = User::where('email', $payload['email'])->first();
 
             if (!$user) {
-                // As above: an undergraduate address with no account is a
-                // sign-up waiting to happen, so the answer carries the ticket.
+                // As above, with the ticket in the answer rather than the URL.
                 if (UgStudent::eligibleEmail($payload['email'])) {
                     return response()->json([
                         'success' => false,

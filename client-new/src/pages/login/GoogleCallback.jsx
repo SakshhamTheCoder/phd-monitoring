@@ -13,8 +13,7 @@ const GoogleCallback = () => {
     const token = urlParams.get('token');
     const userData = urlParams.get('user');
     const availableRoles = urlParams.get('available_roles');
-    // An undergraduate address Google vouched for that has no account yet. The
-    // ticket is what the sign-up form hands back in place of a password.
+    // The ticket the sign-up form hands back in place of a password.
     const signup = urlParams.get('signup');
 
     if (signup) {

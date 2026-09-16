@@ -6,13 +6,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * A URF project names two faculty mentors, and until now only the admin could
- * read one. Mentoring is a fact about a person, not a role, so the capability
- * says what a role may read, "the projects I mentor", and the record decides
- * which projects that means. A faculty member who mentors nothing sees nothing.
- *
- * Granted to every role a faculty account can be acting as, since any of them
- * can be named on an application.
+ * Mentoring is a fact about a person, not a role: the capability says a role
+ * may read the projects it mentors, and the record decides which those are.
+ * Granted to every role a faculty account can act as.
  */
 return new class extends Migration
 {
