@@ -155,6 +155,32 @@ class Student extends Model
             ->with('user'); // Include user details
     }
 
+    /**
+     * Whether this account may read the scholar's profile, and so what hangs off
+     * it. The capability decides whether, the role still decides which scholars,
+     * the same way StudentController::list() chooses who to show.
+     */
+    public function isReadableBy(User $user): bool
+    {
+        if ($user->may('can_read_all_students')) {
+            return true;
+        }
+
+        if ($user->may('can_read_department_students')) {
+            $departments = $user->current_role->role === 'adordc'
+                ? $user->faculty?->adordcDepartments->pluck('id')->all() ?? []
+                : [$user->faculty?->department_id];
+            return in_array($this->department_id, $departments);
+        }
+
+        if ($user->may('can_read_supervised_students') || $user->may('can_read_committee_students')) {
+            $code = $user->faculty?->faculty_code;
+            return $code && ($this->checkSupervises($code) || $this->checkDoctoralCommittee($code));
+        }
+
+        return $user->current_role->role === 'student' && $this->user_id === $user->id;
+    }
+
     public function checkDoctoralCommittee($facultyId)
     {
         return $this->doctoralCommittee->contains('faculty_code', $facultyId);
