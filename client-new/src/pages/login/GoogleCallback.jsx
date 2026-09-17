@@ -54,7 +54,9 @@ const GoogleCallback = () => {
           localStorage.setItem('userRole', user.role.role);
           localStorage.setItem('available_roles', JSON.stringify(roles));
           localStorage.setItem('user', JSON.stringify(user));
-          navigate('/home');
+          // A full load, like every other sign-in, so the providers start again
+          // with the token and ask for this account's capabilities.
+          window.location.href = '/home';
         }
       } catch (error) {
         console.error('Error parsing Google auth response:', error);

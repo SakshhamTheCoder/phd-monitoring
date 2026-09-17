@@ -2,11 +2,10 @@ import React, { useEffect, useState } from 'react'
 import GridContainer from '../forms/fields/GridContainer'
 import DropdownField from '../forms/fields/DropdownField'
 import { useLoading } from '../../context/LoadingContext';
-import { toast } from 'react-toastify';
 import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
 import {getRoleName} from '../../utils/roleName';
-import { clearCapabilities } from '../../hooks/useCapabilities';
+import { clearCapabilities } from '../../context/CapabilitiesContext';
 const SwitchRole = () => {
     const [body, setBody] = useState({});
     const { setLoading } = useLoading();
@@ -42,10 +41,10 @@ const SwitchRole = () => {
                 localStorage.setItem("userRole", data.response.user.role.role);
                 // The new role has its own capabilities; drop the old answer.
                 clearCapabilities();
-                toast.success("Role switched successfully");
-                // Broadcast the change so the header, notifications and any listening
-                // view re-fetch for the newly-active role — no full page reload needed.
-                window.dispatchEvent(new Event("rolechange"));
+                // A full load. The route table, the sidebar, the capabilities and
+                // whatever page was open all belong to the old role; an event only
+                // reached the header, so the rest stayed on the previous role.
+                window.location.href = "/home";
             } else {
                 console.error("No data found or unauthorized access.");
             }

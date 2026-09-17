@@ -24,21 +24,23 @@ const ResetPasswordPage = () => {
  
   const onSubmit = async (data) => {
     setLoading(true);
+    // The email comes from the link. The field showing it is disabled, and a
+    // disabled field is left out of the form's data, so the request went without
+    // one and was refused.
     const response = await customFetch(baseURL + "/reset-password", "POST", {
         token,
-        email: data.email,
+        email,
         password: data.password,
         password_confirmation: data.confirmPassword,
       });
-    
-    if (!response) {
-      toast.error("Something went wrong. Please try again later.");
-    } else {
-      toast.success("Password reset successful!");
-      window.location.href = "/login";
-    }
-  
+
     setLoading(false);
+    // customFetch has already shown the server's reason. This used to report
+    // success for any answer at all, refusals included, and leave for /login.
+    if (!response.success) return;
+
+    toast.success("Password reset. Sign in with the new password.");
+    window.location.href = "/login";
   };
 
   return (
@@ -51,19 +53,22 @@ const ResetPasswordPage = () => {
                className="tw-mx-auto tw-mb-4 tw-w-24"/>
           <h2 className="tw-text-xl tw-font-bold tw-text-center tw-mb-4">Reset Password</h2>
           <form onSubmit={handleSubmit(onSubmit)} className="tw-space-y-4">
-            <input {...register("email")} type="email" placeholder="Email" className="tw-w-full tw-p-2 tw-border tw-rounded tw-bg-gray-100" disabled value={email || ""} />
+            <input {...register("email")} type="email" placeholder="Email" aria-label="Email" className="tw-w-full tw-p-2 tw-border tw-rounded tw-bg-gray-100" disabled value={email || ""} />
             
             <div className="tw-relative">
               <input 
                 {...register("password")} 
                 type={showPassword ? "text" : "password"} 
                 placeholder="New Password" 
+                aria-label="New password"
+
                 className="tw-w-full tw-p-2 tw-border tw-rounded tw-pr-10" 
                 autoComplete="new-password"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
                 className="tw-absolute tw-right-2 tw-top-1/2 tw-transform -tw-translate-y-1/2 tw-text-gray-600 hover:tw-text-gray-800"
               >
                 {showPassword ? (
@@ -79,12 +84,15 @@ const ResetPasswordPage = () => {
                 {...register("confirmPassword")} 
                 type={showConfirmPassword ? "text" : "password"} 
                 placeholder="Confirm Password" 
+                aria-label="Confirm new password"
+
                 className="tw-w-full tw-p-2 tw-border tw-rounded tw-pr-10" 
                 autoComplete="new-password"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                 className="tw-absolute tw-right-2 tw-top-1/2 tw-transform -tw-translate-y-1/2 tw-text-gray-600 hover:tw-text-gray-800"
               >
                 {showConfirmPassword ? (

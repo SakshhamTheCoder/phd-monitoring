@@ -7,6 +7,14 @@ import { CLOUDFLARE_SITE_KEY, rootURL } from "../../api/urls";
 import Loader from "../../components/loader/loader";
 import { toast } from "react-toastify";
 
+// Where to go once signed in: the page that sent the visitor here, or home.
+// Only a path on this site. Anything else ("https://...", "//host") was followed
+// as given, which made the login page an open redirect.
+const afterLogin = () => {
+  const target = new URLSearchParams(window.location.search).get('onLogin') || '';
+  return target.startsWith('/') && !target.startsWith('//') ? target : '/home';
+};
+
 const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -122,12 +130,7 @@ const LoginPage = () => {
         localStorage.setItem('user', JSON.stringify(event.data.user));
         
         // Redirect to appropriate page
-        const onLogin = new URLSearchParams(window.location.search).get("onLogin");
-        if (onLogin) {
-          window.location.href = onLogin;
-        } else {
-          window.location.href = "/home";
-        }
+        window.location.href = afterLogin();
       } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
         clearTimeout(timeout);
         window.removeEventListener('message', messageListener);
@@ -155,14 +158,7 @@ const LoginPage = () => {
     const result = await loginAPI(data.email, data.password, captchaToken);
     
     if (result.success) {
-      const onLogin = new URLSearchParams(window.location.search).get(
-        "onLogin"
-      );
-      if (onLogin) {
-        window.location.href = onLogin;
-      } else {
-        window.location.href = "/home";
-      }
+      window.location.href = afterLogin();
     } else {
       setLoading(false);
       toast.error(result.error || 'Invalid credentials');
