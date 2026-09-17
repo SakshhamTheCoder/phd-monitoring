@@ -84,9 +84,7 @@ const FormTable = ({ filters }) => {
   };
   const handleApproval = () => {
     setLoading(true);
-    console.log("Selected Forms:", selectedForms);
     const selectedIds = Array.from(selectedForms);
-    console.log("Selected IDs:", selectedIds);
     const url = `${baseURL}${location.pathname}/bulk`;
     customFetch(url, "POST", { form_ids: selectedIds })
       .then((data) => {

@@ -1,9 +1,9 @@
 /* Table look comes from styles/ui.css. */
 .form-list-container {
   padding: 20px;
-  border-radius: 8px;
-  background-color: #f8f9fa;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius);
+  background-color: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Form Action Buttons (Top Section) */
@@ -32,7 +32,7 @@
   color: white;
   font-weight: 500;
   border: none;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -78,7 +78,7 @@
   background-color: var(--primary-color);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
 }
 

@@ -2,7 +2,7 @@
     width: 750px;
     display: grid;
     grid-template-columns: 2fr 1fr;
-    gap: 50px;
+    gap: 1.5rem;
     padding: 20px;
 }
 
@@ -15,5 +15,5 @@
 }
 
 .status-box-container h2{
-    font-size: 18px;
+    font-size: var(--text-lg);
 }

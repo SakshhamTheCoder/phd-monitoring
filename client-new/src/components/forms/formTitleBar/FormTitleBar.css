@@ -10,7 +10,7 @@
 
 /* Style for the form title */
 .form-title-bar-t {
-    font-size: 24px;
+    font-size: var(--text-2xl);
     font-weight: bold;
     color: #333;
     margin: 0;
@@ -25,7 +25,7 @@
 
 /* Items on the right side of the title bar */
 .form-title-bar-right-item {
-    font-size: 0.9rem;
+    font-size: var(--text-sm);
     color: #555;
     background-color: #eef1f5;
     padding: 6px 12px;
@@ -35,7 +35,7 @@
 /* Style for the button on the right side */
 .form-title-bar-right-button {
     padding: 6px 12px;
-    font-size: 0.9rem;
+    font-size: var(--text-sm);
     color: #fff;
     background-color: var(--primary-color);
     border: none;

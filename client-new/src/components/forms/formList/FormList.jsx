@@ -23,7 +23,6 @@ const FormList = () => {
         }
       })
       .catch((error) => {
-        console.log(error);
       })
       .finally(() => {
         setLoading(false); 

@@ -36,12 +36,12 @@
 
 .history-timeline-text {
     text-align: left;
-    font-size: 16px;
+    font-size: var(--text-md);
     color: #555; /* Gray text */
 }
 
 .history-timeline-timestamp {
-    font-size: 14px;
+    font-size: var(--text-sm);
     text-align: left;
     color: #777; /* Lighter gray for timestamp */
 }

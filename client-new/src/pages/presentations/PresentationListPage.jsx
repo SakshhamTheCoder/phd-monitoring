@@ -13,14 +13,27 @@ import PagenationTable from "../../components/pagenationTable/PagenationTable";
 import SemesterStatsCard from "./SemsterStatsCard";
 import { set } from "react-hook-form";
 import { useParams } from "react-router-dom";
+import PageHeader from '../../components/pageHeader/PageHeader';
+
+// Admin reads every evaluation but reviews none, so nothing waits on it.
+const REVIEWS_NOTHING = ['admin'];
+// Mirrors PresentationController::bulkSubmit.
+const BULK_APPROVERS = ['hod', 'dordc', 'adordc'];
+// Mirrors SemesterController::notScheduled.
+const READS_NOT_SCHEDULED = ['hod', 'phd_coordinator', 'faculty', 'dordc', 'admin'];
+const ACTION_TAB = 0;
+const NOT_SCHEDULED_TAB = 3;
+// Never had a filter behind it, so it showed whatever the previous tab showed.
+const SEMESTER_OFF_TAB = 4;
+const ALL_TAB = 6;
 
 const PresentationListPage = () => {
   const { semester_id } = useParams();
   const [extraFilter, setExtraFilter] = useState(false);
   const [location, setLocation] = useState(window.location.pathname);
   const [num, setNum] = useState(0);
-  const [presentationTab, setPresentationTab] = useState(0);
   const role = localStorage.getItem("userRole") || "student";
+  const [presentationTab, setPresentationTab] = useState(REVIEWS_NOTHING.includes(role) ? ALL_TAB : ACTION_TAB);
   // const [filters, setFilters] = useState(role==="student"?{}:{
   //   mandatory_filter: [
   //     {
@@ -36,8 +49,7 @@ const PresentationListPage = () => {
 
   const [enableApproval, setEnableApproval] = useState(false);
   const getInitialFilters = () => {
-    const role = localStorage.getItem("userRole") || "student";
-    if (role === "student") {
+    if (role === "student" || REVIEWS_NOTHING.includes(role)) {
       return {};
     } else {
       return {
@@ -66,7 +78,7 @@ const PresentationListPage = () => {
           },
         ],
       });
-      setEnableApproval(true);
+      setEnableApproval(BULK_APPROVERS.includes(role));
     } else if (presentationTab === 1) {
       //new
       setFilters({
@@ -77,6 +89,7 @@ const PresentationListPage = () => {
           },
         ],
       });
+      setEnableApproval(false);
     } else if (presentationTab === 2) {
       //new route
       setFilters({
@@ -116,11 +129,7 @@ const PresentationListPage = () => {
     <Layout
       children={
         <>
-          <div className="page-header">
-            <div>
-              <h1 className="page-title">Progress Monitoring List</h1>
-            </div>
-          </div>
+          <PageHeader title="Progress Monitoring List" />
 
           <SemesterStatsCard semesterName={semester_id} setFilters={setExtraFilter} />
 
@@ -136,7 +145,11 @@ const PresentationListPage = () => {
                 'Semester Off',
                 'Not Submitted',
                 'All Progress Monitoring',
-              ].map((label, i) => ({ value: i, label }))}
+              ]
+                .map((label, i) => ({ value: i, label }))
+                .filter((tab) => tab.value !== SEMESTER_OFF_TAB)
+                .filter((tab) => !(tab.value === ACTION_TAB && REVIEWS_NOTHING.includes(role)))
+                .filter((tab) => !(tab.value === NOT_SCHEDULED_TAB && !READS_NOT_SCHEDULED.includes(role)))}
             />
           )}
           {extraFilter && <FilterBar onSearch={handleSearch} />}

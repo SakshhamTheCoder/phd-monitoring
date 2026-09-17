@@ -22,6 +22,9 @@ import { formatDate } from '../../utils/timeParse';
 
 const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
   const [semesterStats, setSemesterStats] = useState(null);
+  // null stats meant both "still loading" and "there is no semester", so the
+  // card told DoRDC to create the first semester while the real one loaded.
+  const [statsLoaded, setStatsLoaded] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openCreateModal, setOpenCreateModal] = useState(false);
   const [body, setBody] = useState({});
@@ -93,6 +96,8 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
       console.error("Error fetching semester stats:", error);
       // Set empty state when no semesters exist
       setSemesterStats(null);
+    } finally {
+      setStatsLoaded(true);
     }
   };
 
@@ -129,16 +134,17 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
         formData.append('ppt_file', editForm.ppt_file);
       }
 
-      let hello = await customFetch(
+      const result = await customFetch(
         baseURL + "/semester",
         "POST",
         formData,
         true,
         true // isFormData flag
       );
-      if (hello.status === 200) {
-        toast.success("Semester updated successfully!");
-      }
+      // customFetch answers { success, response }; there is no status on it, so
+      // this never said "updated", and the dialog closed on a refusal as well.
+      if (!result.success) return;
+      toast.success("Semester updated.");
 
       setOpenEditModal(false);
       fetchSemesterStats();
@@ -171,13 +177,20 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
         formData.append('ppt_file', createForm.ppt_file);
       }
 
-      await customFetch(baseURL + "/semester", "POST", formData, true, true);
+      const result = await customFetch(baseURL + "/semester", "POST", formData, true, true);
+      // Keep the dialog, and what was typed, when the server refuses.
+      if (!result.success) return;
+      toast.success("Semester created.");
       setOpenCreateModal(false);
       fetchSemesterStats();
     } catch (err) {
       console.error("POST error:", err);
     }
   };
+
+  if (!statsLoaded) {
+    return <div className="semester-card" aria-busy="true"><p className="semester-stats-line">Loading semester…</p></div>;
+  }
 
   if (!semesterStats) {
     // No semesters exist - show create option for admin/dordc
@@ -219,8 +232,8 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
               space={2}
             />
 
-            <label className="input-label">Evaluation Start Date</label>
-            <DatePicker
+            <label className="input-label" htmlFor="semster-stats-card-evaluation-start-date">Evaluation Start Date</label>
+            <DatePicker id="semster-stats-card-evaluation-start-date"
               selected={createForm.start_date}
               onChange={(date) =>
                 setCreateForm({ ...createForm, start_date: date })
@@ -228,8 +241,8 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
               className="input-field"
             />
 
-            <label className="input-label">Evaluation End Date</label>
-            <DatePicker
+            <label className="input-label" htmlFor="semster-stats-card-evaluation-end-date">Evaluation End Date</label>
+            <DatePicker id="semster-stats-card-evaluation-end-date"
               selected={createForm.end_date}
               onChange={(date) =>
                 setCreateForm({ ...createForm, end_date: date })
@@ -319,8 +332,8 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
             space={2}
           />
 
-          <label className="input-label">Evaluation Start Date</label>
-          <DatePicker
+          <label className="input-label" htmlFor="semster-stats-card-evaluation-start-date-2">Evaluation Start Date</label>
+          <DatePicker id="semster-stats-card-evaluation-start-date-2"
             selected={createForm.start_date}
             onChange={(date) =>
               setCreateForm({ ...createForm, start_date: date })
@@ -328,8 +341,8 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
             className="input-field"
           />
 
-          <label className="input-label">Evaluation End Date</label>
-          <DatePicker
+          <label className="input-label" htmlFor="semster-stats-card-evaluation-end-date-2">Evaluation End Date</label>
+          <DatePicker id="semster-stats-card-evaluation-end-date-2"
             selected={createForm.end_date}
             onChange={(date) =>
               setCreateForm({ ...createForm, end_date: date })
@@ -408,57 +421,30 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
               </div>
             </>
           )}
-          {(role === "admin" || role === "dordc") && (
-            <div className="semester-actions">
+          {/* One row for everything this card can do. These were three blocks
+              with their own wrappers, so the buttons came out on separate lines
+              at different widths, and one label wrapped onto two lines. */}
+          <div className="semester-actions">
+            {isInSemester && !semesterName && (
               <CustomButton
-                onClick={() => setFiltersEnabled(prev => !prev)}
+                onClick={() => window.location.href = location + `/semester/${semester_name}`}
+                text="View Current Semester Details"
+              />
+            )}
+            {(isInSemester || isBeforeSemester) && (role === "faculty" || role === "phd_coordinator") && (
+              <CustomButton onClick={openModal} text="Schedule Progress Monitoring" />
+            )}
+            {(isInSemester || isBeforeSemester) && (role === "admin" || role === "dordc") && (
+              <CustomButton text="Edit Evaluation Semester" onClick={() => setOpenEditModal(true)} />
+            )}
+            {(role === "admin" || role === "dordc" || role === "faculty" || role === "phd_coordinator") && (
+              <CustomButton
+                onClick={() => setFiltersEnabled((prev) => !prev)}
                 text={filtersEnabled ? "Disable Advanced Filters" : "Enable Advanced Filters"}
                 variant="secondary"
               />
-              {(isInSemester || isBeforeSemester) && (
-                <CustomButton text="Edit Evaluation Semester" onClick={() => setOpenEditModal(true)} />
-              )}
-            </div>
-          )}
-
-          {/* View Current Semester button - visible to all roles when semester is active */}
-          {isInSemester && !semesterName && (
-            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", width: "100%", marginTop: role === "admin" || role === "dordc" ? "0" : "12px" }}>
-              <div style={{ flex: 1, minWidth: "250px" }}>
-                <CustomButton
-                  onClick={() => window.location.href = location+`/semester/${semester_name}`}
-                  text="View Current Semester Details"
-                  fullWidth
-                />
-              </div>
-            </div>
-          )}
-
-{(isInSemester || isBeforeSemester) && (role === "faculty" || role === "phd_coordinator") && (
-  <div className="form-list-bar">
-
-<div style={{ display: "flex", gap: "12px", flexWrap: "wrap", width: "100%" }}>
-  <div style={{ flex: 1, minWidth: "250px" }}>
-    <CustomButton
-      onClick={() => setFiltersEnabled(prev => !prev)}
-      text={filtersEnabled ? "Disable Advanced Filters" : "Enable Advanced Filters"}
-      fullWidth
-    />
-  </div>
-
-  <div style={{ flex: 1, minWidth: "250px" }}>
-    <CustomButton
-      onClick={openModal}
-      text="Schedule Progress Monitoring +"
-      fullWidth
-    />
-  </div>
-</div>
-
-
-
-    
-    
+            )}
+          </div>
 
     <CustomModal
       isOpen={open}
@@ -488,8 +474,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
         )}
       </>
     </CustomModal>
-  </div>
-)}        </div>
+        </div>
       </div>
 
       {(role === "admin" || role === "dordc") && (
@@ -512,16 +497,16 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
             space={2}
           />
 
-          <label className="input-label">Evaluation Start Date</label>
-          <DatePicker
+          <label className="input-label" htmlFor="semster-stats-card-evaluation-start-date-3">Evaluation Start Date</label>
+          <DatePicker id="semster-stats-card-evaluation-start-date-3"
             selected={editForm.start_date}
             readOnly
             disabled
             className="input-field field-readonly"
           />
 
-          <label className="input-label">Evaluation End Date</label>
-          <DatePicker
+          <label className="input-label" htmlFor="semster-stats-card-evaluation-end-date-3">Evaluation End Date</label>
+          <DatePicker id="semster-stats-card-evaluation-end-date-3"
             selected={editForm.end_date}
             onChange={(date) => setEditForm({ ...editForm, end_date: date })}
             className="input-field"
