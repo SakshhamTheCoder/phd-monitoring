@@ -39,7 +39,7 @@ class GoogleAuthController extends Controller
             if (!$user) {
                 // An undergraduate address with no account came here to sign up.
                 if (UgStudent::eligibleEmail($googleUser->getEmail())) {
-                    return redirect(env('FRONTEND_URL', 'https://phdportal.thapar.edu') . '/google/callback?' . http_build_query([
+                    return redirect(config('app.frontend_url') . '/google/callback?' . http_build_query([
                         'signup' => UgSignupController::issueGoogleTicket($googleUser->getEmail(), $googleUser->getName()),
                         'email' => $googleUser->getEmail(),
                         'name' => $googleUser->getName(),
@@ -47,11 +47,11 @@ class GoogleAuthController extends Controller
                 }
 
                 // User does not exist, redirect with error
-                return redirect(env('FRONTEND_URL', 'https://phdportal.thapar.edu') . '/google/callback?error=' . urlencode('No account found with this email. Please contact administrator.'));
+                return redirect(config('app.frontend_url') . '/google/callback?error=' . urlencode('No account found with this email. Please contact administrator.'));
             }
 
             if ($user->isDeactivated()) {
-                return redirect(env('FRONTEND_URL', 'https://phdportal.thapar.edu') . '/google/callback?error=' . urlencode('This account has been deactivated. Contact the office.'));
+                return redirect(config('app.frontend_url') . '/google/callback?error=' . urlencode('This account has been deactivated. Contact the office.'));
             }
 
             $this->recordGoogleProof($user, $googleUser->user['email_verified'] ?? false);
@@ -88,7 +88,7 @@ class GoogleAuthController extends Controller
             ];
 
             // Redirect to frontend callback with data
-            $callbackUrl = env('FRONTEND_URL', 'https://phdportal.thapar.edu') . '/google/callback?' . http_build_query([
+            $callbackUrl = config('app.frontend_url') . '/google/callback?' . http_build_query([
                 'token' => $token,
                 'user' => json_encode($userData),
                 'available_roles' => json_encode($user->availableRoles())
@@ -98,7 +98,7 @@ class GoogleAuthController extends Controller
 
         } catch (\Exception $e) {
             // Redirect to frontend with error
-            return redirect(env('FRONTEND_URL', 'https://phdportal.thapar.edu') . '/google/callback?error=' . urlencode('Failed to authenticate with Google: ' . $e->getMessage()));
+            return redirect(config('app.frontend_url') . '/google/callback?error=' . urlencode('Failed to authenticate with Google: ' . $e->getMessage()));
         }
     }
 

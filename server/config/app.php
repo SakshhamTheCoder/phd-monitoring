@@ -27,7 +27,10 @@ return [
     */
 
     'env' => env('APP_ENV', 'production'),
-    'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
+    // The portal the mails and the Google callback point at. The fallback is
+    // production: a deployment that forgets the key still sends working links,
+    // and every other environment sets it.
+    'frontend_url' => env('FRONTEND_URL', 'https://phdportal.thapar.edu'),
 
 
     /*
