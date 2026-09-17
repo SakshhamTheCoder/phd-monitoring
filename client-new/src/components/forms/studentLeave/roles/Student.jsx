@@ -136,8 +136,8 @@ const Student = ({ formData }) => {
 
       <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
         <div className="input-field-container" style={{ flex: 1, minWidth: '180px' }}>
-          <label className="input-label">From</label>
-          <DatePicker
+          <label className="input-label" htmlFor="student-from">From</label>
+          <DatePicker id="student-from"
             selected={parseDate(fromDate)}
             onChange={(d) => d && setFromDate(formatDate(d))}
             dateFormat="yyyy-MM-dd"
@@ -151,8 +151,8 @@ const Student = ({ formData }) => {
           />
         </div>
         <div className="input-field-container" style={{ flex: 1, minWidth: '180px' }}>
-          <label className="input-label">To</label>
-          <DatePicker
+          <label className="input-label" htmlFor="student-to">To</label>
+          <DatePicker id="student-to"
             selected={parseDate(toDate)}
             onChange={(d) => d && setToDate(formatDate(d))}
             dateFormat="yyyy-MM-dd"
@@ -170,9 +170,9 @@ const Student = ({ formData }) => {
       {/* day_part is only valid when from_date === to_date — a multi-day
           application must stay 'full' or the backend returns a 422. */}
       <div className="input-field-container">
-        <label className="input-label" htmlFor="leave-day-part">Part of Day</label>
+        <label className="input-label" htmlFor="student-part-of-day">Part of Day</label>
         <select
-          id="leave-day-part"
+          id="student-part-of-day"
           className="input-field"
           value={dayPart}
           onChange={(e) => setDayPart(e.target.value)}
@@ -188,8 +188,8 @@ const Student = ({ formData }) => {
       </div>
 
       <div className="input-field-container">
-        <label className="input-label">Reason</label>
-        <textarea
+        <label className="input-label" htmlFor="student-reason">Reason</label>
+        <textarea id="student-reason"
           className="input-field"
           rows={4}
           maxLength={1000}

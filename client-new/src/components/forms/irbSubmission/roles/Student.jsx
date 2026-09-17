@@ -168,7 +168,6 @@ const Student = ({ formData }) => {
             ]}
        
           />
-             {/* {console.log(formData)}, */}
            <GridContainer
                 elements={[
                   <DateField required={true}

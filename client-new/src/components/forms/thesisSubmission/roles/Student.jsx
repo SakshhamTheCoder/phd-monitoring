@@ -41,6 +41,12 @@ const Student = ({ formData }) => {
       book: formData.book,
       national: formData.national,
       international: formData.international,
+      // Shown prefilled, so they have to be sent prefilled. The synopsis date
+      // arrives from the scholar's synopsis, and a scholar who left it as shown
+      // was told the field was required.
+      date_of_synopsis: formData.date_of_synopsis,
+      reciept_no: formData.reciept_no,
+      date_of_fee_submission: formData.date_of_fee_submission,
     });
     setLock(formData?.locks?.student);
     setIsLoaded(true);
@@ -122,13 +128,10 @@ const Student = ({ formData }) => {
     };
 
     Object.keys(temp).forEach((type) => {
-      console.log("type", type);
       const selectedIds = temp[type];
-      console.log("selectedIds", selectedIds);
 
       selectedIds.forEach((id) => {
         const targetType = type !== "patents" ? "publications" : "patents"; // Use targetType instead of modifying type
-        console.log("id", id.id);
         tt[targetType].push(id.id);
       });
     });
@@ -175,7 +178,6 @@ const Student = ({ formData }) => {
     setTemp(tt);
   };
   useEffect(() => {
-    console.log(body);
   }, [body]);
 
   return (
@@ -308,7 +310,7 @@ const Student = ({ formData }) => {
               />,
               <DateField required={true}
                 label="Date of Fee Submission"
-                initialValue={formData.date_of_synopsis}
+                initialValue={formData.date_of_fee_submission}
                 isLocked={lock}
                 onChange={(value) => {
                   setBody((prev) => ({

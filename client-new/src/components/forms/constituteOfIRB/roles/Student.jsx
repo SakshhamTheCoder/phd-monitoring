@@ -102,7 +102,6 @@ const Student = ({ formData }) => {
                 ]}
                 isLocked={lock}
                 onChange={(value) => {
-                  console.log("hi", body);
                   body.gender = value;
                 }}
               />,
@@ -159,7 +158,6 @@ const Student = ({ formData }) => {
                 label={"Title of Phd Thesis"}
                 isLocked={lock}
                 onChange={(value) => {
-                  console.log("hi", body);
                   body.title = value;
                 }}
               />,
@@ -214,7 +212,6 @@ const Student = ({ formData }) => {
             />
           ) : (
             <>
-              {console.log(formData.objectives)}
               <GridContainer
                 elements={[
                   <TableComponent

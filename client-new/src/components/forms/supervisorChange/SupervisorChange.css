@@ -1,7 +1,12 @@
+/* A toggle button, so a keyboard reaches it and a screen reader hears whether
+   it is selected. Reset to read as the box it was drawn as. */
 .supervisor-box {
+    width: 100%;
+    font: inherit;
+    background: none;
     padding: 10px;
     border: 1px solid #ccc;
-    border-radius: 5px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
     text-align: center;
 }

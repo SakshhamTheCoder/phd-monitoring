@@ -27,7 +27,6 @@ const SchedulePresentation = ({ close, semester }) => {
                     data.response[i].value = data.response[i].roll_no;
                     data.response[i].title = data.response[i].name;
                 }
-                console.log(data.response);
                 let stu=data.response.data.map((student) => {
                     return {
                         value: student.roll_no,
@@ -41,7 +40,6 @@ const SchedulePresentation = ({ close, semester }) => {
             setLoading(false);
           })
           .catch((error) => {
-            console.log(error);
             // setLoading(false);
           });
           const periods = generateReportPeriods(2,1,true);
@@ -93,7 +91,7 @@ const SchedulePresentation = ({ close, semester }) => {
         <>
           <GridContainer
             elements={[
-              <DropdownField required={true}
+              <DropdownField
                 label="Student"
                 options={students}
                 onChange={(value) =>
@@ -117,14 +115,14 @@ const SchedulePresentation = ({ close, semester }) => {
           />
           <GridContainer
             elements={[
-              <DateField required={true}
+              <DateField
                 label="Date"
                 onChange={(value) =>
                   setBody((prev) => ({ ...prev, date: value }))
                 }
                 required={true}
               />,
-              <TimeField required={true}
+              <TimeField
                 label="Time"
                 onChange={(value) =>
                   setBody((prev) => ({ ...prev, time: value }))

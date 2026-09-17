@@ -30,7 +30,6 @@ const PhDCoordinator = ({ formData }) => {
       approval: true,
     });
     setLock(formData.locks?.phd_coordinator);
-    formData.role = "phd_coordinator";
     setIsLoaded(true);
   }, [formData]);
 
@@ -38,7 +37,6 @@ const PhDCoordinator = ({ formData }) => {
     body.new_supervisors[index] = value.id;
   };
   const handleAddSupervisor = () => {
-    console.log("Add Supervisor");
     setBody((prevBody) => ({
       ...prevBody,
       new_supervisors: [...prevBody.new_supervisors, ""],

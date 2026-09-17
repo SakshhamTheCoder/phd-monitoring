@@ -177,13 +177,15 @@ const Student = ({ formData }) => {
               const isSelected = selectedSupervisors.includes(sup.faculty_code);
 
               return (
-                <div
+                <button
+                  type="button"
                   key={sup.faculty_code}
                   onClick={() => handleToggle(sup.faculty_code)}
+                  aria-pressed={isSelected}
                   className={`supervisor-box ${isSelected ? "selected" : ""}`}
                 >
                   {sup.name}
-                </div>
+                </button>
               );
             })}
           />
@@ -242,7 +244,7 @@ const Student = ({ formData }) => {
             ]}
             space={3}
           />
-          <GridContainer elements={[<p>Student Prefrences</p>]} space={2} />
+          <GridContainer elements={[<p>Student Preferences</p>]} space={2} />
           <GridContainer
             elements={[
               <TableComponent

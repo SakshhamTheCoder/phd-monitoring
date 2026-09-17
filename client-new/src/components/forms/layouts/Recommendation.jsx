@@ -8,6 +8,7 @@ import { getRoleName } from '../../../utils/roleName';
 import { useLoading } from '../../../context/LoadingContext';
 import { submitForm } from '../../../api/form';
 import TableComponent from '../table/TableComponent';
+import { toast } from 'react-toastify';
 
 const Recommendation = ({formData,allowRejection,role,moreFields,handleRecommendationChange,isLocked,submitPath,decision,title}) => {
     const [roleName, setRoleName] = useState('');
@@ -20,7 +21,10 @@ const Recommendation = ({formData,allowRejection,role,moreFields,handleRecommend
         if (role && formData) {
             setRoleName(getRoleName(role));
             setBody({
-                approval: formData.approvals[role],
+                // The approval column defaults to 0, which the radios read as
+                // "Not Recommend" already chosen. Until the step is answered
+                // (locked), nothing is chosen, so a bare Submit cannot reject.
+                approval: formData.locks[role] ? formData.approvals[role] : null,
                 rejection: false,
                 comments: formData.comments[role],
             });
@@ -33,7 +37,7 @@ const Recommendation = ({formData,allowRejection,role,moreFields,handleRecommend
             setLock(true);
         }
         // locks[role] says the step is answered and the stage says whose turn
-        // it is, but neither says who is reading. RoleBasedWrapper renders every
+        // it is, but neither says who is reading. FormLadder renders every
         // earlier step to the roles above it, so a DORDC opening a form parked
         // at the HOD step was handed the HOD's live controls. Only the role
         // being asked may answer. The supervisor step is named "faculty" in
@@ -131,7 +135,13 @@ const Recommendation = ({formData,allowRejection,role,moreFields,handleRecommend
                 // caller rendered somewhere other than /forms/:type/:id (its usual home)
                 // can override just that via submitPath. Every existing caller leaves
                 // submitPath unset, so this falls back to the real location unchanged.
-                <CustomButton text='Submit' onClick={()=>{submitForm(body,submitPath?{...location,pathname:submitPath}:location,setLoading)}} />
+                <CustomButton text='Submit' onClick={()=>{
+                    if (body.approval === null || body.approval === undefined) {
+                        toast.error(decision ? 'Choose Accepted or Rejected first.' : 'Choose Recommend or Not Recommend first.');
+                        return;
+                    }
+                    submitForm(body,submitPath?{...location,pathname:submitPath}:location,setLoading);
+                }} />
             ]}/>)}
 
         </>

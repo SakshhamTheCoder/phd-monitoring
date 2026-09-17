@@ -57,6 +57,13 @@ const Supervisor = ({ formData }) => {
   // "5515", which is over 100 for any figure anyone could type: the warning
   // fired on every keystroke and the entry was rewritten every time.
   useEffect(() => {
+    // A locked panel is a record, not an entry. previous_progress is the
+    // scholar's overall progress today, which on an approved form already
+    // includes this increase, so checking it there fired on page load.
+    if (lock) {
+      return;
+    }
+
     const increase = parseFloat(body.current_progress);
     const previous = parseFloat(formData.previous_progress) || 0;
 
@@ -68,7 +75,7 @@ const Supervisor = ({ formData }) => {
     // figure that will actually be submitted.
     setBody((prev) => ({ ...prev, current_progress: 100 - previous }));
     toast.error("Total progress cannot exceed 100%");
-  }, [body.current_progress, formData.previous_progress]);
+  }, [body.current_progress, formData.previous_progress, lock]);
 
   return (
     <>
@@ -81,7 +88,7 @@ const Supervisor = ({ formData }) => {
             moreFields={true}
             handleRecommendationChange={handleApprovalChange}
           />
-          {body.approval && (
+          {!!body.approval && (
             <>
               <GridContainer
                 elements={[
@@ -118,7 +125,11 @@ const Supervisor = ({ formData }) => {
                 elements={[
                   <InputField
                     label={"Total Quantum Progress Percentage"}
-                    initialValue={formData.total_progress}
+                    // The stored total is 0 until the supervisor submits, so while
+                    // entering, show what the server will store: previous plus increase.
+                    initialValue={lock
+                      ? formData.total_progress
+                      : (parseFloat(formData.previous_progress) || 0) + (parseFloat(body.current_progress) || 0)}
                     isLocked={true}
                   />,
                 ]}

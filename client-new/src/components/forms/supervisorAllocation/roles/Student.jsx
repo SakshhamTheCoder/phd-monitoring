@@ -291,7 +291,9 @@ const Student = ({ formData }) => {
                 onClick={() => {
                   const submitBody = {
                     ...body,
-                    prefrences: body.prefrences.map((p) => p?.faculty_code ?? p),
+                    // An empty slot is null. Sending the slot object itself made the server
+                    // fail on it instead of saying six choices are needed.
+                    prefrences: body.prefrences.map((p) => p?.faculty_code ?? null),
                   };
                   submitForm(submitBody, location, setLoading);
                 }}
@@ -303,7 +305,7 @@ const Student = ({ formData }) => {
         <>
       
           <GridContainer
-          label={[<p>Student Prefrences</p>]}
+          label={[<p>Student Preferences</p>]}
             elements={[
               <TableComponent
                 data={formData.prefrences}

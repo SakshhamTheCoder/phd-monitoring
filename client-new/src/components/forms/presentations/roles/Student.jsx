@@ -123,13 +123,10 @@ const Student = ({ formData, refetchData = null, }) => {
     };
 
     Object.keys(temp).forEach((type) => {
-      console.log("type", type);
       const selectedIds = temp[type];
-      console.log("selectedIds", selectedIds);
 
       selectedIds.forEach((id) => {
         const targetType = type !== "patents" ? "publications" : "patents"; // Use targetType instead of modifying type
-        console.log("id", id.id);
         tt[targetType].push(id.id);
       });
     });
@@ -176,7 +173,6 @@ const Student = ({ formData, refetchData = null, }) => {
     setTemp(tt);
   };
   useEffect(() => {
-    console.log(body);
   }, [body]);
 
   return (
@@ -222,7 +218,7 @@ const Student = ({ formData, refetchData = null, }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Extenstion Availed"
+                label="Extension Availed"
                 initialValue={formData.extention_availed ? "Yes" : "No"}
                 isLocked={true}
               />,
