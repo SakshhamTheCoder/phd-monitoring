@@ -17,6 +17,8 @@ import IrbExtention from "../../components/forms/irbExtention/IrbExtention";
 import SupervisorChange from "../../components/forms/supervisorChange/SupervisorChange";
 import ListOfExaminers from "../../components/forms/listOfExaminers/ListOfExaminers";
 import ReviseTitle from "../../components/forms/reviseTitle/ReviseTitle";
+import StudentLeave from "../../components/forms/studentLeave/StudentLeave";
+import ThesisExtention from "../../components/forms/thesisExtention/ThesisExtention";
 import useScholarInPath from "../../hooks/useScholarInPath";
 const MainFormPage = () => {
   const [formData, setFormData] = useState({});
@@ -38,7 +40,6 @@ const MainFormPage = () => {
         setLoading(false);
       })
       .catch((error) => {
-        console.log(error);
         setLoading(false);
       });
   }, []);
@@ -78,11 +79,16 @@ const MainFormPage = () => {
                     return <SupervisorChange formData={formData}/>
                   case "list-of-examiners":
                     return <ListOfExaminers formData={formData}/>
-                 //fix yaha p
-                    case "thesis-extension":
-                    return <ThesisSubmission formData={formData} />
+                  case "thesis-extension":
+                    return <ThesisExtention formData={formData} />
                   case "revise-title":
                     return <ReviseTitle formData={formData}/>
+                  // The API serves /forms/student-leave/:id, and StudentLeave
+                  // defaults submitPath to the current location, which is that
+                  // endpoint. Without this the canonical URL fell through to the
+                  // "Are You Sure this is a FORM?" default.
+                  case "student-leave":
+                    return <StudentLeave formData={formData} />
                   default:
                     return <p>Are You Sure this is a FORM?</p>;
                 }

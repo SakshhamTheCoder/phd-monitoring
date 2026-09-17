@@ -12,7 +12,7 @@
     flex-direction: column;
     gap: 20px;
     height: 100vh;
-    background-image: url('/public/image-1@2x.png');
+    background-image: url('/image-1@2x.png');
     background-size: cover;
 }
 .not-found-container h1{
@@ -20,7 +20,7 @@
     color: #333;
 }
 .not-found-container p{
-    font-size: 24px;
+    font-size: var(--text-2xl);
     color: #333;
 }
 .not-found-container a{
@@ -28,7 +28,7 @@
     background-color: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
