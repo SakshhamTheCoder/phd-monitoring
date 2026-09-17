@@ -84,10 +84,6 @@ class ClerkController extends Controller
     public function myDepartments(Request $request)
     {
         $user = Auth::user();
-        if (!$user->may('can_read_own_clerk_departments')) {
-            return $this->refuse();
-        }
-
         $departments = Department::whereIn('id', $this->clerkDepartmentIds($user->id))
             ->orderBy('name')
             ->get(['id', 'name', 'code']);
@@ -107,11 +103,6 @@ class ClerkController extends Controller
     public function roster(Request $request)
     {
         $user = Auth::user();
-
-        // Admins get read access for oversight; only clerks can write (save()).
-        if (!$user->may('can_mark_attendance')) {
-            return $this->refuse();
-        }
 
         $request->validate([
             'date' => 'nullable|date',
@@ -180,10 +171,6 @@ class ClerkController extends Controller
     {
         $user = Auth::user();
         $role = $user->current_role->role;
-        if (!$user->may('can_mark_attendance')) {
-            return response()->json(['message' => 'You are not authorized to mark attendance'], 403);
-        }
-
         $request->validate([
             'date' => 'required|date|before_or_equal:today',
             'lecture_id' => 'nullable|integer|min:0',
@@ -310,9 +297,6 @@ class ClerkController extends Controller
     public function template(Request $request)
     {
         $user = Auth::user();
-        if (!$user->may('can_mark_attendance')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
         $csv = "roll_no,date,status\n123,2026-08-26,present\n124,2026-08-26,absent\n";
         return response($csv, 200, [
             'Content-Type' => 'text/csv',
@@ -328,10 +312,6 @@ class ClerkController extends Controller
     {
         $user = Auth::user();
         $role = $user->current_role->role;
-        if (!$user->may('can_mark_attendance')) {
-            return response()->json(['message' => 'You are not authorized to import attendance'], 403);
-        }
-
         $request->validate([
             'file' => 'required|file|mimes:csv,txt|max:2048',
             'lecture_id' => 'nullable|integer|min:0',
@@ -493,9 +473,6 @@ class ClerkController extends Controller
     public function history(Request $request)
     {
         $user = Auth::user();
-        if (!$user->may('can_mark_attendance')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
         $request->validate([
             'from' => 'nullable|date',
             'to' => 'nullable|date|after_or_equal:from',
@@ -533,10 +510,6 @@ class ClerkController extends Controller
     {
         $user = Auth::user();
         $role = $user->current_role->role;
-        if (!$user->may('can_mark_attendance')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
         $request->validate([
             'date' => 'required|date',
             'department_id' => 'nullable|integer|exists:departments,id',
@@ -582,10 +555,6 @@ class ClerkController extends Controller
     {
         $user = Auth::user();
         $role = $user->current_role->role;
-        if (!$user->may('can_mark_attendance')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
         $request->validate([
             'month' => 'required|date_format:Y-m',
             'department_id' => 'nullable|integer|exists:departments,id',
@@ -762,10 +731,6 @@ class ClerkController extends Controller
     public function export(Request $request)
     {
         $user = Auth::user();
-        if (!$user->may('can_mark_attendance')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
         $request->validate([
             'from' => 'nullable|date',
             'to' => 'nullable|date|after_or_equal:from',

@@ -24,12 +24,6 @@ class UserManagementController extends Controller
 
     public function list(Request $request)
     {
-        $loggedInUser = Auth::user();
-        
-        if (!$loggedInUser->may('can_manage_users')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
         $filters = $request->input('filters', []);
         $filtersJson = $request->query('filters');
 
@@ -89,12 +83,6 @@ class UserManagementController extends Controller
 
     public function show($id)
     {
-        $loggedInUser = Auth::user();
-        
-        if (!$loggedInUser->may('can_manage_users')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
         $user = User::with(['role', 'current_role', 'default_role', 'student', 'faculty'])->find($id);
 
         if (!$user) {
@@ -244,10 +232,6 @@ class UserManagementController extends Controller
     {
         $loggedInUser = Auth::user();
         
-        if (!$loggedInUser->may('can_manage_users')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
         $user = User::find($id);
 
         if (!$user) {
@@ -266,12 +250,6 @@ class UserManagementController extends Controller
 
     public function resetPassword(Request $request, $id)
     {
-        $loggedInUser = Auth::user();
-        
-        if (!$loggedInUser->may('can_manage_users')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
         $request->validate([
             'password' => 'required|string|min:8',
         ]);
@@ -291,12 +269,6 @@ class UserManagementController extends Controller
 
     public function sendResetEmail($id)
     {
-        $loggedInUser = Auth::user();
-        
-        if (!$loggedInUser->may('can_manage_users')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
         $user = User::find($id);
 
         if (!$user) {
@@ -314,12 +286,6 @@ class UserManagementController extends Controller
 
     public function bulkImport(Request $request)
     {
-        $loggedInUser = Auth::user();
-        
-        if (!$loggedInUser->may('can_manage_users')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
         $request->validate([
             'batch_data' => 'required|array',
             'batch_data.*.full_name' => 'nullable|string',
