@@ -92,7 +92,7 @@ class StudentSemesterOffFormController extends Controller
         $steps=['student','faculty','phd_coordinator','hod','dra','dordc','director'];
         switch ($role->role) {
             case 'student':
-                return $this->handleStudentForm($user, $form_id, $model,$steps);
+                return $this->handleStudentForm($user, $form_id, $model);
             case 'hod':
                 return $this->handleHodForm($user, $form_id, $model);
             case 'phd_coordinator':

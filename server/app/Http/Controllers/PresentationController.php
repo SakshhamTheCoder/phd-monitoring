@@ -740,7 +740,6 @@ class PresentationController extends Controller
     {
         $user = Auth::user();
         $form_id = $this->routeParam($request, 'form_id', $form_id);
-        $steps = ['student', 'faculty', 'doctoral', 'hod', 'adordc','dordc', 'complete'];
         $model = Presentation::class;
         $form = Presentation::find($form_id);
         $role = $user->current_role;
@@ -752,7 +751,7 @@ class PresentationController extends Controller
         }
         switch ($cur) {
             case 'student':
-                return $this->handleStudentForm($user, $form_id, $model, $steps);
+                return $this->handleStudentForm($user, $form_id, $model);
             case 'hod':
                 return $this->handleHodForm($user, $form_id, $model);
             case 'doctoral':
@@ -1023,7 +1022,7 @@ class PresentationController extends Controller
                         ->update(['progress' => 'satisfactory', 'review_status' => 'completed', 'comments' => $request->comments]);
                     $approvals = PresentationReview::where('presentation_id', $formInstance->id)->where('is_supervisor', 1)->where('review_status', 'pending')->get();
                     if (count($approvals) != 0) {
-                        throw new \Exception("Your Prefrences have been saved. Please wait for other supervisors to approve", 201);
+                        throw new \Exception("Your review is saved. The form moves on once the other reviewers have submitted theirs.", 201);
                     } else {
                         $doctoral = $formInstance->student->doctoralCommittee;
                         foreach ($doctoral as $doc) {
@@ -1073,7 +1072,7 @@ class PresentationController extends Controller
                 $approvals = PresentationReview::where('presentation_id', $formInstance->id)->where('is_supervisor', 0)->where('review_status', 'pending')->get();
               
                 if (count($approvals) != 0) {
-                    throw new \Exception("Your Prefrences have been saved. Please wait for other supervisors to approve", 201);
+                    throw new \Exception("Your review is saved. The form moves on once the other reviewers have submitted theirs.", 201);
                 }
                 
             }
