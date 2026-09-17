@@ -89,6 +89,8 @@
 
     <a href="{{ $resetUrl }}" class="button">Set Password</a>
 
+    <p>If the link has expired, use Forgot Password on the sign-in page and you will get a new one.</p>
+
     <p>If you didn’t expect this email, you can safely ignore it.</p>
 
     <p>Thank you for being part of this important phase.</p>

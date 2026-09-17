@@ -83,13 +83,13 @@
         <a href="https://phdportal.thapar.edu/login" target="_blank">phdportal.thapar.edu</a>.
     </p>
 
-    <p>If you made this request, please click the button below to reset your password. This link will remain valid for 60 minutes.</p>
+    <p>If you made this request, please click the button below to reset your password. This link will remain valid for 24 hours.</p>
 
     <a href="{{ $resetUrl }}" class="button">Reset Password</a>
 
     <p>If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>
 
-    <p>For security reasons, this link will expire after one hour.</p>
+    <p>For security reasons, this link expires after 24 hours. If it has expired, ask for a new one from the Forgot Password page.</p>
 
     <p>Best regards,<br>
     PhD Coordination Team<br>
