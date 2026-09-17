@@ -77,6 +77,23 @@ class IrbSubController extends Controller
     }
 
 
+    /**
+     * A committee member signs in holding 'faculty', and nothing sent them to
+     * the doctoral step: opening the form at that stage answered "not
+     * authorized" unless they first switched role. Presentation and Synopsis
+     * already read committee membership this way.
+     */
+    private function actingStep($user, $form_id): string
+    {
+        $role = $user->current_role->role;
+        if ($role !== 'faculty') {
+            return $role;
+        }
+
+        $form = IrbSubForm::find($form_id);
+        return $form && $form->student->checkDoctoralCommittee($user->faculty?->faculty_code) ? 'doctoral' : $role;
+    }
+
     public function loadForm(Request $request, $form_id=null)
     {
         $form_id = $this->routeParam($request, 'form_id', $form_id);
@@ -84,9 +101,9 @@ class IrbSubController extends Controller
         $role = $user->current_role;
         $model = IrbSubForm::class;
         $steps=['student','faculty','external','doctoral','hod','adordc','dordc','complete'];
-        switch ($role->role) {
+        switch ($this->actingStep($user, $form_id)) {
             case 'student':
-                return $this->handleStudentForm($user, $form_id, $model,$steps);
+                return $this->handleStudentForm($user, $form_id, $model);
             case 'hod':
                 return $this->handleHodForm($user, $form_id, $model);
             case 'doctoral':
@@ -112,7 +129,7 @@ class IrbSubController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
 
-        switch ($role->role) {
+        switch ($this->actingStep($user, $form_id)) {
             case 'student':
                 return $this->studentSubmit($user, $request, $form_id);
             case 'faculty':
