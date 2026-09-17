@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Exception;
 use Illuminate\Support\Facades\Log;
+use App\Support\Outbox;
 
 class EmailService
 {
@@ -72,8 +73,9 @@ class EmailService
                 return true;
             }
             
-            // Otherwise send immediately
-            Mail::to($to)->send($email);
+            // Sent after the response: the caller is not made to wait on an
+            // SMTP round trip before their page can say anything.
+            Outbox::afterResponse(fn () => Mail::to($to)->send($email), 'Templated');
             
             Log::info("Email sent immediately to " . (is_array($to) ? implode(', ', $to) : $to));
             return true;

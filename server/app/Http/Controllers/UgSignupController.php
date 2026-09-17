@@ -19,6 +19,7 @@ use Illuminate\Support\Str;
  * Sign-up for undergraduates applying to the URF, the only account made from
  * outside. It is useless until the address is confirmed.
  */
+use App\Support\Outbox;
 class UgSignupController extends Controller
 {
     private const LINK_DAYS = 3;
@@ -148,17 +149,13 @@ class UgSignupController extends Controller
             'hash' => sha1($user->email),
         ]);
 
-        try {
-            Mail::send('emails.ug_verify', [
-                'name' => $user->name(),
-                'verifyUrl' => $url,
-                'days' => self::LINK_DAYS,
-            ], function ($message) use ($user) {
-                $message->to($user->email)->subject('Confirm your email - PhD Portal');
-            });
-        } catch (\Exception $e) {
-            // The account is saved either way; they can ask for the link again.
-            Log::error('UG sign-up verification email failed: ' . $e->getMessage());
-        }
+        // The account is saved either way; they can ask for the link again.
+        Outbox::afterResponse(fn () => Mail::send('emails.ug_verify', [
+            'name' => $user->name(),
+            'verifyUrl' => $url,
+            'days' => self::LINK_DAYS,
+        ], function ($message) use ($user) {
+            $message->to($user->email)->subject('Confirm your email - PhD Portal');
+        }), 'UG sign-up verification');
     }
 }

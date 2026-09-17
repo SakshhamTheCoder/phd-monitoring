@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Traits\GeneralFormSubmitter;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use App\Support\Outbox;
 
 class IrbSubForm extends Model
 {
@@ -183,18 +184,20 @@ class IrbSubForm extends Model
         $reviewUrl = rtrim(config('app.frontend_url'), '/') . '/external-review/' . $approval->key;
         $pdfPath = $this->revised_irb_pdf ? storage_path($this->revised_irb_pdf) : null;
 
-        Mail::send('emails.approval', [
+        $mail = [
             'expertName' => trim($expert->first_name . ' ' . $expert->last_name),
             'studentName' => $this->student->user->name(),
             'title' => $this->revised_phd_title,
             'formId' => $this->id,
             'reviewUrl' => $reviewUrl,
-        ], function ($message) use ($expert, $pdfPath) {
+        ];
+
+        Outbox::afterResponse(fn () => Mail::send('emails.approval', $mail, function ($message) use ($expert, $pdfPath) {
             $message->to($expert->email)->subject('IRB Submission Review Request');
             if ($pdfPath && file_exists($pdfPath)) {
                 $message->attach($pdfPath);
             }
-        });
+        }), 'IRB review request');
 
         return $approval;
     }

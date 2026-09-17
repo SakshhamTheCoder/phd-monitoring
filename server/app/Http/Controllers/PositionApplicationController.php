@@ -9,7 +9,7 @@ use App\Http\Controllers\Traits\NotificationManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-
+use App\Support\Outbox;
 class PositionApplicationController extends Controller {
     use SaveFile, ProjectAuthorizes, NotificationManager;
 
@@ -54,16 +54,12 @@ class PositionApplicationController extends Controller {
 
         if (!$app->token || !$app->email) return;
         $statusUrl = rtrim(config('app.frontend_url'), '/') . '/applications/' . $app->token;
-        try {
-            \Illuminate\Support\Facades\Mail::raw(
-                $body . "
+        Outbox::afterResponse(fn () => \Illuminate\Support\Facades\Mail::raw(
+            $body . "
 
 Track your application: " . $statusUrl,
-                fn ($message) => $message->to($app->email)->subject('Application ' . $app->status)
-            );
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Applicant status email failed: ' . $e->getMessage());
-        }
+            fn ($message) => $message->to($app->email)->subject('Application ' . $app->status)
+        ), 'Applicant status');
     }
 
     public function openings() {

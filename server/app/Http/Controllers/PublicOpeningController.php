@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Validator;
  * are written field by field rather than filtered, so nothing new on a project
  * or a position becomes public by being added.
  */
+use App\Support\Outbox;
 class PublicOpeningController extends Controller
 {
     use SaveFile;
@@ -181,20 +182,16 @@ class PublicOpeningController extends Controller
     {
         $base = rtrim(config('app.frontend_url'), '/');
 
-        try {
-            Mail::send('emails.application_verify', [
-                'applicantName' => $app->name,
-                'positionTitle' => $position->title,
-                'projectTitle' => optional($position->project)->title,
-                'verifyUrl' => $base . '/applications/' . $app->token . '/verify',
-                'statusUrl' => $base . '/applications/' . $app->token,
-            ], function ($message) use ($app) {
-                $message->to($app->email)->subject('Confirm your application');
-            });
-        } catch (\Exception $e) {
-            // A failed mail must not lose the application; the PI still sees it
-            // as unverified and the applicant keeps the link from the response.
-            Log::error('Application verification email failed: ' . $e->getMessage());
-        }
+        // A failed mail must not lose the application; the PI still sees it as
+        // unverified and the applicant keeps the link from the response.
+        Outbox::afterResponse(fn () => Mail::send('emails.application_verify', [
+            'applicantName' => $app->name,
+            'positionTitle' => $position->title,
+            'projectTitle' => optional($position->project)->title,
+            'verifyUrl' => $base . '/applications/' . $app->token . '/verify',
+            'statusUrl' => $base . '/applications/' . $app->token,
+        ], function ($message) use ($app) {
+            $message->to($app->email)->subject('Confirm your application');
+        }), 'Application verification');
     }
 }
