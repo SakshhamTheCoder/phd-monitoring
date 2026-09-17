@@ -1,5 +1,4 @@
 import React from "react";
-import { FaFilePdf } from "react-icons/fa";
 import { rootURL } from "../../api/urls";
 import "./FileLink.css";
 
@@ -27,7 +26,7 @@ const FileLink = ({ value, label = "View" }) => (
     title="Open file"
     onClick={(e) => e.stopPropagation()}
   >
-    <FaFilePdf className="file-cell-icon" />
+    <i className="fa fa-file-pdf-o file-cell-icon" aria-hidden="true" />
     {label && <span>{label}</span>}
   </a>
 );

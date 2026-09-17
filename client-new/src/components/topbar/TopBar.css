@@ -1,6 +1,11 @@
 /* Left padding matches .content, so the breadcrumb sits directly above the
    page title rather than a few pixels off it. */
 .topbar_sub {
+  /* The shell's .topbar is a flex row now, to seat the mobile nav toggle beside
+     this. Without flex:1 this box shrinks to its contents and space-between has
+     no free space left to push the profile to the right. */
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -28,16 +33,16 @@
   flex-direction: column;
   justify-content: space-evenly;
   width: 100%;
-  font-size: 16px;
+  font-size: var(--text-md);
   margin-left: 10px;
 }
 .user_name{
-  font-size: 16px;
+  font-size: var(--text-md);
   font-weight: 600;
   color: black;
 }
 .user_role{
-  font-size: 14px;
+  font-size: var(--text-sm);
   font-weight: 500;
   color: black;
 }
@@ -45,7 +50,7 @@
   width: 45px;
   height: 45px;
   object-fit: fill;
-  border-radius: 15px;
+  border-radius: var(--radius-xl);
   cursor: pointer;
 }
 .notification_icon {
@@ -75,7 +80,7 @@
   display: flex; /* Center content */
   align-items: center; /* Center vertically */
   justify-content: center; /* Center horizontally */
-  font-size: 8px; /* Font size */
+  font-size: var(--text-2xs); /* Font size */
   font-weight: bold; /* Make font bold */
   animation: pulse 1s infinite; /* Pulse animation */
 }

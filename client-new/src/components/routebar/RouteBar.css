@@ -3,7 +3,7 @@
    under a second copy of the same word. */
 .route-bar {
     padding: 0;
-    font-size: 0.8rem;
+    font-size: var(--text-xs);
     font-weight: 500;
     color: var(--text-subtle);
 }

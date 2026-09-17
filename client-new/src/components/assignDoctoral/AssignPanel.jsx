@@ -81,8 +81,8 @@ export default function AssignPanel({ roll_no }) {
       <div className="assign-card">
         <h2>Assign Supervisor</h2>
         <form onSubmit={(e) => handleSubmit(e, "supervisor")}>
-          <label className="assign-label">Student ID</label>
-          <input
+          <label className="assign-label" htmlFor="assign-panel-student-id">Student ID</label>
+          <input id="assign-panel-student-id"
             type="number"
             name="student_id"
             value={roll_no}
@@ -124,8 +124,8 @@ export default function AssignPanel({ roll_no }) {
       <div className="assign-card">
         <h2>Assign Doctoral Committee</h2>
         <form onSubmit={(e) => handleSubmit(e, "doctoral")}>
-          <label className="assign-label">Student ID</label>
-          <input
+          <label className="assign-label" htmlFor="assign-panel-student-id-2">Student ID</label>
+          <input id="assign-panel-student-id-2"
             type="number"
             name="student_id"
             disabled={true}

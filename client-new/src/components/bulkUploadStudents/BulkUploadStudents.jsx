@@ -4,7 +4,6 @@ import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
 import CustomButton from '../forms/fields/CustomButton';
 import { toast } from 'react-toastify';
-import { read, utils } from 'xlsx';
 import GridContainer from '../forms/fields/GridContainer';
 
 const BulkUploadStudents = ({ onSuccess }) => {
@@ -71,7 +70,10 @@ const BulkUploadStudents = ({ onSuccess }) => {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
+      // xlsx is ~400KB and only this handler needs it, so it loads on
+      // the first upload rather than in everyone's entry chunk.
+      const { read, utils } = await import('xlsx');
       const data = new Uint8Array(event.target.result);
       const workbook = read(data, { type: 'array', cellDates: true, dateNF: 'yyyy-mm-dd' });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
