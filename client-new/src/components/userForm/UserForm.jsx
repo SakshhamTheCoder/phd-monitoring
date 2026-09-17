@@ -106,8 +106,12 @@ const UserForm = ({ edit, userData, onClose }) => {
       const saved = response.response || {};
       if (saved.password) {
         toast.success(`User ${edit ? 'updated' : 'created'}. Password: ${saved.password}`);
+      } else if (edit) {
+        toast.success('User updated.');
       } else {
-        toast.success(`User ${edit ? 'updated' : 'created'}.`);
+        // No password in the answer means none was typed, so the account was
+        // mailed a link to choose its own.
+        toast.success('User created. They are emailed a link to set their password.');
       }
 
       // Roles can be granted before the record backing them exists, so the save
@@ -411,7 +415,7 @@ const UserForm = ({ edit, userData, onClose }) => {
               key="password_new"
             />
             <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
-              Leave empty to auto-generate a password
+              Leave empty and they are emailed a link to set their own
             </p>
           </div>
         )}

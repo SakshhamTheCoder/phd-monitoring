@@ -115,9 +115,9 @@ const FacultyForm = ({ edit = false, facultyData = {}, onSuccess, onClose }) => 
 
     if (res.success) {
       if (!edit) {
-        toast.success(
-          "Faculty created. Temporary Password: " + res.response.password
-        );
+        // The server no longer hands back a generated password: a new faculty
+        // account is mailed a link and chooses its own.
+        toast.success(res.response?.message || "Faculty added.");
       } else {
         toast.success("Faculty updated successfully.");
       }

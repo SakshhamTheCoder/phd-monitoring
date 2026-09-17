@@ -98,7 +98,8 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
       const res = await customFetch(endpoint, "POST", formData);
       if (res.success) {
         if (!edit) {
-          toast.success("Student created. Temporary Password: " + res.response);
+          // The server mails the new account a link to set its own password.
+          toast.success(res.response?.message || "Student added.");
         } else {
           toast.success("Student updated successfully.");
         }

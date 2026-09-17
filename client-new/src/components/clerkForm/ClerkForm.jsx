@@ -63,9 +63,9 @@ const ClerkForm = ({ onSuccess, onClose }) => {
       const res = await customFetch(baseURL + "/users", "POST", payload, true);
       if (res.success !== false) {
         if (res.password) {
-          toast.success("Clerk created. Temporary Password: " + res.password);
+          toast.success("Clerk created. Password: " + res.password);
         } else {
-          toast.success("Clerk created successfully");
+          toast.success("Clerk created. They are emailed a link to set their password.");
         }
         (res.warnings || []).forEach((w) => toast.warn(w, { autoClose: 10000 }));
         if (onSuccess) onSuccess();
@@ -144,7 +144,7 @@ const ClerkForm = ({ onSuccess, onClose }) => {
         ]}
       />
       <p style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "0.25rem" }}>
-        Leave empty to auto-generate a password.
+        Leave empty and they are emailed a link to set their own.
       </p>
       <GridContainer
         elements={[
