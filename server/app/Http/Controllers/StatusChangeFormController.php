@@ -97,7 +97,7 @@ class StatusChangeFormController extends Controller
             case 'dra':
             case 'dordc':
             case 'director':
-                return $this->handleAdminForm($user, $form_id, $model);
+                return $this->handleAdminForm($user, $form_id, $model, true);
             case 'faculty':
                 return $this->handleFacultyForm($user, $form_id, $model);
             case 'admin':
@@ -109,7 +109,7 @@ class StatusChangeFormController extends Controller
     }
 
     private function customLoadStudent($user, $form_id, $model,$steps) {
-        return $this->handleStudentForm($user, $form_id, $model,$steps);
+        return $this->handleStudentForm($user, $form_id, $model);
     }
     
     public function submit(Request $request, $form_id)

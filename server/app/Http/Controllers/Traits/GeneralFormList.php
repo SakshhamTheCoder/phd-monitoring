@@ -66,8 +66,71 @@ trait GeneralFormList
 
 
 
+    /**
+     * Keep only the forms this role can open.
+     *
+     * The lists scoped by department or supervision alone, while every
+     * GeneralFormHandler loader also requires the reader's step to be in the
+     * form's own chain and already reached (index <= maximum_step). So a HOD saw
+     * a form still with the scholar, a coordinator saw IRB forms they have no
+     * step in, and clicking either answered "not yet assigned" or "not
+     * authorized". This is the loaders' rule, stated once for the lists.
+     *
+     * Admin reads every form and has no step, so is not filtered. The director
+     * reads every form they have no step in, and the rest once reached.
+     */
+    private function onlyFormsReachedBy($formsQuery, string $formsTable, string $role): void
+    {
+        if ($role === 'admin') {
+            return;
+        }
+
+        $steps = in_array($role, ['doctoral', 'external'], true) ? ['doctoral', 'external'] : [$role];
+        // JSON_SEARCH answers a path such as "$[3]", or NULL when the step is not
+        // in the chain, which fails the comparison.
+        $stepIndex = "CAST(REPLACE(REPLACE(JSON_UNQUOTE(JSON_SEARCH(`{$formsTable}`.`steps`, 'one', ?)), '$[', ''), ']', '') AS UNSIGNED)";
+
+        $formsQuery->where(function ($query) use ($steps, $formsTable, $stepIndex, $role) {
+            foreach ($steps as $step) {
+                $query->orWhereRaw("{$stepIndex} <= `{$formsTable}`.`maximum_step`", [$step]);
+            }
+            if ($role === 'director') {
+                $query->orWhereRaw("JSON_SEARCH(`{$formsTable}`.`steps`, 'one', 'director') IS NULL");
+            }
+        });
+    }
+
+    /** onlyFormsReachedBy() for one loaded form. */
+    private function formReachedBy($form, string $role): bool
+    {
+        if ($role === 'admin') {
+            return true;
+        }
+
+        $steps = $form->steps ?? [];
+        if ($role === 'director' && !in_array('director', $steps, true)) {
+            return true;
+        }
+
+        foreach (in_array($role, ['doctoral', 'external'], true) ? ['doctoral', 'external'] : [$role] as $step) {
+            $index = array_search($step, $steps, true);
+            if ($index !== false && $index <= $form->maximum_step) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function paginateAndMap($formsQuery, $page, $fields, $perPage = 50, $user)
     {
+        if ($formsQuery instanceof \Illuminate\Database\Eloquent\Builder) {
+            $this->onlyFormsReachedBy($formsQuery, $formsQuery->getModel()->getTable(), $user->current_role->role);
+            // mapForm reads the scholar and their name on every row, and most lists
+            // add the department or supervisors; one query each for the page.
+            $formsQuery->with(['student.user', 'student.department', 'student.supervisors.user']);
+        }
+
         $total = $formsQuery instanceof \Illuminate\Database\Eloquent\Builder || $formsQuery instanceof \Illuminate\Database\Query\Builder
             ? $formsQuery->count()
             : count($formsQuery);
@@ -173,20 +236,10 @@ trait GeneralFormList
                 break;
         }
         $formsQuery = $model::where('student_id', $student_id);
-        // The step check answers "has this form reached my desk yet", which is
-        // only a question for a role that appears in the chain. An admin never
-        // does, so searching for them found nothing and every form was filtered
-        // away: the profile's View Forms page came back empty for every scholar.
-        // A role that is not a step is reading, not acting, and has already been
-        // authorised above, so it sees the lot.
-        $filteredForms = $formsQuery->get()->filter(function ($form) use ($role) {
-            $index = array_search($role, $form->steps);
-            if ($index === false) {
-                return true;
-            }
-
-            return $index <= $form->maximum_step;
-        });
+        // The same rule onlyFormsReachedBy() puts on the other lists, since the
+        // rows open through the same loaders. Letting in every form without the
+        // reader's step listed forms those loaders then refused.
+        $filteredForms = $formsQuery->get()->filter(fn ($form) => $this->formReachedBy($form, $role));
         // The table on the other side reads {data, fields, fieldsTitles}. This
         // used to hand back a bare array, so the page drew a single S.NO column
         // and said "No results yet" however many forms came back.

@@ -103,7 +103,7 @@ class ResearchExtentionController extends Controller
         ];
         switch ($role->role) {
             case 'student':
-                return $this->handleStudentForm($user, $form_id, $model,$steps);
+                return $this->handleStudentForm($user, $form_id, $model);
             case 'hod':
                 return $this->handleHodForm($user, $form_id, $model);
             case 'phd_coordinator':
@@ -111,7 +111,7 @@ class ResearchExtentionController extends Controller
             case 'dra':
             case 'dordc':
             case 'director':
-                return $this->handleAdminForm($user, $form_id, $model);
+                return $this->handleAdminForm($user, $form_id, $model, true);
             case 'faculty':
                 return $this->handleFacultyForm($user, $form_id, $model);
             case 'admin':
