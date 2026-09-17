@@ -494,8 +494,10 @@ class UrfController extends Controller
     /** The office reads every project, a mentor the ones they are on. */
     private function mayRead(User $user): bool
     {
-        return $user->may('can_manage_urf')
-            || ($user->may('can_read_urf_mentees') && $user->faculty?->faculty_code);
+        // A mentee reader with no faculty row mentors nothing, so they read an
+        // empty list. Refusing them showed "not authorized" on a page the
+        // capability puts in their sidebar.
+        return $user->may('can_manage_urf') || $user->may('can_read_urf_mentees');
     }
 
     private function mentors(User $user, UrfApplication $application): bool

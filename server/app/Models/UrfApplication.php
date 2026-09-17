@@ -79,6 +79,12 @@ class UrfApplication extends Model
     /** Grouped for the same reason as scopeForMember. */
     public function scopeMentoredBy($query, ?int $facultyCode)
     {
+        // where(column, null) is IS NULL, which matched every application
+        // without a second mentor. No faculty code mentors nothing.
+        if ($facultyCode === null) {
+            return $query->whereRaw('1 = 0');
+        }
+
         return $query->where(fn ($q) => $q
             ->where('mentor1_faculty_code', $facultyCode)
             ->orWhere('mentor2_faculty_code', $facultyCode));
