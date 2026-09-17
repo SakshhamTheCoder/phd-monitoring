@@ -12,7 +12,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -100,7 +99,7 @@ class UgStudentController extends Controller
             return $account;
         });
 
-        Password::sendResetLink(['email' => $created->email]);
+        $created->inviteToSetPassword();
 
         return response()->json($created->load('ugStudent.branch'), 201);
     }
@@ -193,7 +192,7 @@ class UgStudentController extends Controller
                 'gender' => trim((string) ($row['gender'] ?? '')) ?: null,
             ];
 
-            DB::transaction(function () use ($details, $rollNo, $branch, $account, $year) {
+            $account = DB::transaction(function () use ($details, $rollNo, $branch, $account, $year) {
                 if ($account) {
                     $account->fill(array_filter($details))->save();
                 } else {
@@ -203,13 +202,15 @@ class UgStudentController extends Controller
                 $record = $account->ugStudent ?: $account->ugStudent()->make();
                 $record->fill(['roll_no' => $rollNo, 'branch_id' => $branch->id, 'year' => $year]);
                 $account->ugStudent()->save($record);
+
+                return $account;
             });
 
             if ($existed) {
                 $updated++;
             } else {
                 $added++;
-                Password::sendResetLink(['email' => $email]);
+                $account->inviteToSetPassword();
             }
         }
 

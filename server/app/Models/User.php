@@ -8,6 +8,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Notifications\CustomResetPassword;
+use App\Notifications\WelcomeResetPassword;
+use Illuminate\Support\Facades\Password;
 
 class User extends Authenticatable
 {
@@ -208,11 +210,39 @@ class User extends Authenticatable
     /**
      * Send the password reset notification.
      *
+     * Someone who has never chosen a password is being invited rather than
+     * resetting, and reads the welcome mail. Either way the mail goes out after
+     * the response: an SMTP round trip to Gmail took seconds, and the caller
+     * was made to wait for it before their page could say anything.
+     *
      * @param  string  $token
      * @return void
      */
     public function sendPasswordResetNotification($token)
     {
-        $this->notify(new CustomResetPassword($token));
+        $notification = $this->password_set_at === null
+            ? new WelcomeResetPassword($token, $this)
+            : new CustomResetPassword($token);
+
+        // A worker or a command has no response to come after, and its
+        // terminating callbacks are not a place to leave mail waiting.
+        if (app()->runningInConsole()) {
+            $this->notifyNow($notification);
+            return;
+        }
+
+        dispatch(function () use ($notification) {
+            $this->notifyNow($notification);
+        })->afterResponse();
+    }
+
+    /**
+     * Mail a new account the link that lets them choose their password. Every
+     * office-created account gets this, whether it was added one at a time or
+     * imported, so nobody has to be told a password over the phone.
+     */
+    public function inviteToSetPassword(): void
+    {
+        Password::sendResetLink(['email' => $this->email]);
     }
 }

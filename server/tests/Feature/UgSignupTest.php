@@ -298,23 +298,24 @@ class UgSignupTest extends TestCase
         $this->postJson('/api/login', ['email' => $form['email'], 'password' => 'another-password'])->assertOk();
     }
 
-    public function test_an_account_the_office_creates_knows_it_has_a_password(): void
+    public function test_an_account_the_office_creates_is_mailed_a_link(): void
     {
         $admin = $this->admin();
         DB::table('roles')->where('role', 'admin')->update(['can_manage_users' => 'true']);
         $role = Role::where('role', 'student')->value('id');
         $email = Str::lower(Str::random(10)) . '@thapar.edu';
 
-        // The admin is read the generated password, so one exists that somebody
-        // knows and Change Password has to ask for it.
+        // No password was typed, so none is generated for anyone to pass on: the
+        // account is mailed a link and password_set_at stays null until they use it.
         $this->actingAs($admin, 'sanctum')->postJson('/api/users', [
             'full_name' => 'Office Made Scholar',
             'email' => $email,
             'phone' => '9800000099',
             'role_id' => $role,
-        ])->assertOk();
+        ])->assertOk()->assertJsonPath('password', null);
 
-        $this->assertNotNull(User::where('email', $email)->value('password_set_at'));
+        $this->assertNull(User::where('email', $email)->value('password_set_at'));
+        $this->assertDatabaseHas('password_reset_tokens', ['email' => $email]);
     }
 
     public function test_a_deactivated_account_cannot_sign_in(): void

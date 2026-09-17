@@ -178,12 +178,13 @@ class UserManagementController extends Controller
             }
         } else {
             $user = new User();
-            // Generate password if not provided
+            // A password the office typed is handed over, so Change Password can
+            // ask for it. One generated here is known to nobody: the account is
+            // mailed a link to choose its own, and password_set_at stays null.
+            $chosenByOffice = (bool) $request->password;
             $password = $request->password ?: Str::password(8, true, true, true, false);
             $user->password = Hash::make($password);
-            // The admin is handed this password, so one exists that somebody
-            // knows: Change Password asks for it rather than skipping it.
-            $user->password_set_at = now();
+            $user->password_set_at = $chosenByOffice ? now() : null;
         }
 
         $name = $request->filled('full_name')
@@ -216,11 +217,17 @@ class UserManagementController extends Controller
         ));
         $warnings = \App\Support\RoleRequirements::warningsFor($user->fresh(), $grantedRoles);
 
+        if (!$isUpdate && !$chosenByOffice) {
+            $user->inviteToSetPassword();
+        }
+
         return response()->json([
             'message' => $isUpdate ? 'User updated successfully' : 'User created successfully',
             'user' => $user,
             'warnings' => $warnings,
-            'password' => $isUpdate ? null : ($password ?? null),
+            // Only a password the office chose is worth reporting back. A
+            // generated one is never shown: the account is mailed a link.
+            'password' => !$isUpdate && $chosenByOffice ? $password : null,
         ]);
     }
 
@@ -354,7 +361,7 @@ class UserManagementController extends Controller
                     }
                     $password = Str::password(8, true, true, true, false);
 
-                    User::create([
+                    $created = User::create([
                         'first_name' => $name['first'],
                         'last_name' => $name['last'],
                         'email' => $email,
@@ -363,13 +370,15 @@ class UserManagementController extends Controller
                         'phone' => !empty($data['phone']) ? trim($data['phone']) : null,
                         'gender' => !empty($data['gender']) ? $data['gender'] : null,
                         'password' => Hash::make($password),
-                        'password_set_at' => now(),
+                        // Nobody knows this one, so the row is mailed a link.
+                        'password_set_at' => null,
                         'role_id' => $role->id,
                         'current_role_id' => $role->id,
                         'default_role_id' => $role->id,
                         'available_roles' => $availableRoles ?? [],
                         'status' => !empty($data['status']) ? strtolower(trim($data['status'])) : 'active',
                     ]);
+                    $created->inviteToSetPassword();
                     $successCount++;
                 }
             } catch (\Exception $e) {

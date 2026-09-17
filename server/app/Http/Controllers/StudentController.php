@@ -67,8 +67,9 @@ class StudentController extends Controller {
                 'cgpa' => 'nullable|numeric'
             ]
         );
+        // Nobody is told this one. The account is mailed a link and chooses
+        // its own, the same way a UG student or any other new account does.
         $password = Str::password(8, true, true, true, false);
-        //generated a random password for the new user he will change it later
 
         $user = new \App\Models\User();
         $name = $request->filled('full_name')
@@ -124,9 +125,9 @@ class StudentController extends Controller {
         if ($formData) {
             Forms::create($formData);
         }
-        return response()->json($password,200);
-        //return the password to the user
-        //TODO: Send email to the user with the password        
+        $user->inviteToSetPassword();
+
+        return response()->json(['message' => 'Student added. They are emailed a link to set their password.'], 200);
     }
 
     /**
@@ -350,7 +351,7 @@ class StudentController extends Controller {
                         $errors[] = "Row " . ($index + 1) . ": missing required fields for new student (full_name, phone, roll_no, department_code, date_of_registration, current_status)";
                         $failed++; continue;
                     }
-                    // Generate random password
+                    // Generated, never shown: the row is mailed a link below.
                     $password = Str::password(8, true, true, true, false);
 
                     // Create user (address lives on Student only)
@@ -382,6 +383,8 @@ class StudentController extends Controller {
                     $student->is_jrf = $studentData['is_jrf'] ?? null;
                     $student->overall_progress = $studentData['overall_progress'] ?? 0.0;
                     $student->save();
+
+                    $user->inviteToSetPassword();
 
                     // Create supervisor allocation form
                     $adminFormController = new \App\Http\Controllers\AdminFormController();

@@ -172,9 +172,14 @@ class FacultyController extends Controller
         $faculty->area_of_specialization_id = $request->input('area_of_specialization_id');
         $faculty->save();
 
+        if ($password !== null) {
+            $newUser->inviteToSetPassword();
+        }
+
         return response()->json([
-            'message' => 'Faculty added successfully',
-            'password' => $password,
+            'message' => $password === null
+                ? 'Faculty added successfully'
+                : 'Faculty added. They are emailed a link to set their password.',
             'faculty_code' => $facultyCode
         ], 200);
     }
@@ -609,11 +614,14 @@ class FacultyController extends Controller
                         'email' => $email,
                         'phone' => $phone,
                         'password' => bcrypt($password),
-                        'password_set_at' => now(),
+                        // Nobody knows this one, so the row is mailed a link.
+                        'password_set_at' => null,
                         'role_id' => $role_id,
                         'current_role_id' => $role_id,
                         'default_role_id' => $role_id,
                     ]);
+
+                    $newUser->inviteToSetPassword();
 
                     Faculty::create([
                         'user_id' => $newUser->id,

@@ -2,14 +2,12 @@
 namespace App\Jobs;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
-use App\Notifications\WelcomeResetPassword;
 
 class ProcessBulkForgotPassword implements ShouldQueue
 {
@@ -32,8 +30,7 @@ class ProcessBulkForgotPassword implements ShouldQueue
                 continue;
             }
 
-            $token = Password::broker()->createToken($user);
-            $user->notify(new WelcomeResetPassword($token, $user));
+            $user->inviteToSetPassword();
             Log::info("Reset link sent to: $email");
         }
     }
