@@ -71,12 +71,19 @@ const NotificationBox = () => {
 
   return (
     <div className="notification_wrapper" ref={notificationRef}>
-      <div className="notification_icon" onClick={toggleNotifications}>
-        <img src="/icons/notifications.svg" alt="Notifications" className="notif_icon" />
+      <button
+        type="button"
+        className="notification_icon"
+        onClick={toggleNotifications}
+        aria-haspopup="true"
+        aria-expanded={isOpen}
+        aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications"}
+      >
+        <img src="/icons/notifications.svg" alt="" aria-hidden="true" className="notif_icon" />
         {unreadCount > 0 && (
-          <div className="notification_badge">{unreadCount > 9 ? "9+" : unreadCount}</div>
+          <span className="notification_badge" aria-hidden="true">{unreadCount > 9 ? "9+" : unreadCount}</span>
         )}
-      </div>
+      </button>
       {isOpen && (
         <div className="notification_box">
           <div className="notification_header">
