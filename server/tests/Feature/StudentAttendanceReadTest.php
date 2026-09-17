@@ -88,6 +88,13 @@ class StudentAttendanceReadTest extends TestCase
     {
         $student = Student::query()->firstOrFail();
 
+        // The window this reads has to hold only the two rows below. On a working
+        // database the scholar may already have attendance inside it, which would
+        // be counted alongside them. DatabaseTransactions rolls the delete back.
+        Attendance::where('roll_no', $student->roll_no)
+            ->whereBetween('date', ['2026-09-01', '2026-09-30'])
+            ->delete();
+
         Attendance::create([
             'roll_no' => $student->roll_no,
             'date' => '2026-09-05',
