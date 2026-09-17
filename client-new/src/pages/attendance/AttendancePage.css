@@ -78,13 +78,13 @@
 /* Shared department/date filter strip above the tab panels */
 .attendance-filters { margin: 1rem 0; }
 .attendance-filters .filter-row { gap: 1rem; flex-wrap: wrap; }
-.attendance-today-pill { margin-left: 0.5rem; font-size: 0.65rem; }
+.attendance-today-pill { margin-left: 0.5rem; font-size: var(--text-2xs); }
 .attendance-filter-meta {
   margin-left: auto;
   display: flex;
   gap: 1rem;
   align-items: center;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   font-weight: 600;
 }
@@ -109,19 +109,19 @@
   border-radius: var(--radius);
 }
 .attendance-summary-label {
-  font-size: 0.68rem;
+  font-size: var(--text-2xs);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   font-weight: 700;
   color: var(--text-subtle);
 }
-.attendance-summary-value { font-size: 1.6rem; font-weight: 700; line-height: 1; color: var(--text-color, #111827); }
+.attendance-summary-value { font-size: var(--text-2xl); font-weight: 700; line-height: 1; color: var(--text-color, #111827); }
 .attendance-summary-value.present { color: var(--success-text); }
 .attendance-summary-value.absent { color: var(--danger-text); }
 .attendance-summary-caption {
   grid-column: 1 / -1;
   margin: 0;
-  font-size: 0.82rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
 }
 

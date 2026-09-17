@@ -31,7 +31,7 @@ const OPTIONAL_ORDER = [
 
 // A form may carry its own `path`; `title={null}` leaves out the heading, for a
 // page that shows several grids under headings of its own.
-const FormGrid = ({ forms, title = "Available Forms" }) => {
+const FormGrid = ({ forms, title = "Available Forms", loading = false }) => {
     const location = useLocation();
 
     const handleClick = (form) => {
@@ -69,7 +69,7 @@ const FormGrid = ({ forms, title = "Available Forms" }) => {
                 aria-hidden="true"
             ></span>
             <h3 className="form-card-title">{form.form_name}</h3>
-            <i className="fa-solid fa-chevron-right form-card-arrow" aria-hidden="true"></i>
+            <i className="fa fa-chevron-right form-card-arrow" aria-hidden="true"></i>
         </div>
     );
 
@@ -92,7 +92,7 @@ const FormGrid = ({ forms, title = "Available Forms" }) => {
                     <div className="form-grid-column">{optional.map(renderCard)}</div>
                 </div>
             ) : (
-                <p>No forms yet.</p>
+                <p>{loading ? 'Loading forms…' : 'No forms yet.'}</p>
             )}
         </>
     );

@@ -36,6 +36,10 @@ const PagenationTable = ({
   const [selectMode, setSelectMode] = useState(false);
   const [role, setRole] = useState("student");
   const [openMenu, setOpenMenu] = useState(null);
+  // The table's own request, not the page-wide loader. That loader is one flag
+  // shared by every request on the page, so it could already be off while this
+  // table was still waiting, and the table said "No results yet." meanwhile.
+  const [fetching, setFetching] = useState(true);
 
   const { setLoading } = useLoading();
 
@@ -57,6 +61,7 @@ const PagenationTable = ({
 
   const fetchData = async (page = 1, rows = rowsPerPage, filters = null) => {
     setLoading(true);
+    setFetching(true);
     let url = `${baseURL}${endpoint}?page=${page}&rows=${rows}`;
     if (filters) {
       const filterStr = encodeURIComponent(JSON.stringify(filters));
@@ -76,11 +81,11 @@ const PagenationTable = ({
       console.error(err);
     } finally {
       setLoading(false);
+      setFetching(false);
     }
   };
 
   useEffect(() => {
-    console.log("Fetching data for page:", currentPage, "with filters:", filters);
     fetchData(currentPage, rowsPerPage, filters);
   }, [endpoint, currentPage, rowsPerPage, filters,num]);
 
@@ -99,6 +104,10 @@ const PagenationTable = ({
     ? filters.length > 0
     : (filters?.conditions?.length ?? 0) > 0;
 
+  // The fallback treats `endpoint` as a client route, which it only is when the
+  // caller passed location.pathname, as the form and presentation lists do. A
+  // caller that passes an API path ("/courses/list") must set rowClickable to
+  // false or pass customOpenForm, or every row opens a dead tab.
   const openForm = (form) => {
     if (customOpenForm) customOpenForm(form);
     else window.open(`${endpoint}/${form.id}`, "_blank");
@@ -191,7 +200,7 @@ const PagenationTable = ({
             <th>S.No</th>
             {fieldsTitle.map((title, index) => <th key={index}>{title}</th>)}
             {actions.length > 0 && <th>Actions</th>}
-            {!selectMode && <th></th>}
+            {rowClickable && !selectMode && <th></th>}
           </tr>
         </thead>
 
@@ -199,12 +208,13 @@ const PagenationTable = ({
         {forms.length === 0 && (
   <tr className="no-data-row">
     {/* S.No, the fields, and whichever of the tick box, actions and chevron
-        columns this table is drawing. */}
+        columns this table is drawing. The chevron column exists only where a row
+        opens something, so it is counted on the same condition that draws it. */}
     <td
-      colSpan={fields.length + 1 + (selecting ? 1 : 0) + (actions.length > 0 ? 1 : 0) + (!selectMode ? 1 : 0)}
+      colSpan={fields.length + 1 + (selecting ? 1 : 0) + (actions.length > 0 ? 1 : 0) + (rowClickable && !selectMode ? 1 : 0)}
       className="no-data-cell"
     >
-      {hasFilters ? "No results match your filters." : "No results yet."}
+      {fetching ? "Loading…" : hasFilters ? "No results match your filters." : "No results yet."}
     </td>
   </tr>
 )}
@@ -300,7 +310,7 @@ const PagenationTable = ({
                               setOpenMenu(openMenu === index ? null : index);
                             }}
                           >
-                            <i className="fa-solid fa-ellipsis-vertical"></i>
+                            <i className="fa fa-ellipsis-v"></i>
                           </button>
                           {openMenu === index && (
                             <div className="row-actions-menu" onClick={(e) => e.stopPropagation()}>
@@ -328,7 +338,7 @@ const PagenationTable = ({
                     })()}
                   </td>
                 )}
-                {!selectMode && (
+                {rowClickable && !selectMode && (
                   <td className="row-go" title="Open"><i className="fa fa-angle-right"></i></td>
                 )}
               </tr>
