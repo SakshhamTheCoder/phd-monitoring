@@ -81,7 +81,7 @@ class ThesisExtentionController extends Controller
         $steps=['student','faculty','phd_coordinator','hod','dra','dordc','director'];
         switch ($role->role) {
             case 'student':
-                return $this->handleStudentForm($user, $form_id, $model,$steps);
+                return $this->handleStudentForm($user, $form_id, $model);
             case 'hod':
                 return $this->handleHodForm($user, $form_id, $model);
             case 'phd_coordinator':
@@ -117,6 +117,8 @@ class ThesisExtentionController extends Controller
                 return $this->draSubmit($user, $request, $form_id);
             case 'dordc':
                 return $this->dordcSubmit($user, $request, $form_id);
+            case 'director':
+                return $this->directorSubmit($user, $request, $form_id);
             case 'phd_coordinator':
                 return $this->coordinatorSubmit($user, $request, $form_id);
             default:
