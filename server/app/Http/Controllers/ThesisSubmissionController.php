@@ -76,7 +76,7 @@ class ThesisSubmissionController extends Controller
         $steps=['student','faculty','phd_coordinator','hod','dra','adordc','dordc','complete'];
         switch ($role->role) {
             case 'student':
-                return $this->handleStudentForm($user, $form_id, $model,$steps);
+                return $this->handleStudentForm($user, $form_id, $model);
             case 'hod':
                 return $this->handleHodForm($user, $form_id, $model);
             case 'phd_coordinator':
@@ -132,6 +132,10 @@ class ThesisSubmissionController extends Controller
             return $this->refuse();
         }
         $formInstance=ThesisSubmission::find($form_id);
+        // A scholar links and unlinks on their own form only.
+        if (!$formInstance || $formInstance->student_id != $user->student?->roll_no) {
+            return $this->refuse();
+        }
         if(count($this->selectedIds($request, 'publications')) != 0){
             foreach ($this->selectedIds($request, 'publications') as $publication) {
                 $publication = Publication::find($publication);
@@ -197,6 +201,10 @@ class ThesisSubmissionController extends Controller
             return $this->refuse();
         }
         $formInstance=ThesisSubmission::find($form_id);
+        // A scholar links and unlinks on their own form only.
+        if (!$formInstance || $formInstance->student_id != $user->student?->roll_no) {
+            return $this->refuse();
+        }
         if(count($this->selectedIds($request, 'publications')) != 0){
             foreach ($this->selectedIds($request, 'publications') as $publication) {
                 $publication = Publication::where('id',$publication)->where('form_id',$formInstance->id)->where('form_type','thesis');
