@@ -205,11 +205,14 @@ class PresentationController extends Controller
             }));            
             $role= $user->current_role->role;
             if($role=='faculty')$role='supervisor';
-            $mandatoryFilters[] = [
-                'key' => $role.'_lock',
-                'op' => '=',
-                'value' => 0
-            ];
+            // A role outside the review chain (admin) has no lock column, so
+            // nothing can be waiting on it.
+            $lockColumn = \Illuminate\Support\Facades\Schema::hasColumn('presentations', $role.'_lock')
+                ? $role.'_lock'
+                : null;
+            $mandatoryFilters[] = $lockColumn
+                ? ['key' => $lockColumn, 'op' => '=', 'value' => 0]
+                : ['key' => 'id', 'op' => '=', 'value' => -1];
           }
 
        
