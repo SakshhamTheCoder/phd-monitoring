@@ -20,8 +20,15 @@ Route::delete('/{id}/milestones/{milestoneId}', [ProjectMilestoneController::cla
 Route::post('/{id}/documents', [ProjectDocumentController::class, 'store'])->middleware('auth:sanctum');
 Route::post('/{id}/documents/{documentId}', [ProjectDocumentController::class, 'update'])->middleware('auth:sanctum');
 Route::delete('/{id}/documents/{documentId}', [ProjectDocumentController::class, 'destroy'])->middleware('auth:sanctum');
-Route::get('/{id}/positions', [ProjectPositionController::class, 'index'])->middleware('auth:sanctum');
-Route::post('/{id}/positions', [ProjectPositionController::class, 'store'])->middleware('auth:sanctum');
-Route::post('/{id}/positions/{positionId}', [ProjectPositionController::class, 'update'])->middleware('auth:sanctum');
-Route::delete('/{id}/positions/{positionId}', [ProjectPositionController::class, 'destroy'])->middleware('auth:sanctum');
-Route::get('/{id}/applications', [PositionApplicationController::class, 'index'])->middleware('auth:sanctum');
+// Recruitment. These hang off a project, but what they produce is an opening
+// and the applicants for it, so they answer to the job_openings switch rather
+// than to project_management. With openings off, a PI could still post a
+// position and list its applicants while POST /applications/{id}/status, which
+// was already behind that switch, refused every decision on them.
+Route::middleware('feature:job_openings')->group(function () {
+    Route::get('/{id}/positions', [ProjectPositionController::class, 'index'])->middleware('auth:sanctum');
+    Route::post('/{id}/positions', [ProjectPositionController::class, 'store'])->middleware('auth:sanctum');
+    Route::post('/{id}/positions/{positionId}', [ProjectPositionController::class, 'update'])->middleware('auth:sanctum');
+    Route::delete('/{id}/positions/{positionId}', [ProjectPositionController::class, 'destroy'])->middleware('auth:sanctum');
+    Route::get('/{id}/applications', [PositionApplicationController::class, 'index'])->middleware('auth:sanctum');
+});
