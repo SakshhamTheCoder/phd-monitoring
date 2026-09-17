@@ -14,6 +14,7 @@ use App\Models\Student;
 use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -43,6 +44,18 @@ Route::post('/login', function (Request $request) {
         /** @var \App\Models\MyUserModel $user **/
         $user = Auth::user();
 
+        if ($user->isDeactivated()) {
+            return response()->json(['error' => 'This account has been deactivated. Contact the office.'], 403);
+        }
+
+        if ($user->needsEmailConfirmation()) {
+            return response()->json([
+                'error' => "Confirm your email first. We sent a link to {$user->email}.",
+                'unverified' => true,
+                'email' => $user->email,
+            ], 403);
+        }
+
         if ($user->current_role_id == null) {
             if ($user->default_role_id == null) {
                 $user->current_role_id = $user->role_id;
@@ -59,6 +72,8 @@ Route::post('/login', function (Request $request) {
         $ret['phone'] = $user->phone;
         $ret['gender'] = $user->gender;
         $ret['role']['role'] = $user->current_role->role;
+        // False for a Google sign-up, which has a password nobody chose.
+        $ret['password_set'] = $user->password_set_at !== null;
         $token = $user->createToken('auth_token', ['server:access'], now()->addDays(10))->plainTextToken;
         return response()->json([
             "user" => $ret,
@@ -110,6 +125,45 @@ Route::post('/forgot-password', function (Request $request) {
     ], 500);
 });
 
+/**
+ * Asks for the current password, except where there is none to give: a Google
+ * sign-up holds one nobody was told, and being signed in is the proof.
+ */
+Route::post('/change-password', function (Request $request) {
+    /** @var \App\Models\User $user */
+    $user = $request->user();
+    $chosenBefore = $user->password_set_at !== null;
+
+    $request->validate([
+        'password' => ['required', 'min:8', 'confirmed'],
+    ]);
+
+    // Not the current_password rule: it reads the default guard, and this
+    // request is authenticated by a token.
+    if ($chosenBefore && !Hash::check((string) $request->current_password, $user->password)) {
+        throw ValidationException::withMessages([
+            'current_password' => 'That is not your current password.',
+        ]);
+    }
+
+    if (Hash::check($request->password, $user->password)) {
+        throw ValidationException::withMessages([
+            'password' => 'Your new password has to be different from the old one.',
+        ]);
+    }
+
+    $user->forceFill([
+        'password' => Hash::make($request->password),
+        'password_set_at' => now(),
+        'first_activation' => $user->first_activation ?? now(),
+    ])->save();
+
+    // Signing out elsewhere is what makes a changed password mean anything.
+    $user->tokens()->where('id', '!=', optional($user->currentAccessToken())->id)->delete();
+
+    return response()->json(['message' => 'Your password is changed.']);
+})->middleware('auth:sanctum');
+
 Route::post('/reset-password', function (Request $request) {
     $validator = Validator::make($request->all(), [
         'token' => 'required|string',
@@ -128,6 +182,7 @@ Route::post('/reset-password', function (Request $request) {
         function (User $user, string $password) {
             $user->forceFill([
                 'password' => Hash::make($password),
+                'password_set_at' => now(),
                 'remember_token' => Str::random(60),
             ])->save();
 
@@ -164,6 +219,12 @@ Route::get('/my-roles', function () {
         ->filter(fn ($value, $key) => str_starts_with($key, 'can_'))
         ->map(fn ($value) => $value === 'true')
         ->all();
+
+    // Mentoring is a fact about the person, not the role: true only while they
+    // mentor something, so the nav item stays off everyone else's screen.
+    $capabilities['can_read_urf_mentees'] = !empty($capabilities['can_manage_urf'])
+        || (!empty($capabilities['can_read_urf_mentees'])
+            && \App\Models\UrfApplication::mentoredBy($user->faculty?->faculty_code)->exists());
 
     return response()->json([
         'available_roles' => $user->availableRoles(),
@@ -242,36 +303,6 @@ Route::post('/switch-role', function (Request $request) {
     }
 })->middleware('auth:sanctum');
 
-Route::post('register', function (Request $request) {
-    $request->validate([
-        'first_name' => 'required|string',
-        'last_name' => 'required|string',
-        'phone' => 'required|string',
-        'email' => 'required|email|unique:users',
-        'password' => 'required|string',
-        'gender' => 'required|string',
-    ]);
-    $user = new \App\Models\User();
-    $user->first_name = $request->first_name;
-    $user->last_name = $request->last_name;
-    $user->phone = $request->phone;
-    $user->email = $request->email;
-    $user->password = bcrypt($request->password);
-    $user->gender = $request->gender;
-    $user->role_id = 1;
-    $user->save();
-    return response()->json($user, 200);
-});
-
-Route::post('create-role', function (Request $request) {
-    $request->validate([
-        'role' => 'required|string',
-    ]);
-    $role = new \App\Models\Role();
-    $role->role = 'Default';
-    $role->save();
-    return response()->json($role, 200);
-});
 Route::prefix('roles')->group(function () {
     require base_path('routes/base/roles.php');
 });
@@ -389,6 +420,18 @@ Route::prefix('supervisor-doctoral-changes')->group(function () {
 
 Route::prefix('users')->group(function () {
     require base_path('routes/base/users.php');
+});
+
+Route::prefix('urf')->group(function () {
+    require base_path('routes/base/urf.php');
+});
+
+Route::prefix('ug-students')->group(function () {
+    require base_path('routes/base/ug_students.php');
+});
+
+Route::prefix('ug-branches')->group(function () {
+    require base_path('routes/base/ug_branches.php');
 });
 
 Route::prefix('settings')->group(function () {

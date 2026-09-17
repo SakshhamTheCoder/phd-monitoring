@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Traits;
 
 trait GeneralFormHandler
 {
-    private function handleStudentForm($user, $form_id, $modelClass, $steps, callable $callback = null)
+    // The form's own chain and its stored fields come off the row via
+    // fullForm(), so this needs nothing but the model and the id. It used to
+    // take a $steps array and a $callback and read neither.
+    private function handleStudentForm($user, $form_id, $modelClass)
     {
         try {
             $student = $user->student;
@@ -19,7 +22,7 @@ trait GeneralFormHandler
                 if ($formInstance->student->id == $student->id) {
                     return response()->json($formInstance->fullForm($user));
                 } else {
-                    return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                    return $this->refuse();
                 }
             } else {
                 return response()->json(['message' => 'No form found'], 404);
@@ -43,7 +46,7 @@ trait GeneralFormHandler
                     else
                         return response()->json(['message' => 'The form is not yet assigned to you for review or action.'], 404);
                 } else {
-                    return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                    return $this->refuse();
                 }
             } else {
                 return response()->json(['message' => 'No form found'], 404);
@@ -66,7 +69,7 @@ trait GeneralFormHandler
                     else
                         return response()->json(['message' => 'The form is not yet assigned to you for review or action.'], 404);
                 } else {
-                    return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                    return $this->refuse();
                 }
             } else {
                 return response()->json(['message' => 'No form found'], 404);
@@ -110,7 +113,7 @@ trait GeneralFormHandler
                     else
                         return response()->json(['message' => 'The form is not yet assigned to you for review or action.'], 404);
                 } else {
-                    return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                    return $this->refuse();
                 }
             } else {
                 return response()->json(['message' => 'No form found'], 404);
@@ -130,12 +133,21 @@ trait GeneralFormHandler
                     $index = array_search('doctoral', $formInstance->steps);
                     if (!$index)
                         $index = array_search('external', $formInstance->steps);
-                    if ($index !== false && $index <= $formInstance->maximum_step)
-                        return response()->json($formInstance->fullForm($user));
+                    if ($index !== false && $index <= $formInstance->maximum_step) {
+                        $form = $formInstance->fullForm($user);
+                        // Presentation and Synopsis route a committee member here
+                        // while they hold 'faculty'. The page draws the chain up to
+                        // the reader's role, so reporting 'faculty' hid the very
+                        // panel they had been sent to answer.
+                        if (!in_array($user->current_role->role, ['doctoral', 'external'], true)) {
+                            $form['role'] = 'doctoral';
+                        }
+                        return response()->json($form);
+                    }
                     else
                         return response()->json(['message' => 'The form is not yet assigned to you for review or action.'], 404);
                 } else {
-                    return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                    return $this->refuse();
                 }
             } else {
                 return response()->json(['message' => 'No form found'], 404);
@@ -173,7 +185,7 @@ trait GeneralFormHandler
                 ], 404);
             }
 
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['errors' => $e->errors()], 422);
         }

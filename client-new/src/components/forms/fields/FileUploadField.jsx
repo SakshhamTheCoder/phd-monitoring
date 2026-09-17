@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import './Fields.css';
 import { toast } from 'react-toastify';
 import {  rootURL } from '../../../api/urls';
@@ -14,6 +14,7 @@ const FileUploadField = ({
   fileTypeLabel = 'PDF',
   required = false,
 }) => {
+  const fieldId = useId();
   const [fileName, setFileName] = useState(
     initialValue ? 'View Uploaded File' : `Upload ${fileTypeLabel} (Max ${maxSizeMB}MB)`
   );
@@ -42,7 +43,11 @@ const FileUploadField = ({
 
   return (
     <div className='file-upload-container'>
-      {showLabel && <label className='input-label'>{label}{required && <span className="req">*</span>}</label>}
+      {showLabel && (
+        <label className='input-label' htmlFor={isLocked ? undefined : fieldId}>
+          {label}{required && <span className="req" aria-hidden="true">*</span>}
+        </label>
+      )}
 
       {isLocked ? (
         initialValue ? (
@@ -61,7 +66,9 @@ const FileUploadField = ({
         )
       ) : (
         <input
+          id={fieldId}
           type='file'
+          aria-required={required || undefined}
           accept={acceptedTypes}
           className='file-input'
           onChange={handleFileChange}

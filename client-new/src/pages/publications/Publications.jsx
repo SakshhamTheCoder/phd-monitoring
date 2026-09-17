@@ -13,6 +13,7 @@ import TableComponent from '../../components/forms/table/TableComponent';
 import { formatDate } from '../../utils/timeParse';
 import ShowPublications from '../../components/publications/ShowPublications';
 import { APIdeletePublication, APIdeletePatent } from '../../api/publication';
+import PageHeader from '../../components/pageHeader/PageHeader';
 const Publications = () => {
 
 
@@ -29,13 +30,11 @@ const Publications = () => {
         .then((data) => {
           if (data && data.success) {
             setFormData(data.response);
-            console.log(data.response);
             setIsLoaded(true);
           }
           setLoading(false);
         })
         .catch((error) => {
-          console.log(error);
           setLoading(false);
         });
     };
@@ -78,16 +77,16 @@ const Publications = () => {
         <>
 
         <Layout children={<>
-            <div className='page-header'>
-                <div className='publication-top-bar-left'>
-                    <h1 className='page-title'>Publications</h1>
-                </div>
-                <div className='publication-top-bar-right'>
-                   <CustomButton text={'+ Add Publication'} onClick={openModal}/>
-                </div>    
-             </div>
+            <PageHeader
+                title="Publications"
+                actions={<CustomButton text="+ Add Publication" onClick={openModal} />}
+            />
 
-                <ShowPublications formData={formData} refetchData={fetchData} enableDelete={true} onDelete={handleDelete} canAdd={true}/>
+                {/* Before the first answer the lists are empty, which read as
+                    "No publications yet" for a scholar who has some. */}
+                {isLoaded
+                  ? <ShowPublications formData={formData} refetchData={fetchData} enableDelete={true} onDelete={handleDelete} canAdd={true}/>
+                  : <p className="no-data-cell" aria-busy="true">Loading publications…</p>}
 
                 <CustomModal isOpen={open} onClose={closeModal} title={'Add Publication'}
                     minHeight='200px' maxHeight='600px' minWidth='650px' maxWidth='700px' closeOnOutsideClick={false}>

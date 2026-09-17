@@ -8,7 +8,6 @@ import GridContainer from "../../components/forms/fields/GridContainer";
 import BulkSchedulePresentation from "../../components/forms/presentations/BulkSchedulePresentation";
 import SchedulePresentation from "../../components/forms/presentations/SchedulePresentation";
 import FormTable from "../../components/forms/formTable/FormTable";
-import FilterBar from "../../components/filterBar/FilterBar";
 import PagenationTable from "../../components/pagenationTable/PagenationTable";
 import SemesterStatsCard from "./SemsterStatsCard";
 import InputField from "../../components/forms/fields/InputField";
@@ -81,9 +80,8 @@ const PresentationSemester = () => {
         true,
         true
       );
-      if (response.success) {
-        toast.success("Semester updated successfully!");
-      }
+      if (!response.success) return;
+      toast.success("Semester updated.");
 
       setOpenEditModal(false);
       window.location.reload();
@@ -194,16 +192,16 @@ const PresentationSemester = () => {
                 space={2}
               />
 
-              <label className="input-label">Evaluation Start Date</label>
-              <DatePicker
+              <label className="input-label" htmlFor="presentation-semester-evaluation-start-date">Evaluation Start Date</label>
+              <DatePicker id="presentation-semester-evaluation-start-date"
                 selected={editForm.start_date}
                 readOnly
                 disabled
                 className="input-field field-readonly"
               />
 
-              <label className="input-label">Evaluation End Date</label>
-              <DatePicker
+              <label className="input-label" htmlFor="presentation-semester-evaluation-end-date">Evaluation End Date</label>
+              <DatePicker id="presentation-semester-evaluation-end-date"
                 selected={editForm.end_date}
                 onChange={(date) => setEditForm({ ...editForm, end_date: date })}
                 className="input-field"

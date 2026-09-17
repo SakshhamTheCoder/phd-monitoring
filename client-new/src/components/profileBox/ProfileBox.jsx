@@ -3,6 +3,7 @@ import "./ProfileBox.css";
 import { generateAvatar } from "../../utils/profileImage";
 import CustomModal from "../forms/modal/CustomModal";
 import SwitchRole from "../switchRole/SwitchRole";
+import ChangePassword from "./ChangePassword";
 import { getRoleName } from "../../utils/roleName";
 import { logoutAPI } from "../../api/login";
 import { toast } from "react-toastify";
@@ -26,6 +27,7 @@ const ProfileBox = () => {
   }, []);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
@@ -58,17 +60,24 @@ const ProfileBox = () => {
 
   return (
     <div className="profile_wrapper" ref={profileRef}>
-      <div className="user_section" onClick={toggleProfileMenu}>
+      <button
+        type="button"
+        className="user_section"
+        onClick={toggleProfileMenu}
+        aria-haspopup="true"
+        aria-expanded={isOpen}
+      >
         <img
           src={image || ""}
-          alt="User Profile"
+          alt=""
+          aria-hidden="true"
           className="user_profile_image"
         />
         <div className="user_info">
           <span className="user_name">{name}</span>
           <span className="user_role">{role}</span>
         </div>
-      </div>
+      </button>
 
       {isOpen && (
         <div className="profile_box">
@@ -76,42 +85,49 @@ const ProfileBox = () => {
             <h3>User Menu</h3>
           </div>
           <div className="profile_content">
-            <div
-              className="profile_item"
-              onClick={() => alert("Navigating to Profile")}
-            >
-              <h4>Profile</h4>
-            </div>
-            {role !== "Student" && (
-              <>
-                <div
-                  className="profile_item"
-                  onClick={() => handleOpenModal()}
-                >
-                  <h4>Switch Role</h4>
-                </div>
-                <CustomModal
-                  isOpen={isModalOpen}
-                  onClose={handleCloseModal}
-                  minWidth="400px"
-                  maxWidth="500px"
-                  minHeight="200px"
-                  maxHeight="400px"
-                >
-                  <SwitchRole/>
-                </CustomModal>
-              </>
+            {/* "Profile" was a placeholder that only raised an alert. Home is
+                where each role's profile already is, one click away in the sidebar. */}
+            {/* Single-role accounts have nothing to switch to. */}
+            {!["Student", "UG Student"].includes(role) && (
+              <button type="button" className="profile_item" onClick={() => { handleOpenModal(); setIsOpen(false); }}>
+                <h4>Switch Role</h4>
+              </button>
             )}
-            <div className="profile_item" onClick={() => {
+            <button type="button" className="profile_item" onClick={() => setPasswordOpen(true)}>
+              <h4>{user.password_set === false ? "Set Password" : "Change Password"}</h4>
+            </button>
+            <button type="button" className="profile_item" onClick={() => {
               logoutAPI();
               toast.success("Logged out");
               window.location.href = "/login";
             }}>
               <h4>Logout</h4>
-            </div>
+            </button>
           </div>
         </div>
       )}
+
+      {/* Outside the menu: a click inside a dialog is outside the menu, which
+          closed the menu and took the dialog with it. */}
+      <CustomModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        minWidth="400px"
+        maxWidth="500px"
+        minHeight="200px"
+        maxHeight="400px"
+      >
+        <SwitchRole/>
+      </CustomModal>
+
+      <CustomModal
+        isOpen={passwordOpen}
+        onClose={() => setPasswordOpen(false)}
+        minWidth="400px"
+        maxWidth="520px"
+      >
+        <ChangePassword onDone={() => { setPasswordOpen(false); setIsOpen(false); }} />
+      </CustomModal>
     </div>
   );
 };

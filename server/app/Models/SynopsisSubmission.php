@@ -44,7 +44,11 @@ class SynopsisSubmission extends Model
             'revised_title' => $this->revised_title,
             'synopsis_pdf' => $this->synopsis_pdf,
             'total_progress' => $this->total_progress,
-            'previous_progress'=>$this->student->overall_progress,
+            // Stored once the supervisor submits: total is previous plus increase.
+            // Today's overall already includes the increase on an approved form.
+            'previous_progress' => $this->supervisor_lock && $this->total_progress !== null
+                ? $this->total_progress - (int) $this->current_progress
+                : $this->student->overall_progress,
             'sci' => $publicationsQuery->clone()->where('publication_type', 'journal')->where('type', 'sci')->get(),
             'non_sci' => $publicationsQuery->clone()->where('publication_type', 'journal')->where('type', 'non-sci')->get(),
             'national' => $publicationsQuery->clone()->where('publication_type', 'conference')->where('type', 'national')->get(),

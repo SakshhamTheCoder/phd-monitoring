@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\UgStudent;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -36,9 +37,24 @@ class GoogleAuthController extends Controller
             $user = User::where('email', $googleUser->getEmail())->first();
 
             if (!$user) {
+                // An undergraduate address with no account came here to sign up.
+                if (UgStudent::eligibleEmail($googleUser->getEmail())) {
+                    return redirect(config('app.frontend_url') . '/google/callback?' . http_build_query([
+                        'signup' => UgSignupController::issueGoogleTicket($googleUser->getEmail(), $googleUser->getName()),
+                        'email' => $googleUser->getEmail(),
+                        'name' => $googleUser->getName(),
+                    ]));
+                }
+
                 // User does not exist, redirect with error
-                return redirect(env('FRONTEND_URL', 'https://phdportal.thapar.edu') . '/google/callback?error=' . urlencode('No account found with this email. Please contact administrator.'));
+                return redirect(config('app.frontend_url') . '/google/callback?error=' . urlencode('No account found with this email. Please contact administrator.'));
             }
+
+            if ($user->isDeactivated()) {
+                return redirect(config('app.frontend_url') . '/google/callback?error=' . urlencode('This account has been deactivated. Contact the office.'));
+            }
+
+            $this->recordGoogleProof($user, $googleUser->user['email_verified'] ?? false);
 
             // User exists, log them in
             Auth::login($user);
@@ -67,11 +83,12 @@ class GoogleAuthController extends Controller
                 'gender' => $user->gender,
                 'role' => [
                     'role' => $user->current_role->role
-                ]
+                ],
+                'password_set' => $user->password_set_at !== null,
             ];
 
             // Redirect to frontend callback with data
-            $callbackUrl = env('FRONTEND_URL', 'https://phdportal.thapar.edu') . '/google/callback?' . http_build_query([
+            $callbackUrl = config('app.frontend_url') . '/google/callback?' . http_build_query([
                 'token' => $token,
                 'user' => json_encode($userData),
                 'available_roles' => json_encode($user->availableRoles())
@@ -81,7 +98,18 @@ class GoogleAuthController extends Controller
 
         } catch (\Exception $e) {
             // Redirect to frontend with error
-            return redirect(env('FRONTEND_URL', 'https://phdportal.thapar.edu') . '/google/callback?error=' . urlencode('Failed to authenticate with Google: ' . $e->getMessage()));
+            return redirect(config('app.frontend_url') . '/google/callback?error=' . urlencode('Failed to authenticate with Google: ' . $e->getMessage()));
+        }
+    }
+
+    /**
+     * Google holding the mailbox is what the confirmation link asks a student
+     * to prove, so it is recorded rather than asked for twice.
+     */
+    private function recordGoogleProof(User $user, $emailVerified): void
+    {
+        if ($emailVerified && !$user->email_verified_at) {
+            $user->forceFill(['email_verified_at' => now()])->save();
         }
     }
 
@@ -123,12 +151,31 @@ class GoogleAuthController extends Controller
             $user = User::where('email', $payload['email'])->first();
 
             if (!$user) {
+                // As above, with the ticket in the answer rather than the URL.
+                if (UgStudent::eligibleEmail($payload['email'])) {
+                    return response()->json([
+                        'success' => false,
+                        'signup' => UgSignupController::issueGoogleTicket($payload['email'], $payload['name'] ?? null),
+                        'email' => $payload['email'],
+                        'name' => $payload['name'] ?? null,
+                    ], 404);
+                }
+
                 // User does not exist, return error
                 return response()->json([
                     'success' => false,
                     'error' => 'No account found with this email. Please contact administrator.'
                 ], 404);
             }
+
+            if ($user->isDeactivated()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'This account has been deactivated. Contact the office.'
+                ], 403);
+            }
+
+            $this->recordGoogleProof($user, $payload['email_verified'] ?? false);
 
             // User exists, log them in
             Auth::login($user);
@@ -157,7 +204,8 @@ class GoogleAuthController extends Controller
                 'gender' => $user->gender,
                 'role' => [
                     'role' => $user->current_role->role
-                ]
+                ],
+                'password_set' => $user->password_set_at !== null,
             ];
 
             return response()->json([

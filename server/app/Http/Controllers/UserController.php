@@ -34,13 +34,20 @@ class UserController extends Controller{
                 break;
             case 'hod':
             case 'phd_coordinator':
-            case 'dra':
-            case 'dordc':
-            case 'director':
+            case 'adordc':
             case 'faculty':
             case 'external':
             case 'doctoral':
                 $data = $user->faculty->forms($roll_no);
+                break;
+            // Most institute officer accounts have no faculty row, and their
+            // branches of Faculty::forms() read only the acting role, so an
+            // unsaved Faculty carrying the user answers the same.
+            case 'dra':
+            case 'dordc':
+            case 'director':
+                $faculty = $user->faculty ?? (new \App\Models\Faculty())->setRelation('user', $user);
+                $data = $faculty->forms($roll_no);
                 break;
             // Every branch above reads a per-role `<role>_available` column,
             // and there is no admin one: an admin is not a step in any chain,
@@ -54,7 +61,7 @@ class UserController extends Controller{
                     ->each(fn ($form) => $form['action_required'] = false);
                 break;
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
         return response()->json($data, 200);
     }

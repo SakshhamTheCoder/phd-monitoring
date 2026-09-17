@@ -9,8 +9,8 @@
   width: 340px;
   background-color: #fff;
   border: 1px solid #f0dede;
-  border-radius: 12px;
-  box-shadow: 0 12px 28px rgba(120, 29, 29, 0.14);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   z-index: 1000;
   overflow: hidden;
 }
@@ -21,13 +21,13 @@
   justify-content: space-between;
   padding: 12px 16px;
   color: #7f1d1d;
-  font-size: 14px;
+  font-size: var(--text-sm);
   font-weight: 700;
   border-bottom: 1px solid #f4e7e7;
 }
 
 .notification_count {
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   color: #991b1b;
   background: #fff1f2;
@@ -47,7 +47,7 @@
   background: none;
   color: #991b1b;
   font-family: inherit;
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   cursor: pointer;
   padding: 2px 2px;
@@ -100,7 +100,7 @@
 
 .notification_item h4 {
   margin: 0;
-  font-size: 13.5px;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: #1f2937;
   line-height: 1.35;
@@ -108,7 +108,7 @@
 
 .notification_item p {
   margin: 3px 0 0;
-  font-size: 12px;
+  font-size: var(--text-2xs);
   color: #6b7280;
   line-height: 1.4;
   display: -webkit-box;
@@ -120,7 +120,7 @@
 .notification_time {
   display: block;
   margin-top: 5px;
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: #9ca3af;
 }
 
@@ -131,7 +131,7 @@
 
 .notification_empty p {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--text-xs);
   color: #9ca3af;
 }
 
@@ -146,9 +146,28 @@
   color: #991b1b;
   text-decoration: none;
   font-weight: 600;
-  font-size: 13px;
+  font-size: var(--text-xs);
 }
 
 .see_all:hover {
   text-decoration: underline;
+}
+
+/* Was a div until it became a real button, so the button chrome is cleared and
+   the focus ring is put back, rather than left to the browser's default. */
+.notification_icon {
+    appearance: none;
+    border: none;
+    background: none;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    text-align: inherit;
+    cursor: pointer;
+}
+
+.notification_icon:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
 }

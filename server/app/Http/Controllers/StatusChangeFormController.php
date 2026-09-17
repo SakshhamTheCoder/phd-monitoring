@@ -59,7 +59,7 @@ class StatusChangeFormController extends Controller
         $role = $user->current_role;
         $steps=['student','faculty','phd_coordinator','hod','dra','dordc','complete'];
         if($role->role != 'student'){
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $status_changes=$user->student->statusChanges();
         if($status_changes->count()>0){
@@ -97,19 +97,19 @@ class StatusChangeFormController extends Controller
             case 'dra':
             case 'dordc':
             case 'director':
-                return $this->handleAdminForm($user, $form_id, $model);
+                return $this->handleAdminForm($user, $form_id, $model, true);
             case 'faculty':
                 return $this->handleFacultyForm($user, $form_id, $model);
             case 'admin':
                 return $this->handleAdminForm($user, $form_id, $model,true);
            
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
     private function customLoadStudent($user, $form_id, $model,$steps) {
-        return $this->handleStudentForm($user, $form_id, $model,$steps);
+        return $this->handleStudentForm($user, $form_id, $model);
     }
     
     public function submit(Request $request, $form_id)
@@ -134,7 +134,7 @@ class StatusChangeFormController extends Controller
             case 'director':
                 return $this->directorSubmit($user, $request, $form_id);
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -149,7 +149,8 @@ class StatusChangeFormController extends Controller
             $formInstance->reason = $request->reason;
             $prevStatusChanges = $user->student->statusChanges();
             if ($prevStatusChanges->count() > 2) {
-               throw new \Illuminate\Validation\ValidationException(['reason' => 'You have already changed your status twice']);
+               // The constructor takes a Validator, not an array; given one it crashed with a 500.
+               throw \Illuminate\Validation\ValidationException::withMessages(['reason' => 'You have already changed your status twice.']);
             }
         });
    
@@ -161,7 +162,7 @@ class StatusChangeFormController extends Controller
         $model = StudentStatusChangeForms::class;
         $allowedRoles = ['hod', 'phd_coordinator', 'dra', 'dordc', 'director'];
         if (!in_array($role->role, $allowedRoles)) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $request->validate([
             'form_ids' => 'required|array',

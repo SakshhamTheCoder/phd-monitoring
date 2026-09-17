@@ -33,13 +33,13 @@ class DepartmentController extends Controller
         $page = $request->input('page', 1);
     
         if (!$loggedInUser->may('can_edit_department')) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
     
         $facultyQuery = Department::with(['hod.user', 'adordc.user', 'phdCoordinators.faculty.user']);
     
         if ($filters) {
-            $facultyQuery = $this->applyDynamicFilters($facultyQuery, $filters);
+            $facultyQuery = $this->applyDynamicFilters($facultyQuery, $filters, 'departments');
         }
     
         $faculties = $facultyQuery->orderBy('name')->paginate($perPage, ['*'], 'page', $page);
@@ -236,7 +236,7 @@ class DepartmentController extends Controller
 
             // Apply dynamic filters
             if ($filters) {
-                $query = $this->applyDynamicFilters($query, $filters);
+                $query = $this->applyDynamicFilters($query, $filters, 'area_of_specialization');
             }
 
             $areas = $query->orderBy('name')->paginate($perPage, ['*'], 'page', $page);
@@ -302,6 +302,10 @@ class DepartmentController extends Controller
                         'message' => 'You do not have permission to update this area'
                     ], 403);
                 }
+            } elseif (!$loggedInUser->may('can_add_department')) {
+                // Everyone else needs what adding an area needs. Without this any
+                // signed-in account could rename or delete any area.
+                return $this->refuse();
             }
 
             $area->name = $request->name;
@@ -351,6 +355,10 @@ class DepartmentController extends Controller
                         'message' => 'You do not have permission to delete this area'
                     ], 403);
                 }
+            } elseif (!$loggedInUser->may('can_add_department')) {
+                // Everyone else needs what adding an area needs. Without this any
+                // signed-in account could rename or delete any area.
+                return $this->refuse();
             }
 
             // Faculty are listed under this area by id, so deleting it would

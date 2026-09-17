@@ -11,7 +11,20 @@ trait GeneralFormList
 {
     use FilterLogicTrait;
     use PagenationTrait;
-    private function listForms($user, $model, $request, $filters = null, $override = false, $fields = [])
+    /**
+     * The filter bar's conditions, applied to a forms list.
+     *
+     * A key the pages do not define is dropped, so a filter cannot name a
+     * column of its own choosing. $trusted names the keys the controller built
+     * itself, which the client never sent and which scope the list: the scholar
+     * whose page this is, say, or the reviewer's pending forms.
+     */
+    private function applyFormFilters($query, $filters, array $trusted = [])
+    {
+        return $this->applyDynamicFilters($query, $filters, ['forms', 'presentation'], array_merge(['action', 'upcoming', 'missed'], $trusted));
+    }
+
+    private function listForms($user, $model, $request, $filters = null, $override = false, $fields = [], array $trusted = [])
     {
         $role = $user->current_role->role;
         $page = $request->input('page', 1);
@@ -29,32 +42,95 @@ trait GeneralFormList
 
         switch ($role) {
             case 'student':
-                return $this->listStudentForms($user, $model, $filters, $page, $rows, $fields);
+                return $this->listStudentForms($user, $model, $filters, $page, $rows, $fields, $trusted);
             case 'hod':
             case 'phd_coordinator':
-                return $this->listHodForms($user, $model, $filters, false, $page, $rows, $fields,);
+                return $this->listHodForms($user, $model, $filters, false, $page, $rows, $fields, $trusted);
             case 'dra':
             case 'dordc':
             case 'director':
             case 'admin':
-                return $this->listAdminForms($user, $model, $filters, $page, $rows, $fields,);
+                return $this->listAdminForms($user, $model, $filters, $page, $rows, $fields, $trusted);
             case 'faculty':
-                return $this->listFacultyForms($user, $model, $filters, $override, $page, $rows, $fields);
+                return $this->listFacultyForms($user, $model, $filters, $override, $page, $rows, $fields, $trusted);
             case 'adordc':
-                return $this->listAdordcForms($user, $model, $filters, $page, $rows, $fields);
+                return $this->listAdordcForms($user, $model, $filters, $page, $rows, $fields, $trusted);
             case 'doctoral':
             case 'external':
-                return $this->listDoctoralForms($user, $model, $filters, $override, $page, $rows, $fields,);
+                return $this->listDoctoralForms($user, $model, $filters, $override, $page, $rows, $fields, $trusted);
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
 
 
 
+    /**
+     * Keep only the forms this role can open.
+     *
+     * The lists scoped by department or supervision alone, while every
+     * GeneralFormHandler loader also requires the reader's step to be in the
+     * form's own chain and already reached (index <= maximum_step). So a HOD saw
+     * a form still with the scholar, a coordinator saw IRB forms they have no
+     * step in, and clicking either answered "not yet assigned" or "not
+     * authorized". This is the loaders' rule, stated once for the lists.
+     *
+     * Admin reads every form and has no step, so is not filtered. The director
+     * reads every form they have no step in, and the rest once reached.
+     */
+    private function onlyFormsReachedBy($formsQuery, string $formsTable, string $role): void
+    {
+        if ($role === 'admin') {
+            return;
+        }
+
+        $steps = in_array($role, ['doctoral', 'external'], true) ? ['doctoral', 'external'] : [$role];
+        // JSON_SEARCH answers a path such as "$[3]", or NULL when the step is not
+        // in the chain, which fails the comparison.
+        $stepIndex = "CAST(REPLACE(REPLACE(JSON_UNQUOTE(JSON_SEARCH(`{$formsTable}`.`steps`, 'one', ?)), '$[', ''), ']', '') AS UNSIGNED)";
+
+        $formsQuery->where(function ($query) use ($steps, $formsTable, $stepIndex, $role) {
+            foreach ($steps as $step) {
+                $query->orWhereRaw("{$stepIndex} <= `{$formsTable}`.`maximum_step`", [$step]);
+            }
+            if ($role === 'director') {
+                $query->orWhereRaw("JSON_SEARCH(`{$formsTable}`.`steps`, 'one', 'director') IS NULL");
+            }
+        });
+    }
+
+    /** onlyFormsReachedBy() for one loaded form. */
+    private function formReachedBy($form, string $role): bool
+    {
+        if ($role === 'admin') {
+            return true;
+        }
+
+        $steps = $form->steps ?? [];
+        if ($role === 'director' && !in_array('director', $steps, true)) {
+            return true;
+        }
+
+        foreach (in_array($role, ['doctoral', 'external'], true) ? ['doctoral', 'external'] : [$role] as $step) {
+            $index = array_search($step, $steps, true);
+            if ($index !== false && $index <= $form->maximum_step) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function paginateAndMap($formsQuery, $page, $fields, $perPage = 50, $user)
     {
+        if ($formsQuery instanceof \Illuminate\Database\Eloquent\Builder) {
+            $this->onlyFormsReachedBy($formsQuery, $formsQuery->getModel()->getTable(), $user->current_role->role);
+            // mapForm reads the scholar and their name on every row, and most lists
+            // add the department or supervisors; one query each for the page.
+            $formsQuery->with(['student.user', 'student.department', 'student.supervisors.user']);
+        }
+
         $total = $formsQuery instanceof \Illuminate\Database\Eloquent\Builder || $formsQuery instanceof \Illuminate\Database\Query\Builder
             ? $formsQuery->count()
             : count($formsQuery);
@@ -133,47 +209,37 @@ trait GeneralFormList
             case 'hod':
             case 'phd_coordinator':
                 if ($student->department_id != $user->faculty->department_id) {
-                    return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                    return $this->refuse();
                 }
                 break;
             case 'faculty':
                 if (!$user->faculty->supervisedStudents->contains('roll_no', $student_id)) {
-                    return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                    return $this->refuse();
                 }
                 break;
             case 'doctoral':
             case 'external':
                 if (!$student->checkDoctoralCommittee($user->faculty->faculty_code)) {
-                    return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                    return $this->refuse();
                 }
                 break;
             case 'adordc':
                 if (!$user->faculty->adordcDepartments->pluck('id')->contains($student->department_id)) {
-                    return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                    return $this->refuse();
                 }
                 break;
 
             case 'student':
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
                 break;
             default:
                 break;
         }
         $formsQuery = $model::where('student_id', $student_id);
-        // The step check answers "has this form reached my desk yet", which is
-        // only a question for a role that appears in the chain. An admin never
-        // does, so searching for them found nothing and every form was filtered
-        // away: the profile's View Forms page came back empty for every scholar.
-        // A role that is not a step is reading, not acting, and has already been
-        // authorised above, so it sees the lot.
-        $filteredForms = $formsQuery->get()->filter(function ($form) use ($role) {
-            $index = array_search($role, $form->steps);
-            if ($index === false) {
-                return true;
-            }
-
-            return $index <= $form->maximum_step;
-        });
+        // The same rule onlyFormsReachedBy() puts on the other lists, since the
+        // rows open through the same loaders. Letting in every form without the
+        // reader's step listed forms those loaders then refused.
+        $filteredForms = $formsQuery->get()->filter(fn ($form) => $this->formReachedBy($form, $role));
         // The table on the other side reads {data, fields, fieldsTitles}. This
         // used to hand back a bare array, so the page drew a single S.NO column
         // and said "No results yet" however many forms came back.
@@ -187,33 +253,33 @@ trait GeneralFormList
     }
 
 
-    private function listStudentForms($user, $model, $filters = null, $page = 1, $rows = 50, $fields = [])
+    private function listStudentForms($user, $model, $filters = null, $page = 1, $rows = 50, $fields = [], array $trusted = [])
     {
         $student = $user->student;
         $role = $user->current_role->role;
         $formsQuery = $model::where('student_id', $student->roll_no);
 
         if ($filters) {
-            $formsQuery = $this->applyDynamicFilters($formsQuery, $filters);
+            $formsQuery = $this->applyFormFilters($formsQuery, $filters, $trusted);
         }
 
 
         return $this->paginateAndMap($formsQuery, $page, $fields, $rows, $user);
     }
 
-    private function listAdminForms($user, $model, $filters = null, $page = 1, $rows = 50, $fields = [])
+    private function listAdminForms($user, $model, $filters = null, $page = 1, $rows = 50, $fields = [], array $trusted = [])
     {
         $formsQuery = $model::query();
 
         if ($filters) {
-            $formsQuery = $this->applyDynamicFilters($formsQuery, $filters);
+            $formsQuery = $this->applyFormFilters($formsQuery, $filters, $trusted);
         }
 
 
         return $this->paginateAndMap($formsQuery, $page, $fields, $rows, $user);
     }
 
-    private function listFacultyForms($user, $model, $filters = null, $override = false, $page = 1, $rows = 50, $fields = [])
+    private function listFacultyForms($user, $model, $filters = null, $override = false, $page = 1, $rows = 50, $fields = [], array $trusted = [])
     {
         $faculty = $user->faculty;
         $supervisedStudents = $faculty->supervisedStudents();
@@ -222,14 +288,14 @@ trait GeneralFormList
         $formsQuery = $model::whereIn('student_id', $studentIds);
 
         if ($filters) {
-            $formsQuery = $this->applyDynamicFilters($formsQuery, $filters);
+            $formsQuery = $this->applyFormFilters($formsQuery, $filters, $trusted);
         }
 
 
         return $this->paginateAndMap($formsQuery, $page, $fields, $rows, $user);
     }
 
-    private function listHodForms($user, $model, $filters = null, $override = false, $page = 1, $rows = 50, $fields = [])
+    private function listHodForms($user, $model, $filters = null, $override = false, $page = 1, $rows = 50, $fields = [], array $trusted = [])
     {
         $department = $user->faculty->department;
         $students = Student::where('department_id', $department->id)->pluck('roll_no');
@@ -237,12 +303,12 @@ trait GeneralFormList
         $formsQuery = $model::whereIn('student_id', $students);
 
         if ($filters) {
-            $formsQuery = $this->applyDynamicFilters($formsQuery, $filters);
+            $formsQuery = $this->applyFormFilters($formsQuery, $filters, $trusted);
         }
 
         return $this->paginateAndMap($formsQuery, $page, $fields, $rows, $user);
     }
-    private function listAdordcForms($user, $model, $filters = null, $page = 1, $rows = 50, $fields = [])
+    private function listAdordcForms($user, $model, $filters = null, $page = 1, $rows = 50, $fields = [], array $trusted = [])
     {
         $faculty = $user->faculty;
 
@@ -267,13 +333,13 @@ trait GeneralFormList
         $formsQuery = $model::whereIn('student_id', $studentIds);
 
         if ($filters) {
-            $formsQuery = $this->applyDynamicFilters($formsQuery, $filters);
+            $formsQuery = $this->applyFormFilters($formsQuery, $filters, $trusted);
         }
 
         return $this->paginateAndMap($formsQuery, $page, $fields, $rows, $user);
     }
 
-    private function listDoctoralForms($user, $model, $filters = null, $override = false, $page = 1, $rows = 50, $fields = [])
+    private function listDoctoralForms($user, $model, $filters = null, $override = false, $page = 1, $rows = 50, $fields = [], array $trusted = [])
     {
         $faculty = $user->faculty;
         $doctoralStudents = $faculty->doctoredStudents();
@@ -282,7 +348,7 @@ trait GeneralFormList
         $formsQuery = $model::whereIn('student_id', $studentIds);
 
         if ($filters) {
-            $formsQuery = $this->applyDynamicFilters($formsQuery, $filters);
+            $formsQuery = $this->applyFormFilters($formsQuery, $filters, $trusted);
         }
 
 

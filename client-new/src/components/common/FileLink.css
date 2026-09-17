@@ -2,10 +2,10 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: #991b1b;
+  color: var(--primary-color);
   text-decoration: none;
   font-weight: 600;
-  font-size: 13px;
+  font-size: var(--text-xs);
 }
 
 .file-cell-link:hover {
@@ -13,6 +13,6 @@
 }
 
 .file-cell-icon {
-  font-size: 15px;
+  font-size: var(--text-base);
   flex: 0 0 auto;
 }

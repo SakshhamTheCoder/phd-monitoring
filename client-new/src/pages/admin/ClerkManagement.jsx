@@ -149,7 +149,6 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
 
       toast.success(`Import completed: ${totalSuccess} created, ${totalUpdated} updated, ${totalErrors} errors.`);
       if (allErrors.length > 0) {
-        console.log('Import errors:', allErrors);
         toast.warning(`${totalErrors} rows failed. Check console for details.`);
       }
 
@@ -166,22 +165,44 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
     }
   };
 
-  // Client-side filter — mirrors FilterBar shape (combine + conditions[]) but
-  // applied locally so the page feels like Students/Faculty without needing a
-  // server-side /clerks/filters endpoint. Falls back to showing all when empty.
+  // Client-side filter — the clerk list is small and unpaginated, so it is
+  // matched here rather than in a query. The rules are the server's: a field
+  // given two values widens (either matches), two fields narrow each other, and
+  // the search box sends one value across every field at once, which is an OR.
   const filteredClerks = useMemo(() => {
-    const conds = filter.conditions || [];
-    if (conds.length === 0) return clerks;
-    return clerks.filter((c) => {
-      const hay = `${c.name} ${c.email} ${c.phone} ${c.departments.map((d) => d.name).join(' ')}`.toLowerCase();
-      return conds.every((cond) => {
-        const val = String(cond.value || '').toLowerCase();
-        if (!val) return true;
-        const op = cond.op || '=';
-        if (op === 'LIKE') return hay.includes(val);
-        if (op === '!=') return !hay.includes(val);
-        return hay.includes(val);
+    const conditions = filter.conditions || [];
+    const mandatory = filter.mandatory_filter || [];
+
+    if (conditions.length === 0 && mandatory.length === 0) return clerks;
+
+    // A clerk can be tagged with several departments, so a field is a list and
+    // any one of its values matching is a match.
+    const valuesOf = (clerk, key) => (key === 'department.name'
+      ? clerk.departments.map((d) => d.name ?? '')
+      : [clerk[key] ?? '']);
+
+    const matches = (clerk, condition) => {
+      const wanted = String(condition.value ?? '').toLowerCase();
+      if (!wanted) return true;
+
+      return valuesOf(clerk, condition.key).some((held) => {
+        const value = String(held).toLowerCase();
+        return condition.op === '=' ? value === wanted : value.includes(wanted);
       });
+    };
+
+    const groupedByKey = (list) => Object.values(list.reduce((all, condition) => {
+      (all[condition.key] = all[condition.key] || []).push(condition);
+      return all;
+    }, {}));
+
+    return clerks.filter((clerk) => {
+      if (!mandatory.every((condition) => matches(clerk, condition))) return false;
+      if (conditions.length === 0) return true;
+
+      return filter.combine === 'or'
+        ? conditions.some((condition) => matches(clerk, condition))
+        : groupedByKey(conditions).every((group) => group.some((condition) => matches(clerk, condition)));
     });
   }, [clerks, filter]);
 
@@ -198,7 +219,8 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
         actions={<div style={{display:'flex',gap:'10px'}}><CustomButton text="Bulk Import" variant="secondary" onClick={() => setIsBulkUpdateOpen(true)} /><CustomButton text="Add Clerk +" onClick={() => setIsCreateOpen(true)} /></div>}
       />
 
-      <FilterBar onSearch={handleFilterChange} />
+      {/* The page answers to two addresses; the filters live at one of them. */}
+      <FilterBar path="/clerks" onSearch={handleFilterChange} />
 
       {loading ? (
         <div className="empty-state">Loading…</div>
@@ -243,7 +265,7 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
                           setOpenMenu(openMenu === idx ? null : idx);
                         }}
                       >
-                        <i className="fa-solid fa-ellipsis-vertical"></i>
+                        <i className="fa fa-ellipsis-v"></i>
                       </button>
                       {openMenu === idx && (
                         <div className="row-actions-menu" onClick={(e) => e.stopPropagation()}>
@@ -256,7 +278,7 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
                             }}
                           >
                             <span className="ra-icon">
-                              <i className="fa-solid fa-users-gear"></i>
+                              <i className="fa fa-users"></i>
                             </span>
                             <span>Manage Departments</span>
                           </button>

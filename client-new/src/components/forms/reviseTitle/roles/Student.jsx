@@ -92,7 +92,6 @@ const Student = ({ formData }) => {
     setTemp(tt);
   };
   useEffect(() => {
-    console.log(body);
   }, [body]);
 
   return (

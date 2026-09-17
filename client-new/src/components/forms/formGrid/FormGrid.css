@@ -21,7 +21,7 @@
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    font-size: 12.5px;
+    font-size: var(--text-xs);
     font-weight: 500;
     color: #6b6b6b;
 }
@@ -58,13 +58,13 @@
 .form-card {
     background-color: #ffffff;
     padding: 16px 18px;
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
     border: 1px solid #ececec;
     display: flex;
     align-items: center;
     gap: 14px;
     color: #3a3a3a;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    box-shadow: var(--shadow-sm);
     cursor: pointer;
     transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
@@ -86,7 +86,7 @@
 
 .form-status-dot.active {
     background-color: #2e9e4f;
-    box-shadow: 0 0 0 3px rgba(46, 158, 79, 0.15);
+    box-shadow: var(--shadow-focus);
     animation: breathe 1.6s infinite;
 }
 
@@ -97,7 +97,7 @@
 }
 
 .form-card-title {
-    font-size: 15px;
+    font-size: var(--text-base);
     font-weight: 600;
     margin: 0;
     flex: 1;
@@ -108,7 +108,7 @@
 
 .form-card-arrow {
     flex-shrink: 0;
-    font-size: 13px;
+    font-size: var(--text-xs);
     color: #cbc4c4;
     transition: color 0.18s ease, transform 0.18s ease;
 }

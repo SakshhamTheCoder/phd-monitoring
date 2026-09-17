@@ -15,7 +15,7 @@ class SemesterController extends Controller
     public function getRecent(Request $request, $semester_id = null)
     {
         $user = Auth::user();
-        $curr_role = $user->role->role;
+        $curr_role = $user->current_role->role;
 
 
         if (
@@ -80,8 +80,8 @@ class SemesterController extends Controller
 
         $user = Auth::user();
         if (
-            $user->role->role != 'dordc' &&
-            $user->role->role != 'admin'
+            $user->current_role->role != 'dordc' &&
+            $user->current_role->role != 'admin'
         ) {
             return response()->json([
                 'status' => 'error',
@@ -121,7 +121,7 @@ class SemesterController extends Controller
     {
         $semester_id = $this->routeParam($request, 'semester_id', $semester_id);
         $user = Auth::user();
-        $curr_role = $user->role->role;
+        $curr_role = $user->current_role->role;
         if ($semester_id) {
             $semesters = Semester::where('semester_name', $semester_id)->first();
         } else {
@@ -150,7 +150,7 @@ class SemesterController extends Controller
     private function ListNotScheduled($request, $semesters, $dep_id = null)
     {
         $user = Auth::user();
-        $role = $user->role->role;
+        $role = $user->current_role->role;
 
         // Apply pagination
         $perPage = $request->query('rows', 50); // default 10 per page
@@ -165,7 +165,7 @@ class SemesterController extends Controller
                 ->where('students.department_id', $dep_id);
         }
 
-        $students = $query->paginate($perPage, ['*'], 'page', $page);
+        $students = $query->with(['user', 'department'])->paginate($perPage, ['*'], 'page', $page);
 
         $result = $students->map(function ($student) {
             return [
@@ -194,7 +194,7 @@ class SemesterController extends Controller
     private function ListSupervisedOrDoctored($request, $type = 'supervised')
     {
         $user = Auth::user();
-        $role = $user->role->role;
+        $role = $user->current_role->role;
         $faculty = $user->faculty;
     
         // Apply pagination

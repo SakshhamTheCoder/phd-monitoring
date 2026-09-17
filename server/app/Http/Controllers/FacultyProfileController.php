@@ -9,6 +9,7 @@ use App\Jobs\SyncFacultyPublications;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class FacultyProfileController extends Controller
 {
@@ -30,7 +31,7 @@ class FacultyProfileController extends Controller
     {
         $user = Auth::user();
         if (!$user?->may('can_read_faculty_directory')) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
 
         $faculty = Faculty::with(['user', 'department'])->find($facultyCode);
@@ -89,7 +90,7 @@ class FacultyProfileController extends Controller
             'expertise' => 'nullable',
             'area_of_specialization_id' => 'nullable|integer|exists:area_of_specializations,id',
             'supervised_outside' => 'nullable|integer|min:0',
-            'phone' => 'nullable|string|max:20',
+            'phone' => ['nullable', 'string', 'max:20', Rule::unique('users', 'phone')->ignore($faculty->user_id)],
         ]);
 
         foreach ($this->identifierFields as $field) {

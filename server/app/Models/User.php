@@ -31,6 +31,7 @@ class User extends Authenticatable
         'profile_picture',
         'address',
         'password',
+        'password_set_at',
         'email_verified_at',
         'first_activation',
         'available_roles',
@@ -55,7 +56,9 @@ class User extends Authenticatable
 
     public function name()
     {
-        return $this->first_name . ' ' . $this->last_name;
+        // A missing last name, or one padded in the imported data, would
+        // otherwise leave the name trailing a space wherever it is shown.
+        return trim($this->first_name . ' ' . $this->last_name);
     }
 
     /**
@@ -90,6 +93,27 @@ class User extends Authenticatable
     public function student()
     {
         return $this->hasOne(Student::class, 'user_id');
+    }
+
+    /** Read at sign-in, so marking an account inactive means what it says. */
+    public function isDeactivated(): bool
+    {
+        return $this->status === 'inactive';
+    }
+
+    /**
+     * Only UG students, who sign themselves up. Every other account is made by
+     * an admin who already knows who they are, and most predate confirmation.
+     */
+    public function needsEmailConfirmation(): bool
+    {
+        return ($this->current_role?->role ?? $this->role?->role) === 'ug_student'
+            && !$this->email_verified_at;
+    }
+
+    public function ugStudent()
+    {
+        return $this->hasOne(UgStudent::class, 'user_id');
     }
 
     public function faculty()

@@ -47,7 +47,7 @@ trait GeneralFormSubmitter
 
 
             if ($formInstance->{$role . '_lock'} || ($role == 'faculty' && $formInstance->supervisor_lock)) {
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
             }
 
             // The lock above records that a role has already acted; it does not

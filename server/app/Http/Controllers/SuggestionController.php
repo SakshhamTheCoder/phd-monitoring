@@ -128,12 +128,13 @@ class SuggestionController extends Controller
         $request->validate([
             'text' => 'required|string',
             'department_id' => 'nullable|integer',
+            'type' => 'nullable|in:internal,external',
         ]);
 
         // Mirrors the authorization check in the faculty directory endpoints.
         $user = Auth::user();
         if (!$user?->may('can_read_faculty_directory')) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
 
         if (!$request->text) {
@@ -168,6 +169,11 @@ class SuggestionController extends Controller
                     ->orWhere('faculty_code', 'LIKE', $like)
                     ->orWhere('designation', 'LIKE', $like);
             });
+        }
+
+        // The URF form asks for internal faculty only: a mentor is institute staff.
+        if ($request->filled('type')) {
+            $facultyQuery->where('type', $request->type);
         }
 
         if (!empty($request->department_id)) {
@@ -218,7 +224,7 @@ class SuggestionController extends Controller
 
         $user = Auth::user();
         if (!$user?->may('can_read_all_students') && !$user?->may('can_read_department_students')) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
 
         $tokens = preg_split('/[\s.,]+/', trim($request->text), -1, PREG_SPLIT_NO_EMPTY);

@@ -65,7 +65,7 @@ class IrbSubController extends Controller
         $role = $user->current_role;
         $steps=['student','faculty','external','doctoral','hod','adordc','dordc','complete'];
         if($role->role != 'student'){
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $data=[
             'roll_no'=>$user->student->roll_no,
@@ -77,6 +77,23 @@ class IrbSubController extends Controller
     }
 
 
+    /**
+     * A committee member signs in holding 'faculty', and nothing sent them to
+     * the doctoral step: opening the form at that stage answered "not
+     * authorized" unless they first switched role. Presentation and Synopsis
+     * already read committee membership this way.
+     */
+    private function actingStep($user, $form_id): string
+    {
+        $role = $user->current_role->role;
+        if ($role !== 'faculty') {
+            return $role;
+        }
+
+        $form = IrbSubForm::find($form_id);
+        return $form && $form->student->checkDoctoralCommittee($user->faculty?->faculty_code) ? 'doctoral' : $role;
+    }
+
     public function loadForm(Request $request, $form_id=null)
     {
         $form_id = $this->routeParam($request, 'form_id', $form_id);
@@ -84,9 +101,9 @@ class IrbSubController extends Controller
         $role = $user->current_role;
         $model = IrbSubForm::class;
         $steps=['student','faculty','external','doctoral','hod','adordc','dordc','complete'];
-        switch ($role->role) {
+        switch ($this->actingStep($user, $form_id)) {
             case 'student':
-                return $this->handleStudentForm($user, $form_id, $model,$steps);
+                return $this->handleStudentForm($user, $form_id, $model);
             case 'hod':
                 return $this->handleHodForm($user, $form_id, $model);
             case 'doctoral':
@@ -102,7 +119,7 @@ class IrbSubController extends Controller
                     return $this->handleAdminForm($user, $form_id, $model,true);
            
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -112,7 +129,7 @@ class IrbSubController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
 
-        switch ($role->role) {
+        switch ($this->actingStep($user, $form_id)) {
             case 'student':
                 return $this->studentSubmit($user, $request, $form_id);
             case 'faculty':
@@ -126,7 +143,7 @@ class IrbSubController extends Controller
             case 'dordc':
                 return $this->dordcSubmit($user, $request, $form_id);
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
     public function bulkSubmit(Request $request)
@@ -136,7 +153,7 @@ class IrbSubController extends Controller
         $form_ids = $request->input('form_ids');
         $allowed_roles = ['hod', 'dordc','adordc'];
         if (!in_array($role->role, $allowed_roles)) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $request->validate([
             'form_ids' => 'required|array',
@@ -236,7 +253,10 @@ class IrbSubController extends Controller
     private function dordcSubmit($user, $request, $form_id)
     {
         $model = IrbSubForm::class;
-        return $this->submitForm($user, $request, $form_id, $model, 'dordc', 'phd_coordinator', 'complete', function ($formInstance) use ($request, $user) {
+        // Back to the ADORDC, the previous step. This said 'phd_coordinator',
+        // which is in neither this form's chain nor its submit() switch, so a
+        // rejection here parked the form on a stage nobody could act on.
+        return $this->submitForm($user, $request, $form_id, $model, 'dordc', 'adordc', 'complete', function ($formInstance) use ($request, $user) {
             $student = $formInstance->student;
             $student->phd_title=$formInstance->revised_phd_title;
             $student->save();
@@ -312,7 +332,7 @@ class IrbSubController extends Controller
             $approvals=$formInstance->supervisorApprovals()->where('status','approved')->get();
            
             if($approvals->count()!=$formInstance->student->supervisors->count()){
-                throw new \Exception('Your Prefrences Saved, Form Will be submitted once all Supervisors approve',201);
+                throw new \Exception('Your preferences are saved. The form moves on once every supervisor has approved.',201);
             }
             else{
                 // Email the outside expert a secure, single-use link to the review page.
@@ -344,7 +364,7 @@ class IrbSubController extends Controller
             $approvals=$formInstance->doctoralApprovals()->where('status','approved')->get();
            
             if($approvals->count()!=$formInstance->student->doctoralCommittee->count()){
-                throw new \Exception('Your Prefrences Saved, Form Will be submitted once all Members from IRB Committee approve',201);
+                throw new \Exception('Your preferences are saved. The form moves on once every IRB committee member has approved.',201);
             }
         
         }

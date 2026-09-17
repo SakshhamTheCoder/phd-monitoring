@@ -42,7 +42,7 @@ const Supervisor = ({ formData }) => {
     <>
       {isLoaded && formData && (
         <>
-          {lock && (
+          {!!lock && (
             <>
               <p>Supervisors</p>
               <GridContainer

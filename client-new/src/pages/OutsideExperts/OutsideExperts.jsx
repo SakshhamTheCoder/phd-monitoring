@@ -125,7 +125,6 @@ const OutsideExperts = () => {
       if (data.success) {
         toast.success(data.message);
         if (data.data.errors.length > 0) {
-          console.log('Import errors:', data.data.errors);
           toast.info(`Check console for ${data.data.error_count} errors`);
         }
         setShowBulkImportModal(false);
@@ -190,6 +189,8 @@ const OutsideExperts = () => {
         <PagenationTable
           key={refreshKey}
           endpoint="/outside-experts/list"
+          // No detail page for an expert; editing is in the row menu.
+          rowClickable={false}
           enableApproval={false}
           extraTopbarComponents={
             <div className="top-actions">
@@ -206,12 +207,12 @@ const OutsideExperts = () => {
           }
           actions={[
             {
-              icon: <i className="fa-solid fa-pen-to-square"></i>,
+              icon: <i className="fa fa-pencil-square-o"></i>,
               tooltip: 'Edit',
               onClick: (data) => openEditModal(data),
             },
             {
-              icon: <i className="fa-solid fa-trash"></i>,
+              icon: <i className="fa fa-trash"></i>,
               tooltip: 'Delete',
               onClick: (data) => handleDeleteExpert(data.id),
             },

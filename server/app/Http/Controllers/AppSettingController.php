@@ -20,7 +20,7 @@ class AppSettingController extends Controller
         }
 
         if (!in_array(Auth::user()->current_role->role, AppSetting::GROUPS[$group]['readers'], true)) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
 
         return response()->json(AppSetting::map($group), 200);

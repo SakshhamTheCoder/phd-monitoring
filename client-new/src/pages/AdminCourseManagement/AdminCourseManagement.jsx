@@ -11,7 +11,11 @@ import DropdownField from '../../components/forms/fields/DropdownField';
 import InputSuggestions from '../../components/forms/fields/InputSuggestions';
 import InputField from '../../components/forms/fields/InputField';
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
+import PageHeader from '../../components/pageHeader/PageHeader';
 const AdminCourseManagement = () => {
+  // Heads and coordinators manage their own department's courses; the server
+  // fills the department in for them, so only admin picks one.
+  const picksDepartment = localStorage.getItem('userRole') === 'admin';
   const [courses, setCourses] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -45,13 +49,13 @@ const AdminCourseManagement = () => {
 
 
   useEffect(() => {
-    fetchDepartments();
+    if (picksDepartment) fetchDepartments();
     fetchAllCourses();
   }, []);
 
   const fetchDepartments = async () => {
     try {
-      const response = await customFetch(`${baseURL}/departments`, 'GET');
+      const response = await customFetch(`${baseURL}/departments?rows=1000`, 'GET');
       if (response.success) {
         setDepartments(response?.response?.data?.map(dept => ({
           value: dept.id,
@@ -264,13 +268,13 @@ const AdminCourseManagement = () => {
   return (
     <Layout>
       <div className="admin-course-management">
-        <div className="page-header">
-          <h1 className="page-title">Course Management</h1>
-        </div>
+        <PageHeader title="Course Management" />
 
         <PagenationTable
           key={refreshKey}
           endpoint="/courses/list"
+          // A course has no page of its own; editing is in the row menu.
+          rowClickable={false}
           enableApproval={false}
           extraTopbarComponents={
             <div style={{ display: 'flex', gap: '10px' }}>
@@ -292,12 +296,12 @@ const AdminCourseManagement = () => {
           }
           actions={[
             {
-              icon: <i className="fa-solid fa-pen-to-square"></i>,
+              icon: <i className="fa fa-pencil-square-o"></i>,
               tooltip: 'Edit',
               onClick: (data) => openEditModal(data),
             },
             {
-              icon: <i className="fa-solid fa-trash"></i>,
+              icon: <i className="fa fa-trash"></i>,
               tooltip: 'Delete',
               onClick: (data) => handleDeleteCourse(data.id),
             },
@@ -340,13 +344,15 @@ const AdminCourseManagement = () => {
             required
           />
           
-          <DropdownField
-            label="Department"
-            options={departments}
-            initialValue={formData.department_id}
-            onChange={(value) => handleInputChange('department_id', value)}
-            required
-          />
+          {picksDepartment && (
+            <DropdownField
+              label="Department"
+              options={departments}
+              initialValue={formData.department_id}
+              onChange={(value) => handleInputChange('department_id', value)}
+              required
+            />
+          )}
           
           <div className="modal-actions">
             <button
@@ -402,17 +408,19 @@ const AdminCourseManagement = () => {
             required
           />
           
-          <DropdownField
-            label="Department"
-            options={departments}
-            initialValue={
-              departments?.find(
-                (dept) => String(dept.value) === String(formData.department_id)
-              )?.title || ''
-            }
-            onChange={(value) => handleInputChange('department_id', value)}
-            required
-          />
+          {picksDepartment && (
+            <DropdownField
+              label="Department"
+              options={departments}
+              initialValue={
+                departments?.find(
+                  (dept) => String(dept.value) === String(formData.department_id)
+                )?.title || ''
+              }
+              onChange={(value) => handleInputChange('department_id', value)}
+              required
+            />
+          )}
 
           <div className="modal-actions">
             <button

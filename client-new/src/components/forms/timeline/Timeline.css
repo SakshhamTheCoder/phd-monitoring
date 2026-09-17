@@ -42,7 +42,7 @@
 }
 
 .timeline-step {
-    font-size: 16px;
+    font-size: var(--text-md);
     color: #333;
 }
 

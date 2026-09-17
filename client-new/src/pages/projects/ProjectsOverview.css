@@ -1,5 +1,5 @@
 .po-container {
-  font-family: 'Inter', sans-serif;
+  font-family: inherit;
   font-weight: 400;
 }
 
@@ -16,9 +16,9 @@
 
 .po-stat-card {
   background: #FFF;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   padding: 1.25rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  box-shadow: var(--shadow-sm);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -27,7 +27,7 @@
 
 .po-stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-sm);
 }
 
 .po-stat-header {
@@ -37,7 +37,7 @@
 }
 
 .po-stat-label {
-  font-size: 0.7rem;
+  font-size: var(--text-2xs);
   font-weight: 600;
   color: #777;
   text-transform: uppercase;
@@ -48,11 +48,11 @@
 .po-stat-icon {
   width: 34px;
   height: 34px;
-  border-radius: 9px;
+  border-radius: var(--radius);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   background: #f7ebeb;
   color: var(--primary-color);
 }
@@ -67,7 +67,7 @@
 }
 
 .po-stat-value {
-  font-size: 2rem;
+  font-size: var(--text-3xl);
   font-weight: 700;
   color: #111;
   line-height: 1;
@@ -78,12 +78,12 @@
 }
 
 .po-stat-value.large {
-  font-size: 1.8rem;
+  font-size: var(--text-3xl);
   color: var(--primary-color);
 }
 
 .po-stat-trend {
-  font-size: 0.75rem;
+  font-size: var(--text-2xs);
   font-weight: 500;
 }
 
@@ -92,12 +92,12 @@
 }
 
 .po-stat-meta {
-  font-size: 0.75rem;
+  font-size: var(--text-2xs);
   color: #999;
 }
 
 .po-funding-split {
-  font-size: 0.75rem;
+  font-size: var(--text-2xs);
   color: #666;
   display: flex;
   align-items: center;
@@ -127,11 +127,15 @@
   border: none;
   color: var(--primary-color);
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  /* Was 21px tall next to 38px controls, and read as text rather than a button. */
+  padding: 0.55rem 0.75rem;
+  min-height: 38px;
+  border-radius: var(--radius);
 }
 
 .po-export-btn:hover {
@@ -143,12 +147,12 @@
 .po-project-title {
   font-weight: 400;
   color: #222;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   max-width: 280px;
 }
 
 .po-project-id {
-  font-size: 0.72rem;
+  font-size: var(--text-2xs);
   color: #aaa;
   margin-top: 0.2rem;
 }
@@ -172,9 +176,9 @@
   justify-content: center;
   background: #FFF;
   border: 1px solid #E5E5E5;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: #666;
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -200,7 +204,7 @@
 
 /* Delete Confirmation Modal */
 .po-modal-text {
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   color: #666;
   line-height: 1.5;
   margin: 0 0 1.5rem;
@@ -218,6 +222,6 @@
 /* Shown instead of the edit and delete icons on a project the viewer can only
    read, so the column never looks like the actions failed to load. */
 .po-readonly {
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
   color: var(--text-subtle);
 }

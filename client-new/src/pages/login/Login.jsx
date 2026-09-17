@@ -2,15 +2,26 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
 import { loginAPI } from "../../api/login";
+import { apiUrfResendVerification } from "../../api/urf";
 import { CLOUDFLARE_SITE_KEY, rootURL } from "../../api/urls";
 import Loader from "../../components/loader/loader";
 import { toast } from "react-toastify";
+
+// Where to go once signed in: the page that sent the visitor here, or home.
+// Only a path on this site. Anything else ("https://...", "//host") was followed
+// as given, which made the login page an open redirect.
+const afterLogin = () => {
+  const target = new URLSearchParams(window.location.search).get('onLogin') || '';
+  return target.startsWith('/') && !target.startsWith('//') ? target : '/home';
+};
 
 const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [captchaToken, setCaptchaToken] = useState(null);
   const [showEmailForm, setShowEmailForm] = useState(false);
+  // Set when the account exists but its email is unconfirmed.
+  const [unverifiedEmail, setUnverifiedEmail] = useState(null);
   const { register, handleSubmit } = useForm();
 
   // Check if user is already logged in
@@ -18,6 +29,14 @@ const LoginPage = () => {
     const token = localStorage.getItem('token');
     if (token) {
       window.location.href = "/home";
+    }
+
+    const verified = new URLSearchParams(window.location.search).get("verified");
+    if (verified === "1") {
+      toast.success("Email confirmed. Sign in to apply.");
+      setShowEmailForm(true);
+    } else if (verified === "invalid") {
+      toast.error("That confirmation link is no longer valid. Sign in to have another sent.");
     }
 
     return () => {
@@ -111,12 +130,7 @@ const LoginPage = () => {
         localStorage.setItem('user', JSON.stringify(event.data.user));
         
         // Redirect to appropriate page
-        const onLogin = new URLSearchParams(window.location.search).get("onLogin");
-        if (onLogin) {
-          window.location.href = onLogin;
-        } else {
-          window.location.href = "/home";
-        }
+        window.location.href = afterLogin();
       } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
         clearTimeout(timeout);
         window.removeEventListener('message', messageListener);
@@ -144,17 +158,11 @@ const LoginPage = () => {
     const result = await loginAPI(data.email, data.password, captchaToken);
     
     if (result.success) {
-      const onLogin = new URLSearchParams(window.location.search).get(
-        "onLogin"
-      );
-      if (onLogin) {
-        window.location.href = onLogin;
-      } else {
-        window.location.href = "/home";
-      }
+      window.location.href = afterLogin();
     } else {
       setLoading(false);
       toast.error(result.error || 'Invalid credentials');
+      setUnverifiedEmail(result.unverified ? result.email : null);
       
       // Reset captcha
       setCaptchaToken(null);
@@ -278,6 +286,18 @@ const LoginPage = () => {
                   >
                     Forgot Password?
                   </Link>
+                  {unverifiedEmail && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const result = await apiUrfResendVerification(unverifiedEmail);
+                        toast.info(result.response?.message || 'The link is on its way.');
+                      }}
+                      className="tw-text-brand hover:tw-underline"
+                    >
+                      Resend confirmation email
+                    </button>
+                  )}
                 </div>
                 <div className="tw-flex tw-justify-center tw-my-4">
                   <div id="turnstile-container"></div>
@@ -293,6 +313,13 @@ const LoginPage = () => {
             </>
           )}
           
+          <p className="tw-text-center tw-text-sm tw-mt-5">
+            Applying for the Undergraduate Research Fellowship?{" "}
+            <Link to="/signup" className="tw-text-brand hover:tw-underline">
+              Create an account
+            </Link>
+          </p>
+
           {/* Footer Links */}
           <div className="tw-mt-6 tw-pt-4 tw-border-t tw-border-gray-200 tw-flex tw-flex-wrap tw-justify-center tw-gap-4 tw-text-sm">
             <Link

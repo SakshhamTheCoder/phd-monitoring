@@ -30,7 +30,6 @@ const PhDCoordinator = ({ formData }) => {
       approval: true,
     });
     setLock(formData.locks?.phd_coordinator);
-    formData.role = "phd_coordinator";
     setIsLoaded(true);
   }, [formData]);
 
@@ -38,7 +37,6 @@ const PhDCoordinator = ({ formData }) => {
     body.supervisors[index] = value.id;
   };
   const handleAddSupervisor = () => {
-    console.log("Add Supervisor");
     setBody((prevBody) => ({
       ...prevBody,
       supervisors: [...prevBody.supervisors, ""],
@@ -90,7 +88,7 @@ const PhDCoordinator = ({ formData }) => {
             <>
                
               <GridContainer 
-              label={<p>Supervisors Allocated By PhDCoordinator</p>}
+              label={<p>Supervisors Allocated by PhD Coordinator</p>}
               elements={[
                 <TableComponent 
                   data={formData.supervisors}

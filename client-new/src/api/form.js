@@ -17,6 +17,11 @@ export const submitForm = async (body, location, setLoading, files = null) => {
         });
   
         Object.keys(body).forEach((key) => {
+            // FormData turns null into the string "null", which the server reads
+            // as a value and rejects as "not a valid date" rather than missing.
+            if (body[key] === null || body[key] === undefined) {
+                return;
+            }
             if (Array.isArray(body[key])) {
                 body[key].forEach((item) => formData.append(`${key}[]`, item));
             } else {
@@ -33,7 +38,10 @@ export const submitForm = async (body, location, setLoading, files = null) => {
         const data = await customFetch(url, "POST", formData, true, files !== null);
         if (data && data.success) {
             const completed = data.response && data.response.completed;
-            toast.success(completed ? "Form completed successfully" : "Form submitted successfully");
+            // A step shared by several people answers 201 with what is still
+            // outstanding ("moves on once every supervisor has approved"). That
+            // is the message to show, not a flat "submitted".
+            toast.success(completed ? "Form completed successfully" : (data.response?.message || "Form submitted successfully"));
             // Delay the reload so the toast is visible before the page refreshes.
             setTimeout(() => window.location.reload(), 1200);
         } else {
@@ -46,13 +54,11 @@ export const submitForm = async (body, location, setLoading, files = null) => {
             } else {
                 toast.error("Failed to submit the form");
             }
-            console.log("Form submission response:", data);
         }
     } catch (error) {
         toast.error(isNetworkError(error)
             ? NETWORK_ERROR_MESSAGE
             : "Failed to submit the form: " + (error.message || error));
-        console.log(error);
     } finally {
         setLoading(false);
     }

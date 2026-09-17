@@ -5,6 +5,7 @@ import { badgeClass } from '../../data/badges';
 import { apiApplicationStatus, apiVerifyApplication } from '../../api/publicOpenings';
 import { formatDate } from '../../utils/timeParse';
 import '../projects/Openings.css';
+import PageHeader from '../../components/pageHeader/PageHeader';
 
 const ApplicationStatus = ({ verify = false }) => {
   const { token } = useParams();
@@ -33,12 +34,7 @@ const ApplicationStatus = ({ verify = false }) => {
   return (
     <ExternalLayout crumbs={[{ label: 'Openings', to: '/openings' }, { label: 'Your application' }]}>
       <div className="op-container">
-        <div className="page-header">
-          <div>
-            <h1 className="page-title">Your application</h1>
-            <p className="page-subtitle">Where your application stands right now.</p>
-          </div>
-        </div>
+        <PageHeader title="Your application" subtitle="Where your application stands right now." />
 
         {loading && <p className="empty-state">Loading...</p>}
         {error && (

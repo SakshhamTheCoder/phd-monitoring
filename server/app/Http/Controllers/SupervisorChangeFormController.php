@@ -63,7 +63,7 @@ class SupervisorChangeFormController extends Controller {
         $steps=['student','phd_coordinator','hod','dordc','dra','complete'];
         
         if($role->role != 'student'){
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $data=[
             'roll_no'=>$user->student->roll_no,
@@ -86,19 +86,12 @@ class SupervisorChangeFormController extends Controller {
         $user = Auth::user();
         $role = $user->current_role;
         $model = SupervisorChangeForm::class;
-        $steps = [
-            'student',
-            'phd_coordinator',
-            'hod',
-            'dordc',
-            'dra'
-        ];
         switch ($role->role) {
             case 'student':
-                return $this->handleStudentForm($user, $form_id, $model, $steps, function ($formInstance) {
-                    $formInstance->current_supervisors = $formInstance->student->supervisors->pluck('faculty_code')->toArray();
-                    $formInstance->irb_submitted = $formInstance->student->irbSubForm?->completion=='complete'?true:false;
-                });
+                // current_supervisors and irb_submitted are columns, written by
+                // createForm and read back by fullForm. This call used to pass a
+                // closure recomputing both, which handleStudentForm never ran.
+                return $this->handleStudentForm($user, $form_id, $model);
             case 'hod':
                 return $this->handleHodForm($user, $form_id, $model);
             case 'phd_coordinator':
@@ -111,7 +104,7 @@ class SupervisorChangeFormController extends Controller {
                 return $this->handleAdminForm($user, $form_id, $model,true);
            
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -133,7 +126,7 @@ class SupervisorChangeFormController extends Controller {
             case 'dra':
                 return $this->draSubmit($user, $request, $form_id);
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
     public function bulkSubmit(Request $request)
@@ -143,7 +136,7 @@ class SupervisorChangeFormController extends Controller {
 
         $allowedRoles = ['hod', 'phd_coordinator', 'dra', 'dordc', 'director'];
         if (!in_array($role->role, $allowedRoles)) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $request->validate([
             'form_ids' => 'required|array',
@@ -179,12 +172,12 @@ class SupervisorChangeFormController extends Controller {
 
                 $prefrences = $request->prefrences;
                 if (count($prefrences) != 3 || count(array_unique($prefrences)) != 3) {
-                    throw new \Exception("Please select 3 unique prefrences");
+                    throw new \Exception("Please choose three different supervisors.");
                 }
                 $i = 1;
                 foreach ($prefrences as $prefrence) {
                     if (!Faculty::find($prefrence)) {
-                        throw new \Exception("Invalid prefrence selected");
+                        throw new \Exception("One of the chosen supervisors is not in the faculty list.");
                     }
                 }
                 foreach($to_change as $supervisor){

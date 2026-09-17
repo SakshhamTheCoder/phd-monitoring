@@ -310,6 +310,9 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
     };
 
     const removePublication = async (pub) => {
+        // One click used to delete for good. The scholar's Publications page
+        // asks first, and so does this now.
+        if (!window.confirm(`Delete "${pub.title || 'this publication'}"? This cannot be undone.`)) return;
         const res = await apiDeleteFacultyPublication(facultyCode, pub.id);
         if (res.success) { toast.success('Publication deleted.'); load(); }
     };
@@ -576,9 +579,9 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                 <div className="rp-filter-bar">
                     <div className="rp-filters">
                         <div className="rp-filter">
-                            <label htmlFor="rp-year">Year</label>
+                            <label htmlFor="research-profile-year">Year</label>
                             <select
-                                id="rp-year"
+                                id="research-profile-year"
                                 value="Select"
                                 onChange={e => {
                                     const val = e.target.value;
@@ -591,16 +594,16 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                         </div>
 
                         <div className="rp-filter">
-                            <label htmlFor="rp-type">Type</label>
-                            <select id="rp-type" value={filterType} onChange={e => setFilterType(e.target.value)}>
+                            <label htmlFor="research-profile-type">Type</label>
+                            <select id="research-profile-type" value={filterType} onChange={e => setFilterType(e.target.value)}>
                                 <option value="All">All</option>
                                 {TYPE_OPTIONS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                             </select>
                         </div>
 
                         <div className="rp-filter">
-                            <label htmlFor="rp-source">Source</label>
-                            <select id="rp-source" value={filterSource} onChange={e => setFilterSource(e.target.value)}>
+                            <label htmlFor="research-profile-source">Source</label>
+                            <select id="research-profile-source" value={filterSource} onChange={e => setFilterSource(e.target.value)}>
                                 <option value="All">All</option>
                                 {availableSources.map(s => <option key={s} value={s}>{SOURCE_LABELS[s] || s}</option>)}
                             </select>

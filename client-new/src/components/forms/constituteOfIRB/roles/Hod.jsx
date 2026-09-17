@@ -51,13 +51,11 @@ const Hod = ({ formData }) => {
   }, [formData]);
 
   const onUpdateApproval = (data) => {
-    console.log(data);
     setBody((prevBody) => ({
       ...prevBody,
       approval: data.approval,
       comments: data.comments,
     }));
-    console.log(body);
   };
   const handleAddExpert = () => {
     if(body.chairman_experts.length>=2)
@@ -78,7 +76,7 @@ const Hod = ({ formData }) => {
             moreFields={true}
             handleRecommendationChange={onUpdateApproval}
           ></Recommendation>
-          {body.approval && (
+          {!!body.approval && (
             <>
             <p style={{ fontWeight: "bold", textAlign: "left" }}>List of 3 outside experts proposed by the HOD</p>
 

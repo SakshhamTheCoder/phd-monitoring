@@ -4,7 +4,6 @@ import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
 import CustomButton from '../forms/fields/CustomButton';
 import { toast } from 'react-toastify';
-import { read, utils } from 'xlsx';
 import GridContainer from '../forms/fields/GridContainer';
 
 // Number of supervisor columns offered in the sheet. Blank columns are dropped,
@@ -55,7 +54,10 @@ const BulkAllocateSupervisors = ({ onSuccess }) => {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
+      // xlsx is ~400KB and only this handler needs it, so it loads on
+      // the first upload rather than in everyone's entry chunk.
+      const { read, utils } = await import('xlsx');
       const data = new Uint8Array(event.target.result);
       const workbook = read(data, { type: 'array' });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];

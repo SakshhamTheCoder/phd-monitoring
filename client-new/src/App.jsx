@@ -1,74 +1,100 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
-import LandingPage from './pages/landing/LandingPage';
-import LoginPage from './pages/login/Login';
-import GoogleCallback from './pages/login/GoogleCallback';
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { LoadingProvider, useLoading } from './context/LoadingContext'; // Remove useLoading import
+import { LoadingProvider, useLoading } from './context/LoadingContext';
 import { FeaturesProvider, useFeatures } from './context/FeaturesContext';
+import { CapabilitiesProvider } from './context/CapabilitiesContext';
 import Loader from './components/loader/loader';
-import FormsPage from './pages/forms/FormsPage';
-import FormListPage from './pages/forms/FormListPage';
-import MainFormPage from './pages/forms/MainFormPage';
-import StudentsPage from './pages/students/StudentsPage';
-import StudentProfile from './pages/students/StudentProfile';
-import NotFound from './pages/404/NotFound';
-import FacultyFormsPage from './pages/forms/FacultyFormsPage';
-import Dashboard from './pages/dashboard/Dashboard';
-import Publications from './pages/publications/Publications';
-import PresentationListPage from './pages/presentations/PresentationListPage';
-import Presentation from './pages/presentations/PresentationForm';
-import ForgotPasswordPage from './pages/forgot-password/ForgotPasswordPage';
-import ResetPasswordPage from './pages/reset-password/ResetPasswordPage';
-import FacultyPage from './pages/faculty/FacultyPage';
-import PublicOpenings from './pages/publicOpenings/PublicOpenings';
-import PublicOpeningDetail from './pages/publicOpenings/PublicOpeningDetail';
-import ApplicationStatus from './pages/publicOpenings/ApplicationStatus';
-import DepartmentPage from './pages/department/Department';
-import AllNotificationsPage from './components/notificationBox/AllNotificationsPage';
-import PresentationSemester from './pages/presentations/PresentationSemester';
-import StudentProgressMonitoring from './pages/presentations/StudentProgressMonitoring';
-import Logs from './pages/logs/Logs';
-import Team from './pages/team/Team';
-import AdminFormManagement from './pages/admin/AdminFormManagement';
-import AreaOfSpecialization from './pages/areaOfSpecialization/AreaOfSpecialization';
-import StudentCourses from './pages/StudentCourses/StudentCourses';
-import AdminCourseManagement from './pages/AdminCourseManagement/AdminCourseManagement';
-import OutsideExperts from './pages/OutsideExperts/OutsideExperts';
-import ExternalReview from './pages/externalReview/ExternalReview';
-import SupervisorDoctoralApproval from './pages/SupervisorDoctoralApproval/SupervisorDoctoralApproval';
-import UsersPage from './pages/users/UsersPage';
-import AttendanceRoute from './pages/attendance/AttendanceRoute';
-import ClerkManagement from './pages/admin/ClerkManagement';
-import PrivacyPolicy from './pages/privacy/PrivacyPolicy';
-import Support from './pages/support/Support';
-import ResearchProfile from './pages/admin/ResearchProfile';
-import Configuration from './pages/admin/Configuration';
-import ProjectsOverview from './pages/projects/ProjectsOverview';
-import CreateProject from './pages/projects/CreateProject';
-import ProjectDetails from './pages/projects/ProjectDetails';
-import ProjectRecruitment from './pages/projects/ProjectRecruitment';
-import Openings from './pages/projects/Openings';
+import { ACCESS } from './auth/access';
 
+// Every page is split out of the entry chunk. A student signing in should not
+// download the admin surface to see their own forms.
+const LandingPage = lazy(() => import('./pages/landing/LandingPage'));
+const LoginPage = lazy(() => import('./pages/login/Login'));
+const SignupPage = lazy(() => import('./pages/signup/SignupPage'));
+const GoogleCallback = lazy(() => import('./pages/login/GoogleCallback'));
+const FormsPage = lazy(() => import('./pages/forms/FormsPage'));
+const FormListPage = lazy(() => import('./pages/forms/FormListPage'));
+const MainFormPage = lazy(() => import('./pages/forms/MainFormPage'));
+const StudentsPage = lazy(() => import('./pages/students/StudentsPage'));
+const StudentProfile = lazy(() => import('./pages/students/StudentProfile'));
+const NotFound = lazy(() => import('./pages/404/NotFound'));
+const FacultyFormsPage = lazy(() => import('./pages/forms/FacultyFormsPage'));
+const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'));
+const Publications = lazy(() => import('./pages/publications/Publications'));
+const PresentationListPage = lazy(() => import('./pages/presentations/PresentationListPage'));
+const Presentation = lazy(() => import('./pages/presentations/PresentationForm'));
+const ForgotPasswordPage = lazy(() => import('./pages/forgot-password/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/reset-password/ResetPasswordPage'));
+const FacultyPage = lazy(() => import('./pages/faculty/FacultyPage'));
+const PublicOpenings = lazy(() => import('./pages/publicOpenings/PublicOpenings'));
+const PublicOpeningDetail = lazy(() => import('./pages/publicOpenings/PublicOpeningDetail'));
+const ApplicationStatus = lazy(() => import('./pages/publicOpenings/ApplicationStatus'));
+const DepartmentPage = lazy(() => import('./pages/department/Department'));
+const AllNotificationsPage = lazy(() => import('./components/notificationBox/AllNotificationsPage'));
+const PresentationSemester = lazy(() => import('./pages/presentations/PresentationSemester'));
+const StudentProgressMonitoring = lazy(() => import('./pages/presentations/StudentProgressMonitoring'));
+const Logs = lazy(() => import('./pages/logs/Logs'));
+const Team = lazy(() => import('./pages/team/Team'));
+const AdminFormManagement = lazy(() => import('./pages/admin/AdminFormManagement'));
+const AreaOfSpecialization = lazy(() => import('./pages/areaOfSpecialization/AreaOfSpecialization'));
+const StudentCourses = lazy(() => import('./pages/StudentCourses/StudentCourses'));
+const AdminCourseManagement = lazy(() => import('./pages/AdminCourseManagement/AdminCourseManagement'));
+const OutsideExperts = lazy(() => import('./pages/OutsideExperts/OutsideExperts'));
+const ExternalReview = lazy(() => import('./pages/externalReview/ExternalReview'));
+const SupervisorDoctoralApproval = lazy(() => import('./pages/SupervisorDoctoralApproval/SupervisorDoctoralApproval'));
+const UsersPage = lazy(() => import('./pages/users/UsersPage'));
+const AttendanceRoute = lazy(() => import('./pages/attendance/AttendanceRoute'));
+const ClerkManagement = lazy(() => import('./pages/admin/ClerkManagement'));
+const PrivacyPolicy = lazy(() => import('./pages/privacy/PrivacyPolicy'));
+const Support = lazy(() => import('./pages/support/Support'));
+const ResearchProfile = lazy(() => import('./pages/admin/ResearchProfile'));
+const Configuration = lazy(() => import('./pages/admin/Configuration'));
+const ProjectsOverview = lazy(() => import('./pages/projects/ProjectsOverview'));
+const CreateProject = lazy(() => import('./pages/projects/CreateProject'));
+const ProjectDetails = lazy(() => import('./pages/projects/ProjectDetails'));
+const ProjectRecruitment = lazy(() => import('./pages/projects/ProjectRecruitment'));
+const Openings = lazy(() => import('./pages/projects/Openings'));
+const UrfList = lazy(() => import('./pages/urf/UrfList'));
+const UrfDetails = lazy(() => import('./pages/urf/UrfDetails'));
+const UrfFormList = lazy(() => import('./pages/urf/UrfFormList'));
+const UrfFormsPage = lazy(() => import('./pages/urf/UrfStudentForms').then(m => ({ default: m.UrfFormsPage })));
+const UrfFormPage = lazy(() => import('./pages/urf/UrfStudentForms').then(m => ({ default: m.UrfFormPage })));
 
 const App = () => {
   return (
     <LoadingProvider>
       <FeaturesProvider>
-        <AppContent />
+        <CapabilitiesProvider>
+          <AppContent />
+        </CapabilitiesProvider>
       </FeaturesProvider>
     </LoadingProvider>
   );
 };
 
+// Pages a visitor reaches without signing in.
+const PUBLIC_PATHS = /^\/($|team|privacy|support|login|signup|google\/callback|forgot-password|reset-password|external-review\/|openings|applications\/)/;
+
 const AppContent = () => {
   const { loading } = useLoading();
   const role = localStorage.getItem('userRole');
+
   // A switched-off module leaves no route behind, so its address falls through
   // to the 404 page rather than rendering against an API that answers 404.
   const features = useFeatures();
+  // Route gates read the same lists the sidebar does, from src/auth/access.js.
+  const may = (area) => ACCESS[area].includes(role);
+
+  // Signed out, a protected address has no route at all and fell through to
+  // "Not found". Send the visitor to sign in and back to where they were going.
+  const { pathname, search } = window.location;
+  if (!localStorage.getItem('token') && !PUBLIC_PATHS.test(pathname)) {
+    window.location.replace(`/login?onLogin=${encodeURIComponent(pathname + search)}`);
+    return null;
+  }
   return (
     <>
       {loading && <Loader />}
@@ -82,116 +108,119 @@ const AppContent = () => {
         }}
       />
       <Router>
-        <Routes>
-          {/* Landing Page */}
-          <Route path="/" element={<LandingPage />} />
+        <Suspense fallback={<Loader />}>
+          <Routes>
+            {/* Landing Page */}
+            <Route path="/" element={<LandingPage />} />
 
-          {/* Public Pages */}
-          <Route path="/team" element={<Team />} />
-          <Route path="/privacy" element={<PrivacyPolicy />} />
-          <Route path="/support" element={<Support />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/google/callback" element={<GoogleCallback />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/external-review/:token" element={<ExternalReview />} />
-          {/* One address for openings. A signed-in student gets their own board,
-              which prefills from their profile; everyone else gets the public one. */}
-          {features.job_openings && (
-            <>
-              <Route path="/openings" element={role === 'student' ? <Openings /> : <PublicOpenings />} />
-              <Route path="/openings/:id" element={<PublicOpeningDetail />} />
-              <Route path="/applications/:token" element={<ApplicationStatus />} />
-              <Route path="/applications/:token/verify" element={<ApplicationStatus verify />} />
-            </>
-          )}
-
-          {/* Dashboard */}
-          <Route path="/home" element={<Dashboard />} />
-          {features.project_management && (role === 'faculty' || role === 'hod' || role === 'phd_coordinator' || role === 'dordc' || role === 'adordc' || role === 'dra' || role === 'director' || role === 'admin') && (
-            <>
-              <Route path="/projects" element={<ProjectsOverview />} />
-              <Route path="/projects/create" element={<CreateProject />} />
-              <Route path="/projects/:id" element={<ProjectDetails />} />
-              <Route path="/projects/:id/recruit" element={<ProjectRecruitment />} />
-            </>
-          )}
-          {/* <Route path="/team" element={<Team/>} /> */}
-          {role === 'student' && (
-            <>
-              <Route path="/forms" element={<FormsPage />} />
-
-              <Route path="/publications" element={<Publications />} />
-              <Route path="/courses" element={<StudentCourses />} />
-
-            </>
-          )}
-          <Route path="/notifications" element={<AllNotificationsPage />} />
-          {features.research_profile && (
-            <>
-              <Route path="/faculty/:facultyCode/profile" element={<ResearchProfile />} />
-            </>
-          )}
-          {/* Matches the sidebar's Progress Monitoring entry, so clerk and external
-              (who have no sidebar link for it) can't land on the page either. */}
-          {(role === 'student' || role === 'hod' || role === 'phd_coordinator' || role === 'faculty' || role === 'dordc' || role === 'adordc' || role === 'dra' || role === 'director' || role === 'doctoral' || role === 'admin') && (
-            <>
-              <Route path="/presentation" element={<PresentationSemester />} />
-              <Route path="/presentation/semester" element={<Navigate to="/presentation" replace />} />
-              {/* The semester and form pages sit under the same gate, so a role
-                  kept off the landing page cannot reach them by deep link. */}
-              <Route path="/presentation/semester/:semester_id" element={<PresentationListPage />} />
-              <Route path="/presentation/semester/:semester_id/:id" element={<Presentation />} />
-            </>
-          )}
-
-          <Route path="/forms/:form_type" element={<FormListPage />} />
-          <Route path="/forms/:form_type/:id" element={<MainFormPage />} />
-          {(role === 'faculty' || role === 'phd_coordinator' || role === 'hod' || role === 'doctoral' || role === 'external' || role === 'dordc' || role === 'adordc' || role === 'dra' || role === 'director' || role === 'admin') && (
-            <>
-              <Route path="/forms" element={<FacultyFormsPage />} />
-              <Route path="/students" element={<StudentsPage />} />
-              <Route path="/students/:roll_no" element={<StudentProfile />} />
-              <Route path="/students/:roll_no/forms" element={<FormsPage />} />
-              {/* Progress Monitoring for one scholar, from their profile. The
-                  pages read the path back as their API endpoint, and the
-                  scholar-scoped endpoints already exist under
-                  /students/{id}/forms/presentation. */}
-              <Route path="/students/:roll_no/forms/presentation" element={<StudentProgressMonitoring />} />
-              <Route path="/students/:roll_no/forms/presentation/semester/:semester_id" element={<PresentationListPage />} />
-              <Route path="/students/:roll_no/forms/presentation/semester/:semester_id/:id" element={<Presentation />} />
-              <Route path="/students/:roll_no/forms/:form_type" element={<FormListPage />} />
-              <Route path="/students/:roll_no/forms/:form_type/:id" element={<MainFormPage />} />
-              {(role === 'hod' || role === 'phd_coordinator' || role === 'admin') && (
-                <Route path="/courses" element={<AdminCourseManagement />} />
-              )}
-            </>
-          )}
-          {/* Matches can_edit_department, which DepartmentController::list requires. */}
-          {(role === 'dordc' || role === 'dra' || role === 'director' || role === 'admin') && (
+            {/* Public Pages */}
+            <Route path="/team" element={<Team />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/support" element={<Support />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/google/callback" element={<GoogleCallback />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/external-review/:token" element={<ExternalReview />} />
+            {/* One address for openings. A signed-in student gets their own board,
+                which prefills from their profile; everyone else gets the public one. */}
+            {features.job_openings && (
               <>
-                <Route path="/departments" element={<DepartmentPage />} />
-                {/* <Route path="/faculty/:roll_no" element={<StudentProfile />} />
-              <Route path="/faculty/:roll_no/forms" element={<FormsPage />} />
-              <Route path="/faculty/:roll_no/forms/:form_type" element={<FormListPage />} />
-              <Route path="/faculty/:roll_no/forms/:form_type/:id" element={<MainFormPage />} /> */}
+                <Route path="/openings" element={may('openings') ? <Openings /> : <PublicOpenings />} />
+                <Route path="/openings/:id" element={<PublicOpeningDetail />} />
+                <Route path="/applications/:token" element={<ApplicationStatus />} />
+                <Route path="/applications/:token/verify" element={<ApplicationStatus verify />} />
               </>
             )}
-          {/* can_manage_supervisor_changes is granted to dordc and admin on the server. */}
-          {(role === 'dordc' || role === 'admin') && (
-            <Route path="/supervisor-doctoral-approvals" element={<SupervisorDoctoralApproval />} />
-          )}
-          {role !== 'clerk' && (
-            <Route path="/faculty" element={<FacultyPage />} />
-          )}
-          {(role==='clerk' || role==='admin' || role==='student' || role==='hod') && (
-            <Route path="/attendance" element={<AttendanceRoute />} />
-          )}
-          {(
-            role==='admin') && (
-                <>
+
+            {/* Dashboard */}
+            <Route path="/home" element={<Dashboard />} />
+            {features.project_management && may('projects') && (
+              <>
+                <Route path="/projects" element={<ProjectsOverview />} />
+                <Route path="/projects/create" element={<CreateProject />} />
+                <Route path="/projects/:id" element={<ProjectDetails />} />
+                {/* Recruitment produces openings, so it follows the openings
+                    switch rather than the projects one. */}
+                {features.job_openings && (
+                  <Route path="/projects/:id/recruit" element={<ProjectRecruitment />} />
+                )}
+              </>
+            )}
+            {role === 'student' && (
+              <>
+                <Route path="/forms" element={<FormsPage />} />
+                <Route path="/courses" element={<StudentCourses />} />
+              </>
+            )}
+            {role === 'ug_student' && (
+              <>
+                {/* Static form paths outrank the shared /forms/:form_type route. */}
+                <Route path="/forms" element={<UrfFormsPage />} />
+                <Route path="/forms/urf-application" element={<UrfFormPage type="new" />} />
+                <Route path="/forms/urf/:id/application" element={<UrfFormPage type="application" />} />
+                <Route path="/forms/urf/:id/additional-info" element={<UrfFormPage type="additional" />} />
+                <Route path="/forms/urf/:id/half-yearly-report" element={<UrfFormPage type="half_yearly" />} />
+                <Route path="/forms/urf/:id/final-report" element={<UrfFormPage type="final" />} />
+              </>
+            )}
+            {may('publications') && <Route path="/publications" element={<Publications />} />}
+            <Route path="/notifications" element={<AllNotificationsPage />} />
+            <Route path="/faculty/:facultyCode/profile" element={<ResearchProfile />} />
+            {/* Matches the sidebar's Progress Monitoring entry, so clerk and external
+                (who have no sidebar link for it) can't land on the page either. */}
+            {may('presentations') && (
+              <>
+                <Route path="/presentation" element={<PresentationSemester />} />
+                <Route path="/presentation/semester" element={<Navigate to="/presentation" replace />} />
+                {/* The semester and form pages sit under the same gate, so a role
+                    kept off the landing page cannot reach them by deep link. */}
+                <Route path="/presentation/semester/:semester_id" element={<PresentationListPage />} />
+                <Route path="/presentation/semester/:semester_id/:id" element={<Presentation />} />
+              </>
+            )}
+
+            <Route path="/forms/:form_type" element={<FormListPage />} />
+            <Route path="/forms/:form_type/:id" element={<MainFormPage />} />
+            {may('scholars') && (
+              <>
+                <Route path="/forms" element={<FacultyFormsPage />} />
+                <Route path="/students" element={<StudentsPage />} />
+                <Route path="/students/:roll_no" element={<StudentProfile />} />
+                <Route path="/students/:roll_no/forms" element={<FormsPage />} />
+                {/* Progress Monitoring for one scholar, from their profile. The
+                    pages read the path back as their API endpoint, and the
+                    scholar-scoped endpoints already exist under
+                    /students/{id}/forms/presentation. */}
+                <Route path="/students/:roll_no/forms/presentation" element={<StudentProgressMonitoring />} />
+                <Route path="/students/:roll_no/forms/presentation/semester/:semester_id" element={<PresentationListPage />} />
+                <Route path="/students/:roll_no/forms/presentation/semester/:semester_id/:id" element={<Presentation />} />
+                <Route path="/students/:roll_no/forms/:form_type" element={<FormListPage />} />
+                <Route path="/students/:roll_no/forms/:form_type/:id" element={<MainFormPage />} />
+              </>
+            )}
+            {may('courseManagement') && <Route path="/courses" element={<AdminCourseManagement />} />}
+            {/* Matches can_edit_department, which DepartmentController::list requires. */}
+            {may('departments') && <Route path="/departments" element={<DepartmentPage />} />}
+            {/* can_manage_supervisor_changes is granted to dordc and admin on the server. */}
+            {may('supervisorApprovals') && (
+              <Route path="/supervisor-doctoral-approvals" element={<SupervisorDoctoralApproval />} />
+            )}
+            {may('facultyDirectory') && <Route path="/faculty" element={<FacultyPage />} />}
+            {/* The server decides what each of them reads, so the routes only
+                have to be reachable. */}
+            {may('urf') && (
+              <>
+                <Route path="/urf" element={<UrfList />} />
+                <Route path="/urf/:id" element={<UrfDetails />} />
+              </>
+            )}
+            {may('attendance') && <Route path="/attendance" element={<AttendanceRoute />} />}
+            {may('admin') && (
+              <>
                 <Route path="/forms/manage" element={<AdminFormManagement />} />
-                <Route path='/areasOfSpecialization' element={<AreaOfSpecialization />} />
+                <Route path="/areasOfSpecialization" element={<AreaOfSpecialization />} />
                 <Route path="/courses/manage" element={<AdminCourseManagement />} />
                 <Route path="/outside-experts" element={<OutsideExperts />} />
                 <Route path="/logs" element={<Logs />} />
@@ -199,15 +228,15 @@ const AppContent = () => {
                 <Route path="/clerk-management" element={<ClerkManagement />} />
                 <Route path="/clerks" element={<ClerkManagement />} />
                 <Route path="/configuration" element={<Configuration />} />
-
-              {/* <Route path="/faculty/:roll_no" element={<StudentProfile />} />
-              <Route path="/faculty/:roll_no/forms" element={<FormsPage />} />
-              <Route path="/faculty/:roll_no/forms/:form_type" element={<FormListPage />} />
-              <Route path="/faculty/:roll_no/forms/:form_type/:id" element={<MainFormPage />} /> */}
+                <Route path="/urf/urf-application" element={<UrfFormList />} />
+                <Route path="/urf/urf-additional-info" element={<UrfFormList />} />
+                <Route path="/urf/urf-half-yearly-report" element={<UrfFormList />} />
+                <Route path="/urf/urf-final-report" element={<UrfFormList />} />
               </>
             )}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </Router>
     </>
   );

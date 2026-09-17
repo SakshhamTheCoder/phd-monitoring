@@ -15,6 +15,7 @@ import CustomModal from "../forms/modal/CustomModal";
 import SupervisorDoctoralManager from "../supervisorDoctoralManager/SupervisorDoctoralManager";
 import InfoGrid from "../profileFields/InfoGrid";
 import { toast } from "react-toastify";
+import useCapabilities from "../../context/CapabilitiesContext";
 
 /**
  * What the deadline means today. The server owns the dates and the count, so
@@ -27,6 +28,7 @@ const deadlineNote = ({ days_remaining: daysLeft, extensions_granted: granted })
 };
 
 const ProfileCard = ({ dataIP = null, link = false }) => {
+  const can = useCapabilities();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   const [isEditingInline, setIsEditingInline] = useState(false);
@@ -77,7 +79,6 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
     try {
       let response = await customFetch(`${baseURL}/courses/student/courses/${studentId}`, "GET", {}, false, false);
       response = response.response;
-      console.log("Courses response:", response);
       if (response?.success) {
         setCourses(response.data);
       }
@@ -351,14 +352,14 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
                       the department's list on the supervisor allocation form and
                       settled on the IRB form, so this reports it. */}
                   <div className="inline-field-item" style={{ marginTop: '0.6rem' }}>
-                    <label>Domain</label>
+                    <label htmlFor="profile-card-domain">Domain</label>
                     <p className={profile.broad_area ? "" : "student-value-empty"}>
                       {profile.broad_area || 'Set on your supervisor allocation form'}
                     </p>
                   </div>
                   <div className="inline-field-item" style={{ marginTop: '0.6rem' }}>
-                    <label>Description</label>
-                    <textarea
+                    <label htmlFor="profile-card-description">Description</label>
+                    <textarea id="profile-card-description" id="profile-card-domain"
                       placeholder="Briefly describe your proposed research topic, objectives and methodology"
                       value={editForm.tentative_desc ?? ""}
                       disabled={profile.phd_title_locked}
@@ -442,13 +443,16 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
                 />
               </>)}
               {permissions.can_manage && (
-                <>
-                  <CustomButton text="Tag Course" onClick={() => {
-                    fetchAllCourses();
-                    setIsTagModalOpen(true);
-                  }} />
-                  <CustomButton text="Manage Supervisors/Doctoral" onClick={() => setShowSupervisorDoctoralModal(true)} />
-                </>
+                <CustomButton text="Tag Course" onClick={() => {
+                  fetchAllCourses();
+                  setIsTagModalOpen(true);
+                }} />
+              )}
+              {/* The request is refused without this capability, so DRA, Director
+                  and ADoRDC, who can manage the record, were offered a form the
+                  server turns down. */}
+              {can("can_propose_supervisor_changes") && (
+                <CustomButton text="Manage Supervisors/Doctoral" onClick={() => setShowSupervisorDoctoralModal(true)} />
               )}
             </div>
           )}
@@ -514,7 +518,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
             onClose={() => setIsModalOpen(false)}
             children={[
               <>
-                <p>Edit the student Commitee/supervisors</p>
+                <p>Edit the student Committee/supervisors</p>
                 <GridContainer
                   label="Doctoral Committee"
                   elements={[
@@ -605,8 +609,8 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
             <h3>Tag Student with Course</h3>
             <div className="field-stack">
               <div>
-                <label>Course</label>
-                <select
+                <label htmlFor="profile-card-course">Course</label>
+                <select id="profile-card-course"
                   value={tagData.course_id}
                   onChange={(e) => setTagData({ ...tagData, course_id: e.target.value })}
                   className="input-field"
@@ -621,8 +625,8 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
               </div>
               
               <div>
-                <label>Semester</label>
-                <input
+                <label htmlFor="profile-card-semester">Semester</label>
+                <input id="profile-card-semester"
                   type="text"
                   value={tagData.semester}
                   onChange={(e) => setTagData({ ...tagData, semester: e.target.value })}
@@ -632,8 +636,8 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
               </div>
               
               <div>
-                <label>Status</label>
-                <select
+                <label htmlFor="profile-card-status">Status</label>
+                <select id="profile-card-status"
                   value={tagData.status}
                   onChange={(e) => setTagData({ ...tagData, status: e.target.value })}
                   className="input-field"
@@ -645,8 +649,8 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
               
               {tagData.status === 'completed' && (
                 <div>
-                  <label>Grade</label>
-                  <input
+                  <label htmlFor="profile-card-grade">Grade</label>
+                  <input id="profile-card-grade"
                     type="text"
                     value={tagData.grade}
                     onChange={(e) => setTagData({ ...tagData, grade: e.target.value })}

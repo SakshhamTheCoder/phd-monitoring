@@ -10,7 +10,20 @@
     padding: 10px 15px;
     border-radius: var(--radius);
     background-color: var(--primary-color);
-    color: white;
+    color: #FFF;
+    /* Stated rather than inherited, so every button in the product is one size.
+       Five page-local primary classes had drifted to their own padding and font
+       size, which put three different button heights on three pages. */
+    font-size: var(--text-sm);
+    font-weight: 600;
+    font-family: inherit;
+    border: none;
+}
+
+/* Compact, for a dense toolbar or a table row. */
+.custom-button--sm {
+    padding: 6px 10px;
+    font-size: var(--text-xs);
 }
 
 .custom-button--block { width: 100%; }
@@ -20,17 +33,17 @@
 }
 
 /* Button variants (an inline style prop still overrides these) */
-.custom-button--danger { background-color: #c0392b; }
-.custom-button--danger:hover { background-color: #a5281b; }
+.custom-button--danger { background-color: var(--danger); }
+.custom-button--danger:hover { background-color: var(--danger-text); }
 /* Secondary = outlined brand button, for less-primary actions (Bulk Import, Tag, Select) */
 .custom-button--secondary {
-    background-color: #fff;
+    background-color: var(--surface);
     color: var(--primary-color);
     border: 1px solid var(--primary-color);
 }
 .custom-button--secondary:hover { background-color: var(--primary-color); color: #fff; }
-.custom-button--success { background-color: #2e7d46; }
-.custom-button--success:hover { background-color: #256639; }
+.custom-button--success { background-color: var(--success); }
+.custom-button--success:hover { background-color: #12662f; }
 .custom-button:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .input-suggestions-container {
@@ -46,7 +59,7 @@
 .radio-label {
     display: flex;
     align-items: center;
-    font-size: 14px;
+    font-size: var(--text-sm);
     cursor: pointer;
 }
 
@@ -56,7 +69,7 @@
 }
 
 .file-link{
-    font-size: 22px;
+    font-size: var(--text-xl);
 }
 .preview-file{
     display: flex;
@@ -64,11 +77,11 @@
     justify-content: center;
     width: 100%;
     height: 100%;
-    border-radius: 5px;
+    border-radius: var(--radius-sm);
     background-color: #f0f0f0;
     border: 2px dashed #ccc;
     padding: 10px;
-    font-size: 16px;
+    font-size: var(--text-md);
     color: #333;
 }
 .file-input{
@@ -77,11 +90,11 @@
     justify-content: center;
     width: 100%;
     height: 100%;
-    border-radius: 5px;
+    border-radius: var(--radius-sm);
     background-color: #f0f0f0;
     border: 2px dashed #ccc;
     padding: 10px;
-    font-size: 16px;
+    font-size: var(--text-md);
     color: #333;
 }
 
@@ -91,7 +104,7 @@
     left: 0;
     right: 0;
     border: 1px solid #ccc;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     background-color: #fff;
     z-index: 10;
     max-height: 150px; 
@@ -107,7 +120,8 @@
     cursor: pointer;
 }
 
-.suggestion-item:hover {
+.suggestion-item:hover,
+.suggestion-item.active {
     background-color: #f0f0f0;
 }
 
@@ -118,7 +132,7 @@
 /* The gap under this label used to come from the grid cell's own top padding,
    so it vanished when that padding was removed. It belongs on the label. */
 .grid-label{
-    font-size: 18px;
+    font-size: var(--text-lg);
     font-weight: bold;
     margin-top: 15px;
     margin-bottom: 12px;
@@ -137,13 +151,16 @@
 .grid-container-wrapper + .grid-container-wrapper,
 .grid-container-wrapper + .form-section,
 .form-section + .grid-container-wrapper {
-    margin-top: 1.5rem;
+    margin-top: 1.25rem;
 }
 
 .grid-container {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
+    /* Row then column. 2rem in both directions put 32px between a label and the
+       field beside it, which read as three separate forms rather than one. The
+       column count is deliberate and unchanged: it carries the filling order. */
+    gap: 1.25rem 1.5rem;
 }
 
 /* Left-aligned, because centring a form field was wrong and needed two
@@ -201,7 +218,7 @@
     align-items: center;
     gap: 0.2rem;
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: var(--text-sm);
     color: #444;
     margin-bottom: 0.35rem;
     min-height: 20px;
@@ -228,11 +245,15 @@
 .rp-id-form input,
 .rp-filters select {
     padding: 0.6rem 0.8rem;
-    font-size: 0.9rem;
+    font-size: var(--text-sm);
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
     width: 100%;
     box-sizing: border-box;
+    /* A select builds a shorter line box than an input with the same padding, so
+       a row of both stood 5px apart. One height for every control in a row. */
+    line-height: 1.5;
+    min-height: 42px;
     outline: none;
     font-family: inherit;
     font-weight: 400;
@@ -334,7 +355,7 @@ label:disabled:hover {
 }
 
 .counter-label {
-    font-size: 14px;
+    font-size: var(--text-sm);
     font-weight: bold;
     margin-bottom: 5px;
 }
@@ -343,7 +364,7 @@ label:disabled:hover {
     display: flex;
     align-items: center;
     border: 1px solid #ccc;
-    border-radius: 5px;
+    border-radius: var(--radius-sm);
     overflow: hidden;
 }
 
@@ -355,7 +376,7 @@ label:disabled:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: var(--text-xl);
     cursor: pointer;
     transition: background-color 0.2s ease;
 }
@@ -371,7 +392,7 @@ label:disabled:hover {
 
 .counter-value {
     padding: 0 10px;
-    font-size: 16px;
+    font-size: var(--text-md);
     width: 40px;
     text-align: center;
     font-weight: bold;
@@ -389,7 +410,7 @@ label:disabled:hover {
     padding: 0.4rem 0.6rem;
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-sm);
-    font-size: 0.85rem;
+    font-size: var(--text-sm);
     font-family: inherit;
     color: var(--text-color);
     outline: none;
@@ -417,4 +438,15 @@ label:disabled:hover {
 
 .examiner-remove:hover {
   color: var(--primary-color);
+}
+
+/* A keyboard user has to be able to see what is focused. */
+.custom-button:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.custom-button--secondary:focus-visible,
+.custom-button--danger:focus-visible {
+    outline-offset: 3px;
 }

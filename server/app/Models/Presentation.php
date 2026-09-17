@@ -85,7 +85,11 @@ class Presentation extends Model
             'date' => $this->date,
             'time' => $this->time,
             'venue' => $this->venue,
-            'current_progress' => $this->student->overall_progress  ,
+            // The progress the evaluation started from. Once the supervisor has
+            // submitted it is stored on the row; today's overall already includes
+            // this evaluation's increase after DoRDC completes it, so reading that
+            // showed "previous 60, increase 10, total 60".
+            'current_progress' => $this->supervisor_lock ? $this->getAttribute('current_progress') : $this->student->overall_progress,
             'period_of_report' => $this->period_of_report,
             'extention_availed' => ResearchExtentions::where('student_id', $this->student_id)->count()>0?true:false,
 

@@ -2,9 +2,8 @@ import React, { useState } from "react";
 import { toast } from "react-toastify";
 import Student from "./roles/Student";
 import FormTitleBar from "../formTitleBar/FormTitleBar";
-import Recommendation from "../layouts/Recommendation";
 import Supervisor from "./roles/Supervisor";
-import RoleBasedWrapper from "../roleWrapper/RoleBasedWrapper";
+import FormLadder from "../formLadder/FormLadder";
 import { customFetch } from "../../../api/base";
 import { baseURL } from "../../../api/urls";
 
@@ -60,37 +59,10 @@ const IRBSubmission = ({ formData }) => {
         </div>
       )}
       <div className="form-container">
-      <RoleBasedWrapper
-      roleHierarchy={formData.steps}
-      currentRole={formData.role}>
-        <Student formData={formData}></Student>
-        <Supervisor formData={formData} ></Supervisor>
-         <Recommendation
-          formData={formData}
-          role="external"
-          allowRejection={false}
-        ></Recommendation>
-         <Recommendation
-          formData={formData}
-          role="doctoral"
-          allowRejection={false}
-        ></Recommendation>
-        <Recommendation
-          formData={formData}
-          role="hod"
-          allowRejection={false}
-        ></Recommendation>
-        <Recommendation
-          formData={formData}
-          role="adordc"
-          allowRejection={false}
-        ></Recommendation>
-        <Recommendation
-          formData={formData}
-          role="dordc"
-          allowRejection={false}
-        ></Recommendation>
-        </RoleBasedWrapper>
+      <FormLadder
+        formData={formData}
+        panels={{ student: Student, faculty: Supervisor }}
+      />
       </div>
     </>
   );

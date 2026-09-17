@@ -1,45 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Student from "./roles/Student";
 import FormTitleBar from "../formTitleBar/FormTitleBar";
-// import Supervisor from "./roles/Supervisor";
-import Recommendation from "../layouts/Recommendation";
-// import Dordc from "./roles/Dordc";
-import RoleBasedWrapper from "../roleWrapper/RoleBasedWrapper";
+import FormLadder from "../formLadder/FormLadder";
 
+// revise-title is routed to routes/base/synopsis_submission.php, so it is served
+// by SynopsisSubmissionController and carries that controller's chain, which
+// begins at 'student'. The student panel therefore belongs inside the ladder;
+// rendering it outside left the 'student' step with no panel of its own and it
+// fell through to a plain Recommendation, which asked the scholar to recommend
+// their own application.
 const ReviseTitle = ({ formData }) => {
   return (
     <>
       <FormTitleBar formName="Revise Title or Objectives" formData={formData} />
       <div className="form-container">
-        <Student formData={formData}></Student>
-        <RoleBasedWrapper
-          roleHierarchy={formData.steps}
-          currentRole={formData.role}
-        >
-          {/* <Supervisor formData={formData}></Supervisor> */}
-          <Recommendation
-            formData={formData}
-            role="supervisor"
-            allowRejection={false}
-          ></Recommendation>
-
-          <Recommendation
-            formData={formData}
-            role="hod"
-            allowRejection={false}
-          ></Recommendation>
-
-          <Recommendation
-            formData={formData}
-            role="dra"
-            allowRejection={false}
-          ></Recommendation>
-          <Recommendation
-            formData={formData}
-            role="dordc"
-            allowRejection={false}
-          ></Recommendation>
-        </RoleBasedWrapper>
+        <FormLadder
+          formData={formData}
+          panels={{ student: Student }}
+        />
       </div>
     </>
   );

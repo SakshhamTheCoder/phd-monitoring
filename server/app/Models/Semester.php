@@ -2,6 +2,7 @@
 namespace App\Models;
 
 use App\Http\Controllers\Traits\HasSemesterCodeValidation;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -26,6 +27,23 @@ class Semester extends Model
         'year' => 'integer',
         'notification' => 'boolean',
     ];
+
+    /**
+     * The term we are in, read from the date rather than looked up: an academic
+     * year runs July to June, written as 2526, odd until December.
+     */
+    public static function currentTerm(?Carbon $now = null): array
+    {
+        $now = $now ?? Carbon::now();
+        $odd = $now->month >= 7;
+        $from = $odd ? $now->year : $now->year - 1;
+
+        return [
+            'code' => sprintf('%02d%02d%s', $from % 100, ($from + 1) % 100, $odd ? 'ODD' : 'EVEN'),
+            'year' => $from,
+            'semester' => $odd ? 1 : 2,
+        ];
+    }
 
     /**
      * Create or update a semester using a semester code.

@@ -29,6 +29,8 @@ const LINKS = [
   { path: "/presentation", label: "Presentations" },
   { path: "/courses", label: "Courses" },
   { path: "/projects", label: "Projects" },
+  { path: "/urf", label: "URF" },
+  { path: "/publications", label: "Publications" },
   { path: "/attendance", label: "Mark Attendance" },
   { path: "/supervisor-doctoral-approvals", label: "Supervisor Approvals" },
   { path: "/clerks", label: "Clerks" },
@@ -71,7 +73,7 @@ const AdminHome = ({ data }) => {
       <GridContainer
         label="Quick Access"
         elements={tiles.map((t) => (
-          <CustomButton text={t.label} onClick={() => navigate(t.path)} />
+          <CustomButton text={t.label} variant="block" onClick={() => navigate(t.path)} />
         ))}
       />
     </div>

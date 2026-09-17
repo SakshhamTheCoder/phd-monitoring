@@ -26,7 +26,7 @@ class CapabilityGateParityTest extends TestCase
         // Deliberately widened when the faculty directory opened: everyone
         // except clerk may browse it. Was admin, director, dra, dordc, hod,
         // phd_coordinator, adordc.
-        'GET /api/faculty' => ['admin', 'director', 'dra', 'dordc', 'hod', 'phd_coordinator', 'adordc', 'faculty', 'doctoral', 'external', 'student'],
+        'GET /api/faculty' => ['admin', 'director', 'dra', 'dordc', 'hod', 'phd_coordinator', 'adordc', 'faculty', 'doctoral', 'external', 'student', 'ug_student'],
         'GET /api/students' => ['admin', 'director', 'dra', 'dordc', 'hod', 'phd_coordinator', 'adordc', 'faculty', 'doctoral', 'external', 'student'],
         'GET /api/clerks/my-departments' => ['clerk'],
         'GET /api/clerks/attendance' => ['clerk', 'admin'],

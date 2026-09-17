@@ -5,6 +5,7 @@ import Tabs from '../../components/tabs/Tabs';
 import LeaveQuotas from './configuration/LeaveQuotas';
 import ThesisLimits from './configuration/ThesisLimits';
 import SupervisionLimits from './configuration/SupervisionLimits';
+import UgBranches from './configuration/UgBranches';
 
 /**
  * One admin home for settings that would otherwise be hardcoded or buried in
@@ -19,6 +20,7 @@ const SECTIONS = [
   { value: 'leave', label: 'Leave Quotas', Component: LeaveQuotas },
   { value: 'thesis', label: 'Thesis Duration', Component: ThesisLimits },
   { value: 'supervision', label: 'Supervision Limits', Component: SupervisionLimits },
+  { value: 'branches', label: 'UG Branches', Component: UgBranches },
 ];
 
 const Configuration = () => {

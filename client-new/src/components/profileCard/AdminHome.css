@@ -2,27 +2,23 @@
 .adminhome-container {
   background: #ffffff;
   padding: 2rem;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
   max-width: 1000px;
   margin: auto;
 }
 
 .adminhome-container h2 {
   margin-bottom: 0.3rem;
-  font-size: 1.8rem;
+  font-size: var(--text-3xl);
   color: #111827;
 }
 
 .adminhome-sub {
-  font-size: 1rem;
+  font-size: var(--text-md);
   color: #6b7280;
   margin-bottom: 1.5rem;
 }
 
-/* Navigation tiles, not form buttons: they fill their cell so the grid reads
-   as a block rather than a ragged row of different-width pills. This is the
-   case .custom-button--block exists for. */
-.adminhome-container .custom-button {
-  width: 100%;
-}
+/* Navigation tiles use .custom-button--block, the variant that exists for
+   exactly this. */

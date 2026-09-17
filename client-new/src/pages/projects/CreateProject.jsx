@@ -450,39 +450,39 @@ const CreateProject = () => {
           </div>
           <div className="cp-form-grid">
             <div className="cp-field full">
-              <label>Project Title <span className="req">*</span></label>
-              <input type="text" value={form.title} onChange={e => updateField('title', e.target.value)} placeholder="Enter the full formal title of the research project" />
+              <label htmlFor="create-project-project-title">Project Title <span className="req">*</span></label>
+              <input id="create-project-project-title" type="text" value={form.title} onChange={e => updateField('title', e.target.value)} placeholder="Enter the full formal title of the research project" />
             </div>
             <div className="cp-field">
-              <label>Category <span className="req">*</span></label>
-              <select value={form.category} onChange={e => updateField('category', e.target.value)}>
+              <label htmlFor="create-project-category">Category <span className="req">*</span></label>
+              <select id="create-project-category" value={form.category} onChange={e => updateField('category', e.target.value)}>
                 <option value="">Select category</option>
                 {categoryOptions.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div className="cp-field">
-              <label>Funding Agency <span className="req">*</span></label>
-              <input type="text" value={form.fundingAgency} onChange={e => updateField('fundingAgency', e.target.value)} placeholder="e.g. DST, CSIR, ISRO" />
+              <label htmlFor="create-project-funding-agency">Funding Agency <span className="req">*</span></label>
+              <input id="create-project-funding-agency" type="text" value={form.fundingAgency} onChange={e => updateField('fundingAgency', e.target.value)} placeholder="e.g. DST, CSIR, ISRO" />
             </div>
             <div className="cp-field">
-              <label>Focus Area</label>
-              <input type="text" value={form.focusArea} onChange={e => updateField('focusArea', e.target.value)} placeholder="e.g. AI/ML & IoT" />
+              <label htmlFor="create-project-focus-area">Focus Area</label>
+              <input id="create-project-focus-area" type="text" value={form.focusArea} onChange={e => updateField('focusArea', e.target.value)} placeholder="e.g. AI/ML & IoT" />
             </div>
             <div className="cp-field">
-              <label>Grant Type</label>
-              <input type="text" value={form.grantType} onChange={e => updateField('grantType', e.target.value)} placeholder="e.g. CRG (Core Research Grant)" />
+              <label htmlFor="create-project-grant-type">Grant Type</label>
+              <input id="create-project-grant-type" type="text" value={form.grantType} onChange={e => updateField('grantType', e.target.value)} placeholder="e.g. CRG (Core Research Grant)" />
             </div>
             <div className="cp-field full">
-              <label>Project Description</label>
-              <textarea rows="4" value={form.description} onChange={e => updateField('description', e.target.value)} placeholder="Provide a brief abstract or summary of the research objectives and expected outcomes..." maxLength={2000} />
+              <label htmlFor="create-project-project-description">Project Description</label>
+              <textarea id="create-project-project-description" rows="4" value={form.description} onChange={e => updateField('description', e.target.value)} placeholder="Provide a brief abstract or summary of the research objectives and expected outcomes..." maxLength={2000} />
               <span className="cp-char-count">{form.description.length} / 2000 characters</span>
             </div>
             <div className="cp-field">
-              <label>Start Date <span className="req">*</span></label>
-              <input type="date" value={form.startDate} onChange={e => updateField('startDate', e.target.value)} />
+              <label htmlFor="create-project-start-date">Start Date <span className="req">*</span></label>
+              <input id="create-project-start-date" type="date" value={form.startDate} onChange={e => updateField('startDate', e.target.value)} />
             </div>
             <div className="cp-field">
-              <label>Duration <span className="req">*</span></label>
+              <label htmlFor="create-project-duration">Duration <span className="req">*</span></label>
               <div className="cp-duration-pair">
                 <select value={form.durationYears} onChange={e => updateField('durationYears', e.target.value)} aria-label="Duration in years">
                   {meta.duration.years.map(y => <option key={y} value={y}>{y} {y === 1 ? 'Year' : 'Years'}</option>)}
@@ -497,8 +497,8 @@ const CreateProject = () => {
             </div>
             {form.endDate && (
               <div className="cp-field">
-                <label>End Date</label>
-                <input type="date" value={form.endDate} readOnly className="cp-readonly" />
+                <label htmlFor="create-project-end-date">End Date</label>
+                <input id="create-project-end-date" id="create-project-duration" type="date" value={form.endDate} readOnly className="cp-readonly" />
               </div>
             )}
           </div>
@@ -529,8 +529,8 @@ const CreateProject = () => {
             )}
             <div className="cp-form-grid">
               <div className="cp-field">
-                <label>Role on this project</label>
-                <select value={form.role} onChange={e => updateField('role', e.target.value)}>
+                <label htmlFor="create-project-role-on-this-project">Role on this project</label>
+                <select id="create-project-role-on-this-project" value={form.role} onChange={e => updateField('role', e.target.value)}>
                   {roleOptions.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
               </div>
@@ -559,12 +559,12 @@ const CreateProject = () => {
               <div className="cp-ext-form">
                 <div className="cp-ext-header"><span className="cp-ext-label">External Partner</span></div>
                 <div className="cp-form-grid">
-                  <div className="cp-field"><label>Full Name</label><input type="text" value={extCopi.name} onChange={e => setExtCopi({...extCopi, name: e.target.value})} placeholder="e.g. Prof. Robert Miller" /></div>
-                  <div className="cp-field"><label>Designation</label><input type="text" value={extCopi.designation} onChange={e => setExtCopi({...extCopi, designation: e.target.value})} placeholder="e.g. Associate Professor" /></div>
-                  <div className="cp-field full"><label>Institute / Organization</label><input type="text" value={extCopi.institute} onChange={e => setExtCopi({...extCopi, institute: e.target.value})} placeholder="e.g. MIT, Cambridge" /></div>
-                  <div className="cp-field"><label>Email Address</label><input type="email" value={extCopi.email} onChange={e => setExtCopi({...extCopi, email: e.target.value})} /></div>
-                  <div className="cp-field"><label>Mobile Number</label><input type="text" value={extCopi.mobile} onChange={e => setExtCopi({...extCopi, mobile: e.target.value})} /></div>
-                  <div className="cp-field full"><label>Website</label><input type="url" value={extCopi.website} onChange={e => setExtCopi({...extCopi, website: e.target.value})} /></div>
+                  <div className="cp-field"><label htmlFor="create-project-full-name">Full Name</label><input type="text" value={extCopi.name} onChange={e => setExtCopi({...extCopi, name: e.target.value})} placeholder="e.g. Prof. Robert Miller" /></div>
+                  <div className="cp-field"><label htmlFor="create-project-designation">Designation</label><input type="text" value={extCopi.designation} onChange={e => setExtCopi({...extCopi, designation: e.target.value})} placeholder="e.g. Associate Professor" /></div>
+                  <div className="cp-field full"><label htmlFor="create-project-institute-organization">Institute / Organization</label><input id="create-project-institute-organization" type="text" value={extCopi.institute} onChange={e => setExtCopi({...extCopi, institute: e.target.value})} placeholder="e.g. MIT, Cambridge" /></div>
+                  <div className="cp-field"><label htmlFor="create-project-email-address">Email Address</label><input id="create-project-email-address" type="email" value={extCopi.email} onChange={e => setExtCopi({...extCopi, email: e.target.value})} /></div>
+                  <div className="cp-field"><label htmlFor="create-project-mobile-number">Mobile Number</label><input id="create-project-mobile-number" type="text" value={extCopi.mobile} onChange={e => setExtCopi({...extCopi, mobile: e.target.value})} /></div>
+                  <div className="cp-field full"><label htmlFor="create-project-website">Website</label><input id="create-project-website" type="url" value={extCopi.website} onChange={e => setExtCopi({...extCopi, website: e.target.value})} /></div>
                 </div>
                 <div className="cp-ext-actions">
                   <button className="cp-btn-outline" onClick={() => setShowExtForm(false)}>Cancel</button>
@@ -596,13 +596,13 @@ const CreateProject = () => {
           <div className="cp-section-card">
             <h3 className="cp-section-title">Funding Information</h3>
             <div className="cp-form-grid">
-              <div className="cp-field"><label>Funding Agency</label><input type="text" value={form.fundingAgency} readOnly className="cp-readonly" /></div>
-              <div className="cp-field"><label>Total Sanctioned Amount (₹)</label><input type="number" value={form.sanctionAmount} onChange={e => updateField('sanctionAmount', e.target.value)} placeholder="e.g. 4850000" /></div>
-              <div className="cp-field"><label>TIET Share (₹)</label><input type="number" value={form.tietShare} onChange={e => updateField('tietShare', e.target.value)} /></div>
-              <div className="cp-field"><label>Sanction Letter Link</label><input type="url" value={form.sanctionLetterLink} onChange={e => updateField('sanctionLetterLink', e.target.value)} placeholder="https://..." /></div>
+              <div className="cp-field"><label htmlFor="create-project-funding-agency-2">Funding Agency</label><input id="create-project-funding-agency-2" type="text" value={form.fundingAgency} readOnly className="cp-readonly" /></div>
+              <div className="cp-field"><label htmlFor="create-project-total-sanctioned-amount">Total Sanctioned Amount (₹)</label><input id="create-project-total-sanctioned-amount" type="number" value={form.sanctionAmount} onChange={e => updateField('sanctionAmount', e.target.value)} placeholder="e.g. 4850000" /></div>
+              <div className="cp-field"><label htmlFor="create-project-tiet-share">TIET Share (₹)</label><input id="create-project-tiet-share" type="number" value={form.tietShare} onChange={e => updateField('tietShare', e.target.value)} /></div>
+              <div className="cp-field"><label htmlFor="create-project-sanction-letter-link">Sanction Letter Link</label><input id="create-project-sanction-letter-link" type="url" value={form.sanctionLetterLink} onChange={e => updateField('sanctionLetterLink', e.target.value)} placeholder="https://..." /></div>
               <div className="cp-field">
-                <label>Sanction Letter Upload</label>
-                <input type="file" accept=".pdf,.doc,.docx" ref={sanctionRef} onChange={handleSanctionFile} />
+                <label htmlFor="create-project-sanction-letter-upload">Sanction Letter Upload</label>
+                <input id="create-project-sanction-letter-upload" id="create-project-designation" id="create-project-full-name" type="file" accept=".pdf,.doc,.docx" ref={sanctionRef} onChange={handleSanctionFile} />
                 {form.sanctionLetterFileName && <span className="cp-file-hint"><i className="fa fa-check-circle"></i> {form.sanctionLetterFileName}</span>}
               </div>
             </div>

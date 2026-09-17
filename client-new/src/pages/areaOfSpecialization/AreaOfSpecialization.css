@@ -1,7 +1,7 @@
 /* Header comes from styles/ui.css. It used to be redefined here, and because
    the page stylesheets share one bundle, that leaked onto every other page. */
 
-.form-container {
+.area-of-specialization .form-container {
   padding: 20px;
 }
 
@@ -12,7 +12,7 @@
 }
 
 .section-divider h3 {
-  font-size: 16px;
+  font-size: var(--text-md);
   font-weight: 700;
   color: var(--primary-color);
   margin: 0;
@@ -25,14 +25,14 @@
 .upload-info {
   background: #f8f4f1;
   padding: 20px;
-  border-radius: 8px;
+  border-radius: var(--radius);
   border-left: 4px solid var(--primary-color);
   margin-bottom: 25px;
 }
 
 .upload-info p {
   margin: 0 0 10px 0;
-  font-size: 14px;
+  font-size: var(--text-sm);
   color: #5a4a42;
   line-height: 1.6;
 }
@@ -40,7 +40,7 @@
 .upload-info .note {
   background: white;
   padding: 12px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   margin-top: 15px;
   margin-bottom: 15px;
   border: 1px solid #e0d4c8;

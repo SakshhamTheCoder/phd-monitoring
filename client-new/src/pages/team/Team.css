@@ -1,5 +1,4 @@
 /* Team.css */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 .team-page-wrapper {
   background-color: #f9fafb;
@@ -30,7 +29,7 @@
 }
 
 .heading {
-  font-size: 2.75rem;
+  font-size: var(--text-5xl);
   font-weight: 700;
   color: #1a1a1a;
   margin-bottom: 8px;
@@ -38,7 +37,7 @@
 }
 
 .team-subtitle {
-  font-size: 1.05rem;
+  font-size: var(--text-md);
   color: #718096;
   margin-bottom: 24px;
   max-width: 600px;
@@ -48,7 +47,7 @@
 }
 
 .subheading {
-  font-size: 1.6rem;
+  font-size: var(--text-2xl);
   font-weight: 600;
   color: #1a1a1a;
   margin: 24px 0 16px;
@@ -66,7 +65,7 @@
   width: 40px;
   height: 3px;
   background: linear-gradient(90deg, var(--primary-color), #c44040);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
 }
 
 /* Grids for Mentors and Teams */
@@ -89,8 +88,8 @@
 /* Base Person Card Redesign (Compact by default for developers) */
 .person-card {
   background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(0, 0, 0, 0.02);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
   width: 100%;
   max-width: 225px;
   padding: 24px 12px;
@@ -111,7 +110,7 @@
   right: 0;
   height: 4px;
   background: var(--primary-color);
-  border-radius: 16px 16px 0 0;
+  border-radius: var(--radius-xl) 16px 0 0;
   transition: background-color 0.3s ease;
 }
 
@@ -163,7 +162,7 @@
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid #fff;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
   transition: transform 0.3s ease;
   z-index: 1;
 }
@@ -181,10 +180,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.6rem;
+  font-size: var(--text-2xl);
   font-weight: 700;
   border: 3px solid #fff;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
   z-index: 1;
   transition: transform 0.3s ease;
 }
@@ -201,7 +200,7 @@
 }
 
 .card-content h3 {
-  font-size: 1.15rem;
+  font-size: var(--text-lg);
   font-weight: 600;
   margin: 0;
   color: #1a1a1a;
@@ -210,12 +209,12 @@
 
 /* Capsule badge style for developer tags */
 .card-content .title {
-  font-size: 0.68rem;
+  font-size: var(--text-2xs);
   font-weight: 600;
   color: var(--primary-color);
   background: var(--primary-wash);
   padding: 4px 10px;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   display: inline-flex;
   justify-content: center;
   align-items: center;
@@ -246,7 +245,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.95rem;
+  font-size: var(--text-base);
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   border: 1px solid #edf2f7;
   text-decoration: none;
@@ -256,7 +255,7 @@
   color: #fff;
   background: var(--primary-color);
   transform: translateY(-3px);
-  box-shadow: 0 5px 12px rgba(147, 47, 47, 0.25);
+  box-shadow: var(--shadow-sm);
   border-color: var(--primary-color);
 }
 
@@ -277,7 +276,7 @@
 
 .mentor-card:hover {
   transform: translateY(-10px);
-  box-shadow: 0 25px 35px rgba(147, 47, 47, 0.12), 0 6px 15px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow);
 }
 
 .mentor-card .avatar-container {
@@ -295,17 +294,17 @@
 .mentor-card .avatar-fallback {
   width: 120px;
   height: 120px;
-  font-size: 2.25rem;
+  font-size: var(--text-4xl);
   border-width: 4px;
 }
 
 .mentor-card .card-content h3 {
-  font-size: 1.45rem;
+  font-size: var(--text-2xl);
   font-weight: 700;
 }
 
 .mentor-card .card-content .title {
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   padding: 5px 14px;
   margin: 10px 0 20px 0;
@@ -316,7 +315,7 @@
 .mentor-card .social-icons a {
   width: 38px;
   height: 38px;
-  font-size: 1.1rem;
+  font-size: var(--text-lg);
 }
 
 /* ==========================================================================
@@ -331,14 +330,14 @@
 }
 
 .contact {
-  font-size: 0.95rem;
+  font-size: var(--text-base);
   color: #1a202c;
   margin-top: 20px;
   background: #fff;
   display: inline-block;
   padding: 15px 35px;
   border-radius: 30px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-sm);
   border: 1px solid rgba(147, 47, 47, 0.15);
 }
 
@@ -376,11 +375,11 @@
 
 @media (max-width: 480px) {
   .heading {
-    font-size: 2.25rem;
+    font-size: var(--text-4xl);
   }
 
   .team-subtitle {
-    font-size: 1rem;
+    font-size: var(--text-md);
     padding: 0 10px;
   }
 

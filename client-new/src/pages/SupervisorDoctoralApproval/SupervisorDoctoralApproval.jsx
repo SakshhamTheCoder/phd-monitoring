@@ -9,6 +9,7 @@ import GridContainer from '../../components/forms/fields/GridContainer';
 import InputField from '../../components/forms/fields/InputField';
 import Layout from '../../components/dashboard/layout';
 import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
+import PageHeader from '../../components/pageHeader/PageHeader';
 
 const SupervisorDoctoralApproval = () => {
   const [pendingChanges, setPendingChanges] = useState([]);
@@ -155,14 +156,10 @@ const SupervisorDoctoralApproval = () => {
   return (
     <Layout>
     <div>
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Supervisor &amp; Doctoral Committee Change Approvals</h1>
-          <p className="page-subtitle">
-            Review and approve/reject pending change requests from HOD and PhD Coordinators
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Supervisor &amp; Doctoral Committee Change Approvals"
+        subtitle="Review and approve/reject pending change requests from HOD and PhD Coordinators"
+      />
 
       <CustomButton
         text="Refresh"

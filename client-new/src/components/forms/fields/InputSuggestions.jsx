@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { customFetch } from '../../../api/base';
 import "./Fields.css";
 
@@ -14,8 +14,13 @@ const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = 
     // dropdown stayed mounted for good — sitting over the field below and
     // swallowing that field's clicks. It must not outlive focus.
     const [isFocused, setIsFocused] = useState(false);
+    // The suggestion the arrow keys are on, -1 for none. Hover moves it too, so
+    // the mouse and the keyboard always agree on which row Enter would pick.
+    const [activeIndex, setActiveIndex] = useState(-1);
 
+    const fieldId = useId();
     const containerRef = useRef(null);
+    const listRef = useRef(null);
     const abortControllerRef = useRef(null);
     const cacheRef = useRef({});  // Caching previous results
     const debounceTimeout = useRef(null);
@@ -51,7 +56,6 @@ const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = 
         const { signal } = abortControllerRef.current;
     
         const finalBody = body ? { ...body, text: value } : { text: value };
-        console.log("Final body for suggestions:", finalBody);
         try {
             setLoading(true);
             const data = await customFetch(apiUrl, 'POST', finalBody, false);
@@ -72,6 +76,13 @@ const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = 
         }
     };
     
+useEffect(() => { setActiveIndex(-1); }, [suggestions]);
+
+// Keep the highlighted row in view when the arrows walk past the list's edge.
+useEffect(() => {
+    listRef.current?.querySelectorAll('.suggestion-item')[activeIndex]?.scrollIntoView({ block: 'nearest' });
+}, [activeIndex]);
+
 useEffect(() => {
     if(initialValue){
         setInputValue(initialValue);
@@ -88,6 +99,23 @@ useEffect(() => {
         }
     };
 
+    const handleKeyDown = (event) => {
+        const count = suggestions.length;
+        if (event.key === 'ArrowDown' && count) {
+            event.preventDefault();
+            setActiveIndex((i) => (i + 1) % count);
+        } else if (event.key === 'ArrowUp' && count) {
+            event.preventDefault();
+            setActiveIndex((i) => (i <= 0 ? count - 1 : i - 1));
+        } else if (event.key === 'Enter' && activeIndex >= 0 && activeIndex < count) {
+            // Only swallow Enter when it picks a row, so it still submits otherwise.
+            event.preventDefault();
+            handleSuggestionClick(suggestions[activeIndex]);
+        } else if (event.key === 'Escape') {
+            setSuggestions([]);
+        }
+    };
+
     const handleBlur = (event) => {
         if (!containerRef.current.contains(event.relatedTarget)) { // Check if the newly focused element is outside the component
             // Always close on the way out. Whether the typed text is committed as a
@@ -95,7 +123,9 @@ useEffect(() => {
             // separate question from whether the dropdown stays on screen.
             setIsFocused(false);
             setSuggestions([]);
-            if (!suggestionManadatory) {
+            // Only text typed since the last pick is free text. Committing on every
+            // blur replaced a row already chosen with its own label as the id.
+            if (!suggestionManadatory && !userSelected) {
                 setShowHint(false);
                 setUserSelected(true);
                 onSelect({ name: inputValue, id: inputValue });
@@ -114,12 +144,15 @@ useEffect(() => {
             onBlur={handleBlur}
         >
             <div className="input-field-container">
-                {showLabel && (<label className="input-label">{label}{required && <span className="req">*</span>}</label>)}
+                {showLabel && (<label className="input-label" htmlFor={fieldId}>{label}{required && <span className="req" aria-hidden="true">*</span>}</label>)}
                 <input
+                    id={fieldId}
+                    aria-required={required || undefined}
                     type="text"
                     value={inputValue}
                     onChange={handleInputChange}
                     onFocus={() => setIsFocused(true)}
+                    onKeyDown={handleKeyDown}
                     placeholder={isLocked && !inputValue ? 'Not provided' : hintText}
                     className="input-field"
                     disabled={isLocked}
@@ -127,18 +160,27 @@ useEffect(() => {
             </div>
 
             {isFocused && inputValue && (loading || suggestions.length > 0 || showHint) && (
-                <ul className="suggestions-list">
+                <ul
+                    className="suggestions-list"
+                    ref={listRef}
+                    // Keep focus in the input while a row is pressed. Otherwise the
+                    // input blurs first, and a free-text picker commits what was
+                    // typed ("CHED") in place of the row that was clicked.
+                    onMouseDown={(event) => event.preventDefault()}
+                >
                     {loading && (
                         <li className="suggestion-item loading">Loading...</li>
                     )}
-                    {!loading && suggestions.length > 0 && suggestions.map((suggestion) => (
+                    {!loading && suggestions.length > 0 && suggestions.map((suggestion, index) => (
                         <li
                             key={suggestion.id}
+                            aria-selected={index === activeIndex}
+                            onMouseEnter={() => setActiveIndex(index)}
                             // Keep focus on the input: without this the input blurs on
                             // mousedown, the list unmounts, and the click never lands.
                             onMouseDown={(event) => event.preventDefault()}
                             onClick={() => handleSuggestionClick(suggestion)}
-                            className="suggestion-item"
+                            className={`suggestion-item${index === activeIndex ? ' active' : ''}`}
                         >
                               {renderSuggestionText(suggestion)}
                         </li>

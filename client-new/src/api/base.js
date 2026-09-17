@@ -7,32 +7,13 @@ export const NETWORK_ERROR_MESSAGE =
 export const isNetworkError = (error) =>
   !navigator.onLine || error instanceof TypeError;
 
-// In-memory cache store with timestamp
-const cacheStore = new Map();
-const CACHE_DURATION = 0 * 60 * 1000; // 5 minutes in milliseconds
-
 export const customFetch = async (
   link,
   method = "GET",
   body = {},
   showToast = true,
-  isFormData = false,
-  useCache = true // cache toggle
+  isFormData = false
 ) => {
-  const cacheKey = `${method}:${link}:${isFormData ? "form" : JSON.stringify(body)}`;
-
-  // Check if valid cached response exists
-  if (useCache && method === "GET" && cacheStore.has(cacheKey)) {
-    const { timestamp, data } = cacheStore.get(cacheKey);
-    const now = Date.now();
-
-    if (now - timestamp < CACHE_DURATION) {
-      return { success: true, response: data };
-    } else {
-      cacheStore.delete(cacheKey); // Expired, remove from cache
-    }
-  }
-
   try {
     const options = {
       method,
@@ -54,11 +35,7 @@ export const customFetch = async (
     const response = await fetch(link, options);
 
     if (response.ok) {
-      const json = await response.json();
-      if (useCache && method === "GET") {
-        cacheStore.set(cacheKey, { data: json, timestamp: Date.now() });
-      }
-      return { success: true, response: json };
+      return { success: true, response: await response.json() };
     } else {
       throw response;
     }
@@ -74,7 +51,11 @@ export const customFetch = async (
           if (showToast) toast.error(data.error);
           localStorage.clear();
           sessionStorage.clear();
-          window.location.href = "/login";
+          // Already there: navigating again reloads the page and repeats
+          // whatever request just failed, forever.
+          if (window.location.pathname !== "/login") {
+            window.location.href = "/login";
+          }
         } else if (error.status === 500) {
           if (showToast)
             toast.error(data.message || data.error || "Internal server error");

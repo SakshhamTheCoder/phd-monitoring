@@ -1,0 +1,101 @@
+/* A heading with its add button on the same line, as the project form's
+   Co-Investigators section lays out "Add External Co-PI". */
+.urf-subhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 1.75rem 0 0.75rem;
+}
+
+.urf-subhead h3 {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* Same look as .cp-add-btn on the project form. */
+.urf-add-btn {
+  background: var(--primary-color);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.urf-add-btn:hover { background: var(--hover-color); }
+
+.urf-remove-btn {
+  background: #fff;
+  color: #991b1b;
+  border: 1px solid #991b1b;
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--radius);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.urf-remove-btn:hover { background: #991b1b; color: #fff; }
+
+/* One mentor per row: the faculty search, then what it fills in, then remove. */
+.urf-mentor-row {
+  display: grid;
+  grid-template-columns: 1.3fr 1.3fr 1fr 1.3fr 2.75rem;
+  gap: 1rem;
+  align-items: end;
+  margin-bottom: 1rem;
+}
+
+.urf-mentor-row .urf-remove-btn {
+  padding: 0.6rem;
+  justify-content: center;
+  margin-bottom: 0.1rem;
+}
+
+@media (max-width: 900px) {
+  .urf-mentor-row { grid-template-columns: 1fr 1fr; }
+}
+
+/* Reading a form: the recommendation, the remarks and what earlier readers said. */
+.urf-approval {
+  margin: 1rem 0 1.5rem;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: var(--radius);
+  background: #f9f9f9;
+}
+
+.urf-approval-trail {
+  margin: 0.5rem 0 1rem;
+  font-size: var(--text-sm);
+  color: #374151;
+}
+
+.urf-approval-stage {
+  color: #6b7280;
+}
+
+.urf-report-approval {
+  margin-top: 1.5rem;
+}
+
+/* What a fellow is waiting for, when a report round is not open yet. */
+.urf-round-notice {
+  margin: 0.25rem 0 0.75rem;
+  color: #6b7280;
+  font-size: var(--text-sm);
+}
+
+.urf-report-schedule {
+  margin-bottom: 1.5rem;
+}

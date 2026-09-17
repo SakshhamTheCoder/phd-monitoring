@@ -23,6 +23,7 @@ import FacultyLink from '../../components/facultyLink/FacultyLink';
 import { baseURL } from '../../api/urls';
 import { toast } from 'react-toastify';
 import './ProjectDetails.css';
+import { useFeatures } from '../../context/FeaturesContext';
 
 // Build the sanction-letter display object from a loaded project.
 const sanctionFromProject = (p) => {
@@ -36,6 +37,7 @@ const TABS = ['Overview', 'Funding & Budget', 'Milestones', 'Project Team', 'Doc
 const ProjectDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const features = useFeatures();
   const [activeTab, setActiveTab] = useState('Overview');
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -44,6 +46,12 @@ const ProjectDetails = () => {
   const [editForm, setEditForm] = useState({ name: '', deliverable: '', dueDate: '', status: 'Not Started' });
   const [showAddForm, setShowAddForm] = useState(false);
   const [newMs, setNewMs] = useState({ name: '', deliverable: '', dueDate: '', status: 'Not Started' });
+  // Declared with the rest of the state, because manpowerCats reads it a few
+  // hundred lines above where it used to sit. A const is in scope for the whole
+  // function but unreadable until its declaration runs, so every render threw
+  // "Cannot access 'meta' before initialization" and the page never drew.
+  const [meta, setMeta] = useState({ sdgs: [], manpowerCategories: [], budgetHeads: [], duration: { years: [1, 2, 3, 4, 5], maxMonths: 11 } });
+  useEffect(() => { apiProjectMeta().then(setMeta); }, []);
 
   const validateMilestone = (m) => {
     if (!m.name.trim()) { toast.error('Milestone name is required.'); return false; }
@@ -486,9 +494,6 @@ const ProjectDetails = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { loadProject(); }, [id]);
 
-  const [meta, setMeta] = useState({ sdgs: [], manpowerCategories: [], budgetHeads: [], duration: { years: [1,2,3,4,5], maxMonths: 11 } });
-  useEffect(() => { apiProjectMeta().then(setMeta); }, []);
-
   if (loading) {
     return <Layout><div className="pd-empty">Loading project…</div></Layout>;
   }
@@ -743,11 +748,11 @@ const ProjectDetails = () => {
               <div className="pd-ms-add-form">
                 <h4 className="pd-ms-form-title">New Milestone</h4>
                 <div className="pd-ms-form-grid">
-                  <div className="pd-ms-field"><label>Milestone Name *</label><input type="text" value={newMs.name} onChange={e => setNewMs({...newMs, name: e.target.value})} placeholder="e.g. Prototype Delivery" /></div>
-                  <div className="pd-ms-field"><label>Deliverable *</label><input type="text" value={newMs.deliverable} onChange={e => setNewMs({...newMs, deliverable: e.target.value})} placeholder="e.g. Working demo" /></div>
-                  <div className="pd-ms-field"><label>Due Date *</label><input type="date" value={newMs.dueDate} onChange={e => setNewMs({...newMs, dueDate: e.target.value})} /></div>
-                  <div className="pd-ms-field"><label>Status</label>
-                    <select value={newMs.status} onChange={e => setNewMs({...newMs, status: e.target.value})}>
+                  <div className="pd-ms-field"><label htmlFor="project-details-milestone-name">Milestone Name *</label><input type="text" value={newMs.name} onChange={e => setNewMs({...newMs, name: e.target.value})} placeholder="e.g. Prototype Delivery" /></div>
+                  <div className="pd-ms-field"><label htmlFor="project-details-deliverable">Deliverable *</label><input type="text" value={newMs.deliverable} onChange={e => setNewMs({...newMs, deliverable: e.target.value})} placeholder="e.g. Working demo" /></div>
+                  <div className="pd-ms-field"><label htmlFor="project-details-due-date">Due Date *</label><input id="project-details-due-date" type="date" value={newMs.dueDate} onChange={e => setNewMs({...newMs, dueDate: e.target.value})} /></div>
+                  <div className="pd-ms-field"><label htmlFor="project-details-status">Status</label>
+                    <select id="project-details-status" id="project-details-deliverable" id="project-details-milestone-name" value={newMs.status} onChange={e => setNewMs({...newMs, status: e.target.value})}>
                       {milestoneStatusOptions.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
@@ -768,11 +773,11 @@ const ProjectDetails = () => {
                       /* Inline Edit Mode */
                       <div className="pd-ms-edit-form">
                         <div className="pd-ms-form-grid">
-                          <div className="pd-ms-field"><label>Name *</label><input type="text" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} /></div>
-                          <div className="pd-ms-field"><label>Deliverable *</label><input type="text" value={editForm.deliverable} onChange={e => setEditForm({...editForm, deliverable: e.target.value})} /></div>
-                          <div className="pd-ms-field"><label>Due Date *</label><input type="date" value={editForm.dueDate} onChange={e => setEditForm({...editForm, dueDate: e.target.value})} /></div>
-                          <div className="pd-ms-field"><label>Status</label>
-                            <select value={editForm.status} onChange={e => setEditForm({...editForm, status: e.target.value})}>
+                          <div className="pd-ms-field"><label htmlFor="project-details-name">Name *</label><input type="text" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} /></div>
+                          <div className="pd-ms-field"><label htmlFor="project-details-deliverable-2">Deliverable *</label><input type="text" value={editForm.deliverable} onChange={e => setEditForm({...editForm, deliverable: e.target.value})} /></div>
+                          <div className="pd-ms-field"><label htmlFor="project-details-due-date-2">Due Date *</label><input id="project-details-due-date-2" type="date" value={editForm.dueDate} onChange={e => setEditForm({...editForm, dueDate: e.target.value})} /></div>
+                          <div className="pd-ms-field"><label htmlFor="project-details-status-2">Status</label>
+                            <select id="project-details-status-2" id="project-details-deliverable-2" id="project-details-name" value={editForm.status} onChange={e => setEditForm({...editForm, status: e.target.value})}>
                               {milestoneStatusOptions.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
                           </div>
@@ -836,8 +841,8 @@ const ProjectDetails = () => {
               <div className="pd-ms-add-form">
                 <h4 className="pd-ms-form-title">New Co-PI</h4>
                 <div className="pd-ms-form-grid">
-                  <div className="pd-ms-field"><label>Type</label>
-                    <select value={newCopi.type} onChange={e => setNewCopi({ ...emptyCopi, type: e.target.value })}>
+                  <div className="pd-ms-field"><label htmlFor="project-details-type">Type</label>
+                    <select id="project-details-type" value={newCopi.type} onChange={e => setNewCopi({ ...emptyCopi, type: e.target.value })}>
                       <option value="internal">Internal</option>
                       <option value="external">External</option>
                     </select>
@@ -853,10 +858,10 @@ const ProjectDetails = () => {
                       />
                     </div>
                   ) : (
-                    <div className="pd-ms-field"><label>Full Name *</label><input type="text" value={newCopi.name} onChange={e => setNewCopi({ ...newCopi, name: e.target.value })} placeholder="e.g. Dr. Robert Chen" /></div>
+                    <div className="pd-ms-field"><label htmlFor="project-details-full-name">Full Name *</label><input type="text" value={newCopi.name} onChange={e => setNewCopi({ ...newCopi, name: e.target.value })} placeholder="e.g. Dr. Robert Chen" /></div>
                   )}
                   <div className="pd-ms-field"><label>{newCopi.type === 'internal' ? 'Department' : 'Institute'}</label>
-                    <input
+                    <input id="project-details-full-name"
                       type="text"
                       readOnly={newCopi.type === 'internal'}
                       value={newCopi.type === 'internal' ? newCopi.department : newCopi.institute}
@@ -864,7 +869,7 @@ const ProjectDetails = () => {
                       placeholder={newCopi.type === 'internal' ? 'Filled from the selected faculty' : 'e.g. MIT CSAIL'}
                     />
                   </div>
-                  <div className="pd-ms-field"><label>Designation</label><input type="text" readOnly={newCopi.type === 'internal'} value={newCopi.designation} onChange={e => setNewCopi({ ...newCopi, designation: e.target.value })} placeholder="e.g. Professor" /></div>
+                  <div className="pd-ms-field"><label htmlFor="project-details-designation">Designation</label><input type="text" readOnly={newCopi.type === 'internal'} value={newCopi.designation} onChange={e => setNewCopi({ ...newCopi, designation: e.target.value })} placeholder="e.g. Professor" /></div>
                 </div>
                 <div className="pd-ms-form-actions">
                   <button className="pd-ms-cancel" onClick={() => { setShowCopiForm(false); setNewCopi(emptyCopi); }}>Cancel</button>
@@ -878,8 +883,8 @@ const ProjectDetails = () => {
                 <div key={i} className="pd-ms-add-form">
                   <h4 className="pd-ms-form-title">Edit Co-PI</h4>
                   <div className="pd-ms-form-grid">
-                    <div className="pd-ms-field"><label>Type</label>
-                      <select value={copiEditForm.type} onChange={e => setCopiEditForm({ ...emptyCopi, type: e.target.value })}>
+                    <div className="pd-ms-field"><label htmlFor="project-details-type-2">Type</label>
+                      <select id="project-details-type-2" id="project-details-designation" value={copiEditForm.type} onChange={e => setCopiEditForm({ ...emptyCopi, type: e.target.value })}>
                         <option value="internal">Internal</option>
                         <option value="external">External</option>
                       </select>
@@ -896,17 +901,17 @@ const ProjectDetails = () => {
                         />
                       </div>
                     ) : (
-                      <div className="pd-ms-field"><label>Full Name *</label><input type="text" value={copiEditForm.name} onChange={e => setCopiEditForm({ ...copiEditForm, name: e.target.value })} /></div>
+                      <div className="pd-ms-field"><label htmlFor="project-details-full-name-2">Full Name *</label><input type="text" value={copiEditForm.name} onChange={e => setCopiEditForm({ ...copiEditForm, name: e.target.value })} /></div>
                     )}
                     <div className="pd-ms-field"><label>{copiEditForm.type === 'internal' ? 'Department' : 'Institute'}</label>
-                      <input
+                      <input id="project-details-full-name-2"
                         type="text"
                         readOnly={copiEditForm.type === 'internal'}
                         value={copiEditForm.type === 'internal' ? (copiEditForm.department || '') : (copiEditForm.institute || '')}
                         onChange={e => setCopiEditForm(copiEditForm.type === 'internal' ? { ...copiEditForm, department: e.target.value } : { ...copiEditForm, institute: e.target.value })}
                       />
                     </div>
-                    <div className="pd-ms-field"><label>Designation</label><input type="text" readOnly={copiEditForm.type === 'internal'} value={copiEditForm.designation || ''} onChange={e => setCopiEditForm({ ...copiEditForm, designation: e.target.value })} /></div>
+                    <div className="pd-ms-field"><label htmlFor="project-details-designation-2">Designation</label><input type="text" readOnly={copiEditForm.type === 'internal'} value={copiEditForm.designation || ''} onChange={e => setCopiEditForm({ ...copiEditForm, designation: e.target.value })} /></div>
                   </div>
                   <div className="pd-ms-form-actions">
                     <button className="pd-ms-cancel" onClick={cancelCopiEdit}>Cancel</button>
@@ -1003,9 +1008,9 @@ const ProjectDetails = () => {
                 </strong>
               </div>
             </div>
-            {canEdit && (
+            {canEdit && features.job_openings && (
               <div className="pd-header-actions">
-                <button className="pd-hire-btn" onClick={() => navigate(`/projects/${id}/recruit`)}>
+                <button type="button" className="pd-hire-btn" onClick={() => navigate(`/projects/${id}/recruit`)}>
                   <i className="fa fa-user-plus"></i>
                   {openPositions.length ? 'Manage recruitment' : 'Post an opening'}
                 </button>
@@ -1048,8 +1053,8 @@ const ProjectDetails = () => {
           >
             <>
               <div className="pd-modal-field">
-                <label>Document Name <span className="req">*</span></label>
-                <input
+                <label htmlFor="project-details-document-name">Document Name <span className="req">*</span></label>
+                <input id="project-details-document-name" id="project-details-designation-2"
                   type="text"
                   value={docForm.name}
                   onChange={e => setDocForm({ ...docForm, name: e.target.value })}
@@ -1057,7 +1062,7 @@ const ProjectDetails = () => {
                 />
               </div>
               <div className="pd-modal-field">
-                <label>{editingDocIdx !== null ? 'Replace Document' : 'Upload Document'} {editingDocIdx !== null && <span className="pd-modal-hint">(optional — leave empty to keep the current file)</span>}</label>
+                <label htmlFor="project-details-document-file">{editingDocIdx !== null ? 'Replace Document' : 'Upload Document'} {editingDocIdx !== null && <span className="pd-modal-hint">(optional — leave empty to keep the current file)</span>}</label>
                 {editingDocIdx !== null && docForm.currentLabel && !docForm.fileName && (
                   <span className="pd-upload-selected" style={{ color: '#666' }}><i className="fa fa-paperclip"></i> {docForm.currentLabel}</span>
                 )}
@@ -1101,7 +1106,7 @@ const ProjectDetails = () => {
               </div>
               {sanctionMode === 'file' ? (
                 <div className="pd-modal-field">
-                  <label>Choose File</label>
+                  <label htmlFor="project-details-choose-file">Choose File</label>
                   <button type="button" className="pd-upload-label" onClick={() => sanctionInputRef.current && sanctionInputRef.current.click()}>
                     <i className="fa fa-upload"></i> {sanctionFileSel ? 'Change file' : 'Select file from system'}
                   </button>
@@ -1116,8 +1121,8 @@ const ProjectDetails = () => {
                 </div>
               ) : (
                 <div className="pd-modal-field">
-                  <label>Document Link</label>
-                  <input type="url" value={sanctionLinkInput} onChange={e => setSanctionLinkInput(e.target.value)} placeholder="https://… link to sanction letter" />
+                  <label htmlFor="project-details-document-link">Document Link</label>
+                  <input id="project-details-document-link" id="project-details-choose-file" id="project-details-document-file" type="url" value={sanctionLinkInput} onChange={e => setSanctionLinkInput(e.target.value)} placeholder="https://… link to sanction letter" />
                 </div>
               )}
               <div className="modal-actions">

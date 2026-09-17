@@ -56,23 +56,26 @@ const Dordc = ({ formData }) => {
             isLocked={lock}
             handleRecommendationChange={onUpdateApproval}
           ></Recommendation>
-          {body.approval && (
+          {!!body.approval && (
             <>
            
                 <GridContainer
-                 label="One nominee of the DoRDC  in cognate area from the institute:"
                     elements={[
-                        <DropdownField   options={formData.nominee_cognates?.map((cognate)=>{
+                        <DropdownField
+                          label="Nominee of the DoRDC in the cognate area, from the institute"
+                          required
+                          options={formData.nominee_cognates?.map((cognate)=>{
                             return {value:cognate?.faculty_code,title:cognate?.name}
                         })  } initialValue={formData.cognate_expert?.name} isLocked={lock} onChange={(value)=>{body.cognate_expert=value;}} />
                     ]}
                 />   
               
                 <GridContainer
-                label="One expert from the IRB panel of outside experts of concerned 
-                           department  to be nominated  by the DoRDC "
                     elements={[
-                        <DropdownField   options={formData.outside_experts?.map((cognate)=>{
+                        <DropdownField
+                          label="Expert from the IRB panel of outside experts of the concerned department"
+                          required
+                          options={formData.outside_experts?.map((cognate)=>{
                             return {value:cognate?.id,title:cognate?.name}
                         })  } initialValue={formData.outside_expert?.name} isLocked={lock} onChange={(value)=>{body.outside_expert=value;}} />
                     ]}

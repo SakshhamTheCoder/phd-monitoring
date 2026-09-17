@@ -29,5 +29,5 @@
     margin: 0;
     padding: 1rem 0;
     color: var(--text-subtle);
-    font-size: 0.88rem;
+    font-size: var(--text-sm);
 }

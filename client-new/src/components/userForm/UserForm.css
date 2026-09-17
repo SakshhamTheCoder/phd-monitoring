@@ -11,7 +11,7 @@
 
 .user-form h3 {
   color: #374151;
-  font-size: 1.25rem;
+  font-size: var(--text-xl);
 }
 
 .user-form label {
@@ -28,8 +28,8 @@
   width: 100%;
   padding: 0.6rem 0.8rem;
   border: 1px solid #DDD;
-  border-radius: 8px;
-  font-size: 0.9rem;
+  border-radius: var(--radius);
+  font-size: var(--text-sm);
   outline: none;
   font-family: inherit;
   transition: border 0.2s;

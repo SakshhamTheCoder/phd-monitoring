@@ -6,6 +6,38 @@ use App\Models\Student; // Ensure you have the correct namespace for the Student
 trait ModelCommonFormFields
 {
     /**
+     * Roles that own a lock, an approval and a comment column on every form.
+     */
+    private const FORM_ROLES = [
+        'student', 'supervisor', 'phd_coordinator', 'hod',
+        'dordc', 'adordc', 'dra', 'director', 'external', 'doctoral',
+    ];
+
+    /**
+     * The lock and approval columns are declared boolean in
+     * MigrationCommonFormFields, but without a cast they reach the client as 0
+     * and 1. The client then has to remember that: `{lock && <x/>}` printed a
+     * literal 0 on screen, and RecommendationField normalises `approval` by
+     * hand. Cast them once here so every form model, and everything reading
+     * one, sees real booleans. Null stays null, which is still "unanswered".
+     *
+     * Laravel calls this on construction for every model using the trait.
+     */
+    public function initializeModelCommonFormFields(): void
+    {
+        $casts = [];
+        foreach (self::FORM_ROLES as $role) {
+            $casts[$role . '_lock'] = 'boolean';
+            // 'student' has a lock and comments but no approval of its own.
+            if ($role !== 'student') {
+                $casts[$role . '_approval'] = 'boolean';
+            }
+        }
+
+        $this->mergeCasts($casts);
+    }
+
+    /**
      * Step lists use the 'faculty' role name, but the stage enum uses 'supervisor'.
      * Normalize on write so 'faculty' can never reach any form's stage column.
      */

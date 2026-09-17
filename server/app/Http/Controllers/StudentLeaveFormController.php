@@ -32,6 +32,11 @@ class StudentLeaveFormController extends Controller
         return '/attendance?tab=leaves&leave=' . $formInstance->id;
     }
 
+    public function listFilters(Request $request)
+    {
+        return response()->json($this->getAvailableFilters('forms'));
+    }
+
     /**
      * mapForm()'s base fields (name, roll_no, status, ...) say nothing about
      * what was actually applied for, so the HOD's review table needs these
@@ -41,6 +46,12 @@ class StudentLeaveFormController extends Controller
     public function listForm(Request $request, $student_id = null)
     {
         $user = Auth::user();
+
+        // The readers loadForm() opens a leave for. Anyone else was listed rows
+        // that then refused them.
+        if (!in_array($user->current_role->role, ['student', 'hod', 'admin'], true)) {
+            return $this->refuse();
+        }
 
         return $this->listForms($user, StudentLeaveForm::class, $request, null, false, [
             'fields' => ['leave_type', 'from_date', 'to_date', 'day_part'],
@@ -67,7 +78,7 @@ class StudentLeaveFormController extends Controller
     {
         $user = Auth::user();
         if (!$user->may('can_apply_for_leave')) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
 
         $form = StudentLeaveForm::create([
@@ -95,7 +106,7 @@ class StudentLeaveFormController extends Controller
         $form_id = $this->routeParam($request, 'form_id', $form_id);
         $user = Auth::user();
         if (!$user->may('can_apply_for_leave')) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
 
         $form = StudentLeaveForm::find($form_id);
@@ -104,7 +115,7 @@ class StudentLeaveFormController extends Controller
         }
 
         if ($form->student_id != $user->student->roll_no) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
 
         if ($form->status !== 'draft') {
@@ -122,17 +133,16 @@ class StudentLeaveFormController extends Controller
     {
         $form_id = $this->routeParam($request, 'form_id', $form_id);
         $user = Auth::user();
-        $steps = ['student', 'hod'];
 
         switch ($user->current_role->role) {
             case 'student':
-                return $this->handleStudentForm($user, $form_id, StudentLeaveForm::class, $steps);
+                return $this->handleStudentForm($user, $form_id, StudentLeaveForm::class);
             case 'hod':
                 return $this->handleHodForm($user, $form_id, StudentLeaveForm::class);
             case 'admin':
                 return $this->handleAdminForm($user, $form_id, StudentLeaveForm::class, true);
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -147,7 +157,7 @@ class StudentLeaveFormController extends Controller
             case 'hod':
                 return $this->hodSubmit($user, $request, $form_id);
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -156,7 +166,7 @@ class StudentLeaveFormController extends Controller
     {
         $user = Auth::user();
         if (!$user->may('can_read_own_leave_balance')) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
 
         return response()->json(

@@ -2,9 +2,8 @@ import "./Presentation.css";
 import React from "react";
 import Student from "./roles/Student";
 import FormTitleBar from "../formTitleBar/FormTitleBar";
-import Recommendation from "../layouts/Recommendation";
 import Supervisor from "./roles/Supervisor";
-import RoleBasedWrapper from "../roleWrapper/RoleBasedWrapper";
+import FormLadder from "../formLadder/FormLadder";
 
 const PresentationForm = ({formData, refetchData = null,}) => {
   return (
@@ -12,34 +11,11 @@ const PresentationForm = ({formData, refetchData = null,}) => {
       <FormTitleBar formName={"Progress Monitoring " + formData.period_of_report} formData={formData} />
       <div className="form-container">
           
-    <RoleBasedWrapper
-       roleHierarchy={formData.steps}
-       currentRole={formData.role}>
-    
-
-        <Student formData={formData} refetchData={refetchData}/>
-        <Supervisor formData={formData}/>
-        <Recommendation
-          formData={formData}
-          role="doctoral"
-          allowRejection={false}
-        ></Recommendation>
-        <Recommendation
-          formData={formData}
-          role="hod"
-          allowRejection={false}
-        ></Recommendation>
-        <Recommendation
-          formData={formData}
-          role="adordc"
-          allowRejection={false}
-        ></Recommendation>
-        <Recommendation
-          formData={formData}
-          role="dordc"
-          allowRejection={false}
-        ></Recommendation>
-       </RoleBasedWrapper>
+    <FormLadder
+      formData={formData}
+      panels={{ student: Student, faculty: Supervisor }}
+      stepProps={{ student: { refetchData } }}
+    />
       </div>
     </>
   );

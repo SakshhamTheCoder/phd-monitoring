@@ -91,12 +91,12 @@ const ForgotPasswordPage = () => {
                 />
                 <h2 className="tw-text-xl tw-font-semibold tw-mb-4 tw-text-center">Forgot Password</h2>
                 <div className="tw-mb-4">
-                    <label htmlFor="email" className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-2">
+                    <label className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-2" htmlFor="forgot-password-page-email">
                         Email
                     </label>
                     <input
                         {...register("email")}
-                        id="email"
+                        id="forgot-password-page-email"
                         type="email"
                         placeholder="Enter your email"
                         required

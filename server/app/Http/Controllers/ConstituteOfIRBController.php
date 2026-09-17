@@ -81,7 +81,7 @@ class ConstituteOfIRBController extends Controller
             'complete'
         ];
         if($role->role != 'student'){
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $data=[
             'roll_no'=>$user->student->roll_no,
@@ -107,7 +107,7 @@ class ConstituteOfIRBController extends Controller
         ];
         switch ($role->role) {
             case 'student':
-                return $this->handleStudentForm($user, $form_id, $model,$steps);
+                return $this->handleStudentForm($user, $form_id, $model);
             case 'hod':
                 return $this->handleHodForm($user, $form_id, $model);
             case 'dra':
@@ -121,7 +121,7 @@ class ConstituteOfIRBController extends Controller
             case 'admin':
                 return $this->handleAdminForm($user, $form_id, $model,true);
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -144,7 +144,7 @@ class ConstituteOfIRBController extends Controller
             case 'dordc':
                 return $this->dordcSubmit($user, $request, $form_id);
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -154,7 +154,7 @@ class ConstituteOfIRBController extends Controller
         $role = $user->current_role;
         $form_id = $request->form_id;
         if($role->role != 'dra'){
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $request->validate([
             'form_ids' => 'required|array',
@@ -314,7 +314,7 @@ class ConstituteOfIRBController extends Controller
                     throw new \Exception('Invalid faculty code');
                 }
                 if($formInstance->student->checkSupervises($nomineeCognate)){
-                    throw new \Exception('Supervisor can not be a nominee cognate');
+                    throw new \Exception('A supervisor cannot be the nominee cognate expert.');
                 }
                 // if($faculty->department_id != $formInstance->student->department_id){
                 //     throw new \Exception('Nominee cognates must be from the same department');
@@ -354,7 +354,7 @@ class ConstituteOfIRBController extends Controller
                 $approvals=$formInstance->supervisorApprovals()->where('status','approved')->get();
                
                 if($approvals->count()!=$formInstance->student->supervisors->count()){
-                    throw new \Exception('Your Prefrences Saved, Form Will be submitted once all Supervisors approve',201);
+                    throw new \Exception('Your preferences are saved. The form moves on once every supervisor has approved.',201);
                 }
             }
             else{
@@ -401,7 +401,7 @@ class ConstituteOfIRBController extends Controller
                     $faculty = Faculty::where('faculty_code', $chairmanExpert)->first();
                     if ($faculty) {
                         if($formInstance->student->checkSupervises($faculty->faculty_code)){
-                            throw new \Exception('Supervisor can not be a cognate expert');
+                            throw new \Exception('A supervisor cannot be a cognate expert.');
                         }
                         if($formInstance->student->department_id != $faculty->department_id){
                             throw new \Exception('Cognate experts must be from the same department');
@@ -464,7 +464,11 @@ class ConstituteOfIRBController extends Controller
             $form_id, 
             ConstituteOfIRB::class, 
             'adordc', 
-            'dra', 
+            // Back to the HOD, who is the previous step. This said 'dra', which
+            // is not in this form's chain and has no branch in submit(), so a
+            // rejection here parked the form at a stage nobody could act on and
+            // it could never move again.
+            'hod', 
             'dordc',   function ($formInstance, $user) use ($request) {}
         );
     }
@@ -495,13 +499,14 @@ class ConstituteOfIRBController extends Controller
                         throw new \Exception('Invalid expert selection');
                     }
                     $outsideExpert=OutsideExpert::find($outsideExpertId);
+                    // A scholar whose IRB is constituted again keeps members they already
+                    // have. (student, member) is unique, and a plain insert refused the
+                    // whole DoRDC approval as "could not be saved".
                      
-                        IRBCommittee::create([
-                            'student_id'  => $formInstance->student->roll_no,
-                            'type'        => 'outside',
-                            'member_type' => OutsideExpert::class,
-                            'member_id'   => $outsideExpert->id,
-                        ]);
+                        IRBCommittee::firstOrCreate(
+                            ['student_id' => $formInstance->student->roll_no, 'member_type' => OutsideExpert::class, 'member_id' => $outsideExpert->id],
+                            ['type' => 'outside']
+                        );
                         // No login account is created for the outside expert — the external
                         // review happens via a secure email link (see IrbSubForm::
                         // sendExternalReviewRequest / ExternalReviewController), attributed
@@ -521,12 +526,10 @@ class ConstituteOfIRBController extends Controller
                     );
 
 
-                    IRBCommittee::create([
-                        'student_id'  => $formInstance->student->roll_no,
-                        'type'        => 'inside',
-                        'member_type' => Faculty::class,
-                        'member_id'   => $cognateExpertId,
-                    ]);
+                    IRBCommittee::firstOrCreate(
+                            ['student_id' => $formInstance->student->roll_no, 'member_type' => Faculty::class, 'member_id' => $cognateExpertId],
+                            ['type' => 'inside']
+                        );
                     
                     $irbExperts=IrbExpertChairman::where('irb_form_id',$formInstance->id)->get();
                     foreach($irbExperts as $irbExpert){
@@ -537,12 +540,10 @@ class ConstituteOfIRBController extends Controller
                             ],
                             ['type' => 'internal']
                         );
-                        IRBCommittee::create([
-                            'student_id'  => $formInstance->student->roll_no,
-                            'type'        => 'inside',
-                            'member_type' => Faculty::class,
-                            'member_id'   => $irbExpert->expert_id,
-                        ]);
+                        IRBCommittee::firstOrCreate(
+                            ['student_id' => $formInstance->student->roll_no, 'member_type' => Faculty::class, 'member_id' => $irbExpert->expert_id],
+                            ['type' => 'inside']
+                        );
                     }
                     $formInstance->update([
                         'outside_expert' => $outsideExpertId,

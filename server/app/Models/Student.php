@@ -60,9 +60,7 @@ class Student extends Model
      */
     public function phdTitleLocked(): bool
     {
-        return ConstituteOfIRB::where('student_id', $this->roll_no)
-            ->where('student_lock', true)
-            ->exists();
+        return $this->irbConstitutions()->contains(fn ($form) => (bool) $form->student_lock);
     }
 
     /**
@@ -77,9 +75,7 @@ class Student extends Model
     public function irbCompleted(): bool
     {
         return self::irbStatusMeansComplete(
-            ConstituteOfIRB::where('student_id', $this->roll_no)
-                ->orderByDesc('id')
-                ->value('status')
+            $this->irbConstitutions()->sortByDesc('id')->first()?->status
         );
     }
 
@@ -91,7 +87,11 @@ class Student extends Model
 
     public function isSupervisorAllocated(): bool
     {
-        return $this->supervisors()->exists();
+        // The listing has them loaded already; asking the database again is 50
+        // queries for rows sitting in memory.
+        return $this->relationLoaded('supervisors')
+            ? $this->supervisors->isNotEmpty()
+            : $this->supervisors()->exists();
     }
 
     public function canEditTentative(): bool
@@ -155,6 +155,32 @@ class Student extends Model
             ->with('user'); // Include user details
     }
 
+    /**
+     * Whether this account may read the scholar's profile, and so what hangs off
+     * it. The capability decides whether, the role still decides which scholars,
+     * the same way StudentController::list() chooses who to show.
+     */
+    public function isReadableBy(User $user): bool
+    {
+        if ($user->may('can_read_all_students')) {
+            return true;
+        }
+
+        if ($user->may('can_read_department_students')) {
+            $departments = $user->current_role->role === 'adordc'
+                ? $user->faculty?->adordcDepartments->pluck('id')->all() ?? []
+                : [$user->faculty?->department_id];
+            return in_array($this->department_id, $departments);
+        }
+
+        if ($user->may('can_read_supervised_students') || $user->may('can_read_committee_students')) {
+            $code = $user->faculty?->faculty_code;
+            return $code && ($this->checkSupervises($code) || $this->checkDoctoralCommittee($code));
+        }
+
+        return $user->current_role->role === 'student' && $this->user_id === $user->id;
+    }
+
     public function checkDoctoralCommittee($facultyId)
     {
         return $this->doctoralCommittee->contains('faculty_code', $facultyId);
@@ -171,6 +197,26 @@ class Student extends Model
     public function irbForm()
     {
         return $this->hasOne(ConstituteOfIRB::class, 'student_id', 'roll_no');
+    }
+
+    /**
+     * Every IRB constitution form the student has, which is what both
+     * phdTitleLocked() and irbCompleted() read. Eager-loadable, and loaded
+     * once per instance when it is not.
+     */
+    public function irbForms()
+    {
+        return $this->hasMany(ConstituteOfIRB::class, 'student_id', 'roll_no');
+    }
+
+    /** The loaded forms, loading them once if nobody eager-loaded them. */
+    private function irbConstitutions()
+    {
+        if (!$this->relationLoaded('irbForms')) {
+            $this->load('irbForms');
+        }
+
+        return $this->getRelation('irbForms');
     }
 
     public function irbSubForm()

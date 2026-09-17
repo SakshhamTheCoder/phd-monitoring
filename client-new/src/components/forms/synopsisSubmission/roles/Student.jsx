@@ -142,13 +142,10 @@ const Student = ({ formData }) => {
     };
 
     Object.keys(temp).forEach((type) => {
-      console.log("type", type);
       const selectedIds = temp[type];
-      console.log("selectedIds", selectedIds);
 
       selectedIds.forEach((id) => {
         const targetType = type !== "patents" ? "publications" : "patents"; // Use targetType instead of modifying type
-        console.log("id", id.id);
         tt[targetType].push(id.id);
       });
     });
@@ -195,7 +192,6 @@ const Student = ({ formData }) => {
     setTemp(tt);
   };
   useEffect(() => {
-    console.log(body);
   }, [body]);
 
   return (

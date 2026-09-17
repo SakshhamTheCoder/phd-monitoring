@@ -4,11 +4,13 @@
   background-color: #16181D;
   color: #D7DAE0;
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-  font-size: 0.8rem;
+  font-size: var(--text-xs);
   line-height: 1.55;
   height: 70vh;
   width: 100%;
-  overflow-y: auto;
+  /* Both directions. A long unparsed line used to stretch the panel and take
+     the whole page sideways with it. */
+  overflow: auto;
   border: 1px solid #2A2D35;
   border-radius: var(--radius);
   scrollbar-color: #3A3E48 #16181D;
@@ -20,7 +22,7 @@
 .log-terminal::-webkit-scrollbar-thumb {
   background-color: #3A3E48;
   border: 3px solid #16181D;
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
 }
 .log-terminal::-webkit-scrollbar-thumb:hover { background-color: #4E535F; }
 
@@ -33,6 +35,8 @@
 .log-entry,
 .log-line {
   padding: 0.5rem 1rem;
+  white-space: pre-wrap;
+  word-break: break-word;
   border-bottom: 1px solid #21242B;
 }
 
@@ -52,8 +56,8 @@
 /* The level is the one thing worth spotting at a glance in a wall of text. */
 .log-level {
   padding: 0.05rem 0.4rem;
-  border-radius: 4px;
-  font-size: 0.7rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 0.03em;
 }
@@ -75,16 +79,16 @@
   border: 1px solid #24272F;
   padding: 0.6rem 0.75rem;
   margin: 0.5rem 0 0;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: #A6C9A0;
   overflow-x: auto;
-  font-size: 0.75rem;
+  font-size: var(--text-2xs);
 }
 
 .log-boundary {
   padding: 0.5rem 1rem;
   color: #6B7280;
-  font-size: 0.72rem;
+  font-size: var(--text-2xs);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   border-bottom: 1px solid #21242B;

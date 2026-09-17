@@ -29,6 +29,7 @@ class RoleCapabilityMatrixTest extends TestCase
     private const ALL_ROLES = [
         'admin', 'adordc', 'clerk', 'director', 'doctoral', 'dordc',
         'dra', 'external', 'faculty', 'hod', 'phd_coordinator', 'student',
+        'ug_student',
     ];
 
     /** capability => exactly the roles the pre-swap code admitted. */
@@ -44,7 +45,10 @@ class RoleCapabilityMatrixTest extends TestCase
         'can_read_department_faculties' => ['hod', 'phd_coordinator', 'adordc'],
 
         // FacultyController::add/update/upload, StudentController::add/bulk*
-        'can_manage_faculties' => ['admin', 'adordc', 'director', 'dordc', 'dra'],
+        // A coordinator writes their own department's faculty records, which the
+        // controller scopes for them: 2026_09_11_000001_let_coordinators_manage_
+        // their_department_faculty.
+        'can_manage_faculties' => ['admin', 'adordc', 'director', 'dordc', 'dra', 'phd_coordinator'],
         'can_manage_students' => ['admin', 'adordc', 'director', 'dordc', 'dra'],
 
         // DepartmentController::authorize
@@ -79,7 +83,8 @@ class RoleCapabilityMatrixTest extends TestCase
         'can_manage_all_projects' => ['dordc', 'adordc', 'dra', 'director', 'admin'],
 
         // Student-only endpoints
-        'can_manage_own_publications' => ['student'],
+        // A URF fellow keeps their own publication list, as a scholar does.
+        'can_manage_own_publications' => ['student', 'ug_student'],
         'can_edit_own_student_profile' => ['student'],
         'can_read_own_leave_balance' => ['student'],
         'can_apply_for_leave' => ['student'],

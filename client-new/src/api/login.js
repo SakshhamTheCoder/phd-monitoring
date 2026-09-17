@@ -16,10 +16,12 @@ export const loginAPI = async (email, password, captchaToken) => {
         return { success: true };
     }
     
-    // Return error information
+    // `unverified` is the one refusal the user can clear themselves.
     return { 
         success: false, 
-        error: result?.response?.error || result?.response?.message || 'Login failed'
+        error: result?.response?.error || result?.response?.message || 'Login failed',
+        unverified: result?.response?.unverified === true,
+        email: result?.response?.email
     };
 }
 
@@ -28,5 +30,10 @@ export const logoutAPI = async () => {
     localStorage.removeItem("userRole");
     localStorage.removeItem("available_roles");
     localStorage.removeItem("user");
+    // Both caches are read on the next mount to avoid a flash. Capabilities
+    // belong to the role that just signed out, so leaving them would draw the
+    // previous role's menu for whoever signs in next on this browser.
+    localStorage.removeItem("capabilities");
+    localStorage.removeItem("features");
     return true;
 }

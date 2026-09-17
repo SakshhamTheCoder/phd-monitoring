@@ -18,6 +18,9 @@
         </include>
     </source>
     <php>
+        <!-- The role sweeps call every route as every role in one process, which
+             outgrows the CLI's default 128M. -->
+        <ini name="memory_limit" value="1G"/>
         <env name="APP_ENV" value="testing"/>
         <!-- The local .env's APP_URL carries a doubled /api path for the
              deployed reverse proxy; without an override here, feature tests
@@ -27,8 +30,22 @@
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_STORE" value="array"/>
-        <!-- <env name="DB_CONNECTION" value="sqlite"/> -->
-        <!-- <env name="DB_DATABASE" value=":memory:"/> -->
+        <!-- The suite gets its own database. With these commented out it
+             inherited DB_DATABASE from .env and ran against the development
+             database, so a test using RefreshDatabase wiped real local data.
+             sqlite is not an option: 0001_00_00_create_roles_table declares
+             increments('id') and primary('id') together, which MySQL tolerates
+             and sqlite rejects with "more than one primary key".
+             Set it up once:
+               CREATE DATABASE phd_monitoring_test
+                 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+               DB_DATABASE=phd_monitoring_test php artisan migrate
+               DB_DATABASE=phd_monitoring_test php artisan db:seed
+               and then seed TestFixturesSeeder the same way, with db:seed
+               and its class option
+             RolesSeeder and TestFixturesSeeder together are what the suite needs
+             that migrations do not provide. -->
+        <env name="DB_DATABASE" value="phd_monitoring_test"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="QUEUE_CONNECTION" value="sync"/>

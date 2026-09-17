@@ -36,6 +36,8 @@ const AttendancePage = () => {
   const [date, setDate] = useState(todayString());
   const [month, setMonth] = useState(todayString().slice(0, 7));
   const [departments, setDepartments] = useState([]);
+  // An empty list before the answer read as "No departments exist yet."
+  const [departmentsLoaded, setDepartmentsLoaded] = useState(false);
   // '' means All Departments for an admin. A clerk with several departments
   // gets the same choice across their own; a clerk with one is pinned to it.
   const [departmentFilter, setDepartmentFilter] = useState('');
@@ -72,7 +74,7 @@ const AttendancePage = () => {
   const isAdmin = role === 'admin';
 
   useEffect(() => {
-    const url = isAdmin ? '/departments' : '/clerks/my-departments';
+    const url = isAdmin ? '/departments?rows=1000' : '/clerks/my-departments';
     customFetch(baseURL + url, 'GET', {}, false)
       .then((res) => {
         const raw = isAdmin
@@ -84,7 +86,8 @@ const AttendancePage = () => {
         // pin the filter to it rather than showing a one-item dropdown.
         if (!isAdmin && list.length === 1) setDepartmentFilter(String(list[0].id));
       })
-      .catch(() => setDepartments([]));
+      .catch(() => setDepartments([]))
+      .finally(() => setDepartmentsLoaded(true));
   }, [isAdmin]);
 
   const loadRoster = useCallback(async () => {
@@ -279,7 +282,6 @@ const AttendancePage = () => {
         // it gets the same treatment here.
         toast.success(buildSaveMessage(data.message || 'CSV imported', data.data?.skipped_on_leave));
         if (data.data?.errors?.length) toast.warning(`${data.data.error_count} rows had errors — check console`);
-        console.log('CSV import errors', data.data?.errors);
         setShowCsvModal(false); setCsvFile(null); setCsvPreview(null); loadRoster();
       } else toast.error(data.message || 'Import failed.');
     } catch (e) { toast.error(isNetworkError(e) ? NETWORK_ERROR_MESSAGE : 'Upload failed: ' + e.message); } finally { setUploading(false); }
@@ -295,7 +297,7 @@ const AttendancePage = () => {
     <Layout>
       <PageHeader
         title="Attendance"
-        subtitle={departments.length > 0 ? `${departments.map((d) => d.name).join(', ')}` : (isAdmin ? 'No departments exist yet.' : 'Your departments will appear here once an admin tags you.')}
+        subtitle={!departmentsLoaded ? 'Loading departments…' : departments.length > 0 ? `${departments.map((d) => d.name).join(', ')}` : (isAdmin ? 'No departments exist yet.' : 'Your departments will appear here once an admin tags you.')}
         actions={
           <div style={{ display: 'flex', gap: '10px' }}>
             <CustomButton text="Upload CSV" variant="secondary" onClick={() => setShowCsvModal(true)} />
@@ -321,8 +323,8 @@ const AttendancePage = () => {
         <div className="filter-bar attendance-filters">
           <div className="filter-row" style={{ alignItems: 'flex-end' }}>
             <div className="input-field-container" style={{ minWidth: '220px' }}>
-              <label className="input-label">Department</label>
-              <select
+              <label className="input-label" htmlFor="attendance-page-department">Department</label>
+              <select id="attendance-page-department"
                 className="input-field"
                 value={departmentFilter}
                 onChange={(e) => { setDepartmentFilter(e.target.value); setHistoryPage(1); }}
@@ -335,9 +337,9 @@ const AttendancePage = () => {
 
             {(activeTab === 'mark' || activeTab === 'monthly' || activeTab === 'history') && (
               <div className="input-field-container" style={{ minWidth: '220px' }}>
-                <label className="input-label" htmlFor="attendance-scholar-filter">Scholar</label>
+                <label className="input-label" htmlFor="attendance-page-scholar">Scholar</label>
                 <input
-                  id="attendance-scholar-filter"
+                  id="attendance-page-scholar"
                   className="input-field"
                   type="search"
                   value={scholarFilter}
@@ -349,10 +351,10 @@ const AttendancePage = () => {
 
             {(activeTab === 'mark' || activeTab === 'history') && (
               <div className="input-field-container" style={{ minWidth: '190px' }}>
-                <label className="input-label">
+                <label className="input-label" htmlFor="attendance-page-date">
                   Date {date === todayString() && <span className="badge badge--success attendance-today-pill">Today</span>}
                 </label>
-                <DatePicker
+                <DatePicker id="attendance-page-date"
                   selected={parseDate(date)}
                   onChange={(d) => d && setDate(formatDate(d))}
                   dateFormat="yyyy-MM-dd"
@@ -369,8 +371,8 @@ const AttendancePage = () => {
 
             {activeTab === 'monthly' && (
               <div className="input-field-container" style={{ minWidth: '190px' }}>
-                <label className="input-label">Month</label>
-                <DatePicker
+                <label className="input-label" htmlFor="attendance-page-month">Month</label>
+                <DatePicker id="attendance-page-month"
                   selected={parseDate(month + '-01')}
                   onChange={(d) => d && setMonth(formatDate(d).slice(0, 7))}
                   dateFormat="MMMM yyyy"
@@ -408,7 +410,7 @@ const AttendancePage = () => {
               <CustomButton text={saving ? 'Saving…' : 'Save Attendance'} onClick={handleSave} disabled={saving || loading} />
             </div>
           )}
-          {departments.length === 0 && !loading ? (
+          {departmentsLoaded && departments.length === 0 && !loading ? (
             <div className="empty-state">{isAdmin ? 'No departments exist yet.' : 'No departments are assigned to you yet. Please contact an administrator.'}</div>
           ) : (
             <div className="form-list-container">
@@ -611,16 +613,16 @@ const AttendancePage = () => {
           <div className="filter-bar" style={{ marginBottom: '1rem' }}>
             <div className="filter-row" style={{ alignItems: 'flex-end' }}>
               <div className="input-field-container" style={{ minWidth: '160px' }}>
-                <label className="input-label">From</label>
-                <DatePicker selected={parseDate(exportFrom)} onChange={(d) => d && setExportFrom(formatDate(d))} dateFormat="yyyy-MM-dd" className="input-field" placeholderText="YYYY-MM-DD" maxDate={todayDate} />
+                <label className="input-label" htmlFor="attendance-page-from">From</label>
+                <DatePicker id="attendance-page-from" selected={parseDate(exportFrom)} onChange={(d) => d && setExportFrom(formatDate(d))} dateFormat="yyyy-MM-dd" className="input-field" placeholderText="YYYY-MM-DD" maxDate={todayDate} />
               </div>
               <div className="input-field-container" style={{ minWidth: '160px' }}>
-                <label className="input-label">To</label>
-                <DatePicker selected={parseDate(exportTo)} onChange={(d) => d && setExportTo(formatDate(d))} dateFormat="yyyy-MM-dd" className="input-field" placeholderText="YYYY-MM-DD" minDate={parseDate(exportFrom)} maxDate={todayDate} />
+                <label className="input-label" htmlFor="attendance-page-to">To</label>
+                <DatePicker id="attendance-page-to" selected={parseDate(exportTo)} onChange={(d) => d && setExportTo(formatDate(d))} dateFormat="yyyy-MM-dd" className="input-field" placeholderText="YYYY-MM-DD" minDate={parseDate(exportFrom)} maxDate={todayDate} />
               </div>
               <div className="input-field-container" style={{ minWidth: '220px' }}>
-                <label className="input-label">Department</label>
-                <select className="input-field" value={exportDept} onChange={(e) => setExportDept(e.target.value)}>
+                <label className="input-label" htmlFor="attendance-page-department-2">Department</label>
+                <select id="attendance-page-department-2" className="input-field" value={exportDept} onChange={(e) => setExportDept(e.target.value)}>
                   <option value="">All departments</option>
                   {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
                 </select>

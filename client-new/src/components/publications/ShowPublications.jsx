@@ -5,6 +5,31 @@ import { formatDate, EMPTY_VALUE } from '../../utils/timeParse';
 import CustomButton from '../forms/fields/CustomButton';
 import AddPublication from './AddPublication';
 import CustomModal from '../forms/modal/CustomModal';
+import './ShowPublications.css';
+
+// The signed-in account's own name, which Authors shows in bold.
+const accountName = () => {
+    try {
+        const user = JSON.parse(localStorage.getItem('user')) || {};
+        return [user.first_name, user.last_name].filter(Boolean).join(' ');
+    } catch {
+        return '';
+    }
+};
+
+const nameTokens = (text) => String(text || '').toLowerCase().replace(/[^a-z\s]/g, ' ').split(/\s+/).filter(Boolean);
+
+// Authors is free text ("A. Rao, Ravi Kumar and ..."), so each author is matched
+// by the words of a highlighted name, in any order and ignoring punctuation.
+const Authors = ({ text, names }) => {
+    if (!text) return EMPTY_VALUE;
+    const wanted = names.map(nameTokens).filter((tokens) => tokens.length > 0);
+    return String(text).split(/(\s*[,;]\s*|\s+and\s+)/i).map((part, i) => {
+        const tokens = nameTokens(part);
+        const isHighlighted = tokens.length > 0 && wanted.some((name) => name.every((token) => tokens.includes(token)));
+        return isHighlighted ? <strong key={i}>{part}</strong> : <React.Fragment key={i}>{part}</React.Fragment>;
+    });
+};
 
 const ShowPublications = ({
     formData,
@@ -18,7 +43,12 @@ const ShowPublications = ({
     onDelete,
     onEdit,
     refetchData = null,
+    // Whose names are bold among the authors. Defaults to the signed-in account;
+    // a page showing someone else's record passes theirs.
+    highlightNames = null,
 }) => {
+   const highlighted = highlightNames || [accountName()];
+   const authorsCell = { key: 'authors', component: ({ data }) => <Authors text={data} names={highlighted} /> };
    const [editData, setEditData] = useState(null);
    const [selectedRows, setSelectedRows] = useState({});
    const [totalPublications, setTotalPublications] = useState(0);
@@ -75,30 +105,39 @@ const ShowPublications = ({
         setTotalPublications(groups.reduce((total, group) => total + (formData[group]?.length || 0), 0));
    }, [formData]);
 
+   // Only URF projects record funding and mode, so the columns appear when a row has them.
+   const urfColumns = (rows, keys, titles) => rows.some((row) => row.mode || row.funding)
+       ? { keys: [...keys.slice(0, -1), 'mode', 'funding', 'id'], titles: [...titles.slice(0, -1), 'Mode', 'Funding', ' '] }
+       : { keys, titles };
+
+   // The selection tick box leads each row, so it is the first thing seen.
+   const selectCell = (publicationType) => (enableSelect
+       ? ({ row }) => (
+           <input
+               type="checkbox"
+               aria-label="Select publication"
+               checked={!!selectedRows[publicationType]?.[row.id]}
+               onChange={() => handleSelect(row.id, publicationType)}
+           />
+       )
+       : null);
+
    const renderActions = (publicationId, publicationType) => (
        <>
-           {enableSelect && (
-               <input
-                   type="checkbox"
-                   checked={!!selectedRows[publicationType]?.[publicationId]}
-                   onChange={() => handleSelect(publicationId, publicationType)}
-                   style={{ marginRight: 10 }}
-               />
-           )}
            {enableEdit && (
-               <a onClick={() => handleEdit(publicationId, publicationType)} style={{ cursor: "pointer", marginRight: 10, color: "#991b1b" }}>
-                   <i className="fa fa-pencil" ></i>
-               </a>
+               <button type="button" className="icon-action" aria-label="Edit" title="Edit" onClick={() => handleEdit(publicationId, publicationType)}>
+                   <i className="fa fa-pencil" aria-hidden="true"></i>
+               </button>
            )}
            {enableDelete && (
-               <a onClick={() => onDelete && onDelete(publicationId, publicationType)} style={{ cursor: "pointer", color: "#991b1b" }}>
-                   <i className="fa fa-trash-o"></i>
-               </a>
+               <button type="button" className="icon-action" aria-label="Delete" title="Delete" onClick={() => onDelete && onDelete(publicationId, publicationType)}>
+                   <i className="fa fa-trash-o" aria-hidden="true"></i>
+               </button>
            )}
        </>
    );
     return (
-        <>
+        <div className="publications-tables">
             {formData && (
                 <>
                     <GridContainer elements={[]} space={3} />
@@ -117,9 +156,10 @@ const ShowPublications = ({
                             <GridContainer elements={[
                                 <TableComponent
                                     data={formData.sci}
+                                    leading={selectCell('sci')}
                                     keys={['authors', 'year', 'title', 'name', 'impact_factor', 'doi_link', 'id']}
                                     titles={['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of the Journal', 'Impact Factor', 'DOI', '']}
-                                    components={[
+                                    components={[authorsCell,
                                         { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>{EMPTY_VALUE}</span> },
                                           { key: 'id', component: ({ data }) => renderActions(data, 'sci') }
                                     ]}
@@ -135,9 +175,10 @@ const ShowPublications = ({
                             <GridContainer elements={[
                                 <TableComponent
                                     data={formData.non_sci}
+                                    leading={selectCell('non_sci')}
                                     keys={['authors', 'year', 'title', 'name', 'impact_factor', 'doi_link','id']}
                                     titles={['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of the Journal', 'Impact Factor', 'DOI','']}
-                                    components={[
+                                    components={[authorsCell,
                                         { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>{EMPTY_VALUE}</span> },
                                          { key: 'id', component: ({ data }) => renderActions(data, 'non_sci') }
                                     ]}
@@ -153,9 +194,9 @@ const ShowPublications = ({
                             <GridContainer elements={[
                                 <TableComponent
                                     data={formData.international}
-                                    keys={['authors', 'year', 'title', 'name', 'country', 'doi_link','id']}
-                                    titles={['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of Conference', 'Place of Conference', 'DOI',' ']}
-                                    components={[
+                                    leading={selectCell('international')}
+                                    {...urfColumns(formData.international, ['authors', 'year', 'title', 'name', 'country', 'doi_link','id'], ['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of Conference', 'Place of Conference', 'DOI',' '])}
+                                    components={[authorsCell,
                                         { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>{EMPTY_VALUE}</span> },
                                          { key: 'country', component: ({ data }) => <span>{data}</span> },
                                         { key: 'id', component: ({ data }) => renderActions(data, 'international') }
@@ -172,9 +213,9 @@ const ShowPublications = ({
                             <GridContainer elements={[
                                 <TableComponent
                                     data={formData.national}
-                                    keys={['authors', 'year', 'title', 'name', 'city', 'doi_link','id']}
-                                    titles={['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of Conference', 'Place of Conference', 'DOI',' ']}
-                                    components={[
+                                    leading={selectCell('national')}
+                                    {...urfColumns(formData.national, ['authors', 'year', 'title', 'name', 'city', 'doi_link','id'], ['Author(s)', 'Year of Publication', 'Title of Paper', 'Name of Conference', 'Place of Conference', 'DOI',' '])}
+                                    components={[authorsCell,
                                         { key: 'doi_link', component: ({ data }) => data ? <a href={data} target="_blank" rel="noopener noreferrer" title="Open DOI link" style={{ color: '#991b1b' }}><i className="fa fa-link"></i></a> : <span>{EMPTY_VALUE}</span> },
                                          {key: 'id', component: ({ data }) => renderActions(data, 'national') }
                                     ]}
@@ -190,6 +231,7 @@ const ShowPublications = ({
                             <GridContainer elements={[
                                 <TableComponent
                                     data={formData.book}
+                                    leading={selectCell('book')}
                                     keys={['name', 'title', 'year', 'publisher','id']}
                                     titles={['Name of Book', 'Title of Paper', 'Year of Publication', 'Name of Publisher',' ']}
                                     components={[
@@ -207,9 +249,10 @@ const ShowPublications = ({
                             <GridContainer elements={[
                                 <TableComponent
                                     data={formData.patents}
+                                    leading={selectCell('patents')}
                                     keys={['authors', 'year', 'status', 'title', 'country','id']}
                                     titles={['Author(s)', 'Year of Award', 'Status', 'Title of Patent', 'International/National',' ']}
-                                    components={[
+                                    components={[authorsCell,
                                         { key: 'year', component: ({ data }) => <span>{formatDate(data)}</span> },
                                        {key: 'id', component: ({ data }) => renderActions(data, 'patents') }
                                     ]}
@@ -239,7 +282,7 @@ const ShowPublications = ({
                  </CustomModal>
                 </>
             )}
-        </>
+        </div>
     );
 };
 

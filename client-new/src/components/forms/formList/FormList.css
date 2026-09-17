@@ -11,7 +11,7 @@
     width: 100%;
     background-color: #ffffff;
     padding: 20px 22px;
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
     border: 1px solid #ececec;
     position: relative;
     display: grid;
@@ -20,7 +20,7 @@
     text-align: center;
     align-items: center;
     color: #3a3a3a;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    box-shadow: var(--shadow-sm);
     cursor: pointer;
     transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
@@ -40,12 +40,12 @@
     position: absolute;
     top: 12px;
     right: 14px;
-    box-shadow: 0 0 0 3px rgba(236, 144, 15, 0.15);
+    box-shadow: var(--shadow-focus);
     animation: breathe 1.6s infinite;
 }
 
 .form-title {
-    font-size: 16px;
+    font-size: var(--text-md);
     font-weight: 600;
     margin: 0;
 }

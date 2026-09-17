@@ -24,12 +24,6 @@ class UserManagementController extends Controller
 
     public function list(Request $request)
     {
-        $loggedInUser = Auth::user();
-        
-        if (!$loggedInUser->may('can_manage_users')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
         $filters = $request->input('filters', []);
         $filtersJson = $request->query('filters');
 
@@ -40,10 +34,11 @@ class UserManagementController extends Controller
         $perPage = $request->input('rows', 15);
         $page = $request->input('page', 1);
 
-        $usersQuery = User::with(['role', 'current_role', 'default_role', 'student', 'faculty']);
+        // Everything the rows below read, loaded once per page instead of once per row.
+        $usersQuery = User::with(['role', 'current_role', 'default_role', 'ugStudent', 'student.department', 'faculty.department']);
 
         if ($filters) {
-            $usersQuery = $this->applyDynamicFilters($usersQuery, $filters);
+            $usersQuery = $this->applyDynamicFilters($usersQuery, $filters, 'users');
         }
 
         $users = $usersQuery->paginate($perPage, ['*'], 'page', $page);
@@ -63,8 +58,10 @@ class UserManagementController extends Controller
                 'default_role' => $user->default_role ? $user->default_role->role : 'N/A',
                 'available_roles' => $user->available_roles ?? [],
                 'status' => $user->status ?? 'active',
+            'ug_student' => $user->ugStudent,
                 'student_info' => $user->student ? [
-                    'roll_number' => $user->student->roll_number,
+                    // roll_number is not a column; this was always null.
+                    'roll_number' => $user->student->roll_no,
                     'department' => $user->student->department->name ?? null,
                 ] : null,
                 'faculty_info' => $user->faculty ? [
@@ -88,12 +85,6 @@ class UserManagementController extends Controller
 
     public function show($id)
     {
-        $loggedInUser = Auth::user();
-        
-        if (!$loggedInUser->may('can_manage_users')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
         $user = User::with(['role', 'current_role', 'default_role', 'student', 'faculty'])->find($id);
 
         if (!$user) {
@@ -116,26 +107,41 @@ class UserManagementController extends Controller
             'default_role' => $user->default_role ? $user->default_role->role : null,
             'available_roles' => $user->available_roles ?? [],
             'status' => $user->status ?? 'active',
+            'ug_student' => $user->ugStudent,
             'student_info' => $user->student,
             'faculty_info' => $user->faculty,
         ]);
     }
 
-    public function createOrUpdate(Request $request)
+    /** Written only when the form sends them, so other users are untouched. */
+    private function saveUgStudentRecord(User $user, Request $request): void
     {
-        $loggedInUser = Auth::user();
-        
-        if (!$loggedInUser->may('can_manage_users')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+        if (!$request->hasAny(['roll_no', 'branch_id', 'year'])) {
+            return;
         }
 
+        if (optional(Role::find($request->role_id))->role !== 'ug_student') {
+            return;
+        }
+
+        $record = $user->ugStudent ?: $user->ugStudent()->make();
+        $record->fill(array_filter([
+            'roll_no' => $request->roll_no,
+            'branch_id' => $request->branch_id,
+            'year' => $request->year,
+        ]));
+        $user->ugStudent()->save($record);
+    }
+
+    public function createOrUpdate(Request $request)
+    {
         $isUpdate = $request->has('id') && $request->id;
 
         $validationRules = [
             'full_name' => 'required_without:first_name|string|max:255',
             'first_name' => 'required_without:full_name|string|max:255',
             'last_name' => 'nullable|string|max:255',
-            'phone' => 'required|string|max:20',
+            'phone' => ['required', 'string', 'max:20', Rule::unique('users', 'phone')->ignore($request->id)],
             'gender' => 'nullable|in:Male,Female',
             'physically_handicapped' => 'nullable|boolean',
             'role_id' => 'required|exists:roles,id',
@@ -145,7 +151,11 @@ class UserManagementController extends Controller
             // Was 'string', which let a typo or a crafted request store a role
             // name matching no roles row, an unswitchable, invisible dead role.
             'available_roles.*' => 'string|exists:roles,role',
-            'status' => 'nullable|in:active,inactive,suspended',
+            'status' => 'nullable|in:active,inactive',
+            // The UG student record, which the office may correct at any time.
+            'roll_no' => 'nullable|string|max:50',
+            'branch_id' => 'nullable|exists:ug_branches,id',
+            'year' => 'nullable|integer|between:1,4',
         ];
 
         if ($isUpdate) {
@@ -169,13 +179,11 @@ class UserManagementController extends Controller
         } else {
             $user = new User();
             // Generate password if not provided
-            if (!$request->password) {
-                $password = Str::password(8, true, true, true, false);
-                $user->password = Hash::make($password);
-            } else {
-                $password = $request->password;
-                $user->password = Hash::make($password);
-            }
+            $password = $request->password ?: Str::password(8, true, true, true, false);
+            $user->password = Hash::make($password);
+            // The admin is handed this password, so one exists that somebody
+            // knows: Change Password asks for it rather than skipping it.
+            $user->password_set_at = now();
         }
 
         $name = $request->filled('full_name')
@@ -194,6 +202,8 @@ class UserManagementController extends Controller
         $user->status = $request->status ?? 'active';
 
         $user->save();
+
+        $this->saveUgStudentRecord($user, $request);
 
         // Granting a role before its linkage exists is a supported workflow (an
         // admin creates the user shell, then attaches the faculty/student record
@@ -218,10 +228,6 @@ class UserManagementController extends Controller
     {
         $loggedInUser = Auth::user();
         
-        if (!$loggedInUser->may('can_manage_users')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
         $user = User::find($id);
 
         if (!$user) {
@@ -240,12 +246,6 @@ class UserManagementController extends Controller
 
     public function resetPassword(Request $request, $id)
     {
-        $loggedInUser = Auth::user();
-        
-        if (!$loggedInUser->may('can_manage_users')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
         $request->validate([
             'password' => 'required|string|min:8',
         ]);
@@ -257,6 +257,7 @@ class UserManagementController extends Controller
         }
 
         $user->password = Hash::make($request->password);
+        $user->password_set_at = now();
         $user->save();
 
         return response()->json(['message' => 'Password reset successfully']);
@@ -264,12 +265,6 @@ class UserManagementController extends Controller
 
     public function sendResetEmail($id)
     {
-        $loggedInUser = Auth::user();
-        
-        if (!$loggedInUser->may('can_manage_users')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
         $user = User::find($id);
 
         if (!$user) {
@@ -287,12 +282,6 @@ class UserManagementController extends Controller
 
     public function bulkImport(Request $request)
     {
-        $loggedInUser = Auth::user();
-        
-        if (!$loggedInUser->may('can_manage_users')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
         $request->validate([
             'batch_data' => 'required|array',
             'batch_data.*.full_name' => 'nullable|string',
@@ -369,9 +358,12 @@ class UserManagementController extends Controller
                         'first_name' => $name['first'],
                         'last_name' => $name['last'],
                         'email' => $email,
-                        'phone' => !empty($data['phone']) ? trim($data['phone']) : '',
+                        // Blank, not empty string: phone carries a unique index,
+                        // so a second row without one collided with the first.
+                        'phone' => !empty($data['phone']) ? trim($data['phone']) : null,
                         'gender' => !empty($data['gender']) ? $data['gender'] : null,
                         'password' => Hash::make($password),
+                        'password_set_at' => now(),
                         'role_id' => $role->id,
                         'current_role_id' => $role->id,
                         'default_role_id' => $role->id,

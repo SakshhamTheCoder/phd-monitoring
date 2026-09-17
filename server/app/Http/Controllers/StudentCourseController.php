@@ -189,9 +189,9 @@ class StudentCourseController extends Controller
                 ], 404);
             }
 
-            // A scholar reads their own; anyone else needs the capability.
-            $isOwn = Auth::user()->student?->roll_no === $student->roll_no;
-            if (!$isOwn && ($denied = $this->denyUnlessMayManageStudents())) return $denied;
+            // Whoever may open the scholar's profile reads the courses on it. Only
+            // course managers could, so a HOD or supervisor saw an empty list.
+            if (!$student->isReadableBy(Auth::user()) && ($denied = $this->denyUnlessMayManageStudents())) return $denied;
 
             $courses = StudentCourse::with('course.department')
                 ->where('student_id', $studentId)

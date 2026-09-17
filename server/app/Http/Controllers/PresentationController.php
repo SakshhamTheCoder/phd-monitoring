@@ -205,11 +205,14 @@ class PresentationController extends Controller
             }));            
             $role= $user->current_role->role;
             if($role=='faculty')$role='supervisor';
-            $mandatoryFilters[] = [
-                'key' => $role.'_lock',
-                'op' => '=',
-                'value' => 0
-            ];
+            // A role outside the review chain (admin) has no lock column, so
+            // nothing can be waiting on it.
+            $lockColumn = \Illuminate\Support\Facades\Schema::hasColumn('presentations', $role.'_lock')
+                ? $role.'_lock'
+                : null;
+            $mandatoryFilters[] = $lockColumn
+                ? ['key' => $lockColumn, 'op' => '=', 'value' => 0]
+                : ['key' => 'id', 'op' => '=', 'value' => -1];
           }
 
        
@@ -236,6 +239,12 @@ class PresentationController extends Controller
             $filters['mandatory_filter'] = array_merge($parsedFilters, $mandatoryFilters);
             $request->merge(['filters' => $filters]);    
         }
+
+        // The filters built above are this page's own, not the client's, and
+        // they are what scopes the list: the scholar whose page it is, the
+        // forms waiting on this reviewer, the semester. Named here so the
+        // filter bar's allow list keeps them.
+        $trusted = array_values(array_unique(array_column($mandatoryFilters, 'key')));
      
         if (!$semester_id) {
             $titles[] = "Semester";
@@ -280,7 +289,7 @@ class PresentationController extends Controller
                     return $form->venue;
                 },
             ],
-        ]);
+        ], $trusted);
     }
     
 
@@ -322,11 +331,11 @@ class PresentationController extends Controller
             }
             if ($cur == 'student') {
                 if ($student->roll_no !== $user->student->roll_no) {
-                    return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                    return $this->refuse();
                 }
             } else {
                 if (!$student->checkSupervises($user->faculty->faculty_code) && !$student->department->checkCoordinates($user->faculty->faculty_code)) {
-                    return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                    return $this->refuse();
                 }
             }
             $old = Presentation::where('student_id', $request->student_id)->where('semester_id', $validator['semester_id'])->get();
@@ -358,7 +367,7 @@ class PresentationController extends Controller
             $form->addHistoryEntry("Presentation Scheduled by $actionBy", $user->first_name);
             return response()->json($form);
         }
-        return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+        return $this->refuse();
     }
 
     /**
@@ -638,7 +647,7 @@ class PresentationController extends Controller
                 ]);
             }
         } else {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
     }
 
@@ -649,7 +658,7 @@ class PresentationController extends Controller
         $cur = $role->role;
 
         if ($cur != 'faculty' && $cur != 'phd_coordinator') {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
 
         $request->validate([
@@ -731,7 +740,6 @@ class PresentationController extends Controller
     {
         $user = Auth::user();
         $form_id = $this->routeParam($request, 'form_id', $form_id);
-        $steps = ['student', 'faculty', 'doctoral', 'hod', 'adordc','dordc', 'complete'];
         $model = Presentation::class;
         $form = Presentation::find($form_id);
         $role = $user->current_role;
@@ -743,7 +751,7 @@ class PresentationController extends Controller
         }
         switch ($cur) {
             case 'student':
-                return $this->handleStudentForm($user, $form_id, $model, $steps);
+                return $this->handleStudentForm($user, $form_id, $model);
             case 'hod':
                 return $this->handleHodForm($user, $form_id, $model);
             case 'doctoral':
@@ -760,7 +768,7 @@ class PresentationController extends Controller
                 return $this->handleAdminForm($user, $form_id, $model, true);
 
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -809,7 +817,7 @@ class PresentationController extends Controller
             case 'doctoral':
                 return $this->doctoralSubmit($user, $request, $form_id);
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -819,7 +827,7 @@ class PresentationController extends Controller
         $role = $user->current_role;
         $allowedRoles = ['hod', 'dordc', 'doctoral','adordc'];
         if (!in_array($role->role, $allowedRoles)) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $request->validate([
             'form_ids' => 'required|array',
@@ -841,9 +849,13 @@ class PresentationController extends Controller
             $user = Auth::user();
             $role = $user->current_role;
             if ($role->role != 'student') {
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
             }
             $formInstance = Presentation::find($form_id);
+            // A scholar links and unlinks on their own form only.
+            if (!$formInstance || $formInstance->student_id != $user->student?->roll_no) {
+                return $this->refuse();
+            }
             if (count($this->selectedIds($request, 'publications')) != 0) {
                 foreach ($this->selectedIds($request, 'publications') as $publication) {
                     $publication = Publication::find($publication);
@@ -902,9 +914,13 @@ class PresentationController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
         if ($role->role != 'student') {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $formInstance = Presentation::find($form_id);
+        // A scholar links and unlinks on their own form only.
+        if (!$formInstance || $formInstance->student_id != $user->student?->roll_no) {
+            return $this->refuse();
+        }
         if (count($this->selectedIds($request, 'publications')) != 0) {
             foreach ($this->selectedIds($request, 'publications') as $publication) {
                 $publication = Publication::where('id', $publication)->where('form_id', $formInstance->id)->where('form_type', 'progress');
@@ -1006,7 +1022,7 @@ class PresentationController extends Controller
                         ->update(['progress' => 'satisfactory', 'review_status' => 'completed', 'comments' => $request->comments]);
                     $approvals = PresentationReview::where('presentation_id', $formInstance->id)->where('is_supervisor', 1)->where('review_status', 'pending')->get();
                     if (count($approvals) != 0) {
-                        throw new \Exception("Your Prefrences have been saved. Please wait for other supervisors to approve", 201);
+                        throw new \Exception("Your review is saved. The form moves on once the other reviewers have submitted theirs.", 201);
                     } else {
                         $doctoral = $formInstance->student->doctoralCommittee;
                         foreach ($doctoral as $doc) {
@@ -1056,7 +1072,7 @@ class PresentationController extends Controller
                 $approvals = PresentationReview::where('presentation_id', $formInstance->id)->where('is_supervisor', 0)->where('review_status', 'pending')->get();
               
                 if (count($approvals) != 0) {
-                    throw new \Exception("Your Prefrences have been saved. Please wait for other supervisors to approve", 201);
+                    throw new \Exception("Your review is saved. The form moves on once the other reviewers have submitted theirs.", 201);
                 }
                 
             }

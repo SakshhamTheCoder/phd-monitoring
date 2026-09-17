@@ -21,6 +21,7 @@ class FacultyImport
             'first_name' => $name,
             'email' => $email,
             'password' => Hash::make('default_password'),
+            'password_set_at' => now(),
         ]);
 
         return new Faculty([

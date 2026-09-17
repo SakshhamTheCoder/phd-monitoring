@@ -13,7 +13,25 @@ const GoogleCallback = () => {
     const token = urlParams.get('token');
     const userData = urlParams.get('user');
     const availableRoles = urlParams.get('available_roles');
-    
+    // The ticket the sign-up form hands back in place of a password.
+    const signup = urlParams.get('signup');
+
+    if (signup) {
+      const message = {
+        type: 'GOOGLE_SIGNUP',
+        ticket: signup,
+        email: urlParams.get('email'),
+        name: urlParams.get('name'),
+      };
+      if (window.opener) {
+        window.opener.postMessage(message, window.location.origin);
+        window.close();
+      } else {
+        navigate(`/signup?ticket=${encodeURIComponent(signup)}&email=${encodeURIComponent(message.email || '')}&name=${encodeURIComponent(message.name || '')}`);
+      }
+      return;
+    }
+
     if (token && userData) {
       try {
         const user = JSON.parse(decodeURIComponent(userData));
@@ -36,7 +54,9 @@ const GoogleCallback = () => {
           localStorage.setItem('userRole', user.role.role);
           localStorage.setItem('available_roles', JSON.stringify(roles));
           localStorage.setItem('user', JSON.stringify(user));
-          navigate('/home');
+          // A full load, like every other sign-in, so the providers start again
+          // with the token and ask for this account's capabilities.
+          window.location.href = '/home';
         }
       } catch (error) {
         console.error('Error parsing Google auth response:', error);

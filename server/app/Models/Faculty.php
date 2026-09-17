@@ -295,6 +295,17 @@ class Faculty extends Model
                 else
                     $d['action_required'] = false;
             }
+        } else if ($this->user->current_role->role == 'adordc') {
+            // Every department this ADoRDC answers for, the way the HOD reads
+            // their one. There was no branch, so the profile's forms refused them.
+            $departments = $this->adordcDepartments->pluck('id');
+            $data = Forms::where('adordc_available', true)
+                ->whereIn('department_id', $departments)
+                ->when($roll_no, fn ($query) => $query->where('student_id', $roll_no))
+                ->get();
+            foreach ($data as $d) {
+                $d['action_required'] = $d->stage == 'adordc';
+            }
         } else if ($this->user->current_role->role == 'hod') {
             if ($roll_no) {
                 $data = Forms::where('hod_available', true)->where('department_id', $this->department_id)->where('student_id', $roll_no)->get();

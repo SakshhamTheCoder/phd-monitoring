@@ -12,6 +12,9 @@ const Conference = ({callback,updateValue,data={}}) => {
     const year = new Date().getFullYear();
     const yearRange = Array.from({ length: 7 }, (_, i) => year - 3 + i); 
 
+    // The URF publications sheet also asks for these; PhD scholars are not asked.
+    const isUrf = localStorage.getItem('userRole') === 'ug_student';
+
     const apiCountries = baseURL + "/suggestions/country";
     const apiStates = baseURL + "/suggestions/state";
     const apiCities = baseURL + "/suggestions/city";
@@ -55,6 +58,13 @@ const Conference = ({callback,updateValue,data={}}) => {
                 <DropdownField label={"Status of Paper:"} initialValue={data.status} options={[{title:"Accepted",value:"accepted"},{title:"Published",value:"published"}]} onChange={(value)=>{setBodyValue("status",value)}} />,
             ]} />
 
+
+            {isUrf && (
+                <GridContainer elements={[
+                    <DropdownField label={"Mode of Conference"} initialValue={data.mode} options={[{title:"Offline",value:"offline"},{title:"Online",value:"online"}]} onChange={(value)=>{setBodyValue("mode",value)}} />,
+                    <InputField label={"Funding Received"} hint={"Funding source, if any"} initialValue={data.funding} onChange={(value)=>{setBodyValue("funding",value)}} />,
+                ]} />
+            )}
 
             <GridContainer elements={[
                 <InputField label={"DOI Link"} hint={"DOI Link"} initialValue={data.doi_link} onChange={(value)=>{setBodyValue("doi_link",value)}} />,

@@ -4,6 +4,7 @@ import ExternalLayout from '../externalReview/ExternalLayout';
 import { apiPublicOpenings } from '../../api/publicOpenings';
 import { formatDate } from '../../utils/timeParse';
 import '../projects/Openings.css';
+import PageHeader from '../../components/pageHeader/PageHeader';
 
 const skillList = (skills) =>
   (Array.isArray(skills) ? skills : String(skills || '').split(','))
@@ -30,14 +31,10 @@ const PublicOpenings = () => {
   return (
     <ExternalLayout crumbs={[{ label: 'Openings' }]}>
       <div className="op-container">
-        <div className="page-header">
-          <div>
-            <h1 className="page-title">Openings</h1>
-            <p className="page-subtitle">
-              Research positions and internships at Thapar Institute. No account is needed to apply.
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          title="Openings"
+          subtitle="Research positions and internships at Thapar Institute. No account is needed to apply."
+        />
 
         {loading && <p className="empty-state">Loading openings...</p>}
         {error && <p className="empty-state">{error}</p>}

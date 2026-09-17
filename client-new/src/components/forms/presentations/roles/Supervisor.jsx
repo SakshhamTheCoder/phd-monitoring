@@ -62,6 +62,13 @@ const Supervisor = ({ formData }) => {
   // "150", which is over 100 for any figure anyone could type: the warning fired
   // on every keystroke and the entry was rewritten every time.
   useEffect(() => {
+    // A locked panel is a record, not an entry. previous_progress is the
+    // scholar's overall progress today, which on an approved form already
+    // includes this increase, so checking it there fired on page load.
+    if (lock) {
+      return;
+    }
+
     const increase = parseFloat(body.current_progress);
     const previous = parseFloat(formData.previous_progress) || 0;
 
@@ -73,7 +80,7 @@ const Supervisor = ({ formData }) => {
     // figure that will actually be submitted.
     setBody((prev) => ({ ...prev, current_progress: 100 - previous }));
     toast.error("Total progress cannot exceed 100%");
-  }, [body.current_progress, formData.previous_progress]);
+  }, [body.current_progress, formData.previous_progress, lock]);
 
   const handleApprovalChange = (value) => {
     setBody((prevBody) => ({
@@ -100,7 +107,7 @@ const Supervisor = ({ formData }) => {
     <>
       {isLoaded && formData && (
         <>
-          {lock && (
+          {!!lock && (
             <>
               <p style={{ fontWeight: "bold", textAlign: "left" }}>Supervisor(s) Review</p>
               <GridContainer
@@ -135,7 +142,7 @@ const Supervisor = ({ formData }) => {
             handleRecommendationChange={handleApprovalChange}
             isLocked={lock}
           />
-          {body.approval && (
+          {!!body.approval && (
             <>
               <>
                 <GridContainer
@@ -169,7 +176,9 @@ const Supervisor = ({ formData }) => {
                   elements={[
                     <InputField
                       label={"Total Quantum Progress Percentage"}
-                      initialValue={formData.total_progress}
+                      // body, not formData: the stored total is 0 until the form
+                      // is submitted, so the box never followed what was typed.
+                      initialValue={body.total_progress}
                       isLocked={true}
                     />,
                   ]}
@@ -180,7 +189,7 @@ const Supervisor = ({ formData }) => {
                   <GridContainer
                     elements={[
                       <InputField required={true}
-                        label={"% Attendence"}
+                        label={"% Attendance"}
                         initialValue={formData.attendance}
                         isLocked={lock}
                         onChange={(updated) => {

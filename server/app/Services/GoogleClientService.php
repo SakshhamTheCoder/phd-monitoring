@@ -12,9 +12,12 @@ class GoogleClientService
     {
         $client = new Google_Client();
         $client->setApplicationName('PhD Presentation Scheduler');
-        $client->setClientId(env('GOOGLE_CLIENT_ID'));
-        $client->setClientSecret(env('GOOGLE_CLIENT_SECRET'));
-        $client->setRedirectUri(env('GOOGLE_REDIRECT_URI'));
+        // config(), not env(): the deploy caches the configuration, and a
+        // cached configuration stops Laravel from loading .env at all, so
+        // every env() outside config/ read null in production.
+        $client->setClientId(config('services.google.client_id'));
+        $client->setClientSecret(config('services.google.client_secret'));
+        $client->setRedirectUri(config('services.google.redirect'));
         $client->setAccessType('offline');
         $client->setScopes([\Google_Service_Calendar::CALENDAR]);
 

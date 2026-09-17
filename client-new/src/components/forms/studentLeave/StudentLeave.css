@@ -24,7 +24,7 @@
     padding: 1rem 1.25rem;
     background: #f9fafb;
     border: 1px solid #e5e7eb;
-    border-radius: 8px;
+    border-radius: var(--radius);
 }
 
 .student-leave .recommendation-field .options {
@@ -48,7 +48,7 @@
     padding: 1rem 1.25rem;
     background: #f9fafb;
     border: 1px solid #e5e7eb;
-    border-radius: 8px;
+    border-radius: var(--radius);
 }
 
 .leave-outcome__row {
@@ -59,7 +59,7 @@
 
 .leave-outcome__row > span:first-child {
     min-width: 120px;
-    font-size: 0.8rem;
+    font-size: var(--text-xs);
     letter-spacing: 0.04em;
     text-transform: uppercase;
     color: #6b7280;
@@ -73,7 +73,7 @@
 
 .student-leave .field-hint {
     margin: 0.35rem 0 0;
-    font-size: 0.8rem;
+    font-size: var(--text-xs);
     font-weight: 400;
     color: #6b7280;
 }

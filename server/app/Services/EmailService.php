@@ -38,8 +38,9 @@ class EmailService
                 'mail.mailers.smtp.host' => 'smtp.gmail.com',
                 'mail.mailers.smtp.port' => 587,
                 'mail.mailers.smtp.encryption' => 'tls',
-                'mail.mailers.smtp.username' => env('MAIL_USERNAME'),
-                'mail.mailers.smtp.password' => env('MAIL_PASSWORD'),
+                // The credentials stay as config/mail.php read them from .env.
+                // Repeating them here with env() read null once the deploy
+                // cached the configuration, which left SMTP unauthenticated.
             ]);
             
             // Create the mailable

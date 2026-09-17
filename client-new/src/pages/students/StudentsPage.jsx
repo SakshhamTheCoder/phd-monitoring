@@ -13,7 +13,10 @@ import { column } from "../../components/bulkImport/columns";
 import { toast } from "react-toastify";
 import { baseURL } from "../../api/urls";
 import { customFetch } from "../../api/base";
-import useCapabilities from "../../hooks/useCapabilities";
+import useCapabilities from '../../context/CapabilitiesContext';
+import Tabs from "../../components/tabs/Tabs";
+import UgStudentForm from "../../components/urf/UgStudentForm";
+import { apiUgStudentImport } from "../../api/urf";
 
 const StudentsPage = () => {
   const [filter, setFilter] = useState([]);
@@ -34,6 +37,35 @@ const StudentsPage = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(null);
+  // The two lists are read from different places.
+  const [tab, setTab] = useState('phd');
+  const [ugFilter, setUgFilter] = useState({ conditions: [] });
+  const [ugStudent, setUgStudent] = useState(null);
+  const [ugFormOpen, setUgFormOpen] = useState(false);
+  const [ugImportOpen, setUgImportOpen] = useState(false);
+  const [ugRefreshKey, setUgRefreshKey] = useState(0);
+
+  const UG_SAMPLE_CSV = `full_name,email,roll_no,programme,branch_code,year,phone,gender
+Nikhil Verma,nverma_be23@thapar.edu,102303001,BE,COE,2,9876500000,Male
+Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
+
+  const importUgStudents = async (preview, reset) => {
+    setSubmitting(true);
+    const res = await apiUgStudentImport(preview.data);
+    setSubmitting(false);
+
+    if (!res.success) {
+      toast.error(res.response?.message || 'Could not import the students.');
+      return;
+    }
+
+    const { added = 0, updated = 0, errors = [] } = res.response || {};
+    toast.success(`${added} students added, ${updated} updated`);
+    errors.forEach((message) => toast.warn(message, { autoClose: 10000 }));
+    reset();
+    setUgImportOpen(false);
+    setUgRefreshKey((k) => k + 1);
+  };
 
   const STUDENT_HEADERS = "Registration Number,Full Name,Email,Phone,Department Code,Father Name,Gender,Enrollment Type,Date of Admission,Date of IRB,Date of Synopsis,Date of Thesis,CGPA,Overall Progress,PhD Title,JRF?,Permanent Address,Supervisor 1 Name,Supervisor 1 Email,Supervisor 2 Name,Supervisor 2 Email,Supervisor 3 Name,Supervisor 3 Email,Committee Member 1 Name,Committee Member 1 Email,Committee Member 2 Name,Committee Member 2 Email,Committee Member 3 Name,Committee Member 3 Email";
 
@@ -127,7 +159,6 @@ const StudentsPage = () => {
 
       toast.success(`Import completed: ${totalSuccess} created, ${totalUpdated} updated, ${totalErrors} errors`);
       if (allErrors.length > 0) {
-        console.log('Import errors:', allErrors);
         toast.warning(`${totalErrors} rows failed. Check console for details.`);
       }
 
@@ -171,6 +202,55 @@ const StudentsPage = () => {
       children={
         <>
           <PageHeader title="Students" subtitle="All PhD scholars and their current stage." />
+
+          {can("can_manage_urf") && (
+            <Tabs
+              value={tab}
+              onChange={setTab}
+              items={[
+                { value: 'phd', label: 'PhD Scholars' },
+                { value: 'ug', label: 'UG Students' },
+              ]}
+            />
+          )}
+
+          {tab === 'ug' ? (
+            <>
+              <FilterBar
+                path="/ug-students"
+                placeholder="Search by name, roll number or branch…"
+                onSearch={setUgFilter}
+              />
+              <PagenationTable
+                key={ugRefreshKey}
+                endpoint="/ug-students"
+                // UG students have no profile page; editing is in the row menu.
+                rowClickable={false}
+                filters={ugFilter}
+                enableApproval={false}
+                enableSelect={false}
+                extraTopbarComponents={
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <CustomButton
+                      text="Bulk Import"
+                      variant="secondary"
+                      onClick={() => setUgImportOpen(true)}
+                    />
+                    <CustomButton
+                      text="Add UG Student +"
+                      onClick={() => { setUgStudent(null); setUgFormOpen(true); }}
+                    />
+                  </div>
+                }
+                actions={[{
+                  icon: <i className="fa fa-pencil-square-o"></i>,
+                  tooltip: "Edit",
+                  onClick: (student) => { setUgStudent(student); setUgFormOpen(true); },
+                }]}
+              />
+            </>
+          ) : (
+          <>
           <FilterBar onSearch={handleFilterChange} />
 
           <PagenationTable
@@ -195,14 +275,14 @@ const StudentsPage = () => {
             }
             actions={[
               ...(can("can_manage_students") ? [{
-                icon: <i className="fa-solid fa-pen-to-square"></i>,
+                icon: <i className="fa fa-pencil-square-o"></i>,
                 tooltip: "Edit",
                 onClick: (studentData) => {
                   handleOpenForm(studentData);
                 },
               }] : []),
               ...(can("can_propose_supervisor_changes") ? [{
-                icon: <i className="fa-solid fa-users-gear"></i>,
+                icon: <i className="fa fa-users"></i>,
                 tooltip: "Manage Supervisors/Doctoral",
                 onClick: (studentData) => {
                   setStudentToEdit(studentData);
@@ -210,7 +290,7 @@ const StudentsPage = () => {
                 },
               }] : []),
               ...(role === "admin" ? [{
-                icon: <i className="fa-solid fa-file-lines"></i>,
+                icon: <i className="fa fa-file-text-o"></i>,
                 tooltip: "Manage Forms",
                 onClick: (studentData) => {
                   navigate(`/forms/manage?roll_no=${studentData.roll_no}`);
@@ -218,6 +298,39 @@ const StudentsPage = () => {
               }] : []),
             ]}
           />
+          </>
+          )}
+
+          <CustomModal
+            isOpen={ugFormOpen}
+            onClose={() => setUgFormOpen(false)}
+            title={ugStudent ? "Edit UG Student" : "Add UG Student"}
+            width="60vw"
+          >
+            <UgStudentForm
+              student={ugStudent}
+              onClose={() => setUgFormOpen(false)}
+              onSaved={() => setUgRefreshKey((k) => k + 1)}
+            />
+          </CustomModal>
+
+          <UnifiedBulkImportModal
+            isOpen={ugImportOpen}
+            onClose={() => setUgImportOpen(false)}
+            title="Bulk Import UG Students"
+            required={['full_name', 'email', 'roll_no', 'branch_code', 'year']}
+            rules={[
+              'Matched on email, so importing a corrected file updates rather than duplicates.',
+              'branch_code is the code from Configuration, and programme narrows it when two degrees share one.',
+              'year is the year of study, 1 to 4.',
+              'A new student is emailed a link to set their password.',
+            ]}
+            sampleFileName="ug_students_sample.csv"
+            sampleCsvContent={UG_SAMPLE_CSV}
+            onImport={importUgStudents}
+            submitting={submitting}
+          />
+
           <CustomModal
             isOpen={isModalOpen}
             onClose={closeForm}

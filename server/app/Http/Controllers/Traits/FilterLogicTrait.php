@@ -48,11 +48,19 @@ trait FilterLogicTrait
 
 //working
 
-public function applyDynamicFilters($query, $filters)
+/**
+ * Applies the filter bar's conditions.
+ *
+ * $pages names the page (or pages) the request belongs to, and $extraKeys the
+ * keys its own code sends. Anything else is dropped: the keys arrive from the
+ * client, and an unrestricted key is a query over any column in the database,
+ * which includes password hashes.
+ */
+public function applyDynamicFilters($query, $filters, $pages = null, array $extraKeys = [])
 {
     $combine = strtolower($filters['combine'] ?? 'and');
-    $filterList = $filters['conditions'] ?? [];
-    $mandatoryFilter = $filters['mandatory_filter'] ?? null;
+    $filterList = $this->allowedFilters($filters['conditions'] ?? [], $pages, $extraKeys);
+    $mandatoryFilter = $this->allowedFilters($filters['mandatory_filter'] ?? null, $pages, $extraKeys) ?: null;
 
     Log::info('Applying dynamic filters', [
         'combine' => $combine,
@@ -64,9 +72,6 @@ public function applyDynamicFilters($query, $filters)
     if ($mandatoryFilter && is_array($mandatoryFilter)) {
         foreach ($mandatoryFilter as $filter) {
             if (isset($filter['key'], $filter['value'])) {
-                $relationPath = explode('.', $filter['key']);
-                $column = array_pop($relationPath);
-                $relation = implode('.', $relationPath);
                 $op = $filter['op'] ?? '=';
                 $value = $filter['value'];
 
@@ -74,37 +79,35 @@ public function applyDynamicFilters($query, $filters)
                     $value = "%$value%";
                 }
 
-                if ($relation) {
-                    $query->whereHas($relation, function ($q) use ($column, $op, $value) {
-                        $q->where($column, $op, $value);
-                    });
-                } else {
-                    $query->where($column, $op, $value);
-                }
+                $this->applyCondition($query, $filter['key'], $op, $value);
             }
         }
     }
 
-    // Apply other dynamic filters
+    // Apply other dynamic filters.
+    //
+    // The search box sends one value across every field at once, which is an
+    // OR. The filter panel sends a value per field, and may send several for
+    // the same field: two departments mean either department, while a roll
+    // number as well as a department means both. So conditions are grouped by
+    // the key they name, each group an OR, and the groups narrow each other.
     $query->where(function ($q) use ($combine, $filterList) {
-        foreach ($filterList as $filter) {
-            $relationPath = explode('.', $filter['key']);
-            $column = array_pop($relationPath);
-            $relation = implode('.', $relationPath);
-            $op = $filter['op'] ?? '=';
-            $value = $filter['value'] ?? null;
-
-            if ($op === 'LIKE') {
-                $value = "%$value%"; 
+        if ($combine === 'or') {
+            foreach ($filterList as $filter) {
+                [$op, $value] = $this->conditionParts($filter);
+                $this->applyCondition($q, $filter['key'], $op, $value, true);
             }
 
-            if ($relation) {
-                $q->{$combine === 'or' ? 'orWhereHas' : 'whereHas'}($relation, function ($subQ) use ($column, $op, $value) {
-                    $subQ->where($column, $op, $value);
-                });
-            } else {
-                $q->{$combine === 'or' ? 'orWhere' : 'where'}($column, $op, $value);
-            }
+            return;
+        }
+
+        foreach (collect($filterList)->groupBy('key') as $conditions) {
+            $q->where(function ($group) use ($conditions) {
+                foreach ($conditions as $filter) {
+                    [$op, $value] = $this->conditionParts($filter);
+                    $this->applyCondition($group, $filter['key'], $op, $value, true);
+                }
+            });
         }
     });
 
@@ -119,6 +122,49 @@ public function applyDynamicFilters($query, $filters)
 
 //new 
 
+
+/** A condition's operator and value, with a search value wrapped for matching. */
+private function conditionParts(array $filter): array
+{
+    $op = $filter['op'] ?? '=';
+    $value = $filter['value'] ?? null;
+
+    return [$op, $op === 'LIKE' ? "%$value%" : $value];
+}
+
+/**
+ * The conditions whose key the page actually offers. A key the page never
+ * defined is dropped with a warning rather than run.
+ */
+private function allowedFilters($conditions, $pages, array $extraKeys)
+{
+    if (!is_array($conditions) || !$conditions) {
+        return $conditions === null ? null : [];
+    }
+
+    $allowed = DB::table('filters')
+        ->when($pages, fn ($q) => $q->where(function ($inner) use ($pages) {
+            foreach ((array) $pages as $page) {
+                $inner->orWhereJsonContains('applicable_pages', $page);
+            }
+        }))
+        ->pluck('key_name')
+        ->merge($extraKeys)
+        ->flip();
+
+    return collect($conditions)
+        ->filter(function ($condition) use ($allowed) {
+            $key = $condition['key'] ?? null;
+            if ($key !== null && $allowed->has($key)) {
+                return true;
+            }
+            Log::warning('Ignored a filter on a key this page does not offer', ['key' => $key]);
+
+            return false;
+        })
+        ->values()
+        ->all();
+}
 
 public function getAvailableFilters($pageSlug = null)
 {
@@ -139,6 +185,59 @@ public function getAvailableFilters($pageSlug = null)
 
 
 
+
+/**
+ * One condition, applied to the query.
+ *
+ * A key may name two columns separated by "|", for something a row records
+ * twice: the two students on a URF project, say, or its two mentors. Either
+ * column matching is a match, so the parts are grouped rather than narrowed.
+ */
+private function applyCondition($query, string $key, $op, $value, bool $or = false)
+{
+    $parts = explode('|', $key);
+
+    if (count($parts) > 1) {
+        return $query->{$or ? 'orWhere' : 'where'}(function ($group) use ($parts, $op, $value) {
+            foreach ($parts as $part) {
+                $this->applyCondition($group, $part, $op, $value, true);
+            }
+        });
+    }
+
+    $relationPath = explode('.', $key);
+    $column = array_pop($relationPath);
+    $relation = implode('.', $relationPath);
+
+    if ($relation) {
+        return $query->{$or ? 'orWhereHas' : 'whereHas'}($relation, function ($q) use ($column, $op, $value) {
+            $this->whereColumnMatches($q, $column, $op, $value);
+        });
+    }
+
+    return $this->whereColumnMatches($query, $column, $op, $value, $or);
+}
+
+/**
+ * One condition on one column.
+ *
+ * Names are stored as first_name and last_name, so a search for "Arun Mehta"
+ * matches neither on its own. A search value with a space is matched against
+ * the two joined, which is how the suggestion lists and the tables show a
+ * name. Only a search: an exact condition still means the column it names.
+ */
+private function whereColumnMatches($query, $column, $op, $value, $or = false)
+{
+    $where = $or ? 'orWhere' : 'where';
+
+    if ($op === 'LIKE' && $column === 'first_name' && is_string($value) && str_contains(trim($value, '%'), ' ')) {
+        $name = '%' . trim($value, '% ') . '%';
+
+        return $query->{$where . 'Raw'}("CONCAT(first_name, ' ', last_name) LIKE ?", [$name]);
+    }
+
+    return $query->{$where}($column, $op, $value);
+}
 
 //     public function evaluateFilter($form, $filterKey, $input)
 //     {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Models\Attendance;
 use App\Models\ClerkDepartment;
 use App\Models\Department;
@@ -26,6 +27,22 @@ use Illuminate\Support\Facades\DB;
  */
 class ClerkController extends Controller
 {
+    use FilterLogicTrait;
+
+    /**
+     * The fields Clerk Management offers. The page holds its clerks in one
+     * small unpaginated list and matches them in the browser, so this names
+     * the fields rather than backing a query of its own.
+     */
+    public function listFilters()
+    {
+        if ($response = $this->authorizeAdmin()) {
+            return $response;
+        }
+
+        return response()->json($this->getAvailableFilters('clerks'));
+    }
+
     /**
      * Department ids the given user is tagged with as clerk.
      *
@@ -67,10 +84,6 @@ class ClerkController extends Controller
     public function myDepartments(Request $request)
     {
         $user = Auth::user();
-        if (!$user->may('can_read_own_clerk_departments')) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
-        }
-
         $departments = Department::whereIn('id', $this->clerkDepartmentIds($user->id))
             ->orderBy('name')
             ->get(['id', 'name', 'code']);
@@ -90,11 +103,6 @@ class ClerkController extends Controller
     public function roster(Request $request)
     {
         $user = Auth::user();
-
-        // Admins get read access for oversight; only clerks can write (save()).
-        if (!$user->may('can_mark_attendance')) {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
-        }
 
         $request->validate([
             'date' => 'nullable|date',
@@ -163,10 +171,6 @@ class ClerkController extends Controller
     {
         $user = Auth::user();
         $role = $user->current_role->role;
-        if (!$user->may('can_mark_attendance')) {
-            return response()->json(['message' => 'You are not authorized to mark attendance'], 403);
-        }
-
         $request->validate([
             'date' => 'required|date|before_or_equal:today',
             'lecture_id' => 'nullable|integer|min:0',
@@ -293,9 +297,6 @@ class ClerkController extends Controller
     public function template(Request $request)
     {
         $user = Auth::user();
-        if (!$user->may('can_mark_attendance')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
         $csv = "roll_no,date,status\n123,2026-08-26,present\n124,2026-08-26,absent\n";
         return response($csv, 200, [
             'Content-Type' => 'text/csv',
@@ -311,10 +312,6 @@ class ClerkController extends Controller
     {
         $user = Auth::user();
         $role = $user->current_role->role;
-        if (!$user->may('can_mark_attendance')) {
-            return response()->json(['message' => 'You are not authorized to import attendance'], 403);
-        }
-
         $request->validate([
             'file' => 'required|file|mimes:csv,txt|max:2048',
             'lecture_id' => 'nullable|integer|min:0',
@@ -476,9 +473,6 @@ class ClerkController extends Controller
     public function history(Request $request)
     {
         $user = Auth::user();
-        if (!$user->may('can_mark_attendance')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
         $request->validate([
             'from' => 'nullable|date',
             'to' => 'nullable|date|after_or_equal:from',
@@ -516,10 +510,6 @@ class ClerkController extends Controller
     {
         $user = Auth::user();
         $role = $user->current_role->role;
-        if (!$user->may('can_mark_attendance')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
         $request->validate([
             'date' => 'required|date',
             'department_id' => 'nullable|integer|exists:departments,id',
@@ -565,10 +555,6 @@ class ClerkController extends Controller
     {
         $user = Auth::user();
         $role = $user->current_role->role;
-        if (!$user->may('can_mark_attendance')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
         $request->validate([
             'month' => 'required|date_format:Y-m',
             'department_id' => 'nullable|integer|exists:departments,id',
@@ -745,10 +731,6 @@ class ClerkController extends Controller
     public function export(Request $request)
     {
         $user = Auth::user();
-        if (!$user->may('can_mark_attendance')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
         $request->validate([
             'from' => 'nullable|date',
             'to' => 'nullable|date|after_or_equal:from',

@@ -62,7 +62,7 @@ class SupervisorAllocationController extends Controller
             'complete'
         ];
         if ($role->role != 'student') {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $data = [
             'roll_no' => $user->student->roll_no,
@@ -86,7 +86,7 @@ class SupervisorAllocationController extends Controller
         ];
         switch ($role->role) {
             case 'student':
-                return $this->handleStudentForm($user, $form_id, $model, $steps);
+                return $this->handleStudentForm($user, $form_id, $model);
             case 'hod':
                 return $this->handleHodForm($user, $form_id, $model);
             case 'phd_coordinator':
@@ -96,7 +96,7 @@ class SupervisorAllocationController extends Controller
                 return $this->handleAdminForm($user, $form_id, $model, true);
 
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -114,7 +114,7 @@ class SupervisorAllocationController extends Controller
             case 'phd_coordinator':
                 return $this->coordinatorSubmit($user, $request, $form_id);
             default:
-                return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+                return $this->refuse();
         }
     }
 
@@ -126,7 +126,7 @@ class SupervisorAllocationController extends Controller
             'form_ids' => 'array|required',
         ]);
         if ($role->role != 'hod') {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
         $request->merge(['approval' => true]);
         foreach ($request->form_ids as $form_id) {
@@ -149,7 +149,7 @@ class SupervisorAllocationController extends Controller
         $role = $user->current_role;
 
         if ($role->role != 'phd_coordinator' && $role->role != 'admin') {
-            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+            return $this->refuse();
         }
 
         $request->validate([
@@ -249,17 +249,20 @@ class SupervisorAllocationController extends Controller
             function ($formInstance) use ($request, $user) {
                 $request->validate([
                     'prefrences' => 'required|array',
+                    // Faculty codes. Anything else reached array_unique() below and
+                    // surfaced as "Array to string conversion".
+                    'prefrences.*' => 'nullable|integer',
                     'broad_area_of_research' => 'required|array',
                     'broad_area_of_research.*' => 'nullable|string|max:255',
                 ]);
-                $prefrences = $request->prefrences;
+                $prefrences = array_values(array_filter($request->prefrences, fn ($code) => $code !== null));
                 if (count($prefrences) != 6 || count(array_unique($prefrences)) != 6) {
-                    throw new \Exception("Please select 6 unique prefrences");
+                    throw new \Exception("Please choose six different supervisors.");
                 }
                 $i = 1;
                 foreach ($prefrences as $prefrence) {
                     if (!Faculty::find($prefrence)) {
-                        throw new \Exception("Invalid prefrence selected");
+                        throw new \Exception("One of the chosen supervisors is not in the faculty list.");
                     }
                 }
                 $formInstance->prefrences = $prefrences;
@@ -355,8 +358,12 @@ class SupervisorAllocationController extends Controller
                         }
                     }
 
+                    // A supervisor the scholar already has stays as they are.
+                    // The coordinator's panel starts from the current list, so a
+                    // re-allocation carried existing pairs and failed on the
+                    // unique key.
                     foreach ($supervisors as $supervisor) {
-                        Supervisor::create([
+                        Supervisor::firstOrCreate([
                             'student_id' => $formInstance->student_id,
                             'faculty_id' => $supervisor,
                         ]);

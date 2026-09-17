@@ -56,7 +56,6 @@ const Student = ({ formData }) => {
   };
 
   useEffect(() => {
-    console.log(body);
   }, [body]);
 
   return (

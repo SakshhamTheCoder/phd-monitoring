@@ -21,6 +21,13 @@ class ClerkLeaveTest extends TestCase
     private function studentOnLeave(): Student
     {
         $student = Student::query()->firstOrFail();
+
+        // This runs against a working database, not a built-from-scratch one, so
+        // the scholar may already carry attendance on this date. Clear it, or the
+        // assertion that no row was written reads a row nobody wrote here.
+        // DatabaseTransactions rolls the delete back.
+        Attendance::where('roll_no', $student->roll_no)->where('date', self::DATE)->delete();
+
         StudentLeaveForm::create([
             'student_id' => $student->roll_no,
             'leave_type' => 'casual',

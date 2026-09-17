@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
+import { formatDate } from '../../../utils/timeParse';
 import "./Fields.css";
 
 const DateField = ({ label, initialValue, isLocked, onChange, hint = null, showLabel = true, required = false }) => {
     const [hintText] = useState(hint || 'Select Date...');
     const [value, updateValue] = useState('');
+    const fieldId = useId();
 
     // Format the initial value to "YYYY-MM-DD" if it’s in ISO format
     useEffect(() => {
@@ -21,12 +23,29 @@ const DateField = ({ label, initialValue, isLocked, onChange, hint = null, showL
 
     return (
         <div className="input-field-container">
-            {showLabel && (<label className="input-label">{label}{required && <span className="req">*</span>}</label>)}
-            {isLocked && !value ? (
-                <div className="input-field field-readonly">Not provided</div>
+            {showLabel && (
+                <label className="input-label" htmlFor={isLocked ? undefined : fieldId}>
+                    {label}{required && <span className="req" aria-hidden="true">*</span>}
+                </label>
+            )}
+            {isLocked ? (
+                // A locked date is text, not a disabled control. `input type=date`
+                // draws itself in the browser's locale, so a read-only date sat
+                // next to one rendered through formatDate showed the same kind of
+                // value two ways: "12/05/2026" beside "13 Feb 2026". Reading it
+                // through formatDate as well settles on one format everywhere, and
+                // a disabled input was unreachable by keyboard anyway.
+                //
+                // The time is pinned so the date is read in the reader's own zone
+                // rather than shifting a day behind UTC.
+                <div className="input-field field-readonly">
+                    {value ? formatDate(`${value}T00:00:00`) : 'Not provided'}
+                </div>
             ) : (
                 <input
+                    id={fieldId}
                     type="date"
+                    aria-required={required || undefined}
                     className="input-field"
                     value={value}
                     placeholder={hintText}
@@ -34,8 +53,6 @@ const DateField = ({ label, initialValue, isLocked, onChange, hint = null, showL
                         updateValue(e.target.value);
                         onChange(e.target.value);
                     }}
-                    readOnly={isLocked}
-                    disabled={isLocked}
                 />
             )}
         </div>
