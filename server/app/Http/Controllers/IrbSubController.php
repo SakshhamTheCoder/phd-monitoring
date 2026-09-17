@@ -253,7 +253,10 @@ class IrbSubController extends Controller
     private function dordcSubmit($user, $request, $form_id)
     {
         $model = IrbSubForm::class;
-        return $this->submitForm($user, $request, $form_id, $model, 'dordc', 'phd_coordinator', 'complete', function ($formInstance) use ($request, $user) {
+        // Back to the ADORDC, the previous step. This said 'phd_coordinator',
+        // which is in neither this form's chain nor its submit() switch, so a
+        // rejection here parked the form on a stage nobody could act on.
+        return $this->submitForm($user, $request, $form_id, $model, 'dordc', 'adordc', 'complete', function ($formInstance) use ($request, $user) {
             $student = $formInstance->student;
             $student->phd_title=$formInstance->revised_phd_title;
             $student->save();
@@ -329,7 +332,7 @@ class IrbSubController extends Controller
             $approvals=$formInstance->supervisorApprovals()->where('status','approved')->get();
            
             if($approvals->count()!=$formInstance->student->supervisors->count()){
-                throw new \Exception('Your Prefrences Saved, Form Will be submitted once all Supervisors approve',201);
+                throw new \Exception('Your preferences are saved. The form moves on once every supervisor has approved.',201);
             }
             else{
                 // Email the outside expert a secure, single-use link to the review page.
@@ -361,7 +364,7 @@ class IrbSubController extends Controller
             $approvals=$formInstance->doctoralApprovals()->where('status','approved')->get();
            
             if($approvals->count()!=$formInstance->student->doctoralCommittee->count()){
-                throw new \Exception('Your Prefrences Saved, Form Will be submitted once all Members from IRB Committee approve',201);
+                throw new \Exception('Your preferences are saved. The form moves on once every IRB committee member has approved.',201);
             }
         
         }

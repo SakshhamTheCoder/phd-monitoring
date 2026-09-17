@@ -77,11 +77,10 @@ class AdminFormController extends Controller
         'list-of-examiners' => [
             'form_name' => 'List of Examiners',
             'max_count' => 1,
-            'steps' => [            'faculty',
-            'hod',
-            'dordc',
-            'director',
-            'complete']
+            // No HOD step. ListOfExaminersController::store builds the same
+            // ladder without one, and the form has no HOD panel; leaving 'hod'
+            // here marked the HOD available on a stage that does not exist.
+            'steps' => ['faculty', 'dordc', 'director', 'complete']
         ],
         'synopsis-submission' => [
             'form_name' => 'Synopsis Submission',
