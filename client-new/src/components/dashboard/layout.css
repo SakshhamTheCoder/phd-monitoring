@@ -12,13 +12,16 @@
     position: fixed;
     width: 225px;
     height: 100vh;
-    background-color: #2c3e50;
-    color: white;
     overflow-y: auto;
+    z-index: 20;
 }
 
 .main-content {
     flex-grow: 1;
+    /* A flex item will not shrink below its content's natural width without
+       this, so one wide child (a long log line, a wide table) pushed the whole
+       page sideways. */
+    min-width: 0;
     margin-left: 225px;
     min-height: 100vh;
     display: flex;
@@ -32,8 +35,10 @@
     position: sticky;
     top: 0;
     z-index: 10;
-    background-color: #FFF;
-    border-bottom: 1px solid #EEE;
+    background-color: var(--surface);
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
 }
 
 /* The one page gutter. Its left padding matches the topbar's, so the
@@ -45,8 +50,65 @@
     box-sizing: border-box;
 }
 
+/* Only exists below the breakpoint, where the sidebar becomes a drawer. */
+.nav-toggle {
+    display: none;
+    flex: 0 0 auto;
+    margin-left: 0.75rem;
+    padding: 0.5rem 0.65rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text-color);
+    font-size: var(--text-md);
+    cursor: pointer;
+}
+
+.nav-toggle:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.sidebar-scrim {
+    display: none;
+}
+
 @media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+        transition: transform var(--transition) ease-out;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .layout--nav-open .sidebar {
+        transform: translateX(0);
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .nav-toggle {
+        display: inline-flex;
+    }
+
+    .layout--nav-open .sidebar-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 15;
+        background: rgba(0, 0, 0, 0.35);
+    }
+
     .content {
         padding: 1rem 1rem 2rem;
+    }
+}
+
+/* Motion is the drawer's only animation; anyone who has asked for less does
+   not need it to understand that the menu opened. */
+@media (prefers-reduced-motion: reduce) {
+    .sidebar {
+        transition: none;
     }
 }
