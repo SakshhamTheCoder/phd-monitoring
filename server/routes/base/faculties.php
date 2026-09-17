@@ -16,9 +16,8 @@ Route::get('/upload-faculty', [FacultyController::class, 'showUploadForm'])->nam
 Route::post('/upload-faculty', [FacultyController::class, 'upload'])->name('faculty.upload');
 Route::get('/filters', [FacultyController::class, 'listFilters']);
 
-// The research profile and its publications sit behind a switch. The faculty
-// directory above does not, because it predates the module. See FeatureFlag.
-Route::middleware(['auth:sanctum', 'feature:research_profile'])->group(function () {
+// The faculty profile and its publications.
+Route::middleware('auth:sanctum')->group(function () {
     Route::get('/{facultyCode}/profile', [FacultyProfileController::class, 'show']);
     Route::post('/{facultyCode}/profile', [FacultyProfileController::class, 'update']);
     Route::post('/{facultyCode}/profile/sync', [FacultyProfileController::class, 'sync']);
