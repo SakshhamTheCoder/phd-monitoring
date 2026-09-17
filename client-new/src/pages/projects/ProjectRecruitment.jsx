@@ -9,6 +9,7 @@ import CustomModal from '../../components/forms/modal/CustomModal';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import { toast } from 'react-toastify';
 import './ProjectRecruitment.css';
+import PageHeader from '../../components/pageHeader/PageHeader';
 
 const emptyPos = {
   type: '', title: '', openings: 1, status: 'Open', eligibility: '', skills: '',
@@ -133,17 +134,13 @@ const ProjectRecruitment = () => {
         <button className="pr-back-link" onClick={() => navigate(`/projects/${id}`)}>
           <i className="fa fa-arrow-left"></i> BACK TO PROJECT
         </button>
-        <div className="page-header">
-          <div>
-            <h1 className="page-title">Recruitment: {project.title.length > 50 ? project.title.slice(0, 50) + '...' : project.title}</h1>
-            <p className="page-subtitle">Manage positions and applications for this project.</p>
-          </div>
-          <div className="page-actions">
-            {canEdit && (
+        <PageHeader
+          title={`Recruitment: ${project.title.length > 50 ? project.title.slice(0, 50) + '...' : project.title}`}
+          subtitle="Manage positions and applications for this project."
+          actions={<>{canEdit && (
               <CustomButton text="Post Opening +" onClick={() => (showPostForm ? closePostForm() : openAddPos())} />
-            )}
-          </div>
-        </div>
+            )}</>}
+        />
 
         {/* Post / Edit Opening Form */}
         {showPostForm && (
@@ -151,37 +148,37 @@ const ProjectRecruitment = () => {
             <h3 className="pr-card-title"><i className="fa fa-bullhorn"></i> {editingPosIdx !== null ? 'Edit Opening' : 'Post New Opening'}</h3>
             <div className="pr-form-grid">
               <div className="pr-field">
-                <label>Position Type *</label>
-                <select value={posForm.type} onChange={e => setPosForm({...posForm, type: e.target.value})}>
+                <label htmlFor="project-recruitment-position-type">Position Type *</label>
+                <select id="project-recruitment-position-type" value={posForm.type} onChange={e => setPosForm({...posForm, type: e.target.value})}>
                   <option value="">Select type</option>
                   {positionTypes.map(p => <option key={p} value={p}>{p}</option>)}
                 </select>
               </div>
               <div className="pr-field">
-                <label>Position Title *</label>
-                <input type="text" value={posForm.title} onChange={e => setPosForm({...posForm, title: e.target.value})} placeholder="e.g. Junior Research Fellow — NAS Project" />
+                <label htmlFor="project-recruitment-position-title">Position Title *</label>
+                <input id="project-recruitment-position-title" type="text" value={posForm.title} onChange={e => setPosForm({...posForm, title: e.target.value})} placeholder="e.g. Junior Research Fellow — NAS Project" />
               </div>
-              <div className="pr-field"><label>Number of Openings</label><input type="number" min="1" value={posForm.openings} onChange={e => setPosForm({...posForm, openings: e.target.value})} /></div>
+              <div className="pr-field"><label htmlFor="project-recruitment-number-of-openings">Number of Openings</label><input type="number" min="1" value={posForm.openings} onChange={e => setPosForm({...posForm, openings: e.target.value})} /></div>
               <div className="pr-field">
-                <label>Status</label>
-                <select value={posForm.status} onChange={e => setPosForm({...posForm, status: e.target.value})}>
+                <label htmlFor="project-recruitment-status">Status</label>
+                <select id="project-recruitment-status" id="project-recruitment-number-of-openings" value={posForm.status} onChange={e => setPosForm({...posForm, status: e.target.value})}>
                   <option value="Open">Open</option>
                   <option value="Closed">Closed</option>
                 </select>
               </div>
-              <div className="pr-field"><label>Eligibility</label><input type="text" value={posForm.eligibility} onChange={e => setPosForm({...posForm, eligibility: e.target.value})} placeholder="e.g. M.Tech in CS/ECE" /></div>
-              <div className="pr-field"><label>Required Skills</label><input type="text" value={posForm.skills} onChange={e => setPosForm({...posForm, skills: e.target.value})} placeholder="e.g. Python, PyTorch, ML" /></div>
-              <div className="pr-field"><label>Min CGPA</label><input type="text" value={posForm.cgpa} onChange={e => setPosForm({...posForm, cgpa: e.target.value})} placeholder="e.g. 7.5" /></div>
-              <div className="pr-field"><label>Stipend</label><input type="text" value={posForm.stipend} onChange={e => setPosForm({...posForm, stipend: e.target.value})} placeholder="e.g. ₹31,000/month" /></div>
-              <div className="pr-field"><label>Application Deadline</label><input type="date" value={posForm.deadline} onChange={e => setPosForm({...posForm, deadline: e.target.value})} /></div>
+              <div className="pr-field"><label htmlFor="project-recruitment-eligibility">Eligibility</label><input type="text" value={posForm.eligibility} onChange={e => setPosForm({...posForm, eligibility: e.target.value})} placeholder="e.g. M.Tech in CS/ECE" /></div>
+              <div className="pr-field"><label htmlFor="project-recruitment-required-skills">Required Skills</label><input type="text" value={posForm.skills} onChange={e => setPosForm({...posForm, skills: e.target.value})} placeholder="e.g. Python, PyTorch, ML" /></div>
+              <div className="pr-field"><label htmlFor="project-recruitment-min-cgpa">Min CGPA</label><input id="project-recruitment-min-cgpa" type="text" value={posForm.cgpa} onChange={e => setPosForm({...posForm, cgpa: e.target.value})} placeholder="e.g. 7.5" /></div>
+              <div className="pr-field"><label htmlFor="project-recruitment-stipend">Stipend</label><input id="project-recruitment-stipend" type="text" value={posForm.stipend} onChange={e => setPosForm({...posForm, stipend: e.target.value})} placeholder="e.g. ₹31,000/month" /></div>
+              <div className="pr-field"><label htmlFor="project-recruitment-application-deadline">Application Deadline</label><input id="project-recruitment-application-deadline" type="date" value={posForm.deadline} onChange={e => setPosForm({...posForm, deadline: e.target.value})} /></div>
               <div className="pr-field">
-                <label>Advertisement PDF</label>
-                <input type="file" accept=".pdf" ref={adRef} onChange={handleAdvertisement} />
+                <label htmlFor="project-recruitment-advertisement-pdf">Advertisement PDF</label>
+                <input id="project-recruitment-advertisement-pdf" id="project-recruitment-required-skills" id="project-recruitment-eligibility" type="file" accept=".pdf" ref={adRef} onChange={handleAdvertisement} />
                 {posForm.advertisementName
                   ? <span className="pr-field-hint"><i className="fa fa-check-circle"></i> {posForm.advertisementName}</span>
                   : posForm.advertisementPath && <a className="pr-field-hint" href={fileUrl(posForm.advertisementPath)} target="_blank" rel="noopener noreferrer"><i className="fa fa-file-pdf-o"></i> Current advertisement</a>}
               </div>
-              <div className="pr-field full"><label>Job Description</label><textarea rows="4" value={posForm.description} onChange={e => setPosForm({...posForm, description: e.target.value})} placeholder="Describe the role, responsibilities, and what the candidate will work on — this is shown to students on the Openings portal." /></div>
+              <div className="pr-field full"><label htmlFor="project-recruitment-job-description">Job Description</label><textarea id="project-recruitment-job-description" rows="4" value={posForm.description} onChange={e => setPosForm({...posForm, description: e.target.value})} placeholder="Describe the role, responsibilities, and what the candidate will work on — this is shown to students on the Openings portal." /></div>
             </div>
             <div className="pr-form-actions">
               <button className="pr-btn-outline" onClick={closePostForm}>Cancel</button>

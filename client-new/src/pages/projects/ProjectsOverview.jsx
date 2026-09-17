@@ -8,6 +8,7 @@ import CustomModal from '../../components/forms/modal/CustomModal';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import FilterBar from '../../components/filterBar/FilterBar';
 import './ProjectsOverview.css';
+import PageHeader from '../../components/pageHeader/PageHeader';
 
 const emptyStats = { active: 0, completed: 0, totalFunding: 0, consultancy: 0, industry: 0, international: 0 };
 
@@ -65,15 +66,11 @@ const ProjectsOverview = () => {
     <Layout>
       <div className="po-container">
         {/* Page Header */}
-        <div className="page-header">
-          <div>
-            <h1 className="page-title">Projects Overview</h1>
-            <p className="page-subtitle">Monitoring all ongoing research initiatives and funding channels.</p>
-          </div>
-          <div className="page-actions">
-            <CustomButton text="Create Project +" onClick={() => navigate('/projects/create')} />
-          </div>
-        </div>
+        <PageHeader
+          title="Projects Overview"
+          subtitle="Monitoring all ongoing research initiatives and funding channels."
+          actions={<><CustomButton text="Create Project +" onClick={() => navigate('/projects/create')} /></>}
+        />
 
         {/* Stats Cards */}
         <div className="po-stats-grid">
@@ -120,7 +117,7 @@ const ProjectsOverview = () => {
         <div className="po-filter-bar">
           <FilterBar onSearch={(q) => { setLoading(true); setQuery(q); }} />
           <button className="po-export-btn" onClick={handleExportCSV}>
-            <i className="fa fa-download"></i> EXPORT CSV
+            <i className="fa fa-download" aria-hidden="true"></i> Export CSV
           </button>
         </div>
 

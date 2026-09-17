@@ -8,6 +8,7 @@ import Tabs from '../../components/tabs/Tabs';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import { toast } from 'react-toastify';
 import './Openings.css';
+import PageHeader from '../../components/pageHeader/PageHeader';
 
 const emptyApply = { name: '', email: '', phone: '', degree: '', institute: '', cgpa: '', skills: '', research: '', resume: '', resumeFile: null, coverNote: '' };
 
@@ -121,12 +122,10 @@ const Openings = () => {
   return (
     <Layout>
       <div className="op-container">
-        <div className="page-header">
-          <div>
-            <h1 className="page-title">Openings</h1>
-            <p className="page-subtitle">Browse research positions and internships, and apply directly through the portal.</p>
-          </div>
-        </div>
+        <PageHeader
+          title="Openings"
+          subtitle="Browse research positions and internships, and apply directly through the portal."
+        />
 
         <Tabs
           value={tab}
@@ -218,21 +217,21 @@ const Openings = () => {
 
               <div className="op-modal-section">Contact Details</div>
               <div className="op-form-grid">
-                <div className="op-field"><label>Full Name *</label><input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Your full name" /></div>
-                <div className="op-field"><label>Email *</label><input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" /></div>
-                <div className="op-field"><label>Phone *</label><input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+91-…" /></div>
+                <div className="op-field"><label htmlFor="openings-full-name">Full Name *</label><input id="openings-full-name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Your full name" /></div>
+                <div className="op-field"><label htmlFor="openings-email">Email *</label><input id="openings-email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" /></div>
+                <div className="op-field"><label htmlFor="openings-phone">Phone *</label><input id="openings-phone" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+91-…" /></div>
               </div>
 
               <div className="op-modal-section">Academic Details</div>
               <div className="op-form-grid">
-                <div className="op-field"><label>Degree *</label><input value={form.degree} onChange={e => setForm({ ...form, degree: e.target.value })} placeholder="e.g. M.Tech CSE" /></div>
-                <div className="op-field"><label>Institute *</label><input value={form.institute} onChange={e => setForm({ ...form, institute: e.target.value })} placeholder="e.g. TIET" /></div>
-                <div className="op-field"><label>CGPA *</label><input value={form.cgpa} onChange={e => setForm({ ...form, cgpa: e.target.value })} placeholder="e.g. 8.5" /></div>
+                <div className="op-field"><label htmlFor="openings-degree">Degree *</label><input id="openings-degree" value={form.degree} onChange={e => setForm({ ...form, degree: e.target.value })} placeholder="e.g. M.Tech CSE" /></div>
+                <div className="op-field"><label htmlFor="openings-institute">Institute *</label><input id="openings-institute" value={form.institute} onChange={e => setForm({ ...form, institute: e.target.value })} placeholder="e.g. TIET" /></div>
+                <div className="op-field"><label htmlFor="openings-cgpa">CGPA *</label><input id="openings-cgpa" value={form.cgpa} onChange={e => setForm({ ...form, cgpa: e.target.value })} placeholder="e.g. 8.5" /></div>
               </div>
 
               <div className="op-modal-section">Profile</div>
-              <div className="op-field full"><label>Skills (comma separated)</label><input value={form.skills} onChange={e => setForm({ ...form, skills: e.target.value })} placeholder="e.g. Python, ML, IoT" /></div>
-              <div className="op-field full"><label>Research Interest</label><input value={form.research} onChange={e => setForm({ ...form, research: e.target.value })} placeholder="e.g. Edge AI" /></div>
+              <div className="op-field full"><label htmlFor="openings-skills-comma-separated">Skills (comma separated)</label><input id="openings-skills-comma-separated" value={form.skills} onChange={e => setForm({ ...form, skills: e.target.value })} placeholder="e.g. Python, ML, IoT" /></div>
+              <div className="op-field full"><label htmlFor="openings-research-interest">Research Interest</label><input id="openings-research-interest" value={form.research} onChange={e => setForm({ ...form, research: e.target.value })} placeholder="e.g. Edge AI" /></div>
               <div className="op-field full">
                 <label>Resume *</label>
                 <button type="button" className="op-upload" onClick={() => resumeRef.current && resumeRef.current.click()}>
@@ -240,7 +239,7 @@ const Openings = () => {
                 </button>
                 <input type="file" ref={resumeRef} style={{ display: 'none' }} accept=".pdf,.doc,.docx" onChange={handleResume} />
               </div>
-              <div className="op-field full"><label>Cover Note</label><textarea rows="3" value={form.coverNote} onChange={e => setForm({ ...form, coverNote: e.target.value })} placeholder="A short statement of purpose (optional)…" /></div>
+              <div className="op-field full"><label htmlFor="openings-cover-note">Cover Note</label><textarea id="openings-cover-note" rows="3" value={form.coverNote} onChange={e => setForm({ ...form, coverNote: e.target.value })} placeholder="A short statement of purpose (optional)…" /></div>
 
               <div className="modal-actions">
                 <CustomButton text="Cancel" variant="secondary" onClick={() => setApplyFor(null)} />
