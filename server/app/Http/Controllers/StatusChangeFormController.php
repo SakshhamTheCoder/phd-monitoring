@@ -149,7 +149,8 @@ class StatusChangeFormController extends Controller
             $formInstance->reason = $request->reason;
             $prevStatusChanges = $user->student->statusChanges();
             if ($prevStatusChanges->count() > 2) {
-               throw new \Illuminate\Validation\ValidationException(['reason' => 'You have already changed your status twice']);
+               // The constructor takes a Validator, not an array; given one it crashed with a 500.
+               throw \Illuminate\Validation\ValidationException::withMessages(['reason' => 'You have already changed your status twice.']);
             }
         });
    
