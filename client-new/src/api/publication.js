@@ -16,7 +16,9 @@ export const APIaddPublication = async (body,close,url=false) => {
             if(close){
                 close();
             }
-        } else {
+        } else if (!result.response?.message && !result.response?.errors) {
+            // customFetch has already shown the server's reason; only say
+            // something when it had none.
             toast.error("Failed to add publication.");
         }
     } catch (error) {
@@ -60,7 +62,9 @@ export const APIupdatePublication = async (id, body, close, url = false) => {
             if (close) {
                 close();
             }
-        } else {
+        } else if (!result.response?.message && !result.response?.errors) {
+            // customFetch has already shown the server's reason; only say
+            // something when it had none.
             toast.error("Failed to update publication.");
         }
     } catch (error) {

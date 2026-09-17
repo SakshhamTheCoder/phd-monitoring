@@ -125,14 +125,14 @@ const ShowPublications = ({
    const renderActions = (publicationId, publicationType) => (
        <>
            {enableEdit && (
-               <a onClick={() => handleEdit(publicationId, publicationType)} style={{ cursor: "pointer", marginRight: 10, color: "#991b1b" }}>
-                   <i className="fa fa-pencil" ></i>
-               </a>
+               <button type="button" className="icon-action" aria-label="Edit" title="Edit" onClick={() => handleEdit(publicationId, publicationType)}>
+                   <i className="fa fa-pencil" aria-hidden="true"></i>
+               </button>
            )}
            {enableDelete && (
-               <a onClick={() => onDelete && onDelete(publicationId, publicationType)} style={{ cursor: "pointer", color: "#991b1b" }}>
-                   <i className="fa fa-trash-o"></i>
-               </a>
+               <button type="button" className="icon-action" aria-label="Delete" title="Delete" onClick={() => onDelete && onDelete(publicationId, publicationType)}>
+                   <i className="fa fa-trash-o" aria-hidden="true"></i>
+               </button>
            )}
        </>
    );

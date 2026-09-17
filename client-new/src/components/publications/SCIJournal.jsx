@@ -57,7 +57,7 @@ const SCIJournal = ({callback,updateValue,data={}}) => {
 
             
             <GridContainer elements={[
-               <CustomButton text="Submit" onClick={()=>{console.log("Inside",body);callback(body)}}/>
+               <CustomButton text="Submit" onClick={() => callback(body)}/>
             ]}/>
         </>
     );

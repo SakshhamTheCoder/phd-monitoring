@@ -1,13 +1,10 @@
 /* Layout comes from .page-header in styles/ui.css; the gutter from the shell. */
-.publication-top-bar-right{
-    width: 200px;
-}
 .delete-confirm {
   padding: 8px 4px;
 }
 
 .delete-confirm-text {
-  font-size: 15px;
+  font-size: var(--text-base);
   color: #374151;
   margin: 0 0 22px;
   line-height: 1.5;
@@ -22,8 +19,8 @@
 .delete-cancel-btn,
 .delete-confirm-btn {
   padding: 8px 18px;
-  border-radius: 6px;
-  font-size: 14px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
   border: 1px solid transparent;
