@@ -302,6 +302,10 @@ class DepartmentController extends Controller
                         'message' => 'You do not have permission to update this area'
                     ], 403);
                 }
+            } elseif (!$loggedInUser->may('can_add_department')) {
+                // Everyone else needs what adding an area needs. Without this any
+                // signed-in account could rename or delete any area.
+                return $this->refuse();
             }
 
             $area->name = $request->name;
@@ -351,6 +355,10 @@ class DepartmentController extends Controller
                         'message' => 'You do not have permission to delete this area'
                     ], 403);
                 }
+            } elseif (!$loggedInUser->may('can_add_department')) {
+                // Everyone else needs what adding an area needs. Without this any
+                // signed-in account could rename or delete any area.
+                return $this->refuse();
             }
 
             // Faculty are listed under this area by id, so deleting it would

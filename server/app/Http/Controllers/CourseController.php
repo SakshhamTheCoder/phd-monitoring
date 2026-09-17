@@ -90,11 +90,48 @@ class CourseController extends Controller
         }
     }
 
+    // Mirrors ACCESS.courseManagement on the client. add, update, delete and
+    // import carried no check, so any signed-in account could change courses.
+    private const COURSE_MANAGERS = ['admin', 'hod', 'phd_coordinator'];
+
+    private function managesCourses(): bool
+    {
+        return in_array(Auth::user()?->current_role?->role, self::COURSE_MANAGERS, true);
+    }
+
+    /**
+     * The one department a head or coordinator manages courses for, matching
+     * what list() shows them. Null for admin, who manages every department;
+     * 0 when the account is not attached to a department at all.
+     */
+    private function departmentScope(): ?int
+    {
+        $user = Auth::user();
+        $facultyCode = $user->faculty?->faculty_code;
+
+        return match ($user->current_role->role) {
+            'hod' => (int) Department::where('hod_id', $facultyCode)->value('id'),
+            'phd_coordinator' => (int) \App\Models\PhdCoordinator::where('faculty_id', $facultyCode)->value('department_id'),
+            default => null,
+        };
+    }
+
     /**
      * Add new course
      */
+
     public function add(Request $request)
     {
+        if (!$this->managesCourses()) {
+            return $this->refuse();
+        }
+        $scope = $this->departmentScope();
+        if ($scope === 0) {
+            return $this->refuse('You are not attached to a department.');
+        }
+        if ($scope) {
+            $request->merge(['department_id' => $scope]);
+        }
         try {
             $loggedInUser = Auth::user();
             
@@ -130,6 +167,16 @@ class CourseController extends Controller
      */
     public function update(Request $request, $id)
     {
+        if (!$this->managesCourses()) {
+            return $this->refuse();
+        }
+        $scope = $this->departmentScope();
+        if ($scope === 0) {
+            return $this->refuse('You are not attached to a department.');
+        }
+        if ($scope) {
+            $request->merge(['department_id' => $scope]);
+        }
         try {
             $request->validate([
                 'course_code' => 'required|string|unique:courses,course_code,' . $id,
@@ -143,6 +190,10 @@ class CourseController extends Controller
                 return response()->json([
                     'message' => 'Course not found'
                 ], 404);
+            }
+
+            if ($scope && (int) $course->department_id !== $scope) {
+                return $this->refuse('This course belongs to another department.');
             }
 
             $course->course_code = $request->course_code;
@@ -169,12 +220,20 @@ class CourseController extends Controller
      */
     public function delete($id)
     {
+        if (!$this->managesCourses()) {
+            return $this->refuse();
+        }
         try {
             $course = Course::find($id);
             if (!$course) {
                 return response()->json([
                     'message' => 'Course not found'
                 ], 404);
+            }
+
+            $scope = $this->departmentScope();
+            if ($scope !== null && (int) $course->department_id !== $scope) {
+                return $this->refuse('This course belongs to another department.');
             }
 
             // Check if any students are enrolled
@@ -231,6 +290,9 @@ class CourseController extends Controller
      */
     public function importCoursesFromCSV(Request $request)
     {
+        if (!$this->managesCourses()) {
+            return $this->refuse();
+        }
         try {
             $request->validate([
                 'csv_file' => 'required|file|mimes:csv,txt',
@@ -255,7 +317,7 @@ class CourseController extends Controller
                     $course->course_code = trim($row[0]);
                     $course->course_name = trim($row[1]);
                     $course->credits = floatval(trim($row[2]));
-                    $course->department_id = intval(trim($row[3]));
+                    $course->department_id = $this->departmentScope() ?: intval(trim($row[3]));
                     $course->save();
                     $imported++;
                 } catch (\Exception $e) {
