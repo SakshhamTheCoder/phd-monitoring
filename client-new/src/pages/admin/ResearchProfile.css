@@ -1,11 +1,11 @@
 .rp-container {
-    font-family: 'Inter', sans-serif;
+    font-family: inherit;
 }
 
 .loading-state {
     padding: 2rem;
     text-align: center;
-    font-size: 1.2rem;
+    font-size: var(--text-xl);
     color: #666;
 }
 
@@ -23,7 +23,7 @@
     padding: 0 0.75rem;
     background: #fff;
     border: 1px solid #d1d5db;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     color: #6b7280;
     flex: 1 1 200px;
     min-width: 180px;
@@ -34,7 +34,7 @@
     border: none;
     outline: none;
     width: 100%;
-    font-size: 0.9rem;
+    font-size: var(--text-sm);
     font-weight: 400;
 }
 
@@ -81,7 +81,7 @@
     color: #FFF;
     border: none;
     padding: 0.75rem 1.5rem;
-    border-radius: 8px;
+    border-radius: var(--radius);
     font-weight: 600;
     cursor: pointer;
 }
@@ -91,7 +91,7 @@
 /* Filter Bar */
 .rp-filter-bar {
     background: #F0F0F0;
-    border-radius: 8px;
+    border-radius: var(--radius);
     padding: 1rem 1.5rem;
     display: flex;
     justify-content: space-between;
@@ -118,8 +118,8 @@
     background: var(--primary-color);
     color: #FFF;
     padding: 0.2rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: var(--text-2xs);
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -131,7 +131,7 @@
     color: #FFF;
     font-weight: bold;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: var(--text-md);
     line-height: 1;
     padding: 0;
 }
@@ -142,8 +142,12 @@
     border: none;
     color: var(--primary-color);
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: var(--text-sm);
     cursor: pointer;
+    /* Same height as the controls beside it. */
+    padding: 0.55rem 0.75rem;
+    min-height: 38px;
+    border-radius: var(--radius);
 }
 
 /* Tables */
@@ -154,7 +158,7 @@
 .rp-table-section h3 {
     margin-bottom: 1rem;
     color: #1f2937;
-    font-size: 1.2rem;
+    font-size: var(--text-xl);
 }
 
 /* body sets font-weight 600 app-wide, so every publication cell inherits
@@ -199,32 +203,32 @@
 
 
 
-.status-badge {
+.rp-container .status-badge {
     padding: 0.25rem 0.75rem;
-    border-radius: 4px;
-    font-size: 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: var(--text-2xs);
     font-weight: 600;
     text-transform: uppercase;
 }
 
-.status-badge.pending {
+.rp-container .status-badge.pending {
     background: #fef08a;
     color: #a16207;
 }
 
-.status-badge.rejected {
+.rp-container .status-badge.rejected {
     background: #fecaca;
     color: #b91c1c;
 }
 
-.status-badge.approved,
-.status-badge.granted {
+.rp-container .status-badge.approved,
+.rp-container .status-badge.granted {
     background: #bbf7d0;
     color: #15803d;
 }
 
 .small-text {
-    font-size: 0.75rem;
+    font-size: var(--text-2xs);
     color: #888;
     font-style: italic;
 }
@@ -234,7 +238,7 @@
 
 
 .rp-filter-actions { display: flex; align-items: center; gap: 0.6rem; }
-.rp-add-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 0.9rem; background: var(--primary-color); color: #FFF; border: none; border-radius: 8px; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.04em; cursor: pointer; }
+.rp-add-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 10px 15px; background: var(--primary-color); color: #FFF; border: none; border-radius: var(--radius); font-size: var(--text-sm); font-weight: 600; letter-spacing: 0.04em; cursor: pointer; }
 .rp-add-btn:hover { background: var(--hover-color); }
 
 .rp-row-actions { white-space: nowrap; }
@@ -255,7 +259,7 @@
     padding: 10px 16px;
     background: #eef4ff;
     border: 1px solid #c7d9f7;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
 }
 
 .rp-bulk-count {
@@ -266,14 +270,14 @@
 .rp-bulk-bar select {
     padding: 6px 10px;
     border: 1px solid #c7d9f7;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     background: #fff;
 }
 
 .rp-bulk-apply,
 .rp-bulk-clear {
     padding: 6px 14px;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     border: 1px solid transparent;
     cursor: pointer;
 }
@@ -303,11 +307,11 @@
 .rp-select-all {
     margin-left: 12px;
     padding: 2px 8px;
-    font-size: 12px;
+    font-size: var(--text-2xs);
     font-weight: 400;
     background: none;
     border: 1px solid #c7d9f7;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     color: #1b3a6b;
     cursor: pointer;
 }
@@ -347,22 +351,22 @@
 .faculty-container {
     background: #ffffff;
     padding: 2rem;
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
     max-width: 1100px;
     margin: auto;
   }
   
   .faculty-container h2 {
     margin-bottom: 0.3rem;
-    font-size: 1.5rem;
+    font-size: var(--text-2xl);
     line-height: 1.25;
     font-weight: 600;
     color: #111827;
   }
   
   .faculty-sub {
-    font-size: 0.95rem;
+    font-size: var(--text-base);
     color: #6b7280;
     margin-bottom: 0;
   }
@@ -372,7 +376,7 @@
   }
   
   .faculty-table-section h3 {
-    font-size: 1.2rem;
+    font-size: var(--text-xl);
     margin-bottom: 0.8rem;
     color: #1f2937;
   }
@@ -445,8 +449,8 @@
     padding: 0.6rem 1rem;
     background: #f9fafb;
     border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    font-size: 0.85rem;
+    border-radius: var(--radius);
+    font-size: var(--text-sm);
     font-weight: 400;
     color: #6b7280;
 }
@@ -462,8 +466,8 @@
 
 .rp-sync-btn {
     padding: 0.4rem 0.9rem;
-    font-size: 0.85rem;
-    border-radius: 6px;
+    font-size: var(--text-sm);
+    border-radius: var(--radius-sm);
 }
 
 /* Three tallies, read at a glance beside the filters rather than as three
@@ -473,13 +477,13 @@
     flex-wrap: wrap;
     gap: 1.25rem;
     margin-bottom: 1rem;
-    font-size: 0.85rem;
+    font-size: var(--text-sm);
     font-weight: 400;
     color: #6b7280;
 }
 
 .rp-tally strong {
-    font-size: 0.95rem;
+    font-size: var(--text-base);
     font-weight: 700;
     color: #111827;
     margin-right: 0.35rem;
@@ -510,7 +514,7 @@
 
 .rp-export-btn {
     padding: 0.5rem 0.25rem;
-    font-size: 0.85rem;
+    font-size: var(--text-sm);
 }
 
 .rp-filter-bar {
@@ -539,7 +543,7 @@
 }
 
 .rp-filter label {
-    font-size: 0.75rem;
+    font-size: var(--text-2xs);
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -551,9 +555,9 @@
     height: 38px;
     padding: 0 0.6rem;
     border: 1px solid #d1d5db;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     background: #fff;
-    font-size: 0.9rem;
+    font-size: var(--text-sm);
     font-weight: 400;
     color: #374151;
 }
@@ -570,13 +574,13 @@
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    font-size: 0.85rem;
+    font-size: var(--text-sm);
     letter-spacing: 0;
 }
 
 .rp-export-btn {
     border: 1px solid #d1d5db;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     background: #fff;
     padding: 0 0.9rem;
 }
@@ -610,7 +614,7 @@
     margin-top: 1.5rem;
     padding: 1.25rem;
     border: 1px solid #e5e7eb;
-    border-radius: 12px;
+    border-radius: var(--radius-lg);
     background: #fafafa;
 }
 
@@ -624,7 +628,7 @@
     margin: 1.5rem 0 1rem;
     padding-top: 1.25rem;
     border-top: 1px solid #e5e7eb;
-    font-size: 0.95rem;
+    font-size: var(--text-base);
     color: #1f2937;
 }
 

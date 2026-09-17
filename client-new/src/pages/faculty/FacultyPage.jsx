@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import { useLoading } from '../../context/LoadingContext';
-import { useFeatures } from '../../context/FeaturesContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { isNetworkError, NETWORK_ERROR_MESSAGE } from '../../api/base';
@@ -12,7 +11,7 @@ import CustomModal from '../../components/forms/modal/CustomModal';
 import FacultyForm from '../../components/facultyForm/FacultyForm'; // assume it's placed here
 import { baseURL } from '../../api/urls';
 import CustomButton from '../../components/forms/fields/CustomButton';
-import useCapabilities from '../../hooks/useCapabilities';
+import useCapabilities from '../../context/CapabilitiesContext';
 
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
 import { column } from '../../components/bulkImport/columns';
@@ -28,7 +27,6 @@ const FacultyPage = () => {
   const { setLoading } = useLoading();
   const location = useLocation();
   const navigate = useNavigate();
-  const features = useFeatures();
   const can = useCapabilities();
 
   const handleFilterChange = (newFilter) => {
@@ -48,7 +46,6 @@ const FacultyPage = () => {
       // const res = await customFetch(baseURL + `/faculty/${id}`, 'GET');
      
         setEditData(data);
-        console.log(data);
         setIsOpen(true);
     
       setLoading(false);
@@ -193,7 +190,6 @@ const FacultyPage = () => {
       toast.success(`Import completed: ${totalSuccess} created, ${totalUpdated} updated, ${totalErrors} errors`);
       
       if (allErrors.length > 0) {
-        console.log('Import errors:', allErrors);
         toast.warning(`${totalErrors} rows failed. Check console for details.`);
       }
 
@@ -225,7 +221,7 @@ const FacultyPage = () => {
             enableApproval={false}
             // A row leads to the profile, never to the edit form. Editing lives
             // in the actions menu, where the role check is.
-            rowClickable={!!features.research_profile}
+            rowClickable={true}
             customOpenForm={(facultyData) =>
               navigate(`/faculty/${facultyData.faculty_code}/profile`)
             }
@@ -245,15 +241,15 @@ const FacultyPage = () => {
             
             actions={[
               ...(can('can_manage_faculties') ? [{
-                icon: <i className="fa-solid fa-pen-to-square"></i>,
+                icon: <i className="fa fa-pencil-square-o"></i>,
                 tooltip: 'Edit',
                 onClick: (facultyData) => openForm(facultyData),
               }] : []),
-              ...(features.research_profile ? [{
+              {
                 icon: <i className="fa fa-user-circle"></i>,
                 tooltip: 'View profile',
                 onClick: (facultyData) => navigate(`/faculty/${facultyData.faculty_code}/profile`),
-              }] : []),
+              },
             ]}
           />
           <CustomModal
