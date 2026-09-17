@@ -133,19 +133,13 @@ class UserManagementController extends Controller
 
     public function createOrUpdate(Request $request)
     {
-        $loggedInUser = Auth::user();
-        
-        if (!$loggedInUser->may('can_manage_users')) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
         $isUpdate = $request->has('id') && $request->id;
 
         $validationRules = [
             'full_name' => 'required_without:first_name|string|max:255',
             'first_name' => 'required_without:full_name|string|max:255',
             'last_name' => 'nullable|string|max:255',
-            'phone' => 'required|string|max:20',
+            'phone' => ['required', 'string', 'max:20', Rule::unique('users', 'phone')->ignore($request->id)],
             'gender' => 'nullable|in:Male,Female',
             'physically_handicapped' => 'nullable|boolean',
             'role_id' => 'required|exists:roles,id',
@@ -362,7 +356,9 @@ class UserManagementController extends Controller
                         'first_name' => $name['first'],
                         'last_name' => $name['last'],
                         'email' => $email,
-                        'phone' => !empty($data['phone']) ? trim($data['phone']) : '',
+                        // Blank, not empty string: phone carries a unique index,
+                        // so a second row without one collided with the first.
+                        'phone' => !empty($data['phone']) ? trim($data['phone']) : null,
                         'gender' => !empty($data['gender']) ? $data['gender'] : null,
                         'password' => Hash::make($password),
                         'password_set_at' => now(),

@@ -232,7 +232,7 @@ class UgStudentController extends Controller
         }
 
         $data = $request->validate([
-            'phone' => 'required|string|max:20',
+            'phone' => ['required', 'string', 'max:20', Rule::unique('users', 'phone')->ignore($user->id)],
             'gender' => 'required|in:Male,Female',
             'roll_no' => ['required', 'string', 'max:50', Rule::unique('ug_students')->ignore($record->id)],
             'branch_id' => 'required|exists:ug_branches,id',
@@ -255,7 +255,7 @@ class UgStudentController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'nullable|string|max:255',
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($account?->id)],
-            'phone' => 'nullable|string|max:20',
+            'phone' => ['nullable', 'string', 'max:20', Rule::unique('users', 'phone')->ignore($account?->id)],
             'gender' => 'nullable|in:Male,Female',
             'roll_no' => ['required', 'string', 'max:50', Rule::unique('ug_students')->ignore($account?->ugStudent?->id)],
             'branch_id' => 'required|exists:ug_branches,id',

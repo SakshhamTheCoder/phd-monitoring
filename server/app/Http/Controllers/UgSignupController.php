@@ -74,7 +74,7 @@ class UgSignupController extends Controller
                     $fail('Use your institute address, the one carrying your programme and year, like name_be23@thapar.edu.');
                 }
             }],
-            'phone' => 'required|string|max:20',
+            'phone' => 'required|string|max:20|unique:users,phone',
             'gender' => 'required|in:Male,Female',
             'password' => ($vouchedFor ? 'nullable' : 'required') . '|string|min:8|confirmed',
             'roll_no' => 'required|string|max:50|unique:ug_students,roll_no',
