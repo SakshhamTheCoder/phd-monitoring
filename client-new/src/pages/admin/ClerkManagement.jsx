@@ -149,7 +149,6 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
 
       toast.success(`Import completed: ${totalSuccess} created, ${totalUpdated} updated, ${totalErrors} errors.`);
       if (allErrors.length > 0) {
-        console.log('Import errors:', allErrors);
         toast.warning(`${totalErrors} rows failed. Check console for details.`);
       }
 
@@ -266,7 +265,7 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
                           setOpenMenu(openMenu === idx ? null : idx);
                         }}
                       >
-                        <i className="fa-solid fa-ellipsis-vertical"></i>
+                        <i className="fa fa-ellipsis-v"></i>
                       </button>
                       {openMenu === idx && (
                         <div className="row-actions-menu" onClick={(e) => e.stopPropagation()}>
@@ -279,7 +278,7 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
                             }}
                           >
                             <span className="ra-icon">
-                              <i className="fa-solid fa-users-gear"></i>
+                              <i className="fa fa-users"></i>
                             </span>
                             <span>Manage Departments</span>
                           </button>

@@ -12,6 +12,7 @@ import InputField from "../../components/forms/fields/InputField";
 import DropdownField from "../../components/forms/fields/DropdownField";
 import CustomModal from "../../components/forms/modal/CustomModal";
 import "./AdminFormManagement.css";
+import PageHeader from '../../components/pageHeader/PageHeader';
 
 const AdminFormManagement = () => {
   const [students, setStudents] = useState([]);
@@ -114,7 +115,6 @@ const AdminFormManagement = () => {
       );
       if (response.success) {
         setStudentForms(response.response.forms || []);
-        console.log(response.response.forms);
         setSelectedStudent(response.response.student);
       }
     } catch (error) {
@@ -166,7 +166,7 @@ const AdminFormManagement = () => {
         // Unlock the lock for the stage we're moving to
         const lockField = newStage === 'faculty' ? 'faculty' : newStage;
         if (lockRoles.includes(lockField)) {
-          await customFetch(
+          const unlocked = await customFetch(
             baseURL + "/admin/forms/update-control",
             "POST",
             {
@@ -177,8 +177,12 @@ const AdminFormManagement = () => {
             },
             false
           );
+          // The stage moved but whoever holds it cannot act until it unlocks.
+          if (!unlocked.success) {
+            toast.warn("Stage updated, but it could not be unlocked for the new step. Unlock it from the controls.");
+          }
         }
-        
+
         toast.success("Stage updated.");
         await fetchStudentForms(selectedStudent.roll_no);
         
@@ -473,12 +477,10 @@ const AdminFormManagement = () => {
   return (
     <Layout>
     <div className="admin-form-management">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Admin Form Management</h1>
-          <p className="page-subtitle">Manage form stages, locks, and availability per student</p>
-        </div>
-      </div>
+      <PageHeader
+        title="Admin Form Management"
+        subtitle="Manage form stages, locks, and availability per student"
+      />
 
       <div className="student-selector-section">
         <GridContainer
@@ -645,11 +647,11 @@ const AdminFormManagement = () => {
               <h3>Form Overview</h3>
               <div className="overview-grid">
                 <div className="overview-item">
-                  <label>Form Type</label>
+                  <label htmlFor="admin-form-management-form-type">Form Type</label>
                   <span className="form-type-badge">{selectedFormForManagement.form_type}</span>
                 </div>
                 <div className="overview-item">
-                  <label>Current Stage</label>
+                  <label htmlFor="admin-form-management-current-stage">Current Stage</label>
                   <span className="stage-badge">{selectedFormForManagement.general_form.stage}</span>
                 </div>
                 <div className="overview-item">
@@ -770,8 +772,8 @@ const AdminFormManagement = () => {
                     <div className="instance-card-body">
                       <div className="instance-controls">
                         <div className="control-group">
-                          <label>Stage</label>
-                          <select
+                          <label htmlFor="admin-form-management-stage">Stage</label>
+                          <select id="admin-form-management-stage" id="admin-form-management-current-stage" id="admin-form-management-form-type"
                             value={instance.stage}
                             onChange={(e) => {
                               const newStage = e.target.value;
@@ -812,8 +814,8 @@ const AdminFormManagement = () => {
                         </div>
 
                         <div className="control-group">
-                          <label>Current Step (Index in Steps)</label>
-                          <input
+                          <label htmlFor="admin-form-management-current-step-index-in-steps">Current Step (Index in Steps)</label>
+                          <input id="admin-form-management-current-step-index-in-steps"
                             type="number"
                             value={instance.current_step || 0}
                             min="0"
@@ -833,8 +835,8 @@ const AdminFormManagement = () => {
                         </div>
 
                         <div className="control-group">
-                          <label>Maximum Step (Max Reached)</label>
-                          <input
+                          <label htmlFor="admin-form-management-maximum-step-max-reached">Maximum Step (Max Reached)</label>
+                          <input id="admin-form-management-maximum-step-max-reached"
                             type="number"
                             value={instance.maximum_step || 0}
                             min={instance.current_step || 0}

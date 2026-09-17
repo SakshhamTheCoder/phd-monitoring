@@ -60,9 +60,9 @@ const LeaveQuotas = () => {
       <div className="filter-bar">
         <div className="filter-row" style={{ alignItems: 'flex-end' }}>
           <div className="input-field-container" style={{ minWidth: '160px' }}>
-            <label className="input-label" htmlFor="academic-quota">Academic quota</label>
+            <label className="input-label" htmlFor="leave-quotas-academic-quota">Academic quota</label>
             <input
-              id="academic-quota"
+              id="leave-quotas-academic-quota"
               type="number"
               min="0"
               max="365"
@@ -73,9 +73,9 @@ const LeaveQuotas = () => {
             />
           </div>
           <div className="input-field-container" style={{ minWidth: '160px' }}>
-            <label className="input-label" htmlFor="casual-quota">Casual quota</label>
+            <label className="input-label" htmlFor="leave-quotas-casual-quota">Casual quota</label>
             <input
-              id="casual-quota"
+              id="leave-quotas-casual-quota"
               type="number"
               min="0"
               max="365"
@@ -86,9 +86,9 @@ const LeaveQuotas = () => {
             />
           </div>
           <div className="input-field-container" style={{ minWidth: '190px' }}>
-            <label className="input-label" htmlFor="year-start-month">Quota year starts in</label>
+            <label className="input-label" htmlFor="leave-quotas-quota-year-starts-in">Quota year starts in</label>
             <select
-              id="year-start-month"
+              id="leave-quotas-quota-year-starts-in"
               className="input-field"
               value={form.year_start_month}
               onChange={(e) => setForm((prev) => ({ ...prev, year_start_month: e.target.value }))}

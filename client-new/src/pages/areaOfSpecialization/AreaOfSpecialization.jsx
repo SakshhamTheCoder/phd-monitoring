@@ -37,7 +37,7 @@ const AreaOfSpecialization = () => {
 
   const fetchDepartments = async () => {
     try {
-      const response = await customFetch(baseURL + '/departments', 'GET', {}, false);
+      const response = await customFetch(baseURL + '/departments?rows=1000', 'GET', {}, false);
       if (response.success || response.data) {
         const deptData = response.data || response.response?.data || [];
         setDepartments(
@@ -205,12 +205,12 @@ Data Science,CSED`;
           }
           actions={[
             {
-              icon: <i className="fa-solid fa-pen-to-square"></i>,
+              icon: <i className="fa fa-pencil-square-o"></i>,
               tooltip: 'Edit',
               onClick: (data) => openForm(data),
             },
             {
-              icon: <i className="fa-solid fa-trash"></i>,
+              icon: <i className="fa fa-trash"></i>,
               tooltip: 'Delete',
               onClick: (data) => handleDelete(data.id),
             },

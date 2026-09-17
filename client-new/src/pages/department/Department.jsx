@@ -9,7 +9,7 @@ import CustomModal from '../../components/forms/modal/CustomModal';
 import DepartmentManager from '../../components/departmentManager/DepartmentManager';
 import AddDepartmentForm from './AddDepartmentForm';
 import CustomButton from '../../components/forms/fields/CustomButton';
-import useCapabilities from '../../hooks/useCapabilities';
+import useCapabilities from '../../context/CapabilitiesContext';
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
 import { column } from '../../components/bulkImport/columns';
 import { customFetch } from '../../api/base';
@@ -38,7 +38,6 @@ const DepartmentPage = () => {
     if (data) {
       setLoading(true);
       setEditData(data);
-      console.log(data);
       setIsOpen(true);
       setLoading(false);
     } else {
@@ -116,7 +115,7 @@ CSED,Hod One,hod.one@thapar.edu,hcsed@thapar.edu,Adordc One,adordc.one@thapar.ed
             }
             actions={mayManage ? [
               {
-                icon: <i className="fa-solid fa-users-gear"></i>,
+                icon: <i className="fa fa-users"></i>,
                 tooltip: 'Manage HOD & Coordinators',
                 onClick: (deptData) => openForm(deptData),
               },

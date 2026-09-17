@@ -13,7 +13,7 @@ import { column } from "../../components/bulkImport/columns";
 import { toast } from "react-toastify";
 import { baseURL } from "../../api/urls";
 import { customFetch } from "../../api/base";
-import useCapabilities from "../../hooks/useCapabilities";
+import useCapabilities from '../../context/CapabilitiesContext';
 import Tabs from "../../components/tabs/Tabs";
 import UgStudentForm from "../../components/urf/UgStudentForm";
 import { apiUgStudentImport } from "../../api/urf";
@@ -159,7 +159,6 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
 
       toast.success(`Import completed: ${totalSuccess} created, ${totalUpdated} updated, ${totalErrors} errors`);
       if (allErrors.length > 0) {
-        console.log('Import errors:', allErrors);
         toast.warning(`${totalErrors} rows failed. Check console for details.`);
       }
 
@@ -225,6 +224,8 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
               <PagenationTable
                 key={ugRefreshKey}
                 endpoint="/ug-students"
+                // UG students have no profile page; editing is in the row menu.
+                rowClickable={false}
                 filters={ugFilter}
                 enableApproval={false}
                 enableSelect={false}
@@ -242,7 +243,7 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
                   </div>
                 }
                 actions={[{
-                  icon: <i className="fa-solid fa-pen-to-square"></i>,
+                  icon: <i className="fa fa-pencil-square-o"></i>,
                   tooltip: "Edit",
                   onClick: (student) => { setUgStudent(student); setUgFormOpen(true); },
                 }]}
@@ -274,14 +275,14 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
             }
             actions={[
               ...(can("can_manage_students") ? [{
-                icon: <i className="fa-solid fa-pen-to-square"></i>,
+                icon: <i className="fa fa-pencil-square-o"></i>,
                 tooltip: "Edit",
                 onClick: (studentData) => {
                   handleOpenForm(studentData);
                 },
               }] : []),
               ...(can("can_propose_supervisor_changes") ? [{
-                icon: <i className="fa-solid fa-users-gear"></i>,
+                icon: <i className="fa fa-users"></i>,
                 tooltip: "Manage Supervisors/Doctoral",
                 onClick: (studentData) => {
                   setStudentToEdit(studentData);
@@ -289,7 +290,7 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
                 },
               }] : []),
               ...(role === "admin" ? [{
-                icon: <i className="fa-solid fa-file-lines"></i>,
+                icon: <i className="fa fa-file-text-o"></i>,
                 tooltip: "Manage Forms",
                 onClick: (studentData) => {
                   navigate(`/forms/manage?roll_no=${studentData.roll_no}`);

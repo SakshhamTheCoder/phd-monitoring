@@ -106,9 +106,9 @@ const UgBranches = () => {
       <div className="filter-bar">
         <div className="filter-row" style={{ alignItems: 'flex-end' }}>
           <div className="input-field-container" style={{ minWidth: '140px' }}>
-            <label className="input-label" htmlFor="programme">Programme</label>
+            <label className="input-label" htmlFor="ug-branches-programme">Programme</label>
             <input
-              id="programme"
+              id="ug-branches-programme"
               className="input-field"
               placeholder="BE"
               value={form.programme}
@@ -116,9 +116,9 @@ const UgBranches = () => {
             />
           </div>
           <div className="input-field-container" style={{ minWidth: '140px' }}>
-            <label className="input-label" htmlFor="code">Code</label>
+            <label className="input-label" htmlFor="ug-branches-code">Code</label>
             <input
-              id="code"
+              id="ug-branches-code"
               className="input-field"
               placeholder="COE"
               value={form.code}
@@ -126,9 +126,9 @@ const UgBranches = () => {
             />
           </div>
           <div className="input-field-container" style={{ minWidth: '280px' }}>
-            <label className="input-label" htmlFor="name">Branch name</label>
+            <label className="input-label" htmlFor="ug-branches-branch-name">Branch name</label>
             <input
-              id="name"
+              id="ug-branches-branch-name"
               className="input-field"
               placeholder="Computer Engineering"
               value={form.name}
@@ -170,20 +170,12 @@ const UgBranches = () => {
               key: 'id',
               component: ({ row }) => (
                 <>
-                  <a
-                    onClick={() => edit(row)}
-                    style={{ cursor: 'pointer', marginRight: 12, color: '#991b1b' }}
-                    title="Edit branch"
-                  >
+                  <button type="button" className="icon-action" onClick={() => edit(row)} title="Edit branch" aria-label="Edit branch">
                     <i className="fa fa-pencil" aria-hidden="true"></i>
-                  </a>
-                  <a
-                    onClick={() => remove(row)}
-                    style={{ cursor: 'pointer', color: '#991b1b' }}
-                    title="Remove branch"
-                  >
+                  </button>
+                  <button type="button" className="icon-action" onClick={() => remove(row)} title="Remove branch" aria-label="Remove branch">
                     <i className="fa fa-trash" aria-hidden="true"></i>
-                  </a>
+                  </button>
                 </>
               ),
             }]}
