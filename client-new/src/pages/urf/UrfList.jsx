@@ -14,7 +14,7 @@ import FacultyLink from '../../components/facultyLink/FacultyLink';
 import { EMPTY_VALUE } from '../../utils/timeParse';
 import { URF_STATUSES, capitalize } from '../../components/urf/UrfRecord';
 import { apiSettings, apiSaveSettings } from '../../api/settings';
-import useCapabilities from '../../hooks/useCapabilities';
+import useCapabilities, { useCapabilitiesKnown } from '../../context/CapabilitiesContext';
 import TableComponent from '../../components/forms/table/TableComponent';
 import GridContainer from '../../components/forms/fields/GridContainer';
 import { apiUrfQueue } from '../../api/urf';
@@ -59,8 +59,8 @@ const MENTOR_CELL = [{
 // A project is decided once, either way. The table offers both on an applied
 // project and neither on one already decided, as the project page does.
 const DECISIONS = [
-  { status: 'selected', label: 'Select', icon: <i className="fa-solid fa-check"></i> },
-  { status: 'rejected', label: 'Reject', icon: <i className="fa-solid fa-xmark"></i>, danger: true },
+  { status: 'selected', label: 'Select', icon: <i className="fa fa-check"></i> },
+  { status: 'rejected', label: 'Reject', icon: <i className="fa fa-times"></i>, danger: true },
 ];
 
 const isApplied = (row) => String(row.status).toLowerCase() === 'applied';
@@ -80,14 +80,24 @@ const UrfList = () => {
   const [pending, setPending] = useState(null);
   const [saving, setSaving] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  // The applications switch and the session list are the office's. A mentor
+  // asking for them was refused, and the refusal surfaced as an error toast.
+  const managesUrf = can('can_manage_urf');
+  const capabilitiesKnown = useCapabilitiesKnown();
 
   useEffect(() => {
+    if (!managesUrf) return;
     apiSettings('urf').then((res) => res.success && setOpen(!!res.response.applications_open));
-  }, []);
+  }, [managesUrf]);
 
   // One session at a time, so the table never mixes two years. The newest is
   // the one to land on.
   useEffect(() => {
+    if (!capabilitiesKnown) return;
+    if (!managesUrf) {
+      setSessions([]);
+      return;
+    }
     apiUrfSessions()
       .then((res) => (res.success && Array.isArray(res.response) ? res.response : []))
       // An empty list still settles the page: the table shows what it has
@@ -97,7 +107,7 @@ const UrfList = () => {
         setSessions(years);
         setSession(years.length ? String(years[0]) : '');
       });
-  }, []);
+  }, [capabilitiesKnown, managesUrf]);
 
   const toggleApplications = async () => {
     const res = await apiSaveSettings('urf', { applications_open: open ? 0 : 1 });

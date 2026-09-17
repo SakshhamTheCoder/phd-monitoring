@@ -96,9 +96,9 @@ const UrfReportSchedule = ({ session }) => {
               components={[{
                 key: 'id',
                 component: ({ row }) => (
-                  <a onClick={() => remove(row)} style={{ cursor: 'pointer', color: '#991b1b' }} title="Call off this round">
+                  <button type="button" className="icon-action" onClick={() => remove(row)} title="Call off this round" aria-label="Call off this round">
                     <i className="fa fa-trash" aria-hidden="true"></i>
-                  </a>
+                  </button>
                 ),
               }]}
             />,

@@ -10,7 +10,7 @@
 
 .urf-subhead h3 {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: var(--text-md);
   font-weight: 600;
   color: #1f2937;
 }
@@ -21,8 +21,8 @@
   color: #fff;
   border: none;
   padding: 0.5rem 1rem;
-  border-radius: 8px;
-  font-size: 0.82rem;
+  border-radius: var(--radius);
+  font-size: var(--text-xs);
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
@@ -37,8 +37,8 @@
   color: #991b1b;
   border: 1px solid #991b1b;
   padding: 0.45rem 0.9rem;
-  border-radius: 8px;
-  font-size: 0.82rem;
+  border-radius: var(--radius);
+  font-size: var(--text-xs);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -71,13 +71,13 @@
   margin: 1rem 0 1.5rem;
   padding: 1rem;
   border: 1px solid #ddd;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: #f9f9f9;
 }
 
 .urf-approval-trail {
   margin: 0.5rem 0 1rem;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   color: #374151;
 }
 
@@ -93,7 +93,7 @@
 .urf-round-notice {
   margin: 0.25rem 0 0.75rem;
   color: #6b7280;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
 }
 
 .urf-report-schedule {

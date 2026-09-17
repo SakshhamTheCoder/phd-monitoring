@@ -251,7 +251,7 @@ export const ReportForm = ({ application, type, onSaved }) => {
   const slot = application.student2_email?.toLowerCase() === me.email?.toLowerCase() ? 2 : 1;
   const mentors = [application.mentor1, application.mentor2].filter(Boolean);
 
-  const loadLibrary = () => customFetch(`${baseURL}/publications`, 'GET', {}, true, false, false)
+  const loadLibrary = () => customFetch(`${baseURL}/publications`, 'GET', {})
     .then((res) => res.success && setLibrary(res.response));
   useEffect(() => { loadLibrary(); }, []);
 
