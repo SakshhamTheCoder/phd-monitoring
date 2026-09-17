@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { customFetch } from '../../../api/base';
 import "./Fields.css";
 
@@ -18,6 +18,7 @@ const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = 
     // the mouse and the keyboard always agree on which row Enter would pick.
     const [activeIndex, setActiveIndex] = useState(-1);
 
+    const fieldId = useId();
     const containerRef = useRef(null);
     const listRef = useRef(null);
     const abortControllerRef = useRef(null);
@@ -55,7 +56,6 @@ const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = 
         const { signal } = abortControllerRef.current;
     
         const finalBody = body ? { ...body, text: value } : { text: value };
-        console.log("Final body for suggestions:", finalBody);
         try {
             setLoading(true);
             const data = await customFetch(apiUrl, 'POST', finalBody, false);
@@ -123,7 +123,9 @@ useEffect(() => {
             // separate question from whether the dropdown stays on screen.
             setIsFocused(false);
             setSuggestions([]);
-            if (!suggestionManadatory) {
+            // Only text typed since the last pick is free text. Committing on every
+            // blur replaced a row already chosen with its own label as the id.
+            if (!suggestionManadatory && !userSelected) {
                 setShowHint(false);
                 setUserSelected(true);
                 onSelect({ name: inputValue, id: inputValue });
@@ -142,8 +144,10 @@ useEffect(() => {
             onBlur={handleBlur}
         >
             <div className="input-field-container">
-                {showLabel && (<label className="input-label">{label}{required && <span className="req">*</span>}</label>)}
+                {showLabel && (<label className="input-label" htmlFor={fieldId}>{label}{required && <span className="req" aria-hidden="true">*</span>}</label>)}
                 <input
+                    id={fieldId}
+                    aria-required={required || undefined}
                     type="text"
                     value={inputValue}
                     onChange={handleInputChange}
@@ -156,7 +160,14 @@ useEffect(() => {
             </div>
 
             {isFocused && inputValue && (loading || suggestions.length > 0 || showHint) && (
-                <ul className="suggestions-list" ref={listRef}>
+                <ul
+                    className="suggestions-list"
+                    ref={listRef}
+                    // Keep focus in the input while a row is pressed. Otherwise the
+                    // input blurs first, and a free-text picker commits what was
+                    // typed ("CHED") in place of the row that was clicked.
+                    onMouseDown={(event) => event.preventDefault()}
+                >
                     {loading && (
                         <li className="suggestion-item loading">Loading...</li>
                     )}

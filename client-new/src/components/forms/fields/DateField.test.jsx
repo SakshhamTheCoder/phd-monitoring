@@ -50,4 +50,22 @@ describe('DateField', () => {
     const { container } = render(<DateField label="Date" initialValue="" onChange={() => {}} />);
     expect(dateValue(container)).toBe('');
   });
+
+  // A locked date is read as text, in the same format as every other date on a
+  // form. The native picker draws itself in the browser's locale, so leaving it
+  // in place put "12/05/2026" next to "13 Feb 2026" on the same row.
+  it('renders a locked date as text in the shared format', () => {
+    const { container } = render(
+      <DateField label="Date" initialValue="2026-03-14T00:00:00.000Z" isLocked onChange={() => {}} />
+    );
+    expect(container.textContent).toContain('14 Mar 2026');
+    expect(container.querySelector('input')).toBeNull();
+  });
+
+  it('says so when a locked date has no value', () => {
+    const { container } = render(
+      <DateField label="Date" initialValue="" isLocked onChange={() => {}} />
+    );
+    expect(container.textContent).toContain('Not provided');
+  });
 });

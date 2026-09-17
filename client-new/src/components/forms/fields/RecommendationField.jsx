@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import GridContainer from './GridContainer';
 import "./Fields.css";
-import { Table } from 'lucide-react';
 import TableComponent from '../table/TableComponent';
 
 // `decision` collapses the three-way recommend / not recommend / reject into the
@@ -14,8 +13,10 @@ const RecommendationField = ({ role, allowRejection = false, onRecommendationCha
 
     // Set initial values based on `initialValue` prop
     useEffect(() => {
-        console.log('init', initialValue);
         if (initialValue) {
+            // The 0 and 1 arms are belt and braces: the form models now cast
+            // their approval columns to boolean, so the API sends true/false.
+            // Kept so a caller that has not been cast still lands on a boolean.
             const approvalValue = initialValue.approval === 1 ? true : initialValue.approval === 0 ? false : initialValue.approval;
             setApproval(approvalValue);
             setRejected(initialValue.rejected);
