@@ -16,7 +16,7 @@ import { baseURL } from '../../api/urls';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import { customFetch, isNetworkError, NETWORK_ERROR_MESSAGE } from '../../api/base';
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
-import useCapabilities from '../../hooks/useCapabilities';
+import useCapabilities from '../../context/CapabilitiesContext';
 
 const UsersPage = () => {
   const [filter, setFilter] = useState([]);
@@ -223,7 +223,6 @@ Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,d
       toast.success(`Import completed: ${totalSuccess} created, ${totalUpdated} updated, ${totalErrors} errors`);
       
       if (allErrors.length > 0) {
-        console.log('Import errors:', allErrors);
         toast.warning(`${totalErrors} rows failed. Check console for details.`);
       }
 
@@ -271,17 +270,17 @@ Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,d
             }
             actions={can('can_manage_users') ? [
               {
-                icon: <i className="fa-solid fa-pen-to-square"></i>,
+                icon: <i className="fa fa-pencil-square-o"></i>,
                 tooltip: 'Edit',
                 onClick: (userData) => openForm(userData),
               },
               {
-                icon: <i className="fa-solid fa-key"></i>,
+                icon: <i className="fa fa-key"></i>,
                 tooltip: 'Reset Password',
                 onClick: (userData) => handleResetPassword(userData),
               },
               {
-                icon: <i className="fa-solid fa-trash"></i>,
+                icon: <i className="fa fa-trash"></i>,
                 tooltip: 'Delete',
                 onClick: (userData) => handleDeleteUser(userData),
               },

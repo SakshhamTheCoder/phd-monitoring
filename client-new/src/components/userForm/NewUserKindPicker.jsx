@@ -12,28 +12,28 @@ import React from 'react';
 const KINDS = [
   {
     key: 'student',
-    icon: 'fa-user-graduate',
+    icon: 'fa-graduation-cap',
     title: 'Student',
     description:
       'Creates the login and the student record together. Use for anyone enrolling in the PhD programme.',
   },
   {
     key: 'faculty',
-    icon: 'fa-chalkboard-user',
+    icon: 'fa-id-badge',
     title: 'Faculty',
     description:
       'Creates the login and the faculty record together, internal or external. HOD, PhD Coordinator and ADORDC are assigned later from the Departments page.',
   },
   {
     key: 'clerk',
-    icon: 'fa-id-card',
+    icon: 'fa-id-card-o',
     title: 'Clerk',
     description:
       'Creates a login for marking PhD attendance. Departments are tagged afterwards from Clerk Management.',
   },
   {
     key: 'other',
-    icon: 'fa-user-shield',
+    icon: 'fa-shield',
     title: 'Office / Admin',
     description:
       'A login with no student or faculty record, for Admin, Director, DRA, DORDC or a UG Student on the URF. These roles need no linked record.',
@@ -77,7 +77,7 @@ const NewUserKindPicker = ({ onSelect, onCancel }) => (
           }}
         >
           <i
-            className={`fa-solid ${kind.icon}`}
+            className={`fa ${kind.icon}`}
             style={{
               fontSize: '1.1rem',
               color: 'var(--primary-color)',

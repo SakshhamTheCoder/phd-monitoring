@@ -58,23 +58,9 @@ const UserForm = ({ edit, userData, onClose }) => {
         branch_id: userData.ug_student?.branch_id || '',
         year: userData.ug_student?.year || '',
       });
-    } else if (!edit) {
-      // Reset form for new user
-      setFormData({
-        id: null,
-        full_name: '',
-        email: '',
-        phone: '',
-        gender: '',
-        physically_handicapped: false,
-        role_id: '',
-        current_role_id: '',
-        default_role_id: '',
-        available_roles: [],
-        status: 'active',
-        password: '',
-      });
     }
+  // A new user starts from the blank state above. Resetting here as well ran
+  // again when the role list arrived and wiped whatever had been typed.
   }, [edit, userData, rolesLoaded]);
 
   const fetchRoles = async () => {
@@ -111,16 +97,23 @@ const UserForm = ({ edit, userData, onClose }) => {
         true
       );
 
-      if (response.password) {
-        toast.success(`User ${edit ? 'updated' : 'created'} successfully! Password: ${response.password}`);
+      // customFetch has already shown the server's reason for a refusal. This
+      // said "created successfully" either way, and read the password and
+      // warnings from the wrapper rather than from the server's answer.
+      if (!response.success) {
+        return;
+      }
+      const saved = response.response || {};
+      if (saved.password) {
+        toast.success(`User ${edit ? 'updated' : 'created'}. Password: ${saved.password}`);
       } else {
-        toast.success(`User ${edit ? 'updated' : 'created'} successfully!`);
+        toast.success(`User ${edit ? 'updated' : 'created'}.`);
       }
 
       // Roles can be granted before the record backing them exists, so the save
       // succeeds but the role won't work yet. Surface that instead of letting it
       // fail silently later.
-      (response.warnings || []).forEach((warning) =>
+      (saved.warnings || []).forEach((warning) =>
         toast.warn(warning, { autoClose: 10000 })
       );
 
@@ -140,13 +133,14 @@ const UserForm = ({ edit, userData, onClose }) => {
 
     setLoading(true);
     try {
-      await customFetch(
+      const result = await customFetch(
         baseURL + `/users/${formData.id}/reset-password`,
         'POST',
         { password: customPassword },
         true
       );
-      toast.success('Password reset successfully!');
+      if (!result.success) return;
+      toast.success('Password reset.');
       setCustomPassword('');
       setShowPasswordSection(false);
     } catch (error) {
@@ -159,13 +153,14 @@ const UserForm = ({ edit, userData, onClose }) => {
   const handleSendResetEmail = async () => {
     setLoading(true);
     try {
-      await customFetch(
+      const result = await customFetch(
         baseURL + `/users/${formData.id}/send-reset-email`,
         'POST',
         {},
         true
       );
-      toast.success('Password reset email sent successfully!');
+      if (!result.success) return;
+      toast.success('Password reset email sent.');
     } catch (error) {
       toast.error('Failed to send reset email');
     } finally {
@@ -219,7 +214,7 @@ const UserForm = ({ edit, userData, onClose }) => {
               label="Full Name *"
               initialValue={formData.full_name}
               isLocked={false}
-              onChange={(value) => setFormData({ ...formData, full_name: value })}
+              onChange={(value) => setFormData((prev) => ({ ...prev, full_name: value }))}
               key={`full_name_${formData.id || 'new'}`}
             />
           ]}
@@ -233,14 +228,14 @@ const UserForm = ({ edit, userData, onClose }) => {
               initialValue={formData.email}
               isLocked={false}
               type="email"
-              onChange={(value) => setFormData({ ...formData, email: value })}
+              onChange={(value) => setFormData((prev) => ({ ...prev, email: value }))}
               key={`email_${formData.id || 'new'}`}
             />,
             <InputField
               label="Phone *"
               initialValue={formData.phone}
               isLocked={false}
-              onChange={(value) => setFormData({ ...formData, phone: value })}
+              onChange={(value) => setFormData((prev) => ({ ...prev, phone: value }))}
               key={`phone_${formData.id || 'new'}`}
             />
           ]}
@@ -253,31 +248,32 @@ const UserForm = ({ edit, userData, onClose }) => {
               label="Gender"
               options={genderOptions}
               initialValue={formData.gender}
-              onChange={(value) => setFormData({ ...formData, gender: value })}
+              onChange={(value) => setFormData((prev) => ({ ...prev, gender: value }))}
               key={`gender_${formData.id || 'new'}`}
             />,
             <DropdownField
               label="Status"
               options={statusOptions}
               initialValue={statusOptions.find(s => s.value === formData.status)?.title || 'Active'}
-              onChange={(value) => setFormData({ ...formData, status: value })}
+              onChange={(value) => setFormData((prev) => ({ ...prev, status: value }))}
               key={`status_${formData.id || 'new'}`}
             />,
             <ToggleSwitch
               label="Physically handicapped"
               isOn={formData.physically_handicapped}
-              onToggle={() => setFormData({ ...formData, physically_handicapped: !formData.physically_handicapped })}
+              onToggle={() => setFormData((prev) => ({ ...prev, physically_handicapped: !prev.physically_handicapped }))}
             />,
           ]}
           space={3}
         />
 
         <div style={{ marginTop: '1rem', marginBottom: '1rem' }}>
-          <label style={{ fontWeight: '600', marginBottom: '0.5rem', display: 'block' }}>
-            Main Role *
-          </label>
           {rolesLoaded && roles.length > 0 ? (
+            // The label goes through the field so it is tied to the select; a
+            // bare <label> beside it named nothing for a screen reader.
             <DropdownField
+              label="Main Role"
+              required
               options={roles}
               initialValue={formData.role_id ? roles.find(r => r.value === formData.role_id)?.title : ''}
               onChange={handleRoleChange}
@@ -296,7 +292,7 @@ const UserForm = ({ edit, userData, onClose }) => {
                   label="Current Role"
                   options={roles}
                   initialValue={formData.current_role_id ? roles.find(r => r.value === formData.current_role_id)?.title : ''}
-                  onChange={(value) => setFormData({ ...formData, current_role_id: value })}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, current_role_id: value }))}
                   key={`current_role_${formData.id || 'new'}`}
                 />
               ) : (
@@ -309,7 +305,7 @@ const UserForm = ({ edit, userData, onClose }) => {
                   label="Default Role"
                   options={roles}
                   initialValue={formData.default_role_id ? roles.find(r => r.value === formData.default_role_id)?.title : ''}
-                  onChange={(value) => setFormData({ ...formData, default_role_id: value })}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, default_role_id: value }))}
                   key={`default_role_${formData.id || 'new'}`}
                 />
               ) : (
@@ -330,20 +326,20 @@ const UserForm = ({ edit, userData, onClose }) => {
                 <InputField
                   label="Roll Number"
                   initialValue={formData.roll_no || ''}
-                  onChange={(value) => setFormData({ ...formData, roll_no: value })}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, roll_no: value }))}
                 />,
                 <DropdownField
                   label="Branch"
                   options={branches}
                   initialValue={formData.branch_id || ''}
-                  onChange={(value) => setFormData({ ...formData, branch_id: value })}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, branch_id: value }))}
                   key={`branch_${formData.id || 'new'}`}
                 />,
                 <DropdownField
                   label="Year of Study (blank counts from the roll number)"
                   options={[1, 2, 3, 4].map((year) => ({ title: `${year} Year`, value: year }))}
                   initialValue={formData.year || ''}
-                  onChange={(value) => setFormData({ ...formData, year: value })}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, year: value }))}
                   key={`ug_year_${formData.id || 'new'}`}
                 />,
               ]}
