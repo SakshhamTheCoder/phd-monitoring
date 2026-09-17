@@ -16,11 +16,14 @@ class NotificationsController extends Controller
         // Only show notifications relevant to the role the user is currently acting as,
         // plus role-agnostic (common) ones that have no specific role.
         $activeRoleId = $user->current_role_id ?? $user->role_id;
-        $notifications = $user->notifications
+        // Filtered in the database. This loaded every notification the account
+        // had ever received, read ones included, and then the role one row at a
+        // time, on every page load, since the header asks for it.
+        $notifications = $user->notifications()
+            ->with('role:id,role')
             ->where('is_read', false)
-            ->filter(function ($n) use ($activeRoleId) {
-                return is_null($n->role_id) || $n->role_id == $activeRoleId;
-            });
+            ->where(fn ($query) => $query->whereNull('role_id')->orWhere('role_id', $activeRoleId))
+            ->get();
         $ret=[];
         foreach($notifications as $notification)
         {
@@ -40,7 +43,7 @@ class NotificationsController extends Controller
     public function markAsRead($id)
     {
         $user = Auth::user();
-        $notification = $user->notifications->find($id);
+        $notification = $user->notifications()->find($id);
         if ($notification) {
             $notification->is_read = true;
             $notification->save();
@@ -59,7 +62,7 @@ class NotificationsController extends Controller
     public function deleteNotification($id)
     {
         $user = Auth::user();
-        $notification = $user->notifications->find($id);
+        $notification = $user->notifications()->find($id);
         if ($notification) {
             $notification->delete();
             return response()->json(['message' => 'Notification deleted']);
@@ -73,9 +76,10 @@ class NotificationsController extends Controller
         // Only show notifications relevant to the role the user is currently acting as,
         // plus role-agnostic (common) ones that have no specific role.
         $activeRoleId = $user->current_role_id ?? $user->role_id;
-        $notifications = $user->notifications->filter(function ($n) use ($activeRoleId) {
-            return is_null($n->role_id) || $n->role_id == $activeRoleId;
-        });
+        $notifications = $user->notifications()
+            ->with('role:id,role')
+            ->where(fn ($query) => $query->whereNull('role_id')->orWhere('role_id', $activeRoleId))
+            ->get();
         $ret=[];
         foreach($notifications as $notification)
         {

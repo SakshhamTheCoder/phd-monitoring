@@ -34,7 +34,8 @@ class UserManagementController extends Controller
         $perPage = $request->input('rows', 15);
         $page = $request->input('page', 1);
 
-        $usersQuery = User::with(['role', 'current_role', 'default_role', 'student', 'faculty']);
+        // Everything the rows below read, loaded once per page instead of once per row.
+        $usersQuery = User::with(['role', 'current_role', 'default_role', 'ugStudent', 'student.department', 'faculty.department']);
 
         if ($filters) {
             $usersQuery = $this->applyDynamicFilters($usersQuery, $filters, 'users');
@@ -59,7 +60,8 @@ class UserManagementController extends Controller
                 'status' => $user->status ?? 'active',
             'ug_student' => $user->ugStudent,
                 'student_info' => $user->student ? [
-                    'roll_number' => $user->student->roll_number,
+                    // roll_number is not a column; this was always null.
+                    'roll_number' => $user->student->roll_no,
                     'department' => $user->student->department->name ?? null,
                 ] : null,
                 'faculty_info' => $user->faculty ? [

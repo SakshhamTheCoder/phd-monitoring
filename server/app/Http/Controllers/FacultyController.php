@@ -307,7 +307,9 @@ class FacultyController extends Controller
         $perPage = $request->input('rows', 15);
         $page = $request->input('page', 1);
     
-        $facultyQuery = Faculty::with(['user', 'department', 'areaOfSpecialization']);
+        // The live supervision count is an accessor that queried once per row.
+        $facultyQuery = Faculty::with(['user', 'department', 'areaOfSpecialization'])
+            ->withCount(['supervisedStudents as supervised_campus_count' => fn ($query) => $query->whereNull('students.date_of_thesis')]);
         
         // As in StudentController::list: the capability says whether, the role
         // says which departments, since an ADORDC answers for several.
@@ -342,9 +344,8 @@ class FacultyController extends Controller
         // column with one cell filled and the rest missing is worse than no
         // column, so it stays out of `fields` for anyone without the capability.
         $canSeePhone = $loggedInUser->may('can_read_faculty_phone');
-        $canSeeSupervision = $loggedInUser->may('can_read_faculty_supervision');
 
-        $result = $faculties->getCollection()->map(function ($faculty) use ($canSeePhone, $canSeeSupervision) {
+        $result = $faculties->getCollection()->map(function ($faculty) use ($canSeePhone) {
             $row = [
                 'id' => $faculty->faculty_code,
                 'faculty_code' => $faculty->faculty_code,
@@ -359,16 +360,12 @@ class FacultyController extends Controller
                 'type' => $faculty->type,
                 'institution' => $faculty->institution,
                 'website_link' => $faculty->website_link,
-                'supervised_students' => $faculty->supervisedStudents?->map(fn ($s) => [
-                    'name' => $s->user->name(),
-                    'roll_number' => $s->roll_number,
-                ]),
-                'doctored_students' => $faculty->doctoralCommittee?->map(fn ($s) => [
-                    'name' => $s->user->name(),
-                    'roll_number' => $s->roll_number,
-                ]),
+                // supervised_students and doctored_students were built here with
+                // two queries per row. Nothing reads them from the list (the
+                // research profile has its own), doctored_students named a
+                // relation Faculty does not have, and roll_number is not a field.
                 'supervised_outside'=> $faculty->supervised_outside,
-                'supervised_campus'=> $faculty->supervised_campus,
+                'supervised_campus'=> $faculty->supervised_campus_count,
                 'expertise' => $faculty->expertise ?? [],
                 'area_of_specialization_id' => $faculty->area_of_specialization_id,
                 'broad_area' => $faculty->areaOfSpecialization?->name,
@@ -376,9 +373,6 @@ class FacultyController extends Controller
 
             if (!$canSeePhone) {
                 unset($row['phone']);
-            }
-            if (!$canSeeSupervision) {
-                unset($row['supervised_students'], $row['doctored_students']);
             }
 
             return $row;
