@@ -60,17 +60,24 @@ const ProfileBox = () => {
 
   return (
     <div className="profile_wrapper" ref={profileRef}>
-      <div className="user_section" onClick={toggleProfileMenu}>
+      <button
+        type="button"
+        className="user_section"
+        onClick={toggleProfileMenu}
+        aria-haspopup="true"
+        aria-expanded={isOpen}
+      >
         <img
           src={image || ""}
-          alt="User Profile"
+          alt=""
+          aria-hidden="true"
           className="user_profile_image"
         />
         <div className="user_info">
           <span className="user_name">{name}</span>
           <span className="user_role">{role}</span>
         </div>
-      </div>
+      </button>
 
       {isOpen && (
         <div className="profile_box">
@@ -78,46 +85,40 @@ const ProfileBox = () => {
             <h3>User Menu</h3>
           </div>
           <div className="profile_content">
-            <div
-              className="profile_item"
-              onClick={() => alert("Navigating to Profile")}
-            >
-              <h4>Profile</h4>
-            </div>
+            {/* "Profile" was a placeholder that only raised an alert. Home is
+                where each role's profile already is, one click away in the sidebar. */}
             {/* Single-role accounts have nothing to switch to. */}
             {!["Student", "UG Student"].includes(role) && (
-              <>
-                <div
-                  className="profile_item"
-                  onClick={() => handleOpenModal()}
-                >
-                  <h4>Switch Role</h4>
-                </div>
-                <CustomModal
-                  isOpen={isModalOpen}
-                  onClose={handleCloseModal}
-                  minWidth="400px"
-                  maxWidth="500px"
-                  minHeight="200px"
-                  maxHeight="400px"
-                >
-                  <SwitchRole/>
-                </CustomModal>
-              </>
+              <button type="button" className="profile_item" onClick={() => { handleOpenModal(); setIsOpen(false); }}>
+                <h4>Switch Role</h4>
+              </button>
             )}
-            <div className="profile_item" onClick={() => setPasswordOpen(true)}>
+            <button type="button" className="profile_item" onClick={() => setPasswordOpen(true)}>
               <h4>{user.password_set === false ? "Set Password" : "Change Password"}</h4>
-            </div>
-            <div className="profile_item" onClick={() => {
+            </button>
+            <button type="button" className="profile_item" onClick={() => {
               logoutAPI();
               toast.success("Logged out");
               window.location.href = "/login";
             }}>
               <h4>Logout</h4>
-            </div>
+            </button>
           </div>
         </div>
       )}
+
+      {/* Outside the menu: a click inside a dialog is outside the menu, which
+          closed the menu and took the dialog with it. */}
+      <CustomModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        minWidth="400px"
+        maxWidth="500px"
+        minHeight="200px"
+        maxHeight="400px"
+      >
+        <SwitchRole/>
+      </CustomModal>
 
       <CustomModal
         isOpen={passwordOpen}

@@ -73,7 +73,7 @@ const AdminHome = ({ data }) => {
       <GridContainer
         label="Quick Access"
         elements={tiles.map((t) => (
-          <CustomButton text={t.label} onClick={() => navigate(t.path)} />
+          <CustomButton text={t.label} variant="block" onClick={() => navigate(t.path)} />
         ))}
       />
     </div>

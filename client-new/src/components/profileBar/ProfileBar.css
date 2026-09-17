@@ -5,8 +5,8 @@
     justify-items: center;
     background-color: #f9f9f9;
     padding: 15px;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
     max-height: 100px;
   }
   
@@ -23,7 +23,7 @@
   }
   
   .phd-title {
-    font-size: 18px;
+    font-size: var(--text-lg);
     font-weight: bold;
     margin-bottom: 8px; /* Optional, if you want to add a title */
   }
@@ -33,6 +33,6 @@
   .irb-date,
   .synopsis-date {
     margin: 4px 0;
-    font-size: 14px;
+    font-size: var(--text-sm);
   }
   

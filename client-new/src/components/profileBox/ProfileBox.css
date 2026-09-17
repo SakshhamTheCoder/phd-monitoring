@@ -22,8 +22,8 @@
     width: 200px;
     border: 1px solid #ccc;
     background-color: white;
-    border-radius: 5px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow);
     z-index: 100;
   }
   
@@ -34,7 +34,7 @@
   
   .profile_header h3 {
     margin: 0;
-    font-size: 16px;
+    font-size: var(--text-md);
     color: #000;
   }
   
@@ -44,6 +44,12 @@
   }
   
   .profile_item {
+    display: block;
+    width: 100%;
+    border: none;
+    background: none;
+    font: inherit;
+    text-align: left;
     padding: 10px;
     color: #3c3c3c;
     font-weight: 400;
@@ -56,3 +62,21 @@
     background-color: #f0f0f0;
   }
   
+/* Was a div until it became a real button, so the button chrome is cleared and
+   the focus ring is put back, rather than left to the browser's default. */
+.user_section {
+    appearance: none;
+    border: none;
+    background: none;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    text-align: inherit;
+    cursor: pointer;
+}
+
+.user_section:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
