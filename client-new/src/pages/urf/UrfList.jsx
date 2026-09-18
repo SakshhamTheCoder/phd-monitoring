@@ -233,7 +233,7 @@ const UrfList = () => {
               components={[{
                 key: 'project_title',
                 component: ({ row, data }) => (
-                  <button type="button" className="urf-link-cell" onClick={() => navigate(`/urf/${row.application_id}`)}>
+                  <button type="button" className="urf-link-cell" onClick={() => navigate(`/urf/${row.form}/${row.id}`)}>
                     {data}
                   </button>
                 ),

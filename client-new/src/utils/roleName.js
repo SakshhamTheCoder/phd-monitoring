@@ -26,6 +26,10 @@ export const getRoleName = (role) => {
             return 'Vice Chancellor'
         case 'adordc':
             return 'ADORDC';
+        // A URF project's faculty mentor. A relationship rather than a role,
+        // but it is a step on the URF chain and reads as one.
+        case 'mentor':
+            return 'Faculty Mentor';
         case 'admin':
             return 'Administrator';
         default:

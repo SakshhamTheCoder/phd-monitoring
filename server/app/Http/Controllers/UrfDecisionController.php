@@ -33,6 +33,21 @@ class UrfDecisionController extends Controller
         $user = Auth::user();
         [$model, $label] = self::FORMS[$form];
 
+        // The shared recommendation field answers with approval and rejected,
+        // as it does on the PhD forms. Read that as the decision it means, so
+        // both it and a plain { decision } post to the same endpoint.
+        if (!$request->has('decision')) {
+            if (!$request->has('approval') && !$request->boolean('rejected')) {
+                return response()->json(['message' => 'Choose a recommendation first.'], 422);
+            }
+
+            $request->merge([
+                'decision' => $request->boolean('rejected')
+                    ? 'reject'
+                    : ($request->boolean('approval') ? 'approve' : 'send_back'),
+            ]);
+        }
+
         $data = $request->validate([
             'decision' => 'required|in:approve,send_back,reject',
             // The student reads the reason, so anything but a yes needs one.

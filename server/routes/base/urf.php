@@ -28,6 +28,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/queue', [UrfDecisionController::class, 'queue']);
     Route::post('/{form}/{id}/decision', [UrfDecisionController::class, 'decide'])
         ->whereIn('form', $forms)->whereNumber('id');
+    // One form of one project, the page that shows what was filled and what
+    // each step said. Ahead of /{id} so a form name is never read as an id.
+    Route::get('/{form}/{id}', [UrfController::class, 'formShow'])
+        ->whereIn('form', $forms)->whereNumber('id');
     Route::get('/{form}', [UrfController::class, 'formList'])->whereIn('form', $forms);
     Route::get('/{form}/filters', [UrfController::class, 'listFilters'])->whereIn('form', $forms);
     Route::get('/{id}', [UrfController::class, 'show'])->whereNumber('id');

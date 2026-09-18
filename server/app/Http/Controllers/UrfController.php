@@ -31,6 +31,31 @@ class UrfController extends Controller
 
     private const SEARCH_KEYS = ['status'];
 
+    private const FORM_NAMES = [
+        'urf-application' => 'URF Application Form',
+        'urf-additional-info' => 'Additional Information Form',
+        'urf-half-yearly-report' => 'Half-yearly Progress Report',
+        'urf-final-report' => 'Final Report',
+    ];
+
+    /** How a recorded decision reads back on the form's history. */
+    private const DECISION_WORDS = [
+        'approve' => 'Recommended',
+        'send_back' => 'Sent back to the student',
+        'reject' => 'Rejected',
+        'submitted' => 'Submitted',
+        'selected' => 'Project selected by the office',
+        'rejected' => 'Project rejected by the office',
+    ];
+
+    private const STEP_NAMES = [
+        'student' => 'the student',
+        'mentor' => 'the faculty mentor',
+        'adordc' => 'the ADORDC',
+        'dordc' => 'the DORDC',
+        'office' => 'the office',
+    ];
+
     private const DETAIL = [
         'student1Branch', 'student2Branch',
         'mentor1.user', 'mentor1.department', 'mentor2.user', 'mentor2.department',
@@ -156,6 +181,132 @@ class UrfController extends Controller
                 ? ['Session', 'Student', 'Branch and Year', 'Project Title', 'Project Status', 'Submitted On']
                 : ['Session', 'Project Title', 'Submitted By', 'Branch and Year', 'Conference Presentation', 'Submitted On', 'Report'],
         ]);
+    }
+
+    /**
+     * One form of one project, in the shape the PhD form pages read: the chain
+     * it is on, where it has reached, what each step said, and what was filled
+     * in. The client draws it with the same title bar, status view and ladder.
+     */
+    public function formShow(string $form, $id)
+    {
+        $user = Auth::user();
+        $instance = $this->formRow($form, $id);
+        $application = $instance->approvalApplication();
+        if (!$application) {
+            return $this->refuse();
+        }
+
+        // The office reads every form. Everyone else has to be a step on this
+        // one: a student of the project, its mentor, the ADORDC of their
+        // branch's department, or the DORDC.
+        $step = $instance->stepFor($user);
+        $office = $user->may('can_manage_urf');
+        if (!$office && !$step) {
+            return $this->refuse();
+        }
+
+        $steps = array_merge(UrfApplication::CHAIN, [UrfApplication::COMPLETE]);
+        $reached = array_search($instance->stage, $steps, true);
+        // A step is answered once the form has moved past it. Sending a form
+        // back puts it on the student again and clears what the approvers said,
+        // so the position alone is the truth here.
+        $answered = fn (string $one) => $reached > array_search($one, $steps, true);
+
+        $said = fn (string $key) => collect(UrfApplication::APPROVERS)
+            ->mapWithKeys(fn ($approver) => [$approver => $instance->{$approver . '_' . $key}])
+            ->all();
+
+        return response()->json([
+            'form' => $form,
+            'form_id' => $instance->id,
+            'form_name' => self::FORM_NAMES[$form],
+            'application_id' => $application->id,
+            'project_title' => $application->project_title,
+            'session' => $application->session,
+            'status' => $application->status,
+            'stage' => $instance->stage,
+            'steps' => $steps,
+            'current_step' => $reached === false ? 0 : $reached,
+            // FormLadder shows every step to "admin" and the steps up to their
+            // own to anyone else. The office holds no step on the chain, so it
+            // reads the form the way an admin reads a PhD one.
+            'role' => $office ? 'admin' : $step,
+            'comments' => ['student' => null] + $said('comments'),
+            // Booleans, as the PhD forms answer them: the column is an int
+            // here, and the radios read a 0 as an answer already given.
+            'approvals' => array_map('boolval', $said('approval')),
+            'locks' => collect($steps)->mapWithKeys(fn ($one) => [$one => $answered($one)])->all(),
+            'history' => $this->historyOf($instance),
+            'awaiting_me' => $instance->awaits($user),
+            // Rejecting ends the project, which is the DORDC's alone and only
+            // on the application itself.
+            'may_reject' => $instance->awaits($user) && $step === 'dordc' && $instance instanceof UrfApplication,
+            'filled' => $this->filledIn($form, $instance, $application, $office),
+            'application' => $this->payload($application->load(self::DETAIL), $user),
+        ]);
+    }
+
+    private function formRow(string $form, $id)
+    {
+        return match ($form) {
+            'urf-application' => UrfApplication::findOrFail($id),
+            'urf-additional-info' => UrfFellow::with('user')->findOrFail($id),
+            default => UrfReport::with('user')->findOrFail($id),
+        };
+    }
+
+    /** What the history reads as on the page, one line per decision taken. */
+    private function historyOf($instance): array
+    {
+        return collect($instance->history ?? [])->map(fn ($entry) => [
+            'timestamp' => $entry['at'] ?? null,
+            'action' => trim((self::DECISION_WORDS[$entry['decision'] ?? ''] ?? ucfirst((string) ($entry['decision'] ?? 'Answered')))
+                . ' by ' . ($entry['by'] ?? 'someone')
+                . (isset(self::STEP_NAMES[$entry['step'] ?? '']) ? ' (' . self::STEP_NAMES[$entry['step']] . ')' : '')),
+            'comment' => $entry['comments'] ?? null,
+        ])->values()->all();
+    }
+
+    /**
+     * The form's own answers. The application draws itself from the project
+     * payload, which already carries the team and the proposal; the other two
+     * are rows of their own.
+     *
+     * A fellow's PAN, Aadhaar and bank account go to the office and to the
+     * student who gave them. An approver is checking that the person is who
+     * they say, not their bank, so they read the last four digits.
+     */
+    private function filledIn(string $form, $instance, UrfApplication $application, bool $office): ?array
+    {
+        if ($form === 'urf-application') {
+            return null;
+        }
+
+        $row = $instance->toArray();
+        $row['submitted_by'] = $instance->user?->name();
+
+        if ($form === 'urf-additional-info') {
+            $mine = $instance->user_id === Auth::id();
+            foreach (['pan', 'aadhaar', 'account_no'] as $secret) {
+                if (!$office && !$mine) {
+                    $row[$secret] = $this->lastFour($instance->{$secret});
+                }
+            }
+
+            return $row;
+        }
+
+        $row['publications'] = Publication::groupedFor('urf_application_id', $application->id, $instance->id, 'urf_report');
+
+        return $row;
+    }
+
+    private function lastFour(?string $value): string
+    {
+        $value = (string) $value;
+
+        return $value === '' ? '' : str_repeat('X', max(strlen($value) - 4, 0)) . substr($value, -4);
     }
 
     public function show($id)

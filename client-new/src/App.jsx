@@ -60,6 +60,7 @@ const Openings = lazy(() => import('./pages/projects/Openings'));
 const UrfList = lazy(() => import('./pages/urf/UrfList'));
 const UrfDetails = lazy(() => import('./pages/urf/UrfDetails'));
 const UrfFormList = lazy(() => import('./pages/urf/UrfFormList'));
+const UrfFormRecord = lazy(() => import('./pages/urf/UrfFormRecord'));
 const UrfFormsPage = lazy(() => import('./pages/urf/UrfStudentForms').then(m => ({ default: m.UrfFormsPage })));
 const UrfFormPage = lazy(() => import('./pages/urf/UrfStudentForms').then(m => ({ default: m.UrfFormPage })));
 
@@ -222,6 +223,12 @@ const AppContent = () => {
                 <Route path="/urf/urf-additional-info" element={<UrfFormList />} />
                 <Route path="/urf/urf-half-yearly-report" element={<UrfFormList />} />
                 <Route path="/urf/urf-final-report" element={<UrfFormList />} />
+                {/* One submission of one form, with its own chain, as a PhD
+                    form page has. The API path is the page path. */}
+                <Route path="/urf/urf-application/:id" element={<UrfFormRecord />} />
+                <Route path="/urf/urf-additional-info/:id" element={<UrfFormRecord />} />
+                <Route path="/urf/urf-half-yearly-report/:id" element={<UrfFormRecord />} />
+                <Route path="/urf/urf-final-report/:id" element={<UrfFormRecord />} />
                 <Route path="/urf/:id" element={<UrfDetails />} />
               </>
             )}

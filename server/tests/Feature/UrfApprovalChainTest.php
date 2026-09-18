@@ -148,6 +148,137 @@ class UrfApprovalChainTest extends TestCase
         $decide($dordc, ['decision' => 'approve'])->assertStatus(422);
     }
 
+    /**
+     * Each form has a page of its own, in the shape the PhD form pages read:
+     * the chain, where it has reached, what each step said, and what was
+     * filled in. The stipend details on it are masked for an approver.
+     */
+    public function test_each_form_has_a_page_of_its_own_in_the_shape_the_form_pages_read(): void
+    {
+        Storage::fake('public');
+
+        $admin = $this->userAs('admin', ['can_manage_urf' => 'true', 'can_manage_app_settings' => 'true']);
+        $student = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
+        $outsider = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
+
+        $department = Department::create(['name' => 'Page Test Department', 'code' => 'PAGTD']);
+        $branch = UgBranch::create([
+            'programme' => 'BE',
+            'code' => 'PAGTB',
+            'name' => 'Page Test Branch',
+            'department_id' => $department->id,
+        ]);
+
+        $mentor = $this->faculty(990141, $department);
+        $adordcFaculty = $this->faculty(990142, $department);
+        $adordc = $adordcFaculty->user;
+        $adordc->forceFill(['current_role_id' => Role::where('role', 'adordc')->value('id')])->save();
+        $department->adordc_id = $adordcFaculty->faculty_code;
+        $department->save();
+        $dordc = $this->userAs('dordc');
+
+        $this->actingAs($admin, 'sanctum')->postJson('/api/settings/urf', ['applications_open' => 1])->assertOk();
+
+        $id = $this->actingAs($student, 'sanctum')->postJson('/api/urf', [
+            'project_title' => 'Page project ' . Str::random(4),
+            'student1_name' => 'Page Student',
+            'student1_roll_no' => '10230' . random_int(1000, 9999),
+            'student1_branch_id' => $branch->id,
+            'student1_year' => 2,
+            'student1_gender' => 'Male',
+            'student1_email' => $student->email,
+            'student1_phone' => '9800000021',
+            'mentor1_faculty_code' => $mentor->faculty_code,
+            'proposal' => UploadedFile::fake()->create('proposal.pdf', 10, 'application/pdf'),
+        ])->assertCreated()->json('id');
+
+        $page = "/api/urf/urf-application/{$id}";
+        $steps = ['student', 'mentor', 'adordc', 'dordc', 'complete'];
+
+        // The mentor's own step is where it has reached, so the page offers it.
+        $this->actingAs($mentor->user, 'sanctum')->getJson($page)->assertOk()
+            ->assertJsonPath('form_id', $id)
+            ->assertJsonPath('form_name', 'URF Application Form')
+            ->assertJsonPath('stage', 'mentor')
+            ->assertJsonPath('steps', $steps)
+            ->assertJsonPath('current_step', 1)
+            ->assertJsonPath('role', 'mentor')
+            ->assertJsonPath('awaiting_me', true)
+            // Ending a project is the DORDC's alone, and only on the application.
+            ->assertJsonPath('may_reject', false)
+            ->assertJsonPath('locks.mentor', false)
+            ->assertJsonPath('application.project_title', UrfApplication::find($id)->project_title);
+
+        // The office holds no step, so it reads the form the way an admin reads
+        // a PhD one: every panel, none of them live.
+        $this->actingAs($admin, 'sanctum')->getJson($page)->assertOk()
+            ->assertJsonPath('role', 'admin')
+            ->assertJsonPath('awaiting_me', false);
+
+        // A student of another project is not on this chain.
+        $this->actingAs($outsider, 'sanctum')->getJson($page)->assertForbidden();
+
+        // The shared recommendation field answers with approval rather than a
+        // decision, and the endpoint reads it as the decision it means.
+        $this->actingAs($mentor->user, 'sanctum')
+            ->postJson("{$page}/decision", ['approval' => true, 'rejected' => false, 'comments' => 'Worth doing.'])
+            ->assertOk()->assertJsonPath('stage', 'adordc');
+
+        // A bare submit is not a decision.
+        $this->actingAs($adordc, 'sanctum')->postJson("{$page}/decision", [])->assertStatus(422);
+
+        $this->actingAs($adordc, 'sanctum')->getJson($page)->assertOk()
+            ->assertJsonPath('role', 'adordc')
+            ->assertJsonPath('current_step', 2)
+            // The step behind them is answered, and reads as answered.
+            ->assertJsonPath('locks.mentor', true)
+            ->assertJsonPath('approvals.mentor', true)
+            ->assertJsonPath('comments.mentor', 'Worth doing.')
+            ->assertJsonPath('locks.adordc', false)
+            // Filing it is the first line of the history, then each answer.
+            ->assertJsonPath('history.0.action', 'Submitted by ' . $student->name() . ' (the student)')
+            ->assertJsonPath('history.1.action', 'Recommended by ' . $mentor->user->name() . ' (the faculty mentor)')
+            ->assertJsonPath('history.1.comment', 'Worth doing.');
+
+        $this->actingAs($adordc, 'sanctum')->postJson("{$page}/decision", ['approval' => true])->assertOk();
+        $this->actingAs($dordc, 'sanctum')->getJson($page)->assertOk()->assertJsonPath('may_reject', true);
+        $this->actingAs($dordc, 'sanctum')->postJson("{$page}/decision", ['approval' => true])
+            ->assertOk()->assertJsonPath('status', 'selected');
+
+        $this->actingAs($mentor->user, 'sanctum')->getJson($page)->assertOk()
+            ->assertJsonPath('stage', 'complete')
+            ->assertJsonPath('current_step', 4)
+            ->assertJsonPath('awaiting_me', false)
+            ->assertJsonPath('locks.dordc', true);
+
+        // The stipend details are a form of their own, on a page of their own.
+        $this->actingAs($student, 'sanctum')->postJson("/api/urf/{$id}/fellow", [
+            'full_name' => 'Page Student', 'dob' => '2004-01-02', 'gender' => 'Male', 'father_name' => 'Someone',
+            'pan' => 'abcde9876z', 'aadhaar' => '4321 8765 2109', 'bank_name' => 'PNB',
+            'account_no' => '987654321098', 'ifsc' => 'punb0001234',
+        ])->assertOk();
+
+        $fellowId = DB::table('urf_fellows')->where('urf_application_id', $id)->value('id');
+        $fellowPage = "/api/urf/urf-additional-info/{$fellowId}";
+
+        // An approver is checking that the person is who they say, not their
+        // bank, so they read the last four digits of what identifies them.
+        $this->actingAs($mentor->user, 'sanctum')->getJson($fellowPage)->assertOk()
+            ->assertJsonPath('form_name', 'Additional Information Form')
+            ->assertJsonPath('stage', 'mentor')
+            ->assertJsonPath('filled.full_name', 'Page Student')
+            ->assertJsonPath('filled.pan', 'XXXXXX876Z')
+            ->assertJsonPath('filled.account_no', 'XXXXXXXX1098');
+
+        // The office, and the student who gave them, read them whole.
+        $this->actingAs($admin, 'sanctum')->getJson($fellowPage)->assertOk()
+            ->assertJsonPath('filled.pan', 'ABCDE9876Z')
+            ->assertJsonPath('filled.account_no', '987654321098');
+        $this->actingAs($student, 'sanctum')->getJson($fellowPage)->assertOk()
+            ->assertJsonPath('role', 'student')
+            ->assertJsonPath('filled.pan', 'ABCDE9876Z');
+    }
+
     public function test_the_dordc_ends_a_project_and_the_student_may_apply_again(): void
     {
         Storage::fake('public');

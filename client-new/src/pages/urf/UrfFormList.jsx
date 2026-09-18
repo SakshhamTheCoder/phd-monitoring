@@ -16,7 +16,8 @@ const TITLES = {
 /**
  * Admin → URF → one form: who filled it in, listed the way the PhD form lists
  * are. The table and filter bar read the page's own path as their endpoint,
- * and a row opens the project the submission belongs to.
+ * and a row opens that submission's own page, which holds what was filled in
+ * and what each step of the chain said about it.
  */
 const UrfFormList = () => {
   const { pathname } = useLocation();
@@ -35,7 +36,7 @@ const UrfFormList = () => {
           endpoint={pathname}
           filters={filters}
           enableSelect={false}
-          customOpenForm={(row) => navigate(`/urf/${row.application_id ?? row.id}`)}
+          customOpenForm={(row) => navigate(`${pathname}/${row.id}`)}
         />
       </div>
     </Layout>

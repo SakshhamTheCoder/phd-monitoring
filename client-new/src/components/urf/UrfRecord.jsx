@@ -7,7 +7,8 @@ import ShowPublications from '../publications/ShowPublications';
 import { facultyNameCell } from '../facultyLink/FacultyLink';
 import { fileUrlFrom } from '../common/FileLink';
 import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
-import UrfApproval, { UrfApprovalTrail, stageLine } from './UrfApproval';
+import { UrfApprovalTrail, stageLine } from './UrfApproval';
+import FormGrid from '../forms/formGrid/FormGrid';
 
 export const URF_STATUSES = ['applied', 'selected', 'rejected'];
 export const REPORT_TYPES = { half_yearly: 'Half-yearly Progress Report', final: 'Final Report' };
@@ -106,7 +107,47 @@ const hasPublications = (groups) => Object.values(groups || {}).some((rows) => r
  * and reports, each report with the publications linked to it. The server
  * leaves out stipend details a student is not entitled to see.
  */
-const UrfRecord = ({ record, actions = null, onDecided = () => {} }) => {
+/**
+ * The project's forms, each opening its own page. The project page holds the
+ * project; what a form asked, and what each step of the chain said about it,
+ * belongs to that form.
+ *
+ * Offered on the URF pages, which a student has no route to. Their own forms
+ * are on /forms, where they can still be filled in.
+ */
+const UrfForms = ({ record }) => {
+  const forms = [
+    {
+      form_type: 'urf-application',
+      form_name: 'URF Application Form',
+      path: `/urf/urf-application/${record.id}`,
+      action_required: record.awaiting_me,
+    },
+    // A fellow row a reader is not entitled to is left out of the payload, so
+    // the card for it is not offered either.
+    ...(record.fellows || []).map((fellow) => ({
+      form_type: 'urf-additional-info',
+      form_name: 'Additional Information Form',
+      path: `/urf/urf-additional-info/${fellow.id}`,
+      action_required: fellow.awaiting_me,
+    })),
+    ...(record.reports || []).map((report) => ({
+      form_type: report.type === 'final' ? 'urf-final-report' : 'urf-half-yearly-report',
+      form_name: REPORT_TYPES[report.type] || 'Report',
+      path: `/urf/${report.type === 'final' ? 'urf-final-report' : 'urf-half-yearly-report'}/${report.id}`,
+      action_required: report.awaiting_me,
+    })),
+  ];
+
+  return (
+    <div className="grid-container-wrapper">
+      <div className="grid-label">Forms</div>
+      <FormGrid forms={forms} title={null} />
+    </div>
+  );
+};
+
+const UrfRecord = ({ record, actions = null, forms = false }) => {
   const reportsDue = record.reports?.length > 0 || record.status === 'selected';
 
   return (
@@ -136,12 +177,9 @@ const UrfRecord = ({ record, actions = null, onDecided = () => {} }) => {
         {actions && <div className="profile-actions">{actions}</div>}
       </div>
 
-      <UrfApproval
-        form={record}
-        formKey="urf-application"
-        onDecided={onDecided}
-      />
       <UrfApprovalTrail form={record} />
+
+      {forms && <UrfForms record={record} />}
 
       <TeamTables record={record} />
 
@@ -175,26 +213,10 @@ const UrfRecord = ({ record, actions = null, onDecided = () => {} }) => {
         <GridContainer label="Reports" elements={[<ReportsTable reports={record.reports} />]} space={3} />
       )}
 
-      {record.reports?.filter((report) => report.awaiting_me || report.mentor_comments).map((report) => (
+      {record.reports?.filter((report) => report.mentor_comments || report.adordc_comments || report.dordc_comments).map((report) => (
         <div key={`approval-${report.id}`} className="urf-report-approval">
           <div className="urf-subhead"><h3>{report.type === 'final' ? 'Final Report' : 'Half-yearly Report'}</h3></div>
-          <UrfApproval
-            form={report}
-            formKey={report.type === 'final' ? 'urf-final-report' : 'urf-half-yearly-report'}
-            onDecided={onDecided}
-          />
           <UrfApprovalTrail form={report} />
-        </div>
-      ))}
-
-      {record.fellows?.filter((fellow) => fellow.awaiting_me).map((fellow) => (
-        <div key={`approval-fellow-${fellow.id}`} className="urf-report-approval">
-          <div className="urf-subhead"><h3>Additional Information Form</h3></div>
-          <UrfApproval
-            form={fellow}
-            formKey="urf-additional-info"
-            onDecided={onDecided}
-          />
         </div>
       ))}
 
