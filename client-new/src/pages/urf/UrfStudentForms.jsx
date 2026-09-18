@@ -4,7 +4,8 @@ import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import FormGrid from '../../components/forms/formGrid/FormGrid';
 import CustomButton from '../../components/forms/fields/CustomButton';
-import UrfRecord, { ReportsTable, Section, StatusText, REPORT_TYPES } from '../../components/urf/UrfRecord';
+import { ReportsTable, Section, StatusText, REPORT_TYPES } from '../../components/urf/UrfRecord';
+import UrfFormShell from '../../components/urf/UrfFormShell';
 import { ApplyForm, FellowForm, ReportForm, signedInUser } from '../../components/urf/UrfForms';
 import { UrfApprovalTrail } from '../../components/urf/UrfApproval';
 import { apiUrfMine } from '../../api/urf';
@@ -155,7 +156,12 @@ export const UrfFormPage = ({ type }) => {
       && application.status === 'applied'
       && application.session === state.session
       && application.student2_email?.toLowerCase() !== me.email?.toLowerCase();
-    body = editable ? <ApplyForm initial={application} student={state.student} onSaved={load} /> : <UrfRecord record={application} />;
+    // Once it can no longer be corrected it is read rather than filled in,
+    // and what is read is the application: the whole project record here put
+    // the stipend details and every report on a page headed Application Form.
+    body = editable
+      ? <ApplyForm initial={application} student={state.student} onSaved={load} />
+      : <UrfFormShell path={`/urf/urf-application/${application.id}`} />;
   } else if (application && type === 'additional') {
     // Prefilled from the student's most recent other project, and still editable.
     const previous = state.applications.find((a) => a.id !== application.id && a.fellows?.length)?.fellows[0];

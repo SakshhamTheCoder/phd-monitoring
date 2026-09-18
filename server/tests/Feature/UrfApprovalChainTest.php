@@ -218,6 +218,13 @@ class UrfApprovalChainTest extends TestCase
         // A student of another project is not on this chain.
         $this->actingAs($outsider, 'sanctum')->getJson($page)->assertForbidden();
 
+        // A student of this one reads their own form under /forms, which is
+        // the same form and so the same page. They hold the first step, so
+        // that is all the ladder gives them.
+        $this->actingAs($student, 'sanctum')->getJson($page)->assertOk()
+            ->assertJsonPath('role', 'student')
+            ->assertJsonPath('awaiting_me', false);
+
         // The shared recommendation field answers with approval rather than a
         // decision, and the endpoint reads it as the decision it means.
         $this->actingAs($mentor->user, 'sanctum')
