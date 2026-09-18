@@ -213,6 +213,15 @@ const AppContent = () => {
             {may('urf') && (
               <>
                 <Route path="/urf" element={<UrfList />} />
+                {/* Each form's own submissions. These sit beside /urf rather
+                    than with the admin routes: the office roles that manage URF
+                    are not all the admin role, and a form card opening for them
+                    fell through to /urf/:id and drew the project page instead.
+                    The server refuses anyone without can_manage_urf. */}
+                <Route path="/urf/urf-application" element={<UrfFormList />} />
+                <Route path="/urf/urf-additional-info" element={<UrfFormList />} />
+                <Route path="/urf/urf-half-yearly-report" element={<UrfFormList />} />
+                <Route path="/urf/urf-final-report" element={<UrfFormList />} />
                 <Route path="/urf/:id" element={<UrfDetails />} />
               </>
             )}
@@ -228,10 +237,6 @@ const AppContent = () => {
                 <Route path="/clerk-management" element={<ClerkManagement />} />
                 <Route path="/clerks" element={<ClerkManagement />} />
                 <Route path="/configuration" element={<Configuration />} />
-                <Route path="/urf/urf-application" element={<UrfFormList />} />
-                <Route path="/urf/urf-additional-info" element={<UrfFormList />} />
-                <Route path="/urf/urf-half-yearly-report" element={<UrfFormList />} />
-                <Route path="/urf/urf-final-report" element={<UrfFormList />} />
               </>
             )}
             <Route path="*" element={<NotFound />} />
