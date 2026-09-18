@@ -3,6 +3,9 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import './styles/ui.css';
 import App from './App';
+import installStaleChunkReload from './staleChunkReload';
+
+installStaleChunkReload();
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
