@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./FormList.css";
 import { baseURL } from "../../api/urls";
 import { customFetch } from "../../api/base";
@@ -42,6 +42,11 @@ const PagenationTable = ({
   const [fetching, setFetching] = useState(true);
 
   const { setLoading } = useLoading();
+  // Which request the table is waiting for. A filter changing while one is
+  // still in flight leaves two answers coming back in whatever order the
+  // network returns them, and the later answer is not always the newer one.
+  // Only the newest request may write to the table.
+  const latestRequest = useRef(0);
 
   const componentMap = components.reduce((all, one) => ({ ...all, [one.key]: one.component }), {});
 
@@ -60,6 +65,9 @@ const PagenationTable = ({
   }, [openMenu]);
 
   const fetchData = async (page = 1, rows = rowsPerPage, filters = null) => {
+    const request = (latestRequest.current += 1);
+    const isCurrent = () => latestRequest.current === request;
+
     setLoading(true);
     setFetching(true);
     let url = `${baseURL}${endpoint}?page=${page}&rows=${rows}`;
@@ -70,7 +78,7 @@ const PagenationTable = ({
 
     try {
       const data = await customFetch(url, "GET");
-      if (data?.success) {
+      if (data?.success && isCurrent()) {
         setFields(data.response.fields || []);
         setFieldsTitle(data.response.fieldsTitles || []);
         setForms(data.response.data || []);
@@ -80,8 +88,11 @@ const PagenationTable = ({
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
-      setFetching(false);
+      // A newer request is still running; it clears these when it lands.
+      if (isCurrent()) {
+        setLoading(false);
+        setFetching(false);
+      }
     }
   };
 

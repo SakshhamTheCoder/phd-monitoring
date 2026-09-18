@@ -170,19 +170,28 @@ const UrfList = () => {
     window.open(fileUrlFrom(row.proposal), '_blank', 'noopener,noreferrer');
   };
 
-  // The stage and the session are filters the search bar keeps applying,
-  // whatever is searched on top of them.
-  const mandatory = useMemo(() => [
-    { key: 'status', op: '=', value: tab },
-    ...(session ? [{ key: 'session', op: '=', value: session }] : []),
-  ], [tab, session]);
+  // The stage and the session are the page's own scope; the search box is the
+  // filter bar's. They are joined here, so the table has one filter object and
+  // makes one request for it.
+  //
+  // They used to be handed to the filter bar, which re-emitted them after its
+  // own render. A tab press then fetched twice: once with the tab being left,
+  // because the table re-rendered first, and once with the tab being opened.
+  // Neither request waited for the other, so whichever answer arrived last was
+  // the one shown, and the same tab gave a different table each time.
+  const query = useMemo(() => ({
+    ...filter,
+    mandatory_filter: [
+      { key: 'status', op: '=', value: tab },
+      ...(session ? [{ key: 'session', op: '=', value: session }] : []),
+      ...(filter.mandatory_filter ?? []),
+    ],
+  }), [filter, tab, session]);
 
-  // The filter bar emits after its own render, so the session reaches the table
-  // a beat behind the dropdown. Waiting for it to actually be in the query
-  // keeps two years from ever sharing the table, even for one frame. Nothing to
-  // wait for when there are no projects at all.
-  const scopedToOneSession = filter.mandatory_filter?.some((c) => c.key === 'session');
-  const ready = scopedToOneSession || sessions?.length === 0;
+  // Which session to open on is the session list's to say, so the table waits
+  // for that list rather than showing every year for the moment before it
+  // lands. An empty list still settles the page.
+  const ready = sessions !== null;
 
   // Only an applied project is still to be decided, so the tick boxes, the
   // select-all and the decisions themselves belong to that tab alone. A mentor
@@ -257,7 +266,6 @@ const UrfList = () => {
       </div>
       <FilterBar
         placeholder="Search projects by title, student, roll no or mentor…"
-        mandatory={mandatory}
         exclude={['session']}
         onSearch={setFilter}
       />
@@ -268,7 +276,7 @@ const UrfList = () => {
             // rather than keeping a selection the other tabs cannot act on.
             key={`${tab}-${refreshKey}`}
             endpoint="/urf"
-            filters={filter}
+            filters={query}
             enableSelect={decidable}
             persistentSelect={decidable}
             enableApproval={false}
