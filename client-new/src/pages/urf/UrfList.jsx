@@ -222,6 +222,15 @@ const UrfList = () => {
   // lands. An empty list still settles the page.
   const ready = sessions !== null;
 
+  // The same dot a scholar reads on their own forms page: a card is lit when
+  // something of that kind is waiting on this reader. The office holds no step
+  // on a chain, so it fetches no queue and lights nothing.
+  const formCards = useMemo(() => {
+    const waiting = new Set(queue.map((row) => row.form));
+
+    return URF_FORMS.map((form) => ({ ...form, action_required: waiting.has(form.form_type) }));
+  }, [queue]);
+
   // Only an applied project is still to be decided, so the tick boxes, the
   // select-all and the decisions themselves belong to that tab alone. A mentor
   // reads the projects they are on; deciding them is the office's.
@@ -248,7 +257,7 @@ const UrfList = () => {
           </>
         )}
       />
-      {readsUrf && <FormGrid forms={URF_FORMS} />}
+      {readsUrf && <FormGrid forms={formCards} />}
 
       <UnifiedBulkImportModal
         isOpen={importOpen}
