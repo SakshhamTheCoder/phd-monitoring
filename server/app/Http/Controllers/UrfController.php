@@ -351,6 +351,11 @@ class UrfController extends Controller
         );
     }
 
+    private static function roundName(string $type): string
+    {
+        return self::FORM_NAMES[$type === 'final' ? 'urf-final-report' : 'urf-half-yearly-report'];
+    }
+
     public function reportWindows()
     {
         if (!$this->mayRead(Auth::user())) {
@@ -376,6 +381,26 @@ class UrfController extends Controller
         ]);
 
         $window = UrfReportWindow::for($data['session'], $data['type'])->first() ?? new UrfReportWindow();
+
+        // One round runs at a time, so a fellow is never asked for two reports
+        // at once. Checked across every session and not only this one: a
+        // session is a calendar year and its rounds run inside it, so last
+        // year's final can reach into this year's first round.
+        $clash = UrfReportWindow::query()
+            ->when($window->exists, fn ($query) => $query->whereKeyNot($window->getKey()))
+            ->where('opens_on', '<=', $data['closes_on'])
+            ->where('closes_on', '>=', $data['opens_on'])
+            ->orderBy('opens_on')
+            ->first();
+
+        if ($clash) {
+            return response()->json([
+                'message' => 'One round runs at a time, and that overlaps the ' . self::roundName($clash->type)
+                    . ' round for URF ' . $clash->session . ', which runs '
+                    . $clash->opens_on->format('d M Y') . ' to ' . $clash->closes_on->format('d M Y') . '.',
+            ], 422);
+        }
+
         $window->fill($data)->save();
 
         return response()->json($window, 201);

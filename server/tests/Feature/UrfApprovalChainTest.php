@@ -808,6 +808,65 @@ class UrfApprovalChainTest extends TestCase
             ->assertStatus(422);
     }
 
+    /**
+     * One round runs at a time, so a fellow is never asked for two reports at
+     * once. Checked across sessions as well: a session is a calendar year and
+     * its rounds run inside it, so last year's final can reach into this
+     * year's first round.
+     */
+    public function test_only_one_report_round_runs_at_a_time(): void
+    {
+        $admin = $this->userAs('admin', ['can_manage_urf' => 'true']);
+        $year = (int) now()->year;
+
+        $round = fn (array $body) => $this->actingAs($admin, 'sanctum')
+            ->postJson('/api/urf/report-windows', $body);
+
+        $round([
+            'session' => $year,
+            'type' => 'half_yearly',
+            'opens_on' => "{$year}-06-01",
+            'closes_on' => "{$year}-09-30",
+        ])->assertCreated();
+
+        // Back to back is fine; the day after one closes is free.
+        $round([
+            'session' => $year,
+            'type' => 'final',
+            'opens_on' => "{$year}-10-01",
+            'closes_on' => "{$year}-12-31",
+        ])->assertCreated();
+
+        // Reaching back into the half-yearly round is not.
+        $round([
+            'session' => $year,
+            'type' => 'final',
+            'opens_on' => "{$year}-09-15",
+            'closes_on' => "{$year}-12-31",
+        ])->assertStatus(422)
+            ->assertJsonPath('message', 'One round runs at a time, and that overlaps the Half-yearly Progress Report round for URF '
+                . $year . ', which runs 01 Jun ' . $year . ' to 30 Sep ' . $year . '.');
+
+        // Nor does the next session get to start inside this one.
+        $next = $year + 1;
+        $round([
+            'session' => $next,
+            'type' => 'half_yearly',
+            'opens_on' => "{$year}-12-15",
+            'closes_on' => "{$next}-03-31",
+        ])->assertStatus(422);
+
+        // Moving a round's own dates is not a clash with itself.
+        $round([
+            'session' => $year,
+            'type' => 'final',
+            'opens_on' => "{$year}-10-15",
+            'closes_on' => "{$next}-01-31",
+        ])->assertCreated();
+
+        $this->assertSame(2, UrfReportWindow::where('session', $year)->count(), 'moved, not added');
+    }
+
     public function test_each_reader_sees_only_what_waits_on_them(): void
     {
         Storage::fake('public');
