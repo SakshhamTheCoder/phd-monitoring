@@ -37,6 +37,9 @@ export const apiUrfDeleteReportWindow = (id) => customFetch(`${URF}/report-windo
 export const apiUrfSignup = (body) => customFetch(`${URF}/signup`, 'POST', body, false);
 export const apiUrfResendVerification = (email) => customFetch(`${URF}/resend-verification`, 'POST', { email }, false);
 
+// Projects awarded before the portal existed, from the office's own sheet.
+export const apiUrfImportAwarded = (rows) => customFetch(`${URF}/import-awarded`, 'POST', { rows }, false);
+
 const BRANCHES = `${baseURL}/ug-branches`;
 export const apiBranchList = () => customFetch(BRANCHES, 'GET', {});
 export const apiBranchCreate = (body) => customFetch(BRANCHES, 'POST', body, true);

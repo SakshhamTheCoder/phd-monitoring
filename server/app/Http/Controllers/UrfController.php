@@ -6,7 +6,9 @@ use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\NotificationManager;
 use App\Http\Controllers\Traits\SaveFile;
 use App\Models\AppSetting;
+use App\Models\Faculty;
 use App\Models\UgBranch;
+use App\Models\UgStudent;
 use App\Models\Patent;
 use App\Models\Publication;
 use App\Models\UrfApplication;
@@ -484,6 +486,198 @@ class UrfController extends Controller
         $this->commitFileDeletions();
 
         return response()->json($application, $editing ? 200 : 201);
+    }
+
+    /**
+     * Onboard projects that were awarded before the portal, from the office's
+     * own sheet.
+     *
+     * These were not decided here, so nothing pretends they were: the
+     * application is created already selected, and the chain is closed by the
+     * office with a history entry saying where the decision came from. Writing
+     * mentor and ADORDC approvals would be recording readings nobody did.
+     *
+     * A project is matched on the first student's email and the session, so the
+     * same file twice updates rather than duplicates.
+     */
+    public function importAwarded(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user->may('can_manage_urf')) {
+            return $this->refuse();
+        }
+
+        $rows = $request->validate(['rows' => 'required|array|min:1'])['rows'];
+        $branches = UgBranch::all();
+
+        $added = 0;
+        $updated = 0;
+        $errors = [];
+
+        foreach ($rows as $index => $row) {
+            $line = $row['_rowNumber'] ?? $index + 2;
+            $cell = fn (string $key) => trim((string) ($row[$key] ?? ''));
+
+            $title = $cell('project_title');
+            $mentorEmail = $cell('mentor1_email');
+            if ($title === '' || $cell('student1_email') === '' || $mentorEmail === '') {
+                $errors[] = "Row {$line}: a project title, the first student's email and the mentor's email are all needed.";
+                continue;
+            }
+
+            // A project with no mentor has nobody to approve its reports, so an
+            // unknown mentor names the row rather than importing half a project.
+            $mentor = $this->internalFacultyByEmail($mentorEmail);
+            if (!$mentor) {
+                $errors[] = "Row {$line}: no internal faculty member has the email {$mentorEmail}.";
+                continue;
+            }
+
+            $secondMentor = null;
+            if ($cell('mentor2_email') !== '') {
+                $secondMentor = $this->internalFacultyByEmail($cell('mentor2_email'));
+                if (!$secondMentor) {
+                    $errors[] = "Row {$line}: no internal faculty member has the email " . $cell('mentor2_email') . ".";
+                    continue;
+                }
+            }
+
+            try {
+                $students = [];
+                foreach ([1, 2] as $slot) {
+                    if ($cell("student{$slot}_email") === '') {
+                        continue;
+                    }
+                    $students[$slot] = $this->awardedStudent($row, $slot, $branches, $line);
+                }
+            } catch (\RuntimeException $e) {
+                $errors[] = $e->getMessage();
+                continue;
+            }
+
+            $session = (int) ($cell('session') ?: now()->year);
+            $application = UrfApplication::where('student1_email', $cell('student1_email'))
+                ->where('session', $session)->first();
+            $existed = (bool) $application;
+
+            $application = $application ?: new UrfApplication();
+            $application->user_id = $students[1]['account']->id;
+            $application->session = $session;
+            $application->project_title = $title;
+            $application->mentor1_faculty_code = $mentor->faculty_code;
+            $application->mentor2_faculty_code = $secondMentor?->faculty_code;
+            $application->status = 'selected';
+
+            foreach ([1, 2] as $slot) {
+                $student = $students[$slot] ?? null;
+                $application->fill([
+                    "student{$slot}_name" => $student ? $student['name'] : null,
+                    "student{$slot}_roll_no" => $student ? $student['roll_no'] : null,
+                    "student{$slot}_branch_id" => $student ? $student['branch_id'] : null,
+                    "student{$slot}_year" => $student ? $student['year'] : null,
+                    "student{$slot}_gender" => $student ? $student['gender'] : null,
+                    "student{$slot}_email" => $student ? $student['email'] : null,
+                    "student{$slot}_phone" => $student ? $student['phone'] : null,
+                ]);
+            }
+            $application->save();
+
+            $application->closeChain($user, 'selected', 'Carried over from the awarded projects sheet.');
+
+            $existed ? $updated++ : $added++;
+        }
+
+        return response()->json([
+            'added' => $added,
+            'updated' => $updated,
+            'errors' => $errors,
+        ]);
+    }
+
+    /** A mentor is institute faculty, not an outside member of the directory. */
+    private function internalFacultyByEmail(string $email): ?Faculty
+    {
+        return Faculty::whereHas('user', fn ($query) => $query->where('email', $email))
+            ->where('type', 'internal')
+            ->first();
+    }
+
+    /**
+     * The account and record for one student on an awarded row, made if they
+     * have none.
+     *
+     * The branch comes from their own record where they already have one, so a
+     * sheet naming a department rather than a branch still imports. Only a
+     * student the portal has never seen has to be given a branch code, because
+     * a department maps to several branches and guessing which is not something
+     * an import should do.
+     */
+    private function awardedStudent(array $row, int $slot, $branches, $line): array
+    {
+        $cell = fn (string $key) => trim((string) ($row[$key] ?? ''));
+        $email = $cell("student{$slot}_email");
+        $name = $cell("student{$slot}_name");
+        $rollNo = $cell("student{$slot}_roll_no");
+
+        if ($name === '' || $rollNo === '') {
+            throw new \RuntimeException("Row {$line}: student {$slot} needs a name and a roll number.");
+        }
+
+        $account = User::where('email', $email)->first();
+        $branchId = $account?->ugStudent?->branch_id;
+
+        if (!$branchId) {
+            $code = $cell("student{$slot}_branch_code");
+            $branch = $branches->first(fn (UgBranch $b) => strcasecmp($b->code, $code) === 0);
+            if (!$branch) {
+                throw new \RuntimeException(
+                    "Row {$line}: {$email} is not on the portal yet, so the row needs a branch code for them"
+                    . ($code === '' ? "." : ", and '{$code}' is not one.")
+                );
+            }
+            $branchId = $branch->id;
+        }
+
+        $year = (int) ($cell("student{$slot}_year") ?: $account?->ugStudent?->year ?: 0);
+        $gender = $cell("student{$slot}_gender");
+
+        $parts = preg_split('/\s+/', $name, 2);
+        $details = [
+            'first_name' => $parts[0],
+            'last_name' => $parts[1] ?? '',
+            'email' => $email,
+            'phone' => $cell("student{$slot}_phone") ?: null,
+            'gender' => in_array($gender, ['Male', 'Female'], true) ? $gender : null,
+        ];
+
+        $account = DB::transaction(function () use ($details, $account, $rollNo, $branchId, $year) {
+            if ($account) {
+                $account->fill(array_filter($details))->save();
+            } else {
+                $account = UgStudent::registerAccount($details, null, true);
+            }
+
+            $record = $account->ugStudent ?: $account->ugStudent()->make();
+            $record->fill(array_filter([
+                'roll_no' => $rollNo,
+                'branch_id' => $branchId,
+                'year' => $year ?: null,
+            ]));
+            $account->ugStudent()->save($record);
+
+            return $account->fresh();
+        });
+
+        return [
+            'account' => $account,
+            'name' => $name,
+            'roll_no' => $rollNo,
+            'branch_id' => $branchId,
+            'year' => $year ?: null,
+            'gender' => $details['gender'],
+            'email' => $email,
+            'phone' => $details['phone'],
+        ];
     }
 
     /** The stipend details, one set per selected student. */

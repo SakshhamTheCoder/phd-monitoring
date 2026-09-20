@@ -98,10 +98,17 @@ trait UrfApprovable
         $this->save();
     }
 
-    public function closeChain(User $user, string $decision): void
+    /**
+     * Settle the form without anybody reading it: the office has decided.
+     *
+     * `comments` says why, and is what an import uses to record that the
+     * decision was taken outside the portal rather than leave a history entry
+     * that reads like an approval somebody gave here.
+     */
+    public function closeChain(User $user, string $decision, ?string $comments = null): void
     {
         $this->stage = self::COMPLETE;
-        $this->addHistory($user, 'office', $decision, null);
+        $this->addHistory($user, 'office', $decision, $comments);
         $this->save();
     }
 

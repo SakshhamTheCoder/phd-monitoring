@@ -20,7 +20,8 @@ import GridContainer from '../../components/forms/fields/GridContainer';
 import { apiUrfQueue } from '../../api/urf';
 import UrfReportSchedule from '../../components/urf/UrfReportSchedule';
 import CustomModal from '../../components/forms/modal/CustomModal';
-import { apiUrfSessions, apiUrfStatus } from '../../api/urf';
+import { apiUrfSessions, apiUrfStatus, apiUrfImportAwarded } from '../../api/urf';
+import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
 import './UrfList.css';
 
 /** Admin → URF: every application, by stage, with the filters the students page has. */
@@ -65,6 +66,12 @@ const DECISIONS = [
 
 const isApplied = (row) => String(row.status).toLowerCase() === 'applied';
 
+// The office's awarded list. branch_code is only read for a student the portal
+// has not seen before: an existing account already knows its branch, and a
+// department maps to several branches so it cannot be guessed.
+const AWARDED_SAMPLE_CSV = `project_title,session,student1_name,student1_roll_no,student1_email,student1_phone,student1_gender,student1_year,student1_branch_code,student2_name,student2_roll_no,student2_email,student2_phone,student2_gender,student2_year,student2_branch_code,mentor1_email,mentor2_email
+Low power sensing for field robots,2026,Student One,102203001,student.one@thapar.edu,9800000001,Female,3,COE,Student Two,102203002,student.two@thapar.edu,9800000002,Male,3,COE,mentor.one@thapar.edu,`;
+
 const UrfList = () => {
   const navigate = useNavigate();
   const [filter, setFilter] = useState({ conditions: [] });
@@ -83,6 +90,26 @@ const UrfList = () => {
   // The applications switch and the session list are the office's. A mentor
   // asking for them was refused, and the refusal surfaced as an error toast.
   const managesUrf = can('can_manage_urf');
+  const [importOpen, setImportOpen] = useState(false);
+  const [importing, setImporting] = useState(false);
+
+  const importAwarded = async (preview, reset) => {
+    setImporting(true);
+    const res = await apiUrfImportAwarded(preview.data);
+    setImporting(false);
+
+    if (!res.success) {
+      toast.error(res.response?.message || 'Could not import the awarded projects.');
+      return;
+    }
+
+    const { added = 0, updated = 0, errors = [] } = res.response || {};
+    toast.success(`${added} projects added, ${updated} updated`);
+    errors.forEach((message) => toast.warn(message, { autoClose: 10000 }));
+    reset();
+    setImportOpen(false);
+    window.location.reload();
+  };
   const capabilitiesKnown = useCapabilitiesKnown();
 
   useEffect(() => {
@@ -210,11 +237,36 @@ const UrfList = () => {
         subtitle={can('can_manage_urf')
           ? `Undergraduate Research Fellowship. Applications are ${open ? 'open' : 'closed'}.`
           : 'The Undergraduate Research Fellowship projects you mentor.'}
-        actions={can('can_manage_urf') && open !== null && (
-          <CustomButton text={open ? 'Close Applications' : 'Open Applications'} onClick={toggleApplications} />
+        actions={can('can_manage_urf') && (
+          <>
+            <CustomButton text="Import Awarded" onClick={() => setImportOpen(true)} />
+            {open !== null && (
+              <CustomButton text={open ? 'Close Applications' : 'Open Applications'} onClick={toggleApplications} />
+            )}
+          </>
         )}
       />
       {can('can_manage_urf') && <FormGrid forms={URF_FORMS} />}
+
+      <UnifiedBulkImportModal
+        isOpen={importOpen}
+        onClose={() => setImportOpen(false)}
+        title="Import Awarded Projects"
+        required={['project_title', 'student1_name', 'student1_roll_no', 'student1_email', 'mentor1_email']}
+        rules={[
+          'For projects awarded before the portal. They are created already selected.',
+          'Nothing is recorded as approved: the decision was taken elsewhere, and the history says so.',
+          'Matched on the first student\'s email and the session, so the same file twice updates rather than duplicates.',
+          'The mentor is matched by email against institute faculty. A mentor the portal does not know names the row and the row is skipped.',
+          'branch_code is needed only for a student who has no account yet.',
+          'Student accounts are created where they do not exist, and are emailed a link to set a password.',
+          'The proposal PDF is not carried: it was filed outside the portal, so those projects show no proposal link.',
+        ]}
+        sampleFileName="urf_awarded_sample.csv"
+        sampleCsvContent={AWARDED_SAMPLE_CSV}
+        onImport={importAwarded}
+        submitting={importing}
+      />
 
       {can('can_manage_urf') && (
         <>
