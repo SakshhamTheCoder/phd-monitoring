@@ -7,7 +7,6 @@ import FacultyLink from '../facultyLink/FacultyLink';
 import { HeaderLine, StatusText, facultyName, yearLabel } from './UrfRecord';
 import { signedInUser } from './UrfForms';
 import { apiUrfMine } from '../../api/urf';
-import CustomButton from '../forms/fields/CustomButton';
 import UgDetailsForm from './UgDetailsForm';
 import { EMPTY_VALUE } from '../../utils/timeParse';
 
@@ -99,7 +98,9 @@ const UgProfile = () => {
             scholar's edit does. */}
         {state?.student && (
           <div className="profile-actions">
-            <CustomButton text="Edit details" onClick={() => setEditing(true)} />
+            <button className="profile-edit-small" onClick={() => setEditing(true)}>
+              <i className="fa fa-pencil" aria-hidden="true"></i> Edit
+            </button>
           </div>
         )}
       </div>
