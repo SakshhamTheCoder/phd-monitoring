@@ -54,9 +54,13 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
   const { state: locationState, pathname } = useLocation();
   const { roll_no } = useParams();
   const navigate = useNavigate();
-  // The same list the route table and the sidebar read, so the button appears
-  // exactly for the roles that have the attendance tab to land on.
-  const readsAttendancePage = ACCESS.attendance.includes(localStorage.getItem('userRole'));
+  // The roles with an attendance tab, less the HOD: /attendance dispatches by
+  // role, and the HOD's is leave requests with no register on it, so the button
+  // would promise attendance and open something else. Plenty of other roles
+  // read the figure below with no page at all behind it, which is why this is
+  // narrower than "may read attendance".
+  const role = localStorage.getItem('userRole');
+  const opensAttendanceRegister = ACCESS.attendance.includes(role) && role !== 'hod';
 
   const [profile, setProfile] = useState(locationState || dataIP);
   const [loading, setLoading] = useState(!profile);
@@ -322,7 +326,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
             {/* A date range belongs on the attendance page, which already has
                 one and the register behind it. This is the summary, and a way
                 through to the page for whoever has it. */}
-            {readsAttendancePage && (
+            {opensAttendanceRegister && (
               <button type="button" className="profile-edit-small" onClick={() => navigate(`/attendance?roll_no=${profile.roll_no}`)}>
                 <i className="fa fa-calendar" aria-hidden="true"></i> View attendance
               </button>
