@@ -34,7 +34,13 @@ const AttendancePage = () => {
   // Narrows the roster and the monthly table to one scholar. A view filter
   // only: what is saved is still every scholar loaded for the date, so hiding
   // a row cannot drop the mark somebody already made on it.
-  const [scholarFilter, setScholarFilter] = useState('');
+  //
+  // Seeded from ?roll_no=, which a scholar's profile sends, so View attendance
+  // lands on that scholar rather than on the whole roster. Read once on mount
+  // because that is the only way the page is entered with one.
+  const [scholarFilter, setScholarFilter] = useState(
+    () => new URLSearchParams(window.location.search).get('roll_no') || ''
+  );
   const [statuses, setStatuses] = useState({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);

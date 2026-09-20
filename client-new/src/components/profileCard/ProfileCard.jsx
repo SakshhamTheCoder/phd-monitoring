@@ -323,7 +323,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
                 one and the register behind it. This is the summary, and a way
                 through to the page for whoever has it. */}
             {readsAttendancePage && (
-              <button type="button" className="profile-edit-small" onClick={() => navigate('/attendance')}>
+              <button type="button" className="profile-edit-small" onClick={() => navigate(`/attendance?roll_no=${profile.roll_no}`)}>
                 <i className="fa fa-calendar" aria-hidden="true"></i> View attendance
               </button>
             )}
