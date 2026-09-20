@@ -510,6 +510,15 @@ class ConstituteOfIRBController extends Controller
                         'outside_expert' => $outsideExpertId,
                         'cognate_expert' => $cognateExpertId,
                         'completion'=>'complete',
+                        // Student::irbCompleted() asks whether this form was
+                        // approved, and nothing here ever said so: the status
+                        // writes above are on supervisorApprovals, a different
+                        // table. So a scholar whose IRB was constituted in the
+                        // portal still counted as pre-IRB, their title read as
+                        // tentative, and the supervisor change form refused to
+                        // open. Every other form marks itself approved when its
+                        // last step does; this one did not.
+                        'status' => 'approved',
                     ]);
                     $student = $formInstance->student;
                     $student->phd_title = $formInstance->phd_title;
