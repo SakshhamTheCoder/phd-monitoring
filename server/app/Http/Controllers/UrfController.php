@@ -421,10 +421,6 @@ class UrfController extends Controller
         if (!$user->may('can_apply_for_urf')) {
             return $this->refuse();
         }
-        if (!AppSetting::value('urf', 'applications_open')) {
-            return response()->json(['message' => 'URF applications are closed'], 422);
-        }
-
         // One application per student per session, the calendar year.
         $session = (int) now()->year;
         $application = UrfApplication::forMember($user)
@@ -436,6 +432,15 @@ class UrfController extends Controller
             return response()->json(['message' => "You already have a URF project for {$session}"], 422);
         }
         $editing = $application?->status === 'applied';
+
+        // Closing applications stops new ones. A correction is of a form
+        // already filed, which a step sent back to be fixed, so closing the
+        // window in the meantime must not strand it on the student with no way
+        // to return it. The stage check below is what keeps this to a form
+        // actually sent back.
+        if (!$editing && !AppSetting::value('urf', 'applications_open')) {
+            return response()->json(['message' => 'URF applications are closed'], 422);
+        }
         if ($editing && $application->user_id !== $user->id) {
             return response()->json(['message' => 'Only the student who applied can change the application'], 403);
         }

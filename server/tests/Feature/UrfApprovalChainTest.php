@@ -745,6 +745,69 @@ class UrfApprovalChainTest extends TestCase
         $this->assertSame(3, $record->year);
     }
 
+    /**
+     * Closing applications stops new ones. A form a step has sent back is not a
+     * new one: it was filed while the window was open, and it sits on the
+     * student only because somebody asked them to fix it.
+     */
+    public function test_a_sent_back_application_is_corrected_after_applications_close(): void
+    {
+        Storage::fake('public');
+
+        $admin = $this->userAs('admin', ['can_manage_urf' => 'true', 'can_manage_app_settings' => 'true']);
+        $student = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
+        $fresh = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
+        $department = Department::create(['name' => 'Closed Test Department', 'code' => 'CLSTD']);
+        $branch = UgBranch::create(['programme' => 'BE', 'code' => 'CLSTB', 'name' => 'Closed Test Branch', 'department_id' => $department->id]);
+        $mentor = $this->faculty(990181, $department);
+
+        $this->actingAs($admin, 'sanctum')->postJson('/api/settings/urf', ['applications_open' => 1])->assertOk();
+
+        $form = [
+            'project_title' => 'Closed window project ' . Str::random(4),
+            'student1_name' => 'Closed Student',
+            'student1_roll_no' => '10230' . random_int(1000, 9999),
+            'student1_branch_id' => $branch->id,
+            'student1_year' => 2,
+            'student1_gender' => 'Male',
+            'student1_email' => $student->email,
+            'student1_phone' => '9800000020',
+            'mentor1_faculty_code' => $mentor->faculty_code,
+        ];
+
+        $id = $this->actingAs($student, 'sanctum')
+            ->postJson('/api/urf', $form + ['proposal' => UploadedFile::fake()->create('p.pdf', 10, 'application/pdf')])
+            ->assertCreated()->json('id');
+
+        $this->actingAs($mentor->user, 'sanctum')
+            ->postJson("/api/urf/urf-application/{$id}/decision", ['decision' => 'send_back', 'comments' => 'Narrow it.'])
+            ->assertOk();
+
+        $this->actingAs($admin, 'sanctum')->postJson('/api/settings/urf', ['applications_open' => 0])->assertOk();
+
+        // The correction goes through, and starts the reading again.
+        $this->actingAs($student, 'sanctum')
+            ->postJson('/api/urf', $form + ['project_title' => 'Closed window project, narrower'])
+            ->assertOk();
+        $this->assertSame('mentor', UrfApplication::find($id)->stage);
+
+        // A student who never applied still cannot start one.
+        $this->actingAs($fresh, 'sanctum')
+            ->postJson('/api/urf', $form + [
+                'student1_email' => $fresh->email,
+                'student1_roll_no' => '10230' . random_int(1000, 9999),
+                'student1_phone' => '9800000021',
+                'proposal' => UploadedFile::fake()->create('p.pdf', 10, 'application/pdf'),
+            ])
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'URF applications are closed');
+
+        // And the one now back with the mentor is not rewritten either.
+        $this->actingAs($student, 'sanctum')
+            ->postJson('/api/urf', $form + ['project_title' => 'Rewritten behind the mentor'])
+            ->assertStatus(422);
+    }
+
     public function test_each_reader_sees_only_what_waits_on_them(): void
     {
         Storage::fake('public');

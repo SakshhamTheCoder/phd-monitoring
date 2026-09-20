@@ -149,8 +149,10 @@ export const UrfFormPage = ({ type }) => {
     body = <p>This URF project was not found.</p>;
   } else if (application && type === 'application') {
     const me = signedInUser();
-    const editable = state.applications_open
-      && application.status === 'applied'
+    // Not gated on the window being open: an application only sits on the
+    // student once a step has sent it back, and closing applications stops new
+    // ones rather than stranding that one.
+    const editable = application.status === 'applied'
       && !locked(application)
       && application.session === state.session
       && application.student2_email?.toLowerCase() !== me.email?.toLowerCase();
