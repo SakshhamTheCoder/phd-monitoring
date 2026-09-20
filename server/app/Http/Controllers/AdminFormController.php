@@ -42,32 +42,40 @@ class AdminFormController extends Controller
         'supervisor-allocation' => [
             'form_name' => 'Supervisor Allocation Form',
             'max_count' => 1,
-            'steps' => ['student', 'phd_coordinator', 'hod']
+            // Two supervisors or fewer stop at the HOD. Three or more carry on to
+            // 'dordc' and 'director'; SupervisorAllocationController picks the
+            // chain once the coordinator has named them.
+            'steps' => ['student', 'phd_coordinator', 'hod', 'dordc', 'director', 'complete']
         ],
         'irb-constitution' => [
             'form_name' => 'IRB Constitution',
             'max_count' => 1,
-            'steps' => ['student', 'faculty', 'hod','adordc' ,'dordc', 'complete']
+            'steps' => ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc', 'complete']
         ],
         'irb-submission' => [
             'form_name' => 'Revised IRB',
             'max_count' => 1,
-            'steps' => ['student', 'faculty','external','doctoral', 'hod','adordc' , 'dordc', 'complete']
+            'steps' => ['student', 'faculty', 'external', 'doctoral', 'phd_coordinator', 'hod', 'dra', 'dordc', 'complete']
         ],
         'irb-extension' => [
             'form_name' => 'IRB Extension',
             'max_count' => 10,
-            'steps' => ['student', 'faculty', 'phd_coordinator','hod', 'dra', 'dordc', 'complete']
+            // A second extension carries on to the Vice Chancellor; one year of
+            // extension is theirs to grant. ResearchExtentionController picks
+            // the chain at creation, from whether the scholar has had one.
+            'steps' => ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc', 'director', 'complete']
         ],
         'supervisor-change' => [
             'form_name' => 'Supervisor Change',
             'max_count' => 10,
-            'steps' => ['student',  'phd_coordinator', 'hod','dordc', 'dra', 'complete']
+            // Three or more supervisors adds 'director' before 'complete'.
+            'steps' => ['student', 'phd_coordinator', 'hod', 'dordc', 'director', 'complete']
         ],
         'status-change' => [
             'form_name' => 'Change of Status',
             'max_count' => 2,
-            'steps' => ['student', 'faculty',  'phd_coordinator', 'hod', 'dra','dordc', 'complete']
+            // A second change of status carries on to the Vice Chancellor.
+            'steps' => ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc', 'director', 'complete']
         ],
         'semester-off' => [
             'form_name' => 'Semester Off',
@@ -85,18 +93,23 @@ class AdminFormController extends Controller
         'synopsis-submission' => [
             'form_name' => 'Synopsis Submission',
             'max_count' => 1,
-            'steps' => ['student', 'faculty',  'phd_coordinator', 'hod', 'dra','adordc' ,'dordc', 'director',  'complete']
+            // 'doctoral' was missing here while SynopsisSubmissionController has
+            // always built the chain with it. The same roles answer twice, once
+            // on the written submission and again after the viva; the chain is
+            // listed once, because that is what the row stores.
+            'steps' => ['student', 'faculty', 'doctoral', 'phd_coordinator', 'hod', 'dordc', 'complete']
         ],
         'thesis-submission' => [
             'form_name' => 'Thesis Submission',
             'max_count' => 1,
-            'steps' => ['student', 'faculty',  'phd_coordinator','hod',  'dra','adordc','dordc', 'complete']
+            'steps' => ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc', 'complete']
         ],
         'thesis-extension' => [
             'form_name' => 'Thesis Extension',
             // One ordinary extension, then one special extension. Nothing after.
             'max_count' => 2,
-            'steps' => ["student","faculty","phd_coordinator","hod","dra","dordc","complete"]
+            // The special one carries on to the Vice Chancellor.
+            'steps' => ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc', 'director', 'complete']
         ],
         // 'presentation' => [
         //     'form_name' => 'Presentation',

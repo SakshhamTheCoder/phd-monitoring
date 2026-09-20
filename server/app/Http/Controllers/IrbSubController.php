@@ -63,7 +63,7 @@ class IrbSubController extends Controller
     {
         $user = Auth::user();
         $role = $user->current_role;
-        $steps=['student','faculty','external','doctoral','hod','adordc','dordc','complete'];
+        $steps=['student','faculty','external','doctoral','phd_coordinator','hod','dra','dordc','complete'];
         if($role->role != 'student'){
             return $this->refuse();
         }
@@ -100,16 +100,19 @@ class IrbSubController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
         $model = IrbSubForm::class;
-        $steps=['student','faculty','external','doctoral','hod','adordc','dordc','complete'];
         switch ($this->actingStep($user, $form_id)) {
             case 'student':
                 return $this->handleStudentForm($user, $form_id, $model);
             case 'hod':
                 return $this->handleHodForm($user, $form_id, $model);
+            case 'phd_coordinator':
+                return $this->handleCoordinatorForm($user, $form_id, $model);
             case 'doctoral':
                 return $this->handleDoctoralForm($user, $form_id, $model);
+            case 'dra':
             case 'dordc':
                 return $this->handleAdminForm($user, $form_id, $model);
+            // Reads the form, answers nothing. Not a step in the chain.
             case 'adordc':
                 return $this->handleAdordcForm($user, $form_id, $model);
             case 'faculty':
@@ -136,10 +139,12 @@ class IrbSubController extends Controller
                 return $this->supervisorSubmit($user, $request, $form_id);
             case 'doctoral':
                 return $this->doctoralSubmit($user, $request, $form_id);
+            case 'phd_coordinator':
+                return $this->coordinatorSubmit($user, $request, $form_id);
             case 'hod':
                 return $this->hodSubmit($user, $request, $form_id);
-            case 'adordc':
-                return $this->adordcSubmit($user, $request, $form_id);
+            case 'dra':
+                return $this->draSubmit($user, $request, $form_id);
             case 'dordc':
                 return $this->dordcSubmit($user, $request, $form_id);
             default:
@@ -151,7 +156,7 @@ class IrbSubController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
         $form_ids = $request->input('form_ids');
-        $allowed_roles = ['hod', 'dordc','adordc'];
+        $allowed_roles = ['phd_coordinator', 'hod', 'dra', 'dordc'];
         if (!in_array($role->role, $allowed_roles)) {
             return $this->refuse();
         }
@@ -164,11 +169,12 @@ class IrbSubController extends Controller
             if (!$form) {
                 return response()->json(['message' => 'Form not found'], 404);
             }
-            if ($role->role == 'hod') {
-                $this->hodSubmit($user, $request, $id);
-            } elseif ($role->role == 'dordc') {
-                $this->dordcSubmit($user, $request, $id);
-            }
+            match ($role->role) {
+                'phd_coordinator' => $this->coordinatorSubmit($user, $request, $id),
+                'hod' => $this->hodSubmit($user, $request, $id),
+                'dra' => $this->draSubmit($user, $request, $id),
+                'dordc' => $this->dordcSubmit($user, $request, $id),
+            };
         }
         return response()->json(['message' => 'Forms submitted successfully'], 200);
     }
@@ -233,30 +239,34 @@ class IrbSubController extends Controller
     private function doctoralSubmit($user, $request, $form_id)
     {
         $model = IrbSubForm::class;
-        return $this->submitForm($user, $request, $form_id, $model, 'doctoral', 'faculty', 'hod',  function ($formInstance) use ($request, $user) {
+        return $this->submitForm($user, $request, $form_id, $model, 'doctoral', 'faculty', 'phd_coordinator',  function ($formInstance) use ($request, $user) {
             $this->handleDoctoralSubmitForm($user, $request, $formInstance);
         });
     }
     
-     private function adordcSubmit($user, $request, $form_id)
+    private function coordinatorSubmit($user, $request, $form_id)
     {
         $model = IrbSubForm::class;
-        return $this->submitForm($user, $request, $form_id, $model, 'adordc', 'hod', 'dordc');
+        return $this->submitForm($user, $request, $form_id, $model, 'phd_coordinator', 'doctoral', 'hod');
     }
 
     private function hodSubmit($user, $request, $form_id)
     {
         $model = IrbSubForm::class;
-        return $this->submitForm($user, $request, $form_id, $model, 'hod', 'faculty', 'adordc');
+        return $this->submitForm($user, $request, $form_id, $model, 'hod', 'phd_coordinator', 'dra');
+    }
+
+    private function draSubmit($user, $request, $form_id)
+    {
+        $model = IrbSubForm::class;
+        return $this->submitForm($user, $request, $form_id, $model, 'dra', 'hod', 'dordc');
     }
 
     private function dordcSubmit($user, $request, $form_id)
     {
         $model = IrbSubForm::class;
-        // Back to the ADORDC, the previous step. This said 'phd_coordinator',
-        // which is in neither this form's chain nor its submit() switch, so a
-        // rejection here parked the form on a stage nobody could act on.
-        return $this->submitForm($user, $request, $form_id, $model, 'dordc', 'adordc', 'complete', function ($formInstance) use ($request, $user) {
+        // Back to the DRA, the previous step.
+        return $this->submitForm($user, $request, $form_id, $model, 'dordc', 'dra', 'complete', function ($formInstance) use ($request, $user) {
             $student = $formInstance->student;
             $student->phd_title=$formInstance->revised_phd_title;
             $student->save();

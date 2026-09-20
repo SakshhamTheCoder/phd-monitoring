@@ -56,6 +56,10 @@ class IrbSubForm extends Model
         // Use the common form data and merge with specific form data
         $commonJSON = $this->fullCommonForm($user);
         $formData=array_merge($commonJSON, [
+            // The committee reviewing this form is the IRB committee. It is the
+            // same people and the same 'doctoral' step; only the name they are
+            // known by on this form differs, and getRoleName reads this to say so.
+            'form_type' => 'irb-submission',
             'date_of_irb' => $this->student->date_of_irb,
             'revised_phd_title' => $this->revised_phd_title,
             'revised_irb_pdf' => $this->revised_irb_pdf,

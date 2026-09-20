@@ -67,10 +67,17 @@ class FormChainIsWalkableTest extends TestCase
         return file_get_contents((new ReflectionClass($controller))->getFileName());
     }
 
-    /** Every literal chain the controller builds, longest first. */
+    /**
+     * Every literal chain the controller builds, longest first.
+     *
+     * A controller with more than one chain declares them as constants rather
+     * than rebuilding the array at each use, so those spellings are read too:
+     * CHAIN for a chain chosen per form, ROUND for a form the same people
+     * approve more than once.
+     */
     private function chains(string $source): array
     {
-        preg_match_all('/(?:\$steps\s*=|\'steps\'\s*=>|STEPS\s*=)\s*\[(.*?)\]/s', $source, $matches);
+        preg_match_all('/(?:\$steps\s*=|\'steps\'\s*=>|STEPS\s*=|CHAIN[A-Z_]*\s*=|ROUND[A-Z_]*\s*=)\s*\[(.*?)\]/s', $source, $matches);
 
         $chains = [];
         foreach ($matches[1] as $body) {
@@ -155,7 +162,23 @@ class FormChainIsWalkableTest extends TestCase
             PREG_SET_ORDER
         );
 
-        $this->assertNotEmpty($calls, $type . ': no submitForm call this test can read');
+        if (!$calls) {
+            // A controller that works its neighbours out from a chain rather
+            // than writing the triple at each call site has nothing here to
+            // read. Synopsis Submission is one: the same people approve twice,
+            // in a different order each round, so the order lives in ROUND_ONE
+            // and ROUND_TWO and submitAs() looks the neighbours up in them.
+            //
+            // Every name it can produce comes from those arrays, and
+            // test_every_role_in_the_chain_can_submit already checks each of
+            // them against the switch, so the guarantee still holds.
+            $this->assertNotEmpty(
+                $this->chains($source),
+                $type . ': neither a submitForm triple nor a chain this test can read'
+            );
+
+            return;
+        }
 
         foreach ($calls as $call) {
             foreach (['back' => 'sends a rejection to', 'next' => 'hands an approval to'] as $key => $what) {

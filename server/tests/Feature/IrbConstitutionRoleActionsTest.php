@@ -113,10 +113,6 @@ class IrbConstitutionRoleActionsTest extends TestCase
         $user = $this->userAs($role);
         $faculty = $this->facultyFor($user, $this->nextFacultyCode++);
 
-        if ($role === 'adordc') {
-            $this->department->forceFill(['adordc_id' => $faculty->faculty_code])->save();
-        }
-
         return $user->fresh();
     }
 
@@ -157,11 +153,12 @@ class IrbConstitutionRoleActionsTest extends TestCase
             'student_id' => $this->scholar->roll_no,
             'status' => 'pending',
             'stage' => $stage,
-            'steps' => ['student', 'faculty', 'hod', 'adordc', 'dordc', 'complete'],
+            'steps' => ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc', 'complete'],
             'student_lock' => true,
             'supervisor_lock' => $stage === 'supervisor' ? false : true,
+            'phd_coordinator_lock' => $stage === 'phd_coordinator' ? false : true,
             'hod_lock' => $stage === 'hod' ? false : true,
-            'adordc_lock' => $stage === 'adordc' ? false : true,
+            'dra_lock' => $stage === 'dra' ? false : true,
             'dordc_lock' => $stage === 'dordc' ? false : true,
         ]);
 
@@ -176,7 +173,7 @@ class IrbConstitutionRoleActionsTest extends TestCase
                 'stage' => $stage,
                 'max_count' => 1,
                 'count' => 1,
-                'steps' => ['student', 'faculty', 'hod', 'adordc', 'dordc', 'complete'],
+                'steps' => ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc', 'complete'],
             ]
         );
 
@@ -251,7 +248,7 @@ class IrbConstitutionRoleActionsTest extends TestCase
         sort($recorded);
         sort($codes);
         $this->assertSame($codes, array_map('intval', $recorded));
-        $this->assertSame('hod', $form->fresh()->stage);
+        $this->assertSame('phd_coordinator', $form->fresh()->stage);
     }
 
     // ---------------------------------------------------------------- DoRDC
@@ -363,19 +360,19 @@ class IrbConstitutionRoleActionsTest extends TestCase
 
     public function test_a_rejection_without_a_reason_is_refused(): void
     {
-        $form = $this->formAt('adordc');
+        $form = $this->formAt('dra');
 
-        $this->submit($this->reviewer('adordc'), $form, ['approval' => false])
+        $this->submit($this->reviewer('dra'), $form, ['approval' => false])
             ->assertStatus(403);
 
-        $this->assertSame('adordc', $form->fresh()->stage);
+        $this->assertSame('dra', $form->fresh()->stage);
     }
 
     public function test_a_rejection_with_a_reason_sends_the_form_back(): void
     {
-        $form = $this->formAt('adordc');
+        $form = $this->formAt('dra');
 
-        $this->submit($this->reviewer('adordc'), $form, [
+        $this->submit($this->reviewer('dra'), $form, [
             'approval' => false,
             'comments' => 'The cognate area does not match the proposal.',
         ])->assertStatus(200);

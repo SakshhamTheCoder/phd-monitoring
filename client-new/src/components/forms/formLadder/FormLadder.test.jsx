@@ -28,7 +28,7 @@ const Student = Bespoke('student');
 const Supervisor = Bespoke('supervisor');
 
 // Synopsis Submission's real chain.
-const SYNOPSIS = ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'adordc', 'dordc', 'director', 'complete'];
+const SYNOPSIS = ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc', 'director', 'complete'];
 
 const renderSynopsis = (role) => render(
   <FormLadder
@@ -76,20 +76,29 @@ describe('FormLadder', () => {
     expect(screen.getByTestId('panel-student')).toBeTruthy();
   });
 
+  // The ADORDC approves nothing and is in no chain, so slicing by their own
+  // index would leave them with an empty page instead of the form they are
+  // there to read.
+  it('gives the adordc every step even though no chain contains them', () => {
+    renderSynopsis('adordc');
+    expect(screen.getByTestId('rec-director')).toBeTruthy();
+    expect(screen.getByTestId('panel-student')).toBeTruthy();
+  });
+
   it('renders nothing for a role the chain does not contain', () => {
     const { container } = renderSynopsis('clerk');
     expect(container.textContent).toBe('');
   });
 
-  // Supervisor Change raised before the student's IRB submission is complete
-  // drops DORDC and DRA (SupervisorChangeFormController::createForm). The stored
-  // chain is the only thing that knows, so the panels have to follow it.
-  it('follows a shortened chain stored on the form', () => {
-    const short = ['student', 'phd_coordinator', 'hod', 'complete'];
-    render(<FormLadder formData={{ role: 'hod', steps: short }} panels={{}} />);
-    expect(recommendationCalls.map((c) => c.role)).toEqual(['student', 'phd_coordinator', 'hod']);
-    expect(screen.queryByTestId('rec-dordc')).toBeNull();
-    expect(screen.queryByTestId('rec-dra')).toBeNull();
+  // A supervisor change for a scholar with two supervisors or fewer stops at the
+  // DORDC; three or more carries on to the Vice Chancellor
+  // (SupervisorChangeFormController::createForm). The stored chain is the only
+  // thing that knows, so the panels have to follow it.
+  it('follows a shorter chain stored on the form', () => {
+    const short = ['student', 'phd_coordinator', 'hod', 'dordc', 'complete'];
+    render(<FormLadder formData={{ role: 'dordc', steps: short }} panels={{}} />);
+    expect(recommendationCalls.map((c) => c.role)).toEqual(['student', 'phd_coordinator', 'hod', 'dordc']);
+    expect(screen.queryByTestId('rec-director')).toBeNull();
   });
 
   it('defaults allowRejection to false and lets a step override it', () => {

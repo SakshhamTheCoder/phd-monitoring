@@ -7,7 +7,7 @@ const StepTimeline = ({ formData}) => {
     return (
         <div className="timeline-container">
             {steps.map((step, index) => {
-                step=getRoleName(step);
+                step=getRoleName(step, formData.form_type);
                 let stepColor = 'default';
                 if (index < current_step) {
                     stepColor = 'green'; 

@@ -77,7 +77,7 @@ class PresentationController extends Controller
                     'semester_id' => $validator['semester_id'],
                     'status' => 'pending',
                     'completion' => 'incomplete',
-                    'steps' => ['student', 'faculty', 'doctoral', 'hod', 'adordc', 'dordc', 'complete'],
+                    'steps' => ['student', 'faculty', 'doctoral', 'hod', 'dordc', 'complete'],
                 ]);
             }
         }
@@ -354,7 +354,7 @@ class PresentationController extends Controller
                 'completion' => 'incomplete',
                 'semester_id' => $validator['semester_id'],
                 'total_progress'=> $student->overall_progress,
-                'steps' => ['student', 'faculty', 'doctoral', 'hod','adordc', 'dordc', 'complete'],
+                'steps' => ['student', 'faculty', 'doctoral', 'hod', 'dordc', 'complete'],
             ]);
             if(!$request->venue){
                 $form->venue = 'TBD';
@@ -480,7 +480,7 @@ class PresentationController extends Controller
                     'overall_progress' => 'satisfactory',
                     'status' => 'approved',
                     'completion' => 'complete',
-                    'steps' => ['student', 'faculty', 'doctoral', 'hod', 'adordc', 'dordc', 'complete'],
+                    'steps' => ['student', 'faculty', 'doctoral', 'hod', 'dordc', 'complete'],
                 ]);
 
                 $presentation->addHistoryEntry('Imported from progress sheet', $user->first_name);
@@ -643,7 +643,7 @@ class PresentationController extends Controller
                     'status' => 'pending',
                     'completion' => 'incomplete',
                     'semester_id' => $validator['semester_id'],
-                    'steps' => ['student', 'faculty', 'doctoral', 'hod','adordc', 'dordc', 'complete'],
+                    'steps' => ['student', 'faculty', 'doctoral', 'hod', 'dordc', 'complete'],
                 ]);
             }
         } else {
@@ -716,7 +716,7 @@ class PresentationController extends Controller
                 'ppt_file' => $validator['ppt_file'],
                 'total_progress' => $student->overall_progress,
                 'completion' => 'incomplete',
-                'steps' => ['student', 'faculty', 'doctoral', 'hod','adordc', 'dordc', 'complete'],
+                'steps' => ['student', 'faculty', 'doctoral', 'hod', 'dordc', 'complete'],
             ]);
 
             $emails = $this->emailList($student, $request);
@@ -759,6 +759,7 @@ class PresentationController extends Controller
                 return $this->handledoctoralForm($user, $form_id, $model);
             case 'dordc':
                 return $this->handleAdminForm($user, $form_id, $model);
+            // Reads the form, answers nothing. Not a step in the chain.
             case 'adordc':
                 return $this->handleAdordcForm($user, $form_id, $model, false);
             case 'faculty':
@@ -793,7 +794,7 @@ class PresentationController extends Controller
                 'semester_id' => $validator['semester_id'],
                 'status' => 'pending',
                 'completion' => 'incomplete',
-                'steps' => ['student', 'faculty', 'doctoral', 'hod','adordc','dordc','complete'],
+                'steps' => ['student', 'faculty', 'doctoral', 'hod', 'dordc', 'complete'],
             ]);
         }
 
@@ -812,8 +813,6 @@ class PresentationController extends Controller
                 return $this->hodSubmit($user, $request, $form_id);
             case 'dordc':
                 return $this->dordcSubmit($user, $request, $form_id);
-            case 'adordc':
-                return $this->adordcSubmit($user, $request, $form_id);
             case 'doctoral':
                 return $this->doctoralSubmit($user, $request, $form_id);
             default:
@@ -825,7 +824,7 @@ class PresentationController extends Controller
     {
         $user = Auth::user();
         $role = $user->current_role;
-        $allowedRoles = ['hod', 'dordc', 'doctoral','adordc'];
+        $allowedRoles = ['hod', 'dordc', 'doctoral'];
         if (!in_array($role->role, $allowedRoles)) {
             return $this->refuse();
         }
@@ -1089,19 +1088,6 @@ class PresentationController extends Controller
             $model,
             'hod',
             'faculty',
-            'adordc',
-        );
-    }
-    private function adordcSubmit($user, $request, $form_id)
-    {
-        $model = Presentation::class;
-        return $this->submitForm(
-            $user,
-            $request,
-            $form_id,
-            $model,
-            'adordc',
-            'hod',
             'dordc',
         );
     }
@@ -1116,7 +1102,7 @@ class PresentationController extends Controller
             $form_id,
             $model,
             'dordc',
-            'adordc',
+            'hod',
             'complete',
             function ($formInstance) use ($request, $user) {
                 $formInstance->completion = 'complete';

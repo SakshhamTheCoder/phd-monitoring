@@ -8,7 +8,6 @@ use App\Http\Controllers\Traits\GeneralFormHandler;
 use App\Http\Controllers\Traits\GeneralFormList;
 use App\Http\Controllers\Traits\GeneralFormSubmitter;
 use App\Models\ConstituteOfIRB;
-use App\Models\DoctoralCommittee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Faculty;
@@ -17,11 +16,11 @@ use App\Models\IrbExpertChairman;
 use App\Models\IrbNomineeCognate;
 use App\Models\IrbOutsideExpert;
 use App\Models\OutsideExpert;
+use App\Support\ScholarCommittee;
 use App\Models\Role;
 use App\Models\User;
 use App\Http\Controllers\Traits\SaveFile;
 use App\Models\Department;
-use App\Models\IRBCommittee;
 use App\Models\PHDObjective;
 
 //TODO: add outside expert not in the system
@@ -75,8 +74,9 @@ class ConstituteOfIRBController extends Controller
         $steps = [
             'student',
             'faculty',
+            'phd_coordinator',
             'hod',
-            'adordc',
+            'dra',
             'dordc',
             'complete'
         ];
@@ -98,21 +98,17 @@ class ConstituteOfIRBController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
         $model = ConstituteOfIRB::class;
-        $steps=[
-            'student',
-            'faculty',
-            'hod',
-            'adordc',
-            'dordc'
-        ];
         switch ($role->role) {
             case 'student':
                 return $this->handleStudentForm($user, $form_id, $model);
             case 'hod':
                 return $this->handleHodForm($user, $form_id, $model);
+            case 'phd_coordinator':
+                return $this->handleCoordinatorForm($user, $form_id, $model);
             case 'dra':
             case 'dordc':
                 return $this->handleAdminForm($user, $form_id, $model);
+            // Reads the form, answers nothing. Not a step in the chain.
             case 'adordc':
                 return $this->handleAdordcForm($user,$form_id,$model);
             case 'faculty':
@@ -136,10 +132,11 @@ class ConstituteOfIRBController extends Controller
                 return $this->studentSubmit($user, $request, $form_id);
             case 'faculty':
                 return $this->supervisorSubmit($user, $request, $form_id);
+            case 'phd_coordinator':
+                return $this->coordinatorSubmit($user, $request, $form_id);
             case 'hod':
                 return $this->hodSubmit($user, $request, $form_id);
-            case 'adordc':
-                return $this->adordcSubmit($user, $request, $form_id);
+            case 'dra':
                 return $this->draSubmit($user, $request, $form_id);
             case 'dordc':
                 return $this->dordcSubmit($user, $request, $form_id);
@@ -285,7 +282,7 @@ class ConstituteOfIRBController extends Controller
     {
        
     
-        return $this->submitForm($user,$request, $form_id, ConstituteOfIRB::class, 'faculty','student','hod', function ($formInstance) use ($request, $user) {
+        return $this->submitForm($user,$request, $form_id, ConstituteOfIRB::class, 'faculty','student','phd_coordinator', function ($formInstance) use ($request, $user) {
             // Check if nominee cognates are valid
             $request->validate([
                 'nominee_cognates' => 'array|required',
@@ -376,8 +373,8 @@ class ConstituteOfIRBController extends Controller
             $form_id, 
             ConstituteOfIRB::class, 
             'hod', 
-            'faculty', 
-            'adordc', 
+            'phd_coordinator', 
+            'dra', 
             function ($formInstance, $user) use ($request) {
                 $request->validate([
                     'chairman_experts' => 'array|required',
@@ -445,6 +442,18 @@ class ConstituteOfIRBController extends Controller
     }
     
     
+    private function coordinatorSubmit($user, Request $request, $form_id){
+        return $this->submitForm(
+            $user, 
+            $request, 
+            $form_id, 
+            ConstituteOfIRB::class, 
+            'phd_coordinator', 
+            'faculty', 
+            'hod'
+        );
+    }
+
     private function draSubmit($user, Request $request, $form_id){
         return $this->submitForm(
             $user, 
@@ -453,23 +462,7 @@ class ConstituteOfIRBController extends Controller
             ConstituteOfIRB::class, 
             'dra', 
             'hod', 
-            'adordc',   function ($formInstance, $user) use ($request) {}
-        );
-    }
-
-    private function adordcSubmit($user, Request $request, $form_id){
-        return $this->submitForm(
-            $user, 
-            $request, 
-            $form_id, 
-            ConstituteOfIRB::class, 
-            'adordc', 
-            // Back to the HOD, who is the previous step. This said 'dra', which
-            // is not in this form's chain and has no branch in submit(), so a
-            // rejection here parked the form at a stage nobody could act on and
-            // it could never move again.
-            'hod', 
-            'dordc',   function ($formInstance, $user) use ($request) {}
+            'dordc'
         );
     }
     
@@ -481,7 +474,7 @@ class ConstituteOfIRBController extends Controller
             $form_id, 
             ConstituteOfIRB::class, 
             'dordc', 
-            'hod', 
+            'dra', 
             'complete',
             function ($formInstance, $user) use ($request) {
                     $request->validate([
@@ -498,95 +491,32 @@ class ConstituteOfIRBController extends Controller
                     if(!$outsideExpert || !$cognateExpert) {
                         throw new \Exception('Invalid expert selection');
                     }
-                    $outsideExpert=OutsideExpert::find($outsideExpertId);
-                    // A scholar whose IRB is constituted again keeps members they already
-                    // have. (student, member) is unique, and a plain insert refused the
-                    // whole DoRDC approval as "could not be saved".
-                     
-                        IRBCommittee::firstOrCreate(
-                            ['student_id' => $formInstance->student->roll_no, 'member_type' => OutsideExpert::class, 'member_id' => $outsideExpert->id],
-                            ['type' => 'outside']
-                        );
-                        // No login account is created for the outside expert — the external
-                        // review happens via a secure email link (see IrbSubForm::
-                        // sendExternalReviewRequest / ExternalReviewController), attributed
-                        // to the OutsideExpert record, so no portal user is needed.
+                    // The committee is the chosen cognate plus the cognate
+                    // experts the HOD proposed. Written through ScholarCommittee so
+                    // this and the students import cannot disagree about which
+                    // tables a committee lives in.
+                    $members = IrbExpertChairman::where('irb_form_id', $formInstance->id)
+                        ->pluck('expert_id')
+                        ->push($cognateExpertId)
+                        ->all();
 
-                    // firstOrCreate, not create: the nominated cognate may already sit
-                    // on this student's committee, and (faculty_id, student_id) is
-                    // unique — a plain insert then aborts the whole DORDC approval
-                    // with a raw SQL error. Adding someone twice is a no-op, not an
-                    // error.
-                    DoctoralCommittee::firstOrCreate(
-                        [
-                            'student_id' => $formInstance->student->roll_no,
-                            'faculty_id' => $cognateExpertId,
-                        ],
-                        ['type' => 'internal']
+                    ScholarCommittee::constituted(
+                        $formInstance->student,
+                        $members,
+                        OutsideExpert::find($outsideExpertId)
                     );
 
-
-                    IRBCommittee::firstOrCreate(
-                            ['student_id' => $formInstance->student->roll_no, 'member_type' => Faculty::class, 'member_id' => $cognateExpertId],
-                            ['type' => 'inside']
-                        );
-                    
-                    $irbExperts=IrbExpertChairman::where('irb_form_id',$formInstance->id)->get();
-                    foreach($irbExperts as $irbExpert){
-                        DoctoralCommittee::firstOrCreate(
-                            [
-                                'student_id' => $formInstance->student->roll_no,
-                                'faculty_id' => $irbExpert->expert_id,
-                            ],
-                            ['type' => 'internal']
-                        );
-                        IRBCommittee::firstOrCreate(
-                            ['student_id' => $formInstance->student->roll_no, 'member_type' => Faculty::class, 'member_id' => $irbExpert->expert_id],
-                            ['type' => 'inside']
-                        );
-                    }
                     $formInstance->update([
                         'outside_expert' => $outsideExpertId,
                         'cognate_expert' => $cognateExpertId,
                         'completion'=>'complete',
                     ]);
-                    $student=$formInstance->student;
-                    $student->phd_title= $formInstance->phd_title;
+                    $student = $formInstance->student;
+                    $student->phd_title = $formInstance->phd_title;
                     $student->save();
                     $formInstance->save();
 
-                    $forms = [
-                        [
-                            'form_type' => 'irb-submission',
-                            'form_name' => 'Revised IRB',
-                            'max_count' => 1,
-                            'stage' => 'student',
-                        ],
-                        [
-                            'form_type' => 'irb-extension',
-                            'form_name' => 'IRB Extension',
-                            'max_count' => 10,
-                            'stage' => 'student',
-                        ],
-                    ];
-                    $student = $formInstance->student;
-                    foreach ($forms as $form) {
-                        $existingForm = Forms::where('student_id', $student->roll_no)
-                            ->where('form_type', $form['form_type'])
-                            ->first();
-
-                        if (!$existingForm) {
-                            $formData = (new \App\Http\Controllers\AdminFormController())->getFormCreationData(
-                                $form['form_type'],
-                                $student->roll_no,
-                                $student->department_id
-                            );
-                            
-                            if ($formData) {
-                                Forms::create($formData);
-                            }
-                        }
-                    }
+                    ScholarCommittee::openTheFormsItUnlocks($student);
             });
     }
 

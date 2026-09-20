@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 // use App\Models\IrbSubForm;
 use App\Models\Faculty;
+use App\Models\Student;
 use App\Models\Supervisor;
 // use App\Models\SupervisorAllocation;
 use App\Models\SupervisorChangeForm;
@@ -56,27 +57,61 @@ class SupervisorChangeFormController extends Controller {
     ]);
     }
 
+    /**
+     * Two chains, picked by how many supervisors the scholar has.
+     *
+     * Three or more supervisors is beyond the DORDC, so the form carries on to
+     * the Vice Chancellor. Every earlier step is the same in both.
+     */
+    private const CHAIN = ['student', 'phd_coordinator', 'hod', 'dordc', 'complete'];
+    private const CHAIN_ABOVE_TWO_SUPERVISORS = ['student', 'phd_coordinator', 'hod', 'dordc', 'director', 'complete'];
+
+    /**
+     * Raise a supervisor change.
+     *
+     * Only once the IRB has been constituted. Before that there is nothing to
+     * disturb, so the HOD or the PhD coordinator changes the supervisor
+     * outright from the scholar's page (SupervisorDoctoralChangeController::
+     * proposeChange) and no form is raised at all.
+     *
+     * A coordinator may start the form on a scholar's behalf, naming them with
+     * roll_no. It is the same form either way: it opens at the student's step,
+     * because the preferences and the reason are theirs to give.
+     */
     public function createForm(Request $request)
     {
         $user = Auth::user();
         $role = $user->current_role;
-        $steps=['student','phd_coordinator','hod','dordc','dra','complete'];
-        
-        if($role->role != 'student'){
+
+        if ($role->role === 'student') {
+            $student = $user->student;
+        } elseif ($role->role === 'phd_coordinator') {
+            $request->validate(['roll_no' => 'required|integer|exists:students,roll_no']);
+            $student = Student::where('roll_no', $request->roll_no)->first();
+            if ($student->department_id !== $user->faculty->department_id) {
+                return response()->json(['message' => 'You can only raise this for a scholar in your own department'], 403);
+            }
+        } else {
             return $this->refuse();
         }
+
+        if (!$student->irbCompleted()) {
+            return response()->json([
+                'message' => 'The IRB for this scholar has not been constituted yet, so no form is needed. '
+                    . 'The HOD or the PhD coordinator can change the supervisor from the scholar page.',
+            ], 400);
+        }
+
         $data=[
-            'roll_no'=>$user->student->roll_no,
-            'steps'=>$steps,
-            'role'=>$role->role,
+            'roll_no'=>$student->roll_no,
+            'steps'=>count($student->supervisors) > 2 ? self::CHAIN_ABOVE_TWO_SUPERVISORS : self::CHAIN,
+            // The step the form opens at, which is the scholar's whoever raised it.
+            'role'=>'student',
             'name'=>$user->first_name.' '.$user->last_name
         ];
         return $this->createForms(SupervisorChangeForm::class, $data,function ($formInstance) {
             $formInstance->current_supervisors = $formInstance->student->supervisors->pluck('faculty_code')->toArray();
             $formInstance->irb_submitted = $formInstance->student->irbSubForm?->completion=='complete'?true:false;
-            if(!$formInstance->irb_submitted){
-                $formInstance->steps=['student','phd_coordinator','hod','complete'];
-            }
         });
     }
 
@@ -97,8 +132,10 @@ class SupervisorChangeFormController extends Controller {
             case 'phd_coordinator':
                 return $this->handleCoordinatorForm($user, $form_id, $model);
             case 'dordc':
-            case 'dra':
                 return $this->handleAdminForm($user, $form_id, $model);
+            // Reads the form, answers nothing. Not a step in the chain.
+            case 'adordc':
+                return $this->handleAdordcForm($user, $form_id, $model);
             case 'director':
             case 'admin':
                 return $this->handleAdminForm($user, $form_id, $model,true);
@@ -123,8 +160,8 @@ class SupervisorChangeFormController extends Controller {
                 return $this->coordinatorSubmit($user, $request, $form_id);
             case 'dordc':
                 return $this->dordcSubmit($user, $request, $form_id);
-            case 'dra':
-                return $this->draSubmit($user, $request, $form_id);
+            case 'director':
+                return $this->directorSubmit($user, $request, $form_id);
             default:
                 return $this->refuse();
         }
@@ -134,7 +171,7 @@ class SupervisorChangeFormController extends Controller {
         $user = Auth::user();
         $role = $user->current_role;
 
-        $allowedRoles = ['hod', 'phd_coordinator', 'dra', 'dordc', 'director'];
+        $allowedRoles = ['hod', 'phd_coordinator', 'dordc', 'director'];
         if (!in_array($role->role, $allowedRoles)) {
             return $this->refuse();
         }
@@ -231,74 +268,74 @@ class SupervisorChangeFormController extends Controller {
 
     private function hodSubmit($user, $request, $form_id)
     {
-        $model = SupervisorChangeForm::class;
-        $form=SupervisorChangeForm::find($form_id);
-        if(!$form->irb_submitted)
-        {
-            return $this->submitForm(
-                $user,
-                $request,
-                $form_id,
-                $model,
-                'hod',
-                'phd_coordinator',
-                'complete',
-                function ($formInstance) use ($request, $user) {
-                    if ($request->approval) {
-                        $to_change = $formInstance->to_change;
-                        $new_supervisors = $formInstance->new_supervisors;
-                        for($i=0;$i<count($to_change);$i++){
-                            $supervisor=Faculty::find($to_change[$i]);
-                            $new_supervisor=Faculty::find($new_supervisors[$i]);
-                            $this->changeSupervisor($formInstance->student->roll_no,$supervisor,$new_supervisor);
-                        }
-                        $formInstance->completion='complete';
-                        $formInstance->addHistoryEntry("Supervisors change request approved by HOD", $user->name());
-                    }
-                }
-            );
-        }
         return $this->submitForm(
             $user,
             $request,
             $form_id,
-            $model,
+            SupervisorChangeForm::class,
             'hod',
             'phd_coordinator',
-            'dordc',
+            'dordc'
         );
-       
     }
-
-    
-    private function draSubmit($user, $request, $form_id)
-    {
-        $model = SupervisorChangeForm::class;
-        return $this->submitForm($user, $request, $form_id, $model, 'dra', 'dordc', 'complete',
-        function ($formInstance) use ($request, $user) {
-            if ($request->approval) {
-                $to_change = $formInstance->to_change;
-                $new_supervisors = $formInstance->new_supervisors;
-                for($i=0;$i<count($to_change);$i++){
-                    $supervisor=Faculty::find($to_change[$i]);
-                    $new_supervisor=Faculty::find($new_supervisors[$i]);
-                    $this->changeSupervisor($formInstance->student->roll_no,$supervisor,$new_supervisor);
-                }
-                $formInstance->completion='complete';
-                $formInstance->addHistoryEntry("Supervisors change request approved by DRA", $user->name());
-            }
-        });
-    }
-
-
 
     private function dordcSubmit($user, $request, $form_id)
     {
-        $model = SupervisorChangeForm::class;
-        return $this->submitForm($user, $request, $form_id, $model, 'dordc', 'hod', 'dra', function ($formInstance) use ($request, $user) {
-        
+        $form = SupervisorChangeForm::find($form_id);
+        if (!$form) {
+            return response()->json(['message' => 'No form found'], 404);
+        }
 
-        });
+        // Three or more supervisors goes on to the Vice Chancellor, so the
+        // DORDC is not always the last word.
+        $next = in_array('director', $form->steps ?? [], true) ? 'director' : 'complete';
+
+        return $this->submitForm(
+            $user,
+            $request,
+            $form_id,
+            SupervisorChangeForm::class,
+            'dordc',
+            'hod',
+            $next,
+            function ($formInstance) use ($request, $user, $next) {
+                if ($request->approval && $next === 'complete') {
+                    $this->applyChange($formInstance, $user, 'DORDC');
+                }
+            }
+        );
+    }
+
+    private function directorSubmit($user, $request, $form_id)
+    {
+        return $this->submitForm(
+            $user,
+            $request,
+            $form_id,
+            SupervisorChangeForm::class,
+            'director',
+            'dordc',
+            'complete',
+            function ($formInstance) use ($request, $user) {
+                if ($request->approval) {
+                    $this->applyChange($formInstance, $user, 'Vice Chancellor');
+                }
+            }
+        );
+    }
+
+    /** Swap the supervisors over. Run by whoever holds the last step. */
+    private function applyChange($formInstance, $user, string $approvedBy)
+    {
+        $to_change = $formInstance->to_change;
+        $new_supervisors = $formInstance->new_supervisors;
+        for ($i = 0; $i < count($to_change); $i++) {
+            $supervisor = Faculty::find($to_change[$i]);
+            $new_supervisor = Faculty::find($new_supervisors[$i]);
+            $this->changeSupervisor($formInstance->student->roll_no, $supervisor, $new_supervisor);
+        }
+        $formInstance->completion = 'complete';
+        $formInstance->addHistoryEntry("Supervisors change request approved by {$approvedBy}", $user->name());
     }
 
     private function changeSupervisor($student_id,$supervisor,$new_supervisor)

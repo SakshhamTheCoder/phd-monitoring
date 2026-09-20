@@ -19,7 +19,7 @@ const Recommendation = ({formData,allowRejection,role,moreFields,handleRecommend
    
     useEffect(() => {
         if (role && formData) {
-            setRoleName(getRoleName(role));
+            setRoleName(getRoleName(role, formData.form_type));
             setBody({
                 // The approval column defaults to 0, which the radios read as
                 // "Not Recommend" already chosen. Until the step is answered

@@ -11,19 +11,24 @@ const FORMS_DIR = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 // metadata: GeneralFormCreate::createForms writes $data['steps'], and the
 // metadata table only seeds the forms index row.
 const CHAINS = {
-  'constituteOfIRB/ConstituteOfIRB.jsx': ['student', 'faculty', 'hod', 'adordc', 'dordc'],
+  'constituteOfIRB/ConstituteOfIRB.jsx': ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc'],
   'irbExtention/IrbExtention.jsx': ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc', 'director'],
-  'irbSubmission/IRBSubmission.jsx': ['student', 'faculty', 'external', 'doctoral', 'hod', 'adordc', 'dordc'],
+  'irbSubmission/IRBSubmission.jsx': ['student', 'faculty', 'external', 'doctoral', 'phd_coordinator', 'hod', 'dra', 'dordc'],
   'listOfExaminers/ListOfExaminers.jsx': ['faculty', 'dordc', 'director'],
-  'presentations/PresentationForm.jsx': ['student', 'faculty', 'doctoral', 'hod', 'adordc', 'dordc'],
-  'reviseTitle/ReviseTitle.jsx': ['student', 'faculty', 'doctoral', 'phd_coordinator', 'hod', 'dra', 'adordc', 'dordc', 'director'],
+  'presentations/PresentationForm.jsx': ['student', 'faculty', 'doctoral', 'hod', 'dordc'],
+  // Served by SynopsisSubmissionController, so it carries the same chain.
+  'reviseTitle/ReviseTitle.jsx': ['student', 'faculty', 'doctoral', 'phd_coordinator', 'hod', 'dordc'],
   'semesterOff/SemesterOff.jsx': ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc', 'director'],
   'statusChange/StatusChange.jsx': ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc', 'director'],
-  'supervisorAllocation/SupervisorAllocation.jsx': ['student', 'phd_coordinator', 'hod'],
-  'supervisorChange/SupervisorChange.jsx': ['student', 'phd_coordinator', 'hod', 'dordc', 'dra'],
-  'synopsisSubmission/SynopsisSubmission.jsx': ['student', 'faculty', 'doctoral', 'phd_coordinator', 'hod', 'dra', 'adordc', 'dordc', 'director'],
+  // Three or more supervisors extends this one with 'dordc' and 'director'.
+  'supervisorAllocation/SupervisorAllocation.jsx': ['student', 'phd_coordinator', 'hod', 'dordc', 'director'],
+  // Three or more supervisors extends this one with 'director'.
+  'supervisorChange/SupervisorChange.jsx': ['student', 'phd_coordinator', 'hod', 'dordc', 'director'],
+  // The same roles answer twice, once on the written submission and again
+  // after the viva. The row stores the chain once, so it is listed once.
+  'synopsisSubmission/SynopsisSubmission.jsx': ['student', 'faculty', 'doctoral', 'phd_coordinator', 'hod', 'dordc'],
   'thesisExtention/ThesisExtention.jsx': ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc', 'director'],
-  'thesisSubmission/ThesisSubmission.jsx': ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'adordc', 'dordc'],
+  'thesisSubmission/ThesisSubmission.jsx': ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc'],
 };
 
 // A step that collects the scholar's own answers rather than a recommendation.

@@ -53,7 +53,7 @@ class ThesisSubmissionController extends Controller
     {
         $user = Auth::user();
         $role = $user->current_role;
-        $steps=['student','faculty','phd_coordinator','hod','dra','adordc','dordc','complete'];
+        $steps=['student','faculty','phd_coordinator','hod','dra','dordc','complete'];
         if($role->role != 'student'){
             return $this->refuse();
         }
@@ -73,7 +73,6 @@ class ThesisSubmissionController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
         $model = ThesisSubmission::class;
-        $steps=['student','faculty','phd_coordinator','hod','dra','adordc','dordc','complete'];
         switch ($role->role) {
             case 'student':
                 return $this->handleStudentForm($user, $form_id, $model);
@@ -81,6 +80,7 @@ class ThesisSubmissionController extends Controller
                 return $this->handleHodForm($user, $form_id, $model);
             case 'phd_coordinator':
                 return $this->handleCoordinatorForm($user, $form_id, $model);
+            // Reads the form, answers nothing. Not a step in the chain.
             case 'adordc':
                 return $this->handleAdordcForm($user,$form_id,$model);
             case 'dra':
@@ -112,8 +112,6 @@ class ThesisSubmissionController extends Controller
                 return $this->hodSubmit($user, $request, $form_id);
             case 'dra':
                 return $this->draSubmit($user, $request, $form_id);
-            case 'adordc':
-                return $this->adordcSubmit($user, $request, $form_id);
             case 'dordc':
                 return $this->dordcSubmit($user, $request, $form_id);
             case 'phd_coordinator':
@@ -290,7 +288,7 @@ class ThesisSubmissionController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
        
-        $allowedRoles = ['hod', 'phd_coordinator', 'dra', 'dordc', 'director','adordc'];
+        $allowedRoles = ['hod', 'phd_coordinator', 'dra', 'dordc', 'director'];
         if (!in_array($role->role, $allowedRoles)) {
             return $this->refuse();
         }
@@ -356,20 +354,6 @@ class ThesisSubmissionController extends Controller
             $model,
             'dra',
             'hod',
-            'adordc',
-        );
-    }
-
-     private function adordcSubmit($user, $request, $form_id)
-    {
-        $model = ThesisSubmission::class;
-        return $this->submitForm(
-            $user,
-            $request,
-            $form_id,
-            $model,
-            'adordc',
-            'dra',
             'dordc',
         );
     }
