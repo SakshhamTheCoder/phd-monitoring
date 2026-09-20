@@ -16,6 +16,8 @@ class SynopsisSubmission extends Model
     protected $casts = [
         'history' => 'array',
         'steps' => 'array',
+        // 1 = the written submission, 2 = the confirmation after the viva.
+        'round' => 'integer',
     ];
 
     public function __construct(array $attributes = [])
@@ -26,6 +28,9 @@ class SynopsisSubmission extends Model
             'revised_title',
             'synopsis_pdf',
             'total_progress',
+            'round',
+            'viva_minutes_pdf',
+            'checklist_option_id',
         ], $commonFieldKeys);
 
         parent::__construct($attributes);
@@ -44,6 +49,21 @@ class SynopsisSubmission extends Model
             'revised_title' => $this->revised_title,
             'synopsis_pdf' => $this->synopsis_pdf,
             'total_progress' => $this->total_progress,
+            // Which of the two passes the form is on. The client reads it to
+            // decide whether to ask the coordinator for the viva minutes and to
+            // label the panels; it is not an index into steps.
+            'round' => (int) ($this->round ?: 1),
+            'viva_minutes_pdf' => $this->viva_minutes_pdf,
+            'checklist_option_id' => $this->checklist_option_id,
+            // Every declaration this scholar's admission year offers, so the
+            // panel needs no second call, plus the one they chose, read from the
+            // row rather than the list so a retired option still reads back.
+            'checklist_options' => SynopsisChecklistOption::forYear($this->student->admissionYear())
+                ->map(fn ($option) => ['id' => $option->id, 'label' => $option->label])
+                ->values(),
+            'checklist_choice' => $this->checklistOption?->label,
+            'completed_credits' => $this->student->completedCredits(),
+            'required_credits' => $this->student->requiredCredits(),
             // Stored once the supervisor submits: total is previous plus increase.
             // Today's overall already includes the increase on an approved form.
             'previous_progress' => $this->supervisor_lock && $this->total_progress !== null
@@ -82,6 +102,11 @@ class SynopsisSubmission extends Model
         $formData=array_merge($formData,$extraData);
 
         return $formData;
+    }
+
+    public function checklistOption()
+    {
+        return $this->belongsTo(SynopsisChecklistOption::class, 'checklist_option_id');
     }
 
     public function objectives()

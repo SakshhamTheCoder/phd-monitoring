@@ -10,6 +10,11 @@ import { submitForm } from "../../../../api/form";
 import { toast } from "react-toastify";
 
 const Supervisor = ({ formData }) => {
+  // Progress is scored once, on the written round. After the viva the
+  // supervisor is confirming that the viva happened and went well, not
+  // re-scoring the work, so the figures are shown as a record and the server
+  // ignores them either way.
+  const scoring = (formData.round ?? 1) < 2;
   const [lock, setLock] = useState(formData.locks?.supervisor);
   const [body, setBody] = useState({});
   const [isLoaded, setIsLoaded] = useState(true);
@@ -60,7 +65,7 @@ const Supervisor = ({ formData }) => {
     // A locked panel is a record, not an entry. previous_progress is the
     // scholar's overall progress today, which on an approved form already
     // includes this increase, so checking it there fired on page load.
-    if (lock) {
+    if (lock || !scoring) {
       return;
     }
 
@@ -75,7 +80,7 @@ const Supervisor = ({ formData }) => {
     // figure that will actually be submitted.
     setBody((prev) => ({ ...prev, current_progress: 100 - previous }));
     toast.error("Total progress cannot exceed 100%");
-  }, [body.current_progress, formData.previous_progress, lock]);
+  }, [body.current_progress, formData.previous_progress, lock, scoring]);
 
   return (
     <>
@@ -102,10 +107,10 @@ const Supervisor = ({ formData }) => {
               />
               <GridContainer
                 elements={[
-                  <InputField required={true}
+                  <InputField required={scoring}
                     label={"Increase in Quantum Progress Percentage"}
                     initialValue={body.current_progress}
-                    isLocked={lock}
+                    isLocked={lock || !scoring}
                     onChange={(updated) => {
                       setBody((prev) => ({
                         ...prev,
@@ -116,7 +121,7 @@ const Supervisor = ({ formData }) => {
                 ]}
                 space={2}
               />
-              {parseFloat(body.current_progress || 0) > 20 && (
+              {scoring && parseFloat(body.current_progress || 0) > 20 && (
                 <div style={{ color: "red", marginTop: 0 }}>
                   Supervisor has marked progress of student more than 20%
                 </div>
@@ -127,7 +132,7 @@ const Supervisor = ({ formData }) => {
                     label={"Total Quantum Progress Percentage"}
                     // The stored total is 0 until the supervisor submits, so while
                     // entering, show what the server will store: previous plus increase.
-                    initialValue={lock
+                    initialValue={lock || !scoring
                       ? formData.total_progress
                       : (parseFloat(formData.previous_progress) || 0) + (parseFloat(body.current_progress) || 0)}
                     isLocked={true}

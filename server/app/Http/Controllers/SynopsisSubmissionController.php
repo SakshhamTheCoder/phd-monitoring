@@ -14,6 +14,7 @@ use App\Http\Controllers\Traits\SaveFile;
 use App\Models\Patent;
 use App\Models\Publication;
 use App\Models\SynopsisObjectives;
+use App\Models\SynopsisChecklistOption;
 use App\Models\SynopsisSubmission;
 
 class SynopsisSubmissionController extends Controller
@@ -25,6 +26,27 @@ class SynopsisSubmissionController extends Controller
     use SaveFile;
     use GeneralFormCreate;
     use FilterLogicTrait;
+    /**
+     * The synopsis is approved twice.
+     *
+     * Round one is the written submission. The viva then happens offline, on the
+     * department's own arrangements; round two is the confirmation of it, and it
+     * cannot start until the coordinator has uploaded the minutes, which is why
+     * the coordinator holds the first step of it rather than the supervisor.
+     *
+     * `steps` on the row stays the round-one list. That array decides who may
+     * read the form and what the ladder draws, and `current_step` and
+     * `maximum_step` are indices into it, so a role appearing in it twice would
+     * give array_search the wrong answer in every place that reads it. The round
+     * decides where an approval goes next, and nothing else.
+     */
+    private const ROUND_ONE = ['student', 'faculty', 'doctoral', 'phd_coordinator', 'hod', 'dordc'];
+    private const ROUND_TWO = ['phd_coordinator', 'faculty', 'doctoral', 'hod', 'dordc'];
+    private const STEPS = ['student', 'faculty', 'doctoral', 'phd_coordinator', 'hod', 'dordc', 'complete'];
+
+    /** The roles that answer again after the viva, and so have to be reopened. */
+    private const CONFIRM_AFTER_VIVA = ['supervisor', 'doctoral', 'hod'];
+
     public function listFilters(Request $request){
         return response()->json($this->getAvailableFilters("forms"));
     }
@@ -46,21 +68,125 @@ class SynopsisSubmissionController extends Controller
     ]);
     }
 
+    /**
+     * Raise the synopsis.
+     *
+     * Only once the coursework is done. The credits required are per status and
+     * admin-editable (AppSetting group 'coursework'); what the scholar has is
+     * the sum of the courses marked complete on their profile.
+     */
     public function createForm(Request $request)
     {
         $user = Auth::user();
         $role = $user->current_role;
-        $steps=['student','faculty','doctoral','phd_coordinator','hod','dra','adordc','dordc','director','complete'];
         if($role->role != 'student'){
             return $this->refuse();
         }
+
+        $student = $user->student;
+
+        // The coursework gate is off until the course types are settled. UGC
+        // mandatory courses are to be counted separately from the rest, which
+        // means `courses` grows a type and completedCredits() splits into two
+        // totals, so the single figure this compared against is about to stop
+        // being the rule. Turn it back on once that lands, together with the
+        // skipped tests in SynopsisVivaRoundTest.
+        //
+        // if (!$student->hasFinishedCoursework()) {
+        //     return response()->json([
+        //         'message' => 'The synopsis opens once your coursework is complete. You have '
+        //             . $this->credits($student->completedCredits()) . ' of the '
+        //             . $student->requiredCredits() . ' credits required. Your courses are listed on your profile.',
+        //     ], 400);
+        // }
+
         $data=[
-            'roll_no'=>$user->student->roll_no,
-            'steps'=>$steps,
+            'roll_no'=>$student->roll_no,
+            'steps'=>self::STEPS,
             'role'=>$role->role,
             'name'=>$user->first_name.' '.$user->last_name
         ];
         return $this->createForms(SynopsisSubmission::class, $data);
+    }
+
+    /** 14.0 reads as 14, 13.5 stays 13.5. */
+    private function credits(float $credits): string
+    {
+        return rtrim(rtrim(number_format($credits, 1, '.', ''), '0'), '.');
+    }
+
+    /**
+     * The step this user is acting as.
+     *
+     * A committee member signs in holding 'faculty'. Only that role is mapped:
+     * a HOD or a coordinator who also sits on the committee holds their own step
+     * on this form, and round two puts the coordinator and the supervisor in
+     * different places, so mapping either of them to 'doctoral' would send the
+     * form to the wrong person.
+     */
+    private function actingStep($user, $form_id): string
+    {
+        $role = $user->current_role->role;
+        if ($role !== 'faculty') {
+            return $role;
+        }
+
+        $form = SynopsisSubmission::find($form_id);
+        return $form && $form->student->checkDoctoralCommittee($user->faculty?->faculty_code) ? 'doctoral' : $role;
+    }
+
+    /**
+     * Where an approval by $role goes next, and where a rejection sends it back.
+     *
+     * Read from the round rather than hardcoded per method, because the two
+     * rounds put the same people in a different order.
+     */
+    private function neighbours($formInstance, string $role): array
+    {
+        $round = (int) ($formInstance->round ?: 1);
+        $order = $round >= 2 ? self::ROUND_TWO : self::ROUND_ONE;
+        $at = array_search($role, $order, true);
+        if ($at === false) {
+            // This role holds no step in this round: the scholar, in round two.
+            // submitForm's stage check refuses them before either of these is
+            // read, but array_search answering false would index as 0 and hand
+            // the form to somebody else's step, which is worse than a refusal.
+            return [$role, $role];
+        }
+
+        // The first step of a round falls back to itself: there is nothing
+        // behind it to reject to.
+        $previous = $at > 0 ? $order[$at - 1] : $order[0];
+
+        if ($at < count($order) - 1) {
+            return [$previous, $order[$at + 1]];
+        }
+
+        // The end of a round. Round one hands over to the viva, which means back
+        // to the coordinator, who holds the form until the minutes exist.
+        return [$previous, $round >= 2 ? 'complete' : self::ROUND_TWO[0]];
+    }
+
+    /** submitForm with this form's neighbours worked out from the round. */
+    private function submitAs($user, $request, $form_id, string $role, ?callable $extraSteps = null)
+    {
+        $formInstance = SynopsisSubmission::find($form_id);
+        if (!$formInstance) {
+            return response()->json(['message' => 'No form found'], 404);
+        }
+
+        [$previous, $next] = $this->neighbours($formInstance, $role);
+
+        return $this->submitForm(
+            $user,
+            $request,
+            $form_id,
+            SynopsisSubmission::class,
+            $role,
+            $previous,
+            $next,
+            $extraSteps
+        );
     }
 
     
@@ -70,16 +196,7 @@ class SynopsisSubmissionController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
         $model = SynopsisSubmission::class;
-        $role = $user->current_role;
-        $cur = $role->role;
-        $form = SynopsisSubmission::find($form_id);
-        if ($form) {
-            if ($form->student->checkDoctoralCommittee($user->faculty?->faculty_code)) {
-                $cur = 'doctoral';
-            }
-        }
-        $steps=['student','faculty','doctoral','phd_coordinator','hod','dra','adordc','dordc','director','complete'];
-       switch ($cur) {
+       switch ($this->actingStep($user, $form_id)) {
             case 'student':
                 return $this->handleStudentForm($user, $form_id, $model);
             case 'hod':
@@ -89,14 +206,18 @@ class SynopsisSubmissionController extends Controller
                 return $this->handleDoctoralForm($user,  $form_id, $model);
             case 'phd_coordinator':
                 return $this->handleCoordinatorForm($user, $form_id, $model);
+            // Reads the form, answers nothing. Not a step in the chain.
             case 'adordc':
                 return $this->handleAdordcForm($user,$form_id,$model);
-            case 'dra':
             case 'dordc':
-            case 'director':
                 return $this->handleAdminForm($user, $form_id, $model);
             case 'faculty':
                 return $this->handleFacultyForm($user, $form_id, $model);
+            // Neither holds a step in this chain, so there is no index to check
+            // and the read is unconditional. GeneralFormList lists the director
+            // every form whose chain does not name them, and refusing to open
+            // what it listed is a dead end rather than a boundary.
+            case 'director':
             case 'admin':
                 return $this->handleAdminForm($user, $form_id, $model,true);
            
@@ -110,14 +231,7 @@ class SynopsisSubmissionController extends Controller
         $form_id = $this->routeParam($request, 'form_id', $form_id);
         $user = Auth::user();
         $role = $user->current_role;
-         $cur = $role->role;
-        $form = SynopsisSubmission::find($form_id);
-        if ($form) {
-            if ($form->student->checkDoctoralCommittee($user->faculty?->faculty_code)) {
-                $cur = 'doctoral';
-            }
-        }
-        switch ($cur) {
+        switch ($this->actingStep($user, $form_id)) {
             case 'student':
                 return $this->studentSubmit($user, $request, $form_id);
             case 'faculty':
@@ -126,16 +240,10 @@ class SynopsisSubmissionController extends Controller
                 return $this->doctoralFormSubmit($user, $request, $form_id);
             case 'hod':
                 return $this->hodSubmit($user, $request, $form_id);
-            case 'dra':
-                return $this->draSubmit($user, $request, $form_id);
-            case 'adordc':
-                return $this->adordcSubmit($user, $request, $form_id); 
             case 'dordc':
                 return $this->dordcSubmit($user, $request, $form_id);
             case 'phd_coordinator':
                 return $this->coordinatorSubmit($user, $request, $form_id);
-            case 'director':
-                return $this->directorSubmit($user, $request, $form_id);
             default:
                 return $this->refuse();
         }
@@ -145,7 +253,7 @@ class SynopsisSubmissionController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
        
-        $allowedRoles = ['hod', 'phd_coordinator', 'dra', 'dordc', 'director','adordc'];
+        $allowedRoles = ['hod', 'phd_coordinator', 'dordc'];
         if (!in_array($role->role, $allowedRoles)) {
             return $this->refuse();
         }
@@ -259,15 +367,11 @@ class SynopsisSubmissionController extends Controller
 
     private function studentSubmit($user, $request, $form_id)
     {
-        $model = SynopsisSubmission::class;
-        return $this->submitForm(
+        return $this->submitAs(
             $user,
             $request,
             $form_id,
-            $model,
             'student',
-            'student',
-            'faculty',
             function ($formInstance) use ($request, $user) {
                 $request->validate([
                    'revised_title' => 'string',
@@ -276,36 +380,51 @@ class SynopsisSubmissionController extends Controller
                 $formInstance->revised_title = $request->revised_title;
                 $link=$this->replaceUploadedFile($formInstance->synopsis_pdf, $request->file('synopsis_pdf'), 'synopsis', $user->student->roll_no);
                 $formInstance->synopsis_pdf = $link;
-                // $oldObjectives = $formInstance->objectives;
-                // if($oldObjectives->count() > 0){
-                //     $formInstance->objectives()->delete();
-                // }
-            
-            //   if($request->objectives){
-            //     foreach ($request->objectives as $objective) {
-            //         $newObjective = new SynopsisObjectives();
-            //         $newObjective->objective = $objective;
-            //         $newObjective->synopsis_id = $formInstance->id;
-            //         $newObjective->save();
-            //     }
-            // }            
-             
+                $this->recordChecklistChoice($formInstance, $request);
             }
         );
     }
+
+    /**
+     * The declaration the scholar makes, chosen from the set for their admission
+     * year.
+     *
+     * A year with no options configured asks for nothing. That is deliberate:
+     * the alternative is a scholar who cannot file a synopsis at all because an
+     * admin has not reached their year yet.
+     */
+    private function recordChecklistChoice($formInstance, $request): void
+    {
+        $options = SynopsisChecklistOption::forYear($formInstance->student->admissionYear());
+        if ($options->isEmpty()) {
+            return;
+        }
+
+        $request->validate(['checklist_option_id' => 'required|integer']);
+
+        if (!$options->contains('id', (int) $request->checklist_option_id)) {
+            throw new \Exception('Choose one of the declarations listed for your admission year.');
+        }
+
+        $formInstance->checklist_option_id = (int) $request->checklist_option_id;
+    }
+
     private function supervisorSubmit($user, $request, $form_id)
     {
-        $model = SynopsisSubmission::class;
-        return $this->submitForm(
+        return $this->submitAs(
             $user,
             $request,
             $form_id,
-            $model,
             'faculty',
-            'student',
-            'doctoral',
             function ($formInstance) use ($request, $user) {
-               $request->validate([
+                // Progress is the written submission's measure, taken once. The
+                // supervisor confirming after the viva is confirming the viva,
+                // not re-scoring the work.
+                if ((int) $formInstance->round >= 2) {
+                    return;
+                }
+
+                $request->validate([
                    'current_progress' => 'integer',
                 ]);
                 $formInstance->current_progress = $request->current_progress;
@@ -314,117 +433,109 @@ class SynopsisSubmissionController extends Controller
             }
         );
     }
-    private function doctoralFormSubmit($user, $request, $form_id){
 
-         $model = SynopsisSubmission::class;
-      
-        return $this->submitForm(
-            $user,
-            $request,
-            $form_id,
-            $model,
-            'doctoral',
-            'faculty',
-            'phd_coordinator',
-        );
+    private function doctoralFormSubmit($user, $request, $form_id)
+    {
+        return $this->submitAs($user, $request, $form_id, 'doctoral');
     }
-            
+
     private function coordinatorSubmit($user, $request, $form_id)
     {
-        $model = SynopsisSubmission::class;
-      
-        return $this->submitForm(
+        return $this->submitAs(
             $user,
             $request,
             $form_id,
-            $model,
             'phd_coordinator',
-            'faculty',
-            'hod',
+            function ($formInstance) use ($request, $user) {
+                if ((int) $formInstance->round < 2) {
+                    return;
+                }
+
+                // The viva is held offline and on the department's own
+                // arrangements, so the minutes are the only record in the portal
+                // that it happened. Round two does not move without them.
+                //
+                // Required until they exist, optional afterwards: a form sent
+                // back to the coordinator already has its minutes, and asking
+                // for the same file again to answer a comment is busywork.
+                $request->validate([
+                    'viva_minutes_pdf' => ($formInstance->viva_minutes_pdf ? 'nullable' : 'required')
+                        . '|file|mimes:pdf|max:20480',
+                ]);
+
+                if ($request->hasFile('viva_minutes_pdf')) {
+                    $formInstance->viva_minutes_pdf = $this->replaceUploadedFile(
+                        $formInstance->viva_minutes_pdf,
+                        $request->file('viva_minutes_pdf'),
+                        'synopsis_viva_minutes',
+                        $formInstance->student_id
+                    );
+                }
+            }
         );
     }
 
     private function hodSubmit($user, $request, $form_id)
     {
-        $model = SynopsisSubmission::class;
-        return $this->submitForm(
-            $user,
-            $request,
-            $form_id,
-            $model,
-            'hod',
-            'phd_coordinator',
-            'dra',
-        );
-    }
-
-    private function draSubmit($user, $request, $form_id)
-    {
-        $model = SynopsisSubmission::class;
-        return $this->submitForm(
-            $user,
-            $request,
-            $form_id,
-            $model,
-            'dra',
-            'hod',
-            'adordc',
-        );
-    }
-
-      private function adordcSubmit($user, $request, $form_id)
-    {
-        $model = SynopsisSubmission::class;
-        return $this->submitForm(
-            $user,
-            $request,
-            $form_id,
-            $model,
-            'adordc',
-            'dra',
-            'dordc',
-        );
+        return $this->submitAs($user, $request, $form_id, 'hod');
     }
 
     private function dordcSubmit($user, $request, $form_id)
     {
-        $model = SynopsisSubmission::class;
-        return $this->submitForm(
+        return $this->submitAs(
             $user,
             $request,
             $form_id,
-            $model,
             'dordc',
-            'dra',
-            'director',
-        );
-    }
-
-    private function directorSubmit($user, $request, $form_id)
-    {
-        $model = SynopsisSubmission::class;
-        return $this->submitForm(
-            $user,
-            $request,
-            $form_id,
-            $model,
-            'director',
-            'dordc',
-            'complete',
-            function ($formInstance) use ($request, $user) {
-                if ($request->approval) {
-                    $formInstance->completion='complete';
-                    $formInstance->status = 'approved';
-                    $formInstance->student->phd_title=$formInstance->revised_title;
-                    $formInstance->student->save();
-                    $formInstance->student->overall_progress=$formInstance->total_progress;
-                    $formInstance->student->save();
-                    $formInstance->addHistoryEntry("Synopsis approved by Director", $user->name());
+            function ($formInstance, $user) {
+                // Only reached on an approval: submitForm returns a rejection to
+                // the previous step before it runs any extra steps.
+                if ((int) $formInstance->round < 2) {
+                    $this->openVivaRound($formInstance, $user);
+                    return;
                 }
 
+                $this->completeSynopsis($formInstance, $user);
             }
         );
     }
 
+    /**
+     * End of the written round. The form goes back to the coordinator and waits
+     * for the viva minutes.
+     *
+     * Everyone who confirms afterwards has to answer again, so their columns are
+     * cleared. What they said the first time is in the history, which is the
+     * record; the columns hold the current round. The coordinator's own lock is
+     * cleared by the move to their step, and the DORDC's by the move back to
+     * theirs at the end of round two.
+     */
+    private function openVivaRound($formInstance, $user): void
+    {
+        $formInstance->round = 2;
 
+        foreach (self::CONFIRM_AFTER_VIVA as $role) {
+            $formInstance->{$role . '_lock'} = false;
+            $formInstance->{$role . '_approval'} = false;
+            $formInstance->{$role . '_comments'} = null;
+        }
+
+        $formInstance->addHistoryEntry(
+            'Written synopsis approved. Awaiting the viva and its minutes from the PhD Coordinator.',
+            $user->name()
+        );
+    }
+
+    private function completeSynopsis($formInstance, $user): void
+    {
+        $formInstance->completion = 'complete';
+        $formInstance->status = 'approved';
+
+        $student = $formInstance->student;
+        $student->phd_title = $formInstance->revised_title;
+        $student->overall_progress = $formInstance->total_progress;
+        $student->save();
+
+        $formInstance->addHistoryEntry('Synopsis approved by DORDC after the viva', $user->name());
+    }
 }
