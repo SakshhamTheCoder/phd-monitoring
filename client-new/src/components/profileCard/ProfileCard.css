@@ -67,6 +67,32 @@
 
 /* Compact attendance with the portal's hover treatment. */
 .profile-attendance { position: relative; display: inline-block; cursor: help; }
+
+/* The figure and the range that produced it, on one line, wrapping to two on a
+   narrow screen rather than squeezing the inputs. */
+.profile-attendance-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+}
+.profile-attendance-range {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+}
+/* The picker wears .input-field, the same class every other date control in the
+   app wears; only the width is trimmed, because this one sits in a row of text
+   rather than in a form. */
+.profile-attendance-range .input-field {
+    padding: 4px 8px;
+    width: 130px;
+}
+.profile-attendance-range .input-label {
+    margin: 0;
+}
 .profile-attendance-value { border-bottom: 1px dotted #9ca3af; }
 .profile-attendance-pop {
   position: absolute;

@@ -1,0 +1,74 @@
+.progress-chart {
+    margin: 0;
+}
+
+.progress-chart-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    overflow: visible;
+}
+
+/* Grid and ticks locate the line; they are not competing with it. */
+.progress-chart-grid {
+    stroke: var(--border-subtle);
+    stroke-width: 1;
+}
+
+.progress-chart-tick {
+    fill: var(--text-muted);
+    font-size: 11px;
+}
+
+/* A milestone is an annotation, not a second series, so it stays grey and
+   dashed. Giving it a colour would read as data it is not. */
+.progress-chart-milestone {
+    stroke: var(--border-color);
+    stroke-width: 1;
+    stroke-dasharray: 3 4;
+}
+
+.progress-chart-milestone-label {
+    fill: var(--text-muted);
+    font-size: 11px;
+}
+
+.progress-chart-line {
+    stroke: var(--primary-color);
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+/* The surface ring keeps a point legible where the line runs under it. */
+.progress-chart-point {
+    fill: var(--primary-color);
+    stroke: var(--surface);
+    stroke-width: 2;
+    cursor: pointer;
+    transition: r 150ms ease-out;
+}
+
+.progress-chart-point:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.progress-chart-caption {
+    margin-top: 8px;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    min-height: 1.4em;
+}
+
+.progress-chart-empty {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .progress-chart-point {
+        transition: none;
+    }
+}

@@ -1,11 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import "react-circular-progressbar/dist/styles.css";
+import ProgressChart from "./ProgressChart";
+import ShowPublications from "../publications/ShowPublications";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import "./ProfileCard.css";
 import { facultyNameCell } from "../facultyLink/FacultyLink";
 
-import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
+import { EMPTY_VALUE, formatDate, toDateValue, toDateObject } from '../../utils/timeParse';
 import { baseURL } from "../../api/urls";
 import { customFetch } from "../../api/base";
 import GridContainer from "../forms/fields/GridContainer";
@@ -27,6 +31,10 @@ const deadlineNote = ({ days_remaining: daysLeft, extensions_granted: granted })
   return `(${daysLeft} days left${extended})`;
 };
 
+// Yes, No, or a dash for "nobody has said", which is a different answer from No.
+const statedYesNo = (value) =>
+  (value === null || value === undefined ? EMPTY_VALUE : (value ? 'Yes' : 'No'));
+
 const ProfileCard = ({ dataIP = null, link = false }) => {
   const can = useCapabilities();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -37,6 +45,13 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
   const [courses, setCourses] = useState([]);
   const [allCourses, setAllCourses] = useState([]);
   const [attendance, setAttendance] = useState(null);
+  // Blank is the lifetime figure, which is what this showed before there was a
+  // range to ask for. The endpoint has always taken from and to; nothing sent
+  // them.
+  const [attendanceRange, setAttendanceRange] = useState({ from: '', to: '' });
+  const [progressHistory, setProgressHistory] = useState(null);
+  const [publications, setPublications] = useState(null);
+  const today = useMemo(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }, []);
   const [tagData, setTagData] = useState({
     course_id: '',
     semester: '',
@@ -90,8 +105,14 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
   const fetchAttendance = async () => {
     const roll = profile?.roll_no;
     if (!roll) return;
+    const range = new URLSearchParams(
+      Object.entries(attendanceRange).filter(([, value]) => value)
+    ).toString();
     try {
-      const res = await customFetch(`${baseURL}/clerks/attendance/student/${roll}`, 'GET', {}, false, false);
+      const res = await customFetch(
+        `${baseURL}/clerks/attendance/student/${roll}${range ? `?${range}` : ''}`,
+        'GET', {}, false, false
+      );
       if (res?.success) {
         setAttendance({ ...res.response.summary, currentMonth: res.response.current_month });
       } else if (res?.response?.message?.includes?.('permission')) {
@@ -100,14 +121,33 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
     } catch (e) { /* 403 means viewer lacks permission — hide silently */ }
   };
 
+  /**
+   * Something hung off the scholar, on the same gate as the profile itself.
+   *
+   * Their own calls rather than fields on the profile: keeping them out of that
+   * payload keeps a query off every row of the form lists, which build the same
+   * profile shape. A 403 means the viewer may not read this scholar, and the
+   * section simply does not appear.
+   */
+  const fetchScholarSection = async (path, set) => {
+    const roll = profile?.roll_no;
+    if (!roll) return;
+    try {
+      const res = await customFetch(`${baseURL}/students/${roll}/${path}`, 'GET', {}, false, false);
+      if (res?.success) set(res.response);
+    } catch (e) { /* hidden rather than reported: the viewer may not read this */ }
+  };
+
   useEffect(() => {
     const studentId = profile?.database_id || profile?.id;
     if (studentId) {
       fetchCourses();
     }
-    if (profile?.roll_no) fetchAttendance();
+    fetchAttendance();
+    fetchScholarSection('progress-history', setProgressHistory);
+    fetchScholarSection('publications', setPublications);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.database_id, profile?.id, profile?.roll_no]);
+  }, [profile?.database_id, profile?.id, profile?.roll_no, attendanceRange.from, attendanceRange.to]);
 
   const fetchAllCourses = async () => {
     try {
@@ -157,6 +197,8 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
       fathers_name: profile?.fathers_name || '',
       phd_title: profile?.phd_title || '',
       tentative_desc: profile?.tentative_desc || '',
+      strengths: profile?.strengths || '',
+      help_needed: profile?.help_needed || '',
       cgpa: profile?.cgpa || '',
     });
     setIsEditingInline(true);
@@ -223,6 +265,19 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
       { label: "Department", value: department },
       // { label: 'Supervisors', value: supervisors?.join(', ') },
       { label: "CGPA", value: cgpa, field: "cgpa" },
+      // What the synopsis waits on. The required figure is per status and set by
+      // an admin, so it is read from the server rather than assumed here.
+      ...(profile.required_credits === undefined ? [] : [{
+        label: "Coursework",
+        node: (
+          <span>
+            {profile.completed_credits ?? 0} of {profile.required_credits} credits
+            {/* No note about the synopsis while the gate on it is commented
+                out in SynopsisSubmissionController: saying it opens once this
+                is met would not be true today. The figures still report. */}
+          </span>
+        ),
+      }]),
       { label: "Father's Name", value: fathers_name, field: "fathers_name" },
       { label: "Address", value: address, field: "address" },
       { label: "Current Status", value: current_status },
@@ -231,11 +286,14 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
       { label: "Physically Handicapped", value: profile.physically_handicapped ? "Yes" : "No" },
       // Read-only here too: it says where the scholar's stipend comes from.
       // Null means nobody has stated it, which is not the same as No.
-      { label: "JRF", value: profile.is_jrf === null || profile.is_jrf === undefined ? EMPTY_VALUE : (profile.is_jrf ? "Yes" : "No") },
+      { label: "JRF", value: statedYesNo(profile.is_jrf) },
+      { label: "NET/GATE", value: statedYesNo(profile.is_net_gate_qualified) },
       { label: "Date of Admission", value: formatDate(date_of_registration) },
       { label: "Date of IRB", value: formatDate(date_of_irb) },
       { label: "Date of Synopsis", value: formatDate(date_of_synopsis) },
       { label: "Date of Thesis", value: formatDate(date_of_thesis) },
+      // The award is a later and separate event from the submission.
+      { label: "Date of Thesis Awarded", value: formatDate(profile.date_of_thesis_awarded) },
       ...(profile.thesis_window ? [{
         label: "Thesis Deadline",
         node: (
@@ -248,23 +306,56 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
       }] : []),
       ...(attendance ? [{
         label: 'Attendance',
+        span: 'all',
         node: (
-          <span className="profile-attendance" tabIndex={0}>
-            <span className="profile-attendance-value">
-              {attendance.total > 0
-                ? `${attendance.present}/${attendance.total} (${attendance.percent}%)`
-                : EMPTY_VALUE}
+          <span className="profile-attendance-row">
+            <span className="profile-attendance" tabIndex={0}>
+              <span className="profile-attendance-value">
+                {attendance.total > 0
+                  ? `${attendance.present}/${attendance.total} (${attendance.percent}%)`
+                  : (attendanceRange.from || attendanceRange.to ? 'No sessions in this range' : EMPTY_VALUE)}
+              </span>
+              <span className="profile-attendance-pop" role="tooltip">
+                <strong>{attendance.currentMonth?.label || 'Current Month'} Attendance</strong>
+                {attendance.currentMonth && attendance.currentMonth.total > 0 ? (
+                  <>
+                    <span>{attendance.currentMonth.present} Present / {attendance.currentMonth.total} Sessions</span>
+                    <span>{attendance.currentMonth.percent}%</span>
+                  </>
+                ) : (
+                  <span>No sessions recorded this month.</span>
+                )}
+              </span>
             </span>
-            <span className="profile-attendance-pop" role="tooltip">
-              <strong>{attendance.currentMonth?.label || 'Current Month'} Attendance</strong>
-              {attendance.currentMonth && attendance.currentMonth.total > 0 ? (
-                <>
-                  <span>{attendance.currentMonth.present} Present / {attendance.currentMonth.total} Sessions</span>
-                  <span>{attendance.currentMonth.percent}%</span>
-                </>
-              ) : (
-                <span>No sessions recorded this month.</span>
-              )}
+
+            {/* The same DatePicker, format and min/max pairing the attendance
+                page uses for its export range, so the one control in the app
+                that asks for an attendance date range behaves one way. Blank is
+                the whole record, which is what this showed before. */}
+            <span className="profile-attendance-range">
+              <label className="input-label" htmlFor="attendance-from">From</label>
+              <DatePicker
+                id="attendance-from"
+                selected={toDateObject(attendanceRange.from)}
+                onChange={(date) => setAttendanceRange((prev) => ({ ...prev, from: toDateValue(date) }))}
+                dateFormat="yyyy-MM-dd"
+                className="input-field"
+                placeholderText="YYYY-MM-DD"
+                maxDate={toDateObject(attendanceRange.to) || today}
+                isClearable
+              />
+              <label className="input-label" htmlFor="attendance-to">To</label>
+              <DatePicker
+                id="attendance-to"
+                selected={toDateObject(attendanceRange.to)}
+                onChange={(date) => setAttendanceRange((prev) => ({ ...prev, to: toDateValue(date) }))}
+                dateFormat="yyyy-MM-dd"
+                className="input-field"
+                placeholderText="YYYY-MM-DD"
+                minDate={toDateObject(attendanceRange.from)}
+                maxDate={today}
+                isClearable
+              />
             </span>
           </span>
         ),
@@ -458,6 +549,90 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
           )}
           
         
+
+          {/* The scholar's own account of themselves. Read by everyone who may
+              read the profile, which is the point of asking: it is how they say
+              what they need. Written only by them, or by a role that may edit
+              their record, which is the gate the rest of this card already uses.
+
+              Shares the header's edit mode rather than having one of its own, so
+              there is one Edit button on the page and one save. */}
+          {publications && (
+            <GridContainer
+              label="Publications and Patents"
+              elements={[
+                // Read-only here. The scholar adds and edits on their own
+                // publications page, which is the one place that writes them.
+                <ShowPublications
+                  formData={publications}
+                  enableEdit={false}
+                  enableDelete={false}
+                  canAdd={false}
+                />,
+              ]}
+              space={3}
+            />
+          )}
+
+          {progressHistory && (
+            <GridContainer
+              label="Progress over time"
+              elements={[
+                <ProgressChart
+                  points={progressHistory.points}
+                  milestones={progressHistory.milestones}
+                />,
+              ]}
+              space={3}
+            />
+          )}
+
+          <GridContainer
+            label="About the scholar"
+            elements={[
+              isEditingInline ? (
+                <div className="inline-field-item">
+                  <label htmlFor="profile-strengths">Strengths</label>
+                  <textarea
+                    id="profile-strengths"
+                    placeholder="What you are good at, and what you have got better at so far"
+                    value={editForm.strengths ?? ""}
+                    maxLength={5000}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, strengths: e.target.value }))}
+                  />
+                  <div className="inline-char-count">{(editForm.strengths || "").length} / 5000</div>
+                </div>
+              ) : (
+                <div>
+                  <p className="student-research-label">Strengths</p>
+                  <p className={profile.strengths ? "" : "student-value-empty"}>
+                    {profile.strengths || (permissions.is_self ? "Not filled in yet. Edit your profile to add it." : EMPTY_VALUE)}
+                  </p>
+                </div>
+              ),
+              isEditingInline ? (
+                <div className="inline-field-item">
+                  <label htmlFor="profile-help-needed">Help needed</label>
+                  <textarea
+                    id="profile-help-needed"
+                    placeholder="Where you are stuck, and what would help: training, equipment, a collaborator, time"
+                    value={editForm.help_needed ?? ""}
+                    maxLength={5000}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, help_needed: e.target.value }))}
+                  />
+                  <div className="inline-char-count">{(editForm.help_needed || "").length} / 5000</div>
+                </div>
+              ) : (
+                <div>
+                  <p className="student-research-label">Help needed</p>
+                  <p className={profile.help_needed ? "" : "student-value-empty"}>
+                    {profile.help_needed || (permissions.is_self ? "Not filled in yet. Edit your profile to add it." : EMPTY_VALUE)}
+                  </p>
+                </div>
+              ),
+            ]}
+            space={2}
+          />
 
           <GridContainer
             label="Supervisors"

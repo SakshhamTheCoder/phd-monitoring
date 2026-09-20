@@ -11,25 +11,14 @@ import LeaveRequests from './LeaveRequests';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { countAbsent, applyMarkAll, buildSaveMessage } from '../../utils/attendanceMark';
-import { EMPTY_VALUE } from '../../utils/timeParse';
+import { EMPTY_VALUE, toDateValue as formatDate, toDateObject as parseDate } from '../../utils/timeParse';
 import './AttendancePage.css';
 
 const EDIT_WINDOW = 7;
 
-const todayString = () => {
-  const now = new Date();
-  const offset = now.getTimezoneOffset();
-  return new Date(now.getTime() - offset * 60 * 1000).toISOString().slice(0, 10);
-};
-const formatDate = (d) => {
-  if (!d) return '';
-  const offset = d.getTimezoneOffset();
-  return new Date(d.getTime() - offset * 60 * 1000).toISOString().slice(0, 10);
-};
-const parseDate = (str) => {
-  if (!str) return null;
-  return new Date(str + 'T00:00:00');
-};
+// Named as this page has always called them; the implementations moved to
+// timeParse so the profile's attendance range uses the same two.
+const todayString = () => toDateValue(new Date());
 
 const AttendancePage = () => {
   const [activeTab, setActiveTab] = useState('mark');
