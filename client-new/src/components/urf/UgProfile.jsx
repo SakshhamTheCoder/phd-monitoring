@@ -1,14 +1,23 @@
 import React, { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import '../profileCard/ProfileCard.css';
 import InfoGrid from '../profileFields/InfoGrid';
 import GridContainer from '../forms/fields/GridContainer';
 import TableComponent from '../forms/table/TableComponent';
 import FacultyLink from '../facultyLink/FacultyLink';
+import CustomButton from '../forms/fields/CustomButton';
 import { HeaderLine, StatusText, facultyName, yearLabel } from './UrfRecord';
 import { signedInUser } from './UrfForms';
-import { apiUrfMine } from '../../api/urf';
-import UgDetailsForm from './UgDetailsForm';
+import { apiUrfMine, apiUrfUpdateMine } from '../../api/urf';
+import useBranchOptions from '../../hooks/useBranches';
 import { EMPTY_VALUE } from '../../utils/timeParse';
+
+const YEARS = [1, 2, 3, 4].map((year) => ({ title: yearLabel(year), value: year }));
+const GENDERS = [{ title: 'Male', value: 'Male' }, { title: 'Female', value: 'Female' }];
+
+// Who they are is on a URF project once they apply, and the branch is what
+// routes a form to an ADORDC, so those rows say why rather than disappearing.
+const LOCKED_NOTE = 'On a URF project now. Ask the office to change it.';
 
 const PROJECT_KEYS = ['session', 'project_title', 'status', 'teammate', 'teammate_branch', 'teammate_year', 'mentors'];
 const PROJECT_TITLES = ['Session', 'Project Title', 'Status', 'Team Member', 'Branch', 'Year', 'Faculty Mentors'];
@@ -37,6 +46,9 @@ const PROJECT_CELLS = [
 const UgProfile = () => {
   const [state, setState] = useState(null);
   const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({});
+  const [saving, setSaving] = useState(false);
+  const branches = useBranchOptions();
 
   const load = () => apiUrfMine().then((res) => res.success && setState(res.response));
 
@@ -44,6 +56,32 @@ const UgProfile = () => {
 
   const me = signedInUser();
   const applications = state?.applications || [];
+  const applied = applications.length > 0;
+
+  const startEdit = () => {
+    setForm({
+      phone: me.phone || '',
+      gender: me.gender || '',
+      roll_no: state?.student?.roll_no || '',
+      branch_id: state?.student?.branch_id || '',
+      year: state?.student?.year || '',
+    });
+    setEditing(true);
+  };
+
+  const save = async () => {
+    setSaving(true);
+    const res = await apiUrfUpdateMine(form);
+    setSaving(false);
+    if (!res.success) return;
+
+    // The header reads the account stored at sign-in, so the two fields this
+    // changes are kept in step with it.
+    localStorage.setItem('user', JSON.stringify({ ...me, phone: form.phone, gender: form.gender }));
+    toast.success('Your details are saved');
+    setEditing(false);
+    load();
+  };
   // The server sends the newest session first, so the current project leads.
   const [current, ...past] = applications;
   const slotOn = (application) => (
@@ -94,28 +132,63 @@ const UgProfile = () => {
         </div>
 
         {/* How to reach them stays theirs to correct; who they are becomes the
-            office's once they hold a project. Sits on the name's line, as the
-            scholar's edit does. */}
+            office's once they hold a project. Sits on the name's line and edits
+            in place, as both the other profiles do. */}
         {state?.student && (
           <div className="profile-actions">
-            <button className="profile-edit-small" onClick={() => setEditing(true)}>
-              <i className="fa fa-pencil" aria-hidden="true"></i> Edit
-            </button>
+            {!editing && (
+              <button className="profile-edit-small" onClick={startEdit}>
+                <i className="fa fa-pencil" aria-hidden="true"></i> Edit
+              </button>
+            )}
+            {editing && (
+              <>
+                <CustomButton text={saving ? 'Saving…' : 'Save'} onClick={save} disabled={saving} />
+                <CustomButton text="Cancel" variant="secondary" onClick={() => setEditing(false)} />
+              </>
+            )}
           </div>
         )}
       </div>
 
       <div className="student-details">
-        <InfoGrid className="student-info-grid" rows={[
-          { label: 'Roll Number', value: state?.student?.roll_no || current?.[`student${slot}_roll_no`] },
-          { label: 'Branch', value: state?.student?.branch?.name || current?.[`student${slot}_branch`]?.name },
-          { label: 'Year', value: yearLabel(state?.student?.year || current?.[`student${slot}_year`]) },
-          { label: 'Semester', value: state?.student?.semester_of_study },
-          { label: 'Email', value: me.email },
-          { label: 'Phone', value: me.phone },
-          { label: 'Gender', value: me.gender },
-          { label: 'Programme', value: state?.student?.branch?.programme },
-        ]} />
+        <InfoGrid
+          className="student-info-grid"
+          editing={editing}
+          values={form}
+          onChange={(field, value) => setForm((prev) => ({ ...prev, [field]: value }))}
+          rows={[
+            {
+              label: 'Roll Number',
+              value: state?.student?.roll_no || current?.[`student${slot}_roll_no`],
+              field: 'roll_no',
+              disabled: applied,
+              hint: applied ? LOCKED_NOTE : undefined,
+            },
+            {
+              label: 'Branch',
+              value: state?.student?.branch?.name || current?.[`student${slot}_branch`]?.name,
+              field: 'branch_id',
+              options: branches,
+              disabled: applied,
+              hint: applied ? LOCKED_NOTE : undefined,
+            },
+            {
+              label: 'Year',
+              value: yearLabel(state?.student?.year || current?.[`student${slot}_year`]),
+              field: 'year',
+              options: YEARS,
+              disabled: applied,
+              hint: applied ? LOCKED_NOTE : undefined,
+            },
+            // Counted from the year rather than stored, so there is nothing to edit.
+            { label: 'Semester', value: state?.student?.semester_of_study },
+            { label: 'Email', value: me.email },
+            { label: 'Phone', value: me.phone, field: 'phone' },
+            { label: 'Gender', value: me.gender, field: 'gender', options: GENDERS },
+            { label: 'Programme', value: state?.student?.branch?.programme },
+          ]}
+        />
       </div>
 
       {current && (
@@ -147,13 +220,6 @@ const UgProfile = () => {
           space={3}
         />
       )}
-      <UgDetailsForm
-        student={state?.student}
-        applied={applications.length > 0}
-        isOpen={editing}
-        onClose={() => setEditing(false)}
-        onSaved={load}
-      />
     </div>
   );
 };
