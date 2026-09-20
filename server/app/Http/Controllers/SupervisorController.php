@@ -1,10 +1,10 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Models\DoctoralCommittee;
+use App\Models\Student;
+use App\Support\ScholarCommittee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use PhpParser\Comment\Doc;
 
 class SupervisorController extends Controller
 {
@@ -56,19 +56,22 @@ class SupervisorController extends Controller
 
         $request->validate(
             [
-                'student_id' => 'required|integer',
-                'faculty_id' => 'required|integer',
+                'student_id' => 'required|integer|exists:students,roll_no',
+                'faculty_id' => 'required|integer|exists:faculty,faculty_code',
             ]
         );
-       
-        $doc= DoctoralCommittee::create([
-            'student_id' => $request->student_id,
-            'faculty_id' => $request->faculty_id,
-        ]);
-        
+
+        $student = Student::findOrFail($request->student_id);
+
+        // Through ScholarCommittee rather than writing the table directly, so
+        // one place knows that a committee membership is a grant and not a
+        // record: it decides who may answer the `doctoral` step of every form
+        // chain. Also idempotent, where create() threw a raw SQL error on a
+        // member the scholar already had.
+        ScholarCommittee::onTheDoctoralCommittee($student, [$request->faculty_id]);
+
         return response()->json([
             'message' => 'Doctoral added successfully'
-            
         ], 200);
     }
 }
