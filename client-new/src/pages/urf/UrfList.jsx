@@ -87,9 +87,11 @@ const UrfList = () => {
   const [pending, setPending] = useState(null);
   const [saving, setSaving] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  // The applications switch and the session list are the office's. A mentor
-  // asking for them was refused, and the refusal surfaced as an error toast.
+  // The applications switch, the import and the report schedule are the
+  // office's. Everything else on the page is scoped to what the reader may
+  // read, so a mentor gets the same page holding only their own projects.
   const managesUrf = can('can_manage_urf');
+  const readsUrf = managesUrf || can('can_read_urf_mentees');
   const [importOpen, setImportOpen] = useState(false);
   const [importing, setImporting] = useState(false);
 
@@ -121,7 +123,7 @@ const UrfList = () => {
   // the one to land on.
   useEffect(() => {
     if (!capabilitiesKnown) return;
-    if (!managesUrf) {
+    if (!readsUrf) {
       setSessions([]);
       return;
     }
@@ -134,7 +136,7 @@ const UrfList = () => {
         setSessions(years);
         setSession(years.length ? String(years[0]) : '');
       });
-  }, [capabilitiesKnown, managesUrf]);
+  }, [capabilitiesKnown, readsUrf]);
 
   const toggleApplications = async () => {
     const res = await apiSaveSettings('urf', { applications_open: open ? 0 : 1 });
@@ -246,7 +248,7 @@ const UrfList = () => {
           </>
         )}
       />
-      {can('can_manage_urf') && <FormGrid forms={URF_FORMS} />}
+      {readsUrf && <FormGrid forms={URF_FORMS} />}
 
       <UnifiedBulkImportModal
         isOpen={importOpen}

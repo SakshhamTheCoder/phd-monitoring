@@ -134,7 +134,7 @@ class UrfController extends Controller
             return $this->list($request);
         }
         $user = Auth::user();
-        if (!$user->may('can_manage_urf')) {
+        if (!$this->mayRead($user)) {
             return $this->refuse();
         }
 
@@ -142,6 +142,10 @@ class UrfController extends Controller
         $details = $form === 'urf-additional-info';
         $page = ($details ? UrfFellow::query() : UrfReport::where('type', $form === 'urf-final-report' ? 'final' : 'half_yearly'))
             ->with(['application.student1Branch', 'application.student2Branch', 'user'])
+            ->unless($user->may('can_manage_urf'), fn ($q) => $q->whereHas(
+                'application',
+                fn ($a) => $a->mentoredBy($user->faculty?->faculty_code)
+            ))
             ->when($filters, fn ($q) => $q->whereHas('application', fn ($a) => $this->applyDynamicFilters($a, $filters, 'urf', self::SEARCH_KEYS)))
             ->latest('id')
             ->paginate($request->input('rows', 50), ['*'], 'page', $request->input('page', 1));
@@ -336,18 +340,20 @@ class UrfController extends Controller
     public function sessions()
     {
         $user = Auth::user();
-        if (!$user->may('can_manage_urf')) {
+        if (!$this->mayRead($user)) {
             return $this->refuse();
         }
 
         return response()->json(
-            UrfApplication::distinct()->orderByDesc('session')->pluck('session')->values()
+            UrfApplication::query()
+                ->unless($user->may('can_manage_urf'), fn ($q) => $q->mentoredBy($user->faculty?->faculty_code))
+                ->distinct()->orderByDesc('session')->pluck('session')->values()
         );
     }
 
     public function reportWindows()
     {
-        if (!Auth::user()->may('can_manage_urf')) {
+        if (!$this->mayRead(Auth::user())) {
             return $this->refuse();
         }
 

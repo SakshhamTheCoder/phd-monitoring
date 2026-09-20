@@ -33,15 +33,15 @@ const UrfFormList = () => {
   // showing every year at once for the moment before they land.
   const [sessions, setSessions] = useState(null);
   const [session, setSession] = useState('');
-  // The session list is the office's. A mentor reading the application list
-  // was refused it, and the refusal surfaced as an error toast.
+  // Scoped to what the reader may read: the office gets every year, a mentor
+  // the years they mentor in.
   const can = useCapabilities();
-  const managesUrf = can('can_manage_urf');
+  const readsUrf = can('can_manage_urf') || can('can_read_urf_mentees');
   const capabilitiesKnown = useCapabilitiesKnown();
 
   useEffect(() => {
     if (!capabilitiesKnown) return;
-    if (!managesUrf) {
+    if (!readsUrf) {
       setSessions([]);
       return;
     }
@@ -54,7 +54,7 @@ const UrfFormList = () => {
         setSessions(years);
         setSession(years.length ? String(years[0]) : '');
       });
-  }, [capabilitiesKnown, managesUrf]);
+  }, [capabilitiesKnown, readsUrf]);
 
   // The session is the page's own scope and the search box is the filter bar's.
   // They are joined here so the table has one filter object and makes one

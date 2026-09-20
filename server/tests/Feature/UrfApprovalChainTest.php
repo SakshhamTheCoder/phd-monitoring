@@ -572,6 +572,85 @@ class UrfApprovalChainTest extends TestCase
         );
     }
 
+    /**
+     * A mentor browses the forms of the projects they mentor, as they already
+     * browse the projects themselves. The lists and the session picker were the
+     * office's alone, so a mentor could open a form by link but never find one,
+     * and their page came up with no years to choose from.
+     */
+    public function test_a_mentor_browses_the_forms_of_the_projects_they_mentor(): void
+    {
+        Storage::fake('public');
+
+        $admin = $this->userAs('admin', ['can_manage_urf' => 'true', 'can_manage_app_settings' => 'true']);
+        $student = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
+        $department = Department::create(['name' => 'Scope Test Department', 'code' => 'SCPTD']);
+        $branch = UgBranch::create(['programme' => 'BE', 'code' => 'SCPTB', 'name' => 'Scope Test Branch', 'department_id' => $department->id]);
+
+        $mentor = $this->faculty(990161, $department);
+        $stranger = $this->faculty(990162, $department);
+        foreach ([$mentor, $stranger] as $faculty) {
+            DB::table('roles')->where('id', $faculty->user->role_id)->update(['can_read_urf_mentees' => 'true']);
+        }
+
+        $this->actingAs($admin, 'sanctum')->postJson('/api/settings/urf', ['applications_open' => 1])->assertOk();
+
+        $title = 'Scope project ' . Str::random(4);
+        $id = $this->actingAs($student, 'sanctum')->postJson('/api/urf', [
+            'project_title' => $title,
+            'student1_name' => 'Scope Student',
+            'student1_roll_no' => '10230' . random_int(1000, 9999),
+            'student1_branch_id' => $branch->id,
+            'student1_year' => 3,
+            'student1_gender' => 'Female',
+            'student1_email' => $student->email,
+            'student1_phone' => '9800000017',
+            'mentor1_faculty_code' => $mentor->faculty_code,
+            'proposal' => UploadedFile::fake()->create('p.pdf', 10, 'application/pdf'),
+        ])->assertCreated()->json('id');
+
+        $this->actingAs($admin, 'sanctum')->postJson("/api/urf/{$id}/status", ['status' => 'selected'])->assertOk();
+        $this->actingAs($student, 'sanctum')->postJson("/api/urf/{$id}/fellow", [
+            'full_name' => 'Scope Student', 'dob' => '2004-05-06', 'gender' => 'Female', 'father_name' => 'A Parent',
+            'pan' => 'ABCDE4321F', 'aadhaar' => '210987654321', 'bank_name' => 'SBI',
+            'account_no' => '210987654321', 'ifsc' => 'SBIN0004321',
+        ])->assertOk();
+
+        // The mentor finds it by browsing, not only by following a link.
+        $this->actingAs($mentor->user, 'sanctum')->getJson('/api/urf/urf-additional-info')
+            ->assertOk()
+            ->assertJsonFragment(['project_title' => $title]);
+
+        // A faculty member who mentors nothing on it reads an empty list rather
+        // than a refusal: the page is theirs, the rows are not.
+        $this->actingAs($stranger->user, 'sanctum')->getJson('/api/urf/urf-additional-info')
+            ->assertOk()
+            ->assertJsonMissing(['project_title' => $title]);
+
+        // The years on the picker are the years they mentor in.
+        $this->actingAs($mentor->user, 'sanctum')->getJson('/api/urf/sessions')
+            ->assertOk()
+            ->assertJsonFragment([(int) now()->year]);
+        $this->actingAs($stranger->user, 'sanctum')->getJson('/api/urf/sessions')
+            ->assertOk()
+            ->assertExactJson([]);
+
+        // And the rounds a report was due in, which a report is read against.
+        $this->actingAs($mentor->user, 'sanctum')->getJson('/api/urf/report-windows')->assertOk();
+
+        // Scheduling one is still the office's.
+        $this->actingAs($mentor->user, 'sanctum')->postJson('/api/urf/report-windows', [
+            'session' => (int) now()->year,
+            'type' => 'final',
+            'opens_on' => now()->toDateString(),
+            'closes_on' => now()->addWeek()->toDateString(),
+        ])->assertForbidden();
+
+        // A student of the project holds a step on its forms but does not browse
+        // the office's lists.
+        $this->actingAs($student, 'sanctum')->getJson('/api/urf/urf-additional-info')->assertForbidden();
+    }
+
     public function test_each_reader_sees_only_what_waits_on_them(): void
     {
         Storage::fake('public');
