@@ -2,9 +2,7 @@ import React, { useEffect, useState } from "react";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import "react-circular-progressbar/dist/styles.css";
-import ProgressChart from "./ProgressChart";
 import ShowPublications from "../publications/ShowPublications";
-import CollapsibleSection from "../common/CollapsibleSection";
 import "./ProfileCard.css";
 import { facultyNameCell } from "../facultyLink/FacultyLink";
 import { ACCESS } from "../../auth/access";
@@ -45,7 +43,6 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
   const [courses, setCourses] = useState([]);
   const [allCourses, setAllCourses] = useState([]);
   const [attendance, setAttendance] = useState(null);
-  const [progressHistory, setProgressHistory] = useState(null);
   const [publications, setPublications] = useState(null);
   const [tagData, setTagData] = useState({
     course_id: '',
@@ -139,7 +136,6 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
       fetchCourses();
     }
     fetchAttendance();
-    fetchScholarSection('progress-history', setProgressHistory);
     fetchScholarSection('publications', setPublications);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.database_id, profile?.id, profile?.roll_no]);
@@ -543,24 +539,6 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
                   canAdd={false}
                   collapsible
                 />,
-              ]}
-              space={3}
-            />
-          )}
-
-          {/* Everyone else reads this on the Progress Monitoring page, which
-              the button above opens. A scholar has no such button on their own
-              profile, and ACCESS.scholars keeps them off that page, so theirs
-              stays here rather than nowhere. */}
-          {progressHistory && permissions.is_self && (
-            <GridContainer
-              elements={[
-                <CollapsibleSection title="Progress over time">
-                  <ProgressChart
-                    points={progressHistory.points}
-                    milestones={progressHistory.milestones}
-                  />
-                </CollapsibleSection>,
               ]}
               space={3}
             />
