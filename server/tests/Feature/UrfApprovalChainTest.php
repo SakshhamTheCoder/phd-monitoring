@@ -674,6 +674,77 @@ class UrfApprovalChainTest extends TestCase
             ->patchJson("/api/ug-students/{$student->id}", [])->assertForbidden();
     }
 
+    /**
+     * How to reach a UG student stays theirs to correct. Who they are does not:
+     * the roll number identifies them across imports and the branch is what
+     * routes a form to an ADORDC, so a project freezes those.
+     */
+    public function test_a_ug_student_corrects_their_contact_details_after_applying(): void
+    {
+        Storage::fake('public');
+
+        $admin = $this->userAs('admin', ['can_manage_urf' => 'true', 'can_manage_app_settings' => 'true']);
+        $student = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
+        $department = Department::create(['name' => 'Details Test Department', 'code' => 'DTLTD']);
+        $branch = UgBranch::create(['programme' => 'BE', 'code' => 'DTLTB', 'name' => 'Details Test Branch', 'department_id' => $department->id]);
+        $other = UgBranch::create(['programme' => 'BE', 'code' => 'DTLTC', 'name' => 'Other Test Branch', 'department_id' => $department->id]);
+        $mentor = $this->faculty(990171, $department);
+
+        $roll = '10230' . random_int(1000, 9999);
+        $record = $student->ugStudent()->create(['roll_no' => $roll, 'branch_id' => $branch->id, 'year' => 2]);
+
+        $details = fn (array $overrides = []) => array_merge([
+            'phone' => '9800000018',
+            'gender' => 'Female',
+            'roll_no' => $roll,
+            'branch_id' => $branch->id,
+            'year' => 2,
+        ], $overrides);
+
+        // Before applying, the whole card is theirs.
+        $this->actingAs($student, 'sanctum')
+            ->patchJson('/api/urf/me', $details(['year' => 3]))
+            ->assertOk();
+        $this->assertSame(3, $record->fresh()->year);
+
+        $this->actingAs($admin, 'sanctum')->postJson('/api/settings/urf', ['applications_open' => 1])->assertOk();
+        $this->actingAs($student, 'sanctum')->postJson('/api/urf', [
+            'project_title' => 'Details project ' . Str::random(4),
+            'student1_name' => 'Details Student',
+            'student1_roll_no' => $roll,
+            'student1_branch_id' => $branch->id,
+            'student1_year' => 3,
+            'student1_gender' => 'Female',
+            'student1_email' => $student->email,
+            'student1_phone' => '9800000018',
+            'mentor1_faculty_code' => $mentor->faculty_code,
+            'proposal' => UploadedFile::fake()->create('p.pdf', 10, 'application/pdf'),
+        ])->assertCreated();
+
+        // With a project, the contact details still save.
+        $this->actingAs($student, 'sanctum')
+            ->patchJson('/api/urf/me', ['phone' => '9800000019', 'gender' => 'Male'])
+            ->assertOk();
+        $student->refresh();
+        $this->assertSame('9800000019', $student->phone);
+        $this->assertSame('Male', $student->gender);
+
+        // And the rest is ignored rather than written, even if a stale page
+        // posts it: the branch is what routes a form to an ADORDC.
+        $this->actingAs($student, 'sanctum')
+            ->patchJson('/api/urf/me', $details([
+                'roll_no' => '999999999',
+                'branch_id' => $other->id,
+                'year' => 1,
+            ]))
+            ->assertOk();
+
+        $record->refresh();
+        $this->assertSame($roll, $record->roll_no, 'the roll number is the office\'s now');
+        $this->assertSame($branch->id, $record->branch_id, 'and so is the branch that routes the form');
+        $this->assertSame(3, $record->year);
+    }
+
     public function test_each_reader_sees_only_what_waits_on_them(): void
     {
         Storage::fake('public');

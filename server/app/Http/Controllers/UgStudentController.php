@@ -238,26 +238,36 @@ class UgStudentController extends Controller
             return $this->refuse();
         }
 
-        if (UrfApplication::forMember($user)->exists()) {
-            return response()->json([
-                'message' => 'Your details are part of a URF application now. Ask the office to change them.',
-            ], 422);
-        }
-
-        $data = $request->validate([
+        // How to reach them is theirs to correct for as long as they hold the
+        // account. An application copied the phone and gender it was filed
+        // with, so changing them now cannot alter a form somebody is reading.
+        $rules = [
             'phone' => ['required', 'string', 'max:20', Rule::unique('users', 'phone')->ignore($user->id)],
             'gender' => 'required|in:Male,Female',
-            'roll_no' => ['required', 'string', 'max:50', Rule::unique('ug_students')->ignore($record->id)],
-            'branch_id' => 'required|exists:ug_branches,id',
-            'year' => 'required|integer|between:1,4',
-        ]);
+        ];
+
+        // Who they are is not. The roll number identifies them across imports,
+        // and the branch is what routes a form to an ADORDC, so once a project
+        // exists these are the office's to change.
+        $applied = UrfApplication::forMember($user)->exists();
+        if (!$applied) {
+            $rules += [
+                'roll_no' => ['required', 'string', 'max:50', Rule::unique('ug_students')->ignore($record->id)],
+                'branch_id' => 'required|exists:ug_branches,id',
+                'year' => 'required|integer|between:1,4',
+            ];
+        }
+
+        $data = $request->validate($rules);
 
         $user->fill(['phone' => $data['phone'], 'gender' => $data['gender']])->save();
-        $record->fill([
-            'roll_no' => $data['roll_no'],
-            'branch_id' => $data['branch_id'],
-            'year' => $data['year'],
-        ])->save();
+        if (!$applied) {
+            $record->fill([
+                'roll_no' => $data['roll_no'],
+                'branch_id' => $data['branch_id'],
+                'year' => $data['year'],
+            ])->save();
+        }
 
         return response()->json($record->fresh()->load('branch:id,programme,code,name'));
     }

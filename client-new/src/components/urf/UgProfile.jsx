@@ -94,9 +94,10 @@ const UgProfile = () => {
           </div>
         </div>
 
-        {/* Their own to correct until they apply; after that the office makes
-            the change. Sits on the name's line, as the scholar's edit does. */}
-        {state?.student && applications.length === 0 && (
+        {/* How to reach them stays theirs to correct; who they are becomes the
+            office's once they hold a project. Sits on the name's line, as the
+            scholar's edit does. */}
+        {state?.student && (
           <div className="profile-actions">
             <CustomButton text="Edit details" onClick={() => setEditing(true)} />
           </div>
@@ -147,6 +148,7 @@ const UgProfile = () => {
       )}
       <UgDetailsForm
         student={state?.student}
+        applied={applications.length > 0}
         isOpen={editing}
         onClose={() => setEditing(false)}
         onSaved={load}

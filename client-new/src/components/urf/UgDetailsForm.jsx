@@ -12,8 +12,15 @@ import { signedInUser } from './UrfForms';
 
 const YEARS = [1, 2, 3, 4].map((year) => ({ title: yearLabel(year), value: year }));
 
-/** What a UG student can correct about themselves, until their first application. */
-const UgDetailsForm = ({ student, isOpen, onClose, onSaved }) => {
+/**
+ * What a UG student can correct about themselves.
+ *
+ * How to reach them stays theirs. Who they are does not: the roll number
+ * identifies them across imports and the branch is what routes a form to an
+ * ADORDC, so a project locks those three rather than hiding them. The server
+ * enforces the same split.
+ */
+const UgDetailsForm = ({ student, applied = false, isOpen, onClose, onSaved }) => {
   const me = signedInUser();
   const branches = useBranches();
   const [body, setBody] = useState({});
@@ -50,8 +57,8 @@ const UgDetailsForm = ({ student, isOpen, onClose, onSaved }) => {
     <CustomModal isOpen={isOpen} onClose={onClose} title="Edit your details" width="640px">
       <GridContainer
         elements={[
-          <InputField label="Roll Number" initialValue={body.roll_no} onChange={set('roll_no')} required />,
-          <DropdownField label="Branch" options={branches} initialValue={body.branch_id} onChange={set('branch_id')} required />,
+          <InputField label="Roll Number" initialValue={body.roll_no} onChange={set('roll_no')} isLocked={applied} required />,
+          <DropdownField label="Branch" options={branches} initialValue={body.branch_id} onChange={set('branch_id')} isLocked={applied} required />,
           <InputField label="Phone Number" initialValue={body.phone} onChange={set('phone')} required />,
           <DropdownField
             label="Gender"
@@ -65,6 +72,7 @@ const UgDetailsForm = ({ student, isOpen, onClose, onSaved }) => {
             options={YEARS}
             initialValue={body.year}
             onChange={set('year')}
+            isLocked={applied}
             required
           />,
         ]}
