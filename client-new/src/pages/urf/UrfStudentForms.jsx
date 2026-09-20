@@ -4,7 +4,7 @@ import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import FormGrid from '../../components/forms/formGrid/FormGrid';
 import CustomButton from '../../components/forms/fields/CustomButton';
-import { ReportsTable, Section, StatusText, REPORT_TYPES } from '../../components/urf/UrfRecord';
+import { StatusText, REPORT_TYPES } from '../../components/urf/UrfRecord';
 import UrfFormShell from '../../components/urf/UrfFormShell';
 import { ApplyForm, FellowForm, ReportForm, signedInUser } from '../../components/urf/UrfForms';
 import { UrfApprovalTrail } from '../../components/urf/UrfApproval';
@@ -29,6 +29,13 @@ const useUrf = () => {
   return { state, version, load };
 };
 
+const REPORT_FORMS = { half_yearly: 'urf-half-yearly-report', final: 'urf-final-report' };
+
+// A form is the student's to fill while it waits on them. Submitting moves it
+// to the mentor, and from then on it is read rather than filled in, as a PhD
+// form is, until a step sends it back and it is theirs again.
+const locked = (form) => Boolean(form) && form.stage !== 'student';
+
 // One application per session: open unless this year's is waiting or selected.
 const canApply = ({ applications_open: open, session, applications }) =>
   open && !applications.some((a) => a.session === session && a.status !== 'rejected');
@@ -45,7 +52,7 @@ const formsFor = (application, windows) => {
     if (!round?.is_open && !filed) return [];
 
     return [{
-      form_type: type === 'final' ? 'urf-final-report' : 'urf-half-yearly-report',
+      form_type: REPORT_FORMS[type],
       form_name: REPORT_TYPES[type],
       path: `${base}/${path}`,
       action_required: round?.is_open && !filed,
@@ -154,6 +161,7 @@ export const UrfFormPage = ({ type }) => {
     const me = signedInUser();
     const editable = state.applications_open
       && application.status === 'applied'
+      && !locked(application)
       && application.session === state.session
       && application.student2_email?.toLowerCase() !== me.email?.toLowerCase();
     // Once it can no longer be corrected it is read rather than filled in,
@@ -163,33 +171,36 @@ export const UrfFormPage = ({ type }) => {
       ? <ApplyForm initial={application} student={state.student} onSaved={load} />
       : <UrfFormShell path={`/urf/urf-application/${application.id}`} />;
   } else if (application && type === 'additional') {
-    // Prefilled from the student's most recent other project, and still editable.
+    // Prefilled from the student's most recent other project.
     const previous = state.applications.find((a) => a.id !== application.id && a.fellows?.length)?.fellows[0];
-    body = application.status === 'selected'
-      ? <FellowForm applicationId={application.id} initial={application.fellows?.[0]} prefill={previous} onSaved={load} />
-      : <p>This form opens once your project is selected.</p>;
+    const fellow = application.fellows?.[0];
+
+    if (application.status !== 'selected') {
+      body = <p>This form opens once your project is selected.</p>;
+    } else if (locked(fellow)) {
+      body = <UrfFormShell path={`/urf/urf-additional-info/${fellow.id}`} />;
+    } else {
+      body = <FellowForm applicationId={application.id} initial={fellow} prefill={previous} onSaved={load} />;
+    }
   } else if (application && REPORT_TYPES[type]) {
     const round = windowFor(state.report_windows, application, type);
-    const filed = application.reports?.filter((report) => report.type === type) || [];
-    const submitted = filed.length > 0 && (
-      <Section title={`Submitted ${REPORT_TYPES[type]}s`}><ReportsTable reports={filed} /></Section>
-    );
+    // One report per round, so the one the student filed is the one they read.
+    const filed = application.reports?.find((report) => report.type === type);
 
     if (application.status !== 'selected') {
       body = <p>Reports open once your project is selected.</p>;
+    } else if (locked(filed)) {
+      body = <UrfFormShell path={`/urf/${REPORT_FORMS[type]}/${filed.id}`} />;
     } else if (round?.is_open) {
-      body = <><ReportForm application={application} type={type} onSaved={load} />{submitted}</>;
+      body = <ReportForm application={application} type={type} onSaved={load} />;
     } else {
       // Say which round it is rather than offer a form the server would refuse.
       body = (
-        <>
-          <p>
-            {!round && 'This report has not been scheduled yet.'}
-            {round && new Date(round.opens_on) > new Date() && `This report can be filed from ${formatDate(round.opens_on)} to ${formatDate(round.closes_on)}.`}
-            {round && new Date(round.opens_on) <= new Date() && `This report closed on ${formatDate(round.closes_on)}.`}
-          </p>
-          {submitted}
-        </>
+        <p>
+          {!round && 'This report has not been scheduled yet.'}
+          {round && new Date(round.opens_on) > new Date() && `This report can be filed from ${formatDate(round.opens_on)} to ${formatDate(round.closes_on)}.`}
+          {round && new Date(round.opens_on) <= new Date() && `This report closed on ${formatDate(round.closes_on)}.`}
+        </p>
       );
     }
   }

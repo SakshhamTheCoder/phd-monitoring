@@ -456,6 +456,122 @@ class UrfApprovalChainTest extends TestCase
         ])->assertForbidden();
     }
 
+    /**
+     * A form the student has submitted is with the chain, so it is read rather
+     * than filled in until a step sends it back. Every one of the three the
+     * student files used to take a second submit: the application and the
+     * stipend details silently rewrote an answered form and started the
+     * reading again, and a report filed a duplicate row beside the first.
+     */
+    public function test_a_submitted_form_is_not_edited_again_until_it_is_sent_back(): void
+    {
+        Storage::fake('public');
+
+        $admin = $this->userAs('admin', ['can_manage_urf' => 'true', 'can_manage_app_settings' => 'true']);
+        $student = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
+
+        $department = Department::create(['name' => 'Lock Test Department', 'code' => 'LCKTD']);
+        $branch = UgBranch::create([
+            'programme' => 'BE',
+            'code' => 'LCKTB',
+            'name' => 'Lock Test Branch',
+            'department_id' => $department->id,
+        ]);
+
+        $mentor = $this->faculty(990151, $department);
+        $adordcFaculty = $this->faculty(990152, $department);
+        $adordc = $adordcFaculty->user;
+        $adordc->forceFill(['current_role_id' => Role::where('role', 'adordc')->value('id')])->save();
+        $department->adordc_id = $adordcFaculty->faculty_code;
+        $department->save();
+        $dordc = $this->userAs('dordc');
+
+        $this->actingAs($admin, 'sanctum')->postJson('/api/settings/urf', ['applications_open' => 1])->assertOk();
+
+        $form = [
+            'project_title' => 'Lock project ' . Str::random(4),
+            'student1_name' => 'Lock Student',
+            'student1_roll_no' => '10230' . random_int(1000, 9999),
+            'student1_branch_id' => $branch->id,
+            'student1_year' => 2,
+            'student1_gender' => 'Male',
+            'student1_email' => $student->email,
+            'student1_phone' => '9800000016',
+            'mentor1_faculty_code' => $mentor->faculty_code,
+        ];
+        $pdf = fn (string $name) => UploadedFile::fake()->create($name, 10, 'application/pdf');
+
+        $id = $this->actingAs($student, 'sanctum')
+            ->postJson('/api/urf', $form + ['proposal' => $pdf('proposal.pdf')])
+            ->assertCreated()->json('id');
+
+        // The application is with the mentor, so the student does not rewrite it.
+        $this->actingAs($student, 'sanctum')
+            ->postJson('/api/urf', $form + ['project_title' => 'Rewritten behind the mentor'])
+            ->assertStatus(422);
+        $this->assertSame('mentor', UrfApplication::find($id)->stage, 'the refusal left the form where it was');
+
+        $decide = fn (User $actor, string $formName, $formId, array $body) => $this->actingAs($actor, 'sanctum')
+            ->postJson("/api/urf/{$formName}/{$formId}/decision", $body);
+
+        // Sent back, it is theirs again.
+        $decide($mentor->user, 'urf-application', $id, ['decision' => 'send_back', 'comments' => 'Say more.'])->assertOk();
+        $this->actingAs($student, 'sanctum')
+            ->postJson('/api/urf', $form + ['project_title' => 'Lock project, fuller'])
+            ->assertOk();
+
+        $decide($mentor->user, 'urf-application', $id, ['decision' => 'approve'])->assertOk();
+        $decide($adordc, 'urf-application', $id, ['decision' => 'approve'])->assertOk();
+        $decide($dordc, 'urf-application', $id, ['decision' => 'approve'])->assertOk();
+        $this->assertSame('selected', UrfApplication::find($id)->status);
+
+        $details = [
+            'full_name' => 'Lock Student', 'dob' => '2004-03-04', 'gender' => 'Male', 'father_name' => 'A Parent',
+            'pan' => 'ABCDE1234F', 'aadhaar' => '123456789012', 'bank_name' => 'SBI',
+            'account_no' => '123456789012', 'ifsc' => 'SBIN0001234',
+        ];
+        $this->actingAs($student, 'sanctum')->postJson("/api/urf/{$id}/fellow", $details)->assertOk();
+
+        $fellowId = DB::table('urf_fellows')->where('urf_application_id', $id)->value('id');
+        $decide($mentor->user, 'urf-additional-info', $fellowId, ['decision' => 'approve'])->assertOk();
+
+        // An answered form is not rewritten, and the answer stands.
+        $this->actingAs($student, 'sanctum')
+            ->postJson("/api/urf/{$id}/fellow", $details + ['bank_name' => 'Another bank'])
+            ->assertStatus(422);
+        $this->assertSame('adordc', DB::table('urf_fellows')->where('id', $fellowId)->value('stage'));
+
+        $decide($adordc, 'urf-additional-info', $fellowId, ['decision' => 'send_back', 'comments' => 'Wrong IFSC.'])->assertOk();
+        $this->actingAs($student, 'sanctum')->postJson("/api/urf/{$id}/fellow", $details)->assertOk();
+        $this->assertSame(1, DB::table('urf_fellows')->where('urf_application_id', $id)->count(), 'corrected, not filed twice');
+
+        // The same for a report, which used to slip past the lock as a new row.
+        $this->actingAs($admin, 'sanctum')->postJson('/api/urf/report-windows', [
+            'session' => (int) now()->year,
+            'type' => 'half_yearly',
+            'opens_on' => now()->subDay()->toDateString(),
+            'closes_on' => now()->addWeek()->toDateString(),
+        ])->assertCreated();
+
+        $report = fn (string $name) => ['type' => 'half_yearly', 'report' => $pdf($name)];
+        $this->actingAs($student, 'sanctum')->postJson("/api/urf/{$id}/reports", $report('first.pdf'))->assertCreated();
+        $this->actingAs($student, 'sanctum')->postJson("/api/urf/{$id}/reports", $report('second.pdf'))->assertStatus(422);
+        $this->assertSame(
+            1,
+            DB::table('urf_reports')->where('urf_application_id', $id)->where('type', 'half_yearly')->count(),
+            'the round holds one report, not a duplicate'
+        );
+
+        $reportId = DB::table('urf_reports')->where('urf_application_id', $id)->value('id');
+        $decide($mentor->user, 'urf-half-yearly-report', $reportId, ['decision' => 'send_back', 'comments' => 'Add the results.'])->assertOk();
+        $this->actingAs($student, 'sanctum')->postJson("/api/urf/{$id}/reports", $report('third.pdf'))->assertCreated();
+        $this->assertSame(
+            1,
+            DB::table('urf_reports')->where('urf_application_id', $id)->where('type', 'half_yearly')->count(),
+            'a report sent back is replaced'
+        );
+    }
+
     public function test_each_reader_sees_only_what_waits_on_them(): void
     {
         Storage::fake('public');

@@ -433,6 +433,11 @@ class UrfController extends Controller
         if ($editing && $application->user_id !== $user->id) {
             return response()->json(['message' => 'Only the student who applied can change the application'], 403);
         }
+        // A filed application is being read by the chain. It is corrected only
+        // once a step sends it back, which puts it on the student again.
+        if ($editing && $application->stage !== 'student') {
+            return response()->json(['message' => 'This application has been submitted. You can change it only if a reviewer sends it back to you.'], 422);
+        }
 
         $second = 'required_with:student2_name|nullable';
         // Mentors are institute faculty, not outside members of the directory.
@@ -692,6 +697,15 @@ class UrfController extends Controller
             return response()->json(['message' => 'These details are asked for once the project is selected'], 422);
         }
 
+        $keys = ['urf_application_id' => $application->id, 'user_id' => $user->id];
+        $fellow = UrfFellow::where($keys)->first();
+        // Submitted details are with the chain. Overwriting them here used to
+        // rewrite an approved form and send it back round without anybody
+        // asking, so they are changed only after a step sends the form back.
+        if ($fellow && $fellow->stage !== 'student') {
+            return response()->json(['message' => 'These details have been submitted. You can change them only if a reviewer sends the form back to you.'], 422);
+        }
+
         $request->merge([
             'pan' => strtoupper(trim((string) $request->pan)),
             'ifsc' => strtoupper(trim((string) $request->ifsc)),
@@ -710,8 +724,7 @@ class UrfController extends Controller
             'ifsc' => ['required', 'regex:/^[A-Z]{4}0[A-Z0-9]{6}$/'],
         ]);
 
-        $keys = ['urf_application_id' => $application->id, 'user_id' => $user->id];
-        $fellow = UrfFellow::where($keys)->first() ?? (new UrfFellow())->forceFill($keys);
+        $fellow = $fellow ?? (new UrfFellow())->forceFill($keys);
         $fellow->fill($data)->save();
         $fellow->backToTheStartOfTheChain($user);
 
@@ -744,6 +757,17 @@ class UrfController extends Controller
                     : 'This report has not been scheduled yet.',
             ], 422);
         }
+        // One report per round. A report already with the chain is replaced only
+        // after a step sends it back: without this a second submit slipped past
+        // the stage-scoped lookup below and filed a duplicate instead.
+        $existing = UrfReport::where('urf_application_id', $application->id)
+            ->where('user_id', $user->id)
+            ->where('type', $data['type'])
+            ->first();
+        if ($existing && $existing->stage !== 'student') {
+            return response()->json(['message' => 'This report has been submitted. You can change it only if a reviewer sends it back to you.'], 422);
+        }
+
         $chosen = fn ($value) => is_array($value) ? $value : (json_decode((string) $value, true) ?: []);
         $linked = ['publications' => $chosen($request->input('publications')), 'patents' => $chosen($request->input('patents'))];
         $data['report'] = $this->saveUploadedFile($request->file('report'), 'urf_report', $user->id);
