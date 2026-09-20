@@ -2,7 +2,11 @@ import React, { useState, useEffect, useId } from 'react';
 import { formatDate } from '../../../utils/timeParse';
 import "./Fields.css";
 
-const DateField = ({ label, initialValue, isLocked, onChange, hint = null, showLabel = true, required = false }) => {
+// `min` and `max` are the input's own, for a pair of dates that bound each
+// other: giving the closing date the opening one as its minimum is what stops
+// a round that ends before it starts, at the point of picking rather than at
+// the point of saving.
+const DateField = ({ label, initialValue, isLocked, onChange, hint = null, showLabel = true, required = false, min = undefined, max = undefined }) => {
     const [hintText] = useState(hint || 'Select Date...');
     const [value, updateValue] = useState('');
     const fieldId = useId();
@@ -47,6 +51,8 @@ const DateField = ({ label, initialValue, isLocked, onChange, hint = null, showL
                     type="date"
                     aria-required={required || undefined}
                     className="input-field"
+                    min={min}
+                    max={max}
                     value={value}
                     placeholder={hintText}
                     onChange={(e) => {

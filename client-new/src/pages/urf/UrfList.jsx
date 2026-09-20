@@ -282,7 +282,10 @@ const UrfList = () => {
       {can('can_manage_urf') && (
         <>
           <div className="grid-label">Report Rounds</div>
-          <UrfReportSchedule session={Number(session) || new Date().getFullYear()} />
+          <UrfReportSchedule
+            session={Number(session) || new Date().getFullYear()}
+            sessions={sessions || []}
+          />
         </>
       )}
       {queue.length > 0 && (
