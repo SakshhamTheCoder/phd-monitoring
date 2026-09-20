@@ -548,7 +548,11 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
             />
           )}
 
-          {progressHistory && (
+          {/* Everyone else reads this on the Progress Monitoring page, which
+              the button above opens. A scholar has no such button on their own
+              profile, and ACCESS.scholars keeps them off that page, so theirs
+              stays here rather than nowhere. */}
+          {progressHistory && permissions.is_self && (
             <GridContainer
               elements={[
                 <CollapsibleSection title="Progress over time">
