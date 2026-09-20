@@ -54,7 +54,11 @@ trait GeneralFormList
             case 'faculty':
                 return $this->listFacultyForms($user, $model, $filters, $override, $page, $rows, $fields, $trusted);
             case 'adordc':
-                return $this->listAdordcForms($user, $model, $filters, $page, $rows, $fields, $trusted);
+                // The ADORDC approves nothing and holds no step, so their list is
+                // the same read-only list the DRA and DORDC get. Department
+                // scoping is deliberately off: listAdordcForms below still has
+                // it and is what to route back to if it is wanted again.
+                return $this->listAdminForms($user, $model, $filters, $page, $rows, $fields, $trusted);
             case 'doctoral':
             case 'external':
                 return $this->listDoctoralForms($user, $model, $filters, $override, $page, $rows, $fields, $trusted);
@@ -76,12 +80,13 @@ trait GeneralFormList
      * step in, and clicking either answered "not yet assigned" or "not
      * authorized". This is the loaders' rule, stated once for the lists.
      *
-     * Admin reads every form and has no step, so is not filtered. The director
-     * reads every form they have no step in, and the rest once reached.
+     * Admin and the ADORDC read every form and have no step, so are not
+     * filtered. The director reads every form they have no step in, and the rest
+     * once reached.
      */
     private function onlyFormsReachedBy($formsQuery, string $formsTable, string $role): void
     {
-        if ($role === 'admin') {
+        if ($role === 'admin' || $role === 'adordc') {
             return;
         }
 
@@ -103,7 +108,7 @@ trait GeneralFormList
     /** onlyFormsReachedBy() for one loaded form. */
     private function formReachedBy($form, string $role): bool
     {
-        if ($role === 'admin') {
+        if ($role === 'admin' || $role === 'adordc') {
             return true;
         }
 
@@ -308,6 +313,11 @@ trait GeneralFormList
 
         return $this->paginateAndMap($formsQuery, $page, $fields, $rows, $user);
     }
+    /**
+     * The department-scoped ADORDC list. Not reached at the moment: listForms
+     * sends the ADORDC to listAdminForms so they can read every scholar's forms.
+     * Kept for when the scoping is wanted back.
+     */
     private function listAdordcForms($user, $model, $filters = null, $page = 1, $rows = 50, $fields = [], array $trusted = [])
     {
         $faculty = $user->faculty;
@@ -357,6 +367,11 @@ trait GeneralFormList
 
     public function ListStudentProfile($student)
     {
+        // Read once and compared here rather than through
+        // hasFinishedCoursework(), which would sum the credits a second time.
+        $completedCredits = $student->completedCredits();
+        $requiredCredits = $student->requiredCredits();
+
         return [
             'id' => $student->roll_no,
             'database_id' => $student->id,
@@ -367,6 +382,11 @@ trait GeneralFormList
             'phd_title_locked' => $student->phdTitleLocked(),
             'irb_completed' => $student->irbCompleted(),
             'tentative_desc' => $student->tentative_desc,
+            // The scholar's own words about themselves, theirs to write and to
+            // change. Read by everyone who may read the profile, which is the
+            // point: it is how they ask for help.
+            'strengths' => $student->strengths,
+            'help_needed' => $student->help_needed,
             // The broad area is no longer typed here. It is the scholar's
             // settled area once the IRB form sets one, and their allocation
             // preferences until then, so the profile reports rather than asks.
@@ -377,6 +397,7 @@ trait GeneralFormList
             'gender' => $student->user->gender,
             'physically_handicapped' => (bool) $student->user->physically_handicapped,
             'is_jrf' => $student->is_jrf,
+            'is_net_gate_qualified' => $student->is_net_gate_qualified,
             'department_id' => $student->department_id,
             'overall_progress' => $student->overall_progress,
             'roll_no' => $student->roll_no,
@@ -391,6 +412,12 @@ trait GeneralFormList
                 ];
             }),
             'cgpa' => $student->cgpa,
+            // Coursework, which is what the synopsis waits on. Shown to the
+            // scholar and to everyone who reads their profile, so nobody has to
+            // add the course table up by hand to know whether they are ready.
+            'completed_credits' => $completedCredits,
+            'required_credits' => $requiredCredits,
+            'coursework_complete' => $completedCredits >= $requiredCredits,
             'email' => $student->user->email,
             'phone' => $student->user->phone,
             'current_status' => $student->current_status,
@@ -400,6 +427,7 @@ trait GeneralFormList
             'date_of_irb' => $student->date_of_irb,
             'date_of_synopsis' => $student->date_of_synopsis,
             'date_of_thesis' => $student->date_of_thesis,
+            'date_of_thesis_awarded' => $student->date_of_thesis_awarded,
             'thesis_window' => $student->thesisWindow(),
             'doctoral' => $student->doctoralCommittee->map(function ($faculty) {
                 return [

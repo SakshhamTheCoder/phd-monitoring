@@ -29,6 +29,16 @@ Route::prefix('{id}')->group(function () {
 
     Route::get('/forms', [UserController::class, 'listForms'])->middleware('auth:sanctum');
 
+    // The progress chart on the scholar's profile. Gated by Student::isReadableBy,
+    // the same rule the profile itself uses, so what the page shows and what it
+    // may fetch cannot disagree.
+    Route::get('/progress-history', [StudentController::class, 'progressHistory'])->middleware('auth:sanctum');
+
+    // The scholar's publications, on the same gate. /publications answers only
+    // for the signed-in account, so without this nobody could read a scholar's
+    // work from the scholar's own page.
+    Route::get('/publications', [StudentController::class, 'publications'])->middleware('auth:sanctum');
+
     Route::prefix('/forms')->group(function () {
         // Route::middleware('parseRollNumber')->group(function () {
             require base_path('routes/base/forms.php');
