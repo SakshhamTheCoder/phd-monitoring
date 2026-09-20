@@ -527,23 +527,6 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
 
               Shares the header's edit mode rather than having one of its own, so
               there is one Edit button on the page and one save. */}
-          {publications && (
-            <GridContainer
-              elements={[
-                // Read-only here. The scholar adds and edits on their own
-                // publications page, which is the one place that writes them.
-                <ShowPublications
-                  formData={publications}
-                  enableEdit={false}
-                  enableDelete={false}
-                  canAdd={false}
-                  collapsible
-                />,
-              ]}
-              space={3}
-            />
-          )}
-
           <GridContainer
             label="About the scholar"
             elements={[
@@ -616,6 +599,23 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
             ]}
             space={3}
           />
+
+          {publications && (
+            <GridContainer
+              elements={[
+                // Read-only here. The scholar adds and edits on their own
+                // publications page, which is the one place that writes them.
+                <ShowPublications
+                  formData={publications}
+                  enableEdit={false}
+                  enableDelete={false}
+                  canAdd={false}
+                  collapsible
+                />,
+              ]}
+              space={3}
+            />
+          )}
 
             <GridContainer
             label="Enrolled Courses"
