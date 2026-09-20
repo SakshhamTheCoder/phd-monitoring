@@ -17,6 +17,11 @@ const accountName = () => {
     }
 };
 
+const PUBLICATION_GROUPS = ['sci', 'non_sci', 'international', 'national', 'book', 'patents'];
+
+const countPublications = (formData) => PUBLICATION_GROUPS
+    .reduce((total, group) => total + (formData?.[group]?.length || 0), 0);
+
 const nameTokens = (text) => String(text || '').toLowerCase().replace(/[^a-z\s]/g, ' ').split(/\s+/).filter(Boolean);
 
 // Authors is free text ("A. Rao, Ravi Kumar and ..."), so each author is matched
@@ -46,12 +51,17 @@ const ShowPublications = ({
     // Whose names are bold among the authors. Defaults to the signed-in account;
     // a page showing someone else's record passes theirs.
     highlightNames = null,
+    // A profile or a project record carries these beside everything else about
+    // the person, where six open tables push the rest of the page off screen.
+    // Those pages collapse them behind their own count; a form that asks the
+    // scholar to pick from them leaves them open, which is the default.
+    collapsible = false,
+    summaryLabel = 'Publications and Patents',
 }) => {
    const highlighted = highlightNames || [accountName()];
    const authorsCell = { key: 'authors', component: ({ data }) => <Authors text={data} names={highlighted} /> };
    const [editData, setEditData] = useState(null);
    const [selectedRows, setSelectedRows] = useState({});
-   const [totalPublications, setTotalPublications] = useState(0);
    const handleSelect = (publicationId, publicationType) => {
        setSelectedRows(prev => ({
            ...prev,
@@ -97,13 +107,9 @@ const ShowPublications = ({
            setOpen(true);
        }
    };
-   // Some callers pass a partial set (the form pickers only offer journals and
-   // patents), so count defensively rather than assuming every group is present.
-   useEffect(() => {
-    if (!formData) return;
-        const groups = ['sci', 'non_sci', 'international', 'national', 'book', 'patents'];
-        setTotalPublications(groups.reduce((total, group) => total + (formData[group]?.length || 0), 0));
-   }, [formData]);
+   // Derived rather than stored: a count kept in state renders 0 on the first
+   // pass, which the collapsed summary would show before an effect caught up.
+   const totalPublications = countPublications(formData);
 
    // Only URF projects record funding and mode, so the columns appear when a row has them.
    const urfColumns = (rows, keys, titles) => rows.some((row) => row.mode || row.funding)
@@ -136,7 +142,7 @@ const ShowPublications = ({
            )}
        </>
    );
-    return (
+    const tables = (
         <div className="publications-tables">
             {formData && (
                 <>
@@ -283,6 +289,17 @@ const ShowPublications = ({
                 </>
             )}
         </div>
+    );
+
+    if (!collapsible) return tables;
+
+    // <details> rather than a button and a piece of state: the open and closed
+    // markers, the keyboard handling and the accessible name come with it.
+    return (
+        <details className="publications-collapse">
+            <summary>{summaryLabel} ({totalPublications})</summary>
+            {tables}
+        </details>
     );
 };
 
