@@ -7,7 +7,7 @@ import ShowPublications from '../publications/ShowPublications';
 import { facultyNameCell } from '../facultyLink/FacultyLink';
 import { fileUrlFrom } from '../common/FileLink';
 import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
-import { UrfApprovalTrail, stageLine } from './UrfApproval';
+import { stageLine } from './UrfApproval';
 import FormGrid from '../forms/formGrid/FormGrid';
 
 export const URF_STATUSES = ['applied', 'selected', 'rejected'];
@@ -177,8 +177,6 @@ const UrfRecord = ({ record, actions = null, forms = false }) => {
         {actions && <div className="profile-actions">{actions}</div>}
       </div>
 
-      <UrfApprovalTrail form={record} />
-
       {forms && <UrfForms record={record} />}
 
       <TeamTables record={record} />
@@ -213,22 +211,16 @@ const UrfRecord = ({ record, actions = null, forms = false }) => {
         <GridContainer label="Reports" elements={[<ReportsTable reports={record.reports} />]} space={3} />
       )}
 
-      {record.reports?.filter((report) => report.mentor_comments || report.adordc_comments || report.dordc_comments).map((report) => (
-        <div key={`approval-${report.id}`} className="urf-report-approval">
-          <div className="urf-subhead"><h3>{report.type === 'final' ? 'Final Report' : 'Half-yearly Report'}</h3></div>
-          <UrfApprovalTrail form={report} />
-        </div>
-      ))}
-
       {record.reports?.filter((report) => hasPublications(report.publications)).map((report) => (
         <GridContainer
           key={report.id}
-          label={`Publications in ${REPORT_TYPES[report.type] || 'Report'} (${formatDate(report.created_at)})`}
           elements={[
             <ShowPublications
               formData={report.publications}
               enableEdit={false}
               highlightNames={[record.student1_name, record.student2_name].filter(Boolean)}
+              collapsible
+              summaryLabel={`Publications in ${REPORT_TYPES[report.type] || 'Report'}, ${formatDate(report.created_at)}`}
             />,
           ]}
           space={3}

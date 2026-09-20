@@ -7,7 +7,6 @@ import CustomButton from '../../components/forms/fields/CustomButton';
 import { StatusText, REPORT_TYPES } from '../../components/urf/UrfRecord';
 import UrfFormShell from '../../components/urf/UrfFormShell';
 import { ApplyForm, FellowForm, ReportForm, signedInUser } from '../../components/urf/UrfForms';
-import { UrfApprovalTrail } from '../../components/urf/UrfApproval';
 import { apiUrfMine } from '../../api/urf';
 import { formatDate } from '../../utils/timeParse';
 import '../../components/urf/UrfForms.css';
@@ -120,17 +119,8 @@ export const UrfFormsPage = () => {
             <h3>URF {application.session} · {application.project_title}</h3>
             <StatusText status={application.status} />
           </div>
-          <UrfApprovalTrail form={application} />
           <RoundNotice application={application} windows={state.report_windows} />
           <FormGrid forms={formsFor(application, state.report_windows)} title={null} />
-          {application.reports?.filter((report) => report.mentor_comments || report.adordc_comments || report.dordc_comments).map((report) => (
-            <div key={report.id} className="urf-report-approval">
-              <div className="urf-subhead">
-                <h3>{report.type === 'final' ? 'Final Report' : 'Half-yearly Report'}</h3>
-              </div>
-              <UrfApprovalTrail form={report} />
-            </div>
-          ))}
         </div>
       ))}
     </Layout>

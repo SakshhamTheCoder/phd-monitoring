@@ -25,7 +25,6 @@ vi.mock('../../components/dashboard/layout', () => ({ default: ({ children }) =>
 vi.mock('../../components/pageHeader/PageHeader', () => ({ default: () => null }));
 vi.mock('../../components/forms/formGrid/FormGrid', () => ({ default: () => null }));
 vi.mock('../../components/forms/fields/CustomButton', () => ({ default: () => null }));
-vi.mock('../../components/urf/UrfApproval', () => ({ UrfApprovalTrail: () => null }));
 vi.mock('../../components/urf/UrfRecord', () => ({
   StatusText: () => null,
   REPORT_TYPES: { half_yearly: 'Half-yearly Progress Report', final: 'Final Report' },
