@@ -18,8 +18,10 @@ export const buttonConfig = [
     { path: '/forms', icon: 'fa fa-file-text', text: 'Forms', roles: ACCESS.home },
     { path: '/presentation', icon: 'fa fa-tasks', text: 'Progress Monitoring', roles: ACCESS.presentations },
     { path: '/publications', icon: 'fa fa-book', text: 'Publications', roles: ACCESS.publications },
-    // Mentors reach it too, but only while they mentor something.
-    { path: '/urf', icon: 'fa fa-flask', text: 'URF', roles: ACCESS.urf, capability: 'can_read_urf_mentees' },
+    // The office owns the page and a mentor reaches it while they mentor
+    // something, so either capability opens it. Listing only the mentor one hid
+    // the entry from the office, whose can_read_urf_mentees is false.
+    { path: '/urf', icon: 'fa fa-flask', text: 'URF', roles: ACCESS.urf, capability: ['can_manage_urf', 'can_read_urf_mentees'] },
     { path: '/openings', icon: 'fa fa-bullhorn', text: 'Openings', roles: ACCESS.openings, feature: 'job_openings' },
     { path: '/courses', icon: 'fa fa-graduation-cap', text: 'Courses', roles: ACCESS.courses },
     { path: '/students', icon: 'fa fa-users', text: 'Students', roles: ACCESS.scholars },
@@ -43,11 +45,16 @@ const CustomNavBar = () => {
     const userRole = localStorage.getItem('userRole');
     const features = useFeatures();
     const can = useCapabilities();
-    // `capability` is for a page a role may reach only sometimes; the server decides.
+    // `capability` is for a page a role may reach only sometimes; the server
+    // decides. A list means any one of them opens it, for a page two different
+    // roles reach for two different reasons.
+    const holds = (capability) => !capability
+        || (Array.isArray(capability) ? capability.some(can) : can(capability));
+
     const visibleButtons = buttonConfig.filter(
         button => button.roles.includes(userRole)
             && (!button.feature || features[button.feature])
-            && (!button.capability || can(button.capability))
+            && holds(button.capability)
     );
 
     return (
