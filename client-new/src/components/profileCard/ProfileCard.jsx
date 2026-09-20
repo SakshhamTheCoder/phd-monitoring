@@ -4,6 +4,7 @@ import { useLocation, useParams, useNavigate } from "react-router-dom";
 import "react-circular-progressbar/dist/styles.css";
 import ProgressChart from "./ProgressChart";
 import ShowPublications from "../publications/ShowPublications";
+import CollapsibleSection from "../common/CollapsibleSection";
 import "./ProfileCard.css";
 import { facultyNameCell } from "../facultyLink/FacultyLink";
 import { ACCESS } from "../../auth/access";
@@ -549,12 +550,13 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
 
           {progressHistory && (
             <GridContainer
-              label="Progress over time"
               elements={[
-                <ProgressChart
-                  points={progressHistory.points}
-                  milestones={progressHistory.milestones}
-                />,
+                <CollapsibleSection title="Progress over time">
+                  <ProgressChart
+                    points={progressHistory.points}
+                    milestones={progressHistory.milestones}
+                  />
+                </CollapsibleSection>,
               ]}
               space={3}
             />

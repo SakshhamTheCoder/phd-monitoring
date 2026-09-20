@@ -1,0 +1,28 @@
+/* The summary is the section heading, so it carries what .grid-label carries.
+   Left as the default display rather than flex: flex drops the disclosure
+   marker, and the marker is the only sign the section opens. */
+.collapsible-section > summary {
+  cursor: pointer;
+  margin-top: 15px;
+  margin-bottom: 12px;
+  font-size: var(--text-lg);
+  font-weight: bold;
+  text-align: left;
+}
+
+.collapsible-section > summary:focus-visible {
+  outline: 2px solid #991b1b;
+  outline-offset: 2px;
+}
+
+/* How many are in there, said beside the heading without competing with it. */
+.collapsible-count {
+  margin-left: 0.5rem;
+  font-size: var(--text-sm);
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.collapsible-body {
+  margin-bottom: 12px;
+}

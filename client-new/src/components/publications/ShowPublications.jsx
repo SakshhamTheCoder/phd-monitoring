@@ -4,6 +4,7 @@ import TableComponent from '../forms/table/TableComponent';
 import { formatDate, EMPTY_VALUE } from '../../utils/timeParse';
 import CustomButton from '../forms/fields/CustomButton';
 import AddPublication from './AddPublication';
+import CollapsibleSection from '../common/CollapsibleSection';
 import CustomModal from '../forms/modal/CustomModal';
 import './ShowPublications.css';
 
@@ -293,13 +294,10 @@ const ShowPublications = ({
 
     if (!collapsible) return tables;
 
-    // <details> rather than a button and a piece of state: the open and closed
-    // markers, the keyboard handling and the accessible name come with it.
     return (
-        <details className="publications-collapse">
-            <summary>{summaryLabel} ({totalPublications})</summary>
-            {tables}
-        </details>
+        <CollapsibleSection title={summaryLabel} count={totalPublications}>
+            <div className="publications-collapse">{tables}</div>
+        </CollapsibleSection>
     );
 };
 

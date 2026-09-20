@@ -4,30 +4,8 @@
 .publications-tables .custom-table td { font-weight: 400; }
 .publications-tables .custom-table td strong { font-weight: 700; color: #111827; }
 
-/* Closed until asked for, on the pages that carry these beside everything else
-   about a person. The summary is the row that opens them, and keeps the native
-   disclosure marker rather than drawing one. */
-.publications-collapse > summary {
-  cursor: pointer;
-  padding: 0.6rem 0.75rem;
-  border: 1px solid #e5e7eb;
-  border-radius: var(--radius);
-  background: #f9fafb;
-  font-size: var(--text-sm);
-  color: #374151;
-}
-
-.publications-collapse > summary:hover {
-  background: #f3f4f6;
-}
-
-.publications-collapse > summary:focus-visible {
-  outline: 2px solid #991b1b;
-  outline-offset: 2px;
-}
-
-/* Open, the group headings sit inside a panel the summary has already named, so
-   they step down from page headings to captions. */
+/* Open, the group headings sit inside a section the summary has already named,
+   so they step down from page headings to captions. */
 .publications-collapse .left-align-header {
   margin: 0;
   font-size: var(--text-sm);
