@@ -1,15 +1,14 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import "react-circular-progressbar/dist/styles.css";
 import ProgressChart from "./ProgressChart";
 import ShowPublications from "../publications/ShowPublications";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import "./ProfileCard.css";
 import { facultyNameCell } from "../facultyLink/FacultyLink";
+import { ACCESS } from "../../auth/access";
 
-import { EMPTY_VALUE, formatDate, toDateValue, toDateObject } from '../../utils/timeParse';
+import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
 import { baseURL } from "../../api/urls";
 import { customFetch } from "../../api/base";
 import GridContainer from "../forms/fields/GridContainer";
@@ -45,13 +44,8 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
   const [courses, setCourses] = useState([]);
   const [allCourses, setAllCourses] = useState([]);
   const [attendance, setAttendance] = useState(null);
-  // Blank is the lifetime figure, which is what this showed before there was a
-  // range to ask for. The endpoint has always taken from and to; nothing sent
-  // them.
-  const [attendanceRange, setAttendanceRange] = useState({ from: '', to: '' });
   const [progressHistory, setProgressHistory] = useState(null);
   const [publications, setPublications] = useState(null);
-  const today = useMemo(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }, []);
   const [tagData, setTagData] = useState({
     course_id: '',
     semester: '',
@@ -62,6 +56,9 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
   const { state: locationState, pathname } = useLocation();
   const { roll_no } = useParams();
   const navigate = useNavigate();
+  // The same list the route table and the sidebar read, so the button appears
+  // exactly for the roles that have the attendance tab to land on.
+  const readsAttendancePage = ACCESS.attendance.includes(localStorage.getItem('userRole'));
 
   const [profile, setProfile] = useState(locationState || dataIP);
   const [loading, setLoading] = useState(!profile);
@@ -105,12 +102,9 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
   const fetchAttendance = async () => {
     const roll = profile?.roll_no;
     if (!roll) return;
-    const range = new URLSearchParams(
-      Object.entries(attendanceRange).filter(([, value]) => value)
-    ).toString();
     try {
       const res = await customFetch(
-        `${baseURL}/clerks/attendance/student/${roll}${range ? `?${range}` : ''}`,
+        `${baseURL}/clerks/attendance/student/${roll}`,
         'GET', {}, false, false
       );
       if (res?.success) {
@@ -147,7 +141,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
     fetchScholarSection('progress-history', setProgressHistory);
     fetchScholarSection('publications', setPublications);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.database_id, profile?.id, profile?.roll_no, attendanceRange.from, attendanceRange.to]);
+  }, [profile?.database_id, profile?.id, profile?.roll_no]);
 
   const fetchAllCourses = async () => {
     try {
@@ -313,7 +307,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
               <span className="profile-attendance-value">
                 {attendance.total > 0
                   ? `${attendance.present}/${attendance.total} (${attendance.percent}%)`
-                  : (attendanceRange.from || attendanceRange.to ? 'No sessions in this range' : EMPTY_VALUE)}
+                  : EMPTY_VALUE}
               </span>
               <span className="profile-attendance-pop" role="tooltip">
                 <strong>{attendance.currentMonth?.label || 'Current Month'} Attendance</strong>
@@ -328,35 +322,14 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
               </span>
             </span>
 
-            {/* The same DatePicker, format and min/max pairing the attendance
-                page uses for its export range, so the one control in the app
-                that asks for an attendance date range behaves one way. Blank is
-                the whole record, which is what this showed before. */}
-            <span className="profile-attendance-range">
-              <label className="input-label" htmlFor="attendance-from">From</label>
-              <DatePicker
-                id="attendance-from"
-                selected={toDateObject(attendanceRange.from)}
-                onChange={(date) => setAttendanceRange((prev) => ({ ...prev, from: toDateValue(date) }))}
-                dateFormat="yyyy-MM-dd"
-                className="input-field"
-                placeholderText="YYYY-MM-DD"
-                maxDate={toDateObject(attendanceRange.to) || today}
-                isClearable
-              />
-              <label className="input-label" htmlFor="attendance-to">To</label>
-              <DatePicker
-                id="attendance-to"
-                selected={toDateObject(attendanceRange.to)}
-                onChange={(date) => setAttendanceRange((prev) => ({ ...prev, to: toDateValue(date) }))}
-                dateFormat="yyyy-MM-dd"
-                className="input-field"
-                placeholderText="YYYY-MM-DD"
-                minDate={toDateObject(attendanceRange.from)}
-                maxDate={today}
-                isClearable
-              />
-            </span>
+            {/* A date range belongs on the attendance page, which already has
+                one and the register behind it. This is the summary, and a way
+                through to the page for whoever has it. */}
+            {readsAttendancePage && (
+              <button type="button" className="profile-edit-small" onClick={() => navigate('/attendance')}>
+                <i className="fa fa-calendar" aria-hidden="true"></i> View attendance
+              </button>
+            )}
           </span>
         ),
       }] : []),
@@ -559,7 +532,6 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
               there is one Edit button on the page and one save. */}
           {publications && (
             <GridContainer
-              label="Publications and Patents"
               elements={[
                 // Read-only here. The scholar adds and edits on their own
                 // publications page, which is the one place that writes them.
@@ -568,6 +540,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
                   enableEdit={false}
                   enableDelete={false}
                   canAdd={false}
+                  collapsible
                 />,
               ]}
               space={3}
