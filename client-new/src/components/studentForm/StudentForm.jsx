@@ -24,6 +24,7 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
     date_of_irb: "",
     date_of_synopsis: "",
     date_of_thesis: "",
+    date_of_thesis_awarded: "",
     phd_title: "",
     fathers_name: "",
     address: "",
@@ -31,6 +32,7 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
     gender: "",
     physically_handicapped: false,
     is_jrf: false,
+    is_net_gate_qualified: false,
     overall_progress: 0,
     cgpa: "",
   });
@@ -47,6 +49,7 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
         date_of_irb: studentData.date_of_irb || "",
         date_of_synopsis: studentData.date_of_synopsis || "",
         date_of_thesis: studentData.date_of_thesis || "",
+        date_of_thesis_awarded: studentData.date_of_thesis_awarded || "",
         phd_title: studentData.phd_title || "",
         fathers_name: studentData.fathers_name || "",
         address: studentData.address || "",
@@ -56,6 +59,7 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
         gender: ["Male", "Female"].includes(studentData.gender) ? studentData.gender : "",
         physically_handicapped: !!studentData.physically_handicapped,
         is_jrf: !!studentData.is_jrf,
+        is_net_gate_qualified: !!studentData.is_net_gate_qualified,
         overall_progress: studentData.overall_progress || 0,
         cgpa: studentData.cgpa || "",
       });
@@ -201,6 +205,16 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
             initialValue={formData.date_of_thesis}
             onChange={(val) => handleChange("date_of_thesis", val)}
           />,
+          <DateField
+            label="Date of Thesis Awarded"
+            initialValue={formData.date_of_thesis_awarded}
+            onChange={(val) => handleChange("date_of_thesis_awarded", val)}
+          />,
+        ]}
+      />
+      <GridContainer
+        space={3}
+        elements={[
           <ToggleSwitch
             label="Physically handicapped"
             isOn={formData.physically_handicapped}
@@ -210,6 +224,11 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
             label="JRF"
             isOn={formData.is_jrf}
             onToggle={() => handleChange("is_jrf", !formData.is_jrf)}
+          />,
+          <ToggleSwitch
+            label="NET/GATE qualified"
+            isOn={formData.is_net_gate_qualified}
+            onToggle={() => handleChange("is_net_gate_qualified", !formData.is_net_gate_qualified)}
           />,
         ]}
       />

@@ -67,6 +67,15 @@
 
 /* Compact attendance with the portal's hover treatment. */
 .profile-attendance { position: relative; display: inline-block; cursor: help; }
+
+/* The figure and the range that produced it, on one line, wrapping to two on a
+   narrow screen rather than squeezing the inputs. */
+.profile-attendance-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+}
 .profile-attendance-value { border-bottom: 1px dotted #9ca3af; }
 .profile-attendance-pop {
   position: absolute;

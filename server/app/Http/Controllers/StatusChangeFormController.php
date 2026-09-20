@@ -103,6 +103,9 @@ class StatusChangeFormController extends Controller
             case 'admin':
                 return $this->handleAdminForm($user, $form_id, $model,true);
            
+            // Reads the form, answers nothing. Not a step in the chain.
+            case 'adordc':
+                return $this->handleAdordcForm($user, $form_id, $model);
             default:
                 return $this->refuse();
         }

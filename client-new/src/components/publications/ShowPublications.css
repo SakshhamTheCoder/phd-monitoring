@@ -3,3 +3,14 @@
    highlighted name is bold. */
 .publications-tables .custom-table td { font-weight: 400; }
 .publications-tables .custom-table td strong { font-weight: 700; color: #111827; }
+
+/* Open, the group headings sit inside a section the summary has already named,
+   so they step down from page headings to captions. */
+.publications-collapse .left-align-header {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b7280;
+}

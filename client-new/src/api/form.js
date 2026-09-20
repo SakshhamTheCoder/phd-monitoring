@@ -24,6 +24,10 @@ export const submitForm = async (body, location, setLoading, files = null) => {
             }
             if (Array.isArray(body[key])) {
                 body[key].forEach((item) => formData.append(`${key}[]`, item));
+            } else if (typeof body[key] === "boolean") {
+                // FormData sends "true", which Laravel's boolean rule refuses.
+                // It takes "1" and "0", so send those.
+                formData.append(key, body[key] ? "1" : "0");
             } else {
                 formData.append(key, body[key]);
             }

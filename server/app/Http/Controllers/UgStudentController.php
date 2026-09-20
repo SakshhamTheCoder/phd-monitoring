@@ -29,11 +29,23 @@ class UgStudentController extends Controller
     public function list(Request $request)
     {
         $user = Auth::user();
-        if (!$user->may('can_manage_urf')) {
+        if (!$user->may('can_manage_urf') && !$user->may('can_read_urf_mentees')) {
             return $this->refuse();
         }
 
         $query = UgStudent::with(['user', 'branch'])->latest('id');
+
+        // A mentor reads the students on the projects they mentor, as they read
+        // the projects themselves. Membership is the first student's account or
+        // the second student's address, the same pair this method already reads
+        // below to count a student's projects.
+        if (!$user->may('can_manage_urf')) {
+            $mentored = UrfApplication::mentoredBy($user->faculty?->faculty_code)
+                ->get(['user_id', 'student2_email']);
+            $query->where(fn ($q) => $q
+                ->whereIn('user_id', $mentored->pluck('user_id')->filter())
+                ->orWhereHas('user', fn ($u) => $u->whereIn('email', $mentored->pluck('student2_email')->filter())));
+        }
         $filters = json_decode((string) $request->query('filters'), true);
         if ($filters) {
             $query = $this->applyDynamicFilters($query, $filters, 'ug_students');
@@ -226,26 +238,36 @@ class UgStudentController extends Controller
             return $this->refuse();
         }
 
-        if (UrfApplication::forMember($user)->exists()) {
-            return response()->json([
-                'message' => 'Your details are part of a URF application now. Ask the office to change them.',
-            ], 422);
-        }
-
-        $data = $request->validate([
+        // How to reach them is theirs to correct for as long as they hold the
+        // account. An application copied the phone and gender it was filed
+        // with, so changing them now cannot alter a form somebody is reading.
+        $rules = [
             'phone' => ['required', 'string', 'max:20', Rule::unique('users', 'phone')->ignore($user->id)],
             'gender' => 'required|in:Male,Female',
-            'roll_no' => ['required', 'string', 'max:50', Rule::unique('ug_students')->ignore($record->id)],
-            'branch_id' => 'required|exists:ug_branches,id',
-            'year' => 'required|integer|between:1,4',
-        ]);
+        ];
+
+        // Who they are is not. The roll number identifies them across imports,
+        // and the branch is what routes a form to an ADORDC, so once a project
+        // exists these are the office's to change.
+        $applied = UrfApplication::forMember($user)->exists();
+        if (!$applied) {
+            $rules += [
+                'roll_no' => ['required', 'string', 'max:50', Rule::unique('ug_students')->ignore($record->id)],
+                'branch_id' => 'required|exists:ug_branches,id',
+                'year' => 'required|integer|between:1,4',
+            ];
+        }
+
+        $data = $request->validate($rules);
 
         $user->fill(['phone' => $data['phone'], 'gender' => $data['gender']])->save();
-        $record->fill([
-            'roll_no' => $data['roll_no'],
-            'branch_id' => $data['branch_id'],
-            'year' => $data['year'],
-        ])->save();
+        if (!$applied) {
+            $record->fill([
+                'roll_no' => $data['roll_no'],
+                'branch_id' => $data['branch_id'],
+                'year' => $data['year'],
+            ])->save();
+        }
 
         return response()->json($record->fresh()->load('branch:id,programme,code,name'));
     }

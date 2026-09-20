@@ -26,6 +26,10 @@ const StudentsPage = () => {
   // Manage Forms has no capability of its own yet, so it keeps the role
   // check it always had rather than borrowing an unrelated capability.
   const role = localStorage.getItem("userRole");
+  // A mentor reads the UG students on the projects they mentor, so the tab is
+  // theirs too. Adding, importing and editing one stay the office's.
+  const managesUrf = can("can_manage_urf");
+  const readsUrf = managesUrf || can("can_read_urf_mentees");
   const handleFilterChange = (newFilter) => {
     setFilter(newFilter);
   };
@@ -67,10 +71,10 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
     setUgRefreshKey((k) => k + 1);
   };
 
-  const STUDENT_HEADERS = "Registration Number,Full Name,Email,Phone,Department Code,Father Name,Gender,Enrollment Type,Date of Admission,Date of IRB,Date of Synopsis,Date of Thesis,CGPA,Overall Progress,PhD Title,JRF?,Permanent Address,Supervisor 1 Name,Supervisor 1 Email,Supervisor 2 Name,Supervisor 2 Email,Supervisor 3 Name,Supervisor 3 Email,Committee Member 1 Name,Committee Member 1 Email,Committee Member 2 Name,Committee Member 2 Email,Committee Member 3 Name,Committee Member 3 Email";
+  const STUDENT_HEADERS = "Registration Number,Full Name,Email,Phone,Department Code,Father Name,Gender,Enrollment Type,Date of Admission,Date of IRB,Date of Synopsis,Date of Thesis,Date of thesis awarded,CGPA,Overall Progress,PhD Title,NET/Gate,JRF?,Permanent Address,Supervisor 1 Name,Supervisor 1 Email,Supervisor 2 Name,Supervisor 2 Email,Supervisor 3 Name,Supervisor 3 Email,Committee Member 1 Name,Committee Member 1 Email,Committee Member 2 Name,Committee Member 2 Email,Committee Member 3 Name,Committee Member 3 Email,IRB member1 email,IRB member2 email,IRB member3 email,External expert for IRB Name,External expert for IRB Mail,External expert for IRB Designation,External expert for IRB Department,External expert for IRB Institute name";
 
   const studentsSampleCsv = `${STUDENT_HEADERS}
-900011,Scholar One,scholar.one@demo.invalid,9800000011,CSED,Parent One,Female,Full Time,2024-08-01,,,,8.4,10,,Yes,Patiala,Supervisor One,supervisor.one@thapar.edu,,,,,Committee One,committee.one@thapar.edu,,,,`;
+900011,Scholar One,scholar.one@demo.invalid,9800000011,CSED,Parent One,Female,Full Time,2024-08-01,,,,,8.4,10,,Yes,Yes,Patiala,Supervisor One,supervisor.one@thapar.edu,,,,,Committee One,committee.one@thapar.edu,,,,,cognate.one@thapar.edu,,,Expert One,expert.one@elsewhere.edu,Professor,Physics,Elsewhere Institute`;
 
   // The sheet says "Full Time"; the portal stores "full-time".
   const enrolmentType = (value) => value.trim().toLowerCase().replace(/\s+/g, '-');
@@ -119,12 +123,14 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
           date_of_irb: column(r, 'Date of IRB', 'Date of URB or IRB', 'Date of IRB (YYYY-MM-DD)', 'date_of_irb'),
           date_of_synopsis: column(r, 'Date of Synopsis', 'date_of_synopsis'),
           date_of_thesis: column(r, 'Date of Thesis', 'date_of_thesis'),
+          date_of_thesis_awarded: column(r, 'Date of thesis awarded', 'Date of Thesis Awarded', 'date_of_thesis_awarded'),
           phd_title: column(r, 'PhD Title', 'phd_title'),
           fathers_name: column(r, 'Father Name', "Father's Name", 'fathers_name'),
           address: column(r, 'Permanent Address', 'Address', 'address'),
           current_status: enrolmentType(column(r, 'Enrollment Type', 'Enrolment Type', 'Current Status', 'current_status')),
           cgpa: column(r, 'CGPA', 'cgpa'),
           is_jrf: yesNo(column(r, 'JRF?', 'JRF', 'is_jrf')),
+          is_net_gate_qualified: yesNo(column(r, 'NET/Gate', 'NET/GATE', 'NET/Gate (Yes/No)', 'is_net_gate_qualified')),
           overall_progress: column(r, 'Overall Progress', 'overall_progress'),
           supervisors: [1, 2, 3]
             .map((slot) => column(r, `Supervisor ${slot} Email`))
@@ -132,6 +138,18 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
           committee: [1, 2, 3]
             .map((slot) => column(r, `Committee Member ${slot} Email`))
             .filter(Boolean),
+          // The sheet spells these three inconsistently, so all its spellings
+          // are read rather than one being picked and the rest dropped.
+          irb_members: [1, 2, 3]
+            .map((slot) => column(r, `IRB member${slot} email`, `IRB member ${slot} email`, `IRB member ${slot} mail`))
+            .filter(Boolean),
+          external_expert: {
+            name: column(r, 'External expert for IRB Name'),
+            email: column(r, 'External expert for IRB Mail', 'External expert for IRB Email'),
+            designation: column(r, 'External expert for IRB Designation'),
+            department: column(r, 'External expert for IRB Department'),
+            institution: column(r, 'External expert for IRB Institute name'),
+          },
         }));
 
         let retryCount = 0;
@@ -203,7 +221,7 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
         <>
           <PageHeader title="Students" subtitle="All PhD scholars and their current stage." />
 
-          {can("can_manage_urf") && (
+          {readsUrf && (
             <Tabs
               value={tab}
               onChange={setTab}
@@ -230,23 +248,25 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
                 enableApproval={false}
                 enableSelect={false}
                 extraTopbarComponents={
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <CustomButton
-                      text="Bulk Import"
-                      variant="secondary"
-                      onClick={() => setUgImportOpen(true)}
-                    />
-                    <CustomButton
-                      text="Add UG Student +"
-                      onClick={() => { setUgStudent(null); setUgFormOpen(true); }}
-                    />
-                  </div>
+                  managesUrf ? (
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <CustomButton
+                        text="Bulk Import"
+                        variant="secondary"
+                        onClick={() => setUgImportOpen(true)}
+                      />
+                      <CustomButton
+                        text="Add UG Student +"
+                        onClick={() => { setUgStudent(null); setUgFormOpen(true); }}
+                      />
+                    </div>
+                  ) : null
                 }
-                actions={[{
+                actions={managesUrf ? [{
                   icon: <i className="fa fa-pencil-square-o"></i>,
                   tooltip: "Edit",
                   onClick: (student) => { setUgStudent(student); setUgFormOpen(true); },
-                }]}
+                }] : []}
               />
             </>
           ) : (
@@ -376,7 +396,9 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
               'A blank cell never clears a stored value. Clear one on the scholar\'s profile.',
               'Supervisors and committee: filled cells replace the whole list, all blank leaves it alone.',
               'Enrollment Type is Full Time, Part Time or Executive.',
-              'IRB member and external expert columns are read past, not imported yet.',
+              'IRB members and the external expert go on the IRB committee only. The doctoral committee is a separate body, filled from its own columns.',
+              'A Date of IRB is what marks the IRB as constituted: the scholar gets a constitution form recorded as carried over, so their title locks and the forms that follow it open.',
+              'That form is created complete and locked, and nothing in it is recorded as approved, because nobody approved it here.',
             ]}
             sampleFileName="students_bulk_import_sample.csv"
             sampleCsvContent={studentsSampleCsv}

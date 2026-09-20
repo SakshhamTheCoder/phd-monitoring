@@ -27,13 +27,19 @@ const roleForStep = (step) => (step === 'faculty' ? 'supervisor' : step);
 // role, so it must not reach Recommendation, which would title a panel with it.
 const isApprovalStep = (step) => step !== 'complete';
 
+// Roles that read a form without being a step in it. Every panel still locks,
+// because Recommendation locks whenever the reader is not the step's role.
+const READS_EVERY_STEP = ['admin', 'adordc'];
+
 const FormLadder = ({ formData, panels = {}, stepProps = {} }) => {
     const steps = formData?.steps || [];
     const reached = steps.indexOf(formData?.role);
-    // Admin reviews every stage. Everyone else sees their own step and the ones
-    // before it; a role the chain does not contain sees nothing, which is also
-    // what the API would allow.
-    const visible = formData?.role === 'admin' ? steps : steps.slice(0, reached + 1);
+    // Admin reviews every stage, and the ADORDC reads every form while holding a
+    // step in none of the chains, so neither appears in `steps` and slicing by
+    // their own index would show them nothing. Everyone else sees their own step
+    // and the ones before it; a role the chain does not contain sees nothing,
+    // which is also what the API would allow.
+    const visible = READS_EVERY_STEP.includes(formData?.role) ? steps : steps.slice(0, reached + 1);
 
     return (
         <>

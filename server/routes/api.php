@@ -434,6 +434,10 @@ Route::prefix('ug-branches')->group(function () {
     require base_path('routes/base/ug_branches.php');
 });
 
+Route::prefix('synopsis-checklist')->group(function () {
+    require base_path('routes/base/synopsis_checklist.php');
+});
+
 Route::prefix('settings')->group(function () {
     require base_path('routes/base/settings.php');
 });

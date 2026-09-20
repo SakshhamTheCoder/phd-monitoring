@@ -75,20 +75,6 @@
   background: #f9f9f9;
 }
 
-.urf-approval-trail {
-  margin: 0.5rem 0 1rem;
-  font-size: var(--text-sm);
-  color: #374151;
-}
-
-.urf-approval-stage {
-  color: #6b7280;
-}
-
-.urf-report-approval {
-  margin-top: 1.5rem;
-}
-
 /* What a fellow is waiting for, when a report round is not open yet. */
 .urf-round-notice {
   margin: 0.25rem 0 0.75rem;

@@ -1,4 +1,10 @@
-export const getRoleName = (role) => {
+// `formType` is only read for the one step whose name depends on the form it
+// sits in: the doctoral committee reviews an IRB submission as the IRB
+// committee. Callers that do not have it get the ordinary names.
+export const getRoleName = (role, formType) => {
+    if (role === 'doctoral' && formType === 'irb-submission') {
+        return 'IRB Committee';
+    }
     switch (role) {
         case 'student':
            return 'Student'

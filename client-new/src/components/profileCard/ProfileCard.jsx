@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import "react-circular-progressbar/dist/styles.css";
+import ShowPublications from "../publications/ShowPublications";
 import "./ProfileCard.css";
 import { facultyNameCell } from "../facultyLink/FacultyLink";
+import { ACCESS } from "../../auth/access";
 
 import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
 import { baseURL } from "../../api/urls";
@@ -27,6 +29,10 @@ const deadlineNote = ({ days_remaining: daysLeft, extensions_granted: granted })
   return `(${daysLeft} days left${extended})`;
 };
 
+// Yes, No, or a dash for "nobody has said", which is a different answer from No.
+const statedYesNo = (value) =>
+  (value === null || value === undefined ? EMPTY_VALUE : (value ? 'Yes' : 'No'));
+
 const ProfileCard = ({ dataIP = null, link = false }) => {
   const can = useCapabilities();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -37,6 +43,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
   const [courses, setCourses] = useState([]);
   const [allCourses, setAllCourses] = useState([]);
   const [attendance, setAttendance] = useState(null);
+  const [publications, setPublications] = useState(null);
   const [tagData, setTagData] = useState({
     course_id: '',
     semester: '',
@@ -47,6 +54,14 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
   const { state: locationState, pathname } = useLocation();
   const { roll_no } = useParams();
   const navigate = useNavigate();
+  // The roles with an attendance tab to land on. /attendance dispatches by
+  // role, and the HOD's is the leave requests they approve rather than a
+  // register, so the button says what it opens for them. Plenty of other roles
+  // read the figure below with no page at all behind it, which is why this is
+  // narrower than "may read attendance".
+  const role = localStorage.getItem('userRole');
+  const opensAttendancePage = ACCESS.attendance.includes(role);
+  const attendanceLinkText = role === 'hod' ? 'Leave requests' : 'View attendance';
 
   const [profile, setProfile] = useState(locationState || dataIP);
   const [loading, setLoading] = useState(!profile);
@@ -91,7 +106,10 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
     const roll = profile?.roll_no;
     if (!roll) return;
     try {
-      const res = await customFetch(`${baseURL}/clerks/attendance/student/${roll}`, 'GET', {}, false, false);
+      const res = await customFetch(
+        `${baseURL}/clerks/attendance/student/${roll}`,
+        'GET', {}, false, false
+      );
       if (res?.success) {
         setAttendance({ ...res.response.summary, currentMonth: res.response.current_month });
       } else if (res?.response?.message?.includes?.('permission')) {
@@ -100,12 +118,30 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
     } catch (e) { /* 403 means viewer lacks permission — hide silently */ }
   };
 
+  /**
+   * Something hung off the scholar, on the same gate as the profile itself.
+   *
+   * Their own calls rather than fields on the profile: keeping them out of that
+   * payload keeps a query off every row of the form lists, which build the same
+   * profile shape. A 403 means the viewer may not read this scholar, and the
+   * section simply does not appear.
+   */
+  const fetchScholarSection = async (path, set) => {
+    const roll = profile?.roll_no;
+    if (!roll) return;
+    try {
+      const res = await customFetch(`${baseURL}/students/${roll}/${path}`, 'GET', {}, false, false);
+      if (res?.success) set(res.response);
+    } catch (e) { /* hidden rather than reported: the viewer may not read this */ }
+  };
+
   useEffect(() => {
     const studentId = profile?.database_id || profile?.id;
     if (studentId) {
       fetchCourses();
     }
-    if (profile?.roll_no) fetchAttendance();
+    fetchAttendance();
+    fetchScholarSection('publications', setPublications);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.database_id, profile?.id, profile?.roll_no]);
 
@@ -157,6 +193,8 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
       fathers_name: profile?.fathers_name || '',
       phd_title: profile?.phd_title || '',
       tentative_desc: profile?.tentative_desc || '',
+      strengths: profile?.strengths || '',
+      help_needed: profile?.help_needed || '',
       cgpa: profile?.cgpa || '',
     });
     setIsEditingInline(true);
@@ -223,6 +261,19 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
       { label: "Department", value: department },
       // { label: 'Supervisors', value: supervisors?.join(', ') },
       { label: "CGPA", value: cgpa, field: "cgpa" },
+      // What the synopsis waits on. The required figure is per status and set by
+      // an admin, so it is read from the server rather than assumed here.
+      ...(profile.required_credits === undefined ? [] : [{
+        label: "Coursework",
+        node: (
+          <span>
+            {profile.completed_credits ?? 0} of {profile.required_credits} credits
+            {/* No note about the synopsis while the gate on it is commented
+                out in SynopsisSubmissionController: saying it opens once this
+                is met would not be true today. The figures still report. */}
+          </span>
+        ),
+      }]),
       { label: "Father's Name", value: fathers_name, field: "fathers_name" },
       { label: "Address", value: address, field: "address" },
       { label: "Current Status", value: current_status },
@@ -231,11 +282,14 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
       { label: "Physically Handicapped", value: profile.physically_handicapped ? "Yes" : "No" },
       // Read-only here too: it says where the scholar's stipend comes from.
       // Null means nobody has stated it, which is not the same as No.
-      { label: "JRF", value: profile.is_jrf === null || profile.is_jrf === undefined ? EMPTY_VALUE : (profile.is_jrf ? "Yes" : "No") },
+      { label: "JRF", value: statedYesNo(profile.is_jrf) },
+      { label: "NET/GATE", value: statedYesNo(profile.is_net_gate_qualified) },
       { label: "Date of Admission", value: formatDate(date_of_registration) },
       { label: "Date of IRB", value: formatDate(date_of_irb) },
       { label: "Date of Synopsis", value: formatDate(date_of_synopsis) },
       { label: "Date of Thesis", value: formatDate(date_of_thesis) },
+      // The award is a later and separate event from the submission.
+      { label: "Date of Thesis Awarded", value: formatDate(profile.date_of_thesis_awarded) },
       ...(profile.thesis_window ? [{
         label: "Thesis Deadline",
         node: (
@@ -248,24 +302,36 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
       }] : []),
       ...(attendance ? [{
         label: 'Attendance',
+        span: 'all',
         node: (
-          <span className="profile-attendance" tabIndex={0}>
-            <span className="profile-attendance-value">
-              {attendance.total > 0
-                ? `${attendance.present}/${attendance.total} (${attendance.percent}%)`
-                : EMPTY_VALUE}
+          <span className="profile-attendance-row">
+            <span className="profile-attendance" tabIndex={0}>
+              <span className="profile-attendance-value">
+                {attendance.total > 0
+                  ? `${attendance.present}/${attendance.total} (${attendance.percent}%)`
+                  : EMPTY_VALUE}
+              </span>
+              <span className="profile-attendance-pop" role="tooltip">
+                <strong>{attendance.currentMonth?.label || 'Current Month'} Attendance</strong>
+                {attendance.currentMonth && attendance.currentMonth.total > 0 ? (
+                  <>
+                    <span>{attendance.currentMonth.present} Present / {attendance.currentMonth.total} Sessions</span>
+                    <span>{attendance.currentMonth.percent}%</span>
+                  </>
+                ) : (
+                  <span>No sessions recorded this month.</span>
+                )}
+              </span>
             </span>
-            <span className="profile-attendance-pop" role="tooltip">
-              <strong>{attendance.currentMonth?.label || 'Current Month'} Attendance</strong>
-              {attendance.currentMonth && attendance.currentMonth.total > 0 ? (
-                <>
-                  <span>{attendance.currentMonth.present} Present / {attendance.currentMonth.total} Sessions</span>
-                  <span>{attendance.currentMonth.percent}%</span>
-                </>
-              ) : (
-                <span>No sessions recorded this month.</span>
-              )}
-            </span>
+
+            {/* A date range belongs on the attendance page, which already has
+                one and the register behind it. This is the summary, and a way
+                through to the page for whoever has it. */}
+            {opensAttendancePage && (
+              <button type="button" className="profile-edit-small" onClick={() => navigate(`/attendance?roll_no=${profile.roll_no}`)}>
+                <i className="fa fa-calendar" aria-hidden="true"></i> {attendanceLinkText}
+              </button>
+            )}
           </span>
         ),
       }] : []),
@@ -459,6 +525,60 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
           
         
 
+          {/* The scholar's own account of themselves. Read by everyone who may
+              read the profile, which is the point of asking: it is how they say
+              what they need. Written only by them, or by a role that may edit
+              their record, which is the gate the rest of this card already uses.
+
+              Shares the header's edit mode rather than having one of its own, so
+              there is one Edit button on the page and one save. */}
+          <GridContainer
+            label="About the scholar"
+            elements={[
+              isEditingInline ? (
+                <div className="inline-field-item">
+                  <label htmlFor="profile-strengths">Strengths</label>
+                  <textarea
+                    id="profile-strengths"
+                    placeholder="What you are good at, and what you have got better at so far"
+                    value={editForm.strengths ?? ""}
+                    maxLength={5000}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, strengths: e.target.value }))}
+                  />
+                  <div className="inline-char-count">{(editForm.strengths || "").length} / 5000</div>
+                </div>
+              ) : (
+                <div>
+                  <p className="student-research-label">Strengths</p>
+                  <p className={profile.strengths ? "" : "student-value-empty"}>
+                    {profile.strengths || (permissions.is_self ? "Not filled in yet. Edit your profile to add it." : EMPTY_VALUE)}
+                  </p>
+                </div>
+              ),
+              isEditingInline ? (
+                <div className="inline-field-item">
+                  <label htmlFor="profile-help-needed">Help needed</label>
+                  <textarea
+                    id="profile-help-needed"
+                    placeholder="Where you are stuck, and what would help: training, equipment, a collaborator, time"
+                    value={editForm.help_needed ?? ""}
+                    maxLength={5000}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, help_needed: e.target.value }))}
+                  />
+                  <div className="inline-char-count">{(editForm.help_needed || "").length} / 5000</div>
+                </div>
+              ) : (
+                <div>
+                  <p className="student-research-label">Help needed</p>
+                  <p className={profile.help_needed ? "" : "student-value-empty"}>
+                    {profile.help_needed || (permissions.is_self ? "Not filled in yet. Edit your profile to add it." : EMPTY_VALUE)}
+                  </p>
+                </div>
+              ),
+            ]}
+            space={2}
+          />
+
           <GridContainer
             label="Supervisors"
             elements={[
@@ -484,6 +604,23 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
             ]}
             space={3}
           />
+
+          {publications && (
+            <GridContainer
+              elements={[
+                // Read-only here. The scholar adds and edits on their own
+                // publications page, which is the one place that writes them.
+                <ShowPublications
+                  formData={publications}
+                  enableEdit={false}
+                  enableDelete={false}
+                  canAdd={false}
+                  collapsible
+                />,
+              ]}
+              space={3}
+            />
+          )}
 
             <GridContainer
             label="Enrolled Courses"

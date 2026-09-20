@@ -6,6 +6,8 @@ import LeaveQuotas from './configuration/LeaveQuotas';
 import ThesisLimits from './configuration/ThesisLimits';
 import SupervisionLimits from './configuration/SupervisionLimits';
 import UgBranches from './configuration/UgBranches';
+import CourseworkCredits from './configuration/CourseworkCredits';
+import SynopsisChecklist from './configuration/SynopsisChecklist';
 
 /**
  * One admin home for settings that would otherwise be hardcoded or buried in
@@ -21,6 +23,8 @@ const SECTIONS = [
   { value: 'thesis', label: 'Thesis Duration', Component: ThesisLimits },
   { value: 'supervision', label: 'Supervision Limits', Component: SupervisionLimits },
   { value: 'branches', label: 'UG Branches', Component: UgBranches },
+  { value: 'coursework', label: 'Coursework Credits', Component: CourseworkCredits },
+  { value: 'checklist', label: 'Synopsis Checklist', Component: SynopsisChecklist },
 ];
 
 const Configuration = () => {

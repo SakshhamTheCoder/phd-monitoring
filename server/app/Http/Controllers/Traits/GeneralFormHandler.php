@@ -157,6 +157,19 @@ trait GeneralFormHandler
         }
     }
 
+    /**
+     * The ADORDC reads any form and answers none: they hold no step in any
+     * chain, so no submit() routes to them and every panel the client draws is
+     * locked. There is nothing to gate on, so there is no index check here.
+     *
+     * The department scoping this used to apply is off for now, kept below so it
+     * can be put back:
+     *
+     *   $adordc = $formInstance->student->department->adordc;
+     *   if (!$adordc || $adordc->faculty_code !== $user->faculty->faculty_code) {
+     *       return $this->refuse();
+     *   }
+     */
     private function handleAdordcForm($user, $form_id, $modelClass)
     {
         try {
@@ -166,26 +179,7 @@ trait GeneralFormHandler
                 return response()->json(['message' => 'No form found'], 404);
             }
 
-            $student = $formInstance->student;
-
-            // Check if logged-in faculty is ADoRDC for student's department
-            if (
-                $student->department->adordc &&
-                $student->department->adordc->faculty_code === $user->faculty->faculty_code
-            ) {
-
-                $index = array_search('adordc', $formInstance->steps);
-
-                if ($index !== false && $index <= $formInstance->maximum_step) {
-                    return response()->json($formInstance->fullForm($user));
-                }
-
-                return response()->json([
-                    'message' => 'The form is not yet assigned to you for review or action.'
-                ], 404);
-            }
-
-            return $this->refuse();
+            return response()->json($formInstance->fullForm($user));
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['errors' => $e->errors()], 422);
         }

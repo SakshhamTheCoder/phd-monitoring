@@ -70,6 +70,27 @@ class AppSetting extends Model
             // so only the page that edits these numbers has to read them.
             'readers' => ['admin'],
         ],
+        'coursework' => [
+            // Credits a scholar must have passed before the synopsis can be
+            // raised. Per status, because the course load is not the same for
+            // someone studying alongside a job.
+            //
+            // Set these before the gate matters: a wrong number here stops a
+            // scholar filing a synopsis they are entitled to file.
+            'defaults' => [
+                'min_credits_full_time' => 14,
+                'min_credits_part_time' => 14,
+                'min_credits_executive' => 14,
+            ],
+            'rules' => [
+                'min_credits_full_time' => 'required|integer|min:0|max:100',
+                'min_credits_part_time' => 'required|integer|min:0|max:100',
+                'min_credits_executive' => 'required|integer|min:0|max:100',
+            ],
+            // The scholar is told what they still owe, and every role that reads
+            // their coursework is shown the same total they are measured against.
+            'readers' => ['admin', 'student', 'faculty', 'doctoral', 'phd_coordinator', 'hod', 'dra', 'dordc', 'adordc', 'director'],
+        ],
         'urf' => [
             // 1 while the URF application window is open.
             'defaults' => [

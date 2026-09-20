@@ -1,0 +1,52 @@
+/* The heading and its button on one line. The disclosure marker goes with the
+   flex display, which is wanted here: the button says what the marker did. */
+.collapsible-section > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  cursor: pointer;
+  margin-top: 15px;
+  margin-bottom: 12px;
+  list-style: none;
+}
+
+.collapsible-section > summary::-webkit-details-marker {
+  display: none;
+}
+
+.collapsible-section > summary:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 4px;
+}
+
+/* What .grid-label carries, so a shut section is headed like an open one. */
+.collapsible-title {
+  font-size: var(--text-lg);
+  font-weight: bold;
+  text-align: left;
+}
+
+/* How many are in there, said beside the heading without competing with it. */
+.collapsible-count {
+  margin-left: 0.5rem;
+  font-size: var(--text-sm);
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.collapsible-section > summary .collapsible-hide {
+  display: none;
+}
+
+.collapsible-section[open] > summary .collapsible-show {
+  display: none;
+}
+
+.collapsible-section[open] > summary .collapsible-hide {
+  display: inline;
+}
+
+.collapsible-body {
+  margin-bottom: 12px;
+}

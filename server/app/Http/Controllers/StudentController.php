@@ -6,6 +6,11 @@ use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\GeneralFormList;
 use App\Http\Controllers\Traits\PagenationTrait;
 use App\Models\Forms;
+use App\Support\ScholarCommittee;
+use App\Models\OutsideExpert;
+use App\Models\ConstituteOfIRB;
+use App\Models\Presentation;
+use App\Models\Publication;
 use Illuminate\Http\Request;    
 use Illuminate\Support\Facades\Auth;
 use App\Models\Role;
@@ -57,9 +62,11 @@ class StudentController extends Controller {
                 'gender' => 'required|in:Male,Female',
                 'physically_handicapped' => 'nullable|boolean',
                 'is_jrf' => 'nullable|boolean',
+                'is_net_gate_qualified' => 'nullable|boolean',
                 'date_of_irb' => 'nullable|date',
                 'date_of_synopsis' => 'nullable|date',
                 'date_of_thesis' => 'nullable|date',
+                'date_of_thesis_awarded' => 'nullable|date',
                 'phd_title' => 'nullable|string',
                 'fathers_name' => 'nullable|string',
                 'address' => 'nullable|string',
@@ -100,12 +107,15 @@ class StudentController extends Controller {
         $student->date_of_irb = $request->date_of_irb;
         $student->date_of_synopsis = $request->date_of_synopsis;
         $student->date_of_thesis = $request->date_of_thesis;
+        $student->date_of_thesis_awarded = $request->date_of_thesis_awarded;
         $student->phd_title = $request->phd_title;
         $student->fathers_name = $request->fathers_name;
         $student->current_status = $request->current_status;
         $student->address = $request->address;
         $student->cgpa = $request->cgpa;
         $student->is_jrf = $request->has('is_jrf') ? $request->boolean('is_jrf') : null;
+        $student->is_net_gate_qualified = $request->has('is_net_gate_qualified') ? $request->boolean('is_net_gate_qualified') : null;
+        $student->date_of_thesis_awarded = $request->date_of_thesis_awarded;
         if($request->has('overall_progress'))
              $student->overall_progress = $request->overall_progress;
         else
@@ -143,12 +153,14 @@ class StudentController extends Controller {
         'address',
         'cgpa',
         'is_jrf',
+        'is_net_gate_qualified',
         'overall_progress',
         'current_status',
         'date_of_registration',
         'date_of_irb',
         'date_of_synopsis',
         'date_of_thesis',
+        'date_of_thesis_awarded',
     ];
 
     /**
@@ -221,6 +233,145 @@ class StudentController extends Controller {
         return $errors;
     }
 
+
+    /**
+     * Record an IRB that was constituted before the portal, from the sheet.
+     *
+     * The trigger is the scholar's **date of IRB**. That date is what says the
+     * IRB happened, and it is the column the office actually fills.
+     *
+     * What it creates is a constitution form marked as carried over.
+     * irbCompleted() and phdTitleLocked() read that form rather than the
+     * committee, so without one the scholar counts as pre-IRB however complete
+     * their record otherwise is: their title shows as tentative and stays
+     * editable, and the supervisor change form refuses to open and sends them
+     * to the direct edit instead.
+     *
+     * IRB members and the external expert are recorded too when the sheet names
+     * them, but they are not required and today are never present.
+     *
+     * @param  array<string, mixed>  $row
+     * @return array<int, string>
+     */
+    private function recordCarriedOverIrb(Student $student, array $row, int $rowNumber): array
+    {
+        $identifiers = array_values(array_filter(array_map('trim', (array) ($row['irb_members'] ?? []))));
+        $expertRow = array_filter((array) ($row['external_expert'] ?? []));
+
+        // A date of IRB is what says the IRB was constituted. The members are
+        // worth having when the sheet names them, but they are not the trigger:
+        // on the office's sheet the member columns are blank on every row while
+        // the date is filled for most, so keying off the members would mean no
+        // imported scholar ever counted as having an IRB at all.
+        if (!$identifiers && !$expertRow && !$student->date_of_irb) {
+            return [];
+        }
+
+        $errors = [];
+        $facultyCodes = [];
+        foreach ($identifiers as $identifier) {
+            $faculty = $this->facultyByIdentifier($identifier);
+            if (!$faculty) {
+                $errors[] = "Row {$rowNumber}: no faculty matching '{$identifier}', IRB member skipped";
+                continue;
+            }
+            $facultyCodes[] = $faculty->faculty_code;
+        }
+
+        $expert = null;
+        if (!empty($expertRow['email'])) {
+            // OutsideExpert has its own table and its own importer, so this
+            // matches on email and only creates one that is genuinely new.
+            $name = PersonName::split(trim((string) ($expertRow['name'] ?? '')));
+            $expert = OutsideExpert::firstOrCreate(
+                ['email' => strtolower(trim($expertRow['email']))],
+                array_filter([
+                    'first_name' => $name['first'] ?: 'External',
+                    'last_name' => $name['last'] ?: 'Expert',
+                    'designation' => $expertRow['designation'] ?? null,
+                    'department' => $expertRow['department'] ?? null,
+                    'institution' => $expertRow['institution'] ?? null,
+                ])
+            );
+        } elseif ($expertRow) {
+            $errors[] = "Row {$rowNumber}: the external IRB expert needs an email to be matched or created";
+        }
+
+        // The IRB committee only, and only when the sheet actually named
+        // somebody. The doctoral committee has its own columns, which
+        // syncSupervisionTeam() imports; writing an IRB member into
+        // doctoral_commitee would hand them the `doctoral` step of every form
+        // chain and stall this scholar's IRB submission waiting for an approval
+        // they were never meant to give.
+        if ($facultyCodes || $expert) {
+            ScholarCommittee::onTheIrbCommittee($student, $facultyCodes, $expert);
+        }
+
+        if (!ConstituteOfIRB::where('student_id', $student->roll_no)->exists()) {
+            $this->carriedOverIrbForm($student, $expert);
+        }
+
+        ScholarCommittee::openTheFormsItUnlocks($student);
+
+        return $errors;
+    }
+
+    /**
+     * A constitution form standing for one that was filed elsewhere.
+     *
+     * Created complete, which locks it through the ordinary rules rather than a
+     * special case: `stage` is 'complete', so Recommendation locks every panel
+     * because no panel's role matches it, and submitForm refuses a completed
+     * form before it looks at anything else.
+     *
+     * The history says where it came from, so nothing in it reads as an
+     * approval somebody gave here.
+     */
+    private function carriedOverIrbForm(Student $student, ?OutsideExpert $expert): ConstituteOfIRB
+    {
+        $steps = ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc', 'complete'];
+        $last = array_search('complete', $steps, true);
+
+        $form = ConstituteOfIRB::create([
+            'student_id' => $student->roll_no,
+            'status' => 'approved',
+            'completion' => 'complete',
+            'stage' => 'complete',
+            'steps' => $steps,
+            'current_step' => $last,
+            'maximum_step' => $last,
+            'phd_title' => $student->phd_title,
+            'outside_expert' => $expert?->id,
+            'carried_over_at' => now(),
+            'student_lock' => true,
+            'supervisor_lock' => true,
+            'phd_coordinator_lock' => true,
+            'hod_lock' => true,
+            'dra_lock' => true,
+            'dordc_lock' => true,
+        ]);
+
+        $form->addHistoryEntry(
+            'Recorded from the students sheet. This IRB was constituted before the portal, '
+                . 'so no step here was answered.',
+            Auth::user()->name()
+        );
+
+        Forms::updateOrCreate(
+            ['form_type' => 'irb-constitution', 'student_id' => $student->roll_no],
+            [
+                'form_name' => 'IRB Constitution',
+                'department_id' => $student->department_id,
+                'stage' => 'complete',
+                'max_count' => 1,
+                'count' => 1,
+                'steps' => $steps,
+            ]
+        );
+
+        return $form;
+    }
+
     /**
      * A faculty member named in a sheet, by email or by employee code.
      */
@@ -263,12 +414,22 @@ class StudentController extends Controller {
             'students.*.cgpa' => 'nullable|numeric',
             'students.*.gender' => 'nullable|string',
             'students.*.is_jrf' => 'nullable|boolean',
+            'students.*.is_net_gate_qualified' => 'nullable|boolean',
             'students.*.date_of_synopsis' => 'nullable|date',
             'students.*.date_of_thesis' => 'nullable|date',
+            'students.*.date_of_thesis_awarded' => 'nullable|date',
             'students.*.supervisors' => 'nullable|array',
             'students.*.supervisors.*' => 'nullable|string',
             'students.*.committee' => 'nullable|array',
             'students.*.committee.*' => 'nullable|string',
+            'students.*.irb_members' => 'nullable|array',
+            'students.*.irb_members.*' => 'nullable|string',
+            'students.*.external_expert' => 'nullable|array',
+            'students.*.external_expert.name' => 'nullable|string',
+            'students.*.external_expert.email' => 'nullable|email',
+            'students.*.external_expert.designation' => 'nullable|string',
+            'students.*.external_expert.department' => 'nullable|string',
+            'students.*.external_expert.institution' => 'nullable|string',
         ]);
 
         $role_id = Role::where('role', 'student')->first()->id;
@@ -337,6 +498,11 @@ class StudentController extends Controller {
                             $this->syncSupervisionTeam($existingStudent, $studentData, $index + 1)
                         );
 
+                        $errors = array_merge(
+                            $errors,
+                            $this->recordCarriedOverIrb($existingStudent, $studentData, $index + 1)
+                        );
+
                         $updateCount++;
                         continue;
                     }
@@ -375,12 +541,14 @@ class StudentController extends Controller {
                     $student->date_of_irb = $studentData['date_of_irb'] ?? null;
                     $student->date_of_synopsis = $studentData['date_of_synopsis'] ?? null;
                     $student->date_of_thesis = $studentData['date_of_thesis'] ?? null;
+                    $student->date_of_thesis_awarded = $studentData['date_of_thesis_awarded'] ?? null;
                     $student->phd_title = $studentData['phd_title'] ?? null;
                     $student->fathers_name = $studentData['fathers_name'] ?? null;
                     $student->current_status = $studentData['current_status'];
                     $student->address = $studentData['address'] ?? null;
                     $student->cgpa = $studentData['cgpa'] ?? null;
                     $student->is_jrf = $studentData['is_jrf'] ?? null;
+                    $student->is_net_gate_qualified = $studentData['is_net_gate_qualified'] ?? null;
                     $student->overall_progress = $studentData['overall_progress'] ?? 0.0;
                     $student->save();
 
@@ -401,6 +569,11 @@ class StudentController extends Controller {
                     $errors = array_merge(
                         $errors,
                         $this->syncSupervisionTeam($student, $studentData, $index + 1)
+                    );
+
+                    $errors = array_merge(
+                        $errors,
+                        $this->recordCarriedOverIrb($student, $studentData, $index + 1)
                     );
 
                     $createCount++;
@@ -642,6 +815,100 @@ class StudentController extends Controller {
     }
 
     /**
+     * The scholar, or the response to send instead.
+     *
+     * The gate every section hung off a profile shares, so what the page shows
+     * and what it may fetch cannot disagree.
+     */
+    private function readableStudent($roll_no)
+    {
+        $student = Student::find($roll_no);
+        if (!$student) {
+            return response()->json(['message' => 'Student not found'], 404);
+        }
+
+        return $student->isReadableBy(Auth::user())
+            ? $student
+            : response()->json(['message' => 'You do not have permission to view student'], 403);
+    }
+
+    /**
+     * One scholar's publications and patents, for their profile.
+     *
+     * PublicationController::get answers the same shape for whoever is signed
+     * in, and takes no scholar, so a supervisor or the office had no way to see
+     * a scholar's work from their record. The grouping is the one the
+     * publications page and the faculty research profile already use; only the
+     * gate is different, because the question here is "may I read this scholar"
+     * rather than "are these mine".
+     */
+    public function publications(Request $request, $roll_no)
+    {
+        $student = $this->readableStudent($roll_no);
+        if (!$student instanceof Student) {
+            return $student;
+        }
+
+        // The scholar's own library, not the copies a form took: a publication
+        // linked onto three progress reports is one piece of work.
+        return response()->json(Publication::groupedFor('student_id', $student->roll_no), 200);
+    }
+
+    /**
+     * The scholar's progress over time, for the chart on their profile.
+     *
+     * One point per evaluation: the date it happened and the total the scholar
+     * stood at afterwards, plus the milestone dates to mark on the same axis.
+     *
+     * Its own endpoint rather than a field on the profile, because
+     * ListStudentProfile is built once per row on the form lists too and this
+     * would be a query each time.
+     *
+     * An evaluation with no date cannot be placed on a time axis. Imported
+     * history often has none, so it falls back to the end of its semester and
+     * is left out only if that is missing as well.
+     */
+    public function progressHistory(Request $request, $roll_no)
+    {
+        $student = $this->readableStudent($roll_no);
+        if (!$student instanceof Student) {
+            return $student;
+        }
+
+        $points = Presentation::with('semester:id,end_date')
+            ->where('student_id', $student->roll_no)
+            ->whereNotNull('total_progress')
+            ->get()
+            // Presentation.date is not cast and Semester.end_date is, so one is
+            // a string and the other a Carbon. Both print with the date first.
+            ->map(fn ($evaluation) => [
+                'date' => substr((string) ($evaluation->date ?: $evaluation->semester?->end_date), 0, 10),
+                'semester' => $evaluation->period_of_report,
+                'progress' => (float) $evaluation->total_progress,
+            ])
+            ->filter(fn ($point) => !empty($point['date']))
+            ->sortBy('date')
+            ->values();
+
+        return response()->json([
+            'points' => $points,
+            // Marked on the same axis, so the progress line can be read against
+            // what the scholar was doing at the time.
+            'milestones' => collect([
+                ['label' => 'Admission', 'date' => $student->date_of_registration],
+                ['label' => 'IRB', 'date' => $student->date_of_irb],
+                ['label' => 'Synopsis', 'date' => $student->date_of_synopsis],
+                ['label' => 'Thesis', 'date' => $student->date_of_thesis],
+                ['label' => 'Awarded', 'date' => $student->date_of_thesis_awarded],
+            ])->filter(fn ($milestone) => $milestone['date'])
+                ->map(fn ($milestone) => [
+                    'label' => $milestone['label'],
+                    'date' => $milestone['date']->toDateString(),
+                ])->values(),
+        ], 200);
+    }
+
+    /**
      * The signed-in student's own profile.
      *
      * Mirrors faculty: a profile is addressed either by id or by "me", and both
@@ -726,9 +993,11 @@ class StudentController extends Controller {
             'gender' => 'required|in:Male,Female',
             'physically_handicapped' => 'nullable|boolean',
             'is_jrf' => 'nullable|boolean',
+            'is_net_gate_qualified' => 'nullable|boolean',
             'date_of_irb' => 'nullable|date',
             'date_of_synopsis' => 'nullable|date',
             'date_of_thesis' => 'nullable|date',
+            'date_of_thesis_awarded' => 'nullable|date',
             'phd_title' => 'nullable|string',
             'fathers_name' => 'nullable|string',
             'address' => 'nullable|string',
@@ -762,6 +1031,8 @@ class StudentController extends Controller {
         // Says where the scholar's stipend comes from, so it stays on the
         // privileged path rather than the scholar's own profile edit.
         if ($request->has('is_jrf')) $student->is_jrf = $request->boolean('is_jrf');
+        // Off the office's sheet, like JRF, so it stays on the privileged path.
+        if ($request->has('is_net_gate_qualified')) $student->is_net_gate_qualified = $request->boolean('is_net_gate_qualified');
         if ($request->has('overall_progress')) $student->overall_progress = $request->overall_progress;
         $student->save();
 
@@ -796,6 +1067,8 @@ class StudentController extends Controller {
             'fathers_name'         => 'nullable|string',
             'phd_title'            => 'nullable|string|max:1000',
             'tentative_desc'       => 'nullable|string|max:5000',
+            'strengths'            => 'nullable|string|max:5000',
+            'help_needed'          => 'nullable|string|max:5000',
             'cgpa'                 => 'nullable|numeric',
         ]);
 
@@ -810,6 +1083,8 @@ class StudentController extends Controller {
 
         if ($request->has('address'))      $student->address      = $request->address;
         if ($request->has('fathers_name')) $student->fathers_name = $request->fathers_name;
+        if ($request->has('strengths'))    $student->strengths    = $request->strengths;
+        if ($request->has('help_needed'))  $student->help_needed  = $request->help_needed;
         // PhD title and tentative fields can be edited until IRB is constituted/locked
         if (!$student->phdTitleLocked()) {
             if ($request->has('phd_title'))            $student->phd_title            = $request->phd_title;

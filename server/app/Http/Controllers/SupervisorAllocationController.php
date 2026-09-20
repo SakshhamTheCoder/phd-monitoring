@@ -23,6 +23,25 @@ class SupervisorAllocationController extends Controller
     use GeneralFormList;
     use GeneralFormCreate;
     use FilterLogicTrait;
+
+    /**
+     * Two chains, picked by how many supervisors the coordinator names.
+     *
+     * Up to two supervisors is the HOD's to settle. Three or more is a
+     * commitment the department cannot make on its own, so the form carries on
+     * to the DORDC and the Vice Chancellor.
+     *
+     * The first three steps are the same in both, so a form that switches chain
+     * at the coordinator's step keeps its current_step and maximum_step.
+     */
+    private const CHAIN = ['student', 'phd_coordinator', 'hod', 'complete'];
+    private const CHAIN_ABOVE_TWO_SUPERVISORS = ['student', 'phd_coordinator', 'hod', 'dordc', 'director', 'complete'];
+
+    private function needsHigherApproval($formInstance): bool
+    {
+        return count($formInstance->supervisors ?? []) > 2;
+    }
+
     public function listFilters(Request $request)
     {
         return response()->json($this->getAvailableFilters("forms"));
@@ -55,12 +74,7 @@ class SupervisorAllocationController extends Controller
     {
         $user = Auth::user();
         $role = $user->current_role;
-        $steps = [
-            'student',
-            'phd_coordinator',
-            'hod',
-            'complete'
-        ];
+        $steps = self::CHAIN;
         if ($role->role != 'student') {
             return $this->refuse();
         }
@@ -79,11 +93,6 @@ class SupervisorAllocationController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
         $model = SupervisorAllocation::class;
-        $steps = [
-            'student',
-            'phd_coordinator',
-            'hod',
-        ];
         switch ($role->role) {
             case 'student':
                 return $this->handleStudentForm($user, $form_id, $model);
@@ -91,10 +100,15 @@ class SupervisorAllocationController extends Controller
                 return $this->handleHodForm($user, $form_id, $model);
             case 'phd_coordinator':
                 return $this->handleCoordinatorForm($user, $form_id, $model);
+            case 'dordc':
+                return $this->handleAdminForm($user, $form_id, $model);
             case 'director':
             case 'admin':
                 return $this->handleAdminForm($user, $form_id, $model, true);
 
+            // Reads the form, answers nothing. Not a step in the chain.
+            case 'adordc':
+                return $this->handleAdordcForm($user, $form_id, $model);
             default:
                 return $this->refuse();
         }
@@ -113,6 +127,10 @@ class SupervisorAllocationController extends Controller
                 return $this->hodSubmit($user, $request, $form_id);
             case 'phd_coordinator':
                 return $this->coordinatorSubmit($user, $request, $form_id);
+            case 'dordc':
+                return $this->dordcSubmit($user, $request, $form_id);
+            case 'director':
+                return $this->directorSubmit($user, $request, $form_id);
             default:
                 return $this->refuse();
         }
@@ -314,6 +332,12 @@ class SupervisorAllocationController extends Controller
                     }
                 }
                 $formInstance->supervisors = $supervisors;
+                // Set on every coordinator submission, not only the first, so a
+                // form sent back and re-allocated with fewer supervisors drops
+                // the extra steps again.
+                $formInstance->steps = count($supervisors) > 2
+                    ? self::CHAIN_ABOVE_TWO_SUPERVISORS
+                    : self::CHAIN;
             }
         );
     }
@@ -321,6 +345,13 @@ class SupervisorAllocationController extends Controller
     private function hodSubmit($user, $request, $form_id)
     {
         $model = SupervisorAllocation::class;
+        $form = SupervisorAllocation::find($form_id);
+        if (!$form) {
+            return response()->json(['message' => 'No form found'], 404);
+        }
+
+        $next = $this->needsHigherApproval($form) ? 'dordc' : 'complete';
+
         return $this->submitForm(
             $user,
             $request,
@@ -328,105 +359,146 @@ class SupervisorAllocationController extends Controller
             $model,
             'hod',
             'phd_coordinator',
-            'complete',
-            function ($formInstance) use ($request, $user) {
-
-                if ($request->approval) {
-
-                    $formInstance->status = 'approved';
-
-                    $supervisors = $formInstance->supervisors;
-
-                    // The last point where a supervisor can still be swapped.
-                    // Checked here rather than at the coordinator's stage
-                    // because this is where the commitment is actually written,
-                    // and a scholar allocated last week may have filled the
-                    // supervisor's last slot since.
-                    foreach ($supervisors as $supervisor) {
-                        $faculty = Faculty::find($supervisor);
-                        if (!$faculty) {
-                            continue;
-                        }
-
-                        $capacity = SupervisionCapacity::describe($faculty);
-                        if ($capacity['is_full']) {
-                            throw new \Exception(
-                                $faculty->user?->name() . ' already guides ' . $capacity['current']
-                                . ' scholars, which is the limit for a ' . $faculty->designation
-                                . '. Send the form back so another supervisor can be chosen.'
-                            );
-                        }
-                    }
-
-                    // A supervisor the scholar already has stays as they are.
-                    // The coordinator's panel starts from the current list, so a
-                    // re-allocation carried existing pairs and failed on the
-                    // unique key.
-                    foreach ($supervisors as $supervisor) {
-                        Supervisor::firstOrCreate([
-                            'student_id' => $formInstance->student_id,
-                            'faculty_id' => $supervisor,
-                        ]);
-                    }
-                    $student = $formInstance->student;
-                    $forms = [
-                        [
-                            'form_type' => 'supervisor-change',
-                            'form_name' => 'Supervisor Change',
-                            'max_count' => 10,
-                            'stage' => 'student',
-                        ],
-                        [
-                            'form_type' => 'irb-constitution',
-                            'form_name' => 'IRB Constitution',
-                            'max_count' => 1,
-                            'stage' => 'student',
-                        ],
-
-                        [
-                            'form_type' => 'status-change',
-                            'form_name' => 'Change of Status',
-                            'max_count' => 2,
-                            'stage' => 'student',
-                        ],
-                        [
-                            'form_type' => 'list-of-examiners',
-                            'form_name' => 'List of Examiners',
-                            'student_available' => false,
-                            'supervisor_available' => true,
-                            'max_count' => 1,
-                            'stage' => 'supervisor',
-                        ],
-                        [
-                            'form_type' => 'semester-off',
-                            'form_name' => 'Semester Off',
-                            'max_count' => 10,
-                            'stage' => 'student',
-                        ],
-                    ];
-
-                    foreach ($forms as $form) {
-                        $existingForm = Forms::where('student_id', $student->roll_no)
-                            ->where('form_type', $form['form_type'])
-                            ->first();
-
-                        if (!$existingForm) {
-                            $adminController = app()->make(\App\Http\Controllers\AdminFormController::class);
-                            $formData = $adminController->getFormCreationData(
-                                $form['form_type'],
-                                $student->roll_no,
-                                $student->department_id
-                            );
-
-                            if ($formData) {
-                                Forms::create($formData);
-                            }
-                        }
-                    }
-
-                    $formInstance->addHistoryEntry("Supervisors allocated by HOD", $user->name());
+            $next,
+            function ($formInstance) use ($request, $user, $next) {
+                if ($request->approval && $next === 'complete') {
+                    $this->applyAllocation($formInstance, $user, 'HOD');
                 }
             }
         );
+    }
+
+    private function dordcSubmit($user, $request, $form_id)
+    {
+        return $this->submitForm(
+            $user,
+            $request,
+            $form_id,
+            SupervisorAllocation::class,
+            'dordc',
+            'hod',
+            'director'
+        );
+    }
+
+    private function directorSubmit($user, $request, $form_id)
+    {
+        return $this->submitForm(
+            $user,
+            $request,
+            $form_id,
+            SupervisorAllocation::class,
+            'director',
+            'dordc',
+            'complete',
+            function ($formInstance) use ($request, $user) {
+                if ($request->approval) {
+                    $this->applyAllocation($formInstance, $user, 'Vice Chancellor');
+                }
+            }
+        );
+    }
+
+    /**
+     * Write the allocation and open the forms it unlocks.
+     *
+     * Called by whoever holds the last step: the HOD for two supervisors or
+     * fewer, the Vice Chancellor for three or more. Doing it any earlier would
+     * pair a scholar with a supervisor the chain has not finished approving.
+     */
+    private function applyAllocation($formInstance, $user, string $approvedBy)
+    {
+        $formInstance->status = 'approved';
+
+        $supervisors = $formInstance->supervisors;
+
+        // The last point where a supervisor can still be swapped. Checked here
+        // rather than at the coordinator's stage because this is where the
+        // commitment is actually written, and a scholar allocated last week may
+        // have filled the supervisor's last slot since.
+        foreach ($supervisors as $supervisor) {
+            $faculty = Faculty::find($supervisor);
+            if (!$faculty) {
+                continue;
+            }
+
+            $capacity = SupervisionCapacity::describe($faculty);
+            if ($capacity['is_full']) {
+                throw new \Exception(
+                    $faculty->user?->name() . ' already guides ' . $capacity['current']
+                    . ' scholars, which is the limit for a ' . $faculty->designation
+                    . '. Send the form back so another supervisor can be chosen.'
+                );
+            }
+        }
+
+        // A supervisor the scholar already has stays as they are. The
+        // coordinator's panel starts from the current list, so a re-allocation
+        // carried existing pairs and failed on the unique key.
+        foreach ($supervisors as $supervisor) {
+            Supervisor::firstOrCreate([
+                'student_id' => $formInstance->student_id,
+                'faculty_id' => $supervisor,
+            ]);
+        }
+
+        $student = $formInstance->student;
+        $forms = [
+            [
+                'form_type' => 'supervisor-change',
+                'form_name' => 'Supervisor Change',
+                'max_count' => 10,
+                'stage' => 'student',
+            ],
+            [
+                'form_type' => 'irb-constitution',
+                'form_name' => 'IRB Constitution',
+                'max_count' => 1,
+                'stage' => 'student',
+            ],
+            [
+                'form_type' => 'status-change',
+                'form_name' => 'Change of Status',
+                'max_count' => 2,
+                'stage' => 'student',
+            ],
+            [
+                'form_type' => 'list-of-examiners',
+                'form_name' => 'List of Examiners',
+                'student_available' => false,
+                'supervisor_available' => true,
+                'max_count' => 1,
+                'stage' => 'supervisor',
+            ],
+            [
+                'form_type' => 'semester-off',
+                'form_name' => 'Semester Off',
+                'max_count' => 10,
+                'stage' => 'student',
+            ],
+        ];
+
+        foreach ($forms as $form) {
+            $existingForm = Forms::where('student_id', $student->roll_no)
+                ->where('form_type', $form['form_type'])
+                ->first();
+
+            if ($existingForm) {
+                continue;
+            }
+
+            $adminController = app()->make(\App\Http\Controllers\AdminFormController::class);
+            $formData = $adminController->getFormCreationData(
+                $form['form_type'],
+                $student->roll_no,
+                $student->department_id
+            );
+
+            if ($formData) {
+                Forms::create($formData);
+            }
+        }
+
+        $formInstance->addHistoryEntry("Supervisors allocated by {$approvedBy}", $user->name());
     }
 }

@@ -163,8 +163,16 @@ class SupervisorDoctoralChangeController extends Controller
             }
         }
 
+        // Before the IRB is constituted there is no committee for a supervisor
+        // swap to disturb, so the HOD and the PhD coordinator make it outright
+        // and no supervisor change form is raised. Once it is constituted the
+        // change goes through the form and its chain instead.
+        $beforeIrbConstituted = $request->member_type === 'supervisor'
+            && in_array($role, ['hod', 'phd_coordinator'], true)
+            && !$student->irbCompleted();
+
         // Admin, doctoral, and dordc can apply changes directly without approval
-        if ($user->may('can_edit_doctoral_committee')) {
+        if ($beforeIrbConstituted || $user->may('can_edit_doctoral_committee')) {
             DB::beginTransaction();
             try {
                 // Create the change record

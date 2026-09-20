@@ -13,6 +13,16 @@ import InputField from "../../components/forms/fields/InputField";
 import BulkAllocateSupervisors from "../../components/bulkAllocateSupervisors/BulkAllocateSupervisors";
 import useScholarInPath from "../../hooks/useScholarInPath";
 
+// Forms a reviewer raises on a scholar's behalf, from that scholar's own form
+// list. The supervisor raises the list of examiners. The PhD coordinator raises
+// a supervisor change for a scholar who has not raised it themselves; it is the
+// ordinary form either way and still opens at the scholar's step, because the
+// preferences and the reason are theirs to give.
+const RAISED_FOR_A_SCHOLAR = {
+  'list-of-examiners': { role: 'faculty', label: 'Create New Form +' },
+  'supervisor-change': { role: 'phd_coordinator', label: 'Raise Supervisor Change +' },
+};
+
 const FormListPage = () => {
   const location = useLocation();
   const scholar = useScholarInPath();
@@ -22,7 +32,8 @@ const FormListPage = () => {
     .replace(/\b\w/g, (c) => c.toUpperCase());
   const [role, setRole] = useState();
   const [showBar, setShowBar] = useState(false);
-  const [showButton, setShowButton] = useState(false);
+  // The entry from RAISED_FOR_A_SCHOLAR this page offers, or null.
+  const [raisable, setRaisable] = useState(null);
   const [modalButtonShow, setModalButtonShow] = useState(false);
   const [rollNumber, setRollNumber] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -39,24 +50,23 @@ const FormListPage = () => {
   useEffect(() => {
     // Set the user role from localStorage
     setRole(localStorage.getItem("userRole"));
-    const match = location.pathname.match(
-      /^\/students\/(\d+)\/forms\/list-of-examiners$/
-    );
+    const match = location.pathname.match(/^\/students\/(\d+)\/forms\/([\w-]+)$/);
     const matchPath2 = location.pathname.match(/^\/forms\/list-of-examiners$/);
-    if (match) {
-      setShowButton(true);
+    if (match && RAISED_FOR_A_SCHOLAR[match[2]]) {
+      setRaisable(RAISED_FOR_A_SCHOLAR[match[2]]);
       setRollNumber(match[1]);
     } else if (matchPath2) {
       setModalButtonShow(true);
     } else {
-      setShowButton(false);
+      setRaisable(null);
     }
   }, [location]);
   // One place for the page's primary action, so it sits in the header next to
   // the title instead of floating in a band of its own.
   const headerAction =
     role === "student" ? <CreateNewBar />
-    : role === "faculty" && showButton ? <CreateNewBar rollNumber={rollNumber} />
+    : raisable && role === raisable.role
+      ? <CreateNewBar rollNumber={rollNumber} label={raisable.label} />
     : role === "faculty" && modalButtonShow ? (
       <CustomButton onClick={() => setIsModalOpen(true)} text="Create New Form +" />
     ) : null;

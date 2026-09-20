@@ -3,15 +3,20 @@ import { parseAttendanceQuery, overageOf, formatDays, localDateString, localMont
 
 describe('parseAttendanceQuery', () => {
   it('reads the tab and leave id a notification link carries', () => {
-    expect(parseAttendanceQuery('?tab=leaves&leave=42')).toEqual({ tab: 'leaves', leave: 42 });
+    expect(parseAttendanceQuery('?tab=leaves&leave=42')).toEqual({ tab: 'leaves', leave: 42, roll_no: null });
   });
 
   it('returns nulls when the link carries nothing', () => {
-    expect(parseAttendanceQuery('')).toEqual({ tab: null, leave: null });
+    expect(parseAttendanceQuery('')).toEqual({ tab: null, leave: null, roll_no: null });
   });
 
   it('ignores a non-numeric leave id rather than passing NaN on', () => {
-    expect(parseAttendanceQuery('?tab=leaves&leave=abc')).toEqual({ tab: 'leaves', leave: null });
+    expect(parseAttendanceQuery('?tab=leaves&leave=abc')).toEqual({ tab: 'leaves', leave: null, roll_no: null });
+  });
+
+  it('reads the roll number a scholar\u2019s profile links with', () => {
+    expect(parseAttendanceQuery('?roll_no=102203001'))
+      .toEqual({ tab: null, leave: null, roll_no: '102203001' });
   });
 });
 

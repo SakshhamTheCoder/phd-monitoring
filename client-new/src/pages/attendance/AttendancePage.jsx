@@ -11,25 +11,14 @@ import LeaveRequests from './LeaveRequests';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { countAbsent, applyMarkAll, buildSaveMessage } from '../../utils/attendanceMark';
-import { EMPTY_VALUE } from '../../utils/timeParse';
+import { EMPTY_VALUE, toDateValue as formatDate, toDateObject as parseDate } from '../../utils/timeParse';
 import './AttendancePage.css';
 
 const EDIT_WINDOW = 7;
 
-const todayString = () => {
-  const now = new Date();
-  const offset = now.getTimezoneOffset();
-  return new Date(now.getTime() - offset * 60 * 1000).toISOString().slice(0, 10);
-};
-const formatDate = (d) => {
-  if (!d) return '';
-  const offset = d.getTimezoneOffset();
-  return new Date(d.getTime() - offset * 60 * 1000).toISOString().slice(0, 10);
-};
-const parseDate = (str) => {
-  if (!str) return null;
-  return new Date(str + 'T00:00:00');
-};
+// Named as this page has always called them; the implementations moved to
+// timeParse so the profile's attendance range uses the same two.
+const todayString = () => toDateValue(new Date());
 
 const AttendancePage = () => {
   const [activeTab, setActiveTab] = useState('mark');
@@ -45,7 +34,13 @@ const AttendancePage = () => {
   // Narrows the roster and the monthly table to one scholar. A view filter
   // only: what is saved is still every scholar loaded for the date, so hiding
   // a row cannot drop the mark somebody already made on it.
-  const [scholarFilter, setScholarFilter] = useState('');
+  //
+  // Seeded from ?roll_no=, which a scholar's profile sends, so View attendance
+  // lands on that scholar rather than on the whole roster. Read once on mount
+  // because that is the only way the page is entered with one.
+  const [scholarFilter, setScholarFilter] = useState(
+    () => new URLSearchParams(window.location.search).get('roll_no') || ''
+  );
   const [statuses, setStatuses] = useState({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);

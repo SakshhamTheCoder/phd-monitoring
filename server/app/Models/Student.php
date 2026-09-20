@@ -23,6 +23,7 @@ class Student extends Model
         'date_of_irb',
         'date_of_synopsis',
         'date_of_thesis',
+        'date_of_thesis_awarded',
         'phd_title',
         'tentative_desc',
         'fathers_name',
@@ -30,6 +31,9 @@ class Student extends Model
         'current_status',
         'cgpa',
         'is_jrf',
+        'is_net_gate_qualified',
+        'strengths',
+        'help_needed',
         'overall_progress',
     ];
 
@@ -38,7 +42,9 @@ class Student extends Model
         'date_of_irb' => 'date',
         'date_of_synopsis' => 'date',
         'date_of_thesis' => 'date',
+        'date_of_thesis_awarded' => 'date',
         'is_jrf' => 'boolean',
+        'is_net_gate_qualified' => 'boolean',
         'overall_progress' => 'float',
     ];
 
@@ -83,6 +89,55 @@ class Student extends Model
     public static function irbStatusMeansComplete(?string $status): bool
     {
         return strtolower(trim((string) $status)) === 'approved';
+    }
+
+    /**
+     * The year the scholar registered, which decides which synopsis checklist
+     * they are shown. Read off date_of_registration; there is no separate
+     * admission-year column and a second one would only drift from this.
+     */
+    public function admissionYear(): ?int
+    {
+        return $this->date_of_registration
+            ? (int) date('Y', strtotime((string) $this->date_of_registration))
+            : null;
+    }
+
+    /**
+     * Credits from coursework the scholar has finished.
+     *
+     * Counts every row marked complete. The grade is not read: it is a free
+     * string today, so there is no reliable way to tell a pass from a fail, and
+     * guessing would silently withhold credits somebody has earned.
+     */
+    public function completedCredits(): float
+    {
+        return (float) StudentCourse::where('student_id', $this->roll_no)
+            ->where('student_courses.status', 'completed')
+            ->join('courses', 'courses.id', '=', 'student_courses.course_id')
+            ->sum('courses.credits');
+    }
+
+    /**
+     * The credits this scholar's status requires before a synopsis.
+     *
+     * An unrecognised status falls to the full-time figure rather than throwing
+     * on a settings key that does not exist. current_status is an enum, so that
+     * only happens if a status is added without a setting to go with it.
+     */
+    public function requiredCredits(): int
+    {
+        $key = 'min_credits_' . str_replace('-', '_', (string) $this->current_status);
+        if (!array_key_exists($key, AppSetting::GROUPS['coursework']['defaults'])) {
+            $key = 'min_credits_full_time';
+        }
+
+        return AppSetting::value('coursework', $key);
+    }
+
+    public function hasFinishedCoursework(): bool
+    {
+        return $this->completedCredits() >= $this->requiredCredits();
     }
 
     public function isSupervisorAllocated(): bool

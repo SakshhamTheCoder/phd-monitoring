@@ -17,6 +17,7 @@ class ConstituteOfIRB extends Model
     protected $casts = [
         'history' => 'array',
         'steps' => 'array',
+        'carried_over_at' => 'datetime',
     ];
 
     public function __construct(array $attributes = [])
@@ -27,6 +28,7 @@ class ConstituteOfIRB extends Model
             'outside_expert',
             'phd_title',
             'irb_pdf',
+            'carried_over_at',
         ], $commonFieldKeys);
 
         parent::__construct($attributes);
@@ -37,6 +39,14 @@ class ConstituteOfIRB extends Model
     {
         $commonJSON = $this->fullCommonForm($user);
         return array_merge($commonJSON, [
+            // Set when the IRB was constituted before the portal existed. The
+            // page reads it to show a summary rather than a ladder of steps
+            // nobody took.
+            'carried_over_at' => $this->carried_over_at?->toDateString(),
+            // When the IRB was actually constituted, as opposed to when the
+            // record of it was brought into the portal. The summary shown for a
+            // carried over form reads the first and not the second.
+            'date_of_irb' => $this->student->date_of_irb,
             // Prefill from the student's profile title until this form carries its
             // own (i.e. before the student first submits it).
             'phd_title'=> $this->phd_title ?: $this->student->phd_title,

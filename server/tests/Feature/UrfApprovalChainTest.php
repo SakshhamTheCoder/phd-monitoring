@@ -456,6 +456,500 @@ class UrfApprovalChainTest extends TestCase
         ])->assertForbidden();
     }
 
+    /**
+     * A form the student has submitted is with the chain, so it is read rather
+     * than filled in until a step sends it back. Every one of the three the
+     * student files used to take a second submit: the application and the
+     * stipend details silently rewrote an answered form and started the
+     * reading again, and a report filed a duplicate row beside the first.
+     */
+    public function test_a_submitted_form_is_not_edited_again_until_it_is_sent_back(): void
+    {
+        Storage::fake('public');
+
+        $admin = $this->userAs('admin', ['can_manage_urf' => 'true', 'can_manage_app_settings' => 'true']);
+        $student = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
+
+        $department = Department::create(['name' => 'Lock Test Department', 'code' => 'LCKTD']);
+        $branch = UgBranch::create([
+            'programme' => 'BE',
+            'code' => 'LCKTB',
+            'name' => 'Lock Test Branch',
+            'department_id' => $department->id,
+        ]);
+
+        $mentor = $this->faculty(990151, $department);
+        $adordcFaculty = $this->faculty(990152, $department);
+        $adordc = $adordcFaculty->user;
+        $adordc->forceFill(['current_role_id' => Role::where('role', 'adordc')->value('id')])->save();
+        $department->adordc_id = $adordcFaculty->faculty_code;
+        $department->save();
+        $dordc = $this->userAs('dordc');
+
+        $this->actingAs($admin, 'sanctum')->postJson('/api/settings/urf', ['applications_open' => 1])->assertOk();
+
+        $form = [
+            'project_title' => 'Lock project ' . Str::random(4),
+            'student1_name' => 'Lock Student',
+            'student1_roll_no' => '10230' . random_int(1000, 9999),
+            'student1_branch_id' => $branch->id,
+            'student1_year' => 2,
+            'student1_gender' => 'Male',
+            'student1_email' => $student->email,
+            'student1_phone' => '9800000016',
+            'mentor1_faculty_code' => $mentor->faculty_code,
+        ];
+        $pdf = fn (string $name) => UploadedFile::fake()->create($name, 10, 'application/pdf');
+
+        $id = $this->actingAs($student, 'sanctum')
+            ->postJson('/api/urf', $form + ['proposal' => $pdf('proposal.pdf')])
+            ->assertCreated()->json('id');
+
+        // The application is with the mentor, so the student does not rewrite it.
+        $this->actingAs($student, 'sanctum')
+            ->postJson('/api/urf', $form + ['project_title' => 'Rewritten behind the mentor'])
+            ->assertStatus(422);
+        $this->assertSame('mentor', UrfApplication::find($id)->stage, 'the refusal left the form where it was');
+
+        $decide = fn (User $actor, string $formName, $formId, array $body) => $this->actingAs($actor, 'sanctum')
+            ->postJson("/api/urf/{$formName}/{$formId}/decision", $body);
+
+        // Sent back, it is theirs again.
+        $decide($mentor->user, 'urf-application', $id, ['decision' => 'send_back', 'comments' => 'Say more.'])->assertOk();
+        $this->actingAs($student, 'sanctum')
+            ->postJson('/api/urf', $form + ['project_title' => 'Lock project, fuller'])
+            ->assertOk();
+
+        $decide($mentor->user, 'urf-application', $id, ['decision' => 'approve'])->assertOk();
+        $decide($adordc, 'urf-application', $id, ['decision' => 'approve'])->assertOk();
+        $decide($dordc, 'urf-application', $id, ['decision' => 'approve'])->assertOk();
+        $this->assertSame('selected', UrfApplication::find($id)->status);
+
+        $details = [
+            'full_name' => 'Lock Student', 'dob' => '2004-03-04', 'gender' => 'Male', 'father_name' => 'A Parent',
+            'pan' => 'ABCDE1234F', 'aadhaar' => '123456789012', 'bank_name' => 'SBI',
+            'account_no' => '123456789012', 'ifsc' => 'SBIN0001234',
+        ];
+        $this->actingAs($student, 'sanctum')->postJson("/api/urf/{$id}/fellow", $details)->assertOk();
+
+        $fellowId = DB::table('urf_fellows')->where('urf_application_id', $id)->value('id');
+        $decide($mentor->user, 'urf-additional-info', $fellowId, ['decision' => 'approve'])->assertOk();
+
+        // An answered form is not rewritten, and the answer stands.
+        $this->actingAs($student, 'sanctum')
+            ->postJson("/api/urf/{$id}/fellow", $details + ['bank_name' => 'Another bank'])
+            ->assertStatus(422);
+        $this->assertSame('adordc', DB::table('urf_fellows')->where('id', $fellowId)->value('stage'));
+
+        $decide($adordc, 'urf-additional-info', $fellowId, ['decision' => 'send_back', 'comments' => 'Wrong IFSC.'])->assertOk();
+        $this->actingAs($student, 'sanctum')->postJson("/api/urf/{$id}/fellow", $details)->assertOk();
+        $this->assertSame(1, DB::table('urf_fellows')->where('urf_application_id', $id)->count(), 'corrected, not filed twice');
+
+        // The same for a report, which used to slip past the lock as a new row.
+        $this->actingAs($admin, 'sanctum')->postJson('/api/urf/report-windows', [
+            'session' => (int) now()->year,
+            'type' => 'half_yearly',
+            'opens_on' => now()->subDay()->toDateString(),
+            'closes_on' => now()->addWeek()->toDateString(),
+        ])->assertCreated();
+
+        $report = fn (string $name) => ['type' => 'half_yearly', 'report' => $pdf($name)];
+        $this->actingAs($student, 'sanctum')->postJson("/api/urf/{$id}/reports", $report('first.pdf'))->assertCreated();
+        $this->actingAs($student, 'sanctum')->postJson("/api/urf/{$id}/reports", $report('second.pdf'))->assertStatus(422);
+        $this->assertSame(
+            1,
+            DB::table('urf_reports')->where('urf_application_id', $id)->where('type', 'half_yearly')->count(),
+            'the round holds one report, not a duplicate'
+        );
+
+        $reportId = DB::table('urf_reports')->where('urf_application_id', $id)->value('id');
+        $decide($mentor->user, 'urf-half-yearly-report', $reportId, ['decision' => 'send_back', 'comments' => 'Add the results.'])->assertOk();
+        $this->actingAs($student, 'sanctum')->postJson("/api/urf/{$id}/reports", $report('third.pdf'))->assertCreated();
+        $this->assertSame(
+            1,
+            DB::table('urf_reports')->where('urf_application_id', $id)->where('type', 'half_yearly')->count(),
+            'a report sent back is replaced'
+        );
+    }
+
+    /**
+     * A mentor browses the forms of the projects they mentor, as they already
+     * browse the projects themselves. The lists and the session picker were the
+     * office's alone, so a mentor could open a form by link but never find one,
+     * and their page came up with no years to choose from.
+     */
+    public function test_a_mentor_browses_the_forms_of_the_projects_they_mentor(): void
+    {
+        Storage::fake('public');
+
+        $admin = $this->userAs('admin', ['can_manage_urf' => 'true', 'can_manage_app_settings' => 'true']);
+        $student = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
+        $department = Department::create(['name' => 'Scope Test Department', 'code' => 'SCPTD']);
+        $branch = UgBranch::create(['programme' => 'BE', 'code' => 'SCPTB', 'name' => 'Scope Test Branch', 'department_id' => $department->id]);
+
+        // The UG Students tab lists ug_students rows, which an application does
+        // not create: the office adds them, or sign-up does.
+        $student->ugStudent()->create([
+            'roll_no' => '10230' . random_int(1000, 9999),
+            'branch_id' => $branch->id,
+            'year' => 3,
+        ]);
+
+        $mentor = $this->faculty(990161, $department);
+        $stranger = $this->faculty(990162, $department);
+        foreach ([$mentor, $stranger] as $faculty) {
+            DB::table('roles')->where('id', $faculty->user->role_id)->update(['can_read_urf_mentees' => 'true']);
+        }
+
+        $this->actingAs($admin, 'sanctum')->postJson('/api/settings/urf', ['applications_open' => 1])->assertOk();
+
+        $title = 'Scope project ' . Str::random(4);
+        $id = $this->actingAs($student, 'sanctum')->postJson('/api/urf', [
+            'project_title' => $title,
+            'student1_name' => 'Scope Student',
+            'student1_roll_no' => '10230' . random_int(1000, 9999),
+            'student1_branch_id' => $branch->id,
+            'student1_year' => 3,
+            'student1_gender' => 'Female',
+            'student1_email' => $student->email,
+            'student1_phone' => '9800000017',
+            'mentor1_faculty_code' => $mentor->faculty_code,
+            'proposal' => UploadedFile::fake()->create('p.pdf', 10, 'application/pdf'),
+        ])->assertCreated()->json('id');
+
+        $this->actingAs($admin, 'sanctum')->postJson("/api/urf/{$id}/status", ['status' => 'selected'])->assertOk();
+        $this->actingAs($student, 'sanctum')->postJson("/api/urf/{$id}/fellow", [
+            'full_name' => 'Scope Student', 'dob' => '2004-05-06', 'gender' => 'Female', 'father_name' => 'A Parent',
+            'pan' => 'ABCDE4321F', 'aadhaar' => '210987654321', 'bank_name' => 'SBI',
+            'account_no' => '210987654321', 'ifsc' => 'SBIN0004321',
+        ])->assertOk();
+
+        // The mentor finds it by browsing, not only by following a link.
+        $this->actingAs($mentor->user, 'sanctum')->getJson('/api/urf/urf-additional-info')
+            ->assertOk()
+            ->assertJsonFragment(['project_title' => $title]);
+
+        // A faculty member who mentors nothing on it reads an empty list rather
+        // than a refusal: the page is theirs, the rows are not.
+        $this->actingAs($stranger->user, 'sanctum')->getJson('/api/urf/urf-additional-info')
+            ->assertOk()
+            ->assertJsonMissing(['project_title' => $title]);
+
+        // The years on the picker are the years they mentor in.
+        $this->actingAs($mentor->user, 'sanctum')->getJson('/api/urf/sessions')
+            ->assertOk()
+            ->assertJsonFragment([(int) now()->year]);
+        $this->actingAs($stranger->user, 'sanctum')->getJson('/api/urf/sessions')
+            ->assertOk()
+            ->assertExactJson([]);
+
+        // And the rounds a report was due in, which a report is read against.
+        $this->actingAs($mentor->user, 'sanctum')->getJson('/api/urf/report-windows')->assertOk();
+
+        // Scheduling one is still the office's.
+        $this->actingAs($mentor->user, 'sanctum')->postJson('/api/urf/report-windows', [
+            'session' => (int) now()->year,
+            'type' => 'final',
+            'opens_on' => now()->toDateString(),
+            'closes_on' => now()->addWeek()->toDateString(),
+        ])->assertForbidden();
+
+        // A student of the project holds a step on its forms but does not browse
+        // the office's lists.
+        $this->actingAs($student, 'sanctum')->getJson('/api/urf/urf-additional-info')->assertForbidden();
+
+        // The UG Students tab on /students is the same read: their students,
+        // not every student, and not a refusal.
+        $this->actingAs($mentor->user, 'sanctum')->getJson('/api/ug-students')
+            ->assertOk()
+            ->assertJsonFragment(['email' => $student->email]);
+        $this->actingAs($stranger->user, 'sanctum')->getJson('/api/ug-students')
+            ->assertOk()
+            ->assertJsonMissing(['email' => $student->email]);
+
+        // Adding, importing and editing one stay the office's.
+        $this->actingAs($mentor->user, 'sanctum')->postJson('/api/ug-students', [])->assertForbidden();
+        $this->actingAs($mentor->user, 'sanctum')->postJson('/api/ug-students/import', [])->assertForbidden();
+        $this->actingAs($mentor->user, 'sanctum')
+            ->patchJson("/api/ug-students/{$student->id}", [])->assertForbidden();
+    }
+
+    /**
+     * How to reach a UG student stays theirs to correct. Who they are does not:
+     * the roll number identifies them across imports and the branch is what
+     * routes a form to an ADORDC, so a project freezes those.
+     */
+    public function test_a_ug_student_corrects_their_contact_details_after_applying(): void
+    {
+        Storage::fake('public');
+
+        $admin = $this->userAs('admin', ['can_manage_urf' => 'true', 'can_manage_app_settings' => 'true']);
+        $student = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
+        $department = Department::create(['name' => 'Details Test Department', 'code' => 'DTLTD']);
+        $branch = UgBranch::create(['programme' => 'BE', 'code' => 'DTLTB', 'name' => 'Details Test Branch', 'department_id' => $department->id]);
+        $other = UgBranch::create(['programme' => 'BE', 'code' => 'DTLTC', 'name' => 'Other Test Branch', 'department_id' => $department->id]);
+        $mentor = $this->faculty(990171, $department);
+
+        $roll = '10230' . random_int(1000, 9999);
+        $record = $student->ugStudent()->create(['roll_no' => $roll, 'branch_id' => $branch->id, 'year' => 2]);
+
+        $details = fn (array $overrides = []) => array_merge([
+            'phone' => '9800000018',
+            'gender' => 'Female',
+            'roll_no' => $roll,
+            'branch_id' => $branch->id,
+            'year' => 2,
+        ], $overrides);
+
+        // Before applying, the whole card is theirs.
+        $this->actingAs($student, 'sanctum')
+            ->patchJson('/api/urf/me', $details(['year' => 3]))
+            ->assertOk();
+        $this->assertSame(3, $record->fresh()->year);
+
+        $this->actingAs($admin, 'sanctum')->postJson('/api/settings/urf', ['applications_open' => 1])->assertOk();
+        $this->actingAs($student, 'sanctum')->postJson('/api/urf', [
+            'project_title' => 'Details project ' . Str::random(4),
+            'student1_name' => 'Details Student',
+            'student1_roll_no' => $roll,
+            'student1_branch_id' => $branch->id,
+            'student1_year' => 3,
+            'student1_gender' => 'Female',
+            'student1_email' => $student->email,
+            'student1_phone' => '9800000018',
+            'mentor1_faculty_code' => $mentor->faculty_code,
+            'proposal' => UploadedFile::fake()->create('p.pdf', 10, 'application/pdf'),
+        ])->assertCreated();
+
+        // With a project, the contact details still save.
+        $this->actingAs($student, 'sanctum')
+            ->patchJson('/api/urf/me', ['phone' => '9800000019', 'gender' => 'Male'])
+            ->assertOk();
+        $student->refresh();
+        $this->assertSame('9800000019', $student->phone);
+        $this->assertSame('Male', $student->gender);
+
+        // And the rest is ignored rather than written, even if a stale page
+        // posts it: the branch is what routes a form to an ADORDC.
+        $this->actingAs($student, 'sanctum')
+            ->patchJson('/api/urf/me', $details([
+                'roll_no' => '999999999',
+                'branch_id' => $other->id,
+                'year' => 1,
+            ]))
+            ->assertOk();
+
+        $record->refresh();
+        $this->assertSame($roll, $record->roll_no, 'the roll number is the office\'s now');
+        $this->assertSame($branch->id, $record->branch_id, 'and so is the branch that routes the form');
+        $this->assertSame(3, $record->year);
+    }
+
+    /**
+     * Closing applications stops new ones. A form a step has sent back is not a
+     * new one: it was filed while the window was open, and it sits on the
+     * student only because somebody asked them to fix it.
+     */
+    public function test_a_sent_back_application_is_corrected_after_applications_close(): void
+    {
+        Storage::fake('public');
+
+        $admin = $this->userAs('admin', ['can_manage_urf' => 'true', 'can_manage_app_settings' => 'true']);
+        $student = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
+        $fresh = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
+        $department = Department::create(['name' => 'Closed Test Department', 'code' => 'CLSTD']);
+        $branch = UgBranch::create(['programme' => 'BE', 'code' => 'CLSTB', 'name' => 'Closed Test Branch', 'department_id' => $department->id]);
+        $mentor = $this->faculty(990181, $department);
+
+        $this->actingAs($admin, 'sanctum')->postJson('/api/settings/urf', ['applications_open' => 1])->assertOk();
+
+        $form = [
+            'project_title' => 'Closed window project ' . Str::random(4),
+            'student1_name' => 'Closed Student',
+            'student1_roll_no' => '10230' . random_int(1000, 9999),
+            'student1_branch_id' => $branch->id,
+            'student1_year' => 2,
+            'student1_gender' => 'Male',
+            'student1_email' => $student->email,
+            'student1_phone' => '9800000020',
+            'mentor1_faculty_code' => $mentor->faculty_code,
+        ];
+
+        $id = $this->actingAs($student, 'sanctum')
+            ->postJson('/api/urf', $form + ['proposal' => UploadedFile::fake()->create('p.pdf', 10, 'application/pdf')])
+            ->assertCreated()->json('id');
+
+        $this->actingAs($mentor->user, 'sanctum')
+            ->postJson("/api/urf/urf-application/{$id}/decision", ['decision' => 'send_back', 'comments' => 'Narrow it.'])
+            ->assertOk();
+
+        $this->actingAs($admin, 'sanctum')->postJson('/api/settings/urf', ['applications_open' => 0])->assertOk();
+
+        // The correction goes through, and starts the reading again.
+        $this->actingAs($student, 'sanctum')
+            ->postJson('/api/urf', $form + ['project_title' => 'Closed window project, narrower'])
+            ->assertOk();
+        $this->assertSame('mentor', UrfApplication::find($id)->stage);
+
+        // A student who never applied still cannot start one.
+        $this->actingAs($fresh, 'sanctum')
+            ->postJson('/api/urf', $form + [
+                'student1_email' => $fresh->email,
+                'student1_roll_no' => '10230' . random_int(1000, 9999),
+                'student1_phone' => '9800000021',
+                'proposal' => UploadedFile::fake()->create('p.pdf', 10, 'application/pdf'),
+            ])
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'URF applications are closed');
+
+        // And the one now back with the mentor is not rewritten either.
+        $this->actingAs($student, 'sanctum')
+            ->postJson('/api/urf', $form + ['project_title' => 'Rewritten behind the mentor'])
+            ->assertStatus(422);
+    }
+
+    /**
+     * One round runs at a time, so a fellow is never asked for two reports at
+     * once. Checked across sessions as well: a session is a calendar year and
+     * its rounds run inside it, so last year's final can reach into this
+     * year's first round.
+     */
+    public function test_only_one_report_round_runs_at_a_time(): void
+    {
+        $admin = $this->userAs('admin', ['can_manage_urf' => 'true']);
+        $year = (int) now()->year;
+
+        $round = fn (array $body) => $this->actingAs($admin, 'sanctum')
+            ->postJson('/api/urf/report-windows', $body);
+
+        $round([
+            'session' => $year,
+            'type' => 'half_yearly',
+            'opens_on' => "{$year}-06-01",
+            'closes_on' => "{$year}-09-30",
+        ])->assertCreated();
+
+        // Back to back is fine; the day after one closes is free.
+        $round([
+            'session' => $year,
+            'type' => 'final',
+            'opens_on' => "{$year}-10-01",
+            'closes_on' => "{$year}-12-31",
+        ])->assertCreated();
+
+        // Reaching back into the half-yearly round is not.
+        $round([
+            'session' => $year,
+            'type' => 'final',
+            'opens_on' => "{$year}-09-15",
+            'closes_on' => "{$year}-12-31",
+        ])->assertStatus(422)
+            ->assertJsonPath('message', 'One round runs at a time, and that overlaps the Half-yearly Progress Report round for URF '
+                . $year . ', which runs 01 Jun ' . $year . ' to 30 Sep ' . $year . '.');
+
+        // Nor does the next session get to start inside this one.
+        $next = $year + 1;
+        $round([
+            'session' => $next,
+            'type' => 'half_yearly',
+            'opens_on' => "{$year}-12-15",
+            'closes_on' => "{$next}-03-31",
+        ])->assertStatus(422);
+
+        // Moving a round's own dates is not a clash with itself.
+        $round([
+            'session' => $year,
+            'type' => 'final',
+            'opens_on' => "{$year}-10-15",
+            'closes_on' => "{$next}-01-31",
+        ])->assertCreated();
+
+        $this->assertSame(2, UrfReportWindow::where('session', $year)->count(), 'moved, not added');
+    }
+
+    /**
+     * A round that is running has fellows filing to its dates, so it keeps the
+     * day it opened while it runs and only the day it closes can move, as a
+     * semester keeps its start. A round already closed is free again: moving it
+     * is how the office runs that round a second time.
+     */
+    public function test_a_running_round_keeps_the_day_it_opened(): void
+    {
+        $admin = $this->userAs('admin', ['can_manage_urf' => 'true']);
+        $year = (int) now()->year;
+
+        $round = fn (array $body) => $this->actingAs($admin, 'sanctum')
+            ->postJson('/api/urf/report-windows', $body);
+
+        $opened = now()->subWeek()->toDateString();
+        $round([
+            'session' => $year,
+            'type' => 'half_yearly',
+            'opens_on' => $opened,
+            'closes_on' => now()->addWeek()->toDateString(),
+        ])->assertCreated();
+
+        // The closing day still moves, which is the whole point of editing one.
+        $round([
+            'session' => $year,
+            'type' => 'half_yearly',
+            'opens_on' => $opened,
+            'closes_on' => now()->addMonth()->toDateString(),
+        ])->assertCreated();
+        $this->assertSame(
+            now()->addMonth()->toDateString(),
+            UrfReportWindow::for($year, 'half_yearly')->first()->closes_on->toDateString()
+        );
+
+        // The opening day does not.
+        $round([
+            'session' => $year,
+            'type' => 'half_yearly',
+            'opens_on' => now()->subDay()->toDateString(),
+            'closes_on' => now()->addMonth()->toDateString(),
+        ])->assertStatus(422);
+        $this->assertSame(
+            $opened,
+            UrfReportWindow::for($year, 'half_yearly')->first()->opens_on->toDateString()
+        );
+
+        // Bringing the closing day forward is the office's to do, and it ends
+        // the round.
+        $round([
+            'session' => $year,
+            'type' => 'half_yearly',
+            'opens_on' => $opened,
+            'closes_on' => now()->subDay()->toDateString(),
+        ])->assertCreated();
+        $this->assertFalse(UrfReportWindow::for($year, 'half_yearly')->first()->is_open);
+
+        // Closed, it is moved freely again, which is how it is run a second time.
+        $round([
+            'session' => $year,
+            'type' => 'half_yearly',
+            'opens_on' => now()->addMonths(6)->toDateString(),
+            'closes_on' => now()->addMonths(7)->toDateString(),
+        ])->assertCreated();
+        $this->assertSame(
+            now()->addMonths(6)->toDateString(),
+            UrfReportWindow::for($year, 'half_yearly')->first()->opens_on->toDateString()
+        );
+
+        // A round still to come is moved freely, both ends.
+        $round([
+            'session' => $year,
+            'type' => 'final',
+            'opens_on' => now()->addMonths(2)->toDateString(),
+            'closes_on' => now()->addMonths(3)->toDateString(),
+        ])->assertCreated();
+        $round([
+            'session' => $year,
+            'type' => 'final',
+            'opens_on' => now()->addMonths(4)->toDateString(),
+            'closes_on' => now()->addMonths(5)->toDateString(),
+        ])->assertCreated();
+    }
+
     public function test_each_reader_sees_only_what_waits_on_them(): void
     {
         Storage::fake('public');

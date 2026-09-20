@@ -59,3 +59,19 @@ export function formatDate(value, fallback = EMPTY_VALUE) {
         year: 'numeric',
     });
 }
+
+/**
+ * The two conversions a date input needs, as distinct from formatDate above,
+ * which is for reading.
+ *
+ * Local midnight both ways. toISOString() on its own reads the date in UTC and
+ * shifts it a day behind for anyone east of Greenwich, which is how a date
+ * picked on the 5th came back as the 4th.
+ */
+export const toDateValue = (date) => {
+    if (!date) return '';
+    const offset = date.getTimezoneOffset();
+    return new Date(date.getTime() - offset * 60 * 1000).toISOString().slice(0, 10);
+};
+
+export const toDateObject = (value) => (value ? new Date(`${value}T00:00:00`) : null);

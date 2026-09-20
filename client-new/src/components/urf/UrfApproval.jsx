@@ -15,8 +15,6 @@ const STEP_NAMES = {
   complete: 'nobody, it is through',
 };
 
-const STEPS = ['student', 'mentor', 'adordc', 'dordc'];
-
 const ROLE_LABELS = { mentor: 'Faculty Mentor', adordc: 'ADORDC', dordc: 'DORDC' };
 
 export const stageLine = (form) => (form?.stage === 'complete'
@@ -97,22 +95,6 @@ const UrfApproval = ({ form, formKey, onDecided }) => {
           <CustomButton text={saving ? 'Submitting…' : 'Submit'} onClick={submit} disabled={saving} />,
         ]}
       />
-    </div>
-  );
-};
-
-export const UrfApprovalTrail = ({ form }) => {
-  const said = STEPS.filter((step) => form?.[`${step}_comments`]);
-  if (!form || (!said.length && !form.stage)) return null;
-
-  return (
-    <div className="urf-approval-trail">
-      <p className="urf-approval-stage">{stageLine(form)}</p>
-      {said.map((step) => (
-        <p key={step}>
-          <strong>{STEP_NAMES[step]}:</strong> {form[`${step}_comments`]}
-        </p>
-      ))}
     </div>
   );
 };

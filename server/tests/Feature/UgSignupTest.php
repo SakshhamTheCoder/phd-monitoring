@@ -202,7 +202,7 @@ class UgSignupTest extends TestCase
         $this->assertSame(0, User::where('email', 'late_be23@thapar.edu')->count());
     }
 
-    public function test_a_student_corrects_their_own_details_until_they_apply(): void
+    public function test_a_student_corrects_their_contact_details_and_who_they_are_until_they_apply(): void
     {
         Mail::fake();
         $form = $this->form();
@@ -224,8 +224,9 @@ class UgSignupTest extends TestCase
         $this->assertSame(4, (int) $record->year, 'the new year sticks');
         $this->assertSame('9000000000', $student->fresh()->phone);
 
-        // Once there is an application the details belong to a record the
-        // admin is reading, so they are the office's to change.
+        // Once there is an application, who they are is on a record the office
+        // is reading and the branch is what routes a form to an ADORDC, so
+        // those become the office's. How to reach them stays theirs.
         (new UrfApplication())->forceFill([
             'user_id' => $student->id,
             'session' => (int) now()->year,
@@ -241,9 +242,14 @@ class UgSignupTest extends TestCase
             'roll_no' => '102288888',
             'branch_id' => $other->id,
             'year' => 3,
-        ])->assertStatus(422);
+        ])->assertOk();
 
-        $this->assertSame('102299999', $student->fresh()->ugStudent->roll_no);
+        $student->refresh();
+        $this->assertSame('9111111111', $student->phone, 'the number they are reached on is still theirs');
+        $this->assertSame('Male', $student->gender);
+        // Posted all the same, by a page left open from before they applied.
+        $this->assertSame('102299999', $student->ugStudent->roll_no);
+        $this->assertSame(4, (int) $student->ugStudent->year);
     }
 
     public function test_a_google_account_sets_a_password_without_being_asked_for_one(): void

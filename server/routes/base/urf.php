@@ -18,6 +18,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/', [UrfController::class, 'list']);
     Route::post('/', [UrfController::class, 'apply']);
     Route::get('/filters', [UrfController::class, 'listFilters']);
+    // Projects awarded before the portal existed, from the office's sheet.
+    Route::post('/import-awarded', [UrfController::class, 'importAwarded']);
     Route::get('/mine', [UrfController::class, 'mine']);
     Route::patch('/me', [UgStudentController::class, 'updateMine']);
     Route::get('/sessions', [UrfController::class, 'sessions']);

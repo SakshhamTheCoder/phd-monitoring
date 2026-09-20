@@ -6,7 +6,9 @@ use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\NotificationManager;
 use App\Http\Controllers\Traits\SaveFile;
 use App\Models\AppSetting;
+use App\Models\Faculty;
 use App\Models\UgBranch;
+use App\Models\UgStudent;
 use App\Models\Patent;
 use App\Models\Publication;
 use App\Models\UrfApplication;
@@ -132,7 +134,7 @@ class UrfController extends Controller
             return $this->list($request);
         }
         $user = Auth::user();
-        if (!$user->may('can_manage_urf')) {
+        if (!$this->mayRead($user)) {
             return $this->refuse();
         }
 
@@ -140,6 +142,10 @@ class UrfController extends Controller
         $details = $form === 'urf-additional-info';
         $page = ($details ? UrfFellow::query() : UrfReport::where('type', $form === 'urf-final-report' ? 'final' : 'half_yearly'))
             ->with(['application.student1Branch', 'application.student2Branch', 'user'])
+            ->unless($user->may('can_manage_urf'), fn ($q) => $q->whereHas(
+                'application',
+                fn ($a) => $a->mentoredBy($user->faculty?->faculty_code)
+            ))
             ->when($filters, fn ($q) => $q->whereHas('application', fn ($a) => $this->applyDynamicFilters($a, $filters, 'urf', self::SEARCH_KEYS)))
             ->latest('id')
             ->paginate($request->input('rows', 50), ['*'], 'page', $request->input('page', 1));
@@ -334,18 +340,25 @@ class UrfController extends Controller
     public function sessions()
     {
         $user = Auth::user();
-        if (!$user->may('can_manage_urf')) {
+        if (!$this->mayRead($user)) {
             return $this->refuse();
         }
 
         return response()->json(
-            UrfApplication::distinct()->orderByDesc('session')->pluck('session')->values()
+            UrfApplication::query()
+                ->unless($user->may('can_manage_urf'), fn ($q) => $q->mentoredBy($user->faculty?->faculty_code))
+                ->distinct()->orderByDesc('session')->pluck('session')->values()
         );
+    }
+
+    private static function roundName(string $type): string
+    {
+        return self::FORM_NAMES[$type === 'final' ? 'urf-final-report' : 'urf-half-yearly-report'];
     }
 
     public function reportWindows()
     {
-        if (!Auth::user()->may('can_manage_urf')) {
+        if (!$this->mayRead(Auth::user())) {
             return $this->refuse();
         }
 
@@ -368,6 +381,38 @@ class UrfController extends Controller
         ]);
 
         $window = UrfReportWindow::for($data['session'], $data['type'])->first() ?? new UrfReportWindow();
+
+        // A round that is running has fellows filing to its dates, so the day
+        // it opened is settled while it runs and only the day it closes can
+        // move, as a semester keeps its start. A round already closed is free
+        // again: nobody is filing to it, and moving it is how the office runs
+        // that round a second time.
+        if ($window->exists && $window->is_open && $data['opens_on'] !== $window->opens_on->toDateString()) {
+            return response()->json([
+                'message' => 'This round is open, and opened on ' . $window->opens_on->format('d M Y')
+                    . '. A round keeps its opening day while it runs; move the day it closes instead.',
+            ], 422);
+        }
+
+        // One round runs at a time, so a fellow is never asked for two reports
+        // at once. Checked across every session and not only this one: a
+        // session is a calendar year and its rounds run inside it, so last
+        // year's final can reach into this year's first round.
+        $clash = UrfReportWindow::query()
+            ->when($window->exists, fn ($query) => $query->whereKeyNot($window->getKey()))
+            ->where('opens_on', '<=', $data['closes_on'])
+            ->where('closes_on', '>=', $data['opens_on'])
+            ->orderBy('opens_on')
+            ->first();
+
+        if ($clash) {
+            return response()->json([
+                'message' => 'One round runs at a time, and that overlaps the ' . self::roundName($clash->type)
+                    . ' round for URF ' . $clash->session . ', which runs '
+                    . $clash->opens_on->format('d M Y') . ' to ' . $clash->closes_on->format('d M Y') . '.',
+            ], 422);
+        }
+
         $window->fill($data)->save();
 
         return response()->json($window, 201);
@@ -413,10 +458,6 @@ class UrfController extends Controller
         if (!$user->may('can_apply_for_urf')) {
             return $this->refuse();
         }
-        if (!AppSetting::value('urf', 'applications_open')) {
-            return response()->json(['message' => 'URF applications are closed'], 422);
-        }
-
         // One application per student per session, the calendar year.
         $session = (int) now()->year;
         $application = UrfApplication::forMember($user)
@@ -428,8 +469,22 @@ class UrfController extends Controller
             return response()->json(['message' => "You already have a URF project for {$session}"], 422);
         }
         $editing = $application?->status === 'applied';
+
+        // Closing applications stops new ones. A correction is of a form
+        // already filed, which a step sent back to be fixed, so closing the
+        // window in the meantime must not strand it on the student with no way
+        // to return it. The stage check below is what keeps this to a form
+        // actually sent back.
+        if (!$editing && !AppSetting::value('urf', 'applications_open')) {
+            return response()->json(['message' => 'URF applications are closed'], 422);
+        }
         if ($editing && $application->user_id !== $user->id) {
             return response()->json(['message' => 'Only the student who applied can change the application'], 403);
+        }
+        // A filed application is being read by the chain. It is corrected only
+        // once a step sends it back, which puts it on the student again.
+        if ($editing && $application->stage !== 'student') {
+            return response()->json(['message' => 'This application has been submitted. You can change it only if a reviewer sends it back to you.'], 422);
         }
 
         $second = 'required_with:student2_name|nullable';
@@ -486,6 +541,198 @@ class UrfController extends Controller
         return response()->json($application, $editing ? 200 : 201);
     }
 
+    /**
+     * Onboard projects that were awarded before the portal, from the office's
+     * own sheet.
+     *
+     * These were not decided here, so nothing pretends they were: the
+     * application is created already selected, and the chain is closed by the
+     * office with a history entry saying where the decision came from. Writing
+     * mentor and ADORDC approvals would be recording readings nobody did.
+     *
+     * A project is matched on the first student's email and the session, so the
+     * same file twice updates rather than duplicates.
+     */
+    public function importAwarded(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user->may('can_manage_urf')) {
+            return $this->refuse();
+        }
+
+        $rows = $request->validate(['rows' => 'required|array|min:1'])['rows'];
+        $branches = UgBranch::all();
+
+        $added = 0;
+        $updated = 0;
+        $errors = [];
+
+        foreach ($rows as $index => $row) {
+            $line = $row['_rowNumber'] ?? $index + 2;
+            $cell = fn (string $key) => trim((string) ($row[$key] ?? ''));
+
+            $title = $cell('project_title');
+            $mentorEmail = $cell('mentor1_email');
+            if ($title === '' || $cell('student1_email') === '' || $mentorEmail === '') {
+                $errors[] = "Row {$line}: a project title, the first student's email and the mentor's email are all needed.";
+                continue;
+            }
+
+            // A project with no mentor has nobody to approve its reports, so an
+            // unknown mentor names the row rather than importing half a project.
+            $mentor = $this->internalFacultyByEmail($mentorEmail);
+            if (!$mentor) {
+                $errors[] = "Row {$line}: no internal faculty member has the email {$mentorEmail}.";
+                continue;
+            }
+
+            $secondMentor = null;
+            if ($cell('mentor2_email') !== '') {
+                $secondMentor = $this->internalFacultyByEmail($cell('mentor2_email'));
+                if (!$secondMentor) {
+                    $errors[] = "Row {$line}: no internal faculty member has the email " . $cell('mentor2_email') . ".";
+                    continue;
+                }
+            }
+
+            try {
+                $students = [];
+                foreach ([1, 2] as $slot) {
+                    if ($cell("student{$slot}_email") === '') {
+                        continue;
+                    }
+                    $students[$slot] = $this->awardedStudent($row, $slot, $branches, $line);
+                }
+            } catch (\RuntimeException $e) {
+                $errors[] = $e->getMessage();
+                continue;
+            }
+
+            $session = (int) ($cell('session') ?: now()->year);
+            $application = UrfApplication::where('student1_email', $cell('student1_email'))
+                ->where('session', $session)->first();
+            $existed = (bool) $application;
+
+            $application = $application ?: new UrfApplication();
+            $application->user_id = $students[1]['account']->id;
+            $application->session = $session;
+            $application->project_title = $title;
+            $application->mentor1_faculty_code = $mentor->faculty_code;
+            $application->mentor2_faculty_code = $secondMentor?->faculty_code;
+            $application->status = 'selected';
+
+            foreach ([1, 2] as $slot) {
+                $student = $students[$slot] ?? null;
+                $application->fill([
+                    "student{$slot}_name" => $student ? $student['name'] : null,
+                    "student{$slot}_roll_no" => $student ? $student['roll_no'] : null,
+                    "student{$slot}_branch_id" => $student ? $student['branch_id'] : null,
+                    "student{$slot}_year" => $student ? $student['year'] : null,
+                    "student{$slot}_gender" => $student ? $student['gender'] : null,
+                    "student{$slot}_email" => $student ? $student['email'] : null,
+                    "student{$slot}_phone" => $student ? $student['phone'] : null,
+                ]);
+            }
+            $application->save();
+
+            $application->closeChain($user, 'selected', 'Carried over from the awarded projects sheet.');
+
+            $existed ? $updated++ : $added++;
+        }
+
+        return response()->json([
+            'added' => $added,
+            'updated' => $updated,
+            'errors' => $errors,
+        ]);
+    }
+
+    /** A mentor is institute faculty, not an outside member of the directory. */
+    private function internalFacultyByEmail(string $email): ?Faculty
+    {
+        return Faculty::whereHas('user', fn ($query) => $query->where('email', $email))
+            ->where('type', 'internal')
+            ->first();
+    }
+
+    /**
+     * The account and record for one student on an awarded row, made if they
+     * have none.
+     *
+     * The branch comes from their own record where they already have one, so a
+     * sheet naming a department rather than a branch still imports. Only a
+     * student the portal has never seen has to be given a branch code, because
+     * a department maps to several branches and guessing which is not something
+     * an import should do.
+     */
+    private function awardedStudent(array $row, int $slot, $branches, $line): array
+    {
+        $cell = fn (string $key) => trim((string) ($row[$key] ?? ''));
+        $email = $cell("student{$slot}_email");
+        $name = $cell("student{$slot}_name");
+        $rollNo = $cell("student{$slot}_roll_no");
+
+        if ($name === '' || $rollNo === '') {
+            throw new \RuntimeException("Row {$line}: student {$slot} needs a name and a roll number.");
+        }
+
+        $account = User::where('email', $email)->first();
+        $branchId = $account?->ugStudent?->branch_id;
+
+        if (!$branchId) {
+            $code = $cell("student{$slot}_branch_code");
+            $branch = $branches->first(fn (UgBranch $b) => strcasecmp($b->code, $code) === 0);
+            if (!$branch) {
+                throw new \RuntimeException(
+                    "Row {$line}: {$email} is not on the portal yet, so the row needs a branch code for them"
+                    . ($code === '' ? "." : ", and '{$code}' is not one.")
+                );
+            }
+            $branchId = $branch->id;
+        }
+
+        $year = (int) ($cell("student{$slot}_year") ?: $account?->ugStudent?->year ?: 0);
+        $gender = $cell("student{$slot}_gender");
+
+        $parts = preg_split('/\s+/', $name, 2);
+        $details = [
+            'first_name' => $parts[0],
+            'last_name' => $parts[1] ?? '',
+            'email' => $email,
+            'phone' => $cell("student{$slot}_phone") ?: null,
+            'gender' => in_array($gender, ['Male', 'Female'], true) ? $gender : null,
+        ];
+
+        $account = DB::transaction(function () use ($details, $account, $rollNo, $branchId, $year) {
+            if ($account) {
+                $account->fill(array_filter($details))->save();
+            } else {
+                $account = UgStudent::registerAccount($details, null, true);
+            }
+
+            $record = $account->ugStudent ?: $account->ugStudent()->make();
+            $record->fill(array_filter([
+                'roll_no' => $rollNo,
+                'branch_id' => $branchId,
+                'year' => $year ?: null,
+            ]));
+            $account->ugStudent()->save($record);
+
+            return $account->fresh();
+        });
+
+        return [
+            'account' => $account,
+            'name' => $name,
+            'roll_no' => $rollNo,
+            'branch_id' => $branchId,
+            'year' => $year ?: null,
+            'gender' => $details['gender'],
+            'email' => $email,
+            'phone' => $details['phone'],
+        ];
+    }
+
     /** The stipend details, one set per selected student. */
     public function saveFellow(Request $request, $id)
     {
@@ -496,6 +743,15 @@ class UrfController extends Controller
         }
         if ($application->status !== 'selected') {
             return response()->json(['message' => 'These details are asked for once the project is selected'], 422);
+        }
+
+        $keys = ['urf_application_id' => $application->id, 'user_id' => $user->id];
+        $fellow = UrfFellow::where($keys)->first();
+        // Submitted details are with the chain. Overwriting them here used to
+        // rewrite an approved form and send it back round without anybody
+        // asking, so they are changed only after a step sends the form back.
+        if ($fellow && $fellow->stage !== 'student') {
+            return response()->json(['message' => 'These details have been submitted. You can change them only if a reviewer sends the form back to you.'], 422);
         }
 
         $request->merge([
@@ -516,8 +772,7 @@ class UrfController extends Controller
             'ifsc' => ['required', 'regex:/^[A-Z]{4}0[A-Z0-9]{6}$/'],
         ]);
 
-        $keys = ['urf_application_id' => $application->id, 'user_id' => $user->id];
-        $fellow = UrfFellow::where($keys)->first() ?? (new UrfFellow())->forceFill($keys);
+        $fellow = $fellow ?? (new UrfFellow())->forceFill($keys);
         $fellow->fill($data)->save();
         $fellow->backToTheStartOfTheChain($user);
 
@@ -550,6 +805,17 @@ class UrfController extends Controller
                     : 'This report has not been scheduled yet.',
             ], 422);
         }
+        // One report per round. A report already with the chain is replaced only
+        // after a step sends it back: without this a second submit slipped past
+        // the stage-scoped lookup below and filed a duplicate instead.
+        $existing = UrfReport::where('urf_application_id', $application->id)
+            ->where('user_id', $user->id)
+            ->where('type', $data['type'])
+            ->first();
+        if ($existing && $existing->stage !== 'student') {
+            return response()->json(['message' => 'This report has been submitted. You can change it only if a reviewer sends it back to you.'], 422);
+        }
+
         $chosen = fn ($value) => is_array($value) ? $value : (json_decode((string) $value, true) ?: []);
         $linked = ['publications' => $chosen($request->input('publications')), 'patents' => $chosen($request->input('patents'))];
         $data['report'] = $this->saveUploadedFile($request->file('report'), 'urf_report', $user->id);
