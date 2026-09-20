@@ -1,9 +1,7 @@
 import React from 'react';
 import '../profileCard/ProfileCard.css';
-import InfoGrid from '../profileFields/InfoGrid';
 import GridContainer from '../forms/fields/GridContainer';
 import TableComponent from '../forms/table/TableComponent';
-import ShowPublications from '../publications/ShowPublications';
 import { facultyNameCell } from '../facultyLink/FacultyLink';
 import { fileUrlFrom } from '../common/FileLink';
 import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
@@ -35,20 +33,6 @@ export const HeaderLine = ({ label, children, title = false }) => (
     <span className="student-research-label">{label}:</span>{' '}
     {children ?? <span className="student-value-empty">{EMPTY_VALUE}</span>}
   </p>
-);
-
-/** Half-yearly and final reports, in the order they were filed. */
-export const ReportsTable = ({ reports }) => (
-  <TableComponent
-    data={reports}
-    keys={['type', 'conference_presentation', 'created_at', 'report']}
-    titles={['Type', 'Conference Presentation', 'Submitted On', 'Report']}
-    components={[
-      { key: 'type', component: ({ data }) => REPORT_TYPES[data] || data },
-      { key: 'conference_presentation', component: ({ data }) => data || EMPTY_VALUE },
-      { key: 'created_at', component: ({ data }) => formatDate(data) },
-    ]}
-  />
 );
 
 /** The students and faculty mentors on a project, listed the way a PhD profile lists supervisors. */
@@ -99,8 +83,6 @@ export const TeamTables = ({ record }) => {
   );
 };
 
-const hasPublications = (groups) => Object.values(groups || {}).some((rows) => rows?.length > 0);
-
 /**
  * One URF project as a profile card, laid out like the PhD student profile:
  * the title and its status beside the actions, then the team, stipend details
@@ -147,9 +129,15 @@ const UrfForms = ({ record }) => {
   );
 };
 
-const UrfRecord = ({ record, actions = null, forms = false }) => {
-  const reportsDue = record.reports?.length > 0 || record.status === 'selected';
-
+/**
+ * The project, and one card per form it holds. What each form contains is on
+ * that form's own page: the stipend details are masked there for an approver
+ * and whole for the office, and a report carries its file and its publications
+ * there. Rendering all three here put nine identity and bank fields on a page
+ * every mentor opens, and left the reader scrolling past them to find out
+ * whether a report was in.
+ */
+const UrfRecord = ({ record, actions = null }) => {
   return (
     <div className="student-container">
       <div className="student-header">
@@ -177,55 +165,10 @@ const UrfRecord = ({ record, actions = null, forms = false }) => {
         {actions && <div className="profile-actions">{actions}</div>}
       </div>
 
-      {forms && <UrfForms record={record} />}
+      <UrfForms record={record} />
 
       <TeamTables record={record} />
 
-      {record.fellows?.length > 0 && (
-        <GridContainer
-          label="Fellowship Details"
-          elements={[
-            <div>
-              {record.fellows.map((fellow) => (
-                <div key={fellow.id} className="student-details">
-                  <InfoGrid className="student-info-grid" rows={[
-                    { label: 'Full Name (as per PAN)', value: fellow.full_name },
-                    { label: 'Date of Birth', value: formatDate(fellow.dob) },
-                    { label: 'Gender', value: fellow.gender },
-                    { label: "Father's Name", value: fellow.father_name },
-                    { label: 'PAN', value: fellow.pan },
-                    { label: 'Aadhaar', value: fellow.aadhaar },
-                    { label: 'Bank Name', value: fellow.bank_name },
-                    { label: 'Account Number', value: fellow.account_no },
-                    { label: 'IFSC Code', value: fellow.ifsc },
-                  ]} />
-                </div>
-              ))}
-            </div>,
-          ]}
-          space={3}
-        />
-      )}
-
-      {reportsDue && (
-        <GridContainer label="Reports" elements={[<ReportsTable reports={record.reports} />]} space={3} />
-      )}
-
-      {record.reports?.filter((report) => hasPublications(report.publications)).map((report) => (
-        <GridContainer
-          key={report.id}
-          elements={[
-            <ShowPublications
-              formData={report.publications}
-              enableEdit={false}
-              highlightNames={[record.student1_name, record.student2_name].filter(Boolean)}
-              collapsible
-              summaryLabel={`Publications in ${REPORT_TYPES[report.type] || 'Report'}, ${formatDate(report.created_at)}`}
-            />,
-          ]}
-          space={3}
-        />
-      ))}
     </div>
   );
 };
