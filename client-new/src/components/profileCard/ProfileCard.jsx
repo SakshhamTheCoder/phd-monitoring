@@ -54,13 +54,14 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
   const { state: locationState, pathname } = useLocation();
   const { roll_no } = useParams();
   const navigate = useNavigate();
-  // The roles with an attendance tab, less the HOD: /attendance dispatches by
-  // role, and the HOD's is leave requests with no register on it, so the button
-  // would promise attendance and open something else. Plenty of other roles
+  // The roles with an attendance tab to land on. /attendance dispatches by
+  // role, and the HOD's is the leave requests they approve rather than a
+  // register, so the button says what it opens for them. Plenty of other roles
   // read the figure below with no page at all behind it, which is why this is
   // narrower than "may read attendance".
   const role = localStorage.getItem('userRole');
-  const opensAttendanceRegister = ACCESS.attendance.includes(role) && role !== 'hod';
+  const opensAttendancePage = ACCESS.attendance.includes(role);
+  const attendanceLinkText = role === 'hod' ? 'Leave requests' : 'View attendance';
 
   const [profile, setProfile] = useState(locationState || dataIP);
   const [loading, setLoading] = useState(!profile);
@@ -326,9 +327,9 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
             {/* A date range belongs on the attendance page, which already has
                 one and the register behind it. This is the summary, and a way
                 through to the page for whoever has it. */}
-            {opensAttendanceRegister && (
+            {opensAttendancePage && (
               <button type="button" className="profile-edit-small" onClick={() => navigate(`/attendance?roll_no=${profile.roll_no}`)}>
-                <i className="fa fa-calendar" aria-hidden="true"></i> View attendance
+                <i className="fa fa-calendar" aria-hidden="true"></i> {attendanceLinkText}
               </button>
             )}
           </span>

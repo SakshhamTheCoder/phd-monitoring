@@ -121,11 +121,17 @@ const LeaveRequests = ({ departmentId = '', showDepartment = false }) => {
     loadList();
   };
 
+  // Narrowed to one scholar when a profile linked here. Held in state rather
+  // than read from the URL each render, so Show all can clear it without a
+  // navigation.
+  const [scholar, setScholar] = useState(opened.roll_no || '');
+
   const visibleRows = useMemo(
     () => rows
       .filter((r) => !departmentId || String(r.department_id) === String(departmentId))
+      .filter((r) => !scholar || String(r.roll_no) === String(scholar))
       .sort((a, b) => rowPriority(a) - rowPriority(b)),
-    [rows, departmentId]
+    [rows, departmentId, scholar]
   );
   const pendingCount = useMemo(() => visibleRows.filter((r) => r.status === 'pending').length, [visibleRows]);
   const columnCount = showDepartment ? 8 : 7;
@@ -149,6 +155,14 @@ const LeaveRequests = ({ departmentId = '', showDepartment = false }) => {
         <div className="filter-row" style={{ alignItems: 'center' }}>
           <span>{visibleRows.length} application(s)</span>
           <span className="badge badge--warning">{pendingCount} pending</span>
+          {scholar && (
+            <>
+              <span>for {scholar}</span>
+              <button type="button" className="profile-edit-small" onClick={() => setScholar('')}>
+                Show all
+              </button>
+            </>
+          )}
         </div>
       </div>
 

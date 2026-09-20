@@ -13,6 +13,9 @@ export const parseAttendanceQuery = (search) => {
   return {
     tab: params.get('tab'),
     leave: Number.isFinite(leave) ? leave : null,
+    // A scholar's profile links here with their roll number, so the reader
+    // lands on that scholar rather than on everybody.
+    roll_no: params.get('roll_no') || null,
   };
 };
 
