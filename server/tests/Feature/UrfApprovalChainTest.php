@@ -867,6 +867,89 @@ class UrfApprovalChainTest extends TestCase
         $this->assertSame(2, UrfReportWindow::where('session', $year)->count(), 'moved, not added');
     }
 
+    /**
+     * A round that is running has fellows filing to its dates, so it keeps the
+     * day it opened while it runs and only the day it closes can move, as a
+     * semester keeps its start. A round already closed is free again: moving it
+     * is how the office runs that round a second time.
+     */
+    public function test_a_running_round_keeps_the_day_it_opened(): void
+    {
+        $admin = $this->userAs('admin', ['can_manage_urf' => 'true']);
+        $year = (int) now()->year;
+
+        $round = fn (array $body) => $this->actingAs($admin, 'sanctum')
+            ->postJson('/api/urf/report-windows', $body);
+
+        $opened = now()->subWeek()->toDateString();
+        $round([
+            'session' => $year,
+            'type' => 'half_yearly',
+            'opens_on' => $opened,
+            'closes_on' => now()->addWeek()->toDateString(),
+        ])->assertCreated();
+
+        // The closing day still moves, which is the whole point of editing one.
+        $round([
+            'session' => $year,
+            'type' => 'half_yearly',
+            'opens_on' => $opened,
+            'closes_on' => now()->addMonth()->toDateString(),
+        ])->assertCreated();
+        $this->assertSame(
+            now()->addMonth()->toDateString(),
+            UrfReportWindow::for($year, 'half_yearly')->first()->closes_on->toDateString()
+        );
+
+        // The opening day does not.
+        $round([
+            'session' => $year,
+            'type' => 'half_yearly',
+            'opens_on' => now()->subDay()->toDateString(),
+            'closes_on' => now()->addMonth()->toDateString(),
+        ])->assertStatus(422);
+        $this->assertSame(
+            $opened,
+            UrfReportWindow::for($year, 'half_yearly')->first()->opens_on->toDateString()
+        );
+
+        // Bringing the closing day forward is the office's to do, and it ends
+        // the round.
+        $round([
+            'session' => $year,
+            'type' => 'half_yearly',
+            'opens_on' => $opened,
+            'closes_on' => now()->subDay()->toDateString(),
+        ])->assertCreated();
+        $this->assertFalse(UrfReportWindow::for($year, 'half_yearly')->first()->is_open);
+
+        // Closed, it is moved freely again, which is how it is run a second time.
+        $round([
+            'session' => $year,
+            'type' => 'half_yearly',
+            'opens_on' => now()->addMonths(6)->toDateString(),
+            'closes_on' => now()->addMonths(7)->toDateString(),
+        ])->assertCreated();
+        $this->assertSame(
+            now()->addMonths(6)->toDateString(),
+            UrfReportWindow::for($year, 'half_yearly')->first()->opens_on->toDateString()
+        );
+
+        // A round still to come is moved freely, both ends.
+        $round([
+            'session' => $year,
+            'type' => 'final',
+            'opens_on' => now()->addMonths(2)->toDateString(),
+            'closes_on' => now()->addMonths(3)->toDateString(),
+        ])->assertCreated();
+        $round([
+            'session' => $year,
+            'type' => 'final',
+            'opens_on' => now()->addMonths(4)->toDateString(),
+            'closes_on' => now()->addMonths(5)->toDateString(),
+        ])->assertCreated();
+    }
+
     public function test_each_reader_sees_only_what_waits_on_them(): void
     {
         Storage::fake('public');

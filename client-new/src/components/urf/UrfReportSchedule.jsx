@@ -9,10 +9,28 @@ import GridContainer from '../forms/fields/GridContainer';
 import TableComponent from '../forms/table/TableComponent';
 import { apiUrfDeleteReportWindow, apiUrfReportWindows, apiUrfSaveReportWindow } from '../../api/urf';
 import { REPORT_TYPES } from './UrfRecord';
+import { localDateString } from '../../utils/leaveBalance';
 
 const TYPES = Object.entries(REPORT_TYPES).map(([value, title]) => ({ value, title }));
 
 const empty = (session) => ({ session: String(session), type: 'half_yearly', opens_on: '', closes_on: '', notes: '' });
+
+const fromRound = (round) => ({
+  session: String(round.session),
+  type: round.type,
+  opens_on: round.opens_on || '',
+  closes_on: round.closes_on || '',
+  notes: round.notes || '',
+});
+
+const today = () => localDateString(new Date());
+
+// The round the office is most likely to want: the one running, or the next one
+// due if none is. Dates are stored as YYYY-MM-DD, which compares as text.
+const currentRound = (rounds) => rounds.find((round) => round.is_open)
+  ?? rounds
+    .filter((round) => round.opens_on > today())
+    .sort((a, b) => a.opens_on.localeCompare(b.opens_on))[0];
 
 // is_open is today being inside the round, so a round that has not started yet
 // answers false to it. Reading that as Closed said a round was over before it
@@ -33,8 +51,10 @@ const UrfReportSchedule = ({ session, sessions = [] }) => {
   const [windows, setWindows] = useState([]);
   const [form, setForm] = useState(empty(session));
   const [saving, setSaving] = useState(false);
-  // The round a row opened, so the form can offer a way back out of it.
-  const [opened, setOpened] = useState(null);
+  // The round the form is editing. Set from the session's current round on
+  // load, so the office lands on the one that is running rather than on a
+  // blank form and a table to hunt through.
+  const [round, setRound] = useState(null);
   const [pending, setPending] = useState(null);
 
   const load = useCallback(async () => {
@@ -45,10 +65,7 @@ const UrfReportSchedule = ({ session, sessions = [] }) => {
   useEffect(() => { load(); }, [load]);
   // Following the page's session means the rounds below are the ones for the
   // projects above, rather than every year at once.
-  useEffect(() => {
-    setForm(empty(session));
-    setOpened(null);
-  }, [session]);
+  useEffect(() => { setForm(empty(session)); }, [session]);
 
   const set = (key) => (value) => setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -66,20 +83,33 @@ const UrfReportSchedule = ({ session, sessions = [] }) => {
     (round) => Number(round.session) === Number(form.session) && round.type === form.type
   );
 
-  const rows = windows
-    .filter((round) => Number(round.session) === Number(form.session))
-    .map((round) => ({ ...round, report: REPORT_TYPES[round.type], state: stateOf(round) }));
+  const forSession = windows.filter((one) => Number(one.session) === Number(form.session));
 
-  const openRound = (round) => {
-    setForm({
-      session: String(round.session),
-      type: round.type,
-      opens_on: round.opens_on || '',
-      closes_on: round.closes_on || '',
-      notes: round.notes || '',
-    });
-    setOpened(round.id);
+  // One round runs at a time, so there is one round to be looking at: the one
+  // running, or the next one due. Only when neither exists is there a round to
+  // schedule, which is when the semester card offers to create one too.
+  const current = currentRound(forSession);
+  const rows = forSession
+    .filter((one) => one.id !== current?.id)
+    .map((one) => ({ ...one, report: REPORT_TYPES[one.type], state: stateOf(one) }));
+
+  // The session's current round, shown ready to edit. Reruns when the rounds
+  // reload after a save, so the panel settles back on what is running.
+  useEffect(() => {
+    setRound(current ?? null);
+    setForm(current ? fromRound(current) : empty(form.session));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [windows, form.session]);
+
+  const openRound = (one) => {
+    setForm(fromRound(one));
+    setRound(one);
   };
+
+  // Fellows are filing to the dates of a round that is running, so its opening
+  // day is settled while it runs and only its closing day can move. A round
+  // already closed is free again, which is how one is run a second time.
+  const running = !!round && round.is_open;
 
   const save = async () => {
     if (!form.opens_on || !form.closes_on) {
@@ -93,8 +123,6 @@ const UrfReportSchedule = ({ session, sessions = [] }) => {
     if (!res.success) return;
 
     toast.success(existing ? 'Round updated' : 'Round scheduled');
-    setForm(empty(form.session));
-    setOpened(null);
     load();
   };
 
@@ -104,20 +132,35 @@ const UrfReportSchedule = ({ session, sessions = [] }) => {
     if (!res.success) return;
 
     toast.success('Round removed');
-    if (opened === pending.id) {
-      setForm(empty(form.session));
-      setOpened(null);
-    }
     load();
   };
 
   return (
     <div className="urf-report-schedule">
+      <div className="grid-label">
+        {round
+          ? `${REPORT_TYPES[round.type]}: ${stateOf(round).toLowerCase()}`
+          : `No round scheduled for URF ${form.session}`}
+      </div>
+      {!round && (
+        <p className="urf-round-notice">
+          One round runs at a time. Schedule the next one here; it will open on
+          the day you set and close itself on the last.
+        </p>
+      )}
+
       <GridContainer
         elements={[
           <DropdownField label="Session" options={sessionOptions} initialValue={form.session} onChange={set('session')} required />,
-          <DropdownField label="Report" options={TYPES} initialValue={form.type} onChange={set('type')} required />,
-          <DateField label="Opens On" initialValue={form.opens_on} onChange={set('opens_on')} max={form.closes_on || undefined} required />,
+          <DropdownField label="Report" options={TYPES} initialValue={form.type} onChange={set('type')} isLocked={!!round} required />,
+          <DateField
+            label="Opens On"
+            initialValue={form.opens_on}
+            onChange={set('opens_on')}
+            max={form.closes_on || undefined}
+            isLocked={running}
+            required
+          />,
           <DateField label="Closes On" initialValue={form.closes_on} onChange={set('closes_on')} min={form.opens_on || undefined} required />,
           <InputField label="Note for fellows" initialValue={form.notes} onChange={set('notes')} />,
         ]}
@@ -130,7 +173,6 @@ const UrfReportSchedule = ({ session, sessions = [] }) => {
             onClick={save}
             disabled={saving}
           />,
-          ...(opened ? [<CustomButton text="Cancel" variant="secondary" onClick={() => { setForm(empty(form.session)); setOpened(null); }} />] : []),
         ]}
       />
 
@@ -138,6 +180,7 @@ const UrfReportSchedule = ({ session, sessions = [] }) => {
         <GridContainer
           elements={[
             <TableComponent
+              label="Other rounds this session"
               data={rows}
               keys={['session', 'report', 'opens_on', 'closes_on', 'state', 'notes', 'id']}
               titles={['Session', 'Report', 'Opens On', 'Closes On', 'Status', 'Note', ' ']}

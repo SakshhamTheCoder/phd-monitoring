@@ -382,6 +382,18 @@ class UrfController extends Controller
 
         $window = UrfReportWindow::for($data['session'], $data['type'])->first() ?? new UrfReportWindow();
 
+        // A round that is running has fellows filing to its dates, so the day
+        // it opened is settled while it runs and only the day it closes can
+        // move, as a semester keeps its start. A round already closed is free
+        // again: nobody is filing to it, and moving it is how the office runs
+        // that round a second time.
+        if ($window->exists && $window->is_open && $data['opens_on'] !== $window->opens_on->toDateString()) {
+            return response()->json([
+                'message' => 'This round is open, and opened on ' . $window->opens_on->format('d M Y')
+                    . '. A round keeps its opening day while it runs; move the day it closes instead.',
+            ], 422);
+        }
+
         // One round runs at a time, so a fellow is never asked for two reports
         // at once. Checked across every session and not only this one: a
         // session is a calendar year and its rounds run inside it, so last
