@@ -587,6 +587,14 @@ class UrfApprovalChainTest extends TestCase
         $department = Department::create(['name' => 'Scope Test Department', 'code' => 'SCPTD']);
         $branch = UgBranch::create(['programme' => 'BE', 'code' => 'SCPTB', 'name' => 'Scope Test Branch', 'department_id' => $department->id]);
 
+        // The UG Students tab lists ug_students rows, which an application does
+        // not create: the office adds them, or sign-up does.
+        $student->ugStudent()->create([
+            'roll_no' => '10230' . random_int(1000, 9999),
+            'branch_id' => $branch->id,
+            'year' => 3,
+        ]);
+
         $mentor = $this->faculty(990161, $department);
         $stranger = $this->faculty(990162, $department);
         foreach ([$mentor, $stranger] as $faculty) {
@@ -649,6 +657,21 @@ class UrfApprovalChainTest extends TestCase
         // A student of the project holds a step on its forms but does not browse
         // the office's lists.
         $this->actingAs($student, 'sanctum')->getJson('/api/urf/urf-additional-info')->assertForbidden();
+
+        // The UG Students tab on /students is the same read: their students,
+        // not every student, and not a refusal.
+        $this->actingAs($mentor->user, 'sanctum')->getJson('/api/ug-students')
+            ->assertOk()
+            ->assertJsonFragment(['email' => $student->email]);
+        $this->actingAs($stranger->user, 'sanctum')->getJson('/api/ug-students')
+            ->assertOk()
+            ->assertJsonMissing(['email' => $student->email]);
+
+        // Adding, importing and editing one stay the office's.
+        $this->actingAs($mentor->user, 'sanctum')->postJson('/api/ug-students', [])->assertForbidden();
+        $this->actingAs($mentor->user, 'sanctum')->postJson('/api/ug-students/import', [])->assertForbidden();
+        $this->actingAs($mentor->user, 'sanctum')
+            ->patchJson("/api/ug-students/{$student->id}", [])->assertForbidden();
     }
 
     public function test_each_reader_sees_only_what_waits_on_them(): void

@@ -26,6 +26,10 @@ const StudentsPage = () => {
   // Manage Forms has no capability of its own yet, so it keeps the role
   // check it always had rather than borrowing an unrelated capability.
   const role = localStorage.getItem("userRole");
+  // A mentor reads the UG students on the projects they mentor, so the tab is
+  // theirs too. Adding, importing and editing one stay the office's.
+  const managesUrf = can("can_manage_urf");
+  const readsUrf = managesUrf || can("can_read_urf_mentees");
   const handleFilterChange = (newFilter) => {
     setFilter(newFilter);
   };
@@ -217,7 +221,7 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
         <>
           <PageHeader title="Students" subtitle="All PhD scholars and their current stage." />
 
-          {can("can_manage_urf") && (
+          {readsUrf && (
             <Tabs
               value={tab}
               onChange={setTab}
@@ -244,23 +248,25 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
                 enableApproval={false}
                 enableSelect={false}
                 extraTopbarComponents={
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <CustomButton
-                      text="Bulk Import"
-                      variant="secondary"
-                      onClick={() => setUgImportOpen(true)}
-                    />
-                    <CustomButton
-                      text="Add UG Student +"
-                      onClick={() => { setUgStudent(null); setUgFormOpen(true); }}
-                    />
-                  </div>
+                  managesUrf ? (
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <CustomButton
+                        text="Bulk Import"
+                        variant="secondary"
+                        onClick={() => setUgImportOpen(true)}
+                      />
+                      <CustomButton
+                        text="Add UG Student +"
+                        onClick={() => { setUgStudent(null); setUgFormOpen(true); }}
+                      />
+                    </div>
+                  ) : null
                 }
-                actions={[{
+                actions={managesUrf ? [{
                   icon: <i className="fa fa-pencil-square-o"></i>,
                   tooltip: "Edit",
                   onClick: (student) => { setUgStudent(student); setUgFormOpen(true); },
-                }]}
+                }] : []}
               />
             </>
           ) : (

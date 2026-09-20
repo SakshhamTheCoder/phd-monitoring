@@ -29,11 +29,23 @@ class UgStudentController extends Controller
     public function list(Request $request)
     {
         $user = Auth::user();
-        if (!$user->may('can_manage_urf')) {
+        if (!$user->may('can_manage_urf') && !$user->may('can_read_urf_mentees')) {
             return $this->refuse();
         }
 
         $query = UgStudent::with(['user', 'branch'])->latest('id');
+
+        // A mentor reads the students on the projects they mentor, as they read
+        // the projects themselves. Membership is the first student's account or
+        // the second student's address, the same pair this method already reads
+        // below to count a student's projects.
+        if (!$user->may('can_manage_urf')) {
+            $mentored = UrfApplication::mentoredBy($user->faculty?->faculty_code)
+                ->get(['user_id', 'student2_email']);
+            $query->where(fn ($q) => $q
+                ->whereIn('user_id', $mentored->pluck('user_id')->filter())
+                ->orWhereHas('user', fn ($u) => $u->whereIn('email', $mentored->pluck('student2_email')->filter())));
+        }
         $filters = json_decode((string) $request->query('filters'), true);
         if ($filters) {
             $query = $this->applyDynamicFilters($query, $filters, 'ug_students');
