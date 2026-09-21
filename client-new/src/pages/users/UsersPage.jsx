@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import { useLoading } from '../../context/LoadingContext';
@@ -14,7 +14,8 @@ import FacultyForm from '../../components/facultyForm/FacultyForm';
 import ClerkForm from '../../components/clerkForm/ClerkForm';
 import { baseURL } from '../../api/urls';
 import CustomButton from '../../components/forms/fields/CustomButton';
-import { customFetch, isNetworkError, NETWORK_ERROR_MESSAGE } from '../../api/base';
+import { customFetch, isNetworkError, NETWORK_ERROR_MESSAGE } from '../../api/base';
+import { formatDate } from '../../utils/timeParse';
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
 import useCapabilities from '../../context/CapabilitiesContext';
 
@@ -33,6 +34,49 @@ const UsersPage = () => {
   const { setLoading } = useLoading();
   const location = useLocation();
   const can = useCapabilities();
+  const managesUsers = can('can_manage_users');
+
+  // Accounts nobody has claimed: an import creates them without mailing
+  // anybody, and the office sends the links once those people have been told
+  // the portal exists. Each import run stays on the list until its last
+  // person is in, so a second import never buries the first.
+  const [pending, setPending] = useState(null);
+  const [linksOpen, setLinksOpen] = useState(false);
+  const [chosenRun, setChosenRun] = useState('everyone');
+  const [sendingLinks, setSendingLinks] = useState(false);
+
+  const readPending = () => {
+    if (!managesUsers) return;
+    customFetch(`${baseURL}/users/sign-in-links`, 'GET', {}, false)
+      .then((res) => setPending(res?.response ?? null))
+      .catch(() => {});
+  };
+
+  // Capabilities arrive from their own request, so a page reloaded on /users
+  // has none on the first render. Without it in the dependencies this asked
+  // once, too early, and the button sat empty.
+  useEffect(readPending, [refreshKey, managesUsers]);
+
+  const runs = pending?.runs ?? [];
+  const waitingEveryone = pending?.everyone?.count ?? 0;
+  // "756 student, 15 clerk" rather than a bare 771, because everyone reaches
+  // the accounts other imports created too.
+  const waitingByRole = Object.entries(pending?.everyone?.by_role ?? {})
+    .map(([role, count]) => `${count} ${role.replace(/_/g, ' ')}`)
+    .join(', ');
+
+  const sendSignInLinks = async () => {
+    setSendingLinks(true);
+    const body = chosenRun === 'everyone' ? {} : { batch: chosenRun };
+    const res = await customFetch(`${baseURL}/users/sign-in-links`, 'POST', body);
+    setSendingLinks(false);
+
+    if (res?.success) {
+      toast.success(res.response.message);
+      setLinksOpen(false);
+      readPending();
+    }
+  };
 
   const handleFilterChange = (newFilter) => {
     setFilter(newFilter);
@@ -260,6 +304,12 @@ Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,d
               can('can_manage_users') ? (
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <CustomButton
+                    text={waitingEveryone ? `Send sign-in links (${waitingEveryone})` : 'Send sign-in links'}
+                    variant="secondary"
+                    disabled={!waitingEveryone}
+                    onClick={() => { setChosenRun(runs[0]?.batch ?? 'everyone'); setLinksOpen(true); }}
+                  />
+                  <CustomButton
                     text="Bulk Import"
                     variant="secondary"
                     onClick={() => setShowBulkImportModal(true)}
@@ -311,6 +361,54 @@ Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,d
             ) : (
               <UserForm edit={false} userData={null} onClose={() => closeUserModal(true)} />
             )}
+          </CustomModal>
+
+          <CustomModal isOpen={linksOpen} onClose={() => setLinksOpen(false)} title="Send sign-in links">
+            <div className="modal-form">
+              <p>
+                A link lets somebody choose their password. Anybody who already signs in,
+                with a password or through Google, is left out.
+              </p>
+
+              {runs.map((run) => (
+                <label key={run.batch} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '10px' }}>
+                  <input
+                    type="radio"
+                    name="sign-in-link-group"
+                    value={run.batch}
+                    checked={chosenRun === run.batch}
+                    onChange={() => setChosenRun(run.batch)}
+                  />
+                  <span>
+                    <strong>{run.of === 'staff' ? 'Staff' : 'Scholars'} imported {formatDate(run.imported_at)}</strong>
+                    {' '}({run.waiting} waiting)
+                  </span>
+                </label>
+              ))}
+
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                <input
+                  type="radio"
+                  name="sign-in-link-group"
+                  value="everyone"
+                  checked={chosenRun === 'everyone'}
+                  onChange={() => setChosenRun('everyone')}
+                />
+                <span>
+                  <strong>Everyone who cannot sign in yet ({waitingEveryone})</strong>
+                  {waitingByRole && <>: {waitingByRole}</>}
+                </span>
+              </label>
+
+              <div className="modal-actions">
+                <CustomButton text="Cancel" variant="secondary" onClick={() => setLinksOpen(false)} />
+                <CustomButton
+                  text={sendingLinks ? 'Sending...' : 'Send links'}
+                  disabled={sendingLinks || !waitingEveryone}
+                  onClick={sendSignInLinks}
+                />
+              </div>
+            </div>
           </CustomModal>
 
           {/* Bulk Import Modal */}

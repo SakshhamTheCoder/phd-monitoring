@@ -58,6 +58,11 @@ const FacultyPage = () => {
   const handleBulkImport = async (csvPreview, resetState) => {
     try {
       setSubmitting(true);
+
+      // One id for the run, repeated on every batch below, so Send sign-in
+      // links on Manage Users can mail exactly the people this import brought
+      // in, however many requests it took and however many imports follow.
+      const importBatch = crypto.randomUUID();
       setLoading(true);
       
       const BATCH_SIZE = 50;
@@ -130,7 +135,7 @@ const FacultyPage = () => {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
               },
-              body: JSON.stringify({ batch_data: batchData }),
+              body: JSON.stringify({ batch_data: batchData, import_batch: importBatch }),
             });
 
             if (response.status === 302 || response.redirected) {

@@ -15,6 +15,118 @@ use App\Support\PersonName;
 
 class UserManagementController extends Controller
 {
+
+    /**
+     * Accounts nobody has claimed yet.
+     *
+     * An import creates accounts without mailing anybody, so these are the
+     * people who cannot sign in. Two marks, because there are two ways in:
+     * password_set_at stays null until somebody completes a reset, and
+     * email_verified_at is stamped the first time they sign in with Google,
+     * which is a way in that never sets a password.
+     *
+     * $batch narrows it to the people one import run brought in, scholars or
+     * staff. Without it the answer is every unclaimed account, which is the
+     * clerks a departments import created as much as anybody else.
+     */
+    private function whoCannotSignIn(?string $batch = null)
+    {
+        $users = User::whereNull('password_set_at')
+            ->whereNull('email_verified_at')
+            ->orderBy('id');
+
+        if ($batch !== null) {
+            $users->where(function ($query) use ($batch) {
+                $query->whereIn('id', \App\Models\Student::query()->select('user_id')->where('import_batch', $batch))
+                    ->orWhereIn('id', \App\Models\Faculty::query()->select('user_id')->where('import_batch', $batch));
+            });
+        }
+
+        return $users;
+    }
+
+    /**
+     * Every import run that still has somebody waiting for a link.
+     *
+     * Newest first, because that is the one the office has just done. An
+     * earlier run stays on this list until its last person has signed in, so
+     * a second import never buries the first.
+     */
+    private function importRuns()
+    {
+        $runs = collect();
+
+        foreach ([[\App\Models\Student::class, 'scholars'], [\App\Models\Faculty::class, 'staff']] as [$model, $of]) {
+            $model::query()
+                ->whereNotNull('import_batch')
+                ->selectRaw('import_batch, MAX(imported_at) as imported_at')
+                ->groupBy('import_batch')
+                ->orderByDesc('imported_at')
+                ->get()
+                ->each(function ($row) use ($runs, $of) {
+                    $waiting = $this->whoCannotSignIn($row->import_batch)->count();
+                    if ($waiting > 0) {
+                        $runs->push([
+                            'batch' => $row->import_batch,
+                            'of' => $of,
+                            'imported_at' => $row->imported_at,
+                            'waiting' => $waiting,
+                        ]);
+                    }
+                });
+        }
+
+        return $runs->sortByDesc('imported_at')->values();
+    }
+
+    public function pendingSignInLinks()
+    {
+        if (!Auth::user()->may('can_manage_users')) {
+            return response()->json(['message' => 'You do not have permission to read this'], 403);
+        }
+
+        return response()->json([
+            'everyone' => [
+                'count' => $this->whoCannotSignIn()->count(),
+                // Named by role, because "everyone" covering the clerks a
+                // departments import created is the part worth seeing before
+                // pressing send.
+                'by_role' => $this->whoCannotSignIn()->with('role')->get()
+                    ->groupBy(fn ($user) => optional($user->role)->role ?: 'unknown')
+                    ->map->count(),
+            ],
+            'runs' => $this->importRuns(),
+        ]);
+    }
+
+    /**
+     * Mail them the link that lets them choose a password.
+     *
+     * Queued through the job the office's bulk reset already uses, and each one
+     * is the welcome mail rather than a bare reset, because
+     * sendPasswordResetNotification reads the same null password_set_at.
+     */
+    public function sendSignInLinks(Request $request)
+    {
+        if (!Auth::user()->may('can_manage_users')) {
+            return response()->json(['message' => 'You do not have permission to send these'], 403);
+        }
+
+        $request->validate(['batch' => 'nullable|string|max:64']);
+
+        $emails = $this->whoCannotSignIn($request->input('batch'))->pluck('email')->all();
+
+        if (!$emails) {
+            return response()->json(['count' => 0, 'message' => 'Everybody in that group can sign in already.']);
+        }
+
+        \App\Jobs\ProcessBulkForgotPassword::dispatch($emails);
+
+        return response()->json([
+            'count' => count($emails),
+            'message' => count($emails) . ' sign-in link(s) are being sent.',
+        ]);
+    }
     use FilterLogicTrait;
 
     public function listFilters(Request $request)

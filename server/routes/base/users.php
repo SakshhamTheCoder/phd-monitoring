@@ -10,6 +10,14 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth:sanctum', 'can:can_manage_users'])->group(function () {
     Route::get('/', [UserManagementController::class, 'list']);
     Route::get('/filters', [UserManagementController::class, 'listFilters']);
+
+    // Who cannot sign in yet, and mailing them the link when the office is
+    // ready. An import deliberately mails nobody at the time it runs, and
+    // each run stays pickable until its last person is in, so a second
+    // import never buries the first. Declared before '/{id}' or the id
+    // route swallows the path.
+    Route::get('/sign-in-links', [UserManagementController::class, 'pendingSignInLinks']);
+    Route::post('/sign-in-links', [UserManagementController::class, 'sendSignInLinks']);
     Route::post('/', [UserManagementController::class, 'createOrUpdate']);
     Route::get('/{id}', [UserManagementController::class, 'show']);
     Route::delete('/{id}', [UserManagementController::class, 'delete']);

@@ -36,6 +36,8 @@ class Faculty extends Model
         'last_synced_at',
         'last_sync_source',
         'expertise',
+        'import_batch',
+        'imported_at',
     ];
 
     /**
@@ -47,6 +49,7 @@ class Faculty extends Model
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'expertise' => 'array',
+        'imported_at' => 'datetime',
     ];
 
     /**
