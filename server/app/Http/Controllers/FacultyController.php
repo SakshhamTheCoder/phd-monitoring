@@ -426,6 +426,11 @@ class FacultyController extends Controller
             // anybody has been told the portal exists. Send sign-in links on
             // the scholars page reaches them when the office means it.
             'send_invites' => 'nullable|boolean',
+            // One id for the whole run, chosen by the screen and repeated on
+            // every batch, so an office's import is one group however many
+            // requests it took. Send sign-in links reads it to mail exactly
+            // the people one import brought in.
+            'import_batch' => 'nullable|string|max:64',
             'batch_data' => 'required|array',
             'batch_data.*.full_name' => 'nullable|string',
             'batch_data.*.first_name' => 'nullable|string',
@@ -446,6 +451,8 @@ class FacultyController extends Controller
 
         $departmentScope = $this->facultyWriteDepartmentIds($user);
 
+        $batch = $request->input('import_batch') ?: (string) Str::uuid();
+        $importedAt = now();
         $batchData = $request->batch_data;
         $successCount = 0;
         $updateCount = 0;
@@ -609,6 +616,9 @@ class FacultyController extends Controller
                         }
                         if ($areaId) $existingFaculty->area_of_specialization_id = $areaId;
                         if ($supervisedOutside !== '') $existingFaculty->supervised_outside = (int) $supervisedOutside;
+                        $existingFaculty->import_batch = $batch;
+                        $existingFaculty->imported_at = $importedAt;
+
                         try {
                             $existingFaculty->save();
                         } catch (\Illuminate\Database\QueryException $e) {
@@ -643,6 +653,8 @@ class FacultyController extends Controller
                             'institution' => $institution,
                             'website_link' => $websiteLink,
                             'expertise' => Faculty::normalizeExpertise($expertiseRaw),
+                            'import_batch' => $batch,
+                            'imported_at' => $importedAt,
                             'area_of_specialization_id' => $areaId,
                             'supervised_outside' => $supervisedOutside !== '' ? (int) $supervisedOutside : 0,
                         ]);
@@ -680,6 +692,8 @@ class FacultyController extends Controller
                         'institution' => $institution,
                         'website_link' => $websiteLink,
                         'expertise' => Faculty::normalizeExpertise($expertiseRaw),
+                        'import_batch' => $batch,
+                        'imported_at' => $importedAt,
                         'area_of_specialization_id' => $areaId,
                         'supervised_outside' => $supervisedOutside !== '' ? (int) $supervisedOutside : 0,
                     ]);

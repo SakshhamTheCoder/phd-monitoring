@@ -104,50 +104,10 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
     return !/^(no|n|none|not qualified)$/.test(answer);
   };
 
-  // Scholars who still cannot sign in, because an import created their account
-  // without mailing anybody. Read off the records themselves: an account with
-  // no password set is one nobody has claimed yet, so there is no list to keep
-  // between the import and the day the office decides to tell people.
-  const [pending, setPending] = useState(null);
-  const [linksOpen, setLinksOpen] = useState(false);
-  const [linkScope, setLinkScope] = useState('last_import');
-  const [sendingLinks, setSendingLinks] = useState(false);
   // Off by default: an import of the institute's sheet is a migration of
   // records, and a reset link lives 24 hours, so mailing 800 of them days
   // before anyone has been told the portal exists sends 800 dead links.
   const [inviteOnImport, setInviteOnImport] = useState(false);
-
-  const readPending = () => {
-    if (!managesStudents) return;
-    customFetch(baseURL + '/students/sign-in-links', 'GET', {}, false)
-      .then((res) => setPending(res?.response ?? null))
-      .catch(() => {});
-  };
-
-  // Capabilities arrive from their own request, so the first render of a page
-  // reloaded on /students does not have them yet. Without the capability in
-  // the dependencies this asked once, too early, and the button sat empty.
-  useEffect(readPending, [refreshKey, managesStudents]);
-
-  const pendingLinks = pending?.last_import?.count ?? 0;
-  const pendingEveryone = pending?.everyone?.count ?? 0;
-  // "7 scholars, 14 clerks" rather than a bare 21, because the wider option
-  // reaches the accounts other imports created too.
-  const accountsByRole = Object.entries(pending?.everyone?.by_role ?? {})
-    .map(([role, count]) => `${count} ${role.replace(/_/g, ' ')}`)
-    .join(', ');
-
-  const sendSignInLinks = async () => {
-    setSendingLinks(true);
-    const res = await customFetch(baseURL + '/students/sign-in-links', 'POST', { scope: linkScope });
-    setSendingLinks(false);
-
-    if (res?.success) {
-      toast.success(res.response.message);
-      setLinksOpen(false);
-      readPending();
-    }
-  };
 
   const handleBulkImport = async (csvPreview, resetState) => {
     try {
@@ -361,12 +321,6 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
               can("can_manage_students") ? (
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <CustomButton
-                    text={pendingLinks ? `Send sign-in links (${pendingLinks})` : 'Send sign-in links'}
-                    variant="secondary"
-                    disabled={!pendingLinks && !pendingEveryone}
-                    onClick={() => { setLinkScope(pendingLinks ? 'last_import' : 'everyone'); setLinksOpen(true); }}
-                  />
-                  <CustomButton
                     text="Bulk Import"
                     variant="secondary"
                     onClick={() => setIsBulkUploadModalOpen(true)}
@@ -504,54 +458,6 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
             }
           />
 
-          <CustomModal isOpen={linksOpen} onClose={() => setLinksOpen(false)} title="Send sign-in links">
-            <div className="modal-form">
-              <p>
-                A link lets a scholar choose their password. Anybody who already signs in,
-                with a password or through Google, is left out.
-              </p>
-
-              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '12px' }}>
-                <input
-                  type="radio"
-                  name="sign-in-link-scope"
-                  value="last_import"
-                  checked={linkScope === 'last_import'}
-                  disabled={!pendingLinks}
-                  onChange={() => setLinkScope('last_import')}
-                />
-                <span>
-                  <strong>From the last import ({pendingLinks})</strong>
-                  {pending?.last_import?.imported_at && (
-                    <> imported {formatDate(pending.last_import.imported_at)}</>
-                  )}
-                </span>
-              </label>
-
-              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                <input
-                  type="radio"
-                  name="sign-in-link-scope"
-                  value="everyone"
-                  checked={linkScope === 'everyone'}
-                  onChange={() => setLinkScope('everyone')}
-                />
-                <span>
-                  <strong>Every account that cannot sign in yet ({pendingEveryone})</strong>
-                  {accountsByRole && <>: {accountsByRole}</>}
-                </span>
-              </label>
-
-              <div className="modal-actions">
-                <CustomButton text="Cancel" variant="secondary" onClick={() => setLinksOpen(false)} />
-                <CustomButton
-                  text={sendingLinks ? 'Sending...' : 'Send links'}
-                  disabled={sendingLinks || (linkScope === 'last_import' ? !pendingLinks : !pendingEveryone)}
-                  onClick={sendSignInLinks}
-                />
-              </div>
-            </div>
-          </CustomModal>
         </>
       }
     />

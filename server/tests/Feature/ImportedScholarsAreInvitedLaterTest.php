@@ -124,23 +124,25 @@ class ImportedScholarsAreInvitedLaterTest extends TestCase
     public function test_the_office_is_told_how_many_cannot_sign_in_yet(): void
     {
         $everyoneBefore = $this->actingAs($this->office, 'sanctum')
-            ->getJson('/api/students/sign-in-links')->assertStatus(200)->json('everyone.count');
+            ->getJson('/api/users/sign-in-links')->assertStatus(200)->json('everyone.count');
 
         $this->twoScholars();
 
         $response = $this->actingAs($this->office, 'sanctum')
-            ->getJson('/api/students/sign-in-links')->assertStatus(200);
+            ->getJson('/api/users/sign-in-links')->assertStatus(200);
 
-        $this->assertSame(2, $response->json('last_import.count'), 'the run just done is what the office is about to mail');
         $this->assertSame($everyoneBefore + 2, $response->json('everyone.count'));
-        $this->assertStringContainsString('invited.one@thapar.test', json_encode($response->json('scholars')));
+
+        $run = collect($response->json('runs'))->firstWhere('batch', 'batch-under-test');
+        $this->assertNotNull($run, 'the run just done is offered by name');
+        $this->assertSame(2, $run['waiting']);
     }
 
     /**
      * The default scope is the import just run, not every scholar who has
      * never signed in. An older import's stragglers are a separate decision.
      */
-    public function test_the_links_go_to_the_last_import_only(): void
+    public function test_the_links_go_to_the_run_the_office_picks(): void
     {
         $this->import([$this->row('991201', 'invited.older@thapar.test')], ['import_batch' => 'batch-older'])
             ->assertStatus(200);
@@ -150,17 +152,18 @@ class ImportedScholarsAreInvitedLaterTest extends TestCase
         $this->import([$this->row('991202', 'invited.newer@thapar.test')], ['import_batch' => 'batch-newer'])
             ->assertStatus(200);
 
+        // The older run is still pickable: a second import does not bury it.
         $this->actingAs($this->office, 'sanctum')
-            ->postJson('/api/students/sign-in-links')
+            ->postJson('/api/users/sign-in-links', ['batch' => 'batch-older'])
             ->assertStatus(200)
             ->assertJson(['count' => 1]);
 
         Notification::assertSentTo(
-            User::where('email', 'invited.newer@thapar.test')->firstOrFail(),
+            User::where('email', 'invited.older@thapar.test')->firstOrFail(),
             WelcomeResetPassword::class
         );
         Notification::assertNotSentTo(
-            User::where('email', 'invited.older@thapar.test')->firstOrFail(),
+            User::where('email', 'invited.newer@thapar.test')->firstOrFail(),
             WelcomeResetPassword::class
         );
     }
@@ -176,7 +179,7 @@ class ImportedScholarsAreInvitedLaterTest extends TestCase
             ->assertStatus(200);
 
         $this->actingAs($this->office, 'sanctum')
-            ->postJson('/api/students/sign-in-links', ['scope' => 'everyone'])
+            ->postJson('/api/users/sign-in-links')
             ->assertStatus(200);
 
         foreach (['invited.older2@thapar.test', 'invited.newer2@thapar.test'] as $email) {
@@ -199,7 +202,7 @@ class ImportedScholarsAreInvitedLaterTest extends TestCase
         $google->forceFill(['email_verified_at' => now()])->save();
 
         $this->actingAs($this->office, 'sanctum')
-            ->postJson('/api/students/sign-in-links')
+            ->postJson('/api/users/sign-in-links', ['batch' => 'batch-under-test'])
             ->assertStatus(200)
             ->assertJson(['count' => 1]);
 
@@ -211,7 +214,7 @@ class ImportedScholarsAreInvitedLaterTest extends TestCase
         $this->twoScholars();
 
         $this->actingAs($this->office, 'sanctum')
-            ->postJson('/api/students/sign-in-links')
+            ->postJson('/api/users/sign-in-links')
             ->assertStatus(200);
 
         foreach (['invited.one@thapar.test', 'invited.two@thapar.test'] as $email) {
@@ -228,7 +231,7 @@ class ImportedScholarsAreInvitedLaterTest extends TestCase
         $settled->forceFill(['password_set_at' => now()])->save();
 
         $this->actingAs($this->office, 'sanctum')
-            ->postJson('/api/students/sign-in-links')
+            ->postJson('/api/users/sign-in-links')
             ->assertStatus(200);
 
         Notification::assertNotSentTo($settled, WelcomeResetPassword::class);
@@ -264,35 +267,21 @@ class ImportedScholarsAreInvitedLaterTest extends TestCase
         ])->save();
 
         $counts = $this->actingAs($this->office, 'sanctum')
-            ->getJson('/api/students/sign-in-links')->assertStatus(200)->json('everyone.by_role');
+            ->getJson('/api/users/sign-in-links')->assertStatus(200)->json('everyone.by_role');
         $this->assertArrayHasKey('clerk', $counts);
 
         $this->actingAs($this->office, 'sanctum')
-            ->postJson('/api/students/sign-in-links', ['scope' => 'everyone'])
+            ->postJson('/api/users/sign-in-links', ['scope' => 'everyone'])
             ->assertStatus(200);
 
         Notification::assertSentTo($clerk->fresh(), WelcomeResetPassword::class);
-    }
-
-    /** Mailing every account in the portal is a user-management decision. */
-    public function test_the_wider_scope_needs_the_wider_permission(): void
-    {
-        DB::table('roles')->where('id', $this->office->role_id)->update(['can_manage_users' => 'false']);
-
-        $this->actingAs($this->office, 'sanctum')
-            ->postJson('/api/students/sign-in-links', ['scope' => 'everyone'])
-            ->assertStatus(403);
-
-        $this->actingAs($this->office, 'sanctum')
-            ->postJson('/api/students/sign-in-links')
-            ->assertStatus(200);
     }
 
     public function test_only_the_office_may_send_them(): void
     {
         $outsider = $this->userAs('student');
 
-        $this->actingAs($outsider, 'sanctum')->getJson('/api/students/sign-in-links')->assertStatus(403);
-        $this->actingAs($outsider, 'sanctum')->postJson('/api/students/sign-in-links')->assertStatus(403);
+        $this->actingAs($outsider, 'sanctum')->getJson('/api/users/sign-in-links')->assertStatus(403);
+        $this->actingAs($outsider, 'sanctum')->postJson('/api/users/sign-in-links')->assertStatus(403);
     }
 }

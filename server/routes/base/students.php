@@ -19,10 +19,6 @@ Route::post('/add', [StudentController::class, 'add'])->middleware('auth:sanctum
 Route::post('/bulk-upload', [StudentController::class, 'bulkUpload'])->middleware('auth:sanctum');
 Route::post('/bulk-update', [StudentController::class, 'bulkUpdate'])->middleware('auth:sanctum');
 
-// Who cannot sign in yet, and mailing them the link when the office is ready.
-// A bulk import deliberately mails nobody at the time it runs.
-Route::get('/sign-in-links', [StudentController::class, 'pendingSignInLinks'])->middleware('auth:sanctum');
-Route::post('/sign-in-links', [StudentController::class, 'sendSignInLinks'])->middleware('auth:sanctum');
 Route::get('/filters', [StudentController::class, 'listFilters'])->middleware('auth:sanctum');
 
 Route::prefix('{id}')->group(function () {
