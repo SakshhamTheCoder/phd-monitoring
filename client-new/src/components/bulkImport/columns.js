@@ -16,10 +16,15 @@ const normalise = (header) => String(header ?? '')
 
 // Aliases are tried in the order given, so a row carrying two spellings of the
 // same column uses the one the caller named first.
+// A spreadsheet writes "nothing recorded" several ways, and a lookup formula
+// that found nothing leaves #N/A behind. None of them is a value to import.
+const EMPTY_MARKERS = ['na', 'n/a', '#n/a', 'nil', 'none', '-', '--', '---'];
+
 export const column = (row, ...aliases) => {
   const values = {};
   for (const key of Object.keys(row || {})) {
-    values[normalise(key)] = String(row[key] ?? '').trim();
+    const value = String(row[key] ?? '').trim();
+    values[normalise(key)] = EMPTY_MARKERS.includes(value.toLowerCase()) ? '' : value;
   }
 
   for (const alias of aliases) {

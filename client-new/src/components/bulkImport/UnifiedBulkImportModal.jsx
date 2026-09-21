@@ -3,6 +3,65 @@ import CustomModal from '../forms/modal/CustomModal';
 import CustomButton from '../forms/fields/CustomButton';
 import { toast } from 'react-toastify';
 
+/**
+ * A whole CSV file into rows of cells.
+ *
+ * Splitting on newlines first and parsing each line looks equivalent and is
+ * not: a quoted cell may hold a newline, and every one of the institute's
+ * sheets does somewhere. The faculty sheet has four, the students sheet two.
+ * Each tore one row into two, and because the halves carried no email the
+ * server refused the whole batch of fifty they sat in, losing 150 rows of a
+ * 568 row file with nothing on screen to say so.
+ */
+export const parseCsv = (text) => {
+  const rows = [];
+  let row = [];
+  let cell = '';
+  let quoted = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const character = text[i];
+
+    if (quoted) {
+      if (character === '"') {
+        if (text[i + 1] === '"') {
+          cell += '"';
+          i++;
+        } else {
+          quoted = false;
+        }
+      } else {
+        cell += character;
+      }
+      continue;
+    }
+
+    if (character === '"') {
+      quoted = true;
+    } else if (character === ',') {
+      row.push(cell);
+      cell = '';
+    } else if (character === '\n' || character === '\r') {
+      if (character === '\r' && text[i + 1] === '\n') i++;
+      row.push(cell);
+      rows.push(row);
+      row = [];
+      cell = '';
+    } else {
+      cell += character;
+    }
+  }
+
+  if (cell !== '' || row.length) {
+    row.push(cell);
+    rows.push(row);
+  }
+
+  return rows
+    .map((cells) => cells.map((value) => value.trim()))
+    .filter((cells) => cells.some((value) => value !== ''));
+};
+
 export const parseCsvRow = (row) => {
   const out = [];
   let cur = '';
@@ -50,6 +109,10 @@ const UnifiedBulkImportModal = ({
   onImport,
   submitting = false,
   uploadProgress = null,
+  // A page with a decision of its own to offer, such as whether the import
+  // should mail the people it creates. Rendered beside the actions rather than
+  // grown into another prop per question.
+  extraControls = null,
 }) => {
   const [csvFile, setCsvFile] = useState(null);
   const [csvPreview, setCsvPreview] = useState(null);
@@ -90,8 +153,7 @@ const UnifiedBulkImportModal = ({
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
-        const text = event.target.result;
-        const rows = text.split(/\r?\n/).filter((r) => r.trim());
+        const rows = parseCsv(event.target.result);
 
         if (rows.length === 0) {
           toast.error('CSV file is empty');
@@ -99,9 +161,8 @@ const UnifiedBulkImportModal = ({
           return;
         }
 
-        const headers = parseCsvRow(rows[0]);
-        const data = rows.slice(1).map((row, index) => {
-          const values = parseCsvRow(row);
+        const headers = rows[0];
+        const data = rows.slice(1).map((values, index) => {
           const rowData = { _rowNumber: index + 2 };
           headers.forEach((header, i) => {
             rowData[header] = values[i] || '';
@@ -213,6 +274,8 @@ const UnifiedBulkImportModal = ({
             </div>
           </div>
         )}
+
+        {extraControls}
 
         <div className="modal-actions">
           <CustomButton text="Cancel" variant="secondary" onClick={handleClose} />
