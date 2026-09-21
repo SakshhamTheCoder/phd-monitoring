@@ -131,6 +131,50 @@ class DepartmentOfficerImportTest extends TestCase
         $this->assertSame($before, $department->fresh()->adordc_id);
     }
 
+    /**
+     * The office alias is kept as an address rather than thrown away.
+     *
+     * The officers sheet names the ADORDC by one of the DoRSP aliases, which
+     * holds no seat because it is nobody's account. The person goes in by
+     * their own address and the alias is stored beside it, the same pair the
+     * HoD columns have always had.
+     */
+    public function test_the_office_addresses_are_stored_on_the_department(): void
+    {
+        $this->admin();
+
+        $department = Department::firstOrFail();
+
+        $this->import([
+            'department_code' => $department->code,
+            'hod_office_email' => 'hcsed@thapar.edu',
+            'adordc_office_email' => 'adorsp4@thapar.edu',
+        ])->assertStatus(200)->assertJsonPath('data.errors', []);
+
+        $department->refresh();
+        $this->assertSame('hcsed@thapar.edu', $department->hod_email);
+        $this->assertSame('adorsp4@thapar.edu', $department->adordc_email);
+    }
+
+    /** Not every department has an office alias, and a blank cell clears nothing. */
+    public function test_a_blank_office_address_leaves_the_stored_one_alone(): void
+    {
+        $this->admin();
+
+        $department = Department::firstOrFail();
+        $department->forceFill(['hod_email' => 'hmed@thapar.edu', 'adordc_email' => 'adorsp2@thapar.edu'])->save();
+
+        $this->import([
+            'department_code' => $department->code,
+            'hod_office_email' => '',
+            'adordc_office_email' => '',
+        ])->assertStatus(200);
+
+        $department->refresh();
+        $this->assertSame('hmed@thapar.edu', $department->hod_email);
+        $this->assertSame('adorsp2@thapar.edu', $department->adordc_email);
+    }
+
     public function test_the_sheet_replaces_the_coordinator_list(): void
     {
         $this->admin();
