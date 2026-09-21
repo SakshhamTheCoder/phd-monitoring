@@ -57,10 +57,10 @@ class SynopsisSubmission extends Model
             'round' => (int) ($this->round ?: 1),
             'viva_minutes_pdf' => $this->viva_minutes_pdf,
             'checklist_option_id' => $this->checklist_option_id,
-            // Every declaration this scholar's admission year offers, so the
-            // panel needs no second call, plus the one they chose, read from the
-            // row rather than the list so a retired option still reads back.
-            'checklist_options' => SynopsisChecklistOption::forYear($this->student->admissionYear())
+            // Every category this scholar qualifies for, so the panel needs no
+            // second call, plus the one declared, read from the row rather than
+            // the list so a retired option still reads back.
+            'checklist_options' => SynopsisChecklistOption::forStudent($this->student)
                 ->map(fn ($option) => ['id' => $option->id, 'label' => $option->label])
                 ->values(),
             'checklist_choice' => $this->checklistOption?->label,

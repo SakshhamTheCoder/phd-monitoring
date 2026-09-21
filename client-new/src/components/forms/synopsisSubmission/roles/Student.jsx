@@ -8,7 +8,6 @@ import TableComponent from "../../table/TableComponent";
 import CustomButton from "../../fields/CustomButton";
 import DropdownField from "../../fields/DropdownField";
 import FileUploadField from "../../fields/FileUploadField";
-import RadioButtonGroup from "../../fields/RadioButtonGroup";
 import { useLocation } from "react-router-dom";
 import { submitForm } from "../../../../api/form";
 import { useLoading } from "../../../../context/LoadingContext";
@@ -55,7 +54,6 @@ const Student = ({ formData }) => {
         (formData.revised_objectives?.length || 0) > 0 && formData?.locks?.student
           ? true
           : false,
-      checklist_option_id: formData.checklist_option_id ?? null,
     });
     setLock(formData?.locks?.student);
     if (formData.publication_count > 0 || formData.patents.length > 0) {
@@ -367,30 +365,17 @@ const Student = ({ formData }) => {
             />
           </>
 
-          {/* The declarations on offer depend on the year the scholar
-              registered, because the regulations changed. A year with none
-              configured asks for nothing, and the server agrees. */}
-          {(formData.checklist_options?.length || 0) > 0 && (
+          {/* The category is the supervisor's declaration, not the scholar's.
+              Shown here as a record once it has been made. */}
+          {formData.checklist_choice && (
             <GridContainer
-              label={<p>Declaration</p>}
+              label={<p>Publication category</p>}
               elements={[
-                lock ? (
-                  <InputField
-                    label="Declared"
-                    initialValue={formData.checklist_choice || "Not declared"}
-                    isLocked={true}
-                  />
-                ) : (
-                  <RadioButtonGroup
-                    name="synopsis-checklist"
-                    titles={formData.checklist_options.map((option) => option.label)}
-                    values={formData.checklist_options.map((option) => option.id)}
-                    defaultValue={body.checklist_option_id}
-                    onSelect={(id) => {
-                      setBody((prev) => ({ ...prev, checklist_option_id: id }));
-                    }}
-                  />
-                ),
+                <InputField
+                  label="Declared by the supervisor"
+                  initialValue={formData.checklist_choice}
+                  isLocked={true}
+                />,
               ]}
               space={2}
             />
@@ -437,13 +422,6 @@ const Student = ({ formData }) => {
               <CustomButton
                 text="Submit"
                 onClick={() => {
-                  if (
-                    (formData.checklist_options?.length || 0) > 0 &&
-                    !body.checklist_option_id
-                  ) {
-                    toast.error("Choose one of the declarations first.");
-                    return;
-                  }
                   submitForm(
                     body,
                     location,
