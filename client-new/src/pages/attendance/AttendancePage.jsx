@@ -18,7 +18,7 @@ const EDIT_WINDOW = 7;
 
 // Named as this page has always called them; the implementations moved to
 // timeParse so the profile's attendance range uses the same two.
-const todayString = () => toDateValue(new Date());
+const todayString = () => formatDate(new Date());
 
 const AttendancePage = () => {
   const [activeTab, setActiveTab] = useState('mark');
