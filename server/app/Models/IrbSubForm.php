@@ -36,6 +36,7 @@ class IrbSubForm extends Model
         'stage' => 'string',
         'steps' => 'array',
         'history' => 'array', // Ensure history is treated as an array
+        'carried_over_at' => 'datetime',
     ];
 
     public function __construct(array $attributes = [])
@@ -46,6 +47,8 @@ class IrbSubForm extends Model
 
             'revised_phd_title',
             'revised_irb_pdf',
+            'date_of_irb',
+            'carried_over_at',
         ], $commonFieldKeys);
 
         parent::__construct($attributes);

@@ -28,6 +28,8 @@ class Student extends Model
         'tentative_desc',
         'fathers_name',
         'address',
+        'import_batch',
+        'imported_at',
         'current_status',
         'cgpa',
         'is_jrf',
@@ -38,6 +40,7 @@ class Student extends Model
     ];
 
     protected $casts = [
+        'imported_at' => 'datetime',
         'date_of_registration' => 'date',
         'date_of_irb' => 'date',
         'date_of_synopsis' => 'date',

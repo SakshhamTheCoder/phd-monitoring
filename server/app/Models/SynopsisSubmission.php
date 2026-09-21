@@ -16,6 +16,7 @@ class SynopsisSubmission extends Model
     protected $casts = [
         'history' => 'array',
         'steps' => 'array',
+        'carried_over_at' => 'datetime',
         // 1 = the written submission, 2 = the confirmation after the viva.
         'round' => 'integer',
     ];
@@ -28,6 +29,7 @@ class SynopsisSubmission extends Model
             'revised_title',
             'synopsis_pdf',
             'total_progress',
+            'carried_over_at',
             'round',
             'viva_minutes_pdf',
             'checklist_option_id',

@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\Mail;
 
 use function Laravel\Prompts\form;
 
+use App\Support\FormLadder;
+
 class IrbSubController extends Controller
 {
     use GeneralFormHandler;
@@ -272,47 +274,7 @@ class IrbSubController extends Controller
             $student->save();
                $formInstance->completion='complete';
                $formInstance->status='approved';
-               $forms = [
-                [
-                    'form_type' => 'synopsis-submission',
-                    'form_name' => 'Synopsis Submission',
-                    'max_count' => 1,
-                    'stage' => 'student',
-                ],
-                [
-                    'form_type' => 'thesis-extension',
-                    'form_name' => 'Thesis Extension',
-                    'max_count' => 2,
-                    'stage' => 'student',
-                ],
-                [
-                    'form_type' => 'thesis-submission',
-                    'form_name' => 'Thesis Submission',
-                    'max_count' => 1,
-                    'stage' => 'student',
-                ]
-            ];
-            // $student = $formInstance->student;
-            foreach ($forms as $form) {
-                $existingForm = Forms::where('student_id', $student->roll_no)
-                    ->where('form_type', $form['form_type'])
-                    ->first();
-
-                if (!$existingForm) {
-                    $formData = app(\App\Http\Controllers\AdminFormController::class)->getFormCreationData(
-                        $form['form_type'],
-                        $student->roll_no,
-                        $student->department_id
-                    );
-                    
-                    if ($formData) {
-                        Forms::create($formData);
-                    }
-                }
-                
-            
-            }
-
+               FormLadder::open($student, 'irb-submission');
         });
     }
 
