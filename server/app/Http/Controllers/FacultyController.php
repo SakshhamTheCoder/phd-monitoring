@@ -420,6 +420,12 @@ class FacultyController extends Controller
         }
 
         $request->validate([
+            // A sheet of 568 staff is a migration of records, not an
+            // onboarding. Mailing every new one a link the moment the file is
+            // uploaded sends links that expire in 24 hours, days before
+            // anybody has been told the portal exists. Send sign-in links on
+            // the scholars page reaches them when the office means it.
+            'send_invites' => 'nullable|boolean',
             'batch_data' => 'required|array',
             'batch_data.*.full_name' => 'nullable|string',
             'batch_data.*.first_name' => 'nullable|string',
@@ -459,7 +465,13 @@ class FacultyController extends Controller
                 // imported here is internal.
                 $type = 'internal';
                 $email = trim((string)($data['email'] ?? ''));
+                // Several sheets leave the phone as #N/A or blank. users.phone
+                // is unique, so storing '' made the first such row take the
+                // empty string and every row after it fail on a duplicate key.
                 $phone = trim((string)($data['phone'] ?? ''));
+                if ($phone === '' || strtoupper($phone) === '#N/A' || strtoupper($phone) === 'NA') {
+                    $phone = null;
+                }
                 $designation = trim((string)($data['designation'] ?? ''));
                 $facultyCode = isset($data['faculty_code']) && $data['faculty_code'] !== '' ? trim((string)$data['faculty_code']) : null;
                 $departmentCode = isset($data['department_code']) && $data['department_code'] !== '' ? trim((string)$data['department_code']) : null;
@@ -528,16 +540,32 @@ class FacultyController extends Controller
                 $areaId = null;
                 if ($broadArea !== '') {
                     $areaDepartment = $department ?? $existingFacultyCheck?->department;
-                    $areaId = $areaDepartment
-                        ? \App\Models\AreaOfSpecialization::where('department_id', $areaDepartment->id)
-                            ->whereRaw('LOWER(TRIM(name)) = ?', [strtolower(trim($broadArea))])
-                            ->value('id')
-                        : null;
+                    $areaId = $areaDepartment ? $this->areaFor($areaDepartment->id, $broadArea) : null;
 
+                    // A wording the department's matrix does not carry is a
+                    // question for the two sheets to settle, and losing the
+                    // person over it is the wrong answer: they still work here.
+                    // So the row lands without an area and says so.
                     if (!$areaId) {
                         $label = $areaDepartment->code ?? 'that department';
-                        $errors[] = "Row " . $rowNumber . ": '{$broadArea}' is not a research area of {$label}. "
-                            . "Import the research area matrix first, or correct the spelling.";
+                        $errors[] = "Row " . $rowNumber . ": '{$broadArea}' is not a research area of {$label}, "
+                            . "imported without one. Add it to the research area matrix or correct the spelling.";
+                    }
+                }
+
+                // Two people cannot share an employee code. The sheet carries
+                // a second numbering scheme for some staff, and two rows of it
+                // repeat a code outright, which used to reach the database and
+                // come back as a duplicate key nobody could read.
+                if ($facultyCode) {
+                    $heldBy = Faculty::with('user')
+                        ->where('faculty_code', $facultyCode)
+                        ->whereHas('user', fn ($query) => $query->whereRaw('LOWER(email) != ?', [strtolower($email)]))
+                        ->first();
+
+                    if ($heldBy) {
+                        $errors[] = "Row " . $rowNumber . ": employee code {$facultyCode} already belongs to "
+                            . optional($heldBy->user)->name() . " (" . optional($heldBy->user)->email . ")";
                         $errorCount++; continue;
                     }
                 }
@@ -556,12 +584,19 @@ class FacultyController extends Controller
                             $existingUser->first_name = $name['first'];
                             $existingUser->last_name = $name['last'];
                         }
-                        if ($phone !== '') $existingUser->phone = $phone;
+                        if ($phone !== null) $existingUser->phone = $phone;
                         $existingUser->save();
 
                         // faculty_code is an app-wide join key. An external
                         // faculty's code is auto-generated (777xxxxxx); never
                         // let a CSV row rewrite it.
+                        // The sheet carries a second numbering scheme for some
+                        // staff, so this is also a renumbering. The code is a
+                        // join key: committees, supervisions and coordinator
+                        // seats all point at it, and the database refuses to
+                        // move one that is in use. Keeping the portal's number
+                        // is the harmless half of that, said out loud.
+                        $previousCode = $existingFaculty->faculty_code;
                         if ($facultyCode && $existingFaculty->type === 'internal') {
                             $existingFaculty->faculty_code = $facultyCode;
                         }
@@ -574,7 +609,18 @@ class FacultyController extends Controller
                         }
                         if ($areaId) $existingFaculty->area_of_specialization_id = $areaId;
                         if ($supervisedOutside !== '') $existingFaculty->supervised_outside = (int) $supervisedOutside;
-                        $existingFaculty->save();
+                        try {
+                            $existingFaculty->save();
+                        } catch (\Illuminate\Database\QueryException $e) {
+                            if (!str_contains($e->getMessage(), 'foreign key constraint')) {
+                                throw $e;
+                            }
+
+                            $existingFaculty->faculty_code = $previousCode;
+                            $existingFaculty->save();
+                            $errors[] = "Row " . $rowNumber . ": kept employee code {$previousCode} rather than "
+                                . "{$facultyCode}, because committees or supervisions already point at it";
+                        }
 
                         // The portal counts scholars it knows about, so the
                         // sheet's own figure is a cross check rather than
@@ -621,7 +667,9 @@ class FacultyController extends Controller
                         'default_role_id' => $role_id,
                     ]);
 
-                    $newUser->inviteToSetPassword();
+                    if ($request->boolean('send_invites')) {
+                        $newUser->inviteToSetPassword();
+                    }
 
                     Faculty::create([
                         'user_id' => $newUser->id,
@@ -674,4 +722,59 @@ class FacultyController extends Controller
         return response()->json(['data' => $result], 200);
     }
 
+
+    /**
+     * The research area a faculty sheet's broad area column means.
+     *
+     * Two sheets describe the same thing differently. The area matrix holds one
+     * cell per department, and for several departments that cell is itself a
+     * list: ECED's "VLSI Design, Low power system design and test, VLSI
+     * Interconnects..." is stored as one area. The faculty sheet names the
+     * crisp thing a person does, "VLSI Design", and lists several of them per
+     * person. Matching the two strings whole meant almost every row of the
+     * faculty sheet was refused.
+     *
+     * So both sides are read as lists, and a person is filed under the first
+     * area of their department that names something they work on. Their full
+     * cell is kept in their expertise either way, so nothing is lost.
+     *
+     * Comparison ignores case, punctuation and "&" against "and", because
+     * those differ between the two sheets on the same area.
+     */
+    private function areaFor(int $departmentId, string $broadArea): ?int
+    {
+        $normalise = fn (string $value) => trim(preg_replace(
+            '/\s+/',
+            ' ',
+            preg_replace('/[^a-z0-9 ]/', ' ', str_replace('&', ' and ', strtolower($value)))
+        ));
+
+        $wanted = [$normalise($broadArea)];
+        foreach (preg_split('/[;,]/', $broadArea) as $part) {
+            $part = $normalise($part);
+            if ($part !== '') {
+                $wanted[] = $part;
+            }
+        }
+
+        $areas = \App\Models\AreaOfSpecialization::where('department_id', $departmentId)->get(['id', 'name']);
+
+        foreach ($wanted as $candidate) {
+            foreach ($areas as $area) {
+                $names = [$normalise($area->name)];
+                foreach (preg_split('/[;,]/', $area->name) as $part) {
+                    $part = $normalise($part);
+                    if ($part !== '') {
+                        $names[] = $part;
+                    }
+                }
+
+                if (in_array($candidate, $names, true)) {
+                    return $area->id;
+                }
+            }
+        }
+
+        return null;
+    }
 }

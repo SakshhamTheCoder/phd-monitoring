@@ -11,6 +11,7 @@ use App\Models\Role;
 use App\Models\Student;
 use App\Models\StudentCourse;
 use App\Models\SynopsisChecklistOption;
+use App\Models\SynopsisChecklistRule;
 use App\Models\SynopsisSubmission;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -315,17 +316,173 @@ class SynopsisVivaRoundTest extends TestCase
 
     // --------------------------------------------------------- the checklist
 
-    public function test_the_checklist_offers_the_options_for_the_scholars_admission_year(): void
+    /**
+     * The scholar is in the test department and registered on 2023-08-01, so a
+     * departmentless clause and a date clause covering 2023 both apply, and the
+     * two lists merge in rule order.
+     */
+    public function test_the_checklist_merges_every_condition_the_scholar_meets(): void
     {
-        SynopsisChecklistOption::create(['admission_year' => 2023, 'label' => 'Two SCI papers', 'sort_order' => 1]);
-        SynopsisChecklistOption::create(['admission_year' => 2023, 'label' => 'One SCI paper and one patent', 'sort_order' => 2]);
-        SynopsisChecklistOption::create(['admission_year' => 2023, 'label' => 'Withdrawn wording', 'active' => false]);
-        SynopsisChecklistOption::create(['admission_year' => 2022, 'label' => 'An older rule', 'sort_order' => 1]);
+        $general = $this->ruleFor('All other departments', ['sort_order' => 1]);
+        $dated = $this->ruleFor('Admitted July 2018 to July 2025', [
+            'sort_order' => 2,
+            'admitted_from' => '2018-07-01',
+            'admitted_to' => '2025-07-31',
+        ]);
+        $older = $this->ruleFor('Admitted before July 2018', [
+            'sort_order' => 3,
+            'admitted_to' => '2018-06-30',
+        ]);
 
-        // The scholar registered in 2023.
-        $labels = SynopsisChecklistOption::forYear($this->scholar->admissionYear())->pluck('label')->all();
+        $this->optionOn($general, 'Two SCIE articles and one conference paper', 1);
+        $this->optionOn($general, 'Withdrawn wording', 2, false);
+        $this->optionOn($dated, 'Three SCI publications', 1);
+        $this->optionOn($older, 'Two SCI publications', 1);
 
-        $this->assertSame(['Two SCI papers', 'One SCI paper and one patent'], $labels);
+        $labels = SynopsisChecklistOption::forStudent($this->scholar)->pluck('label')->all();
+
+        $this->assertSame(
+            ['Two SCIE articles and one conference paper', 'Three SCI publications'],
+            $labels
+        );
+    }
+
+    /**
+     * A department with a complete set of its own answers on its own: the
+     * clauses everyone else reads, including the date ones, stay out.
+     */
+    public function test_an_exclusive_department_is_offered_nothing_else(): void
+    {
+        $general = $this->ruleFor('All other departments', ['sort_order' => 1]);
+        $dated = $this->ruleFor('Admitted July 2018 to July 2025', [
+            'sort_order' => 2,
+            'admitted_from' => '2018-07-01',
+            'admitted_to' => '2025-07-31',
+        ]);
+        $own = $this->ruleFor('LMTSM', [
+            'sort_order' => 3,
+            'department_ids' => [$this->department->id],
+            'exclusive' => true,
+        ]);
+
+        $this->optionOn($general, 'Two SCIE articles and one conference paper', 1);
+        $this->optionOn($dated, 'Three SCI publications', 1);
+        $this->optionOn($own, 'One paper in the ABDC list, category B/A/A*/FT-50', 1);
+        $this->optionOn($own, 'Two papers in a Scopus journal in Q1/Q2', 2);
+
+        $labels = SynopsisChecklistOption::forStudent($this->scholar)->pluck('label')->all();
+
+        $this->assertSame(
+            ['One paper in the ABDC list, category B/A/A*/FT-50', 'Two papers in a Scopus journal in Q1/Q2'],
+            $labels
+        );
+    }
+
+    /**
+     * A department whose own rules changed on a date is two conditions, each
+     * with its own window. The windows are what keeps them apart: two
+     * conditions that stand alone and both match would merge with each other.
+     */
+    public function test_one_department_can_hold_a_condition_per_admission_window(): void
+    {
+        $older = $this->ruleFor('Humanities, admitted before July 2018', [
+            'sort_order' => 1,
+            'department_ids' => [$this->department->id],
+            'admitted_to' => '2018-06-30',
+            'exclusive' => true,
+        ]);
+        $current = $this->ruleFor('Humanities, admitted from July 2018', [
+            'sort_order' => 2,
+            'department_ids' => [$this->department->id],
+            'admitted_from' => '2018-07-01',
+            'exclusive' => true,
+        ]);
+
+        $this->optionOn($older, 'One paper in the ABDC list, category A', 1);
+        $this->optionOn($current, 'One paper in the ABDC list, category B/A/A*', 1);
+
+        // The scholar registered on 2023-08-01.
+        $this->assertSame(
+            ['One paper in the ABDC list, category B/A/A*'],
+            SynopsisChecklistOption::forStudent($this->scholar)->pluck('label')->all()
+        );
+
+        $this->scholar->forceFill(['date_of_registration' => '2016-08-01'])->save();
+
+        $this->assertSame(
+            ['One paper in the ABDC list, category A'],
+            SynopsisChecklistOption::forStudent($this->scholar->fresh())->pluck('label')->all()
+        );
+    }
+
+    /** A condition for other departments only does not reach this scholar. */
+    public function test_a_condition_for_other_departments_is_not_offered(): void
+    {
+        $elsewhere = Department::firstOrCreate(['code' => 'SYNX'], ['name' => 'Another Department']);
+        $rule = $this->ruleFor('Humanities', ['department_ids' => [$elsewhere->id]]);
+        $this->optionOn($rule, 'One paper in the ABDC list', 1);
+
+        $this->assertTrue(SynopsisChecklistOption::forStudent($this->scholar)->isEmpty());
+    }
+
+    /** The category is the supervisor's declaration, and round one will not move without it. */
+    public function test_the_supervisor_declares_the_category_on_the_written_round(): void
+    {
+        $rule = $this->ruleFor('All other departments');
+        $this->optionOn($rule, 'Two SCIE articles and one conference paper', 1);
+        $chosen = $this->optionOn($rule, 'Three SCI publications', 2);
+
+        $form = $this->formAt('supervisor');
+
+        $this->submit($this->supervisorUser, $form, [
+            'approval' => true,
+            'comments' => 'Fine',
+            'current_progress' => 20,
+        ])->assertStatus(422);
+        $this->assertSame('supervisor', $form->fresh()->stage, 'an undeclared category must not move the form');
+
+        $this->submit($this->supervisorUser, $form, [
+            'approval' => true,
+            'comments' => 'Fine',
+            'current_progress' => 20,
+            'checklist_option_id' => $chosen->id,
+        ])->assertStatus(200);
+
+        $form = $form->fresh();
+        $this->assertSame('doctoral', $form->stage);
+        $this->assertSame($chosen->id, (int) $form->checklist_option_id);
+    }
+
+    /** Sending the form back is a request for a correction, not a declaration. */
+    public function test_sending_the_synopsis_back_needs_no_category(): void
+    {
+        $rule = $this->ruleFor('All other departments');
+        $this->optionOn($rule, 'Three SCI publications', 1);
+
+        $form = $this->formAt('supervisor');
+
+        $this->submit($this->supervisorUser, $form, [
+            'approval' => false,
+            'comments' => 'Rework the objectives',
+            'current_progress' => 20,
+        ])->assertStatus(200);
+
+        $this->assertSame('student', $form->fresh()->stage);
+    }
+
+    private function ruleFor(string $name, array $attributes = []): SynopsisChecklistRule
+    {
+        return SynopsisChecklistRule::create(array_merge(['name' => $name], $attributes));
+    }
+
+    private function optionOn(SynopsisChecklistRule $rule, string $label, int $order, bool $active = true): SynopsisChecklistOption
+    {
+        return SynopsisChecklistOption::create([
+            'rule_id' => $rule->id,
+            'label' => $label,
+            'sort_order' => $order,
+            'active' => $active,
+        ]);
     }
 
     private function giveCredits(float $credits): void

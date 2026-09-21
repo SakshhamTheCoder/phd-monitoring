@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useId } from 'react';
-import { formatDate } from '../../../utils/timeParse';
+import { formatDate, toDateValue } from '../../../utils/timeParse';
 import "./Fields.css";
 
 // `min` and `max` are the input's own, for a pair of dates that bound each
@@ -11,12 +11,16 @@ const DateField = ({ label, initialValue, isLocked, onChange, hint = null, showL
     const [value, updateValue] = useState('');
     const fieldId = useId();
 
-    // Format the initial value to "YYYY-MM-DD" if it’s in ISO format
+    // Format the initial value to "YYYY-MM-DD" if it’s in ISO format.
+    //
+    // Through toDateValue, because toISOString() reads local midnight in UTC
+    // and hands back the day before for anyone east of Greenwich: a date of
+    // IRB of 15 April was drawn, locked, as 14 April.
     useEffect(() => {
         if (initialValue) {
             const parsed = new Date(initialValue);
             if (!Number.isNaN(parsed.getTime())) {
-                updateValue(parsed.toISOString().split('T')[0]);
+                updateValue(toDateValue(parsed));
             } else {
                 updateValue('');
             }

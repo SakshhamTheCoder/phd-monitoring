@@ -16,6 +16,7 @@ use App\Models\IrbExpertChairman;
 use App\Models\IrbNomineeCognate;
 use App\Models\IrbOutsideExpert;
 use App\Models\OutsideExpert;
+use App\Support\FormLadder;
 use App\Support\ScholarCommittee;
 use App\Models\Role;
 use App\Models\User;
@@ -525,7 +526,7 @@ class ConstituteOfIRBController extends Controller
                     $student->save();
                     $formInstance->save();
 
-                    ScholarCommittee::openTheFormsItUnlocks($student);
+                    FormLadder::open($student, 'irb-constitution');
             });
     }
 

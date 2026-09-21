@@ -46,10 +46,10 @@ const DepartmentPage = () => {
     }
   };
 
-  const OFFICER_HEADERS = 'Department Code,HOD Name,HOD Personal Email,HOD Office Email,ADORDC Name,ADORDC Email,PhD Coordinator 1 Name,PhD Coordinator 1 Email,PhD Coordinator 2 Name,PhD Coordinator 2 Email,Clerk Name,Clerk Email,Clerk Phone';
+  const OFFICER_HEADERS = 'Department Code,HOD Name,HOD Personal Email,HOD Office Email,ADORDC Name,ADORDC Email,ADORDC Office Email,PhD Coordinator 1 Name,PhD Coordinator 1 Email,PhD Coordinator 2 Name,PhD Coordinator 2 Email,Clerk Name,Clerk Email,Clerk Phone';
 
   const officerSampleCsv = `${OFFICER_HEADERS}
-CSED,Hod One,hod.one@thapar.edu,hcsed@thapar.edu,Adordc One,adordc.one@thapar.edu,Coordinator One,coordinator.one@thapar.edu,Coordinator Two,coordinator.two@thapar.edu,Clerk One,clerk.one@thapar.edu,9800000031`;
+CSED,Hod One,hod.one@thapar.edu,hcsed@thapar.edu,Adordc One,adordc.one@thapar.edu,adorsp4@thapar.edu,Coordinator One,coordinator.one@thapar.edu,Coordinator Two,coordinator.two@thapar.edu,Clerk One,clerk.one@thapar.edu,9800000031`;
 
   // People are matched by their personal address, so an office address such as
   // adorsp3@thapar.edu is reported rather than guessed at.
@@ -60,7 +60,8 @@ CSED,Hod One,hod.one@thapar.edu,hcsed@thapar.edu,Adordc One,adordc.one@thapar.ed
       department_code: column(row, 'Department Code', 'department_code'),
       hod_email: column(row, 'HOD Personal Email', 'HOD Email', 'hod_email'),
       hod_office_email: column(row, 'HOD Office Email', 'hod_office_email'),
-      adordc_email: column(row, 'ADORDC Email', 'adordc_email'),
+      adordc_email: column(row, 'ADORDC Email', 'ADORDC Personal Email', 'adordc_email'),
+      adordc_office_email: column(row, 'ADORDC Office Email', 'adordc_office_email'),
       coordinator_1_email: column(row, 'PhD Coordinator 1 Email', 'coordinator_1_email'),
       coordinator_2_email: column(row, 'PhD Coordinator 2 Email', 'coordinator_2_email'),
       clerk_name: column(row, 'Clerk Name', 'clerk_name'),
@@ -162,6 +163,7 @@ CSED,Hod One,hod.one@thapar.edu,hcsed@thapar.edu,Adordc One,adordc.one@thapar.ed
             rules={[
               'Departments are never created or deleted. A renamed code renames the department in place.',
               'Officers are matched by their personal email. An office mailbox is reported and skipped.',
+              'The HOD and ADORDC office addresses are kept on the department, and a blank cell leaves the stored one alone.',
               'Both coordinator cells blank leaves the current coordinators alone.',
             ]}
             sampleFileName="department_officers_sample.csv"

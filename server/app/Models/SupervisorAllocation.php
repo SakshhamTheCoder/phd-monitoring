@@ -19,6 +19,7 @@ class SupervisorAllocation extends Model
             'steps' => 'array',
             'prefrences' => 'array',
             'supervisors' => 'array',
+            'carried_over_at' => 'datetime',
         ];
     
         public function __construct(array $attributes = [])
@@ -27,6 +28,7 @@ class SupervisorAllocation extends Model
             $this->fillable = array_merge([
                 'prefrences',
                 'supervisors',
+                'carried_over_at',
             ], $commonFieldKeys);
     
             parent::__construct($attributes);

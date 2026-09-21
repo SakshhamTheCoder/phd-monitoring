@@ -6,6 +6,7 @@ use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\GeneralFormList;
 use App\Http\Controllers\Traits\PagenationTrait;
 use App\Models\Forms;
+use App\Support\FormLadder;
 use App\Support\ScholarCommittee;
 use App\Models\OutsideExpert;
 use App\Models\ConstituteOfIRB;
@@ -235,12 +236,88 @@ class StudentController extends Controller {
 
 
     /**
-     * Record an IRB that was constituted before the portal, from the sheet.
+     * Every milestone the row records, turned into the form that stands for it.
+     *
+     * The portal opens a form off the last one finishing, never off a date
+     * column: the allocation being approved opens the IRB constitution, that
+     * opens the revised IRB, and that opens synopsis and thesis. An import that
+     * wrote only the dates left every imported scholar holding one open
+     * allocation form for supervisors they already had, and nothing else. A
+     * scholar admitted in 2019 with an IRB behind them could not file the next
+     * thing they actually needed, and one past their synopsis had no synopsis
+     * or thesis form at all.
+     *
+     * So each filled signal is recorded as the form it stands for, complete and
+     * locked, which opens the next rung through the ordinary rules.
+     *
+     * @param  array<string, mixed>  $row
+     * @return array<int, string>
+     */
+    private function backfillMilestones(Student $student, array $row, int $rowNumber): array
+    {
+        $errors = $this->syncSupervisionTeam($student, $row, $rowNumber);
+
+        // Supervisors on the scholar are the sheet saying the allocation
+        // happened, whether this row named them or an earlier import did.
+        $supervisors = \App\Models\Supervisor::where('student_id', $student->roll_no)
+            ->pluck('faculty_id')
+            ->map(fn ($code) => (int) $code)
+            ->all();
+
+        if ($supervisors) {
+            $this->carriedOverForm(
+                $student,
+                'supervisor-allocation',
+                \App\Models\SupervisorAllocation::class,
+                'These supervisors were allocated before the portal',
+                ['supervisors' => $supervisors]
+            );
+        }
+
+        $errors = array_merge($errors, $this->recordCarriedOverIrb($student, $row, $rowNumber));
+
+        // Synopsis and thesis are opened by the IRB submission finishing, which
+        // a date of IRB has just carried over. A sheet that gives a synopsis
+        // date without one is still saying the scholar has submitted, so the
+        // forms after it are opened rather than the row being argued with.
+        if (!$student->date_of_irb && ($student->date_of_synopsis || $student->date_of_thesis)) {
+            FormLadder::open($student, 'irb-submission');
+        }
+
+        if ($student->date_of_synopsis) {
+            $this->carriedOverForm(
+                $student,
+                'synopsis-submission',
+                \App\Models\SynopsisSubmission::class,
+                'This synopsis was submitted before the portal',
+                ['revised_title' => $student->phd_title]
+            );
+        }
+
+        if ($student->date_of_thesis) {
+            $this->carriedOverForm(
+                $student,
+                'thesis-submission',
+                \App\Models\ThesisSubmission::class,
+                'This thesis was submitted before the portal',
+                ['date_of_synopsis' => $student->date_of_synopsis?->toDateString()]
+            );
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Record an IRB that happened before the portal, from the sheet.
      *
      * The trigger is the scholar's **date of IRB**. That date is what says the
-     * IRB happened, and it is the column the office actually fills.
+     * IRB happened, and it is the column the office actually fills. It is also
+     * the date the portal's own IRB submission writes onto the scholar
+     * (IrbSubController::studentSubmit), which is why both forms are carried
+     * over from it: an IRB with a date behind it was constituted and submitted,
+     * not constituted and still pending.
      *
-     * What it creates is a constitution form marked as carried over.
+     * The constitution is the one that decides how the scholar reads elsewhere.
      * irbCompleted() and phdTitleLocked() read that form rather than the
      * committee, so without one the scholar counts as pre-IRB however complete
      * their record otherwise is: their title shows as tentative and stays
@@ -307,69 +384,101 @@ class StudentController extends Controller {
             ScholarCommittee::onTheIrbCommittee($student, $facultyCodes, $expert);
         }
 
-        if (!ConstituteOfIRB::where('student_id', $student->roll_no)->exists()) {
-            $this->carriedOverIrbForm($student, $expert);
-        }
+        $this->carriedOverForm(
+            $student,
+            'irb-constitution',
+            ConstituteOfIRB::class,
+            'This IRB was constituted before the portal',
+            ['phd_title' => $student->phd_title, 'outside_expert' => $expert?->id]
+        );
 
-        ScholarCommittee::openTheFormsItUnlocks($student);
+        // A date is the submission having happened, so the submission is
+        // recorded too, and with it the synopsis and thesis forms it opens.
+        if ($student->date_of_irb) {
+            $this->carriedOverForm(
+                $student,
+                'irb-submission',
+                \App\Models\IrbSubForm::class,
+                'This IRB was submitted before the portal',
+                [
+                    'date_of_irb' => $student->date_of_irb->toDateString(),
+                    'revised_phd_title' => $student->phd_title,
+                ]
+            );
+        }
 
         return $errors;
     }
 
     /**
-     * A constitution form standing for one that was filed elsewhere.
+     * A form standing for one that was filed elsewhere, before the portal.
      *
      * Created complete, which locks it through the ordinary rules rather than a
      * special case: `stage` is 'complete', so Recommendation locks every panel
      * because no panel's role matches it, and submitForm refuses a completed
-     * form before it looks at anything else.
+     * form before it looks at anything else. The chain drawn over it is the one
+     * AdminFormController already publishes for that form type, so there is no
+     * second copy of it here.
      *
      * The history says where it came from, so nothing in it reads as an
-     * approval somebody gave here.
+     * approval somebody gave here. Whatever the milestone unlocks is opened
+     * either way, including for a scholar who already had the form: the rung
+     * above it is what an earlier import was missing.
      */
-    private function carriedOverIrbForm(Student $student, ?OutsideExpert $expert): ConstituteOfIRB
-    {
-        $steps = ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc', 'complete'];
-        $last = array_search('complete', $steps, true);
+    private function carriedOverForm(
+        Student $student,
+        string $formType,
+        string $model,
+        string $what,
+        array $extra = []
+    ): void {
+        $meta = (new AdminFormController())->formMetadata[$formType] ?? null;
+        if (!$meta) {
+            return;
+        }
 
-        $form = ConstituteOfIRB::create([
-            'student_id' => $student->roll_no,
-            'status' => 'approved',
-            'completion' => 'complete',
-            'stage' => 'complete',
-            'steps' => $steps,
-            'current_step' => $last,
-            'maximum_step' => $last,
-            'phd_title' => $student->phd_title,
-            'outside_expert' => $expert?->id,
-            'carried_over_at' => now(),
-            'student_lock' => true,
-            'supervisor_lock' => true,
-            'phd_coordinator_lock' => true,
-            'hod_lock' => true,
-            'dra_lock' => true,
-            'dordc_lock' => true,
-        ]);
+        if (!$model::where('student_id', $student->roll_no)->exists()) {
+            $steps = $meta['steps'];
+            $last = array_search('complete', $steps, true);
 
-        $form->addHistoryEntry(
-            'Recorded from the students sheet. This IRB was constituted before the portal, '
-                . 'so no step here was answered.',
-            Auth::user()->name()
-        );
-
-        Forms::updateOrCreate(
-            ['form_type' => 'irb-constitution', 'student_id' => $student->roll_no],
-            [
-                'form_name' => 'IRB Constitution',
-                'department_id' => $student->department_id,
+            $form = $model::create(array_merge([
+                'student_id' => $student->roll_no,
+                'status' => 'approved',
+                'completion' => 'complete',
                 'stage' => 'complete',
-                'max_count' => 1,
-                'count' => 1,
                 'steps' => $steps,
-            ]
-        );
+                'current_step' => $last,
+                'maximum_step' => $last,
+                'carried_over_at' => now(),
+                'student_lock' => true,
+                'supervisor_lock' => true,
+                'phd_coordinator_lock' => true,
+                'hod_lock' => true,
+                'dra_lock' => true,
+                'dordc_lock' => true,
+                'director_lock' => true,
+                'doctoral_lock' => true,
+                'external_lock' => true,
+            ], array_filter($extra, fn ($value) => $value !== null)));
 
-        return $form;
+            $form->addHistoryEntry(
+                "Recorded from the students sheet. {$what}, so no step here was answered.",
+                Auth::user()->name()
+            );
+
+            Forms::updateOrCreate(
+                ['form_type' => $formType, 'student_id' => $student->roll_no],
+                [
+                    'form_name' => $meta['form_name'],
+                    'department_id' => $student->department_id,
+                    'stage' => 'complete',
+                    'max_count' => $meta['max_count'],
+                    'count' => 1,
+                ]
+            );
+        }
+
+        FormLadder::open($student, $formType);
     }
 
     /**
@@ -386,6 +495,126 @@ class StudentController extends Controller {
         return ctype_digit($identifier) ? Faculty::where('faculty_code', $identifier)->first() : null;
     }
 
+    /**
+     * Accounts nobody has claimed yet.
+     *
+     * An import creates accounts without mailing anybody, so these are the
+     * people who cannot sign in. Two marks, because there are two ways in:
+     * password_set_at stays null until somebody completes a reset, and
+     * email_verified_at is stamped the first time they sign in with Google,
+     * which is a way in that never sets a password. Reading only the password
+     * would mail a link to everybody who has been using their institute Google
+     * account since the day they arrived.
+     *
+     * Nothing is remembered separately, so nothing falls out of date.
+     *
+     * $batch narrows it to the scholars one import run brought in. Without it
+     * the answer is every account in the portal that cannot be signed into,
+     * which is the clerks a departments import created as much as the scholars.
+     */
+    private function whoCannotSignIn(?string $batch = null)
+    {
+        $users = \App\Models\User::whereNull('password_set_at')
+            ->whereNull('email_verified_at')
+            ->orderBy('id');
+
+        if ($batch !== null) {
+            $users->whereIn('id', Student::query()->select('user_id')->where('import_batch', $batch));
+        }
+
+        return $users;
+    }
+
+    /** The id of the most recent import run, or null if nothing was ever imported. */
+    private function lastImportBatch(): ?string
+    {
+        return Student::whereNotNull('import_batch')
+            ->orderByDesc('imported_at')
+            ->value('import_batch');
+    }
+
+    public function pendingSignInLinks()
+    {
+        if (!Auth::user()->may('can_manage_students')) {
+            return response()->json(['message' => 'You do not have permission to read this'], 403);
+        }
+
+        $batch = $this->lastImportBatch();
+        $lastImport = $batch === null ? null : $this->whoCannotSignIn($batch);
+
+        return response()->json([
+            'last_import' => [
+                'batch' => $batch,
+                'imported_at' => Student::where('import_batch', $batch)->value('imported_at'),
+                'count' => $lastImport ? $lastImport->count() : 0,
+            ],
+            'everyone' => [
+                'count' => $this->whoCannotSignIn()->count(),
+                // Named by role, because "everyone" covering the clerks a
+                // departments import created is the part worth seeing before
+                // pressing send.
+                'by_role' => $this->whoCannotSignIn()->with('role')->get()
+                    ->groupBy(fn ($user) => optional($user->role)->role ?: 'unknown')
+                    ->map->count(),
+            ],
+            'scholars' => ($lastImport ?: $this->whoCannotSignIn())
+                ->take(20)->get()->map(fn ($user) => [
+                    'name' => $user->name(),
+                    'email' => $user->email,
+                ]),
+        ]);
+    }
+
+    /**
+     * Mail them the link that lets them choose a password.
+     *
+     * Scope 'last_import' is the default and the usual case: the office
+     * imported the sheet, waited until those scholars had been told the portal
+     * exists, and is now letting that group in. 'everyone' reaches every
+     * account without a way in, whatever its role, which is what the clerks and
+     * officers a departments import created need; it asks for the wider
+     * permission to match.
+     *
+     * Queued through the job the office's bulk reset already uses, and each one
+     * is the welcome mail rather than a bare reset, because
+     * sendPasswordResetNotification reads the same null password_set_at.
+     */
+    public function sendSignInLinks(Request $request)
+    {
+        if (!Auth::user()->may('can_manage_students')) {
+            return response()->json(['message' => 'You do not have permission to send these'], 403);
+        }
+
+        $request->validate(['scope' => 'nullable|in:last_import,everyone']);
+
+        $everyone = $request->input('scope', 'last_import') === 'everyone';
+
+        if ($everyone && !Auth::user()->may('can_manage_users')) {
+            return response()->json([
+                'message' => 'Sending to every account needs the manage users permission. The last import is yours to send.',
+            ], 403);
+        }
+
+        $batch = $everyone ? null : $this->lastImportBatch();
+
+        if (!$everyone && $batch === null) {
+            return response()->json(['count' => 0, 'message' => 'No import has been run yet.']);
+        }
+
+        $emails = $this->whoCannotSignIn($batch)->pluck('email')->all();
+
+        if (!$emails) {
+            return response()->json(['count' => 0, 'message' => 'Everybody in that group can sign in already.']);
+        }
+
+        \App\Jobs\ProcessBulkForgotPassword::dispatch($emails);
+
+        return response()->json([
+            'count' => count($emails),
+            'message' => count($emails) . ' sign-in link(s) are being sent.',
+        ]);
+    }
+
     public function bulkUpload(Request $request)
     {
         $loggedInUser = Auth::user();
@@ -396,6 +625,16 @@ class StudentController extends Controller {
         }
 
         $request->validate([
+            // A spreadsheet of scholars is a migration of records, not an
+            // onboarding, so nobody is mailed unless this says so. The reset
+            // link lives 24 hours, and 799 of them sent before anyone has been
+            // told the portal exists are 799 dead links. Send them when you
+            // mean to, from Send sign-in links on the scholars page.
+            'send_invites' => 'nullable|boolean',
+            // One id for the whole run, chosen by the screen and repeated on
+            // every batch of fifty, so an office's import is one group however
+            // many requests it took. It is what Send sign-in links reads.
+            'import_batch' => 'nullable|string|max:64',
             'students' => 'required|array',
             'students.*.full_name' => 'nullable|string',
             'students.*.first_name' => 'nullable|string',
@@ -437,6 +676,9 @@ class StudentController extends Controller {
         $updateCount = 0;
         $failed = 0;
         $errors = [];
+
+        $batch = $request->input('import_batch') ?: (string) Str::uuid();
+        $importedAt = now();
 
         DB::beginTransaction();
         
@@ -491,16 +733,13 @@ class StudentController extends Controller {
                                 $existingStudent->$field = $studentData[$field];
                             }
                         }
+                        $existingStudent->import_batch = $batch;
+                        $existingStudent->imported_at = $importedAt;
                         $existingStudent->save();
 
                         $errors = array_merge(
                             $errors,
-                            $this->syncSupervisionTeam($existingStudent, $studentData, $index + 1)
-                        );
-
-                        $errors = array_merge(
-                            $errors,
-                            $this->recordCarriedOverIrb($existingStudent, $studentData, $index + 1)
+                            $this->backfillMilestones($existingStudent, $studentData, $index + 1)
                         );
 
                         $updateCount++;
@@ -550,30 +789,21 @@ class StudentController extends Controller {
                     $student->is_jrf = $studentData['is_jrf'] ?? null;
                     $student->is_net_gate_qualified = $studentData['is_net_gate_qualified'] ?? null;
                     $student->overall_progress = $studentData['overall_progress'] ?? 0.0;
+                    $student->import_batch = $batch;
+                    $student->imported_at = $importedAt;
                     $student->save();
 
-                    $user->inviteToSetPassword();
-
-                    // Create supervisor allocation form
-                    $adminFormController = new \App\Http\Controllers\AdminFormController();
-                    $formData = $adminFormController->getFormCreationData(
-                        'supervisor-allocation',
-                        $student->roll_no,
-                        $student->department_id
-                    );
-                    
-                    if ($formData) {
-                        Forms::create($formData);
+                    if ($request->boolean('send_invites')) {
+                        $user->inviteToSetPassword();
                     }
 
-                    $errors = array_merge(
-                        $errors,
-                        $this->syncSupervisionTeam($student, $studentData, $index + 1)
-                    );
+                    // The first form of the ladder. A row that names supervisors
+                    // has it carried over complete a moment later instead.
+                    FormLadder::openOne($student, 'supervisor-allocation');
 
                     $errors = array_merge(
                         $errors,
-                        $this->recordCarriedOverIrb($student, $studentData, $index + 1)
+                        $this->backfillMilestones($student, $studentData, $index + 1)
                     );
 
                     $createCount++;
@@ -594,6 +824,7 @@ class StudentController extends Controller {
                     'update_count' => $updateCount,
                     'error_count' => $failed,
                     'errors' => $errors,
+                    'import_batch' => $batch,
                 ]
             ], 200);
 

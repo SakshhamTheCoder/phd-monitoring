@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Layout from "../../components/dashboard/layout";
 import PageHeader from '../../components/pageHeader/PageHeader';
 import { useLocation, useNavigate } from "react-router-dom";
@@ -10,6 +10,7 @@ import CustomButton from "../../components/forms/fields/CustomButton";
 import SupervisorDoctoralManager from "../../components/supervisorDoctoralManager/SupervisorDoctoralManager";
 import UnifiedBulkImportModal from "../../components/bulkImport/UnifiedBulkImportModal";
 import { column } from "../../components/bulkImport/columns";
+import { formatDate } from "../../utils/timeParse";
 import { toast } from "react-toastify";
 import { baseURL } from "../../api/urls";
 import { customFetch } from "../../api/base";
@@ -28,6 +29,7 @@ const StudentsPage = () => {
   const role = localStorage.getItem("userRole");
   // A mentor reads the UG students on the projects they mentor, so the tab is
   // theirs too. Adding, importing and editing one stay the office's.
+  const managesStudents = can("can_manage_students");
   const managesUrf = can("can_manage_urf");
   const readsUrf = managesUrf || can("can_read_urf_mentees");
   const handleFilterChange = (newFilter) => {
@@ -76,15 +78,85 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
   const studentsSampleCsv = `${STUDENT_HEADERS}
 900011,Scholar One,scholar.one@demo.invalid,9800000011,CSED,Parent One,Female,Full Time,2024-08-01,,,,,8.4,10,,Yes,Yes,Patiala,Supervisor One,supervisor.one@thapar.edu,,,,,Committee One,committee.one@thapar.edu,,,,,cognate.one@thapar.edu,,,Expert One,expert.one@elsewhere.edu,Professor,Physics,Elsewhere Institute`;
 
-  // The sheet says "Full Time"; the portal stores "full-time".
-  const enrolmentType = (value) => value.trim().toLowerCase().replace(/\s+/g, '-');
+  // The office's sheet writes REG, PT and Executive; an older template writes
+  // Full Time and Part Time; the portal stores full-time, part-time and
+  // executive. The server rejects the whole batch over one unknown value, so a
+  // sheet of REG rows used to import nothing at all.
+  const ENROLMENT_TYPES = {
+    reg: 'full-time', regular: 'full-time', ft: 'full-time', fulltime: 'full-time',
+    pt: 'part-time', parttime: 'part-time',
+    exec: 'executive', executive: 'executive',
+  };
 
-  // A blank JRF cell means nobody has said yet, which is not the same as No.
-  const yesNo = (value) => (value === '' ? null : /^y/i.test(value));
+  const enrolmentType = (value) => {
+    const key = value.trim().toLowerCase().replace(/[^a-z]/g, '');
+    return ENROLMENT_TYPES[key] ?? value.trim().toLowerCase().replace(/\s+/g, '-');
+  };
+
+  // A blank cell means nobody has said yet, which is not the same as No.
+  //
+  // The sheet answers the NET/GATE column by naming the qualification rather
+  // than saying yes: GATE, NET(UGC/CSIR), DBT-BET, GPAT. Reading only a
+  // leading "y" filed every one of those as not qualified.
+  const yesNo = (value) => {
+    const answer = value.trim().toLowerCase();
+    if (answer === '') return null;
+    return !/^(no|n|none|not qualified)$/.test(answer);
+  };
+
+  // Scholars who still cannot sign in, because an import created their account
+  // without mailing anybody. Read off the records themselves: an account with
+  // no password set is one nobody has claimed yet, so there is no list to keep
+  // between the import and the day the office decides to tell people.
+  const [pending, setPending] = useState(null);
+  const [linksOpen, setLinksOpen] = useState(false);
+  const [linkScope, setLinkScope] = useState('last_import');
+  const [sendingLinks, setSendingLinks] = useState(false);
+  // Off by default: an import of the institute's sheet is a migration of
+  // records, and a reset link lives 24 hours, so mailing 800 of them days
+  // before anyone has been told the portal exists sends 800 dead links.
+  const [inviteOnImport, setInviteOnImport] = useState(false);
+
+  const readPending = () => {
+    if (!managesStudents) return;
+    customFetch(baseURL + '/students/sign-in-links', 'GET', {}, false)
+      .then((res) => setPending(res?.response ?? null))
+      .catch(() => {});
+  };
+
+  // Capabilities arrive from their own request, so the first render of a page
+  // reloaded on /students does not have them yet. Without the capability in
+  // the dependencies this asked once, too early, and the button sat empty.
+  useEffect(readPending, [refreshKey, managesStudents]);
+
+  const pendingLinks = pending?.last_import?.count ?? 0;
+  const pendingEveryone = pending?.everyone?.count ?? 0;
+  // "7 scholars, 14 clerks" rather than a bare 21, because the wider option
+  // reaches the accounts other imports created too.
+  const accountsByRole = Object.entries(pending?.everyone?.by_role ?? {})
+    .map(([role, count]) => `${count} ${role.replace(/_/g, ' ')}`)
+    .join(', ');
+
+  const sendSignInLinks = async () => {
+    setSendingLinks(true);
+    const res = await customFetch(baseURL + '/students/sign-in-links', 'POST', { scope: linkScope });
+    setSendingLinks(false);
+
+    if (res?.success) {
+      toast.success(res.response.message);
+      setLinksOpen(false);
+      readPending();
+    }
+  };
 
   const handleBulkImport = async (csvPreview, resetState) => {
     try {
       setSubmitting(true);
+
+      // One id for the run, repeated on every batch below, so Send sign-in
+      // links can mean "the scholars this import brought in" however many
+      // requests it took.
+      const importBatch = crypto.randomUUID();
 
       const BATCH_SIZE = 50;
       const totalRows = csvPreview.data.length;
@@ -143,12 +215,14 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
           irb_members: [1, 2, 3]
             .map((slot) => column(r, `IRB member${slot} email`, `IRB member ${slot} email`, `IRB member ${slot} mail`))
             .filter(Boolean),
+          // The sheet stops prefixing after the expert's name, so its last five
+          // columns read Mail, Designation, Department and Institute name.
           external_expert: {
             name: column(r, 'External expert for IRB Name'),
-            email: column(r, 'External expert for IRB Mail', 'External expert for IRB Email'),
-            designation: column(r, 'External expert for IRB Designation'),
-            department: column(r, 'External expert for IRB Department'),
-            institution: column(r, 'External expert for IRB Institute name'),
+            email: column(r, 'External expert for IRB Mail', 'External expert for IRB Email', 'Mail'),
+            designation: column(r, 'External expert for IRB Designation', 'Designation'),
+            department: column(r, 'External expert for IRB Department', 'Department'),
+            institution: column(r, 'External expert for IRB Institute name', 'Institute name'),
           },
         }));
 
@@ -157,7 +231,12 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
         let batchSuccess = false;
 
         while (retryCount <= maxRetries && !batchSuccess) {
-          const res = await customFetch(baseURL + '/students/bulk-upload', 'POST', { students }, true);
+          const res = await customFetch(
+            baseURL + '/students/bulk-upload',
+            'POST',
+            { students, import_batch: importBatch, send_invites: inviteOnImport },
+            true
+          );
           if (res.success) {
             const d = res.response.data || {};
             totalSuccess += d.success_count ?? res.response.successful ?? 0;
@@ -282,6 +361,12 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
               can("can_manage_students") ? (
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <CustomButton
+                    text={pendingLinks ? `Send sign-in links (${pendingLinks})` : 'Send sign-in links'}
+                    variant="secondary"
+                    disabled={!pendingLinks && !pendingEveryone}
+                    onClick={() => { setLinkScope(pendingLinks ? 'last_import' : 'everyone'); setLinksOpen(true); }}
+                  />
+                  <CustomButton
                     text="Bulk Import"
                     variant="secondary"
                     onClick={() => setIsBulkUploadModalOpen(true)}
@@ -395,17 +480,78 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
               'Matched by registration number, then email. Both must belong to the same scholar.',
               'A blank cell never clears a stored value. Clear one on the scholar\'s profile.',
               'Supervisors and committee: filled cells replace the whole list, all blank leaves it alone.',
-              'Enrollment Type is Full Time, Part Time or Executive.',
+              'Enrollment Type reads REG, PT and Exec as well as Full Time, Part Time and Executive.',
+              'Nobody is mailed. Use Send sign-in links when the scholars are ready to be told.',
               'IRB members and the external expert go on the IRB committee only. The doctoral committee is a separate body, filled from its own columns.',
-              'A Date of IRB is what marks the IRB as constituted: the scholar gets a constitution form recorded as carried over, so their title locks and the forms that follow it open.',
-              'That form is created complete and locked, and nothing in it is recorded as approved, because nobody approved it here.',
+              'Named supervisors, a Date of IRB, of Synopsis and of Thesis each record that milestone as done, which opens the forms that come after it.',
+              'Those forms are created complete and locked, and nothing in them is recorded as approved, because nobody approved them here.',
             ]}
             sampleFileName="students_bulk_import_sample.csv"
             sampleCsvContent={studentsSampleCsv}
             onImport={handleBulkImport}
             submitting={submitting}
             uploadProgress={uploadProgress}
+            extraControls={
+              <label className="csv-import-note" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input
+                  type="checkbox"
+                  checked={inviteOnImport}
+                  onChange={(e) => setInviteOnImport(e.target.checked)}
+                />
+                Email each new scholar their sign-in link now. The link lasts 24 hours, so
+                leave this off until they have been told the portal exists.
+              </label>
+            }
           />
+
+          <CustomModal isOpen={linksOpen} onClose={() => setLinksOpen(false)} title="Send sign-in links">
+            <div className="modal-form">
+              <p>
+                A link lets a scholar choose their password. Anybody who already signs in,
+                with a password or through Google, is left out.
+              </p>
+
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '12px' }}>
+                <input
+                  type="radio"
+                  name="sign-in-link-scope"
+                  value="last_import"
+                  checked={linkScope === 'last_import'}
+                  disabled={!pendingLinks}
+                  onChange={() => setLinkScope('last_import')}
+                />
+                <span>
+                  <strong>From the last import ({pendingLinks})</strong>
+                  {pending?.last_import?.imported_at && (
+                    <> imported {formatDate(pending.last_import.imported_at)}</>
+                  )}
+                </span>
+              </label>
+
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                <input
+                  type="radio"
+                  name="sign-in-link-scope"
+                  value="everyone"
+                  checked={linkScope === 'everyone'}
+                  onChange={() => setLinkScope('everyone')}
+                />
+                <span>
+                  <strong>Every account that cannot sign in yet ({pendingEveryone})</strong>
+                  {accountsByRole && <>: {accountsByRole}</>}
+                </span>
+              </label>
+
+              <div className="modal-actions">
+                <CustomButton text="Cancel" variant="secondary" onClick={() => setLinksOpen(false)} />
+                <CustomButton
+                  text={sendingLinks ? 'Sending...' : 'Send links'}
+                  disabled={sendingLinks || (linkScope === 'last_import' ? !pendingLinks : !pendingEveryone)}
+                  onClick={sendSignInLinks}
+                />
+              </div>
+            </div>
+          </CustomModal>
         </>
       }
     />

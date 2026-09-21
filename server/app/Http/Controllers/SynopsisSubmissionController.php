@@ -380,22 +380,28 @@ class SynopsisSubmissionController extends Controller
                 $formInstance->revised_title = $request->revised_title;
                 $link=$this->replaceUploadedFile($formInstance->synopsis_pdf, $request->file('synopsis_pdf'), 'synopsis', $user->student->roll_no);
                 $formInstance->synopsis_pdf = $link;
-                $this->recordChecklistChoice($formInstance, $request);
             }
         );
     }
 
     /**
-     * The declaration the scholar makes, chosen from the set for their admission
-     * year.
+     * The category the supervisor declares the scholar has met, chosen from the
+     * options their department and admission date qualify them for.
      *
-     * A year with no options configured asks for nothing. That is deliberate:
-     * the alternative is a scholar who cannot file a synopsis at all because an
-     * admin has not reached their year yet.
+     * A scholar no rule covers is asked for nothing. That is deliberate: the
+     * alternative is a synopsis that cannot be filed at all because an admin has
+     * not written the condition for that department or those years yet.
      */
     private function recordChecklistChoice($formInstance, $request): void
     {
-        $options = SynopsisChecklistOption::forYear($formInstance->student->admissionYear());
+        // Sending the form back is not a declaration: the supervisor is asking
+        // for a correction, not certifying a category, and the callback runs
+        // either way.
+        if (!$request->boolean('approval')) {
+            return;
+        }
+
+        $options = SynopsisChecklistOption::forStudent($formInstance->student);
         if ($options->isEmpty()) {
             return;
         }
@@ -403,7 +409,7 @@ class SynopsisSubmissionController extends Controller
         $request->validate(['checklist_option_id' => 'required|integer']);
 
         if (!$options->contains('id', (int) $request->checklist_option_id)) {
-            throw new \Exception('Choose one of the declarations listed for your admission year.');
+            throw new \Exception('Choose one of the categories listed for this scholar.');
         }
 
         $formInstance->checklist_option_id = (int) $request->checklist_option_id;
@@ -430,6 +436,7 @@ class SynopsisSubmissionController extends Controller
                 $formInstance->current_progress = $request->current_progress;
                 $oldProgress=$formInstance->student->overall_progress;
                 $formInstance->total_progress = $oldProgress + $request->current_progress;
+                $this->recordChecklistChoice($formInstance, $request);
             }
         );
     }

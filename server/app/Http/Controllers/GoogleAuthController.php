@@ -108,6 +108,10 @@ class GoogleAuthController extends Controller
      */
     private function recordGoogleProof(User $user, $emailVerified): void
     {
+        // Also what says the account has been claimed by somebody who will
+        // never choose a password here: Send sign-in links reads it, so a
+        // scholar who has been signing in with Google since the day they
+        // arrived is not mailed a password link they have never needed.
         if ($emailVerified && !$user->email_verified_at) {
             $user->forceFill(['email_verified_at' => now()])->save();
         }

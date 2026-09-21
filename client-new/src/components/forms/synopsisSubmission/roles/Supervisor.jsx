@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { useLoading } from "../../../../context/LoadingContext";
 import GridContainer from "../../fields/GridContainer";
 import InputField from "../../fields/InputField";
+import RadioButtonGroup from "../../fields/RadioButtonGroup";
 import TableComponent from "../../table/TableComponent";
 import Recommendation from "../../layouts/Recommendation";
 import CustomButton from "../../fields/CustomButton";
@@ -31,6 +32,7 @@ const Supervisor = ({ formData }) => {
       current_progress: formData.current_progress,
       progress: formData.progress,
       total_progress: formData.total_progress,
+      checklist_option_id: formData.checklist_option_id ?? null,
     });
     setTotalProgress(
       parseFloat(formData.current_progress) + parseFloat(formData.progress)
@@ -142,6 +144,34 @@ const Supervisor = ({ formData }) => {
               />
             </>
           )}
+          {/* The categories on offer are the ones this scholar's department and
+              admission date qualify them for. A scholar no condition covers is
+              asked for nothing, and the server agrees. */}
+          {scoring && !!body.approval && (formData.checklist_options?.length || 0) > 0 && (
+            <GridContainer
+              label={<p>Publication category met</p>}
+              elements={[
+                lock ? (
+                  <InputField
+                    label="Declared"
+                    initialValue={formData.checklist_choice || "Not declared"}
+                    isLocked={true}
+                  />
+                ) : (
+                  <RadioButtonGroup
+                    name="synopsis-checklist"
+                    titles={formData.checklist_options.map((option) => option.label)}
+                    values={formData.checklist_options.map((option) => option.id)}
+                    defaultValue={body.checklist_option_id}
+                    onSelect={(id) => {
+                      setBody((prev) => ({ ...prev, checklist_option_id: id }));
+                    }}
+                  />
+                ),
+              ]}
+              space={2}
+            />
+          )}
           {formData.role === "faculty" && !lock && (
             <>
               <GridContainer
@@ -149,6 +179,15 @@ const Supervisor = ({ formData }) => {
                   <CustomButton
                     text="Submit"
                     onClick={() => {
+                      if (
+                        scoring &&
+                        !!body.approval &&
+                        (formData.checklist_options?.length || 0) > 0 &&
+                        !body.checklist_option_id
+                      ) {
+                        toast.error("Choose the publication category the scholar has met.");
+                        return;
+                      }
                       submitForm(body, location, setLoading);
                     }}
                   />,

@@ -58,6 +58,9 @@ class DepartmentController extends Controller
                 // person's own address for departments that have no official one.
                 'hod_email' => $department->hod_email ?: optional(optional($department->hod)->user)->email,
                 'hod_personal_email' => optional(optional($department->hod)->user)->email,
+                // The same pair on the ADORDC: the office alias when the sheet
+                // gives one, the officer's own address otherwise.
+                'adordc_email' => $department->adordc_email ?: optional(optional($department->adordc)->user)->email,
                 'hod_phone' => optional(optional($department->hod)->user)->phone,
                 'hod' => $department->hod ? [
                     'faculty_code' => $department->hod->faculty_code,
@@ -684,10 +687,14 @@ class DepartmentController extends Controller
                 $department->save();
             }
 
-            $officeEmail = trim((string) ($row['hod_office_email'] ?? ''));
-            if ($officeEmail !== '') {
-                $department->hod_email = $officeEmail;
-                $department->save();
+            // A blank cell is not a statement that the address is gone, so
+            // only a filled one writes.
+            foreach (['hod_office_email' => 'hod_email', 'adordc_office_email' => 'adordc_email'] as $column => $field) {
+                $officeEmail = trim((string) ($row[$column] ?? ''));
+                if ($officeEmail !== '') {
+                    $department->$field = $officeEmail;
+                    $department->save();
+                }
             }
 
             foreach ([['hod', 'addHOD'], ['adordc', 'addAdordc']] as [$field, $method]) {

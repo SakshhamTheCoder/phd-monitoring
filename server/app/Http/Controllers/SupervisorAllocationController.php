@@ -16,6 +16,8 @@ use App\Models\Supervisor;
 use App\Support\SupervisionCapacity;
 use App\Models\SupervisorAllocation;
 
+use App\Support\FormLadder;
+
 class SupervisorAllocationController extends Controller
 {
     use GeneralFormHandler;
@@ -442,62 +444,7 @@ class SupervisorAllocationController extends Controller
             ]);
         }
 
-        $student = $formInstance->student;
-        $forms = [
-            [
-                'form_type' => 'supervisor-change',
-                'form_name' => 'Supervisor Change',
-                'max_count' => 10,
-                'stage' => 'student',
-            ],
-            [
-                'form_type' => 'irb-constitution',
-                'form_name' => 'IRB Constitution',
-                'max_count' => 1,
-                'stage' => 'student',
-            ],
-            [
-                'form_type' => 'status-change',
-                'form_name' => 'Change of Status',
-                'max_count' => 2,
-                'stage' => 'student',
-            ],
-            [
-                'form_type' => 'list-of-examiners',
-                'form_name' => 'List of Examiners',
-                'student_available' => false,
-                'supervisor_available' => true,
-                'max_count' => 1,
-                'stage' => 'supervisor',
-            ],
-            [
-                'form_type' => 'semester-off',
-                'form_name' => 'Semester Off',
-                'max_count' => 10,
-                'stage' => 'student',
-            ],
-        ];
-
-        foreach ($forms as $form) {
-            $existingForm = Forms::where('student_id', $student->roll_no)
-                ->where('form_type', $form['form_type'])
-                ->first();
-
-            if ($existingForm) {
-                continue;
-            }
-
-            $adminController = app()->make(\App\Http\Controllers\AdminFormController::class);
-            $formData = $adminController->getFormCreationData(
-                $form['form_type'],
-                $student->roll_no,
-                $student->department_id
-            );
-
-            if ($formData) {
-                Forms::create($formData);
-            }
-        }
+        FormLadder::open($formInstance->student, 'supervisor-allocation');
 
         $formInstance->addHistoryEntry("Supervisors allocated by {$approvedBy}", $user->name());
     }

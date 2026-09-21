@@ -64,15 +64,124 @@ class FacultyBroadAreaImportTest extends TestCase
         return Faculty::with('user')->whereNotNull('department_id')->where('type', 'internal')->firstOrFail();
     }
 
-    public function test_a_broad_area_off_the_department_list_is_refused(): void
+    /**
+     * An area nobody offers is still not stored, but the person is.
+     *
+     * Refusing the whole row used to lose them over a wording difference
+     * between two sheets, and they work here whatever the matrix says.
+     */
+    public function test_a_broad_area_off_the_department_list_is_reported_and_the_row_still_lands(): void
     {
         $this->admin();
         $faculty = $this->internalFaculty();
 
-        $response = $this->import($this->row($faculty, ['broad_area' => 'Sorcery']))->assertStatus(200);
+        $response = $this->import($this->row($faculty, [
+            'broad_area' => 'Sorcery',
+            'designation' => 'Sorcerer Supreme',
+        ]))->assertStatus(200);
 
         $this->assertStringContainsString('is not a research area', $response->json('data.errors.0'));
+        $this->assertSame(0, $response->json('data.error_count'), 'the person is not lost over the wording');
         $this->assertNull($faculty->fresh()->area_of_specialization_id);
+        $this->assertSame('Sorcerer Supreme', $faculty->fresh()->designation);
+    }
+
+    /**
+     * The institute's two sheets write the same area differently.
+     *
+     * The faculty sheet names every area a person works on in one cell, and
+     * the area matrix stores whole lists as single areas for some departments.
+     * Matched whole against whole, almost no row of the real sheet matched.
+     */
+    public function test_an_area_named_among_others_on_either_side_is_found(): void
+    {
+        $this->admin();
+        $faculty = $this->internalFaculty();
+
+        $area = AreaOfSpecialization::create([
+            'department_id' => $faculty->department_id,
+            'name' => 'VLSI Design, Low power system design and test, FPGA-based designs',
+        ]);
+
+        $this->import($this->row($faculty, [
+            'broad_area' => 'Wireless Communication; vlsi design, Computer Vision',
+        ]))->assertStatus(200);
+
+        $this->assertSame($area->id, $faculty->fresh()->area_of_specialization_id);
+    }
+
+    /**
+     * Sheets leave a phone as #N/A or blank, and users.phone is unique.
+     *
+     * Stored as an empty string, the first such row took '' and every row
+     * after it died on a duplicate key: 47 rows of the institute's own file.
+     */
+    public function test_a_blank_phone_is_stored_as_nothing(): void
+    {
+        $this->admin();
+
+        $rows = [];
+        foreach ([1, 2] as $i) {
+            $rows[] = array_merge($this->row($this->internalFaculty()), [
+                'full_name' => "Phoneless Person {$i}",
+                'email' => "phoneless.person{$i}@thapar.test",
+                'phone' => $i === 1 ? '' : '#N/A',
+                'designation' => 'Professor',
+                'faculty_code' => (string) (994100 + $i),
+                'department_code' => $this->internalFaculty()->department->code,
+                'row_number' => $i + 1,
+            ]);
+        }
+
+        $response = $this->postJson('/api/faculty/bulk-import', ['batch_data' => $rows])->assertStatus(200);
+
+        $this->assertSame(0, $response->json('data.error_count'), json_encode($response->json('data.errors')));
+        foreach ([1, 2] as $i) {
+            $this->assertNull(User::where('email', "phoneless.person{$i}@thapar.test")->firstOrFail()->phone);
+        }
+    }
+
+    /**
+     * A staff list is a migration of records, so nobody is mailed by it.
+     *
+     * The link lives 24 hours. Importing the institute's 568 row sheet used to
+     * mail one to every person it created, before anybody had been told the
+     * portal existed.
+     */
+    public function test_the_import_mails_nobody_unless_asked(): void
+    {
+        \Illuminate\Support\Facades\Notification::fake();
+        $this->admin();
+        $department = $this->internalFaculty()->department;
+
+        $this->import($this->row($this->internalFaculty(), [
+            'full_name' => 'Quiet Arrival',
+            'email' => 'quiet.arrival@thapar.test',
+            'designation' => 'Professor',
+            'department_code' => $department->code,
+            'faculty_code' => '994205',
+        ]))->assertStatus(200);
+
+        \Illuminate\Support\Facades\Notification::assertNothingSent();
+        $this->assertNotNull(User::where('email', 'quiet.arrival@thapar.test')->first());
+    }
+
+    /** An employee code somebody else holds is a person question, not a crash. */
+    public function test_an_employee_code_another_person_holds_is_reported(): void
+    {
+        $this->admin();
+        $holder = $this->internalFaculty();
+
+        $response = $this->import($this->row($holder, [
+            'full_name' => 'Somebody Else',
+            'email' => 'somebody.else@thapar.test',
+            'designation' => 'Professor',
+            'department_code' => $holder->department->code,
+            'faculty_code' => (string) $holder->faculty_code,
+        ]))->assertStatus(200);
+
+        $this->assertStringContainsString('already belongs to', $response->json('data.errors.0'));
+        $this->assertNull(User::where('email', 'somebody.else@thapar.test')->first());
     }
 
     public function test_a_listed_broad_area_is_stored_and_the_outside_count_uses_a_slot(): void

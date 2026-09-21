@@ -16,6 +16,7 @@ class ThesisSubmission extends Model
     protected $casts = [
         'history' => 'array',
         'steps' => 'array',
+        'carried_over_at' => 'datetime',
     ];
 
     public function __construct(array $attributes = [])
@@ -27,6 +28,7 @@ class ThesisSubmission extends Model
             'date_of_fee_submission',
             'thesis_pdf',
             'fee_receipt',
+            'carried_over_at',
         ], $commonFieldKeys);
 
         parent::__construct($attributes);

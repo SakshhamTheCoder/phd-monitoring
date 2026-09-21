@@ -113,39 +113,4 @@ class ScholarCommittee
             );
         }
     }
-
-    /**
-     * Open the forms a constituted IRB unlocks.
-     *
-     * Called when the DORDC completes the constitution form, and when one is
-     * carried over by the import, because a scholar whose IRB was constituted
-     * years ago still has to be able to file what comes after it.
-     */
-    public static function openTheFormsItUnlocks(Student $student): void
-    {
-        $forms = [
-            ['form_type' => 'irb-submission', 'form_name' => 'Revised IRB'],
-            ['form_type' => 'irb-extension', 'form_name' => 'IRB Extension'],
-        ];
-
-        foreach ($forms as $form) {
-            $exists = Forms::where('student_id', $student->roll_no)
-                ->where('form_type', $form['form_type'])
-                ->exists();
-
-            if ($exists) {
-                continue;
-            }
-
-            $formData = (new \App\Http\Controllers\AdminFormController())->getFormCreationData(
-                $form['form_type'],
-                $student->roll_no,
-                $student->department_id
-            );
-
-            if ($formData) {
-                Forms::create($formData);
-            }
-        }
-    }
 }
