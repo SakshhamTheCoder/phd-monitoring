@@ -1,4 +1,3 @@
-import "./Presentation.css";
 import React from "react";
 import Student from "./roles/Student";
 import FormTitleBar from "../formTitleBar/FormTitleBar";
