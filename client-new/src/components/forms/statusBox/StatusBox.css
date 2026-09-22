@@ -1,5 +1,9 @@
 .status-box-container {
     width: 750px;
+    /* The dialog it sits in is narrower than this on a phone, and a grid does
+       not shrink itself to fit its parent. */
+    max-width: 100%;
+    box-sizing: border-box;
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 1.5rem;
@@ -16,4 +20,20 @@
 
 .status-box-container h2{
     font-size: var(--text-lg);
+}
+
+/* One column below the breakpoint, so the divider between the two halves
+   becomes the line between them rather than a border in mid air. */
+@media (max-width: 768px) {
+    .status-box-container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .first {
+        border-right: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.286);
+        padding-bottom: 1rem;
+    }
 }

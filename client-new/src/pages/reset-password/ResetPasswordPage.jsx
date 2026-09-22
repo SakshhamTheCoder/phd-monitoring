@@ -46,7 +46,7 @@ const ResetPasswordPage = () => {
   return (
     <>
       {loading && <Loader />}
-      <div className="tw-bg-cover tw-bg-center tw-h-screen tw-flex tw-items-center tw-justify-center"
+      <div className="tw-bg-cover tw-bg-center tw-min-h-screen tw-flex tw-items-center tw-justify-center tw-p-4"
            style={{ backgroundImage: "url('/image-1@2x.png')" }}>
         <div className="tw-bg-white tw-p-8 tw-rounded-lg tw-shadow-lg tw-w-full tw-max-w-md">
           <img src="/images/tiet_logo.png" alt="TIETLogo"

@@ -201,3 +201,17 @@
 .pd-budget-subsub-row td { background: #FCFCFD; }
 /* A head or parent whose breakdown disagrees with the amount recorded against it. */
 .pd-budget-bad { color: #b91c1c; font-weight: 600; }
+
+/* The sidebar column has no room to sit beside the body on a phone, and the
+   pairs inside the cards are narrower than the figures they hold. */
+@media (max-width: 768px) {
+  .pd-header { padding: 1.25rem; }
+  .pd-overview-grid { grid-template-columns: 1fr; }
+  .pd-funding-summary { grid-template-columns: 1fr; }
+  .pd-ms-form-grid { grid-template-columns: 1fr; }
+  .pd-header-top,
+  .pd-ms-header,
+  .pd-budget-header { flex-wrap: wrap; gap: 0.75rem; }
+  .pd-header-actions { flex-wrap: wrap; }
+  .pd-tl-top { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
+}

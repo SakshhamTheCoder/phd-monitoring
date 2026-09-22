@@ -450,3 +450,36 @@ label:disabled:hover {
 .custom-button--danger:focus-visible {
     outline-offset: 3px;
 }
+
+/* ==========================================================================
+   Below the mobile breakpoint
+
+   A three column grid on a 390px screen gives each field about 110px, which
+   is narrower than the text inside it. One column, and the spans collapse
+   with it, or a span-2 field would still be asked to cross columns that are
+   no longer there.
+   ========================================================================== */
+@media (max-width: 768px) {
+    .grid-container {
+        grid-template-columns: 1fr;
+    }
+
+    .span-1,
+    .span-2,
+    .span-3 {
+        grid-column: span 1;
+    }
+
+    /* Counter and radio rows read left aligned like every other field, rather
+       than centred against labels that are not. */
+    .counter-field-container {
+        align-items: flex-start;
+    }
+
+    /* A grid item will not shrink below the widest thing inside it, so a wide
+       table in a cell held the whole grid open and took the page sideways with
+       it. Allowed to shrink, the table's own container scrolls instead. */
+    .grid-item {
+        min-width: 0;
+    }
+}

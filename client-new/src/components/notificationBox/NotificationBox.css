@@ -7,6 +7,9 @@
   top: 34px;
   right: 0;
   width: 340px;
+  /* Anchored to an icon near the right edge, so on a narrow screen the panel
+     would otherwise run off the left one. */
+  max-width: calc(100vw - 2rem);
   background-color: #fff;
   border: 1px solid #f0dede;
   border-radius: var(--radius-lg);

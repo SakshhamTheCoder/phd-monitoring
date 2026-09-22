@@ -68,3 +68,17 @@
         transform: scale(1);
     }
 }
+
+
+
+/* Four columns of form metadata on a phone gives each about 70px, which is
+   narrower than the dates in them. Two columns, and the card's own title
+   spans both. */
+@media (max-width: 768px) {
+    .form-card-list {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        padding: 16px;
+        text-align: left;
+    }
+}

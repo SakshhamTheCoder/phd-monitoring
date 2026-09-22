@@ -50,7 +50,7 @@
 }
 
 /* Ensure consistent spacing on smaller devices */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .form-title-bar {
         flex-direction: column;
         align-items: flex-start;

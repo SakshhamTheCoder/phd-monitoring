@@ -121,3 +121,36 @@
 
 
 
+
+/* Below the mobile breakpoint the topbar carries the nav toggle as well, and
+   the name and role are already on the profile screen a tap away. The avatar
+   stays, so the menu it opens keeps a target. */
+@media (max-width: 768px) {
+  .topbar_sub {
+    padding: 0.6rem 1rem;
+    gap: 0.5rem;
+  }
+
+  .topbar_right {
+    gap: 12px;
+  }
+
+  .user_section {
+    width: auto;
+  }
+
+  .user_info {
+    display: none;
+  }
+
+  .user_profile_image {
+    width: 36px;
+    height: 36px;
+  }
+
+  .notification_icon,
+  .notif_icon {
+    width: 32px;
+    height: 32px;
+  }
+}

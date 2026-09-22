@@ -90,3 +90,17 @@ a.pr-field-hint { color: var(--primary-color); }
 .pr-decision-btn:hover { opacity: 0.85; }
 
 .pr-app-flag { margin-left: 0.5rem; vertical-align: middle; }
+
+/* Four stats across leaves about 80px each, and a two column form field is
+   narrower than the names and dates that go in it. */
+@media (max-width: 768px) {
+  .pr-header { flex-direction: column; gap: 0.75rem; }
+  .pr-pos-stats,
+  .pr-app-stats { grid-template-columns: 1fr 1fr; }
+  .pr-form-grid,
+  .pr-modal-grid { grid-template-columns: 1fr; }
+  .pr-pos-top { flex-direction: column; gap: 0.75rem; }
+  .pr-pos-top-right { align-items: flex-start; }
+  .pr-view-toggle { overflow-x: auto; }
+  .pr-view-toggle button { white-space: nowrap; }
+}

@@ -118,6 +118,6 @@
     transform: translateX(2px);
 }
 
-@media (max-width: 720px) {
+@media (max-width: 768px) {
     .form-grid-container { flex-direction: column; }
 }

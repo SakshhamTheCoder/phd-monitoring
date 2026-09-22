@@ -371,6 +371,12 @@
     grid-template-columns: repeat(2, 1fr);
     gap: 15px;
   }
+
+  /* Two 225px mentor cards in a row do not fit a phone, and the row does not
+     wrap on its own. */
+  .mentor-grid {
+    flex-wrap: wrap;
+  }
 }
 
 @media (max-width: 480px) {

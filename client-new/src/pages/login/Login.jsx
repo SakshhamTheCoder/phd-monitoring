@@ -180,14 +180,14 @@ const LoginPage = () => {
     <>
       {loading && <Loader />}
       <div
-        className="tw-bg-cover tw-bg-center tw-h-screen tw-flex tw-items-center tw-justify-center"
+        className="tw-bg-cover tw-bg-center tw-min-h-screen tw-flex tw-items-center tw-justify-center tw-p-4"
         style={{ backgroundImage: "url('/image-1@2x.png')" }}
       >
-        <div className="tw-bg-white tw-p-8 tw-rounded-lg tw-shadow-lg tw-w-full tw-max-w-md sm:tw-p-6 sm:tw-max-w-sm xs:tw-p-4 xs:tw-max-w-xs">
+        <div className="tw-bg-white tw-p-8 tw-rounded-lg tw-shadow-lg tw-w-full tw-max-w-md sm:tw-p-6 sm:tw-max-w-sm">
           <img
             src="/images/tiet_logo.png"
             alt="TIETLogo"
-            className="tw-mx-auto tw-mb-6 tw-w-24 sm:tw-w-20 xs:tw-w-16"
+            className="tw-mx-auto tw-mb-6 tw-w-24 sm:tw-w-20"
           />
           
           {/* Google Sign-In Button */}

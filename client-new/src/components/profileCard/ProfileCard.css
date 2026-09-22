@@ -108,9 +108,12 @@
 .profile-attendance:focus .profile-attendance-pop,
 .profile-attendance:focus-within .profile-attendance-pop { display: flex; }
 
-@media (max-width: 640px) {
-  .student-header-text { max-width: 100%; }
+@media (max-width: 768px) {
+  /* The 300px floor is wider than a 320px phone once the page gutter is off. */
+  .student-header-text { max-width: 100%; min-width: 0; }
   .profile-attendance-pop { left: auto; right: 0; }
+  .student-container { padding: 1.25rem; }
+  .profile-actions { flex-wrap: wrap; }
 }
 
 .student-table-section {

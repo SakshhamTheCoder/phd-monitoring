@@ -769,3 +769,69 @@
 }
 
 .inline-add-btn--sm:disabled { opacity: 0.4; cursor: default; }
+
+/* ==========================================================================
+   Below the mobile breakpoint
+
+   Shared patterns only. A page keeps its own narrow-screen rules next to the
+   layout they belong to; what is here is what every page inherits.
+
+   The rules live in one block rather than beside each pattern above, so there
+   is one place to look for what a phone gets, and one breakpoint to change.
+   768px is the value --break-mobile documents and the shell's drawer already
+   uses.
+   ========================================================================== */
+@media (max-width: 768px) {
+    /* Title and actions stop competing for one row: the actions go under the
+       title and stretch, which is also where a thumb is. */
+    .page-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .page-title { font-size: var(--text-2xl); }
+
+    /* Buttons wrap as whole buttons. Without this the labels wrap inside
+       them, and "Add User +" reads as two lines of a torn label. */
+    .page-actions { flex-wrap: wrap; }
+    .page-actions .custom-button { white-space: nowrap; }
+
+    /* A dialog's footer is the one place a full width button is right: it is
+       the last thing on the screen and there is nothing to line up with. */
+    .modal-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .modal-actions .custom-button { width: 100%; }
+
+    .card { padding: 1rem; }
+
+    .empty-state { padding: 2rem 1rem; }
+
+    /* A table with more columns than the screen is wide scrolls inside its own
+       card, rather than widening the page and dragging every other element
+       sideways with it. .data-table-wrap already scrolls; .form-list-container
+       is the same card without the wrapper. */
+    .form-list-container {
+        padding: 12px;
+        overflow-x: auto;
+    }
+
+    .table-bottom {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .table-bottom--paged .rows-per-page { margin-top: 0; }
+
+    /* Row actions open a menu wider than the phone unless it is allowed to
+       sit left of its trigger. */
+    .row-actions-menu {
+        min-width: 180px;
+        max-width: calc(100vw - 2rem);
+    }
+}

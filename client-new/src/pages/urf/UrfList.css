@@ -46,3 +46,17 @@
 .urf-link-cell:hover {
   text-decoration: underline;
 }
+
+/* The tabs and the session picker do not fit one line on a phone. */
+@media (max-width: 768px) {
+  .urf-stage-bar {
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .urf-session-picker {
+    min-width: 0;
+    width: 100%;
+  }
+}

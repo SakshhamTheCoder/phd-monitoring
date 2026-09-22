@@ -128,3 +128,19 @@
 }
 
 .filter-chip button:hover { color: #991b1b; }
+
+/* The search row is an input and three buttons, which needs about 420px. It
+   wraps onto a second line rather than pushing the page sideways. */
+@media (max-width: 768px) {
+  .filter-bar-row {
+    flex-wrap: wrap;
+  }
+
+  /* The input keeps the search icon company on the first line; the buttons
+     wrap under them. A 100% basis put the icon on a line of its own. */
+  .filter-bar-input {
+    flex: 1 1 60%;
+  }
+
+  .filter-bar { padding: 0.75rem; }
+}

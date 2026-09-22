@@ -85,3 +85,17 @@
 .urf-report-schedule {
   margin-bottom: 1.5rem;
 }
+
+/* Two columns still gives each field about 170px on a phone, which is less
+   than the faculty names that go in them. */
+@media (max-width: 768px) {
+  .urf-mentor-row {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .urf-subhead {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}

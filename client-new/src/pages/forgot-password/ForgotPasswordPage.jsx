@@ -80,14 +80,14 @@ const ForgotPasswordPage = () => {
 
     return (
         <div
-        className="tw-bg-cover tw-bg-center tw-h-screen tw-flex tw-items-center tw-justify-center"
+        className="tw-bg-cover tw-bg-center tw-min-h-screen tw-flex tw-items-center tw-justify-center tw-p-4"
         style={{ backgroundImage: "url('/image-1@2x.png')" }}
       >
             <form onSubmit={handleSubmit(onSubmit)} className="tw-bg-white tw-p-8 tw-rounded tw-shadow-md tw-w-full tw-max-w-sm">
                 <img
                     src="/images/tiet_logo.png"
                     alt="TIETLogo"
-                    className="tw-mx-auto tw-mb-4 tw-w-24 sm:tw-w-20 xs:tw-w-16"
+                    className="tw-mx-auto tw-mb-4 tw-w-24 sm:tw-w-20"
                 />
                 <h2 className="tw-text-xl tw-font-semibold tw-mb-4 tw-text-center">Forgot Password</h2>
                 <div className="tw-mb-4">

@@ -79,10 +79,16 @@ const CustomModal = ({
         }
     };
 
+    // Every width is capped at what the overlay actually has. A dialog asking
+    // for 520px on a 390px phone used to draw 520px and push the page sideways,
+    // because an inline width beats any stylesheet. min() resolves to the asked
+    // width wherever there is room, so nothing moves on a desktop.
+    const fit = (value) => `min(${value}, 100%)`;
+
     // When an explicit width is given, let it win over the default maxWidth cap.
     const sizeStyle = width
-        ? { width, minWidth, maxWidth: width, minHeight, maxHeight }
-        : { minWidth, maxWidth, minHeight, maxHeight };
+        ? { width: fit(width), minWidth: fit(minWidth), maxWidth: fit(width), minHeight, maxHeight }
+        : { minWidth: fit(minWidth), maxWidth: fit(maxWidth), minHeight, maxHeight };
 
     return (
         <div className="modal-overlay" onClick={handleOverlayClick}>
