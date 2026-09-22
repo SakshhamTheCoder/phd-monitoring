@@ -2,15 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
 import {
-  categoryOptions, roleOptions, milestoneStatusOptions, formatDuration,
-  subVal, setSubCell, headTotal, yearTotal, grandTotal, emptyBudget,
-  subItemsTotal, headSubMismatch,
-  manpowerCell, setManpowerCell, unionLabels,
-  manpowerTotal, equipmentTotal, typedHead, setTypedHead,
-  equipRows, equipLine, setEquipAmount, renameEquipRow, dropEquipRow, addEquipRow,
-  otherRows, otherSubRows, otherLine, otherSubTotal, otherSubMismatch,
-  setOtherAmount, renameOtherRow, dropOtherRow, addOtherRow,
-  KEY_MANPOWER, HEAD_MANPOWER, HEAD_EQUIPMENT, HEAD_OTHER,
+  categoryOptions,
+  roleOptions,
+  milestoneStatusOptions,
+  formatDuration,
+  yearTotal,
+  grandTotal,
+  emptyBudget,
 } from '../../data/projectsData';
 import { formatDate, EMPTY_VALUE } from '../../utils/timeParse';
 import { apiCreateProject, apiUpdateProjectFromForm, apiUpdateProject, apiCurrentFaculty, apiProjectMeta, apiUploadGanttChart } from '../../api/projects';
@@ -18,6 +16,7 @@ import InputSuggestions from '../../components/forms/fields/InputSuggestions';
 import FacultyLink from '../../components/facultyLink/FacultyLink';
 import { baseURL } from '../../api/urls';
 import { toast } from 'react-toastify';
+import ProjectBudgetStep from './ProjectBudgetStep';
 import './CreateProject.css';
 
 const STEPS = ['Basic Info', 'Team', 'Budget', 'Objectives', 'Milestones', 'Review'];
@@ -122,14 +121,6 @@ const CreateProject = () => {
 
   const removeCopi = (idx) => setForm({ ...form, coPIs: form.coPIs.filter((_, i) => i !== idx) });
 
-  const updateBudget = (year, head, value) => {
-    setForm({ ...form, budget: { ...form.budget, [year]: { ...form.budget[year], [head]: parseFloat(value) || 0 } } });
-  };
-
-  const updateSubBudget = (year, head, sub, value) => {
-    setForm(prev => ({ ...prev, budget: setSubCell(prev.budget, year, head, sub, value) }));
-  };
-
   const handleSanctionFile = (e) => {
     const file = e.target.files && e.target.files[0];
     if (file) setForm(prev => ({ ...prev, sanctionLetterFile: file, sanctionLetterFileName: file.name }));
@@ -198,247 +189,11 @@ const CreateProject = () => {
     { length: Math.min(5, Math.max(1, parseInt(form.durationYears, 10) || 1)) },
     (_, i) => `year${i + 1}`
   );
+
+  // The review step reports the totals; the table that produces them lives in
+  // ProjectBudgetStep.
   const yTotal = (y) => yearTotal(form.budget, y, meta.budgetHeads);
   const gTotal = grandTotal(form.budget, meta.budgetHeads, budgetYears);
-
-  // In-table editing for the derived heads. Manpower rows are fixed per
-  // category, equipment rows and Other Expenses rows are self-added by
-  // label, and Other Expenses rows may own sub-rows. All three persist to
-  // the same __manpower/__equipment/__other line lists, and any of them may
-  // instead carry a hand-typed head total in __headamt that overrides its
-  // breakdown.
-  const manpowerCats = (meta.manpowerCategories && meta.manpowerCategories.length)
-    ? meta.manpowerCategories : ['Postdoc', 'JRF', 'SRF', 'UG Intern', 'PG Intern'];
-  const extraManpowerCats = unionLabels(form.budget, KEY_MANPOWER, 'category')
-    .filter(c => c && !manpowerCats.includes(c));
-  const equipItems = equipRows(form.budget);
-  const otherTopRows = otherRows(form.budget);
-
-  const editManpower = (y, cat, field, value) =>
-    setForm(prev => ({ ...prev, budget: setManpowerCell(prev.budget, y, cat, field, value) }));
-  const editEquipAmount = (y, key, value) =>
-    setForm(prev => ({ ...prev, budget: setEquipAmount(prev.budget, y, key, value) }));
-  const renameEquip = (key, label) =>
-    setForm(prev => ({ ...prev, budget: renameEquipRow(prev.budget, key, label) }));
-  const addEquip = () =>
-    setForm(prev => ({ ...prev, budget: addEquipRow(prev.budget, budgetYears) }));
-  const dropEquip = (key) =>
-    setForm(prev => ({ ...prev, budget: dropEquipRow(prev.budget, key) }));
-  const editTypedHead = (y, head, value) =>
-    setForm(prev => ({ ...prev, budget: setTypedHead(prev.budget, y, head, value) }));
-  const editOther = (y, key, parentKey, value) =>
-    setForm(prev => ({ ...prev, budget: setOtherAmount(prev.budget, y, key, parentKey, value) }));
-  const renameOther = (key, label) =>
-    setForm(prev => ({ ...prev, budget: renameOtherRow(prev.budget, key, label) }));
-  const dropOther = (key) =>
-    setForm(prev => ({ ...prev, budget: dropOtherRow(prev.budget, key) }));
-  const addOther = (parentKey) =>
-    setForm(prev => ({ ...prev, budget: addOtherRow(prev.budget, budgetYears, parentKey) }));
-
-  // One table in budgetHeads order (Manpower, Travel, Equipment,
-  // Contingency, Overhead, Other Expenses). Each derived head renders
-  // its own rows; plain heads render the head + sub-item rows.
-  // A head whose breakdown can be overridden by a typed total renders the same
-  // three parts: an editable head row, its breakdown, and a sub-total row that
-  // flags a disagreement the way Travel's sub-items already do.
-  const headSum = (head, y) =>
-    head === HEAD_MANPOWER ? manpowerTotal(form.budget, y) : equipmentTotal(form.budget, y);
-  const headMismatch = (head, y) => {
-    const typed = typedHead(form.budget, y, head);
-    const sum = headSum(head, y);
-    return typed !== null && sum > 0 && typed !== sum;
-  };
-
-  const renderTypedHeadCells = (head) => budgetYears.map(y => {
-    const typed = typedHead(form.budget, y, head);
-    const sum = headSum(head, y);
-    const bad = headMismatch(head, y);
-    return (
-      <td key={y}>
-        <input type="number" min="0" className={`cp-budget-input${bad ? ' cp-budget-mismatch' : ''}`}
-          value={typed === null ? '' : typed}
-          placeholder={sum ? String(sum) : '0'}
-          title={bad ? `Breakdown sums to ₹${sum.toLocaleString('en-IN')}` : 'Leave blank to use the breakdown below'}
-          onChange={e => editTypedHead(y, head, e.target.value)} />
-      </td>
-    );
-  });
-
-  const renderHeadSubSum = (head) => (
-    <tr className="cp-budget-subsum-row">
-      <td className="cp-budget-sub-name">↳ sub-items total</td>
-      {budgetYears.map(y => {
-        const sum = headSum(head, y);
-        const bad = headMismatch(head, y);
-        return (
-          <td key={y} className={`cp-budget-subsum${bad ? ' bad' : (sum > 0 ? ' ok' : '')}`}>
-            ₹{sum.toLocaleString('en-IN')}{bad ? ' ⚠' : (sum > 0 ? ' ✓' : '')}
-          </td>
-        );
-      })}
-      <td></td>
-    </tr>
-  );
-
-  const renderManpowerRows = () => (
-    <>
-      <tr className="cp-budget-head-row">
-        <td className="cp-budget-head-name">{HEAD_MANPOWER}</td>
-        {renderTypedHeadCells(HEAD_MANPOWER)}
-        <td className="cp-budget-total">₹{budgetYears.reduce((s, y) => s + headTotal(form.budget, y, HEAD_MANPOWER), 0).toLocaleString('en-IN')}</td>
-      </tr>
-      {[...manpowerCats, ...extraManpowerCats].map(cat => (
-        <tr key={cat} className="cp-budget-sub-row">
-          <td className="cp-budget-sub-name">↳ {cat}(s)</td>
-          {budgetYears.map(y => (
-            <td key={y}>
-              <input type="number" min="0" className="cp-budget-input sub" title="Amount (₹)"
-                value={manpowerCell(form.budget, y, cat).amount || ''} placeholder="0"
-                onChange={e => editManpower(y, cat, 'amount', e.target.value)} />
-            </td>
-          ))}
-          <td className="cp-budget-total">₹{budgetYears.reduce((s, y) =>
-            s + (Number(manpowerCell(form.budget, y, cat).amount) || 0), 0).toLocaleString('en-IN')}</td>
-        </tr>
-      ))}
-      {renderHeadSubSum(HEAD_MANPOWER)}
-    </>
-  );
-
-  const renderEquipmentRows = () => (
-    <>
-      <tr className="cp-budget-head-row">
-        <td className="cp-budget-head-name">{HEAD_EQUIPMENT}
-          <button type="button" className="inline-add-btn inline-add-btn--sm" onClick={addEquip}>
-            <i className="fa fa-plus"></i> Add Item
-          </button>
-        </td>
-        {renderTypedHeadCells(HEAD_EQUIPMENT)}
-        <td className="cp-budget-total">₹{budgetYears.reduce((s, y) => s + headTotal(form.budget, y, HEAD_EQUIPMENT), 0).toLocaleString('en-IN')}</td>
-      </tr>
-      {equipItems.map(row => (
-        <tr key={row.key} className="cp-budget-sub-row">
-          <td>
-            <span className="cp-budget-countpair">
-              <input type="text" className="cp-budget-input" value={row.label}
-                placeholder="e.g. GPU Workstation"
-                onChange={e => renameEquip(row.key, e.target.value)} />
-              <button type="button" className="cp-remove-btn" title="Remove item"
-                onClick={() => dropEquip(row.key)}>
-                <i className="fa fa-trash"></i>
-              </button>
-            </span>
-          </td>
-          {budgetYears.map(y => (
-            <td key={y}>
-              <input type="number" min="0" className="cp-budget-input sub"
-                value={(equipLine(form.budget, y, row.key) || {}).amount || ''}
-                placeholder="0" onChange={e => editEquipAmount(y, row.key, e.target.value)} />
-            </td>
-          ))}
-          <td className="cp-budget-total">₹{budgetYears.reduce((s, y) =>
-            s + Number(((equipLine(form.budget, y, row.key) || {}).amount) || 0), 0).toLocaleString('en-IN')}</td>
-        </tr>
-      ))}
-      {equipItems.length > 0 && renderHeadSubSum(HEAD_EQUIPMENT)}
-    </>
-  );
-
-  // Other Expenses is the only head you build yourself: add a row, name it, and
-  // optionally break it down with sub-rows. A parent row carries the money; its
-  // sub-rows are a breakdown, flagged when they disagree.
-  const renderOtherRows = () => (
-    <>
-      <tr className="cp-budget-head-row">
-        <td className="cp-budget-head-name">{HEAD_OTHER}
-          <button type="button" className="inline-add-btn inline-add-btn--sm" onClick={() => addOther('')}>
-            <i className="fa fa-plus"></i> Add Expense
-          </button>
-        </td>
-        {budgetYears.map(y => (
-          <td key={y} className="cp-budget-total">₹{headTotal(form.budget, y, HEAD_OTHER).toLocaleString('en-IN')}</td>
-        ))}
-        <td className="cp-budget-total">₹{budgetYears.reduce((s, y) => s + headTotal(form.budget, y, HEAD_OTHER), 0).toLocaleString('en-IN')}</td>
-      </tr>
-      {otherTopRows.map(row => {
-        const subs = otherSubRows(form.budget, row.key);
-        return (
-          <React.Fragment key={row.key}>
-            <tr className="cp-budget-sub-row">
-              <td>
-                <span className="cp-budget-countpair">
-                  <input type="text" className="cp-budget-input" value={row.label}
-                    placeholder="e.g. Fabrication"
-                    onChange={e => renameOther(row.key, e.target.value)} />
-                  <button type="button" className="inline-add-btn inline-add-btn--sm" title="Add sub-item"
-                    onClick={() => addOther(row.key)}>
-                    <i className="fa fa-plus"></i>
-                  </button>
-                  <button type="button" className="cp-remove-btn" title="Remove expense"
-                    onClick={() => dropOther(row.key)}>
-                    <i className="fa fa-trash"></i>
-                  </button>
-                </span>
-              </td>
-              {budgetYears.map(y => {
-                const bad = otherSubMismatch(form.budget, y, row.key);
-                return (
-                  <td key={y}>
-                    <input type="number" min="0" className={`cp-budget-input sub${bad ? ' cp-budget-mismatch' : ''}`}
-                      value={(otherLine(form.budget, y, row.key) || {}).amount || ''}
-                      placeholder="0"
-                      title={bad ? `Sub-items sum to ₹${otherSubTotal(form.budget, y, row.key).toLocaleString('en-IN')}` : undefined}
-                      onChange={e => editOther(y, row.key, '', e.target.value)} />
-                  </td>
-                );
-              })}
-              <td className="cp-budget-total">₹{budgetYears.reduce((s, y) =>
-                s + Number(((otherLine(form.budget, y, row.key) || {}).amount) || 0), 0).toLocaleString('en-IN')}</td>
-            </tr>
-            {subs.map(sub => (
-              <tr key={sub.key} className="cp-budget-sub-row cp-budget-subsub-row">
-                <td>
-                  <span className="cp-budget-countpair">
-                    <input type="text" className="cp-budget-input" value={sub.label}
-                      placeholder="e.g. Casting"
-                      onChange={e => renameOther(sub.key, e.target.value)} />
-                    <button type="button" className="cp-remove-btn" title="Remove sub-item"
-                      onClick={() => dropOther(sub.key)}>
-                      <i className="fa fa-trash"></i>
-                    </button>
-                  </span>
-                </td>
-                {budgetYears.map(y => (
-                  <td key={y}>
-                    <input type="number" min="0" className="cp-budget-input sub"
-                      value={(otherLine(form.budget, y, sub.key) || {}).amount || ''}
-                      placeholder="0" onChange={e => editOther(y, sub.key, row.key, e.target.value)} />
-                  </td>
-                ))}
-                <td className="cp-budget-total">₹{budgetYears.reduce((s, y) =>
-                  s + Number(((otherLine(form.budget, y, sub.key) || {}).amount) || 0), 0).toLocaleString('en-IN')}</td>
-              </tr>
-            ))}
-            {subs.length > 0 && (
-              <tr className="cp-budget-subsum-row">
-                <td className="cp-budget-sub-name cp-budget-indent-sum">↳ sub-items total</td>
-                {budgetYears.map(y => {
-                  const sum = otherSubTotal(form.budget, y, row.key);
-                  const bad = otherSubMismatch(form.budget, y, row.key);
-                  return (
-                    <td key={y} className={`cp-budget-subsum${bad ? ' bad' : (sum > 0 ? ' ok' : '')}`}>
-                      ₹{sum.toLocaleString('en-IN')}{bad ? ' ⚠' : (sum > 0 ? ' ✓' : '')}
-                    </td>
-                  );
-                })}
-                <td></td>
-              </tr>
-            )}
-          </React.Fragment>
-        );
-      })}
-    </>
-  );
 
   const renderStep = () => {
     switch (currentStep) {
@@ -607,79 +362,7 @@ const CreateProject = () => {
               </div>
             </div>
           </div>
-          <div className="cp-section-card">
-            <h3 className="cp-section-title">Budget Breakdown</h3>
-            <div className="cp-budget-table-wrap">
-              <table className="cp-budget-table">
-                <thead>
-                  <tr>
-                    <th>Budget Head</th>
-                    {budgetYears.map((y, i) => <th key={y}>Year {i + 1} (₹)</th>)}
-                    <th>Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {meta.budgetHeads.map(bh => {
-                    if (bh.head === HEAD_MANPOWER) return <React.Fragment key={bh.head}>{renderManpowerRows()}</React.Fragment>;
-                    if (bh.head === HEAD_EQUIPMENT) return <React.Fragment key={bh.head}>{renderEquipmentRows()}</React.Fragment>;
-                    if (bh.head === HEAD_OTHER) return <React.Fragment key={bh.head}>{renderOtherRows()}</React.Fragment>;
-                    return (
-                    <React.Fragment key={bh.head}>
-                      <tr className="cp-budget-head-row">
-                        <td className="cp-budget-head-name">{bh.head}</td>
-                        {budgetYears.map(y => {
-                          const mism = bh.subItems.length > 0 && headSubMismatch(form.budget, y, bh.head, bh.subItems);
-                          return (
-                            <td key={y}>
-                              <input type="number" min="0" className={`cp-budget-input${mism ? ' cp-budget-mismatch' : ''}`}
-                                value={form.budget[y]?.[bh.head] || ''}
-                                onChange={e => updateBudget(y, bh.head, e.target.value)} placeholder="0"
-                                title={mism ? `Sub-items sum to ₹${subItemsTotal(form.budget, y, bh.head, bh.subItems).toLocaleString('en-IN')}` : undefined} />
-                            </td>
-                          );
-                        })}
-                        <td className="cp-budget-total">₹{budgetYears.reduce((s, y) => s + headTotal(form.budget, y, bh.head), 0).toLocaleString('en-IN')}</td>
-                      </tr>
-                      {bh.subItems.map(sub => (
-                        <tr key={sub} className="cp-budget-sub-row">
-                          <td className="cp-budget-sub-name">↳ {sub}</td>
-                          {budgetYears.map(y => (
-                            <td key={y}>
-                              <input type="number" min="0" className="cp-budget-input sub"
-                                value={subVal(form.budget, y, bh.head, sub) || ''}
-                                onChange={e => updateSubBudget(y, bh.head, sub, e.target.value)} placeholder="0" />
-                            </td>
-                          ))}
-                          <td className="cp-budget-total">₹{budgetYears.reduce((s, y) => s + subVal(form.budget, y, bh.head, sub), 0).toLocaleString('en-IN')}</td>
-                        </tr>
-                      ))}
-                      {bh.subItems.length > 0 && (
-                        <tr className="cp-budget-subsum-row">
-                          <td className="cp-budget-sub-name">↳ sub-items total</td>
-                          {budgetYears.map(y => {
-                            const total = subItemsTotal(form.budget, y, bh.head, bh.subItems);
-                            const bad = headSubMismatch(form.budget, y, bh.head, bh.subItems);
-                            return (
-                              <td key={y} className={`cp-budget-subsum${bad ? ' bad' : (total > 0 ? ' ok' : '')}`}>
-                                ₹{total.toLocaleString('en-IN')}{bad ? ' ⚠' : (total > 0 ? ' ✓' : '')}
-                              </td>
-                            );
-                          })}
-                          <td></td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                    );
-                  })}
-                  <tr className="cp-budget-grand-row">
-                    <td><strong>Grand Total</strong></td>
-                    {budgetYears.map(y => <td key={y} className="cp-budget-total">₹{yTotal(y).toLocaleString('en-IN')}</td>)}
-                    <td className="cp-budget-grand">₹{gTotal.toLocaleString('en-IN')}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <ProjectBudgetStep budget={form.budget} years={budgetYears} meta={meta} onChange={(next) => setForm(prev => ({ ...prev, budget: next }))} />
         </div>
       );
 
@@ -880,9 +563,15 @@ const CreateProject = () => {
         <div className="cp-stepper">
           {STEPS.map((step, i) => (
             <React.Fragment key={step}>
-              <div className={`cp-step-dot ${i < currentStep ? 'done' : ''} ${i === currentStep ? 'active' : ''}`} onClick={() => setCurrentStep(i)}>
+              <button
+                type="button"
+                className={`cp-step-dot ${i < currentStep ? 'done' : ''} ${i === currentStep ? 'active' : ''}`}
+                onClick={() => setCurrentStep(i)}
+                aria-current={i === currentStep ? 'step' : undefined}
+                aria-label={`Step ${i + 1}: ${step}`}
+              >
                 {i < currentStep ? <i className="fa fa-check"></i> : <span>{String(i + 1).padStart(2, '0')}</span>}
-              </div>
+              </button>
               {i < STEPS.length - 1 && <div className={`cp-step-line ${i < currentStep ? 'done' : ''}`}></div>}
             </React.Fragment>
           ))}
