@@ -3,6 +3,11 @@ import { Link } from 'react-router-dom';
 import { useFeatures } from '../../context/FeaturesContext';
 import './LandingPage.css';
 
+// The PhD workflow section is off the page for now. It is switched rather than
+// deleted because it is coming back, and rather than commented out because the
+// block holds JSX comments, which do not nest.
+const SHOW_WORKFLOW = false;
+
 const LandingPage = () => {
   const featureFlags = useFeatures();
   const features = [
@@ -53,6 +58,14 @@ const LandingPage = () => {
     { name: 'Thesis Submission', type: 'main' }
   ];
 
+  // Where each stage sits on the ring. The nodes and the arrows between them
+  // used to work this out separately, from the same two constants.
+  const RING_RADIUS = 200;
+  const nodePoints = workflow.map((_, index) => {
+    const angle = (((index / workflow.length) * 360 - 90) * Math.PI) / 180;
+    return { x: Math.cos(angle) * RING_RADIUS, y: Math.sin(angle) * RING_RADIUS };
+  });
+
   const optionalForms = [
     'Status Change',
     'Semester Off',
@@ -73,7 +86,8 @@ const LandingPage = () => {
           </div>
           <div className="nav-links">
             <a href="#features">Features</a>
-            <a href="#workflow">Workflow</a>
+            {SHOW_WORKFLOW && <a href="#workflow">Workflow</a>}
+            <Link to="/team">Team</Link>
             <Link to="/login" className="nav-login-btn">Login</Link>
           </div>
         </div>
@@ -103,7 +117,7 @@ const LandingPage = () => {
             <div className="hero-graphic">
               <div className="graphic-circle"></div>
               <div className="graphic-dots"></div>
-              <img src="/images/tiet_logo.png" alt="PhD Excellence" className="hero-logo" />
+              <img src="/images/tiet_logo.png" alt="University Logo" className="hero-logo" />
             </div>
           </div>
         </div>
@@ -146,6 +160,7 @@ const LandingPage = () => {
       </section>
 
       {/* Workflow Section */}
+      {SHOW_WORKFLOW && (
       <section id="workflow" className="workflow-section">
         <div className="container">
           <h2 className="section-title">PhD Workflow</h2>
@@ -159,11 +174,8 @@ const LandingPage = () => {
               <div className="workflow-circle-container">
                 <div className="workflow-circle">
                   {workflow.map((stage, index) => {
-                    const angle = (index / workflow.length) * 360 - 90;
-                    const radius = 200;
-                    const x = Math.cos((angle * Math.PI) / 180) * radius;
-                    const y = Math.sin((angle * Math.PI) / 180) * radius;
-                    
+                    const { x, y } = nodePoints[index];
+
                     return (
                       <div
                         key={index}
@@ -203,23 +215,16 @@ const LandingPage = () => {
                         <polygon points="0 0, 10 3, 0 6" fill="var(--primary-color)" />
                       </marker>
                     </defs>
-                    {workflow.map((_, index) => {
-                      if (index === workflow.length - 1) return null;
-                      const angle1 = (index / workflow.length) * 360 - 90;
-                      const angle2 = ((index + 1) / workflow.length) * 360 - 90;
-                      const radius = 200;
-                      const x1 = Math.cos((angle1 * Math.PI) / 180) * radius;
-                      const y1 = Math.sin((angle1 * Math.PI) / 180) * radius;
-                      const x2 = Math.cos((angle2 * Math.PI) / 180) * radius;
-                      const y2 = Math.sin((angle2 * Math.PI) / 180) * radius;
-                      
+                    {nodePoints.slice(0, -1).map((from, index) => {
+                      const to = nodePoints[index + 1];
+
                       return (
                         <line
                           key={index}
-                          x1={x1}
-                          y1={y1}
-                          x2={x2}
-                          y2={y2}
+                          x1={from.x}
+                          y1={from.y}
+                          x2={to.x}
+                          y2={to.y}
                           stroke="var(--primary-color)"
                           strokeWidth="2"
                           markerEnd="url(#arrowhead)"
@@ -250,6 +255,7 @@ const LandingPage = () => {
           </div>
         </div>
       </section>
+      )}
 
       {/* CTA Section */}
       <section className="cta-section">
@@ -290,7 +296,7 @@ const LandingPage = () => {
             </div>
           </div>
           <div className="footer-bottom">
-            <p>&copy; 2025 Thapar Institute of Engineering & Technology. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Thapar Institute of Engineering & Technology. All rights reserved.</p>
           </div>
         </div>
       </footer>
