@@ -8,7 +8,9 @@
 }
 
 .team-container {
-  max-width: 1200px;
+  /* Wider than the 1200 it was: the team sits beside the mentor now, and four
+     cards across need the room. */
+  max-width: 1320px;
   margin: 0 auto;
   padding: 40px 20px;
   text-align: center;
@@ -31,7 +33,7 @@
 .heading {
   font-size: var(--text-5xl);
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--text-color);
   margin-bottom: 8px;
   letter-spacing: -0.5px;
 }
@@ -49,7 +51,7 @@
 .subheading {
   font-size: var(--text-2xl);
   font-weight: 600;
-  color: #1a1a1a;
+  color: var(--text-color);
   margin: 24px 0 16px;
   position: relative;
   display: inline-block;
@@ -68,19 +70,32 @@
   border-radius: var(--radius-sm);
 }
 
-/* Grids for Mentors and Teams */
-.mentor-grid {
-  display: flex;
-  justify-content: center;
+/* The mentor beside the team, rather than above it.
+
+   The page used to be three stacked grids: one mentor, then a grid per batch,
+   each under its own heading. Two headings for eight people read as two teams,
+   and the mentor's row was mostly empty space. The mentor now holds the left
+   column at the size the card already had, and the team fills the right. */
+.team-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) 1fr;
   gap: 24px;
-  margin: 0 auto 24px auto;
+  align-items: start;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.team-mentor,
+.team-members {
+  min-width: 0;
 }
 
 .team-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  /* Four across, so the eight of them read as two even rows. Fewer as the
+     column narrows, or the longest name stops fitting on one line. */
+  grid-template-columns: repeat(4, 1fr);
   gap: 15px;
-  max-width: 1200px;
   margin: 0 auto 24px auto;
   justify-items: center;
 }
@@ -91,8 +106,8 @@
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-sm);
   width: 100%;
-  max-width: 225px;
-  padding: 24px 12px;
+  max-width: 260px;
+  padding: 24px 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -197,14 +212,27 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* Names run to one or two lines, so without this the social row sat at a
+     different height on every card in a row. */
+  flex: 1;
 }
 
 .card-content h3 {
   font-size: var(--text-lg);
   font-weight: 600;
   margin: 0;
-  color: #1a1a1a;
+  color: var(--text-color);
   letter-spacing: -0.2px;
+}
+
+/* The batch, between the name and the role. Quiet: it says when someone was
+   here, which is context for the role rather than the role itself. */
+.person-batch {
+  font-size: var(--text-2xs);
+  font-weight: 400;
+  color: var(--text-subtle);
+  margin: 4px 0 0;
+  letter-spacing: 0.1px;
 }
 
 /* Capsule badge style for developer tags */
@@ -226,7 +254,6 @@
   margin: 8px 0 16px 0;
   letter-spacing: 0.3px;
   text-transform: uppercase;
-  height: 38px;
   box-sizing: border-box;
 }
 
@@ -234,6 +261,7 @@
   display: flex;
   justify-content: center;
   gap: 10px;
+  margin-top: auto;
 }
 
 .social-icons a {
@@ -263,9 +291,9 @@
    Mentor Card Styling Override (Showcasing Importance)
    ========================================================================== */
 .mentor-card {
-  max-width: 300px;
+  max-width: 320px;
   width: 100%;
-  padding: 35px 24px;
+  padding: 30px 24px 26px;
   border-top-width: 6px;
   box-shadow: 0 10px 25px var(--primary-wash), 0 3px 6px rgba(0, 0, 0, 0.03);
 }
@@ -280,20 +308,20 @@
 }
 
 .mentor-card .avatar-container {
-  width: 130px;
-  height: 130px;
-  margin-bottom: 20px;
+  width: 136px;
+  height: 136px;
+  margin-bottom: 16px;
 }
 
 .mentor-card .avatar {
-  width: 120px;
-  height: 120px;
+  width: 126px;
+  height: 126px;
   border-width: 4px;
 }
 
 .mentor-card .avatar-fallback {
-  width: 120px;
-  height: 120px;
+  width: 126px;
+  height: 126px;
   font-size: var(--text-4xl);
   border-width: 4px;
 }
@@ -307,7 +335,7 @@
   font-size: var(--text-sm);
   font-weight: 600;
   padding: 5px 14px;
-  margin: 10px 0 20px 0;
+  margin: 10px 0 16px 0;
   background: var(--primary-wash);
   height: auto;
 }
@@ -319,16 +347,8 @@
 }
 
 /* ==========================================================================
-   Footer and Dividers
+   Footer
    ========================================================================== */
-.divider {
-  border: none;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(147, 47, 47, 0.15) 30%, rgba(147, 47, 47, 0.15) 70%, transparent);
-  margin: 28px auto;
-  width: 80%;
-}
-
 .contact {
   font-size: var(--text-base);
   color: #1a202c;
@@ -359,23 +379,26 @@
 /* ==========================================================================
    Responsiveness
    ========================================================================== */
-@media (max-width: 1100px) {
+@media (max-width: 1200px) {
   .team-grid {
     grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
   }
 }
 
-@media (max-width: 768px) {
-  .team-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
+@media (max-width: 900px) {
+  /* Below this the two columns leave the team grid narrower than two cards,
+     so the mentor goes back above the team. */
+  .team-layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
 
-  /* Two 225px mentor cards in a row do not fit a phone, and the row does not
-     wrap on its own. */
-  .mentor-grid {
-    flex-wrap: wrap;
+  .team-mentor .person-card {
+    margin: 0 auto;
+  }
+
+  .team-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 

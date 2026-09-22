@@ -2,20 +2,24 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Team.css';
 
-const mentors = [
-  {
-    name: 'Dr. Tarunpreet Bhatia',
-    title: 'Associate Professor, CSED',
-    image: '/images/tarun.jpg',
-    linkedin: 'https://www.linkedin.com/in/tarunpreet-bhatia30/',
-    email: 'tarunpreet@thapar.edu',
-  },
-];
+const mentor = {
+  name: 'Dr. Tarunpreet Bhatia',
+  title: 'Associate Professor, CSED',
+  image: '/images/tarun.jpg',
+  linkedin: 'https://www.linkedin.com/in/tarunpreet-bhatia30/',
+  email: 'tarunpreet@thapar.edu',
+};
 
-const team2025_2026 = [
+// The batch reads under the name. It replaced the two batch sections, which
+// split the team into two grids and made the second look like an afterthought.
+// The order is unchanged: the older batch first. Each person carries their own
+// string rather than sharing a constant, because the branch differs.
+
+const team = [
   {
     name: 'Aadi Jain',
     role: 'UI and UX Designer',
+    batch: 'B.E. COE (2021-2025)',
     image: '/images/aadi.png',
     github: 'https://github.com/nandinnijainn',
     linkedin: 'https://www.linkedin.com/in/aadi-jain-3732b4247/',
@@ -24,6 +28,7 @@ const team2025_2026 = [
   {
     name: 'Abhinav Jain',
     role: 'Mobile App Developer',
+    batch: 'B.E. COE (2022-2026)',
     image: '/images/abhinav.jpeg',
     github: 'https://github.com/AbhinavJain1234',
     linkedin: 'https://www.linkedin.com/in/abhinavjain30/',
@@ -32,49 +37,34 @@ const team2025_2026 = [
   {
     name: 'Akarsh Srivastava',
     role: 'Backend Developer',
+    batch: 'B.E. COE (2022-2026)',
     image: '/images/akarsh.jpeg',
     github: 'https://github.com/akarsh911',
     linkedin: 'https://www.linkedin.com/in/aksrv09/',
     email: 'asrivastava2_be22@thapar.edu',
   },
   {
-    name: 'Gurman Kaur',
-    role: 'Frontend Developer',
-    image: '/images/gurman.jpeg',
-    github: 'https://github.com/GurmanKD',
-    linkedin: 'https://www.linkedin.com/in/gurmankd/',
-    email: 'gkaur5_be22@thapar.edu',
-  },
-  {
     name: 'Nandini Jain',
     role: 'Frontend Developer',
+    batch: 'B.E. COE (2022-2026)',
     image: '/images/nandini.jpeg',
     github: 'https://github.com/nandinnijainn',
     linkedin: 'https://www.linkedin.com/in/nandini-jain-446271267/',
     email: 'nandini1904jain@gmail.com',
   },
-];
-
-const team2026_2027 = [
   {
     name: 'Arnav Raj Singh',
     role: 'Backend Developer',
+    batch: 'B.E. ECE (2023-2027)',
     image: '/images/arnav.png',
     github: 'https://github.com/arnavrajsingh19',
     linkedin: 'https://www.linkedin.com/in/arnavrajsingh18',
     email: 'asingh32_be23@thapar.edu',
   },
   {
-    name: 'Ishwin',
-    role: 'Frontend Developer',
-    image: '/images/ishwin.png',
-    github: 'https://github.com/ishwin07',
-    linkedin: 'https://www.linkedin.com/in/ishwin-syal-b466b02a8',
-    email: 'iishwin_be23@thapar.edu',
-  },
-  {
     name: 'Manjot Kaur',
     role: 'Frontend Developer and UI/UX',
+    batch: 'B.E. COE (2023-2027)',
     image: '/images/manjot.jpeg',
     github: 'https://github.com/kaurmanjot20',
     linkedin: 'https://www.linkedin.com/in/kaurmanjot20',
@@ -83,6 +73,7 @@ const team2026_2027 = [
   {
     name: 'Sakshham Bhagat',
     role: 'Backend & App Developer',
+    batch: 'B.E. COE (2023-2027)',
     image: '/images/sakshham.png',
     github: 'https://github.com/SakshhamTheCoder',
     linkedin: 'https://www.linkedin.com/in/sakshhamthecoder',
@@ -91,6 +82,7 @@ const team2026_2027 = [
   {
     name: 'Saumil Makkar',
     role: 'Backend Developer',
+    batch: 'B.E. COE (2023-2027)',
     image: '/images/saumil.png',
     github: 'https://github.com/SaumilMakkar',
     linkedin: 'https://www.linkedin.com/in/saumil-makkar-3731a0285',
@@ -98,7 +90,7 @@ const team2026_2027 = [
   },
 ];
 
-const PersonCard = ({ name, title, image, github, linkedin, email, isMentor }) => {
+const PersonCard = ({ name, title, batch, image, github, linkedin, email, isMentor }) => {
   const [imgError, setImgError] = React.useState(false);
   const cleanTitle = title ? title.trim() : '';
 
@@ -125,6 +117,7 @@ const PersonCard = ({ name, title, image, github, linkedin, email, isMentor }) =
       </div>
       <div className='card-content'>
         <h3>{name}</h3>
+        {batch && <p className='person-batch'>{batch}</p>}
         <p className='title'>{cleanTitle}</p>
         <div className='social-icons'>
           {github && (
@@ -166,39 +159,30 @@ const Team = () => {
         <img src='/images/tiet_logo.png' alt='Thapar Logo' className='logo' />
         <h1 className='heading'>Meet the Portal Team</h1>
         <p className='team-subtitle'>
-          The dedicated group of mentors, developers, and designers who designed and built the Doctoral, Research and Innovation Management Portal.
+          The mentor, developers and designers who designed and built the Doctoral, Research and Innovation Management Portal.
         </p>
 
-        <h2 className='subheading'>Mentors</h2>
-        <div className='mentor-grid'>
-          {mentors.map((person) => (
-            <PersonCard key={person.name} {...person} isMentor={true} />
-          ))}
-        </div>
+        <div className='team-layout'>
+          <div className='team-mentor'>
+            <h2 className='subheading'>Mentor</h2>
+            <PersonCard {...mentor} isMentor={true} />
+          </div>
 
-        <hr className='divider' />
-
-        <h2 className='subheading'>Team 2025-2026</h2>
-        <div className='team-grid'>
-          {team2025_2026.map((person) => (
-            <PersonCard key={person.name} {...person} title={person.role}/>
-          ))}
-        </div>
-
-        <hr className='divider' />
-
-        <h2 className='subheading'>Team 2026-2027</h2>
-        <div className='team-grid'>
-          {team2026_2027.map((person) => (
-            <PersonCard key={person.name} {...person} title={person.role}/>
-          ))}
+          <div className='team-members'>
+            <h2 className='subheading'>The Team</h2>
+            <div className='team-grid'>
+              {team.map((person) => (
+                <PersonCard key={person.name} {...person} title={person.role} />
+              ))}
+            </div>
+          </div>
         </div>
 
         <p className='contact'>
           For queries, you can reach us at{' '}
-          <a href='mailto:sbhagat_be23@thapar.edu'>
-            sbhagat_be23@thapar.edu
-          </a>
+          <a href='mailto:tarunpreet@thapar.edu'>tarunpreet@thapar.edu</a>
+          {' '}or{' '}
+          <a href='mailto:sbhagat_be23@thapar.edu'>sbhagat_be23@thapar.edu</a>
         </p>
       </div>
     </div>
