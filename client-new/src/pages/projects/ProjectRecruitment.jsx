@@ -197,7 +197,17 @@ const ProjectRecruitment = () => {
               positions.map((pos, i) => (
                 // Applications are PI only server side, so for anyone else the
                 // card is the whole story and opening it would show an empty list.
-                <div key={i} className={`pr-card pr-position-card${canEdit ? ' pr-position-clickable' : ''}`} onClick={canEdit ? () => setSelectedPosition(pos) : undefined}>
+                <div
+                  key={i}
+                  className={`pr-card pr-position-card${canEdit ? ' pr-position-clickable' : ''}`}
+                  onClick={canEdit ? () => setSelectedPosition(pos) : undefined}
+                  onKeyDown={canEdit ? (e) => {
+                    if (e.target !== e.currentTarget) return;
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedPosition(pos); }
+                  } : undefined}
+                  role={canEdit ? 'button' : undefined}
+                  tabIndex={canEdit ? 0 : undefined}
+                >
                   <div className="pr-pos-top">
                     <div>
                       <span className="pr-pos-type">{pos.type}</span>
