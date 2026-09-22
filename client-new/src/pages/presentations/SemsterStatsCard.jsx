@@ -19,6 +19,7 @@ import FileUploadField from "../../components/forms/fields/FileUploadField";
 // import FilterBar from "../../components/filterBar/FilterBar";
 import { set } from "react-hook-form";
 import { formatDate } from '../../utils/timeParse';
+import { currentRole } from '../../auth/access';
 
 const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
   const [semesterStats, setSemesterStats] = useState(null);
@@ -46,7 +47,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
   const [open, setOpen] = useState(false);
   const [tabIndex, setTabIndex] = useState(0);
 
-  const role = localStorage.getItem("userRole") || "student";
+  const role = currentRole() || "student";
   const [createForm, setCreateForm] = useState({
     semester_name: "",
     start_date: new Date(),
@@ -299,7 +300,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
           </div>
           <div className="semester-stats-line">
             <div style={{ display: "flex", flexDirection: "column", gap: "12px", width: "100%" }}>
-              <p style={{ margin: 0, fontSize: "14px", color: "#666" }}>
+              <p style={{ margin: 0, fontSize: "14px", color: "var(--text-muted)" }}>
                 Semester <strong>{semester_name}</strong> was completed recently. Create a new semester to continue scheduling presentations.
               </p>
               <button

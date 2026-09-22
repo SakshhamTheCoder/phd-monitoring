@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useFeatures } from '../../context/FeaturesContext';
 import { useCapabilities } from '../../context/CapabilitiesContext';
-import { ACCESS } from '../../auth/access';
+import { ACCESS, currentRole } from '../../auth/access';
 import './NavBar.css';
 
 // Exported so the breadcrumb names a route the same way the nav does, instead
@@ -42,7 +42,7 @@ const CustomNavBar = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const userRole = localStorage.getItem('userRole');
+    const userRole = currentRole();
     const features = useFeatures();
     const can = useCapabilities();
     // `capability` is for a page a role may reach only sometimes; the server

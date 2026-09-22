@@ -6,6 +6,7 @@ import { buttonConfig } from "../navbar/CustomNavBar";
 import { useFeatures } from "../../context/FeaturesContext";
 import GridContainer from "../forms/fields/GridContainer";
 import CustomButton from "../forms/fields/CustomButton";
+import { currentRole } from '../../auth/access';
 
 // Path -> sidebar entry, so a tile's role and feature-flag gating come from
 // the sidebar itself instead of a second list that can drift out of sync.
@@ -55,7 +56,7 @@ const AdminHome = ({ data }) => {
   const navigate = useNavigate();
   const features = useFeatures();
   const d = data || {}; // data can be null (default params only cover undefined)
-  const role = d.role || localStorage.getItem("userRole") || "admin";
+  const role = d.role || currentRole() || "admin";
   const name = d.name || storedName() || "there";
   const tiles = LINKS.filter((l) => {
     const roles = l.roles || NAV_BY_PATH[l.path]?.roles || [];

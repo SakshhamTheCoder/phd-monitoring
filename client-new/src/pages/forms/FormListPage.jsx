@@ -12,6 +12,7 @@ import CustomModal from "../../components/forms/modal/CustomModal";
 import InputField from "../../components/forms/fields/InputField";
 import BulkAllocateSupervisors from "../../components/bulkAllocateSupervisors/BulkAllocateSupervisors";
 import useScholarInPath from "../../hooks/useScholarInPath";
+import { currentRole } from '../../auth/access';
 
 // Forms a reviewer raises on a scholar's behalf, from that scholar's own form
 // list. The supervisor raises the list of examiners. The PhD coordinator raises
@@ -49,7 +50,7 @@ const FormListPage = () => {
 
   useEffect(() => {
     // Set the user role from localStorage
-    setRole(localStorage.getItem("userRole"));
+    setRole(currentRole());
     const match = location.pathname.match(/^\/students\/(\d+)\/forms\/([\w-]+)$/);
     const matchPath2 = location.pathname.match(/^\/forms\/list-of-examiners$/);
     if (match && RAISED_FOR_A_SCHOLAR[match[2]]) {

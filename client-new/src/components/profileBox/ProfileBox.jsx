@@ -7,6 +7,7 @@ import ChangePassword from "./ChangePassword";
 import { getRoleName } from "../../utils/roleName";
 import { logoutAPI } from "../../api/login";
 import { toast } from "react-toastify";
+import { currentRole } from '../../auth/access';
 const ProfileBox = () => {
   const [isOpen, setIsOpen] = useState(false);
   const profileRef = useRef(null);
@@ -17,11 +18,11 @@ const ProfileBox = () => {
     user && user.first_name && user.last_name
       ? `${user.first_name} ${user.last_name}`
       : "Name";
-  const [role, setRole] = useState(getRoleName(localStorage.getItem("userRole")) || "Role");
+  const [role, setRole] = useState(getRoleName(currentRole()) || "Role");
 
   useEffect(() => {
     const onRoleChange = () =>
-      setRole(getRoleName(localStorage.getItem("userRole")) || "Role");
+      setRole(getRoleName(currentRole()) || "Role");
     window.addEventListener("rolechange", onRoleChange);
     return () => window.removeEventListener("rolechange", onRoleChange);
   }, []);

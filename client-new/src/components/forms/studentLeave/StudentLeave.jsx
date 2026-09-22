@@ -4,6 +4,7 @@ import Recommendation from '../layouts/Recommendation';
 import Student from './roles/Student';
 import { badgeClass } from '../../../data/badges';
 import './StudentLeave.css';
+import { currentRole } from '../../../auth/access';
 
 // submitPath is optional: pages that embed this form at its normal route
 // (/forms/student-leave/:id) need not pass it, but a page like
@@ -14,7 +15,7 @@ const StudentLeave = ({ formData, submitPath }) => {
   // the outcome rather than a locked set of radio buttons. Everyone else sees
   // the HOD's decision: live for the HOD, and locked by Recommendation for an
   // admin reading along, since the viewer is not the role being asked.
-  const isStudent = localStorage.getItem('userRole') === 'student';
+  const isStudent = currentRole() === 'student';
 
   return (
     <div className="student-leave">

@@ -201,7 +201,7 @@ const StudentCourses = () => {
         }
 
         .detail-value.grade {
-          background: #dcfce7;
+          background: var(--success-bg);
           color: #16a34a;
           padding: 0.25rem 0.75rem;
           border-radius: 0.25rem;

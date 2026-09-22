@@ -6,9 +6,10 @@ import { customFetch } from '../../api/base';
 import { baseURL, ENDPOINTS } from '../../api/urls';
 import { useLoading } from '../../context/LoadingContext';
 import { useLocation } from 'react-router-dom';
+import { currentRole } from '../../auth/access';
 
 const FacultyFormsPage = () => {
-    const role = localStorage.getItem('userRole');
+    const role = currentRole();
     const [user, setUser] = useState();
     const { setLoading } = useLoading();
     const [forms, setForms] = useState([]);

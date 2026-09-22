@@ -5,7 +5,7 @@ import "react-circular-progressbar/dist/styles.css";
 import ShowPublications from "../publications/ShowPublications";
 import "./ProfileCard.css";
 import { facultyNameCell } from "../facultyLink/FacultyLink";
-import { ACCESS } from "../../auth/access";
+import { ACCESS, currentRole } from "../../auth/access";
 
 import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
 import { baseURL } from "../../api/urls";
@@ -59,7 +59,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
   // register, so the button says what it opens for them. Plenty of other roles
   // read the figure below with no page at all behind it, which is why this is
   // narrower than "may read attendance".
-  const role = localStorage.getItem('userRole');
+  const role = currentRole();
   const opensAttendancePage = ACCESS.attendance.includes(role);
   const attendanceLinkText = role === 'hod' ? 'Leave requests' : 'View attendance';
 

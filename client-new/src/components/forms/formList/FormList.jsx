@@ -5,6 +5,7 @@ import { baseURL } from "../../../api/urls";
 import { customFetch } from "../../../api/base";
 import { useLoading } from "../../../context/LoadingContext";
 import { parseDateTime } from "../../../utils/timeParse";
+import { currentRole } from '../../../auth/access';
 
 const FormList = () => {
   const [forms, setForms] = useState([]);
@@ -12,7 +13,7 @@ const FormList = () => {
   const location = useLocation();
   const [role, setRole] = useState();
   useEffect(() => {
-    setRole(localStorage.getItem("userRole"));
+    setRole(currentRole());
     setLoading(true);
     const url = baseURL + location.pathname;
 

@@ -7,6 +7,7 @@ import FileUploadField from '../../fields/FileUploadField';
 import RadioButtonGroup from '../../fields/RadioButtonGroup';
 import { apiLeaveBalance, apiLeaveLoad, apiLeaveSubmit } from '../../../../api/leave';
 import { overageOf, formatDays, localDateString } from '../../../../utils/leaveBalance';
+import { currentRole } from '../../../../auth/access';
 
 const DAY_PART_OPTIONS = [
   { value: 'full', label: 'Full day' },
@@ -60,7 +61,7 @@ const Student = ({ formData }) => {
   // HOD, and apiLeaveBalance's showToast=true would surface that 403 as a red
   // error toast for no reason.
   useEffect(() => {
-    if (localStorage.getItem('userRole') !== 'student') return;
+    if (currentRole() !== 'student') return;
     apiLeaveBalance().then((res) => {
       if (res.success) setBalance(res.response);
     });

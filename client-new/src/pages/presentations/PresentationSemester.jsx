@@ -21,6 +21,7 @@ import { toast } from "react-toastify";
 import UnifiedBulkImportModal from "../../components/bulkImport/UnifiedBulkImportModal";
 import { column } from "../../components/bulkImport/columns";
 import { set } from "react-hook-form";
+import { currentRole } from '../../auth/access';
 
 const PresentationSemester = () => {
   const [role, setRole] = useState("");
@@ -40,7 +41,7 @@ const PresentationSemester = () => {
   
 
   useEffect(() => {
-    setRole(localStorage.getItem("userRole"));
+    setRole(currentRole());
   }, []);
 
   const handleEditClick = async (semester) => {

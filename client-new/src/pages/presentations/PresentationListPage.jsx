@@ -14,6 +14,7 @@ import SemesterStatsCard from "./SemsterStatsCard";
 import { set } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import PageHeader from '../../components/pageHeader/PageHeader';
+import { currentRole } from '../../auth/access';
 
 // Admin reads every evaluation but reviews none, so nothing waits on it.
 const REVIEWS_NOTHING = ['admin'];
@@ -32,7 +33,7 @@ const PresentationListPage = () => {
   const [extraFilter, setExtraFilter] = useState(false);
   const [location, setLocation] = useState(window.location.pathname);
   const [num, setNum] = useState(0);
-  const role = localStorage.getItem("userRole") || "student";
+  const role = currentRole() || "student";
   const [presentationTab, setPresentationTab] = useState(REVIEWS_NOTHING.includes(role) ? ALL_TAB : ACTION_TAB);
   // const [filters, setFilters] = useState(role==="student"?{}:{
   //   mandatory_filter: [

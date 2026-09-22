@@ -2,6 +2,7 @@ import React from 'react';
 import AttendancePage from './AttendancePage';
 import StudentAttendancePage from './StudentAttendancePage';
 import HodAttendancePage from './HodAttendancePage';
+import { currentRole } from '../../auth/access';
 
 /**
  * /attendance means something different per role, and a notification link is the
@@ -9,7 +10,7 @@ import HodAttendancePage from './HodAttendancePage';
  * one link working for everyone.
  */
 const AttendanceRoute = () => {
-  const role = localStorage.getItem('userRole');
+  const role = currentRole();
 
   if (role === 'student') return <StudentAttendancePage />;
   if (role === 'hod') return <HodAttendancePage />;

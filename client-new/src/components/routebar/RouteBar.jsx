@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { buttonConfig } from '../navbar/CustomNavBar';
 import './RouteBar.css';
+import { currentRole } from '../../auth/access';
 
 // Page names come from the nav config, so a route is labelled once. Segments the
 // nav does not know about (an id, a form type) are title-cased from the URL.
@@ -38,7 +39,7 @@ const labelFor = (labels, path, segment) =>
 
 const RouteBar = () => {
   const { pathname } = useLocation();
-  const labels = navLabels(localStorage.getItem('userRole'));
+  const labels = navLabels(currentRole());
   const segments = pathname.split('/').filter(Boolean);
 
   const crumbs = segments.map((segment, i) => {

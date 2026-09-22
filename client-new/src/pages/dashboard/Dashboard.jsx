@@ -8,9 +8,10 @@ import { baseURL } from '../../api/urls';
 import FacultyProfile from '../admin/ResearchProfile';
 import AdminHome from '../../components/profileCard/AdminHome';
 import UgProfile from '../../components/urf/UgProfile';
+import { currentRole } from '../../auth/access';
 
 const Dashboard = () => {
-  const userRole = localStorage.getItem('userRole');
+  const userRole = currentRole();
   const [view, setView] = useState(null); // 'student' | 'faculty' | 'admin'
   const { setLoading } = useLoading();
   const [data, setData] = useState(null);

@@ -5,6 +5,7 @@ import Layout from "../dashboard/layout";
 import { timeAgo } from "../../utils/timeParse";
 import { toast } from "react-toastify";
 import { getRoleName } from "../../utils/roleName";
+import { currentRole } from '../../auth/access';
 
 const AllNotificationsPage = () => {
   const [notifications, setNotifications] = useState([]);
@@ -29,7 +30,7 @@ const AllNotificationsPage = () => {
   }, [fetchNotifications]);
 
   const openNotification = (notification) => {
-    const role = localStorage.getItem("userRole");
+    const role = currentRole();
     if (!notification.link) return;
     if (role !== notification.role) {
       toast.warn("Switch to the " + getRoleName(notification.role) + " role to open this notification");

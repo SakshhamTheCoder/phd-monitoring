@@ -6,6 +6,7 @@ import FileUploadField from '../forms/fields/FileUploadField';
 import CustomButton from '../forms/fields/CustomButton';
 import InputSuggestions from '../forms/fields/InputSuggestions';
 import { baseURL } from '../../api/urls';
+import { currentRole } from '../../auth/access';
 
 const Conference = ({callback,updateValue,data={}}) => {
     const [body, setBody] = useState(data);
@@ -13,7 +14,7 @@ const Conference = ({callback,updateValue,data={}}) => {
     const yearRange = Array.from({ length: 7 }, (_, i) => year - 3 + i); 
 
     // The URF publications sheet also asks for these; PhD scholars are not asked.
-    const isUrf = localStorage.getItem('userRole') === 'ug_student';
+    const isUrf = currentRole() === 'ug_student';
 
     const apiCountries = baseURL + "/suggestions/country";
     const apiStates = baseURL + "/suggestions/state";

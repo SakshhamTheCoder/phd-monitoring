@@ -4,6 +4,7 @@ import { APIlistUnreadNotifications, APImarkNotificationAsRead, APImarkAllNotifi
 import { toast } from "react-toastify";
 import { getRoleName } from "../../utils/roleName";
 import { timeAgo } from "../../utils/timeParse";
+import { currentRole } from '../../auth/access';
 
 const NotificationBox = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -41,7 +42,7 @@ const NotificationBox = () => {
   }, []);
 
   const onNotificationClick = (notification) => {
-    const role = localStorage.getItem("userRole");
+    const role = currentRole();
     if (notification && notification.link) {
       if (role !== notification.role) {
         toast.warn("Switch to the " + getRoleName(notification.role) + " role to open this notification");

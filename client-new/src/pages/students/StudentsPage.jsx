@@ -18,6 +18,7 @@ import useCapabilities from '../../context/CapabilitiesContext';
 import Tabs from "../../components/tabs/Tabs";
 import UgStudentForm from "../../components/urf/UgStudentForm";
 import { apiUgStudentImport } from "../../api/urf";
+import { currentRole } from '../../auth/access';
 
 const StudentsPage = () => {
   const [filter, setFilter] = useState([]);
@@ -26,7 +27,7 @@ const StudentsPage = () => {
   const can = useCapabilities();
   // Manage Forms has no capability of its own yet, so it keeps the role
   // check it always had rather than borrowing an unrelated capability.
-  const role = localStorage.getItem("userRole");
+  const role = currentRole();
   // A mentor reads the UG students on the projects they mentor, so the tab is
   // theirs too. Adding, importing and editing one stay the office's.
   const managesStudents = can("can_manage_students");

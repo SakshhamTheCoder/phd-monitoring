@@ -6,6 +6,7 @@ import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
 import {getRoleName} from '../../utils/roleName';
 import { clearCapabilities } from '../../context/CapabilitiesContext';
+import { currentRole } from '../../auth/access';
 const SwitchRole = () => {
     const [body, setBody] = useState({});
     const { setLoading } = useLoading();
@@ -32,7 +33,7 @@ const SwitchRole = () => {
         // backend with a 401, which the fetch layer treats as a session expiry and logs
         // the user out. Also skip switching to the role that's already active.
         if (!role) return;
-        if (role === localStorage.getItem("userRole")) return;
+        if (role === currentRole()) return;
         setLoading(true);
         const url = `${baseURL}/switch-role`;
         customFetch(url, "POST",{role:role}).then((data) => {

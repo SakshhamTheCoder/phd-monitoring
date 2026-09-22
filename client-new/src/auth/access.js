@@ -42,3 +42,10 @@ export const ACCESS = {
 };
 
 export const allows = (area, role) => ACCESS[area].includes(role);
+
+// The acting role, as the server last told us at sign-in or role switch.
+//
+// Read in three dozen places to decide what to draw. It was read as
+// localStorage.getItem('userRole') in every one of them, in two quote styles,
+// so there was nowhere to change what "the current role" means.
+export const currentRole = () => localStorage.getItem('userRole');

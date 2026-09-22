@@ -12,10 +12,11 @@ import InputSuggestions from '../../components/forms/fields/InputSuggestions';
 import InputField from '../../components/forms/fields/InputField';
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
 import PageHeader from '../../components/pageHeader/PageHeader';
+import { currentRole } from '../../auth/access';
 const AdminCourseManagement = () => {
   // Heads and coordinators manage their own department's courses; the server
   // fills the department in for them, so only admin picks one.
-  const picksDepartment = localStorage.getItem('userRole') === 'admin';
+  const picksDepartment = currentRole() === 'admin';
   const [courses, setCourses] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -581,7 +582,7 @@ const AdminCourseManagement = () => {
         }
 
         .delete-button:hover {
-          background: #fee2e2;
+          background: var(--danger-bg);
         }
 
         .modal-form {

@@ -7,7 +7,7 @@ import { LoadingProvider, useLoading } from './context/LoadingContext';
 import { FeaturesProvider, useFeatures } from './context/FeaturesContext';
 import { CapabilitiesProvider } from './context/CapabilitiesContext';
 import Loader from './components/loader/loader';
-import { ACCESS } from './auth/access';
+import { ACCESS, currentRole } from './auth/access';
 
 // Every page is split out of the entry chunk. A student signing in should not
 // download the admin surface to see their own forms.
@@ -81,7 +81,7 @@ const PUBLIC_PATHS = /^\/($|team|privacy|support|login|signup|google\/callback|f
 
 const AppContent = () => {
   const { loading } = useLoading();
-  const role = localStorage.getItem('userRole');
+  const role = currentRole();
 
   // A switched-off module leaves no route behind, so its address falls through
   // to the 404 page rather than rendering against an API that answers 404.
