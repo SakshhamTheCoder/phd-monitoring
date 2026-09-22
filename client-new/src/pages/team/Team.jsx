@@ -1,10 +1,11 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import PublicPageBar from '../../components/publicPageBar/PublicPageBar';
 import './Team.css';
 
 const mentor = {
   name: 'Dr. Tarunpreet Bhatia',
   title: 'Associate Professor, CSED',
+  secondTitle: 'Associate Dean of Strategic Initiatives',
   image: '/images/tarun.jpg',
   linkedin: 'https://www.linkedin.com/in/tarunpreet-bhatia30/',
   email: 'tarunpreet@thapar.edu',
@@ -90,7 +91,7 @@ const team = [
   },
 ];
 
-const PersonCard = ({ name, title, batch, image, github, linkedin, email, isMentor }) => {
+const PersonCard = ({ name, title, secondTitle, batch, image, github, linkedin, email, isMentor }) => {
   const [imgError, setImgError] = React.useState(false);
   const cleanTitle = title ? title.trim() : '';
 
@@ -119,6 +120,7 @@ const PersonCard = ({ name, title, batch, image, github, linkedin, email, isMent
         <h3>{name}</h3>
         {batch && <p className='person-batch'>{batch}</p>}
         <p className='title'>{cleanTitle}</p>
+        {secondTitle && <p className='title title--second'>{secondTitle}</p>}
         <div className='social-icons'>
           {github && (
             <a href={github} target='_blank' rel='noopener noreferrer' title="GitHub">
@@ -141,27 +143,11 @@ const PersonCard = ({ name, title, batch, image, github, linkedin, email, isMent
   );
 };
 
-const Team = () => {
-  const navigate = useNavigate();
-
-  return (
+const Team = () => (
     <div className='team-page-wrapper'>
-      <nav className="page-navbar">
-        <div className="nav-container">
-          <button onClick={() => navigate(-1)} className="back-button">
-            ← Back
-          </button>
-          <Link to="/" className="nav-home-link">Home</Link>
-        </div>
-      </nav>
+      <PublicPageBar title="Meet the Portal Team" />
       
       <div className='team-container'>
-        <img src='/images/tiet_logo.png' alt='Thapar Logo' className='logo' />
-        <h1 className='heading'>Meet the Portal Team</h1>
-        <p className='team-subtitle'>
-          The mentor, developers and designers who designed and built the Doctoral, Research and Innovation Management Portal.
-        </p>
-
         <div className='team-layout'>
           <div className='team-mentor'>
             <h2 className='subheading'>Mentor</h2>
@@ -169,7 +155,7 @@ const Team = () => {
           </div>
 
           <div className='team-members'>
-            <h2 className='subheading'>The Team</h2>
+            <h2 className='subheading'>Development Team</h2>
             <div className='team-grid'>
               {team.map((person) => (
                 <PersonCard key={person.name} {...person} title={person.role} />
@@ -186,7 +172,6 @@ const Team = () => {
         </p>
       </div>
     </div>
-  );
-};
+);
 
 export default Team;
