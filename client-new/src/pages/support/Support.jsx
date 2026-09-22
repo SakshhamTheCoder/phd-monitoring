@@ -42,6 +42,10 @@ const Support = () => {
                 <h3 className="tw-font-bold tw-text-gray-900 tw-mb-2">Email Support</h3>
                 <p className="tw-text-gray-700">
                   For technical support and general inquiries: <br/>
+                  <a href="mailto:tarunpreet@thapar.edu" className="tw-text-brand hover:tw-underline tw-font-semibold">
+                    tarunpreet@thapar.edu
+                  </a>
+                  {' '}or{' '}
                   <a href="mailto:sbhagat_be23@thapar.edu" className="tw-text-brand hover:tw-underline tw-font-semibold">
                     sbhagat_be23@thapar.edu
                   </a>
@@ -101,7 +105,11 @@ const Support = () => {
                 </h3>
                 <p className="tw-text-gray-700">
                   For account creation, access issues, or role-related queries, please email 
-                  <a href="mailto:sbhagat_be23@thapar.edu" className="tw-text-brand hover:tw-underline tw-font-semibold tw-ml-1">
+                  <a href="mailto:tarunpreet@thapar.edu" className="tw-text-brand hover:tw-underline tw-font-semibold tw-ml-1">
+                    tarunpreet@thapar.edu
+                  </a>
+                  {' '}or{' '}
+                  <a href="mailto:sbhagat_be23@thapar.edu" className="tw-text-brand hover:tw-underline tw-font-semibold">
                     sbhagat_be23@thapar.edu
                   </a>
                 </p>

@@ -111,7 +111,7 @@ const PrivacyPolicy = () => {
               <li><strong>Deletion:</strong> You have the right to request the deletion of your personal information, subject to legal and contractual restrictions.</li>
             </ul>
             <p className="tw-text-gray-700 tw-leading-relaxed tw-mt-3">
-              To exercise these rights, please contact us at <a href="mailto:sbhagat_be23@thapar.edu" className="tw-text-brand hover:tw-underline tw-font-semibold">sbhagat_be23@thapar.edu</a>.
+              To exercise these rights, please contact us at <a href="mailto:tarunpreet@thapar.edu" className="tw-text-brand hover:tw-underline tw-font-semibold">tarunpreet@thapar.edu</a> or <a href="mailto:sbhagat_be23@thapar.edu" className="tw-text-brand hover:tw-underline tw-font-semibold">sbhagat_be23@thapar.edu</a>.
             </p>
           </section>
 
@@ -134,7 +134,7 @@ const PrivacyPolicy = () => {
               If you have any questions or concerns about this Privacy Policy or our data practices, please contact us at:
             </p>
             <div className="tw-bg-gray-50 tw-p-6 tw-rounded-r-lg tw-border-l-4 tw-border-l-brand tw-shadow-sm tw-space-y-2">
-              <p><strong>Email:</strong> <a href="mailto:sbhagat_be23@thapar.edu" className="tw-text-brand hover:tw-underline tw-font-semibold">sbhagat_be23@thapar.edu</a></p>
+              <p><strong>Email:</strong> <a href="mailto:tarunpreet@thapar.edu" className="tw-text-brand hover:tw-underline tw-font-semibold">tarunpreet@thapar.edu</a> or <a href="mailto:sbhagat_be23@thapar.edu" className="tw-text-brand hover:tw-underline tw-font-semibold">sbhagat_be23@thapar.edu</a></p>
               <p><strong>Address:</strong> Thapar Institute of Engineering & Technology, Patiala</p>
             </div>
           </section>
