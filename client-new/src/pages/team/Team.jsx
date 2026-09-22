@@ -4,8 +4,8 @@ import './Team.css';
 
 const mentor = {
   name: 'Dr. Tarunpreet Bhatia',
-  title: 'Associate Professor, CSED',
-  secondTitle: 'Associate Dean of Strategic Initiatives',
+  title: 'Associate Dean of Strategic Initiatives',
+  secondTitle: 'Associate Professor, CSED',
   image: '/images/tarun.jpg',
   linkedin: 'https://www.linkedin.com/in/tarunpreet-bhatia30/',
   email: 'tarunpreet@thapar.edu',

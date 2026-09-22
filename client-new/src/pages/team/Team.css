@@ -328,6 +328,15 @@
   height: auto;
 }
 
+/* "Associate Dean of Strategic Initiatives" is 39 characters in capitals. One
+   step down the type scale and no tracking holds it on one line in the card's
+   310px; if a platform's font runs wider it wraps, as it did before. */
+.mentor-card .card-content .title:not(.title--second) {
+  font-size: var(--text-xs);
+  letter-spacing: 0;
+  max-width: 100%;
+}
+
 .mentor-card .card-content .title--second {
   margin: 0 0 10px 0;
   background: #F3F4F6;
