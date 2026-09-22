@@ -19,13 +19,16 @@
 }
 
 .subheading {
-  font-size: var(--text-2xl);
+  /* One step under the bar's page title, so the two section labels read as
+     labels rather than as a second and third title. The space that frees goes
+     to the gap above them, off the bar. */
+  font-size: var(--text-xl);
   font-weight: 600;
   color: var(--text-color);
-  margin: 4px 0 10px;
+  margin: 12px 0 24px;
   position: relative;
   display: inline-block;
-  padding-bottom: 8px;
+  padding-bottom: 6px;
 }
 
 .subheading::after {
@@ -343,12 +346,14 @@
    Footer
    ========================================================================== */
 .contact {
-  font-size: var(--text-base);
+  /* A line of contact detail, not a call to action, so it is sized like one.
+     What it gave up pays for the gap between the section labels and the cards. */
+  font-size: var(--text-sm);
   color: #1a202c;
-  margin-top: 12px;
+  margin-top: 8px;
   background: #fff;
   display: inline-block;
-  padding: 12px 28px;
+  padding: 6px 20px;
   border-radius: 30px;
   box-shadow: var(--shadow-sm);
   border: 1px solid rgba(147, 47, 47, 0.15);
