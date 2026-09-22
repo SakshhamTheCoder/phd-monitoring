@@ -5,6 +5,7 @@ import TableComponent from '../../../components/forms/table/TableComponent';
 import GridContainer from '../../../components/forms/fields/GridContainer';
 import InputSuggestions from '../../../components/forms/fields/InputSuggestions';
 import { baseURL } from '../../../api/urls';
+import './Configuration.css';
 import {
   apiChecklistCreate,
   apiChecklistDelete,
@@ -170,10 +171,10 @@ const SynopsisChecklist = () => {
   }));
 
   return (
-    <div style={{ marginTop: '1rem' }}>
+    <div className="config-block">
       <div className="filter-bar">
-        <div className="filter-row" style={{ alignItems: 'flex-end' }}>
-          <div className="input-field-container" style={{ minWidth: '240px' }}>
+        <div className="filter-row config-filter-row">
+          <div className="input-field-container config-field-240">
             <label className="input-label" htmlFor="rule-name">Condition</label>
             <input
               id="rule-name"
@@ -183,7 +184,7 @@ const SynopsisChecklist = () => {
               onChange={(e) => setRule((prev) => ({ ...prev, name: e.target.value }))}
             />
           </div>
-          <div className="input-field-container" style={{ minWidth: '240px' }}>
+          <div className="input-field-container config-field-240">
             <InputSuggestions
               label="Add a department"
               apiUrl={`${baseURL}/suggestions/department`}
@@ -198,7 +199,7 @@ const SynopsisChecklist = () => {
               }}
             />
           </div>
-          <div className="input-field-container" style={{ minWidth: '160px' }}>
+          <div className="input-field-container config-field-160">
             <label className="input-label" htmlFor="rule-from">Admitted from</label>
             <input
               id="rule-from"
@@ -208,7 +209,7 @@ const SynopsisChecklist = () => {
               onChange={(e) => setRule((prev) => ({ ...prev, admitted_from: e.target.value }))}
             />
           </div>
-          <div className="input-field-container" style={{ minWidth: '160px' }}>
+          <div className="input-field-container config-field-160">
             <label className="input-label" htmlFor="rule-to">Admitted to</label>
             <input
               id="rule-to"
@@ -218,7 +219,7 @@ const SynopsisChecklist = () => {
               onChange={(e) => setRule((prev) => ({ ...prev, admitted_to: e.target.value }))}
             />
           </div>
-          <div className="input-field-container" style={{ minWidth: '110px' }}>
+          <div className="input-field-container config-field-110">
             <label className="input-label" htmlFor="rule-order">Order</label>
             <input
               id="rule-order"
@@ -230,7 +231,7 @@ const SynopsisChecklist = () => {
               onChange={(e) => setRule((prev) => ({ ...prev, sort_order: e.target.value }))}
             />
           </div>
-          <div className="input-field-container" style={{ minWidth: '220px' }}>
+          <div className="input-field-container config-field-220">
             <label className="input-label" htmlFor="rule-exclusive">
               <input
                 id="rule-exclusive"
@@ -241,7 +242,7 @@ const SynopsisChecklist = () => {
               {' '}These categories stand alone
             </label>
           </div>
-          <div className="input-field-container" style={{ minWidth: '160px' }}>
+          <div className="input-field-container config-field-160">
             <label className="input-label" htmlFor="rule-active">
               <input
                 id="rule-active"
@@ -259,7 +260,7 @@ const SynopsisChecklist = () => {
         </div>
 
         {rule.departments.length > 0 && (
-          <div className="filter-row" style={{ gap: '0.5rem', flexWrap: 'wrap' }}>
+          <div className="filter-row config-chip-row">
             {rule.departments.map((department) => (
               <button
                 key={department.id}
@@ -308,9 +309,9 @@ const SynopsisChecklist = () => {
 
       {open && (
         <>
-          <div className="filter-bar" style={{ marginTop: '1rem' }}>
-            <div className="filter-row" style={{ alignItems: 'flex-end' }}>
-              <div className="input-field-container" style={{ minWidth: '440px' }}>
+          <div className="filter-bar config-block">
+            <div className="filter-row config-filter-row">
+              <div className="input-field-container config-field-440">
                 <label className="input-label" htmlFor="option-label">Category under {open.name}</label>
                 <input
                   id="option-label"
@@ -320,7 +321,7 @@ const SynopsisChecklist = () => {
                   onChange={(e) => setOption((prev) => ({ ...prev, label: e.target.value }))}
                 />
               </div>
-              <div className="input-field-container" style={{ minWidth: '110px' }}>
+              <div className="input-field-container config-field-110">
                 <label className="input-label" htmlFor="option-order">Order</label>
                 <input
                   id="option-order"
@@ -332,7 +333,7 @@ const SynopsisChecklist = () => {
                   onChange={(e) => setOption((prev) => ({ ...prev, sort_order: e.target.value }))}
                 />
               </div>
-              <div className="input-field-container" style={{ minWidth: '160px' }}>
+              <div className="input-field-container config-field-160">
                 <label className="input-label" htmlFor="option-active">
                   <input
                     id="option-active"
@@ -386,7 +387,7 @@ const SynopsisChecklist = () => {
         </>
       )}
 
-      <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.75rem' }}>
+      <p className="config-note">
         A scholar is offered every category whose condition they meet, merged into one list, in
         condition order. A condition that stands alone answers on its own: when a scholar meets
         it, the conditions everyone else reads are left out, which is how a department with a

@@ -29,7 +29,7 @@
   
   .profile_header {
     padding: 10px;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid var(--border-color);
   }
   
   .profile_header h3 {

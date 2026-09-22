@@ -1,4 +1,5 @@
 import React from 'react';
+import './NewUserKindPicker.css';
 
 /**
  * Asks what kind of user is being created before any record is written.
@@ -41,53 +42,25 @@ const KINDS = [
 ];
 
 const NewUserKindPicker = ({ onSelect, onCancel }) => (
-  <div style={{ padding: '1.5rem' }}>
-    <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#111827' }}>What kind of user is this?</h3>
-    <p style={{ marginTop: '0.4rem', marginBottom: '1.25rem', fontSize: '0.875rem', color: '#6b7280' }}>
+  <div className="kind-picker">
+    <h3 className="kind-picker-title">What kind of user is this?</h3>
+    <p className="kind-picker-intro">
       Picking the right kind creates the record the account needs, so the user isn't left with a
       role they can't use.
     </p>
 
-    <div style={{ display: 'grid', gap: '0.75rem' }}>
+    <div className="kind-picker-options">
       {KINDS.map((kind) => (
         <button
           key={kind.key}
           type="button"
           onClick={() => onSelect(kind.key)}
-          style={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '0.9rem',
-            width: '100%',
-            textAlign: 'left',
-            padding: '1rem',
-            border: '1px solid #d1d5db',
-            borderRadius: '0.5rem',
-            background: 'white',
-            cursor: 'pointer',
-            transition: 'all 0.15s',
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.borderColor = 'var(--primary-color)';
-            e.currentTarget.style.background = '#fdf6f6';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.borderColor = '#d1d5db';
-            e.currentTarget.style.background = 'white';
-          }}
+          className="kind-picker-option"
         >
-          <i
-            className={`fa ${kind.icon}`}
-            style={{
-              fontSize: '1.1rem',
-              color: 'var(--primary-color)',
-              marginTop: '0.15rem',
-              width: '1.4rem',
-            }}
-          />
+          <i className={`fa ${kind.icon} kind-picker-icon`} aria-hidden="true" />
           <span>
-            <span style={{ display: 'block', fontWeight: 600, color: '#111827' }}>{kind.title}</span>
-            <span style={{ display: 'block', fontSize: '0.8rem', color: '#6b7280', marginTop: '0.2rem' }}>
+            <span className="kind-picker-option-title">{kind.title}</span>
+            <span className="kind-picker-option-text">
               {kind.description}
             </span>
           </span>
@@ -95,19 +68,11 @@ const NewUserKindPicker = ({ onSelect, onCancel }) => (
       ))}
     </div>
 
-    <div style={{ marginTop: '1.25rem', textAlign: 'right' }}>
+    <div className="kind-picker-footer">
       <button
         type="button"
         onClick={onCancel}
-        style={{
-          padding: '0.5rem 1rem',
-          border: '1px solid #d1d5db',
-          borderRadius: '0.375rem',
-          background: 'white',
-          cursor: 'pointer',
-          fontSize: '0.875rem',
-          color: '#374151',
-        }}
+        className="kind-picker-cancel"
       >
         Cancel
       </button>

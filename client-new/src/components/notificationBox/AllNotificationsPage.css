@@ -57,7 +57,7 @@
 /* Read: muted and quiet, so unread items stand out. */
 .notification-card.is-read {
   background-color: #fafafa;
-  border: 1px solid #eee;
+  border: 1px solid var(--border-subtle);
   border-left: 4px solid #e5e7eb;
 }
 

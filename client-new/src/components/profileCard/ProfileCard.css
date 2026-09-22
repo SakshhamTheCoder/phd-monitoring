@@ -250,7 +250,7 @@
 }
 
 /* Edit button */
-.profile-deadline-due { color: #b91c1c; font-weight: 600; }
+.profile-deadline-due { color: var(--danger-text); font-weight: 600; }
 .profile-deadline-note { color: #6b7280; }
 
 /* body sets font-weight 600 app-wide, so table cells arrived semi-bold. On a

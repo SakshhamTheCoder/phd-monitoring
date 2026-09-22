@@ -7,6 +7,7 @@ import InputSuggestions from '../../../components/forms/fields/InputSuggestions'
 import UnifiedBulkImportModal from '../../../components/bulkImport/UnifiedBulkImportModal';
 import { baseURL } from '../../../api/urls';
 import { apiBranchCreate, apiBranchDelete, apiBranchImport, apiBranchList, apiBranchUpdate } from '../../../api/urf';
+import './Configuration.css';
 
 const EMPTY = { programme: '', code: '', name: '', department_id: '', department: '' };
 
@@ -102,10 +103,10 @@ const UgBranches = () => {
   }));
 
   return (
-    <div style={{ marginTop: '1rem' }}>
+    <div className="config-block">
       <div className="filter-bar">
-        <div className="filter-row" style={{ alignItems: 'flex-end' }}>
-          <div className="input-field-container" style={{ minWidth: '140px' }}>
+        <div className="filter-row config-filter-row">
+          <div className="input-field-container config-field-140">
             <label className="input-label" htmlFor="ug-branches-programme">Programme</label>
             <input
               id="ug-branches-programme"
@@ -115,7 +116,7 @@ const UgBranches = () => {
               onChange={(e) => setForm((prev) => ({ ...prev, programme: e.target.value }))}
             />
           </div>
-          <div className="input-field-container" style={{ minWidth: '140px' }}>
+          <div className="input-field-container config-field-140">
             <label className="input-label" htmlFor="ug-branches-code">Code</label>
             <input
               id="ug-branches-code"
@@ -125,7 +126,7 @@ const UgBranches = () => {
               onChange={(e) => setForm((prev) => ({ ...prev, code: e.target.value }))}
             />
           </div>
-          <div className="input-field-container" style={{ minWidth: '280px' }}>
+          <div className="input-field-container config-field-280">
             <label className="input-label" htmlFor="ug-branches-branch-name">Branch name</label>
             <input
               id="ug-branches-branch-name"
@@ -135,7 +136,7 @@ const UgBranches = () => {
               onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
             />
           </div>
-          <div className="input-field-container" style={{ minWidth: '240px' }}>
+          <div className="input-field-container config-field-240">
             <InputSuggestions
               label="Department"
               apiUrl={`${baseURL}/suggestions/department`}

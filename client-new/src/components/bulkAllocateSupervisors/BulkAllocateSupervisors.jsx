@@ -5,6 +5,8 @@ import { customFetch } from '../../api/base';
 import CustomButton from '../forms/fields/CustomButton';
 import { toast } from 'react-toastify';
 import GridContainer from '../forms/fields/GridContainer';
+import { parseCsv } from '../../utils/csv';
+import '../bulkImport/bulkPreview.css';
 
 // Number of supervisor columns offered in the sheet. Blank columns are dropped,
 // so a row may allocate anywhere from one to MAX_SUPERVISORS supervisors.
@@ -53,15 +55,8 @@ const BulkAllocateSupervisors = ({ onSuccess }) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      // xlsx is ~400KB and only this handler needs it, so it loads on
-      // the first upload rather than in everyone's entry chunk.
-      const { read, utils } = await import('xlsx');
-      const data = new Uint8Array(event.target.result);
-      const workbook = read(data, { type: 'array' });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rawData = utils.sheet_to_json(sheet, { header: 1, raw: false });
+    file.text().then((text) => {
+      const rawData = parseCsv(text);
 
       const parsed = [];
       let invalidRows = 0;
@@ -114,9 +109,7 @@ const BulkAllocateSupervisors = ({ onSuccess }) => {
 
       setRows(parsed);
       toast.success(`Loaded ${parsed.length} allocation(s) from CSV`);
-    };
-
-    reader.readAsArrayBuffer(file);
+    });
   };
 
   const confirmBulkAllocate = () => {
@@ -155,20 +148,13 @@ const BulkAllocateSupervisors = ({ onSuccess }) => {
   };
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div className="bulk-preview">
       <h3>Bulk Allocate Supervisors</h3>
-      <p style={{ marginBottom: '10px' }}>
+      <p className="bulk-preview-title">
         Upload a CSV to allocate supervisors for many students at once. Download the sample CSV to see the required format.
       </p>
       <div
-        style={{
-          backgroundColor: '#f0f7ff',
-          border: '1px solid #2196F3',
-          borderRadius: '6px',
-          padding: '12px',
-          marginBottom: '20px',
-          fontSize: '14px',
-        }}
+        className="bulk-preview-info"
       >
         <strong>Roll Number:</strong> must belong to a student whose supervisor allocation form is awaiting you (the PhD Coordinator).<br />
         <strong>Supervisors:</strong> give each supervisor's faculty code or email. Leave unused supervisor columns blank.<br />
@@ -181,24 +167,12 @@ const BulkAllocateSupervisors = ({ onSuccess }) => {
             type='file'
             accept='.csv'
             onChange={handleFileUpload}
-            style={{
-              marginTop: '10px',
-              padding: '8px',
-              border: '2px solid #ddd',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}
+            className="bulk-preview-file"
           />,
           <CustomButton
             text='Download Sample CSV'
             onClick={downloadSampleCSV}
-            style={{
-              backgroundColor: '#FF9800',
-              color: 'white',
-              padding: '10px 20px',
-              borderRadius: '6px',
-              fontWeight: '500',
-            }}
+            className="bulk-preview-template"
           />,
         ]}
         space={2}
@@ -206,41 +180,22 @@ const BulkAllocateSupervisors = ({ onSuccess }) => {
 
       {rows.length > 0 && (
         <>
-          <div style={{ marginTop: '20px', fontWeight: 'bold' }}>
+          <div className="bulk-preview-heading">
             {rows.length} allocation(s) ready to submit
           </div>
 
-          <div style={{ overflowX: 'auto', marginTop: '16px', maxHeight: '400px', overflowY: 'auto' }}>
+          <div className="bulk-preview-scroll">
             <table
-              style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                fontFamily: 'Arial, sans-serif',
-                fontSize: '14px',
-                backgroundColor: '#fff',
-                boxShadow: '0 0 10px rgba(0,0,0,0.1)',
-              }}
+              className="bulk-preview-table"
             >
               <thead
-                style={{
-                  backgroundColor: '#f5f5f5',
-                  position: 'sticky',
-                  top: 0,
-                  zIndex: 1,
-                }}
+                className="bulk-preview-head"
               >
                 <tr>
                   {['Row', 'Roll Number', 'Supervisors'].map((key) => (
                     <th
                       key={key}
-                      style={{
-                        border: '1px solid #ccc',
-                        padding: '10px',
-                        fontWeight: '600',
-                        textAlign: 'left',
-                        color: '#333',
-                        whiteSpace: 'nowrap',
-                      }}
+                      className="bulk-preview-th bulk-preview-th--nowrap"
                     >
                       {key}
                     </th>
@@ -251,19 +206,12 @@ const BulkAllocateSupervisors = ({ onSuccess }) => {
                 {rows.map((row, index) => (
                   <tr
                     key={row.row_number}
-                    style={{
-                      borderBottom: '1px solid #eee',
-                      backgroundColor: index % 2 === 0 ? '#fff' : '#f9f9f9',
-                    }}
+                    className="bulk-preview-row"
                   >
                     {[row.row_number, row.roll_no, row.supervisors.join(', ')].map((value, idx) => (
                       <td
                         key={idx}
-                        style={{
-                          padding: '10px',
-                          border: '1px solid #ddd',
-                          color: '#444',
-                        }}
+                        className="bulk-preview-cell"
                       >
                         {value}
                       </td>
@@ -274,18 +222,11 @@ const BulkAllocateSupervisors = ({ onSuccess }) => {
             </table>
           </div>
 
-          <div style={{ marginTop: '16px', textAlign: 'right' }}>
+          <div className="bulk-preview-actions">
             <CustomButton
               text='Confirm Bulk Allocation'
               onClick={confirmBulkAllocate}
-              style={{
-                backgroundColor: '#4CAF50',
-                color: 'white',
-                padding: '12px 24px',
-                borderRadius: '6px',
-                fontWeight: '600',
-                fontSize: '16px',
-              }}
+              className="bulk-preview-confirm"
             />
           </div>
         </>

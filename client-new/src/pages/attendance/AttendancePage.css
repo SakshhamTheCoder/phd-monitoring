@@ -1,4 +1,4 @@
-/* Maroon theme for react-datepicker to match --primary-color #B22626 */
+/* Maroon theme for react-datepicker, from --primary-color */
 .react-datepicker {
   border-color: var(--border-color);
   font-family: inherit;
@@ -116,7 +116,7 @@
   color: var(--text-subtle);
 }
 .attendance-summary-value { font-size: var(--text-2xl); font-weight: 700; line-height: 1; color: var(--text-color, #111827); }
-.attendance-summary-value.present { color: var(--success-text); }
+.attendance-summary-value.present { color: var(--success); }
 .attendance-summary-value.absent { color: var(--danger-text); }
 .attendance-summary-caption {
   grid-column: 1 / -1;
@@ -143,4 +143,219 @@
 
 .leave-draft-delete:hover {
     color: #c0392b;
+}
+
+
+/* ==========================================================================
+   Page furniture that used to be written inline
+
+   Every declaration below is the value the inline style carried, moved
+   verbatim. An inline style wins over any stylesheet, so while these lived in
+   the markup no rule here could correct one.
+   ========================================================================== */
+.attendance-header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.attendance-filter-row { align-items: flex-end; }
+
+.attendance-field-lg { min-width: 220px; }
+.attendance-field-md { min-width: 190px; }
+.attendance-field-sm { min-width: 160px; }
+
+.attendance-filter-push { margin-left: auto; }
+
+.attendance-tab-panel { margin-top: 1rem; }
+.attendance-tab-head { margin-bottom: 0.75rem; }
+
+/* Mark tab */
+.attendance-mark-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.attendance-action-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border-subtle);
+  margin: 0 0.25rem;
+}
+
+.attendance-save-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.attendance-status-choice {
+  display: inline-flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.attendance-status-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  font-weight: 400;
+}
+
+/* The chosen one carries the weight, so the row says what it is without the
+   radio having to be read. */
+.attendance-status-option.is-chosen { font-weight: 600; }
+.attendance-status-option.is-chosen.is-absent { color: var(--danger-text); }
+
+/* A cell, so it has to out-rank `.form-table td` in styles/ui.css, which sets
+   the table's own colour and size. The container class does that without an
+   !important. */
+.form-list-container .attendance-marked-by {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.attendance-note-muted {
+  color: var(--text-subtle);
+  font-style: italic;
+}
+
+.form-list-container .attendance-status-present { color: var(--success); }
+.form-list-container .attendance-status-absent { color: var(--danger-text); }
+
+/* History tab */
+.attendance-pager {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  align-items: center;
+}
+
+.attendance-pager-label {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* Export tab */
+.attendance-export-filters { margin-bottom: 1rem; }
+
+.attendance-date-warning {
+  margin-top: 0.75rem;
+  background: #FFF1F2;
+  border: 1px solid #FECDD3;
+  color: #9F1239;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.attendance-export-note {
+  padding: 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* CSV dialog */
+.attendance-csv-info {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.attendance-csv-line {
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+}
+
+.attendance-csv-required { margin: 0.5rem 0 0.25rem 0; }
+
+.attendance-csv-code {
+  font-family: monospace;
+  background: #e0f2fe;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.attendance-csv-warn { color: #92400e; }
+
+.attendance-csv-template { margin-bottom: 1rem; }
+
+/* The one orange button in the product, matching the bulk import pattern the
+   other CSV dialogs use. Compound selector so it beats .custom-button whatever
+   order the two stylesheets load in. */
+.custom-button.attendance-csv-template-btn {
+  background-color: #FF9800;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.attendance-csv-file {
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  font-size: 1rem;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.attendance-csv-preview {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+}
+
+.attendance-csv-preview-head {
+  padding: 0.75rem;
+  background: #f9fafb;
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 600;
+}
+
+.attendance-csv-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.attendance-csv-cancel,
+.attendance-csv-upload {
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.attendance-csv-cancel {
+  background: white;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+}
+
+.attendance-csv-upload {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+}
+
+.attendance-csv-upload:disabled {
+  background: var(--text-subtle);
+  cursor: not-allowed;
 }

@@ -1,0 +1,54 @@
+/* The six configuration pages draw the same shape: a filter row of fields, the
+   action pushed to the right, a note underneath. Each had written it inline, so
+   no stylesheet could reach any of it.
+
+   The field classes are named for their width because that is all they are.
+   The widths are the ones the pages already used; they are not a scale, and a
+   new page should reuse one of these rather than add a tenth.
+*/
+
+.config-block { margin-top: 1rem; }
+
+.config-filter-row { align-items: flex-end; }
+
+.config-chip-row {
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.config-push { margin-left: auto; }
+
+.config-note {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 0.75rem;
+}
+
+.config-field-110 { min-width: 110px; }
+.config-field-140 { min-width: 140px; }
+.config-field-160 { min-width: 160px; }
+.config-field-190 { min-width: 190px; }
+.config-field-200 { min-width: 200px; }
+.config-field-220 { min-width: 220px; }
+.config-field-240 { min-width: 240px; }
+.config-field-280 { min-width: 280px; }
+
+/* The synopsis checklist's item text, which is a sentence rather than a value. */
+.config-field-440 { min-width: 440px; }
+
+/* A phone has no room for a 440px field, and the widths above hold a filter row
+   open at its widest field. */
+@media (max-width: 768px) {
+  .config-field-110,
+  .config-field-140,
+  .config-field-160,
+  .config-field-190,
+  .config-field-200,
+  .config-field-220,
+  .config-field-240,
+  .config-field-280,
+  .config-field-440 {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+}

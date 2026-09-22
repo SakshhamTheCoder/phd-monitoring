@@ -6,7 +6,7 @@
     padding: 2rem;
     text-align: center;
     font-size: var(--text-xl);
-    color: #666;
+    color: var(--text-muted);
 }
 
 /* Top Nav */
@@ -213,18 +213,18 @@
 
 .rp-container .status-badge.pending {
     background: #fef08a;
-    color: #a16207;
+    color: var(--warning);
 }
 
 .rp-container .status-badge.rejected {
     background: #fecaca;
-    color: #b91c1c;
+    color: var(--danger-text);
 }
 
 .rp-container .status-badge.approved,
 .rp-container .status-badge.granted {
     background: #bbf7d0;
-    color: #15803d;
+    color: var(--success);
 }
 
 .small-text {

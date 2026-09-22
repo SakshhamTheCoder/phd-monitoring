@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import CustomButton from '../../../components/forms/fields/CustomButton';
 import { apiSettings, apiSaveSettings } from '../../../api/settings';
+import './Configuration.css';
 
 const FIELDS = [
   { key: 'min_years', label: 'Minimum years before submission', hint: 'Same for full-time and part-time.' },
@@ -53,11 +54,11 @@ const ThesisLimits = () => {
   };
 
   return (
-    <div style={{ marginTop: '1rem' }}>
+    <div className="config-block">
       <div className="filter-bar">
-        <div className="filter-row" style={{ alignItems: 'flex-end' }}>
+        <div className="filter-row config-filter-row">
           {FIELDS.map(({ key, label, hint }) => (
-            <div key={key} className="input-field-container" style={{ minWidth: '220px' }}>
+            <div key={key} className="input-field-container config-field-220">
               <label className="input-label" htmlFor={key}>{label}</label>
               <input
                 id={key}
@@ -73,7 +74,7 @@ const ThesisLimits = () => {
               <small id={`${key}-hint`}>{hint}</small>
             </div>
           ))}
-          <div style={{ marginLeft: 'auto' }}>
+          <div className="config-push">
             <CustomButton text={saving ? 'Saving…' : 'Save'} onClick={handleSave} disabled={loading || saving} />
           </div>
         </div>

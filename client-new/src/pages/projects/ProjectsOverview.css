@@ -74,7 +74,7 @@
 }
 
 .po-stat-value.accent {
-  color: #15803d;
+  color: var(--success);
 }
 
 .po-stat-value.large {
@@ -88,7 +88,7 @@
 }
 
 .po-stat-trend.up {
-  color: #15803d;
+  color: var(--success);
 }
 
 .po-stat-meta {
@@ -98,7 +98,7 @@
 
 .po-funding-split {
   font-size: var(--text-2xs);
-  color: #666;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -177,7 +177,7 @@
   background: #FFF;
   border: 1px solid #E5E5E5;
   border-radius: var(--radius-sm);
-  color: #666;
+  color: var(--text-muted);
   font-size: var(--text-xs);
   cursor: pointer;
   transition: all 0.15s;
@@ -193,19 +193,19 @@
 .po-icon-btn.delete {
   background: #fef2f2;
   border-color: #fecaca;
-  color: #dc2626;
+  color: var(--danger);
 }
 
 .po-icon-btn.delete:hover {
-  background: #dc2626;
-  border-color: #dc2626;
+  background: var(--danger);
+  border-color: var(--danger);
   color: #FFF;
 }
 
 /* Delete Confirmation Modal */
 .po-modal-text {
   font-size: var(--text-sm);
-  color: #666;
+  color: var(--text-muted);
   line-height: 1.5;
   margin: 0 0 1.5rem;
 }
@@ -215,8 +215,8 @@
 }
 
 .po-modal-btn.confirm:hover {
-  background: #b91c1c;
-  border-color: #b91c1c;
+  background: var(--danger-text);
+  border-color: var(--danger-text);
 }
 
 /* Shown instead of the edit and delete icons on a project the viewer can only

@@ -271,7 +271,7 @@ const UserForm = ({ edit, userData, onClose }) => {
           space={3}
         />
 
-        <div style={{ marginTop: '1rem', marginBottom: '1rem' }}>
+        <div className="user-form-row">
           {rolesLoaded && roles.length > 0 ? (
             // The label goes through the field so it is tied to the select; a
             // bare <label> beside it named nothing for a screen reader.
@@ -322,7 +322,7 @@ const UserForm = ({ edit, userData, onClose }) => {
 
         {roles.find(r => r.value === formData.role_id)?.role_name === 'ug_student' && (
           <>
-            <label style={{ fontWeight: '600', margin: '1rem 0 0.5rem', display: 'block' }}>
+            <label className="user-form-section-label">
               URF Details
             </label>
             <GridContainer
@@ -352,51 +352,30 @@ const UserForm = ({ edit, userData, onClose }) => {
           </>
         )}
 
-        <div style={{ marginTop: '1rem', marginBottom: '1rem' }}>
-          <label style={{ fontWeight: '600', marginBottom: '0.5rem', display: 'block' }}>
+        <div className="user-form-row">
+          <label className="user-form-block-label">
             Available Roles (Select multiple)
           </label>
-          <p style={{ fontSize: '0.8rem', color: '#92400e', background: '#fffbeb',
-                      border: '1px solid #fcd34d', borderRadius: '0.375rem',
-                      padding: '0.5rem 0.75rem', marginTop: 0, marginBottom: '0.5rem' }}>
+          <p className="user-form-note-warn">
             Ticking a role here grants it, but does not create the record it depends on.
             <strong>Hod</strong>, <strong>Phd_coordinator</strong> and <strong>Adordc</strong> are
             assigned from the Departments page, <strong>Clerk</strong> from Clerk Management.
             <strong>Faculty</strong>-type roles need a faculty record and <strong>Student</strong>
             needs a student record. Until those exist the user cannot switch into the role.
           </p>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-            gap: '0.5rem',
-            padding: '1rem',
-            border: '1px solid #d1d5db',
-            borderRadius: '0.5rem',
-            background: '#f9fafb'
-          }}>
+          <div className="user-form-role-grid">
             {allRoleOptions.map(roleName => (
               <label
                 key={roleName}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  cursor: 'pointer',
-                  padding: '0.5rem',
-                  borderRadius: '0.25rem',
-                  background: formData.available_roles.includes(roleName) ? '#dbeafe' : 'white',
-                  border: '1px solid',
-                  borderColor: formData.available_roles.includes(roleName) ? 'var(--primary-color)' : '#d1d5db',
-                  transition: 'all 0.2s'
-                }}
+                className={'user-form-role' + (formData.available_roles.includes(roleName) ? ' is-chosen' : '')}
               >
                 <input
                   type="checkbox"
                   checked={formData.available_roles.includes(roleName)}
                   onChange={() => toggleAvailableRole(roleName)}
-                  style={{ cursor: 'pointer' }}
+                  className="user-form-check"
                 />
-                <span style={{ fontSize: '0.875rem', textTransform: 'capitalize' }}>
+                <span className="user-form-role-name">
                   {roleName}
                 </span>
               </label>
@@ -405,7 +384,7 @@ const UserForm = ({ edit, userData, onClose }) => {
         </div>
 
         {!edit && (
-          <div style={{ marginTop: '1rem', marginBottom: '1rem' }}>
+          <div className="user-form-row">
             <InputField
               label="Custom Password (Optional, min 8 characters)"
               type="password"
@@ -414,29 +393,17 @@ const UserForm = ({ edit, userData, onClose }) => {
               onChange={(value) => setCustomPassword(value)}
               key="password_new"
             />
-            <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+            <p className="user-form-hint">
               Leave empty and they are emailed a link to set their own
             </p>
           </div>
         )}
 
-        <div style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          gap: '1rem',
-          marginTop: '1.5rem'
-        }}>
+        <div className="user-form-actions">
           <button
             type="button"
             onClick={onClose}
-            style={{
-              padding: '0.75rem 1.5rem',
-              background: 'white',
-              color: '#6b7280',
-              border: '1px solid #d1d5db',
-              borderRadius: '0.5rem',
-              cursor: 'pointer'
-            }}
+            className="user-form-btn-cancel"
           >
             Cancel
           </button>
@@ -449,42 +416,22 @@ const UserForm = ({ edit, userData, onClose }) => {
       </form>
 
       {edit && (
-        <div style={{
-          marginTop: '2rem',
-          paddingTop: '2rem',
-          borderTop: '2px solid #e5e7eb'
-        }}>
-          <h3 style={{ marginBottom: '1rem' }}>Password Management</h3>
+        <div className="user-form-password">
+          <h3>Password Management</h3>
           
           {!showPasswordSection ? (
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            <div className="user-form-button-row">
               <button
                 onClick={() => setShowPasswordSection(true)}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  background: '#f59e0b',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '0.5rem',
-                  cursor: 'pointer',
-                  fontWeight: '500'
-                }}
+                className="user-form-btn-amber"
               >
                 Set Custom Password
               </button>
               <button
+                type="button"
                 onClick={handleSendResetEmail}
                 disabled={loading}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  background: 'var(--primary-color)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '0.5rem',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  fontWeight: '500',
-                  opacity: loading ? 0.6 : 1
-                }}
+                className="user-form-btn-primary"
               >
                 Send Password Reset Email
               </button>
@@ -499,35 +446,20 @@ const UserForm = ({ edit, userData, onClose }) => {
                 onChange={(value) => setCustomPassword(value)}
                 key={`reset_password_${formData.id}`}
               />
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+              <div className="user-form-button-row user-form-button-row--spaced">
                 <button
                   onClick={() => {
                     setShowPasswordSection(false);
                     setCustomPassword('');
                   }}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    background: 'white',
-                    color: '#6b7280',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '0.5rem',
-                    cursor: 'pointer'
-                  }}
+                  className="user-form-btn-cancel"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleResetPassword}
                   disabled={loading || !customPassword || customPassword.length < 8}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    background: loading || !customPassword || customPassword.length < 8 ? '#9ca3af' : '#f59e0b',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '0.5rem',
-                    cursor: loading || !customPassword || customPassword.length < 8 ? 'not-allowed' : 'pointer',
-                    fontWeight: '500'
-                  }}
+                  className="user-form-btn-amber"
                 >
                   {loading ? 'Resetting...' : 'Reset Password'}
                 </button>

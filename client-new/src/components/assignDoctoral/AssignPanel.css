@@ -40,7 +40,7 @@
   .assign-input {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     border-radius: var(--radius);
     font-size: var(--text-md);
     margin-bottom: 1rem;

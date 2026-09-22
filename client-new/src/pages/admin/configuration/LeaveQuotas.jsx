@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import CustomButton from '../../../components/forms/fields/CustomButton';
 import { validateLeaveSettings } from '../../../utils/leaveBalance';
 import { apiSettings, apiSaveSettings } from '../../../api/settings';
+import './Configuration.css';
 
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -56,10 +57,10 @@ const LeaveQuotas = () => {
   };
 
   return (
-    <div style={{ marginTop: '1rem' }}>
+    <div className="config-block">
       <div className="filter-bar">
-        <div className="filter-row" style={{ alignItems: 'flex-end' }}>
-          <div className="input-field-container" style={{ minWidth: '160px' }}>
+        <div className="filter-row config-filter-row">
+          <div className="input-field-container config-field-160">
             <label className="input-label" htmlFor="leave-quotas-academic-quota">Academic quota</label>
             <input
               id="leave-quotas-academic-quota"
@@ -72,7 +73,7 @@ const LeaveQuotas = () => {
               disabled={loading}
             />
           </div>
-          <div className="input-field-container" style={{ minWidth: '160px' }}>
+          <div className="input-field-container config-field-160">
             <label className="input-label" htmlFor="leave-quotas-casual-quota">Casual quota</label>
             <input
               id="leave-quotas-casual-quota"
@@ -85,7 +86,7 @@ const LeaveQuotas = () => {
               disabled={loading}
             />
           </div>
-          <div className="input-field-container" style={{ minWidth: '190px' }}>
+          <div className="input-field-container config-field-190">
             <label className="input-label" htmlFor="leave-quotas-quota-year-starts-in">Quota year starts in</label>
             <select
               id="leave-quotas-quota-year-starts-in"
@@ -98,7 +99,7 @@ const LeaveQuotas = () => {
               {MONTH_NAMES.map((name, idx) => <option key={name} value={idx + 1}>{name}</option>)}
             </select>
           </div>
-          <div style={{ marginLeft: 'auto' }}>
+          <div className="config-push">
             <CustomButton text={saving ? 'Saving…' : 'Save'} onClick={handleSave} disabled={loading || saving} />
           </div>
         </div>

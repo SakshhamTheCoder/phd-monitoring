@@ -70,7 +70,7 @@
 .urf-approval {
   margin: 1rem 0 1.5rem;
   padding: 1rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: var(--radius);
   background: #f9f9f9;
 }

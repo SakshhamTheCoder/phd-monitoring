@@ -201,7 +201,7 @@ const StudentAttendancePage = () => {
               ) : months.map((m) => (
                 <tr key={m.month}>
                   <td>{m.month}</td>
-                  <td style={{ color: 'var(--success-text)' }}>{m.present}</td>
+                  <td className="attendance-status-present">{m.present}</td>
                   <td style={{ color: 'var(--danger-text)' }}>{m.absent}</td>
                   <td>{m.total}</td>
                   {/* A bucket only exists here when a record created it, so m.total is

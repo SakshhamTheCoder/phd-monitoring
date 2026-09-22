@@ -9,6 +9,8 @@ import DropdownField from '../fields/DropdownField';
 
 import { generateReportPeriods } from "../../../utils/semester";
 import InputField from '../fields/InputField';
+import { parseCsv } from '../../../utils/csv';
+import '../../bulkImport/bulkPreview.css';
 
 const BulkSchedulePresentation = ({semester_name}) => {
   const { setLoading } = useLoading();
@@ -37,15 +39,7 @@ const BulkSchedulePresentation = ({semester_name}) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      // xlsx is ~400KB and only this handler needs it, so it loads on
-      // the first upload rather than in everyone's entry chunk.
-      const { read, utils } = await import('xlsx');
-      const data = new Uint8Array(event.target.result);
-      const workbook = read(data, { type: 'array' });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-
+    file.text().then((text) => {
       const headers = [
         "Student's Roll Number",
         "Student's Name",
@@ -56,7 +50,7 @@ const BulkSchedulePresentation = ({semester_name}) => {
         'Additional Guest Email',
       ];
       const expectedColumns = headers.length;
-      const rawData = utils.sheet_to_json(sheet, { header: 1 });
+      const rawData = parseCsv(text);
 
       const parsedData = [];
       let invalidRows = 0;
@@ -114,9 +108,7 @@ const BulkSchedulePresentation = ({semester_name}) => {
       }
 
       setCsvData(parsedData);
-    };
-
-    reader.readAsArrayBuffer(file);
+    });
   };
 
   const confirmBulkSchedule = () => {
@@ -228,7 +220,7 @@ const BulkSchedulePresentation = ({semester_name}) => {
             type='file'
             accept='.csv'
             onChange={handleFileUpload}
-            style={{ marginTop: '10px' }}
+            className="bulk-preview-file-plain"
           />,
           <CustomButton
             text='Sample CSV'
@@ -252,39 +244,21 @@ const BulkSchedulePresentation = ({semester_name}) => {
 
       {csvData.length > 0 && (
         <>
-          <div style={{ marginTop: '10px', fontWeight: 'bold' }}>
+          <div className="bulk-preview-heading bulk-preview-heading--tight">
             Selected Period: {body.period_of_report}
           </div>
-          <div style={{ overflowX: 'auto', marginTop: '16px' }}>
+          <div className="bulk-preview-scroll bulk-preview-scroll--full">
             <table
-              style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                fontFamily: 'Arial, sans-serif',
-                fontSize: '14px',
-                backgroundColor: '#fff',
-                boxShadow: '0 0 10px rgba(0,0,0,0.1)',
-              }}
+              className="bulk-preview-table"
             >
               <thead
-                style={{
-                  backgroundColor: '#f5f5f5',
-                  position: 'sticky',
-                  top: 0,
-                  zIndex: 1,
-                }}
+                className="bulk-preview-head"
               >
                 <tr>
                   {Object.keys(csvData[0]).map((key) => (
                     <th
                       key={key}
-                      style={{
-                        border: '1px solid #ccc',
-                        padding: '10px',
-                        fontWeight: '600',
-                        textAlign: 'left',
-                        color: '#333',
-                      }}
+                      className="bulk-preview-th"
                     >
                       {key}
                     </th>
@@ -295,27 +269,12 @@ const BulkSchedulePresentation = ({semester_name}) => {
                 {csvData.map((row, index) => (
                   <tr
                     key={index}
-                    style={{
-                      borderBottom: '1px solid #eee',
-                      backgroundColor: index % 2 === 0 ? '#fff' : '#f9f9f9',
-                      transition: 'background-color 0.3s',
-                    }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.backgroundColor = '#eaeaea')
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.backgroundColor =
-                        index % 2 === 0 ? '#fff' : '#f9f9f9')
-                    }
+                    className="bulk-preview-row bulk-preview-row--hover"
                   >
                     {Object.values(row).map((value, idx) => (
                       <td
                         key={idx}
-                        style={{
-                          padding: '10px',
-                          border: '1px solid #ddd',
-                          color: '#444',
-                        }}
+                        className="bulk-preview-cell"
                       >
                         {Array.isArray(value) ? value.join(', ') : value}
                       </td>
@@ -326,7 +285,7 @@ const BulkSchedulePresentation = ({semester_name}) => {
             </table>
           </div>
 
-          <div style={{ marginTop: '16px', textAlign: 'right' }}>
+          <div className="bulk-preview-actions">
             <CustomButton
               text='Confirm Bulk Schedule'
               onClick={confirmBulkSchedule}

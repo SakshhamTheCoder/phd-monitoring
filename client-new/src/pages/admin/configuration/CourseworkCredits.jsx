@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import CustomButton from '../../../components/forms/fields/CustomButton';
 import { apiSettings, apiSaveSettings } from '../../../api/settings';
+import './Configuration.css';
 
 const FIELDS = [
   { key: 'min_credits_full_time', label: 'Full time' },
@@ -47,11 +48,11 @@ const CourseworkCredits = () => {
   };
 
   return (
-    <div style={{ marginTop: '1rem' }}>
+    <div className="config-block">
       <div className="filter-bar">
-        <div className="filter-row" style={{ alignItems: 'flex-end' }}>
+        <div className="filter-row config-filter-row">
           {FIELDS.map(({ key, label }) => (
-            <div key={key} className="input-field-container" style={{ minWidth: '200px' }}>
+            <div key={key} className="input-field-container config-field-200">
               <label className="input-label" htmlFor={key}>{label}</label>
               <input
                 id={key}
@@ -65,12 +66,12 @@ const CourseworkCredits = () => {
               />
             </div>
           ))}
-          <div style={{ marginLeft: 'auto' }}>
+          <div className="config-push">
             <CustomButton text={saving ? 'Saving…' : 'Save'} onClick={handleSave} disabled={loading || saving} />
           </div>
         </div>
       </div>
-      <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.75rem' }}>
+      <p className="config-note">
         A scholar's total is the credits of the courses marked complete on their profile.
         Until they reach the figure for their status, the synopsis cannot be raised, and
         their profile says how far off they are.

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import CustomButton from '../../../components/forms/fields/CustomButton';
 import { apiSettings, apiSaveSettings } from '../../../api/settings';
+import './Configuration.css';
 
 const FIELDS = [
   { key: 'max_professor', label: 'Professor' },
@@ -54,11 +55,11 @@ const SupervisionLimits = () => {
   };
 
   return (
-    <div style={{ marginTop: '1rem' }}>
+    <div className="config-block">
       <div className="filter-bar">
-        <div className="filter-row" style={{ alignItems: 'flex-end' }}>
+        <div className="filter-row config-filter-row">
           {FIELDS.map(({ key, label, hint }) => (
-            <div key={key} className="input-field-container" style={{ minWidth: '220px' }}>
+            <div key={key} className="input-field-container config-field-220">
               <label className="input-label" htmlFor={key}>{label}</label>
               <input
                 id={key}
@@ -74,12 +75,12 @@ const SupervisionLimits = () => {
               {hint && <small id={`${key}-hint`}>{hint}</small>}
             </div>
           ))}
-          <div style={{ marginLeft: 'auto' }}>
+          <div className="config-push">
             <CustomButton text={saving ? 'Saving…' : 'Save'} onClick={handleSave} disabled={loading || saving} />
           </div>
         </div>
       </div>
-      <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.75rem' }}>
+      <p className="config-note">
         The limit counts scholars a faculty member is currently guiding. Once a thesis is submitted, it no longer occupies a slot.
       </p>
     </div>

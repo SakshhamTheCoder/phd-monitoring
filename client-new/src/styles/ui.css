@@ -608,7 +608,7 @@
 /* Destructive actions: red, and separated from the rest */
 .row-actions-item.danger {
   color: #c0392b;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--border-subtle);
   margin-top: 3px;
   padding-top: 11px;
 }
@@ -626,7 +626,7 @@
   padding: 20px;
   font-style: italic;
   font-weight: 500;
-  color: #666;
+  color: var(--text-muted);
   text-align: center;
 }
 
