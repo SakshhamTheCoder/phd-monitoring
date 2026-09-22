@@ -1,0 +1,47 @@
+/* The presentation list's own action row. The table card, the pager and the
+   row beneath are shared with PagenationTable and live in styles/ui.css. */
+
+.form-actions-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: left;
+  margin-bottom: 16px;
+}
+
+.form-actions-left,
+.form-actions-right {
+  display: flex;
+  align-items: left;
+  gap: 20px;
+}
+
+.form-actions-left button {
+  margin-right: 20px;
+}
+
+.form-actions-left button,
+.form-actions-right button {
+  padding: 6px 14px;
+  background-color: #494a4b;
+  color: white;
+  font-weight: 500;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.form-actions-left button:hover,
+.form-actions-right button:hover {
+  background-color: #494a4b;
+}
+
+/* This table separates the pager from the table with a margin on the row, and
+   spaces the label from its select with a gap. */
+.table-bottom--list {
+  margin-top: 20px;
+}
+
+.table-bottom--list .rows-per-page {
+  gap: 8px;
+}

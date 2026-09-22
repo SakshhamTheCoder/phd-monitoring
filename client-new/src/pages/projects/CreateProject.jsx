@@ -309,7 +309,7 @@ const CreateProject = () => {
     <>
       <tr className="cp-budget-head-row">
         <td className="cp-budget-head-name">{HEAD_EQUIPMENT}
-          <button type="button" className="cp-add-btn cp-add-inline" onClick={addEquip}>
+          <button type="button" className="inline-add-btn inline-add-btn--sm" onClick={addEquip}>
             <i className="fa fa-plus"></i> Add Item
           </button>
         </td>
@@ -351,7 +351,7 @@ const CreateProject = () => {
     <>
       <tr className="cp-budget-head-row">
         <td className="cp-budget-head-name">{HEAD_OTHER}
-          <button type="button" className="cp-add-btn cp-add-inline" onClick={() => addOther('')}>
+          <button type="button" className="inline-add-btn inline-add-btn--sm" onClick={() => addOther('')}>
             <i className="fa fa-plus"></i> Add Expense
           </button>
         </td>
@@ -370,7 +370,7 @@ const CreateProject = () => {
                   <input type="text" className="cp-budget-input" value={row.label}
                     placeholder="e.g. Fabrication"
                     onChange={e => renameOther(row.key, e.target.value)} />
-                  <button type="button" className="cp-add-btn cp-add-inline" title="Add sub-item"
+                  <button type="button" className="inline-add-btn inline-add-btn--sm" title="Add sub-item"
                     onClick={() => addOther(row.key)}>
                     <i className="fa fa-plus"></i>
                   </button>
@@ -540,7 +540,7 @@ const CreateProject = () => {
           <div className="cp-section-card">
             <div className="cp-section-header-row">
               <h3 className="cp-section-title">Co-Investigators</h3>
-              <button className="cp-add-btn" onClick={() => setShowExtForm(!showExtForm)}>
+              <button className="inline-add-btn" onClick={() => setShowExtForm(!showExtForm)}>
                 <i className="fa fa-plus"></i> Add External Co-PI
               </button>
             </div>
@@ -692,7 +692,7 @@ const CreateProject = () => {
           <div className="cp-section-card">
             <div className="cp-section-header-row">
               <h3 className="cp-section-title">Objectives</h3>
-              <button className="cp-add-btn" onClick={() => setForm(p => ({ ...p, objectives: [...p.objectives, ''] }))}>
+              <button className="inline-add-btn" onClick={() => setForm(p => ({ ...p, objectives: [...p.objectives, ''] }))}>
                 <i className="fa fa-plus"></i> Add Objective
               </button>
             </div>
@@ -869,7 +869,7 @@ const CreateProject = () => {
   return (
     <Layout>
       <div className="cp-container">
-        <button className="cp-back-link" onClick={() => navigate('/projects')}>
+        <button className="page-back-link" onClick={() => navigate('/projects')}>
           <i className="fa fa-arrow-left"></i> BACK TO PROJECTS
         </button>
         <div className="cp-wizard-header">

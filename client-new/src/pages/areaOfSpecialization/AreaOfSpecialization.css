@@ -3,6 +3,9 @@
 
 .area-of-specialization .form-container {
   padding: 20px;
+  /* The shared .form-container carries a top margin for the form pages; this
+     page starts at its own header, so it does not want one. */
+  margin-top: 0;
 }
 
 .section-divider {

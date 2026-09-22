@@ -131,7 +131,7 @@ const ProjectRecruitment = () => {
   return (
     <Layout>
       <div className="pr-container">
-        <button className="pr-back-link" onClick={() => navigate(`/projects/${id}`)}>
+        <button className="page-back-link" onClick={() => navigate(`/projects/${id}`)}>
           <i className="fa fa-arrow-left"></i> BACK TO PROJECT
         </button>
         <PageHeader

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import "./card.css";
+import "./AssignPanel.css";
 import { customFetch } from "../../api/base";
 import { baseURL } from "../../api/urls";
 import InputSuggestions from "../forms/fields/InputSuggestions";

@@ -1,4 +1,8 @@
-.form-list-container {
+/* Renamed from .form-list-container, which is the white table card in
+   styles/ui.css. This is the opposite thing: a transparent column of cards,
+   with no padding of its own. Both were global and both were called the same,
+   so which one a page got depended on which route chunk loaded last. */
+.form-card-stack {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -64,5 +68,3 @@
         transform: scale(1);
     }
 }
-
-

@@ -629,3 +629,143 @@
   color: #666;
   text-align: center;
 }
+
+/* --- List page table chrome ----------------------------------------------
+   The card a table sits in, the row below it and the page buttons. Two
+   components draw all three: PagenationTable (server paged) and FormTable
+   (the presentation lists). Each carried its own copy in a file called
+   FormList.css, both global, and the copies disagreed: .table-bottom had a
+   top margin in one and .rows-per-page had it in the other, so the gap above
+   the pager depended on which route chunk the browser had loaded last.
+
+   What both agree on is here. Where they differ, the difference is now a
+   modifier the component asks for by name (.table-bottom--paged,
+   .table-bottom--list), so each keeps the spacing it was drawn with instead of
+   inheriting whichever stylesheet loaded last. Pages draw their own tables with
+   .form-list-container too (Attendance, ClerkManagement), which is why this
+   cannot live in either component's stylesheet. */
+.form-list-container {
+    padding: 20px;
+    border-radius: var(--radius);
+    background-color: var(--surface);
+    box-shadow: var(--shadow-sm);
+}
+
+.form-table { margin-bottom: 20px; }
+
+.selected-row { background-color: #d7ecff; }
+
+.table-bottom {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.rows-per-page {
+    display: flex;
+    align-items: center;
+}
+
+.pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pagination button {
+    padding: 5px 10px;
+    margin: 0 5px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.pagination button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+/* The row of buttons above a table. Three pages put their own buttons in one
+   without rendering a PagenationTable, so it is not that component's to own. */
+.top-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* --- Form page body ------------------------------------------------------
+   The padded block a form is drawn in, and the line of context above it.
+   These lived in pages/forms/forms.css, which a component two directories
+   away reached across to import; any page that did not import it drew its
+   fields hard against the edge. */
+.form-container {
+    padding: 10px 30px;
+    margin-top: 20px;
+}
+
+/* A line of context above a form: which round it is on, what the round is for.
+   Reads as prose, not as an alert; nothing here is wrong. */
+.form-note {
+    margin: 16px 30px 0;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    max-width: 70ch;
+}
+
+/* --- Back link, above a page title --------------------------------------
+   The three project pages each defined this, identically, under their own
+   prefix. */
+.page-back-link {
+    background: none;
+    border: none;
+    color: #555;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.page-back-link:hover { color: var(--primary-color); }
+
+/* --- Add button, inside a section rather than a toolbar ------------------
+   Smaller than .custom-button, which is the page's own primary action. The
+   project form and the project page both use it; only the form defined it, so
+   opening a project directly drew an unstyled button until the form's chunk
+   happened to load. */
+.inline-add-btn {
+    background: var(--primary-color);
+    color: #FFF;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.inline-add-btn:hover { background: var(--hover-color); }
+
+/* Sitting at the end of a table row, where a full size button would not fit. */
+.inline-add-btn--sm {
+    margin-left: 0.5rem;
+    padding: 0.25rem 0.6rem;
+    font-size: var(--text-2xs);
+}
+
+.inline-add-btn--sm:disabled { opacity: 0.4; cursor: default; }

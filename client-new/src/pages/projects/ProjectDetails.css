@@ -1,8 +1,6 @@
 .pd-container { font-family: inherit; font-weight: 400; }
 .pd-empty { text-align: center; padding: 4rem; color: #999; font-size: var(--text-md); }
 .pd-empty button { margin-top: 1rem; background: var(--primary-color); color: #FFF; border: none; padding: 0.6rem 1.2rem; border-radius: var(--radius); cursor: pointer; }
-.pd-back-link { background: none; border: none; color: #555; font-size: var(--text-xs); font-weight: 600; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
-.pd-back-link:hover { color: var(--primary-color); }
 
 /* Header */
 .pd-header { background: #FFF; border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-sm); margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; display: flex; gap: 2rem; align-items: flex-start; }
@@ -195,10 +193,8 @@
 .pd-doc-link { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--primary-color); font-weight: 600; font-size: var(--text-sm); text-decoration: none; }
 .pd-doc-link:hover { text-decoration: underline; }
 
-.cp-add-btn { background: var(--primary-color); color: #FFF; border: none; padding: 0.5rem 1rem; border-radius: var(--radius); font-size: var(--text-xs); font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; }
-.cp-add-btn:hover { background: var(--hover-color); }
-.cp-remove-btn { background: none; border: none; color: #ccc; cursor: pointer; font-size: var(--text-sm); }
-.cp-remove-btn:hover { color: #b91c1c; }
+.pd-remove-btn { background: none; border: none; color: #ccc; cursor: pointer; font-size: var(--text-sm); }
+.pd-remove-btn:hover { color: #b91c1c; }
 
 /* An Other Expenses sub-row: one level in from the row it breaks down. */
 .pd-budget-subsub-row td:first-child { padding-left: 1.5rem; }

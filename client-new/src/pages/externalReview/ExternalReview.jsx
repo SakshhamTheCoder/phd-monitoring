@@ -7,7 +7,6 @@ import InputField from "../../components/forms/fields/InputField";
 import RecommendationField from "../../components/forms/fields/RecommendationField";
 import CustomButton from "../../components/forms/fields/CustomButton";
 import "../../components/forms/formTitleBar/FormTitleBar.css";
-import "../forms/forms.css";
 import "./ExternalReview.css";
 
 // Public, token-authenticated page. Uses plain fetch (NOT the authed customFetch) so a 401

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import "./FormList.css";
+import "./PagenationTable.css";
 import { baseURL } from "../../api/urls";
 import { customFetch } from "../../api/base";
 import { useLoading } from "../../context/LoadingContext";
@@ -199,7 +199,7 @@ const PagenationTable = ({
       )}
 
       <div className="form-list-container">
-      <table className="form-table">
+      <table className="form-table form-table--tint">
         <thead>
           <tr>
             {selecting && <th><input
@@ -358,7 +358,7 @@ const PagenationTable = ({
         </tbody>
       </table>
 
-      <div className="table-bottom">
+      <div className="table-bottom table-bottom--paged">
         <label className="rows-per-page">
           Rows per page:
           <select value={rowsPerPage} onChange={(e) => {

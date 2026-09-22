@@ -42,7 +42,7 @@ const FormList = () => {
   return (
     <>
       {forms?.length > 0 ? (
-        <div className="form-list-container">
+        <div className="form-card-stack">
           {forms.map((form) => (
             <div
               key={form.id}

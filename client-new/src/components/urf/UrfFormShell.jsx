@@ -5,7 +5,6 @@ import UrfFilled from './UrfFilled';
 import { useLoading } from '../../context/LoadingContext';
 import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
-import '../../pages/forms/forms.css';
 
 /**
  * One URF form, read the way a PhD form is read: the title bar with its id,

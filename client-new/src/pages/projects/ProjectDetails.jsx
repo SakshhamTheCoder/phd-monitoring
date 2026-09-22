@@ -201,7 +201,7 @@ const ProjectDetails = () => {
       <tr className="pd-budget-head-row">
         <td className="pd-budget-head-name">{HEAD_EQUIPMENT}
           {editingBudget && (
-            <button type="button" className="cp-add-btn cp-add-inline" onClick={addEquip}>
+            <button type="button" className="inline-add-btn inline-add-btn--sm" onClick={addEquip}>
               <i className="fa fa-plus"></i> Add Item
             </button>
           )}
@@ -217,7 +217,7 @@ const ProjectDetails = () => {
                 <input type="text" className="pd-budget-edit-input" value={row.label}
                   placeholder="e.g. GPU Workstation"
                   onChange={e => renameEquip(row.key, e.target.value)} />
-                <button type="button" className="cp-remove-btn" title="Remove item"
+                <button type="button" className="pd-remove-btn" title="Remove item"
                   onClick={() => dropEquip(row.key)}>
                   <i className="fa fa-trash"></i>
                 </button>
@@ -256,7 +256,7 @@ const ProjectDetails = () => {
         <tr className="pd-budget-head-row">
           <td className="pd-budget-head-name">{HEAD_OTHER}
             {editingBudget && (
-              <button type="button" className="cp-add-btn cp-add-inline" onClick={() => addOther('')}>
+              <button type="button" className="inline-add-btn inline-add-btn--sm" onClick={() => addOther('')}>
                 <i className="fa fa-plus"></i> Add Expense
               </button>
             )}
@@ -275,11 +275,11 @@ const ProjectDetails = () => {
                       <input type="text" className="pd-budget-edit-input" value={row.label}
                         placeholder="e.g. Fabrication"
                         onChange={e => renameOther(row.key, e.target.value)} />
-                      <button type="button" className="cp-add-btn cp-add-inline" title="Add sub-item"
+                      <button type="button" className="inline-add-btn inline-add-btn--sm" title="Add sub-item"
                         onClick={() => addOther(row.key)}>
                         <i className="fa fa-plus"></i>
                       </button>
-                      <button type="button" className="cp-remove-btn" title="Remove expense"
+                      <button type="button" className="pd-remove-btn" title="Remove expense"
                         onClick={() => dropOther(row.key)}>
                         <i className="fa fa-trash"></i>
                       </button>
@@ -316,7 +316,7 @@ const ProjectDetails = () => {
                         <input type="text" className="pd-budget-edit-input" value={sub.label}
                           placeholder="e.g. Casting"
                           onChange={e => renameOther(sub.key, e.target.value)} />
-                        <button type="button" className="cp-remove-btn" title="Remove sub-item"
+                        <button type="button" className="pd-remove-btn" title="Remove sub-item"
                           onClick={() => dropOther(sub.key)}>
                           <i className="fa fa-trash"></i>
                         </button>
@@ -985,7 +985,7 @@ const ProjectDetails = () => {
   return (
     <Layout>
       <div className="pd-container">
-        <button className="pd-back-link" onClick={() => navigate('/projects')}>
+        <button className="page-back-link" onClick={() => navigate('/projects')}>
           <i className="fa fa-arrow-left"></i> BACK TO PROJECTS
         </button>
         {/* Header */}

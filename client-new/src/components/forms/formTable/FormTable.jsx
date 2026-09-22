@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import "./FormList.css";
+import "./FormTable.css";
 import { useLocation } from "react-router-dom";
 import { baseURL } from "../../../api/urls";
 import { customFetch } from "../../../api/base";
@@ -234,7 +234,7 @@ const FormTable = ({ filters }) => {
         </tbody>
       </table>
 
-      <div className="table-bottom">
+      <div className="table-bottom table-bottom--list">
         <label className="rows-per-page">
           Rows per page:
           <select value={rowsPerPage} onChange={handleRowsChange}>
