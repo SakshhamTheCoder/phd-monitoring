@@ -1,27 +1,10 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import PublicPageBar from '../../components/publicPageBar/PublicPageBar';
 
 const Support = () => {
-  const navigate = useNavigate();
-
   return (
     <div className="tw-min-h-screen tw-bg-white tw-flex tw-flex-col">
-      <nav className="page-navbar">
-        <div className="nav-container tw-max-w-4xl">
-          <button 
-            onClick={() => navigate(-1)} 
-            className="back-button"
-          >
-            ← Back
-          </button>
-          <Link 
-            to="/" 
-            className="nav-home-link"
-          >
-            Home
-          </Link>
-        </div>
-      </nav>
+      <PublicPageBar containerClassName="tw-max-w-4xl" />
       <div className="tw-flex-1 tw-py-8 tw-px-4">
         <div className="tw-max-w-4xl tw-mx-auto tw-p-2 tw-w-full">
           

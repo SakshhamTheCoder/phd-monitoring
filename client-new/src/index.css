@@ -136,6 +136,52 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 1rem;
+}
+
+/* The logo holds the left corner on every public page; the two ways out sit
+   together on the right. A page with no room for a heading of its own puts it
+   here, beside the logo. */
+.page-navbar .nav-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    min-width: 0;
+}
+
+.page-navbar .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.page-navbar .nav-logo-link {
+    display: flex;
+    align-items: center;
+}
+
+.page-navbar .nav-logo {
+    height: 36px;
+    width: auto;
+}
+
+.page-navbar .nav-title {
+    margin: 0;
+    font-size: var(--text-xl);
+    font-weight: 700;
+    color: var(--text-color);
+    letter-spacing: -0.3px;
+}
+
+@media (max-width: 768px) {
+    .page-navbar .nav-title {
+        font-size: var(--text-md);
+    }
+
+    .page-navbar .nav-logo {
+        height: 30px;
+    }
 }
 
 .page-navbar .back-button {
