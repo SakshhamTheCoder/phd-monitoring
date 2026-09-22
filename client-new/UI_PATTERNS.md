@@ -2,6 +2,15 @@
 
 > All new screens must reuse these. Do not recreate tables, modals, buttons or field styles. If a pattern is missing, add it to `styles/ui.css` or `components/*`, not as page-local CSS.
 
+## Narrow screens
+- **One breakpoint:** `max-width: 768px`, the value `--break-mobile` documents and the shell's drawer uses. A second tier at `480px` exists on the landing and team pages, for phones too narrow for two columns. Do not invent a third; 600, 640, 720 and 560 were merged into 768.
+- **Where the rules live:** shared patterns in `styles/ui.css` (one block at the end), a page's own layout beside the layout it changes. Every rule sits inside a `max-width` query, so nothing above 768px moved.
+- **What the shared block covers** (`ui.css`): page header stacks, dialog footers stack and stretch, `.form-list-container` scrolls sideways instead of widening the page, `.card`/`.empty-state` lose padding, row-action menus are capped at the viewport.
+- **Tables:** they scroll inside their card. Do not rebuild a table as cards for a phone.
+- **Grids:** `GridContainer` collapses to one column and `span-2`/`span-3` collapse with it. A grid cell holding a table also needs `min-width: 0`, or the table holds the grid open.
+- **Dialogs:** `CustomModal` caps every width at `min(<width>, 100%)`, so a `width="520px"` dialog fits a 390px screen. Pass the desktop width and leave the phone to the cap.
+- **Checked by:** `e2e-local/tests/mobile-audit.spec.js` (no page or dialog scrolls sideways at 390px) and `desktop-parity.spec.js` (nothing changed at 1440px).
+
 ## Tokens
 - **File:** `src/index.css:18` defines `--primary-color`, `--hover-color`, `--primary-tint/wash`, `--surface`, `--text-color/muted/subtle`, `--border-color/subtle`, `--danger/success/warning`, `--radius*`.
 - Use tokens, never hard-code `#B22626` / `#932f2f` again (there were 4 maroons).
@@ -19,9 +28,16 @@
 - **Component:** `src/components/filterBar/FilterBar.js:9` — fetches `GET {pathname}/filters`, renders Select Filter + Operator + Value (DropdownField / InputSuggestions / date/number/text) + Add + AND/OR + Search. Chips in `.filter-chip`.
 - Use for any list page needing server-side filtering. `UsersPage` + `DepartmentPage` both do: `<FilterBar onSearch={handleFilterChange} />` + `<PagenationTable filters={filter} />`.
 
+## Shared bits that used to be copied
+- `.page-back-link` (`ui.css`) — the uppercase back link above a page title. Was `.cp-`/`.pd-`/`.pr-back-link`, three identical copies.
+- `.inline-add-btn` + `.inline-add-btn--sm` (`ui.css`) — the small brand Add button inside a section. Was `.cp-add-btn`/`.cp-add-inline`, defined in one page's stylesheet and used from two.
+- `.form-container` / `.form-note` (`ui.css`) — the padded block a form is drawn in. Was `pages/forms/forms.css`, which a component two directories away reached across to import.
+- Table chrome (`ui.css`): `.form-list-container`, `.selected-row`, `.pagination`, `.table-bottom`, `.rows-per-page`, `.top-actions`. Was two files both called `FormList.css`, both global, disagreeing on `.form-table`'s background and on where the pager's margin sat. Each component now asks for its own difference by name: `.table-bottom--paged` (PagenationTable), `.table-bottom--list` (FormTable), `.form-table--tint` (PagenationTable's grey rows).
+- **Rule:** a page stylesheet is global once its route chunk loads. Two pages defining the same class is a bug even when the values match today. Put it in `ui.css` or give it the page's own prefix.
+
 ## Tables — one look, three names
 - **CSS:** `src/styles/ui.css:244` `.data-table-wrap`, `.data-table/.form-table/.custom-table` share same header (uppercase 0.72rem, `#F5F5F5`), cells, hover.
-- **Container:** `src/components/pagenationTable/FormList.css:3` `.form-list-container` (padding 20px, `#f7f1f1` card), `.table-toolbar` (title left, actions right), `.top-actions/.extra-components`.
+- **Container:** `src/styles/ui.css` `.form-list-container` (padding 20px, `#f7f1f1` card), `.table-toolbar` (title left, actions right), `.top-actions/.extra-components`.
 - **PagenationTable:** `src/components/pagenationTable/PagenationTable.js:9` — props `endpoint`, `filters`, `enableApproval`, `customOpenForm`, `extraTopbarComponents`, `actions[]`, `num`. Handles paginate, selectMode, row-actions kebab. Toolbar pattern: `extraTopbarComponents={<div style={{display:'flex',gap:'10px'}}><CustomButton …/></div>}` (Users: Bulk Import + Add User).
 - **When to use:** Server-paginated lists → `PagenationTable`. Client roster (Attendance) → `<div className="form-list-container"><table className="form-table">` manually but same classes (Attendance does this).
 - **Row actions:** `.row-actions` + `.row-actions-trigger` + `.row-actions-menu` + `.row-actions-item` (`.danger` variant) — `PagenationTable.js:194`.
@@ -36,7 +52,7 @@
 
 ## Buttons — CustomButton
 - **Component:** `src/components/forms/fields/CustomButton.js:2` — `text`, `variant` (`secondary` = outlined brand, `danger`, `success`), `disabled`, `style` (escape hatch, avoid). CSS `src/components/forms/fields/Fields.css:5` `.custom-button` (maroon) + modifiers.
-- **Toolbar sizing:** `FormList.css:87` `.top-actions .custom-button{width:auto}` + `.select-btn/.approve-btn` same size — so toolbar buttons align.
+- **Toolbar sizing:** `ui.css` `.top-actions` + `.select-btn/.approve-btn` same size — so toolbar buttons align.
 - **Pattern:** Primary action brand filled, secondary outlined. Do not use raw `<button>` with inline maroon unless copying bulk-import orange exception (see below).
 
 ## Fields — the form kit
