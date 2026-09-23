@@ -127,16 +127,11 @@ const Student = ({ formData }) => {
          
           <GridContainer
             label="Revised PhD objectives"
-            elements={[
-              <>
-                {formData.role === "student" && !lock && (
-                  <CustomButton text="Add objective" variant="secondary" size="sm" onClick={addObjective} />
-                )}
-              </>,
-            ]}
+            elements={formData.role === "student" && !lock ? [<CustomButton text="Add objective" variant="secondary" size="sm" onClick={addObjective} />] : []}
           />
 
           <GridContainer
+            each={3}
             elements={body.revised_phd_objectives?.map((objective, index) => {
               return (
                 <InputField required={true}

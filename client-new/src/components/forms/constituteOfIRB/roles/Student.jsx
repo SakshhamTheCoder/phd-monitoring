@@ -185,16 +185,11 @@ const Student = ({ formData }) => {
 
           <GridContainer
             label="Objectives of research"
-            elements={[
-              <>
-                {!lock && (
-                  <CustomButton text="Add objective" variant="secondary" size="sm" onClick={addObjective} />
-                )}
-              </>,
-            ]}
+            elements={!lock ? [<CustomButton text="Add objective" variant="secondary" size="sm" onClick={addObjective} />] : []}
           />
           {formData.role == "student" ? (
             <GridContainer
+              each={3}
               elements={body.objectives?.map((objective, index) => (
                 <InputField required={true}
                   initialValue={objective}
@@ -206,7 +201,6 @@ const Student = ({ formData }) => {
                   showLabel={false}
                 />
               ))}
-              space={2}
             />
           ) : (
             <>
@@ -227,13 +221,7 @@ const Student = ({ formData }) => {
 
           <GridContainer
             label="Subdomain"
-            elements={[
-              <>
-                {!lock && (
-                  <CustomButton text="Add subdomain" variant="secondary" size="sm" onClick={addSubdomain} />
-                )}
-              </>,
-            ]}
+            elements={!lock ? [<CustomButton text="Add subdomain" variant="secondary" size="sm" onClick={addSubdomain} />] : []}
           />
           {formData.role == "student" ? (
             <GridContainer
@@ -250,7 +238,7 @@ const Student = ({ formData }) => {
                   hint={`Enter keyword ${index + 1}`}
                 />
               ))}
-              space={2}
+              each={1}
             />
           ) : (
             <GridContainer
