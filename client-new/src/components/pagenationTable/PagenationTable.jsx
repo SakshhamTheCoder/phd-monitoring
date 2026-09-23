@@ -48,6 +48,17 @@ const PagenationTable = ({
   // Only the newest request may write to the table.
   const latestRequest = useRef(0);
 
+  // A different filter is a different result set: the page the user was on may
+  // not exist in it ("Page 5 of 1"). Compared by value, since a caller may hand
+  // over an equal object again. Adjusted during render so the fetch below
+  // already asks for page 1.
+  const filtersKey = JSON.stringify(filters ?? null);
+  const [fetchedFiltersKey, setFetchedFiltersKey] = useState(filtersKey);
+  if (filtersKey !== fetchedFiltersKey) {
+    setFetchedFiltersKey(filtersKey);
+    setCurrentPage(1);
+  }
+
   const componentMap = components.reduce((all, one) => ({ ...all, [one.key]: one.component }), {});
 
   // The tick boxes can be on permanently. There is then no mode to enter, the
@@ -82,7 +93,10 @@ const PagenationTable = ({
         setFields(data.response.fields || []);
         setFieldsTitle(data.response.fieldsTitles || []);
         setForms(data.response.data || []);
-        setTotalPages(data.response.totalPages || 1);
+        const pageCount = data.response.totalPages || 1;
+        setTotalPages(pageCount);
+        // Approving rows can empty the last page; step back to one that exists.
+        if (page > pageCount) setCurrentPage(pageCount);
         setRole(data.response.role || "student");
       }
     } catch (err) {
@@ -97,6 +111,8 @@ const PagenationTable = ({
   };
 
   useEffect(() => {
+    // Ticked rows that leave the screen must not ride along into a bulk action.
+    setSelectedForms(new Set());
     fetchData(currentPage, rowsPerPage, filters);
   }, [endpoint, currentPage, rowsPerPage, filters,num]);
 
@@ -130,7 +146,7 @@ const PagenationTable = ({
 
     if (customBulkAction) {
       await customBulkAction(selectedIds);
-      fetchData(currentPage, rowsPerPage);
+      fetchData(currentPage, rowsPerPage, filters);
       setLoading(false);
       return;
     }
@@ -140,7 +156,8 @@ const PagenationTable = ({
       .then((data) => {
         if (data.success) {
           toast.success("Selected forms approved successfully.");
-          fetchData(currentPage, rowsPerPage);
+          setSelectedForms(new Set());
+          fetchData(currentPage, rowsPerPage, filters);
         } else {
           toast.error("Failed to approve selected forms.");
         }
