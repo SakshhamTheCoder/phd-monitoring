@@ -636,6 +636,9 @@
    .form-table was defined identically in two separate stylesheets, both
    global, and only agreed by luck. */
 .data-table-wrap {
+    /* Positioned, so a visually hidden header inside is clipped by the scroll
+       box instead of widening the page. */
+    position: relative;
     overflow-x: auto;
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-lg);
