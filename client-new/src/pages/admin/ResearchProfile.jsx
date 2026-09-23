@@ -7,6 +7,9 @@ import TableComponent from '../../components/forms/table/TableComponent';
 import Tabs from '../../components/tabs/Tabs';
 import InfoGrid from '../../components/profileFields/InfoGrid';
 import LoadError from '../../components/common/LoadError';
+import StatusNotice from '../../components/common/StatusNotice';
+import Page from '../../components/page/Page';
+import Panel, { PanelSection } from '../../components/panel/Panel';
 import { customFetch, isNetworkError, NETWORK_ERROR_MESSAGE } from '../../api/base';
 import { baseURL } from '../../api/urls';
 import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
@@ -55,6 +58,9 @@ const studentNameCell = {
     component: ({ row }) => <Link to={`/students/${row.roll_no}`}>{row.name}</Link>,
 };
 
+// The publications panel, which the Research profile button scrolls to.
+const RESEARCH_ID = 'research-publications';
+
 const emptyProfileForm = {
     phone: '', expertise: '',
     orcid_id: '', scopus_id: '', google_scholar_id: '', joined_on: '', citations: '', h_index: '',
@@ -87,7 +93,6 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
     const [editingProfile, setEditingProfile] = useState(false);
     const [profileForm, setProfileForm] = useState(emptyProfileForm);
     const [loadFailed, setLoadFailed] = useState(false);
-    const researchRef = useRef(null);
 
     // A failed refresh keeps what is on screen; only a failed first load shows
     // the error, since data is cleared whenever the faculty changes.
@@ -185,7 +190,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
     if (!data) {
         return loadFailed
             ? <LoadError message="Could not load this research profile. Check your connection and try again." onRetry={load} />
-            : <div className="loading-state">Loading Profile…</div>;
+            : <Page><Panel><StatusNotice tone="loading" title="Loading profile" /></Panel></Page>;
     }
 
     const {
@@ -423,7 +428,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
         load();
     };
 
-    const selectHeader = canEdit && isOwnTab ? <th className="rp-select-col"></th> : null;
+    const selectHeader = canEdit && isOwnTab ? <th className="rp-select-col"><span className="sr-only">Select</span></th> : null;
 
     const selectCell = (pub) => (
         canEdit && isOwnTab && (
@@ -441,171 +446,179 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
     const rowActions = (pub) => (
         canEdit && isOwnTab && (
             <td className="rp-row-actions">
-                <button onClick={() => { setEditPub(pub); setShowPubForm(true); }} title="Edit"><i className="fa fa-pencil"></i></button>
-                <button onClick={() => removePublication(pub)} title="Delete"><i className="fa fa-trash"></i></button>
+                <button type="button" className="icon-action" onClick={() => { setEditPub(pub); setShowPubForm(true); }} title="Edit" aria-label="Edit"><i className="fa fa-pencil" aria-hidden="true"></i></button>
+                <button type="button" className="icon-action" onClick={() => removePublication(pub)} title="Delete" aria-label="Delete"><i className="fa fa-trash" aria-hidden="true"></i></button>
             </td>
         )
     );
 
-    const actionHeader = canEdit && isOwnTab ? <th></th> : null;
+    const actionHeader = canEdit && isOwnTab ? <th><span className="sr-only">Actions</span></th> : null;
 
     // A column's width comes from its heading, so the classes are picked off the
     // label rather than the position: the select checkbox shifts every index,
     // and the year/title columns sit in different places from table to table.
     const columnClass = (label) => {
-        if (label.startsWith('YEAR OF')) return 'rp-col-year';
-        if (label.startsWith('TITLE OF')) return 'rp-col-title';
+        if (label.startsWith('Year of')) return 'rp-col-year';
+        if (label.startsWith('Title of')) return 'rp-col-title';
         return undefined;
     };
 
-    // "YEAR OF PUBLICATION" on one line holds the column open to the width of the
-    // whole phrase. Broken after "OF", the column only has to fit "PUBLICATION",
+    // "Year of publication" on one line holds the column open to the width of the
+    // whole phrase. Broken after "of", the column only has to fit "publication",
     // and the space saved goes to the title.
     const headingText = (label) => {
-        if (!label.startsWith('YEAR OF')) return label;
+        if (!label.startsWith('Year of')) return label;
         const cut = label.lastIndexOf(' ');
         return (<>{label.slice(0, cut)}<br />{label.slice(cut + 1)}</>);
     };
 
     const table = (key, title, columns, renderRow) => (
         filtered[key] && filtered[key].length > 0 && (
-            <div className="rp-table-section" key={key}>
-                <h3>
-                    {title}
-                    {canEdit && isOwnTab && (
-                        <button type="button" className="rp-select-all" onClick={() => toggleGroup(key)}>
-                            Select all
-                        </button>
-                    )}
-                </h3>
+            <Panel
+                flush
+                key={key}
+                title={title}
+                className="rp-table-panel"
+                actions={canEdit && isOwnTab && (
+                    <CustomButton text="Select all" variant="quiet" size="sm" onClick={() => toggleGroup(key)} />
+                )}
+            >
                 <div className="data-table-wrap">
                     <table className="data-table">
-                        <thead><tr>{selectHeader}<th className="rp-col-num"></th>{columns.map(c => <th key={c} className={columnClass(c)}>{headingText(c)}</th>)}<th>SOURCE</th>{actionHeader}</tr></thead>
+                        <thead><tr>{selectHeader}<th className="rp-col-num"><span className="sr-only">Number</span></th>{columns.map(c => <th key={c} className={columnClass(c)}>{headingText(c)}</th>)}<th>Source</th>{actionHeader}</tr></thead>
                         <tbody>{filtered[key].map((pub, i) => <tr key={`${pub.source}-${pub.id}`}>{selectCell(pub)}<td className="rp-col-num">{i + 1}</td>{renderRow(pub)}<td>{sourceBadge(pub)}</td>{rowActions(pub)}</tr>)}</tbody>
                     </table>
                 </div>
-            </div>
+            </Panel>
         )
     );
 
     const doiCell = (pub) => (
-        <td>{pub.doi_link ? <a href={pub.doi_link} target="_blank" rel="noopener noreferrer"><i className="fa fa-link"></i> DOI</a> : EMPTY_VALUE}</td>
+        <td>{pub.doi_link ? <a href={pub.doi_link} target="_blank" rel="noopener noreferrer"><i className="fa fa-link" aria-hidden="true"></i> DOI</a> : EMPTY_VALUE}</td>
+    );
+
+    // Research lives on the same page, below the supervision tables: most
+    // visits are about supervision. The button beside the name reaches it
+    // without scrolling past them.
+    const headerActions = (
+        <>
+            {canEdit && !editingProfile && (
+                <CustomButton text="Edit" variant="secondary" onClick={startProfileEdit} />
+            )}
+            {canEdit && editingProfile && (
+                <>
+                    <CustomButton text="Save" onClick={saveProfile} />
+                    <CustomButton text="Cancel" variant="quiet" onClick={() => setEditingProfile(false)} />
+                </>
+            )}
+            <CustomButton
+                text="Research profile"
+                variant="secondary"
+                onClick={() => document.getElementById(RESEARCH_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+            />
+        </>
     );
 
     return (
-        <>
-            <div className="rp-container">
-                <div className="faculty-container">
-                    <div className="faculty-header">
-                        <div>
-                            <h2>{profile.name}</h2>
-                            <p className="faculty-sub">{profile.designation}, {profile.department}</p>
-                        </div>
-                        {/* Research lives on the same page but stays folded away:
-                            most visits are about supervision. Kept beside the name
-                            so it is seen without scrolling past the tables. */}
-                        <div className="profile-actions">
-                            {canEdit && !editingProfile && (
-                                <button className="profile-edit-small" onClick={startProfileEdit}>
-                                    <i className="fa fa-pencil" aria-hidden="true"></i> Edit
-                                </button>
-                            )}
-                            {canEdit && editingProfile && (
-                                <>
-                                    <CustomButton text="Save" onClick={saveProfile} />
-                                    <CustomButton text="Cancel" variant="secondary" onClick={() => setEditingProfile(false)} />
-                                </>
-                            )}
-                            <CustomButton
-                                text="Research Profile"
-                                variant="secondary"
-                                onClick={() => researchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                            />
-                        </div>
-                    </div>
+        <Page
+            title={profile.name}
+            description={`${profile.designation}, ${profile.department}`}
+            actions={headerActions}
+        >
+            {/* One panel, so one Edit shows everything that one Save will write. */}
+            <Panel>
+                <PanelSection>
+                    <InfoGrid
+                        rows={identityRows}
+                        editing={editingProfile}
+                        values={profileForm}
+                        onChange={setProfileField}
+                    />
+                </PanelSection>
+                <PanelSection title="Academic identifiers">
+                    <InfoGrid
+                        rows={identifierRows}
+                        editing={editingProfile}
+                        values={profileForm}
+                        onChange={setProfileField}
+                    />
+                </PanelSection>
+            </Panel>
 
-                    <div className="faculty-details">
-                        <InfoGrid
-                            className="faculty-info-grid"
-                            rows={identityRows}
-                            editing={editingProfile}
-                            values={profileForm}
-                            onChange={setProfileField}
+            {canViewSupervision && (
+                <>
+                    <Panel flush title="Supervising students">
+                        <TableComponent
+                            data={data.supervised_students || []}
+                            keys={['name', 'roll_no', 'email', 'date_of_admission']}
+                            titles={['Name', 'Roll no', 'Email', 'Date of admission']}
+                            rowStyle={() => ({ cursor: 'pointer' })}
+                            components={[studentNameCell]}
                         />
+                        {!(data.supervised_students || []).length && (
+                            <div className="rp-panel-note">
+                                <StatusNotice tone="empty">No students currently being supervised.</StatusNotice>
+                            </div>
+                        )}
+                    </Panel>
 
-                        {/* Same card as the fields above, so one Edit shows
-                            everything that one Save will write. */}
-                        <h4 className="faculty-details-heading">Academic Identifiers</h4>
-                        <InfoGrid
-                            className="faculty-info-grid"
-                            rows={identifierRows}
-                            editing={editingProfile}
-                            values={profileForm}
-                            onChange={setProfileField}
+                    <Panel flush title="Doctoral committee membership">
+                        <TableComponent
+                            data={data.doctoral_committee_students || []}
+                            keys={['name', 'roll_no', 'email', 'department', 'date_of_admission']}
+                            titles={['Name', 'Roll no', 'Email', 'Department', 'Date of admission']}
+                            rowStyle={() => ({ cursor: 'pointer' })}
+                            components={[studentNameCell]}
                         />
-                    </div>
-
-                    {canViewSupervision && (
-                        <>
-                            <div className="faculty-table-section">
-                                <h3>Supervising Students</h3>
-                                <TableComponent
-                                    data={data.supervised_students || []}
-                                    keys={['name', 'roll_no', 'email', 'date_of_admission']}
-                                    titles={['Name', 'Roll No', 'Email', 'Date of Admission']}
-                                    rowStyle={() => ({ cursor: 'pointer' })}
-                                    components={[studentNameCell]}
-                                />
-                                {!(data.supervised_students || []).length && (
-                                    <p className="empty-msg">No students currently being supervised.</p>
-                                )}
+                        {!(data.doctoral_committee_students || []).length && (
+                            <div className="rp-panel-note">
+                                <StatusNotice tone="empty">Not a member of any doctoral committee.</StatusNotice>
                             </div>
+                        )}
+                    </Panel>
+                </>
+            )}
 
-                            <div className="faculty-table-section">
-                                <h3>Doctoral Committee Membership</h3>
-                                <TableComponent
-                                    data={data.doctoral_committee_students || []}
-                                    keys={['name', 'roll_no', 'email', 'department', 'date_of_admission']}
-                                    titles={['Name', 'Roll No', 'Email', 'Department', 'Date of Admission']}
-                                    rowStyle={() => ({ cursor: 'pointer' })}
-                                    components={[studentNameCell]}
-                                />
-                                {!(data.doctoral_committee_students || []).length && (
-                                    <p className="empty-msg">Not a member of any doctoral committee.</p>
-                                )}
-                            </div>
-                        </>
+            <Panel
+                id={RESEARCH_ID}
+                title="Publications"
+                actions={
+                    <>
+                        {canEdit && isOwnTab && (
+                            <button type="button" className="custom-button custom-button--secondary" onClick={() => { setEditPub(null); setShowPubForm(true); }}>
+                                <i className="fa fa-plus" aria-hidden="true"></i> Add publication
+                            </button>
+                        )}
+                        <button type="button" className="custom-button custom-button--quiet" onClick={exportCSV}>
+                            <i className="fa fa-download" aria-hidden="true"></i> Export CSV
+                        </button>
+                    </>
+                }
+            >
+                <div className="rp-sync-strip">
+                    <span>
+                        Source <strong>{profile.last_sync_source ? SOURCE_LABELS[profile.last_sync_source] : 'not synced'}</strong>
+                        <span className="rp-sync-dot" aria-hidden="true">·</span>
+                        Last synced <strong>{formatDate(profile.last_sync, 'never')}</strong>
+                    </span>
+                    {canEdit && canSync && (
+                        <button type="button" className="custom-button custom-button--secondary custom-button--sm" onClick={runSync} disabled={syncing} title="Sync from ORCID/Scopus">
+                            <i className={`fa ${syncing ? 'fa-spinner fa-spin' : 'fa-refresh'}`} aria-hidden="true"></i> {syncing ? 'Syncing…' : 'Sync'}
+                        </button>
                     )}
-
+                    {canEdit && !canSync && (
+                        <span className="rp-sync-hint">Add an ORCID or Scopus ID to sync automatically.</span>
+                    )}
                 </div>
 
-                <div className="rp-research" ref={researchRef}>
-                    <div className="rp-right-col">
-                        <div className="rp-sync-strip">
-                            <span>
-                                Source <strong>{profile.last_sync_source ? SOURCE_LABELS[profile.last_sync_source] : 'not synced'}</strong>
-                                <span className="rp-sync-dot">·</span>
-                                Last synced <strong>{formatDate(profile.last_sync, 'never')}</strong>
-                            </span>
-                            {canEdit && canSync && (
-                                <button className="rp-sync-btn" onClick={runSync} disabled={syncing} title="Sync from ORCID/Scopus">
-                                    <i className={`fa ${syncing ? 'fa-spinner fa-spin' : 'fa-refresh'}`}></i> {syncing ? 'Syncing…' : 'Sync'}
-                                </button>
-                            )}
-                            {canEdit && !canSync && (
-                                <span className="rp-sync-hint">Add an ORCID or Scopus ID to sync automatically.</span>
-                            )}
-                        </div>
-                    </div>
-
-                    <Tabs
-                        value={tab}
-                        onChange={refilter(setActiveTab)}
-                        items={[
-                            { value: 'faculty', label: 'Faculty Publications' },
-                            ...(canViewSupervision ? [{ value: 'phd', label: 'PhD Student Publications' }] : []),
-                        ]}
-                    />
+                <Tabs
+                    value={tab}
+                    onChange={refilter(setActiveTab)}
+                    items={[
+                        { value: 'faculty', label: 'Faculty publications' },
+                        ...(canViewSupervision ? [{ value: 'phd', label: 'PhD student publications' }] : []),
+                    ]}
+                />
 
                 <div className="rp-tallies">
                     <span className="rp-tally"><strong>{profile.total_publications}</strong> total</span>
@@ -614,58 +627,49 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
                 </div>
 
                 <div className="rp-filter-bar">
-                    <div className="rp-filters">
-                        <div className="rp-filter">
-                            <label htmlFor="research-profile-year">Year</label>
-                            <select
-                                id="research-profile-year"
-                                value="Select"
-                                onChange={e => {
-                                    const val = e.target.value;
-                                    if (val !== 'Select' && !filterYears.includes(val)) refilter(setFilterYears)([...filterYears, val]);
-                                }}
-                            >
-                                <option value="Select">All years</option>
-                                {allYears.map(y => <option key={y} value={y}>{y}</option>)}
-                            </select>
-                        </div>
-
-                        <div className="rp-filter">
-                            <label htmlFor="research-profile-type">Type</label>
-                            <select id="research-profile-type" value={filterType} onChange={e => refilter(setFilterType)(e.target.value)}>
-                                <option value="All">All</option>
-                                {TYPE_OPTIONS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                            </select>
-                        </div>
-
-                        <div className="rp-filter">
-                            <label htmlFor="research-profile-source">Source</label>
-                            <select id="research-profile-source" value={filterSource} onChange={e => refilter(setFilterSource)(e.target.value)}>
-                                <option value="All">All</option>
-                                {availableSources.map(s => <option key={s} value={s}>{SOURCE_LABELS[s] || s}</option>)}
-                            </select>
-                        </div>
+                    <div className="rp-filter">
+                        <label htmlFor="research-profile-year">Year</label>
+                        <select
+                            id="research-profile-year"
+                            value="Select"
+                            onChange={e => {
+                                const val = e.target.value;
+                                if (val !== 'Select' && !filterYears.includes(val)) refilter(setFilterYears)([...filterYears, val]);
+                            }}
+                        >
+                            <option value="Select">All years</option>
+                            {allYears.map(y => <option key={y} value={y}>{y}</option>)}
+                        </select>
                     </div>
 
-                    <div className="rp-search-bar">
-                        <i className="fa fa-search"></i>
-                        <input
-                            type="text"
-                            placeholder="Search publications..."
-                            value={search}
-                            onChange={e => refilter(setSearch)(e.target.value)}
-                        />
+                    <div className="rp-filter">
+                        <label htmlFor="research-profile-type">Type</label>
+                        <select id="research-profile-type" value={filterType} onChange={e => refilter(setFilterType)(e.target.value)}>
+                            <option value="All">All</option>
+                            {TYPE_OPTIONS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                        </select>
                     </div>
 
-                    <div className="rp-filter-actions">
-                        {canEdit && isOwnTab && (
-                            <button className="rp-add-btn" onClick={() => { setEditPub(null); setShowPubForm(true); }}>
-                                <i className="fa fa-plus"></i> Add publication
-                            </button>
-                        )}
-                        <button className="rp-export-btn" onClick={exportCSV}>
-                            <i className="fa fa-download"></i> Export CSV
-                        </button>
+                    <div className="rp-filter">
+                        <label htmlFor="research-profile-source">Source</label>
+                        <select id="research-profile-source" value={filterSource} onChange={e => refilter(setFilterSource)(e.target.value)}>
+                            <option value="All">All</option>
+                            {availableSources.map(s => <option key={s} value={s}>{SOURCE_LABELS[s] || s}</option>)}
+                        </select>
+                    </div>
+
+                    <div className="rp-filter rp-filter--search">
+                        <label htmlFor="research-profile-search">Search</label>
+                        <div className="rp-search-bar">
+                            <i className="fa fa-search" aria-hidden="true"></i>
+                            <input
+                                id="research-profile-search"
+                                type="text"
+                                placeholder="Search publications..."
+                                value={search}
+                                onChange={e => refilter(setSearch)(e.target.value)}
+                            />
+                        </div>
                     </div>
                 </div>
 
@@ -674,9 +678,9 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
                 {filterYears.length > 0 && (
                     <div className="rp-year-tags">
                         {filterYears.map(y => (
-                            <span key={y} className="rp-year-tag">
+                            <span key={y} className="badge badge--accent">
                                 {y}
-                                <button type="button" aria-label={`Remove ${y}`} onClick={() => refilter(setFilterYears)(filterYears.filter(v => v !== y))}>&times;</button>
+                                <button type="button" className="rp-year-remove" aria-label={`Remove ${y}`} onClick={() => refilter(setFilterYears)(filterYears.filter(v => v !== y))}>&times;</button>
                             </span>
                         ))}
                     </div>
@@ -690,6 +694,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
                             {selected.length} selected
                         </span>
                         <select
+                            aria-label="Move selected publications to"
                             value={bulkTarget}
                             onChange={e => setBulkTarget(e.target.value)}
                             disabled={bulkBusy}
@@ -699,105 +704,100 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
                                 .filter(t => CATEGORY_TO_FIELDS[t.value])
                                 .map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                         </select>
-                        <button
-                            className="rp-bulk-apply"
+                        <CustomButton
+                            text={bulkBusy ? 'Moving…' : 'Apply'}
+                            variant="secondary"
+                            size="sm"
                             onClick={applyBulkCategory}
                             disabled={!bulkTarget || bulkBusy}
-                        >
-                            {bulkBusy ? 'Moving…' : 'Apply'}
-                        </button>
-                        <button className="rp-bulk-clear" onClick={() => setSelected([])} disabled={bulkBusy}>
-                            Clear
-                        </button>
+                        />
+                        <CustomButton text="Clear" variant="quiet" size="sm" onClick={() => setSelected([])} disabled={bulkBusy} />
                     </div>
                 )}
+            </Panel>
 
-                <div className="rp-tables">
-                    {/* Imported works whose category could not be established, chiefly ORCID
-                        journal articles, since ORCID records no indexing. Shown so they are
-                        visible and can be classified rather than silently filed as Scopus. */}
-                    {/* No SOURCE column here: table() already appends one with the
-                        source badge, so listing it again showed it twice. */}
-                    {table('uncategorised', 'Unclassified (needs a category)',
-                        ['AUTHOR(S)', 'YEAR OF PUBLICATION', 'TITLE OF PAPER', 'PUBLISHED IN', 'DOI'],
-                        pub => (<>
-                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td><td>{pub.title}</td>
-                            <td>{pub.name || EMPTY_VALUE}</td>{doiCell(pub)}
-                        </>))}
+            {/* Imported works whose category could not be established, chiefly ORCID
+                journal articles, since ORCID records no indexing. Shown so they are
+                visible and can be classified rather than silently filed as Scopus. */}
+            {/* No Source column here: table() already appends one with the
+                source badge, so listing it again showed it twice. */}
+            {table('uncategorised', 'Unclassified (needs a category)',
+                ['Author(s)', 'Year of publication', 'Title of paper', 'Published in', 'DOI'],
+                pub => (<>
+                    <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td><td>{pub.title}</td>
+                    <td>{pub.name || EMPTY_VALUE}</td>{doiCell(pub)}
+                </>))}
 
-                    {table('sci', 'SCI/SCIE/SSCI/ABDC/AHCI Journal',
-                        ['AUTHOR(S)', 'YEAR OF PUBLICATION', 'TITLE OF PAPER', 'NAME OF THE JOURNAL', 'IMPACT FACTOR', 'DOI'],
-                        pub => (<>
-                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td><td>{pub.title}</td>
-                            <td>{pub.name}</td><td>{pub.impact_factor ?? EMPTY_VALUE}</td>{doiCell(pub)}
-                        </>))}
+            {table('sci', 'SCI/SCIE/SSCI/ABDC/AHCI Journal',
+                ['Author(s)', 'Year of publication', 'Title of paper', 'Name of the journal', 'Impact factor', 'DOI'],
+                pub => (<>
+                    <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td><td>{pub.title}</td>
+                    <td>{pub.name}</td><td>{pub.impact_factor ?? EMPTY_VALUE}</td>{doiCell(pub)}
+                </>))}
 
-                    {table('non_sci', 'Papers in Scopus Journal',
-                        ['AUTHOR(S)', 'YEAR OF PUBLICATION', 'TITLE OF PAPER', 'NAME OF THE JOURNAL', 'IMPACT FACTOR', 'NAME OF PUBLISHER'],
-                        pub => (<>
-                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td><td>{pub.title}</td>
-                            <td>{pub.name}</td><td>{pub.impact_factor ?? EMPTY_VALUE}</td><td>{pub.publisher || EMPTY_VALUE}</td>
-                        </>))}
+            {table('non_sci', 'Papers in Scopus Journal',
+                ['Author(s)', 'Year of publication', 'Title of paper', 'Name of the journal', 'Impact factor', 'Name of publisher'],
+                pub => (<>
+                    <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td><td>{pub.title}</td>
+                    <td>{pub.name}</td><td>{pub.impact_factor ?? EMPTY_VALUE}</td><td>{pub.publisher || EMPTY_VALUE}</td>
+                </>))}
 
-                    {table('international', 'Papers in International Conferences',
-                        ['AUTHOR(S)', 'YEAR OF PUBLICATION', 'TITLE OF PAPER', 'NAME OF CONFERENCE', 'PLACE OF CONFERENCE', 'DOI'],
-                        pub => (<>
-                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td><td>{pub.title}</td>
-                            <td>{pub.name}</td><td>{pub.country || EMPTY_VALUE}</td>{doiCell(pub)}
-                        </>))}
+            {table('international', 'Papers in International Conferences',
+                ['Author(s)', 'Year of publication', 'Title of paper', 'Name of conference', 'Place of conference', 'DOI'],
+                pub => (<>
+                    <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td><td>{pub.title}</td>
+                    <td>{pub.name}</td><td>{pub.country || EMPTY_VALUE}</td>{doiCell(pub)}
+                </>))}
 
-                    {table('national', 'Papers in National Conferences',
-                        ['AUTHOR(S)', 'YEAR OF PUBLICATION', 'TITLE OF PAPER', 'NAME OF CONFERENCE', 'PLACE OF CONFERENCE', 'DOI'],
-                        pub => (<>
-                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td><td>{pub.title}</td>
-                            <td>{pub.name}</td><td>{pub.city || EMPTY_VALUE}</td>{doiCell(pub)}
-                        </>))}
+            {table('national', 'Papers in National Conferences',
+                ['Author(s)', 'Year of publication', 'Title of paper', 'Name of conference', 'Place of conference', 'DOI'],
+                pub => (<>
+                    <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td><td>{pub.title}</td>
+                    <td>{pub.name}</td><td>{pub.city || EMPTY_VALUE}</td>{doiCell(pub)}
+                </>))}
 
-                    {table('book', 'Book/Book Chapters',
-                        ['AUTHOR(S)', 'YEAR OF PUBLICATION', 'NAME OF BOOK', 'TITLE OF PAPER', 'NAME OF PUBLISHER'],
-                        pub => (<>
-                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td><td>{pub.name}</td>
-                            <td>{pub.title}</td><td>{pub.publisher || EMPTY_VALUE}</td>
-                        </>))}
+            {table('book', 'Book/Book Chapters',
+                ['Author(s)', 'Year of publication', 'Name of book', 'Title of paper', 'Name of publisher'],
+                pub => (<>
+                    <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td><td>{pub.name}</td>
+                    <td>{pub.title}</td><td>{pub.publisher || EMPTY_VALUE}</td>
+                </>))}
 
-                    {table('patents', 'Patents',
-                        ['AUTHOR(S)', 'YEAR OF AWARD', 'TITLE OF PATENT', 'INTERNATIONAL/NATIONAL'],
-                        pub => (<>
-                            <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td>
-                            <td>{pub.title}</td><td>{pub.country || EMPTY_VALUE}</td>
-                        </>))}
+            {table('patents', 'Patents',
+                ['Author(s)', 'Year of award', 'Title of patent', 'International/national'],
+                pub => (<>
+                    <td>{formatAuthors(pub.authors)}</td><td>{pub.year || EMPTY_VALUE}</td>
+                    <td>{pub.title}</td><td>{pub.country || EMPTY_VALUE}</td>
+                </>))}
 
-                    {Object.values(filtered).every(list => !list || !list.length) && (
-                        <div className="empty-state">
-                            {filtersActive
-                                ? (isOwnTab
-                                    ? 'No publications match these filters. Clear a filter to see more.'
-                                    : 'No publications from supervised students match these filters.')
-                                : isOwnTab
-                                    ? (canEdit
-                                        ? 'No publications recorded yet. Add one, or sync from ORCID or Scopus.'
-                                        : 'No publications recorded yet.')
-                                    : 'No publications from supervised students yet.'}
-                        </div>
-                    )}
-                </div>
-                </div>
+            {Object.values(filtered).every(list => !list || !list.length) && (
+                <StatusNotice tone="empty">
+                        {filtersActive
+                            ? (isOwnTab
+                                ? 'No publications match these filters. Clear a filter to see more.'
+                                : 'No publications from supervised students match these filters.')
+                            : isOwnTab
+                                ? (canEdit
+                                    ? 'No publications recorded yet. Add one, or sync from ORCID or Scopus.'
+                                    : 'No publications recorded yet.')
+                                : 'No publications from supervised students yet.'}
+                </StatusNotice>
+            )}
 
-                <CustomModal
-                    isOpen={showPubForm}
-                    onClose={() => { setShowPubForm(false); setEditPub(null); }}
-                    maxWidth="900px"
-                    minHeight="auto"
-                    closeOnOutsideClick={false}
-                >
-                    <AddPublication
-                        close={() => { setShowPubForm(false); setEditPub(null); }}
-                        editData={editPub}
-                        onSave={savePublication}
-                    />
-                </CustomModal>
-            </div>
-        </>
+            <CustomModal
+                isOpen={showPubForm}
+                onClose={() => { setShowPubForm(false); setEditPub(null); }}
+                maxWidth="900px"
+                minHeight="auto"
+                closeOnOutsideClick={false}
+            >
+                <AddPublication
+                    close={() => { setShowPubForm(false); setEditPub(null); }}
+                    editData={editPub}
+                    onSave={savePublication}
+                />
+            </CustomModal>
+        </Page>
     );
 };
 

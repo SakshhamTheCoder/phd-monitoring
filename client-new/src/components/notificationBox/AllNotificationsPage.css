@@ -1,125 +1,89 @@
-.notification-page-head {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-}
-
-/* Sits inline with the unread pill, so it drops the title's bottom margin. */
-.notification-page-head .page-title {
-  margin: 0;
-}
-
-.notification-unread-pill {
-  font-size: var(--text-xs);
-  font-weight: 600;
-  color: #991b1b;
-  background: #fff1f2;
-  border: 1px solid #f6d5d7;
-  padding: 3px 12px;
-  border-radius: 999px;
-}
-
-.notification-muted {
-  color: #9ca3af;
-}
-
+/* One row per notification, ruled, inside the one panel. */
 .notification-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-/* A button so the keyboard can reach it; the read and unread rules below set
-   its background and border, so only the rest of the button chrome is cleared. */
-.notification-card {
+.notification-list li + li { border-top: 1px solid var(--border-subtle); }
+
+/* A button so the keyboard can reach it. */
+.notification-row {
   appearance: none;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-4);
   width: 100%;
-  border-radius: var(--radius-lg);
-  padding: 1.1rem 1.4rem;
+  padding: var(--space-4) var(--space-5);
+  border: none;
+  background: var(--surface);
   font: inherit;
   color: inherit;
   text-align: left;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  transition: background-color 0.15s ease-out;
 }
 
-/* Unread: brand-red accent, solid, bold — clearly needs attention. */
-.notification-card.is-unread {
-  background-color: #fff;
-  border: 1px solid #f4dcdc;
-  border-left: 4px solid #991b1b;
-  box-shadow: var(--shadow-sm);
-}
+.notification-list li:first-child .notification-row { border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+.notification-list li:last-child .notification-row { border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+.notification-list li:only-child .notification-row { border-radius: var(--radius-lg); }
 
-.notification-card.is-unread:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
-}
+.notification-row:hover { background: var(--canvas); }
 
-/* Read: muted and quiet, so unread items stand out. */
-.notification-card.is-read {
-  background-color: #fafafa;
-  border: 1px solid var(--border-subtle);
-  border-left: 4px solid #e5e7eb;
-}
-
-.notification-card.is-read:hover {
-  background-color: #f5f5f5;
-}
-
-.notification-card:focus-visible {
+.notification-row:focus-visible {
   outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
+  outline-offset: -2px;
 }
 
-.notification-card-main {
-  min-width: 0;
-}
+.notification-row-main { min-width: 0; }
 
-.notification-card-titlerow {
+.notification-row-titleline {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
+/* Unread is carried by the dot, the weight and the screen reader text, not by
+   colour alone. */
 .notification-dot {
   flex: 0 0 auto;
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: #991b1b;
+  background-color: var(--primary-color);
 }
 
 .notification-title {
-  font-size: var(--text-md);
+  font-size: var(--text-base);
   font-weight: 600;
-  color: #7f1d1d;
+  color: var(--text-color);
   line-height: 1.35;
 }
 
-.notification-card.is-read .notification-title {
-  color: #6b7280;
+.notification-row.is-read .notification-title {
+  color: var(--text-muted);
   font-weight: 500;
 }
 
 .notification-body {
   display: block;
-  margin-top: 0.35rem;
-  font-size: var(--text-base);
-  color: #6b7280;
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  color: var(--text-muted);
   line-height: 1.5;
 }
 
 .notif-date {
   flex: 0 0 auto;
   font-size: var(--text-xs);
-  color: #9ca3af;
+  font-weight: 400;
+  color: var(--text-subtle);
   white-space: nowrap;
   padding-top: 2px;
 }
 
+@media (max-width: 768px) {
+  .notification-row { padding: var(--space-4); }
+}

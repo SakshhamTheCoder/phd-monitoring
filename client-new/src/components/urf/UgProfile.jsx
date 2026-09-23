@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import '../profileCard/ProfileCard.css';
 import InfoGrid from '../profileFields/InfoGrid';
-import GridContainer from '../forms/fields/GridContainer';
+import Page from '../page/Page';
+import Panel, { PanelSection } from '../panel/Panel';
 import TableComponent from '../forms/table/TableComponent';
 import FacultyLink from '../facultyLink/FacultyLink';
 import CustomButton from '../forms/fields/CustomButton';
@@ -20,7 +21,7 @@ const GENDERS = [{ title: 'Male', value: 'Male' }, { title: 'Female', value: 'Fe
 const LOCKED_NOTE = 'On a URF project now. Ask the office to change it.';
 
 const PROJECT_KEYS = ['session', 'project_title', 'status', 'teammate', 'teammate_branch', 'teammate_year', 'mentors'];
-const PROJECT_TITLES = ['Session', 'Project Title', 'Status', 'Team Member', 'Branch', 'Year', 'Faculty Mentors'];
+const PROJECT_TITLES = ['Session', 'Project title', 'Status', 'Team member', 'Branch', 'Year', 'Faculty mentors'];
 
 const PROJECT_CELLS = [
   { key: 'status', component: ({ data }) => <StatusText status={data} /> },
@@ -38,7 +39,7 @@ const PROJECT_CELLS = [
 
 /**
  * A UG student's home, laid out like the PhD student profile: their name with
- * their current URF project beside it, their details in the framed grid, then
+ * their current URF project under it, their details below that, then
  * that project and the ones behind it. Roll number, branch and year come from
  * what they gave at sign-up, falling back to the current application for an
  * account an admin created.
@@ -112,11 +113,54 @@ const UgProfile = () => {
     };
   };
 
+  const rows = [
+    {
+      label: 'Roll Number',
+      value: state?.student?.roll_no || current?.[`student${slot}_roll_no`],
+      field: 'roll_no',
+      disabled: applied,
+      hint: applied ? LOCKED_NOTE : undefined,
+    },
+    {
+      label: 'Branch',
+      value: state?.student?.branch?.name || current?.[`student${slot}_branch`]?.name,
+      field: 'branch_id',
+      options: branches,
+      disabled: applied,
+      hint: applied ? LOCKED_NOTE : undefined,
+    },
+    {
+      label: 'Year',
+      value: yearLabel(state?.student?.year || current?.[`student${slot}_year`]),
+      field: 'year',
+      options: YEARS,
+      disabled: applied,
+      hint: applied ? LOCKED_NOTE : undefined,
+    },
+    // Counted from the year rather than stored, so there is nothing to edit.
+    { label: 'Semester', value: state?.student?.semester_of_study },
+    { label: 'Email', value: me.email },
+    { label: 'Phone', value: me.phone, field: 'phone' },
+    { label: 'Gender', value: me.gender, field: 'gender', options: GENDERS },
+    { label: 'Programme', value: state?.student?.branch?.programme },
+  ];
+
+  // How to reach them stays theirs to correct; who they are becomes the
+  // office's once they hold a project. Edits in place, as both the other
+  // profiles do.
+  const actions = state?.student && (editing ? (
+    <>
+      <CustomButton text={saving ? 'Saving…' : 'Save'} onClick={save} disabled={saving} />
+      <CustomButton text="Cancel" variant="quiet" onClick={() => setEditing(false)} />
+    </>
+  ) : (
+    <CustomButton text="Edit" variant="secondary" onClick={startEdit} />
+  ));
+
   return (
-    <div className="student-container">
-      <div className="student-header">
-        <div className="student-header-text">
-          <h2>{[me.first_name, me.last_name].filter(Boolean).join(' ')}</h2>
+    <Page title={[me.first_name, me.last_name].filter(Boolean).join(' ')} actions={actions}>
+      <Panel>
+        <PanelSection>
           <div className="student-research">
             <HeaderLine label="Current URF Project" title>
               {current && `URF ${current.session} · ${current.project_title}`}
@@ -133,98 +177,39 @@ const UgProfile = () => {
               ))}
             </HeaderLine>
           </div>
-        </div>
-
-        {/* How to reach them stays theirs to correct; who they are becomes the
-            office's once they hold a project. Sits on the name's line and edits
-            in place, as both the other profiles do. */}
-        {state?.student && (
-          <div className="profile-actions">
-            {!editing && (
-              <button className="profile-edit-small" onClick={startEdit}>
-                <i className="fa fa-pencil" aria-hidden="true"></i> Edit
-              </button>
-            )}
-            {editing && (
-              <>
-                <CustomButton text={saving ? 'Saving…' : 'Save'} onClick={save} disabled={saving} />
-                <CustomButton text="Cancel" variant="secondary" onClick={() => setEditing(false)} />
-              </>
-            )}
-          </div>
-        )}
-      </div>
-
-      <div className="student-details">
-        <InfoGrid
-          className="student-info-grid"
-          editing={editing}
-          values={form}
-          onChange={(field, value) => setForm((prev) => ({ ...prev, [field]: value }))}
-          rows={[
-            {
-              label: 'Roll Number',
-              value: state?.student?.roll_no || current?.[`student${slot}_roll_no`],
-              field: 'roll_no',
-              disabled: applied,
-              hint: applied ? LOCKED_NOTE : undefined,
-            },
-            {
-              label: 'Branch',
-              value: state?.student?.branch?.name || current?.[`student${slot}_branch`]?.name,
-              field: 'branch_id',
-              options: branches,
-              disabled: applied,
-              hint: applied ? LOCKED_NOTE : undefined,
-            },
-            {
-              label: 'Year',
-              value: yearLabel(state?.student?.year || current?.[`student${slot}_year`]),
-              field: 'year',
-              options: YEARS,
-              disabled: applied,
-              hint: applied ? LOCKED_NOTE : undefined,
-            },
-            // Counted from the year rather than stored, so there is nothing to edit.
-            { label: 'Semester', value: state?.student?.semester_of_study },
-            { label: 'Email', value: me.email },
-            { label: 'Phone', value: me.phone, field: 'phone' },
-            { label: 'Gender', value: me.gender, field: 'gender', options: GENDERS },
-            { label: 'Programme', value: state?.student?.branch?.programme },
-          ]}
-        />
-      </div>
+        </PanelSection>
+        <PanelSection>
+          <InfoGrid
+            editing={editing}
+            values={form}
+            onChange={(field, value) => setForm((prev) => ({ ...prev, [field]: value }))}
+            rows={rows}
+          />
+        </PanelSection>
+      </Panel>
 
       {current && (
-        <GridContainer
-          label="Current URF Project"
-          elements={[
-            <TableComponent
-              data={[projectRow(current)]}
-              keys={PROJECT_KEYS}
-              titles={PROJECT_TITLES}
-              components={PROJECT_CELLS}
-            />,
-          ]}
-          space={3}
-        />
+        <Panel flush title="Current URF project">
+          <TableComponent
+            data={[projectRow(current)]}
+            keys={PROJECT_KEYS}
+            titles={PROJECT_TITLES}
+            components={PROJECT_CELLS}
+          />
+        </Panel>
       )}
 
       {past.length > 0 && (
-        <GridContainer
-          label="Past URF Projects"
-          elements={[
-            <TableComponent
-              data={past.map(projectRow)}
-              keys={PROJECT_KEYS}
-              titles={PROJECT_TITLES}
-              components={PROJECT_CELLS}
-            />,
-          ]}
-          space={3}
-        />
+        <Panel flush title="Past URF projects">
+          <TableComponent
+            data={past.map(projectRow)}
+            keys={PROJECT_KEYS}
+            titles={PROJECT_TITLES}
+            components={PROJECT_CELLS}
+          />
+        </Panel>
       )}
-    </div>
+    </Page>
   );
 };
 

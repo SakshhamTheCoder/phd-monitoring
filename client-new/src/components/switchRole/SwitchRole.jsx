@@ -54,8 +54,8 @@ const SwitchRole = () => {
     }
     
     return (
-        <div style={{color:"black"}}>
-            <h2 className="section-heading">Switch Role</h2>
+        <div>
+            <h2 className="modal-title">Switch role</h2>
             <GridContainer elements={[
                 <DropdownField
                     label="Role"

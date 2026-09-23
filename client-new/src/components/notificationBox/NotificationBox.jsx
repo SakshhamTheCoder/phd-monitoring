@@ -110,7 +110,7 @@ const NotificationBox = () => {
             <span>Notifications</span>
             {unreadCount > 0 && (
               <div className="notification_header_actions">
-                <span className="notification_count">{unreadCount} new</span>
+                <span className="badge badge--accent">{unreadCount} new</span>
                 <button
                   type="button"
                   className="notification_mark_all"

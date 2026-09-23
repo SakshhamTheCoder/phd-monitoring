@@ -6,6 +6,9 @@ import { toast } from "react-toastify";
 import { getRoleName } from "../../utils/roleName";
 import { currentRole } from '../../auth/access';
 import LoadError from "../common/LoadError";
+import StatusNotice from "../common/StatusNotice";
+import Page from "../page/Page";
+import Panel from "../panel/Panel";
 
 const AllNotificationsPage = () => {
   const [notifications, setNotifications] = useState([]);
@@ -43,16 +46,12 @@ const AllNotificationsPage = () => {
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   return (
-    <div className="all-notifications-page">
-      <div className="notification-page-head">
-        <h1 className="page-title">Notifications</h1>
-        {unreadCount > 0 && (
-          <span className="notification-unread-pill">{unreadCount} unread</span>
-        )}
-      </div>
-
+    <Page
+      title="Notifications"
+      meta={unreadCount > 0 && <span className="badge badge--accent">{unreadCount} unread</span>}
+    >
       {status === "loading" ? (
-        <p className="notification-muted">Loading…</p>
+        <Panel><StatusNotice tone="loading" title="Loading notifications" /></Panel>
       ) : status === "failed" ? (
         <LoadError
           message="Could not load your notifications. Check your connection and try again."
@@ -62,32 +61,35 @@ const AllNotificationsPage = () => {
           }}
         />
       ) : notifications.length === 0 ? (
-        <div className="empty-state">
-          No notifications yet. Anything that needs your attention in this role
-          will show up here.
-        </div>
+        <StatusNotice tone="empty" title="No notifications yet">
+          Anything that needs your attention in this role will show up here.
+        </StatusNotice>
       ) : (
-        <div className="notification-list">
-          {notifications.map((notification) => (
-            <button
-              type="button"
-              className={`notification-card ${notification.is_read ? "is-read" : "is-unread"}`}
-              key={notification.id}
-              onClick={() => openNotification(notification)}
-            >
-              <span className="notification-card-main">
-                <span className="notification-card-titlerow">
-                  {!notification.is_read && <span className="notification-dot" />}
-                  <span className="notification-title">{notification.title}</span>
-                </span>
-                <span className="notification-body">{notification.body}</span>
-              </span>
-              <span className="notif-date">{timeAgo(notification.created_at)}</span>
-            </button>
-          ))}
-        </div>
+        <Panel flush>
+          <ul className="notification-list">
+            {notifications.map((notification) => (
+              <li key={notification.id}>
+                <button
+                  type="button"
+                  className={`notification-row ${notification.is_read ? "is-read" : "is-unread"}`}
+                  onClick={() => openNotification(notification)}
+                >
+                  <span className="notification-row-main">
+                    <span className="notification-row-titleline">
+                      {!notification.is_read && <span className="notification-dot" aria-hidden="true" />}
+                      {!notification.is_read && <span className="sr-only">Unread: </span>}
+                      <span className="notification-title">{notification.title}</span>
+                    </span>
+                    <span className="notification-body">{notification.body}</span>
+                  </span>
+                  <span className="notif-date">{timeAgo(notification.created_at)}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </Panel>
       )}
-    </div>
+    </Page>
   );
 };
 

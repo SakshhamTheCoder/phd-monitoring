@@ -14,6 +14,9 @@ import GridContainer from "../forms/fields/GridContainer";
 import TableComponent from "../forms/table/TableComponent";
 import CustomButton from "../forms/fields/CustomButton";
 import LoadError from "../common/LoadError";
+import StatusNotice from "../common/StatusNotice";
+import Page from "../page/Page";
+import Panel, { PanelSection } from "../panel/Panel";
 import CustomModal from "../forms/modal/CustomModal";
 import SupervisorDoctoralManager from "../supervisorDoctoralManager/SupervisorDoctoralManager";
 import InfoGrid from "../profileFields/InfoGrid";
@@ -253,7 +256,13 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
     }
   };
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) {
+    return (
+      <Page>
+        <Panel><StatusNotice tone="loading" title="Loading profile" /></Panel>
+      </Page>
+    );
+  }
 
   if (profile) {
     const {
@@ -341,7 +350,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
                   : EMPTY_VALUE}
               </span>
               <span className="profile-attendance-pop" role="tooltip">
-                <strong>{attendance.currentMonth?.label || 'Current Month'} Attendance</strong>
+                <strong>{attendance.currentMonth?.label || 'Current month'} attendance</strong>
                 {attendance.currentMonth && attendance.currentMonth.total > 0 ? (
                   <>
                     <span>{attendance.currentMonth.present} Present / {attendance.currentMonth.total} Sessions</span>
@@ -393,291 +402,251 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
       designation: member.designation || EMPTY_VALUE,
     }));
 
+    // Page actions first, then the profile's own edit controls. One filled
+    // button: View forms for someone reading another scholar's profile, Save
+    // for a scholar editing their own. The two never show together.
+    const pageActions = (
+      <>
+        {!permissions.is_self && (<>
+          <CustomButton text="View forms" onClick={navigateToForms} />
+          <CustomButton
+            text="View progress monitoring"
+            variant="secondary"
+            onClick={navigateToProgress}
+          />
+        </>)}
+        {permissions.can_manage && (
+          <CustomButton text="Tag course" variant="secondary" onClick={() => {
+            fetchAllCourses();
+            setIsTagModalOpen(true);
+          }} />
+        )}
+        {/* The request is refused without this capability, so DRA, Director
+            and ADoRDC, who can manage the record, were offered a form the
+            server turns down. */}
+        {can("can_propose_supervisor_changes") && (
+          <CustomButton text="Manage supervisors/doctoral" variant="secondary" onClick={() => setShowSupervisorDoctoralModal(true)} />
+        )}
+        {permissions.can_edit && permissions.is_self && (
+          isEditingInline ? (
+            <>
+              <CustomButton text="Save" onClick={handleInlineSave} disabled={savingProfile} />
+              <CustomButton text="Cancel" variant="quiet" onClick={cancelInlineEdit} />
+            </>
+          ) : (
+            <CustomButton text="Edit" variant="secondary" onClick={startInlineEdit} />
+          )
+        )}
+      </>
+    );
+
     return (
       <>
-        <div className="student-container">
-          <div className="student-header">
-            <div className="student-header-text">
-              <h2>{name}</h2>
-              {!isEditingInline && (
-                <div className="student-research">
-                  <p className="student-research-title">
-                    <span className="student-research-label">{titleLabel}:</span>{" "}
-                    <span className={phd_title ? "" : "student-value-empty"}>
-                      {phd_title || EMPTY_VALUE}
-                    </span>
-                  </p>
-                  <p>
-                    <span className="student-research-label">Domain:</span>{" "}
-                    <span className={profile.broad_area ? "" : "student-value-empty"}>
-                      {profile.broad_area || EMPTY_VALUE}
-                    </span>
-                  </p>
-                  <p>
-                    <span className="student-research-label">Description:</span>{" "}
-                    <span className={profile.tentative_desc ? "" : "student-value-empty"}>
-                      {profile.tentative_desc || EMPTY_VALUE}
-                    </span>
-                  </p>
-                  {profile.phd_title_locked && (
-                    <p className="student-sub-meta-locked">Locked, IRB constituted</p>
+        <Page title={name} actions={pageActions}>
+          <Panel>
+            <PanelSection>
+              <div className="student-overview">
+                <div className="student-overview-text">
+                  {!isEditingInline && (
+                    <div className="student-research">
+                      <p className="student-research-title">
+                        <span className="student-research-label">{titleLabel}:</span>{" "}
+                        <span className={phd_title ? "" : "student-value-empty"}>
+                          {phd_title || EMPTY_VALUE}
+                        </span>
+                      </p>
+                      <p>
+                        <span className="student-research-label">Domain:</span>{" "}
+                        <span className={profile.broad_area ? "" : "student-value-empty"}>
+                          {profile.broad_area || EMPTY_VALUE}
+                        </span>
+                      </p>
+                      <p>
+                        <span className="student-research-label">Description:</span>{" "}
+                        <span className={profile.tentative_desc ? "" : "student-value-empty"}>
+                          {profile.tentative_desc || EMPTY_VALUE}
+                        </span>
+                      </p>
+                      {profile.phd_title_locked && (
+                        <p className="student-sub-meta-locked">Locked, IRB constituted</p>
+                      )}
+                    </div>
+                  )}
+                  {isEditingInline && (
+                    <div className="student-sub-edit">
+                      <div className="inline-field-item">
+                        <label htmlFor="profile-card-title">{titleLabel}</label>
+                        <input id="profile-card-title"
+                          type="text"
+                          placeholder="Enter your Ph.D. title"
+                          value={editForm.phd_title ?? ""}
+                          disabled={profile.phd_title_locked}
+                          onChange={(e) =>
+                            setEditForm((prev) => ({ ...prev, phd_title: e.target.value }))
+                          }
+                        />
+                        {profile.phd_title_locked && (
+                          <small className="profile-lock-note">
+                            Locked. IRB constitution form already submitted.
+                          </small>
+                        )}
+                      </div>
+                      {/* The domain is not typed here any more. It is chosen from
+                          the department's list on the supervisor allocation form and
+                          settled on the IRB form, so this reports it. */}
+                      <div className="inline-field-item">
+                        <label>Domain</label>
+                        <p className={profile.broad_area ? "" : "student-value-empty"}>
+                          {profile.broad_area || 'Set on your supervisor allocation form'}
+                        </p>
+                      </div>
+                      <div className="inline-field-item">
+                        <label htmlFor="profile-card-description">Description</label>
+                        <textarea id="profile-card-description"
+                          placeholder="Briefly describe your proposed research topic, objectives and methodology"
+                          value={editForm.tentative_desc ?? ""}
+                          disabled={profile.phd_title_locked}
+                          maxLength={5000}
+                          onChange={(e) =>
+                            setEditForm((prev) => ({ ...prev, tentative_desc: e.target.value }))
+                          }
+                        />
+                        <div className="inline-char-count">
+                          {(editForm.tentative_desc || "").length} / 5000
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
-              )}
-              {isEditingInline && (
-                <div className="student-sub-edit">
-                  <div className="inline-field-item">
-                    <label>{titleLabel}</label>
-                    <input
-                      type="text"
-                      placeholder="Enter your Ph.D. title"
-                      value={editForm.phd_title ?? ""}
-                      disabled={profile.phd_title_locked}
-                      onChange={(e) =>
-                        setEditForm((prev) => ({ ...prev, phd_title: e.target.value }))
-                      }
-                    />
-                    {profile.phd_title_locked && (
-                      <small className="profile-lock-note">
-                        Locked. IRB constitution form already submitted.
-                      </small>
-                    )}
-                  </div>
-                  {/* The domain is not typed here any more. It is chosen from
-                      the department's list on the supervisor allocation form and
-                      settled on the IRB form, so this reports it. */}
-                  <div className="inline-field-item" style={{ marginTop: '0.6rem' }}>
-                    <label>Domain</label>
-                    <p className={profile.broad_area ? "" : "student-value-empty"}>
-                      {profile.broad_area || 'Set on your supervisor allocation form'}
-                    </p>
-                  </div>
-                  <div className="inline-field-item" style={{ marginTop: '0.6rem' }}>
-                    <label htmlFor="profile-card-description">Description</label>
-                    <textarea id="profile-card-description"
-                      placeholder="Briefly describe your proposed research topic, objectives and methodology"
-                      value={editForm.tentative_desc ?? ""}
-                      disabled={profile.phd_title_locked}
-                      maxLength={5000}
-                      onChange={(e) =>
-                        setEditForm((prev) => ({ ...prev, tentative_desc: e.target.value }))
-                      }
-                    />
-                    <div className="inline-char-count">
-                      {(editForm.tentative_desc || "").length} / 5000
-                    </div>
-                  </div>
+
+                <div className="student-progress">
+                  <CircularProgressbar
+                    value={progressPercent}
+                    text={`${progressPercent}%`}
+                    styles={buildStyles({
+                      textColor: "var(--text-color)",
+                      pathColor: "var(--primary-color)",
+                      trailColor: "var(--border-subtle)",
+                    })}
+                  />
+                  <span className="progress-label">Progress</span>
                 </div>
-              )}
-            </div>
-            {permissions.can_edit && permissions.is_self && (
-              <div className="profile-actions">
-                {!isEditingInline && (
-                  <button className="profile-edit-small" onClick={startInlineEdit}>
-                    <i className="fa fa-pencil" aria-hidden="true"></i> Edit
-                  </button>
-                )}
-                {isEditingInline && (
-                  <>
-                    <CustomButton text="Save" onClick={handleInlineSave} disabled={savingProfile} />
-                    <CustomButton text="Cancel" variant="secondary" onClick={cancelInlineEdit} />
-                  </>
-                )}
               </div>
-            )}
+            </PanelSection>
 
-            <div className="student-progress">
-              <CircularProgressbar
-                value={progressPercent}
-                text={`${progressPercent}%`}
-                styles={buildStyles({
-                  textColor: "#111827",
-                  pathColor: "var(--primary-color)",
-                  trailColor: "#e5e7eb",
-                })}
+            <PanelSection>
+              <InfoGrid
+                rows={personalInfo}
+                editing={isEditingInline}
+                values={editForm}
+                onChange={(field, value) => setEditForm((prev) => ({ ...prev, [field]: value }))}
               />
-              <span className="progress-label">Progress</span>
-            </div>
-          </div>
-
-          <div className="student-details">
-            <InfoGrid
-              className="student-info-grid"
-              rows={personalInfo}
-              editing={isEditingInline}
-              values={editForm}
-              onChange={(field, value) => setEditForm((prev) => ({ ...prev, [field]: value }))}
-            />
-          </div>
-
-
-
-          {/* <div className='student-table-section'>
-        <h3>Overall Progress</h3>
-        <div style={{ maxWidth: '100px', marginTop: '1rem' }}>
-          <CircularProgressbar
-            value={overall_progress}
-            text={`${overall_progress}%`}
-            styles={buildStyles({
-              textColor: '#111827',
-              pathColor: 'var(--primary-color)',
-              trailColor: '#e5e7eb',
-            })}
-          />
-        </div>
-      </div> */}
-          {/* Page actions, not profile editing. Rendered only when there is
-              something in them, or the row is 3rem of empty margin. */}
-          {(!permissions.is_self || permissions.can_manage) && (
-            <div className="profile-actions">
-              {!permissions.is_self && (<>
-                <CustomButton text="View Forms" onClick={navigateToForms} />
-                <CustomButton
-                  text="View Progress Monitoring"
-                  onClick={navigateToProgress}
-                />
-              </>)}
-              {permissions.can_manage && (
-                <CustomButton text="Tag Course" onClick={() => {
-                  fetchAllCourses();
-                  setIsTagModalOpen(true);
-                }} />
-              )}
-              {/* The request is refused without this capability, so DRA, Director
-                  and ADoRDC, who can manage the record, were offered a form the
-                  server turns down. */}
-              {can("can_propose_supervisor_changes") && (
-                <CustomButton text="Manage Supervisors/Doctoral" onClick={() => setShowSupervisorDoctoralModal(true)} />
-              )}
-            </div>
-          )}
-          
-        
+            </PanelSection>
+          </Panel>
 
           {/* The scholar's own account of themselves. Read by everyone who may
               read the profile, which is the point of asking: it is how they say
               what they need. Written only by them, or by a role that may edit
-              their record, which is the gate the rest of this card already uses.
+              their record, which is the gate the rest of this page already uses.
 
               Shares the header's edit mode rather than having one of its own, so
               there is one Edit button on the page and one save. */}
-          <GridContainer
-            label="About the scholar"
-            elements={[
-              isEditingInline ? (
-                <div className="inline-field-item">
-                  <label htmlFor="profile-strengths">Strengths</label>
-                  <textarea
-                    id="profile-strengths"
-                    placeholder="What you are good at, and what you have got better at so far"
-                    value={editForm.strengths ?? ""}
-                    maxLength={5000}
-                    onChange={(e) => setEditForm((prev) => ({ ...prev, strengths: e.target.value }))}
-                  />
-                  <div className="inline-char-count">{(editForm.strengths || "").length} / 5000</div>
-                </div>
-              ) : (
-                <div>
-                  <p className="student-research-label">Strengths</p>
-                  <p className={profile.strengths ? "" : "student-value-empty"}>
-                    {profile.strengths || (permissions.is_self ? "Not filled in yet. Edit your profile to add it." : EMPTY_VALUE)}
-                  </p>
-                </div>
-              ),
-              isEditingInline ? (
-                <div className="inline-field-item">
-                  <label htmlFor="profile-help-needed">Help needed</label>
-                  <textarea
-                    id="profile-help-needed"
-                    placeholder="Where you are stuck, and what would help: training, equipment, a collaborator, time"
-                    value={editForm.help_needed ?? ""}
-                    maxLength={5000}
-                    onChange={(e) => setEditForm((prev) => ({ ...prev, help_needed: e.target.value }))}
-                  />
-                  <div className="inline-char-count">{(editForm.help_needed || "").length} / 5000</div>
-                </div>
-              ) : (
-                <div>
-                  <p className="student-research-label">Help needed</p>
-                  <p className={profile.help_needed ? "" : "student-value-empty"}>
-                    {profile.help_needed || (permissions.is_self ? "Not filled in yet. Edit your profile to add it." : EMPTY_VALUE)}
-                  </p>
-                </div>
-              ),
-            ]}
-            space={2}
-          />
-
-          <GridContainer
-            label="Supervisors"
-            elements={[
-              <TableComponent
-                data={supervisorTableData}
-                keys={["name", "email", "phone", "designation"]}
-                titles={["Name", "Email", "Phone", "Designation"]}
-                components={[facultyNameCell]}
-              />,
-            ]}
-            space={3}
-          />
-
-          <GridContainer
-            label="Doctoral Committee"
-            elements={[
-              <TableComponent
-                data={doctoralTableData}
-                keys={["name", "email", "phone", "designation"]}
-                titles={["Name", "Email", "Phone", "Designation"]}
-                components={[facultyNameCell]}
-              />,
-            ]}
-            space={3}
-          />
-
-          {publications && (
+          <Panel title="About the scholar">
             <GridContainer
               elements={[
-                // Read-only here. The scholar adds and edits on their own
-                // publications page, which is the one place that writes them.
-                <ShowPublications
-                  formData={publications}
-                  enableEdit={false}
-                  enableDelete={false}
-                  canAdd={false}
-                  collapsible
-                />,
+                isEditingInline ? (
+                  <div className="inline-field-item">
+                    <label htmlFor="profile-strengths">Strengths</label>
+                    <textarea
+                      id="profile-strengths"
+                      placeholder="What you are good at, and what you have got better at so far"
+                      value={editForm.strengths ?? ""}
+                      maxLength={5000}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, strengths: e.target.value }))}
+                    />
+                    <div className="inline-char-count">{(editForm.strengths || "").length} / 5000</div>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="student-research-label">Strengths</p>
+                    <p className={profile.strengths ? "student-about-text" : "student-value-empty"}>
+                      {profile.strengths || (permissions.is_self ? "Not filled in yet. Edit your profile to add it." : EMPTY_VALUE)}
+                    </p>
+                  </div>
+                ),
+                isEditingInline ? (
+                  <div className="inline-field-item">
+                    <label htmlFor="profile-help-needed">Help needed</label>
+                    <textarea
+                      id="profile-help-needed"
+                      placeholder="Where you are stuck, and what would help: training, equipment, a collaborator, time"
+                      value={editForm.help_needed ?? ""}
+                      maxLength={5000}
+                      onChange={(e) => setEditForm((prev) => ({ ...prev, help_needed: e.target.value }))}
+                    />
+                    <div className="inline-char-count">{(editForm.help_needed || "").length} / 5000</div>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="student-research-label">Help needed</p>
+                    <p className={profile.help_needed ? "student-about-text" : "student-value-empty"}>
+                      {profile.help_needed || (permissions.is_self ? "Not filled in yet. Edit your profile to add it." : EMPTY_VALUE)}
+                    </p>
+                  </div>
+                ),
               ]}
-              space={3}
+              space={2}
             />
+          </Panel>
+
+          <Panel flush title="Supervisors">
+            <TableComponent
+              data={supervisorTableData}
+              keys={["name", "email", "phone", "designation"]}
+              titles={["Name", "Email", "Phone", "Designation"]}
+              components={[facultyNameCell]}
+            />
+          </Panel>
+
+          <Panel flush title="Doctoral committee">
+            <TableComponent
+              data={doctoralTableData}
+              keys={["name", "email", "phone", "designation"]}
+              titles={["Name", "Email", "Phone", "Designation"]}
+              components={[facultyNameCell]}
+            />
+          </Panel>
+
+          {publications && (
+            <Panel>
+              {/* Read-only here. The scholar adds and edits on their own
+                  publications page, which is the one place that writes them. */}
+              <ShowPublications
+                formData={publications}
+                enableEdit={false}
+                enableDelete={false}
+                canAdd={false}
+                collapsible
+              />
+            </Panel>
           )}
 
-            <GridContainer
-            label="Enrolled Courses"
-            elements={[
-              <TableComponent
-                data={courses?.filter(c => c.status === 'enrolled')}
-                keys={["course_code", "course_name", "credits", "semester"]}
-                titles={["Course Code", "Course Name", "Credits", "Semester"]}
-              />,
-            ]}
-            space={3}
-          />
+          <Panel flush title="Enrolled courses">
+            <TableComponent
+              data={courses?.filter(c => c.status === 'enrolled')}
+              keys={["course_code", "course_name", "credits", "semester"]}
+              titles={["Course code", "Course name", "Credits", "Semester"]}
+            />
+          </Panel>
 
-          <GridContainer
-            label="Completed Courses"
-            elements={[
-              <TableComponent
-                data={courses?.filter(c => c.status === 'completed')}
-                keys={["course_code", "course_name", "credits", "semester", "grade"]}
-                titles={["Course Code", "Course Name", "Credits", "Semester", "Grade"]}
-              />,
-            ]}
-            space={3}
-          />
-
-          {/* Attendance — visible only if viewer can view student (API enforces same as StudentController::get) */}
-
-        </div>
+          <Panel flush title="Completed courses">
+            <TableComponent
+              data={courses?.filter(c => c.status === 'completed')}
+              keys={["course_code", "course_name", "credits", "semester", "grade"]}
+              titles={["Course code", "Course name", "Credits", "Semester", "Grade"]}
+            />
+          </Panel>
+        </Page>
         {
           <CustomModal
             isOpen={isModalOpen}
@@ -712,7 +681,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
                             <GridContainer
                               space={1}
                               elements={[
-                                <CustomButton text="Edit" />,
+                                <CustomButton text="Edit" variant="secondary" />,
                                 <CustomButton text="Delete" variant="danger" />,
                               ]}
                             />
@@ -750,7 +719,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
                             <GridContainer
                               space={1}
                               elements={[
-                                <CustomButton text="Edit" onClick={() => toast.warn("Disabled by admin")} />,
+                                <CustomButton text="Edit" variant="secondary" onClick={() => toast.warn("Disabled by admin")} />,
                                 <CustomButton text="Delete" variant="danger" onClick={()=>{toast.info("Disabled by Admin")}}/>,
                               ]}
                             />
@@ -772,7 +741,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
           onClose={() => setIsTagModalOpen(false)}
         >
           <div>
-            <h3>Tag Student with Course</h3>
+            <h3 className="modal-title">Tag student with course</h3>
             <div className="field-stack">
               <div>
                 <label htmlFor="profile-card-course">Course</label>
@@ -827,8 +796,8 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
               )}
               
               <div className="modal-actions">
-                <CustomButton text="Cancel" onClick={() => setIsTagModalOpen(false)} />
-                <CustomButton text="Tag Course" onClick={handleTagCourse} disabled={taggingCourse} />
+                <CustomButton text="Cancel" variant="quiet" onClick={() => setIsTagModalOpen(false)} />
+                <CustomButton text="Tag course" onClick={handleTagCourse} disabled={taggingCourse} />
               </div>
             </div>
           </div>

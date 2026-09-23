@@ -95,7 +95,7 @@ const ProfileBox = () => {
       {isOpen && (
         <div className="profile_box">
           <div className="profile_header">
-            <h3>User Menu</h3>
+            <h3>User menu</h3>
           </div>
           <div className="profile_content">
             {/* "Profile" was a placeholder that only raised an alert. Home is
@@ -103,11 +103,11 @@ const ProfileBox = () => {
             {/* Single-role accounts have nothing to switch to. */}
             {!["Student", "UG Student"].includes(role) && (
               <button type="button" className="profile_item" onClick={() => { handleOpenModal(); setIsOpen(false); }}>
-                <h4>Switch Role</h4>
+                <h4>Switch role</h4>
               </button>
             )}
             <button type="button" className="profile_item" onClick={() => setPasswordOpen(true)}>
-              <h4>{user.password_set === false ? "Set Password" : "Change Password"}</h4>
+              <h4>{user.password_set === false ? "Set password" : "Change password"}</h4>
             </button>
             <button type="button" className="profile_item" onClick={() => {
               logoutAPI();

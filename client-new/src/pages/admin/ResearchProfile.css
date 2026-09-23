@@ -1,301 +1,184 @@
-.rp-container {
-    font-family: inherit;
-}
+/* Research profile: a faculty member's details, supervision and publications.
+   Layout comes from Page and Panel; this file holds only what is particular to
+   the publications part. */
 
-.loading-state {
-    padding: 2rem;
-    text-align: center;
-    font-size: var(--text-xl);
+/* An empty note under a table's header row, inside a flush panel. */
+.rp-panel-note { padding: var(--space-4) var(--space-5); }
+
+/* Sync state is one line of status and one action, so it gets one line. */
+.rp-sync-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-4);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-4);
+    font-size: var(--text-sm);
     color: var(--text-muted);
 }
 
-/* Top Nav */
+.rp-sync-strip strong {
+    font-weight: 600;
+    color: var(--text-color);
+}
 
+.rp-sync-dot {
+    margin: 0 var(--space-2);
+    color: var(--text-subtle);
+}
 
+.rp-sync-hint { font-style: italic; }
 
-/* Title comes from styles/ui.css; it sits inline with the search bar here. */
+/* Three tallies, read at a glance above the filters. */
+.rp-tallies {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-5);
+    margin-bottom: var(--space-4);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+}
+
+.rp-tally strong {
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--text-color);
+    margin-right: 6px;
+}
+
+.rp-tally.is-green strong { color: var(--success); }
+.rp-tally.is-yellow strong { color: var(--warning); }
+
+/* Each filter is a labelled group, so the label belongs to its control, and
+   every control is the same height. */
+.rp-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--space-4);
+}
+
+.rp-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.rp-filter--search { flex: 1 1 220px; }
+
+.rp-filter label {
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.rp-filter select {
+    min-width: 170px;
+    height: var(--field-height);
+    padding: 0 var(--space-3);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    font: inherit;
+    font-size: var(--text-sm);
+    color: var(--text-color);
+}
 
 .rp-search-bar {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    height: 38px;
-    padding: 0 0.75rem;
-    background: #fff;
-    border: 1px solid #d1d5db;
+    gap: var(--space-2);
+    height: var(--field-height);
+    padding: 0 var(--space-3);
+    background: var(--surface);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    color: #6b7280;
-    flex: 1 1 200px;
-    min-width: 180px;
+    color: var(--text-muted);
+    box-sizing: border-box;
 }
+
+.rp-search-bar:focus-within { border-color: var(--primary-color); box-shadow: var(--shadow-focus); }
 
 .rp-search-bar input {
     background: transparent;
     border: none;
     outline: none;
     width: 100%;
+    font: inherit;
     font-size: var(--text-sm);
-    font-weight: 400;
+    color: var(--text-color);
 }
 
-.rp-right-col {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-
-
-.border-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: #FAFAFA;
-    color: var(--primary-color);
-}
-
-
-
-/* Stats Cards */
-
-
-
-
-
-
-
-
-
-
-
-/* Sync Card */
-
-
-
-
-.rp-sync-btn {
-    background: var(--primary-color);
-    color: #FFF;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: var(--radius);
-    font-weight: 600;
-    cursor: pointer;
-}
-
-/* Tabs come from styles/ui.css */
-
-/* Filter Bar */
-.rp-filter-bar {
-    background: #F0F0F0;
-    border-radius: var(--radius);
-    padding: 1rem 1.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-
-
-
-
-
-
-
-
+/* Chosen years, each removable. */
 .rp-year-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    margin: -1rem 0 1.5rem;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
 }
 
-.rp-year-tag {
-    background: var(--primary-color);
-    color: #FFF;
-    padding: 0.2rem 0.5rem;
-    border-radius: var(--radius-sm);
-    font-size: var(--text-2xs);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.rp-year-tag button {
+.rp-year-remove {
     background: none;
     border: none;
-    color: #FFF;
-    font-weight: bold;
-    cursor: pointer;
+    padding: 0;
+    color: inherit;
     font-size: var(--text-md);
     line-height: 1;
-    padding: 0;
-}
-
-
-.rp-export-btn {
-    background: none;
-    border: none;
-    color: var(--primary-color);
-    font-weight: 600;
-    font-size: var(--text-sm);
     cursor: pointer;
-    /* Same height as the controls beside it. */
-    padding: 0.55rem 0.75rem;
-    min-height: 38px;
-    border-radius: var(--radius);
 }
 
-/* Tables */
-.rp-table-section {
-    margin-bottom: 3rem;
+/* Bulk reclassification. Imported publications arrive with only the category
+   their source could prove, so the common task is moving a batch of them at
+   once. The bar is hidden until something is ticked. */
+.rp-bulk-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+    padding: var(--space-2) var(--space-4);
+    background: var(--info-bg);
+    border: 1px solid var(--info-border);
+    border-radius: var(--radius-sm);
 }
 
-.rp-table-section h3 {
-    margin-bottom: 1rem;
-    color: #1f2937;
-    font-size: var(--text-xl);
+.rp-bulk-count {
+    font-weight: 600;
+    color: var(--info);
 }
 
-/* body sets font-weight 600 app-wide, so every publication cell inherits
-   semi-bold and the rows read as a wall of emphasis. The list is data: give it
-   a normal weight. The column headers keep their own 600 from .data-table th,
-   the section heading keeps the inherited one, and the author highlight stays
-   bold because <strong> resolves relative to this. */
-.rp-table-section .data-table td {
-    font-weight: 400;
+.rp-bulk-bar select {
+    height: 32px;
+    padding: 0 var(--space-2);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    font: inherit;
+    font-size: var(--text-sm);
 }
 
-/* .data-table th is nowrap app-wide, which made "YEAR OF PUBLICATION" hold open
-   a column far wider than a four-digit year needs. Letting these headings wrap
-   onto two lines returns that space to the title, which is the column that
-   actually has something long to say. */
-.rp-table-section .data-table th {
-    white-space: normal;
-}
+/* Publication tables. .data-table th is nowrap app-wide, which made "Year of
+   publication" hold open a column far wider than a four-digit year needs.
+   Letting these headings wrap returns that space to the title. */
+.rp-table-panel .data-table th { white-space: normal; }
 
-.rp-table-section .data-table .rp-col-year {
+.rp-table-panel .data-table .rp-col-year {
     width: 4.5rem;
     white-space: nowrap;
 }
 
 /* Claimed rather than merely allowed: without a width the freed space is shared
    out among every remaining column instead of going to the title. */
-.rp-table-section .data-table .rp-col-title {
-    width: 42%;
-}
+.rp-table-panel .data-table .rp-col-title { width: 42%; }
 
 /* Row number: a narrow, quiet index. Fixed width so the column does not shift
    when a list crosses from single to double digits. */
-.rp-table-section .data-table .rp-col-num {
+.rp-table-panel .data-table .rp-col-num {
     width: 2.5rem;
     color: var(--text-muted);
     text-align: right;
-    padding-right: 0.5rem;
+    padding-right: var(--space-2);
     white-space: nowrap;
-}
-
-
-
-
-
-.rp-container .status-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: var(--radius-sm);
-    font-size: var(--text-2xs);
-    font-weight: 600;
-    text-transform: uppercase;
-}
-
-.rp-container .status-badge.pending {
-    background: #fef08a;
-    color: var(--warning);
-}
-
-.rp-container .status-badge.rejected {
-    background: #fecaca;
-    color: var(--danger-text);
-}
-
-.rp-container .status-badge.approved,
-.rp-container .status-badge.granted {
-    background: #bbf7d0;
-    color: var(--success);
-}
-
-.small-text {
-    font-size: var(--text-2xs);
-    color: #888;
-    font-style: italic;
-}
-
-/* Edit, source and modal additions */
-
-
-
-.rp-filter-actions { display: flex; align-items: center; gap: 0.6rem; }
-.rp-add-btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 10px 15px; background: var(--primary-color); color: #FFF; border: none; border-radius: var(--radius); font-size: var(--text-sm); font-weight: 600; letter-spacing: 0.04em; cursor: pointer; }
-.rp-add-btn:hover { background: var(--hover-color); }
-
-.rp-row-actions { white-space: nowrap; }
-.rp-row-actions button { background: none; border: none; cursor: pointer; color: #777; padding: 0.2rem 0.35rem; }
-.rp-row-actions button:hover { color: var(--primary-color); }
-
-
-
-/* Bulk reclassification.
-   Imported publications arrive with only the category their source could
-   prove, so the common task is moving a batch of them at once. The bar is
-   hidden until something is ticked. */
-.rp-bulk-bar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 0 0 16px;
-    padding: 10px 16px;
-    background: #eef4ff;
-    border: 1px solid #c7d9f7;
-    border-radius: var(--radius-sm);
-}
-
-.rp-bulk-count {
-    font-weight: 600;
-    color: #1b3a6b;
-}
-
-.rp-bulk-bar select {
-    padding: 6px 10px;
-    border: 1px solid #c7d9f7;
-    border-radius: var(--radius-sm);
-    background: #fff;
-}
-
-.rp-bulk-apply,
-.rp-bulk-clear {
-    padding: 6px 14px;
-    border-radius: var(--radius-sm);
-    border: 1px solid transparent;
-    cursor: pointer;
-}
-
-.rp-bulk-apply {
-    background: #1b3a6b;
-    color: #fff;
-}
-
-.rp-bulk-apply:disabled {
-    background: #9bb0cd;
-    cursor: not-allowed;
-}
-
-.rp-bulk-clear {
-    background: #fff;
-    border-color: #c7d9f7;
-    color: #1b3a6b;
 }
 
 /* Narrow, so the checkbox does not push the real columns around. */
@@ -304,342 +187,10 @@
     text-align: center;
 }
 
-.rp-select-all {
-    margin-left: 12px;
-    padding: 2px 8px;
-    font-size: var(--text-2xs);
-    font-weight: 400;
-    background: none;
-    border: 1px solid #c7d9f7;
-    border-radius: var(--radius-sm);
-    color: #1b3a6b;
-    cursor: pointer;
-}
+.rp-row-actions { white-space: nowrap; }
 
-/* Supervision tab. Sits between the dashboard's plain tables and the
-   publication tables: same surface and type as the rest of the page, with the
-   row affordance the dashboard had, since a row still opens the student. */
-
-
-
-
-
-/* Expertise, given the full-width row it had on the dashboard card rather than
-   a line buried among the academic identifiers. */
-
-
-
-
-/* The dashboard card's softer surface, carried onto the profile so the two
-   read as the same product rather than two pages that grew separately. */
-
-
-
-/* Every figure in one row: supervision load and research output read together
-   rather than interleaved down the sidebar, which is what made that list long
-   enough to scan. Wraps rather than shrinking the tiles on a narrow screen. */
-
-
-
-
-/* The banner is identity, contact and identifiers now, so the middle column no
-   longer carries a stack and the three read as equal cards. */
-
-/* The dashboard card, restored as the page itself. These rules came from
-   components/profileCard/FacultyProfile.css, which this page replaced; the
-   markup is unchanged, so the styles come with it rather than being reinvented. */
-.faculty-container {
-    background: #ffffff;
-    padding: 2rem;
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-sm);
-    max-width: 1100px;
-    margin: auto;
-  }
-  
-  .faculty-container h2 {
-    margin-bottom: 0.3rem;
-    font-size: var(--text-2xl);
-    line-height: 1.25;
-    font-weight: 600;
-    color: #111827;
-  }
-  
-  .faculty-sub {
-    font-size: var(--text-base);
-    color: #6b7280;
-    margin-bottom: 0;
-  }
-  
-  .faculty-table-section {
-    margin-top: 2.5rem;
-  }
-  
-  .faculty-table-section h3 {
-    font-size: var(--text-xl);
-    margin-bottom: 0.8rem;
-    color: #1f2937;
-  }
-
-  /* Headers stay on one line so "Date of Admission" doesn't stack and
-     inflate the row height. */
-
-  /* Dates, roll numbers, phone numbers and percentages read as single
-     tokens, wrapping them mid-value is what made the rows look ragged.
-     Names and emails are still free to wrap and absorb the slack. */
-  
-  .empty-msg {
-    color: #9ca3af;
-    font-style: italic;
-  }
-  
-/* Research is a section of this page, revealed on demand. */
-
-
-
-.rp-research {
-    max-width: 1100px;
-    margin: 1.5rem auto 0;
-}
-
-
-/* Identifiers span the width; the sync line sits under them as a strip rather
-   than a second panel the same size for two lines of text. */
-.rp-research .rp-right-col {
-    display: block;
-    margin-bottom: 1.5rem;
-}
-
-/* Name on the left, the way into the research section on the right, so it is
-   visible on arrival instead of below the supervision tables. */
-.faculty-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
-    margin-bottom: 1.5rem;
-}
-
-/* Same rule as ProfileCard.css, which this page does not import. The margin is
-   dropped: here the actions sit in the header row, not under it. */
-.faculty-header .profile-actions {
-    display: flex;
-    gap: 1rem;
-    margin: 0;
-    flex-shrink: 0;
-}
-
-.faculty-header h2 {
-    margin-bottom: 0.3rem;
-}
-
-
-
-
-
-/* Sync state is one line of status and one action, so it gets one line. */
-.rp-sync-strip {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
-    margin-top: 1rem;
-    padding: 0.6rem 1rem;
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: var(--radius);
-    font-size: var(--text-sm);
-    font-weight: 400;
-    color: #6b7280;
-}
-
-.rp-sync-strip strong {
-    color: #374151;
-}
-
-.rp-sync-dot {
-    margin: 0 0.5rem;
-    color: #d1d5db;
-}
-
-.rp-sync-btn {
-    padding: 0.4rem 0.9rem;
-    font-size: var(--text-sm);
-    border-radius: var(--radius-sm);
-}
-
-/* Three tallies, read at a glance beside the filters rather than as three
-   panels the height of a stat card. */
-.rp-tallies {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.25rem;
-    margin-bottom: 1rem;
-    font-size: var(--text-sm);
-    font-weight: 400;
-    color: #6b7280;
-}
-
-.rp-tally strong {
-    font-size: var(--text-base);
-    font-weight: 700;
-    color: #111827;
-    margin-right: 0.35rem;
-}
-
-.rp-tally.is-green strong {
-    color: #22c55e;
-}
-
-.rp-tally.is-yellow strong {
-    color: #eab308;
-}
-
-/* Filter bar. The action buttons were wrapping onto two lines and the year
-   select was collapsing to nothing, because everything in the row was free to
-   shrink. */
-.rp-filter-actions {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-shrink: 0;
-}
-
-.rp-add-btn,
-.rp-export-btn {
-    white-space: nowrap;
-}
-
-.rp-export-btn {
-    padding: 0.5rem 0.25rem;
-    font-size: var(--text-sm);
-}
-
-.rp-filter-bar {
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-
-
-
-/* Filter bar. Each filter is a labelled group, so the label belongs to its
-   control instead of being a sibling in one long flex row, and every control
-   is the same height and width. */
-.rp-filters {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    gap: 1rem;
-    flex: 1 1 auto;
-}
-
-.rp-filter {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-}
-
-.rp-filter label {
-    font-size: var(--text-2xs);
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: #6b7280;
-}
-
-.rp-filter select {
-    min-width: 170px;
-    height: 38px;
-    padding: 0 0.6rem;
-    border: 1px solid #d1d5db;
-    border-radius: var(--radius-sm);
-    background: #fff;
-    font-size: var(--text-sm);
-    font-weight: 400;
-    color: #374151;
-}
-
-.rp-filter select:focus-visible {
-    outline: 2px solid var(--primary-color);
-    outline-offset: 1px;
-}
-
-/* Both actions match the control height so the row reads as one band. */
-.rp-add-btn,
-.rp-export-btn {
-    height: 38px;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: var(--text-sm);
-    letter-spacing: 0;
-}
-
-.rp-export-btn {
-    border: 1px solid #d1d5db;
-    border-radius: var(--radius-sm);
-    background: #fff;
-    padding: 0 0.9rem;
-}
-
-.rp-export-btn:hover {
-    background: #f9fafb;
-}
-
-.rp-sync-hint {
-    font-style: italic;
-}
-
-/* Edit profile. Reuses the identifier form's field and action styling so the
-   two dialogs on this page look like one thing. */
-
-
-
-
-
-/* Identifiers use the same grid and label style as the card above, so the page
-   has one way of showing a field rather than two. Three across at the container
-   width, wrapping below it. */
-.rp-research .faculty-info-grid {
-    margin-bottom: 0;
-}
-
-/* The matrix sits in an inset panel, matching .student-details on the student
-   card. Without it the fields floated on the card while the student's were
-   framed, which is the difference between the two profiles. */
-.faculty-details {
-    margin-top: 1.5rem;
-    padding: 1.25rem;
-    border: 1px solid #e5e7eb;
-    border-radius: var(--radius-lg);
-    background: #fafafa;
-}
-
-.faculty-details .faculty-info-grid {
-    margin: 0;
-}
-
-/* Splits the profile card into who they are and what the sync runs on, without
-   splitting it into two cards that edit separately. */
-.faculty-details-heading {
-    margin: 1.5rem 0 1rem;
-    padding-top: 1.25rem;
-    border-top: 1px solid #e5e7eb;
-    font-size: var(--text-base);
-    color: #1f2937;
-}
-
-
-/* The card's 2rem of padding costs a quarter of a phone's width. */
 @media (max-width: 768px) {
-    .faculty-container,
-    .rp-research {
-        padding: 1.25rem;
-    }
-
-    .rp-filter select { min-width: 0; width: 100%; }
     .rp-filter { flex: 1 1 100%; }
+    .rp-filter select { min-width: 0; width: 100%; }
+    .rp-panel-note { padding: var(--space-4); }
 }

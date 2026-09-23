@@ -41,9 +41,9 @@ const ChangePassword = ({ onDone }) => {
 
   return (
     <div>
-      <h3 style={{ marginTop: 0 }}>{hasPassword ? 'Change password' : 'Set a password'}</h3>
+      <h3 className="modal-title">{hasPassword ? 'Change password' : 'Set a password'}</h3>
       {!hasPassword && (
-        <p style={{ color: '#4b5563', fontSize: '0.9rem' }}>
+        <p className="modal-note">
           You signed up with Google, so this account has no password yet. Setting one lets you sign
           in with your email as well.
         </p>
@@ -77,7 +77,7 @@ const ChangePassword = ({ onDone }) => {
         />
       </div>
 
-      <div className="change-password-actions">
+      <div className="modal-actions">
         <CustomButton
           text={saving ? 'Saving…' : (hasPassword ? 'Change password' : 'Set password')}
           onClick={save}

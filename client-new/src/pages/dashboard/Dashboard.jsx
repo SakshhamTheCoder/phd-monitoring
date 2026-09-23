@@ -75,7 +75,7 @@ const Dashboard = () => {
             <AdminHome data={data} />
           ) : (
             // The faculty profile is one page; the dashboard shows the
-            // signed-in faculty's own, without the page chrome.
+            // signed-in faculty's own.
             <FacultyProfile facultyCode={data?.faculty_code} />
           )}
         </>
