@@ -29,6 +29,10 @@
     box-sizing: border-box;
 }
 
+/* The dialog takes focus so the keyboard starts inside it; the ring would
+   outline the whole dialog, which says nothing the dialog itself does not. */
+.modal-content:focus-visible { outline: none; }
+
 .modal-close-button {
     position: absolute;
     top: var(--space-4);
