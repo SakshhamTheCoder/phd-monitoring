@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useId, useRef } from 'react';
+import usePresence from '../../../hooks/usePresence';
 import './CustomModal.css';
 
 const FOCUSABLE = [
@@ -21,6 +22,12 @@ const CustomModal = ({
     const panelRef = useRef(null);
     const returnFocusRef = useRef(null);
     const titleId = useId();
+    const { mounted, closing } = usePresence(isOpen);
+    // What was on screen when it closed, so the exit animation shows that and
+    // not whatever the page renders once its data for the dialog is cleared.
+    const lastShown = useRef({ title, children });
+    if (isOpen) lastShown.current = { title, children };
+    const shown = lastShown.current;
 
     // Escape closes, and Tab is kept inside the panel. Without either, the page
     // behind the overlay still took focus, so a keyboard user tabbed into a
@@ -80,7 +87,7 @@ const CustomModal = ({
         };
     }, [isOpen]);
 
-    if (!isOpen) return null;
+    if (!mounted) return null;
 
     // Close only when the click lands on THIS overlay — not on the content, and not on
     // a nested modal's overlay bubbling up. Fixes nested modals closing the parent.
@@ -102,24 +109,25 @@ const CustomModal = ({
         : { minWidth: fit(minWidth), maxWidth: fit(maxWidth), minHeight, maxHeight };
 
     return (
-        <div className="modal-overlay" onClick={handleOverlayClick}>
+        // inert while closing: the fading dialog takes no clicks or focus.
+        <div className={`modal-overlay${closing ? ' is-closing' : ''}`} onClick={handleOverlayClick} inert={closing ? '' : undefined}>
             <div
                 ref={panelRef}
                 className="modal-content"
                 style={sizeStyle}
                 role="dialog"
                 aria-modal="true"
-                aria-labelledby={title ? titleId : undefined}
-                aria-label={title ? undefined : 'Dialog'}
+                aria-labelledby={shown.title ? titleId : undefined}
+                aria-label={shown.title ? undefined : 'Dialog'}
                 tabIndex={-1}
                 onKeyDown={handleKeyDown}
             >
                 <button type="button" className="modal-close-button" onClick={onClose} aria-label="Close">
                     <i className="fa fa-times" aria-hidden="true"></i>
                 </button>
-                {title && <div className="modal-title" id={titleId}>{title}</div>}
+                {shown.title && <div className="modal-title" id={titleId}>{shown.title}</div>}
                 <div className="modal-body">
-                    {children}
+                    {shown.children}
                 </div>
             </div>
         </div>

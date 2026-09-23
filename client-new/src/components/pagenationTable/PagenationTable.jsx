@@ -39,7 +39,7 @@ const PagenationTable = ({
   const [totalPages, setTotalPages] = useState(1);
   const [selectMode, setSelectMode] = useState(false);
   const [role, setRole] = useState("student");
-  const { openMenu, menuStyle, toggleMenu, closeMenu } = useRowMenu();
+  const { openMenu, shownMenu, menuClosing, menuStyle, toggleMenu, closeMenu } = useRowMenu();
   // The table's own request, not the page-wide loader. That loader is one flag
   // shared by every request on the page, so it could already be off while this
   // table was still waiting, and the table said "No results yet." meanwhile.
@@ -367,8 +367,8 @@ const PagenationTable = ({
                           >
                             <i className="fa fa-ellipsis-v"></i>
                           </button>
-                          {openMenu === index && (
-                            <div className="row-actions-menu" style={menuStyle} onClick={(e) => e.stopPropagation()}>
+                          {shownMenu === index && (
+                            <div className={`row-actions-menu${menuClosing ? " is-closing" : ""}`} style={menuStyle} onClick={(e) => e.stopPropagation()}>
                               {rowActions.map((action, actionIndex) => {
                                 const danger = action.danger || /delete|remove/i.test(action.tooltip || "");
                                 return (

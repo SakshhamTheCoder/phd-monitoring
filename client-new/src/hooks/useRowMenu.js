@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import usePresence from './usePresence';
 
 // Space the menu needs below its trigger before it opens upward instead.
 const ROOM_BELOW = 220;
@@ -39,11 +40,19 @@ export const useRowMenu = () => {
     }
     const rect = event.currentTarget.getBoundingClientRect();
     const right = window.innerWidth - rect.right;
+    // It grows from the corner at its trigger, whichever way it opens.
     setMenuStyle(window.innerHeight - rect.bottom < ROOM_BELOW
-      ? { right, bottom: window.innerHeight - rect.top + 4 }
-      : { right, top: rect.bottom + 4 });
+      ? { right, bottom: window.innerHeight - rect.top + 4, transformOrigin: 'bottom right' }
+      : { right, top: rect.bottom + 4, transformOrigin: 'top right' });
     setOpenMenu(key);
   };
 
-  return { openMenu, menuStyle, toggleMenu, closeMenu: () => setOpenMenu(null) };
+  // `shownMenu` is the menu to draw: the open one, or the one just closed
+  // while it fades out (`menuClosing`).
+  const lastOpen = useRef(null);
+  if (openMenu !== null) lastOpen.current = openMenu;
+  const { mounted, closing: menuClosing } = usePresence(openMenu !== null, 100);
+  const shownMenu = mounted ? (openMenu ?? lastOpen.current) : null;
+
+  return { openMenu, shownMenu, menuClosing, menuStyle, toggleMenu, closeMenu: () => setOpenMenu(null) };
 };

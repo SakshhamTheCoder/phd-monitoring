@@ -34,7 +34,7 @@ const ClerkManagement = () => {
   const [isBulkUpdateOpen, setIsBulkUpdateOpen] = useState(false);
   const [bulkSubmitting, setBulkSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(null);
-  const { openMenu, menuStyle, toggleMenu, closeMenu } = useRowMenu();
+  const { openMenu, shownMenu, menuClosing, menuStyle, toggleMenu, closeMenu } = useRowMenu();
 
   const clerkSampleCsv = `email,phone,department_codes,full_name
 clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
@@ -276,8 +276,8 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
                         >
                           <i className="fa fa-ellipsis-v"></i>
                         </button>
-                        {openMenu === idx && (
-                          <div className="row-actions-menu" style={menuStyle} onClick={(e) => e.stopPropagation()}>
+                        {shownMenu === idx && (
+                          <div className={`row-actions-menu${menuClosing ? ' is-closing' : ''}`} style={menuStyle} onClick={(e) => e.stopPropagation()}>
                             <button
                               className="row-actions-item"
                               onClick={(e) => {

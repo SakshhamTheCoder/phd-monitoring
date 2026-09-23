@@ -5,6 +5,7 @@
    five hand-rolled copies in the projects pages now point at this. */
 
 .modal-overlay {
+    animation: fade-in 200ms ease-out;
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.4);
@@ -16,6 +17,7 @@
 }
 
 .modal-content {
+    animation: dialog-in 200ms ease-out;
     background: var(--surface);
     border-radius: var(--radius-lg);
     position: relative;
@@ -32,6 +34,14 @@
 /* The dialog takes focus so the keyboard starts inside it; the ring would
    outline the whole dialog, which says nothing the dialog itself does not. */
 .modal-content:focus-visible { outline: none; }
+
+/* The dialog grows out of the page a little and settles; closing is quicker
+   and runs the same way back. usePresence holds it for the 150ms. */
+@keyframes dialog-in { from { opacity: 0; transform: scale(0.96); } }
+@keyframes dialog-out { to { opacity: 0; transform: scale(0.98); } }
+@keyframes overlay-out { to { opacity: 0; } }
+.modal-overlay.is-closing { animation: overlay-out 150ms ease-out forwards; pointer-events: none; }
+.modal-overlay.is-closing .modal-content { animation: dialog-out 150ms ease-out forwards; }
 
 .modal-close-button {
     position: absolute;
