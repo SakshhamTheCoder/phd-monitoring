@@ -4,6 +4,7 @@ import { baseURL } from '../../api/urls';
 import Loader from '../../components/loader/loader';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import Tabs from '../../components/tabs/Tabs';
+import LoadError from '../../components/common/LoadError';
 import './StudentCourses.css';
 
 const StudentCourses = () => {
@@ -11,6 +12,7 @@ const StudentCourses = () => {
   const [ongoingCourses, setOngoingCourses] = useState([]);
   const [pastCourses, setPastCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
     fetchCourses();
@@ -33,6 +35,7 @@ const StudentCourses = () => {
     if (pastResponse.success) {
       setPastCourses(pastResponse.response.data);
     }
+    setLoadFailed(!ongoingResponse.success || !pastResponse.success);
     setLoading(false);
   };
 
@@ -83,7 +86,11 @@ const StudentCourses = () => {
       />
 
       <div className="courses-content">
-        {activeTab === 'ongoing' && (
+        {loadFailed && (
+          <LoadError message="Could not load your courses. Check your connection and try again." onRetry={fetchCourses} />
+        )}
+
+        {!loadFailed && activeTab === 'ongoing' && (
           <div className="courses-grid">
             {ongoingCourses.length > 0 ? (
               ongoingCourses.map(renderCourseCard)
@@ -95,7 +102,7 @@ const StudentCourses = () => {
           </div>
         )}
 
-        {activeTab === 'past' && (
+        {!loadFailed && activeTab === 'past' && (
           <div className="courses-grid">
             {pastCourses.length > 0 ? (
               pastCourses.map(renderCourseCard)

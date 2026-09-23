@@ -6,6 +6,7 @@ import CustomButton from '../../components/forms/fields/CustomButton';
 import TableComponent from '../../components/forms/table/TableComponent';
 import Tabs from '../../components/tabs/Tabs';
 import InfoGrid from '../../components/profileFields/InfoGrid';
+import LoadError from '../../components/common/LoadError';
 import { customFetch, isNetworkError, NETWORK_ERROR_MESSAGE } from '../../api/base';
 import { baseURL } from '../../api/urls';
 import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
@@ -85,16 +86,30 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
     const [syncing, setSyncing] = useState(false);
     const [editingProfile, setEditingProfile] = useState(false);
     const [profileForm, setProfileForm] = useState(emptyProfileForm);
+    const [loadFailed, setLoadFailed] = useState(false);
     const researchRef = useRef(null);
 
+    // A failed refresh keeps what is on screen; only a failed first load shows
+    // the error, since data is cleared whenever the faculty changes.
     const load = useCallback(async () => {
         if (!facultyCode) return;
+        setLoadFailed(false);
         const res = await apiResearchProfile(facultyCode);
-        if (res && shownCodeRef.current === facultyCode) setData(res);
+        if (shownCodeRef.current !== facultyCode) return;
+        if (res) setData(res);
+        else setLoadFailed(true);
     }, [facultyCode]);
 
     useEffect(() => {
         shownCodeRef.current = facultyCode;
+        // Another faculty starts clean. Keeping the last one's data let Edit
+        // open on it and Save write it to this faculty.
+        setData(null);
+        setEditingProfile(false);
+        setSelected([]);
+        setBulkTarget('');
+        setShowPubForm(false);
+        setEditPub(null);
         return () => { shownCodeRef.current = null; };
     }, [facultyCode]);
 
@@ -167,7 +182,11 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
     const authorIdentity = useMemo(() => profileIdentity(profileName), [profileName]);
     const selectedIds = useMemo(() => new Set(selected), [selected]);
 
-    if (!data) return <div className="loading-state">Loading Profile…</div>;
+    if (!data) {
+        return loadFailed
+            ? <LoadError message="Could not load this research profile. Check your connection and try again." onRetry={load} />
+            : <div className="loading-state">Loading Profile…</div>;
+    }
 
     const {
         profile,
@@ -354,6 +373,11 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
     const sourceBadge = (pub) => (
         <span className={badgeClass(pub.source || 'manual')}>{SOURCE_LABELS[pub.source] || 'Manual'}</span>
     );
+
+    // Changing what is shown drops the ticks, so Apply cannot move rows the
+    // filters now hide.
+    const refilter = (setter) => (value) => { setSelected([]); setter(value); };
+    const filtersActive = filterYears.length > 0 || filterType !== 'All' || filterSource !== 'All' || search.trim() !== '';
 
     const toggleSelected = (id) => {
         setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -576,7 +600,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
 
                     <Tabs
                         value={tab}
-                        onChange={setActiveTab}
+                        onChange={refilter(setActiveTab)}
                         items={[
                             { value: 'faculty', label: 'Faculty Publications' },
                             ...(canViewSupervision ? [{ value: 'phd', label: 'PhD Student Publications' }] : []),
@@ -598,7 +622,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
                                 value="Select"
                                 onChange={e => {
                                     const val = e.target.value;
-                                    if (val !== 'Select' && !filterYears.includes(val)) setFilterYears([...filterYears, val]);
+                                    if (val !== 'Select' && !filterYears.includes(val)) refilter(setFilterYears)([...filterYears, val]);
                                 }}
                             >
                                 <option value="Select">All years</option>
@@ -608,7 +632,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
 
                         <div className="rp-filter">
                             <label htmlFor="research-profile-type">Type</label>
-                            <select id="research-profile-type" value={filterType} onChange={e => setFilterType(e.target.value)}>
+                            <select id="research-profile-type" value={filterType} onChange={e => refilter(setFilterType)(e.target.value)}>
                                 <option value="All">All</option>
                                 {TYPE_OPTIONS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                             </select>
@@ -616,7 +640,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
 
                         <div className="rp-filter">
                             <label htmlFor="research-profile-source">Source</label>
-                            <select id="research-profile-source" value={filterSource} onChange={e => setFilterSource(e.target.value)}>
+                            <select id="research-profile-source" value={filterSource} onChange={e => refilter(setFilterSource)(e.target.value)}>
                                 <option value="All">All</option>
                                 {availableSources.map(s => <option key={s} value={s}>{SOURCE_LABELS[s] || s}</option>)}
                             </select>
@@ -629,7 +653,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
                             type="text"
                             placeholder="Search publications..."
                             value={search}
-                            onChange={e => setSearch(e.target.value)}
+                            onChange={e => refilter(setSearch)(e.target.value)}
                         />
                     </div>
 
@@ -652,7 +676,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
                         {filterYears.map(y => (
                             <span key={y} className="rp-year-tag">
                                 {y}
-                                <button type="button" aria-label={`Remove ${y}`} onClick={() => setFilterYears(filterYears.filter(v => v !== y))}>&times;</button>
+                                <button type="button" aria-label={`Remove ${y}`} onClick={() => refilter(setFilterYears)(filterYears.filter(v => v !== y))}>&times;</button>
                             </span>
                         ))}
                     </div>
@@ -745,11 +769,15 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
 
                     {Object.values(filtered).every(list => !list || !list.length) && (
                         <div className="empty-state">
-                            {isOwnTab
-                                ? (canEdit
-                                    ? 'No publications recorded yet. Add one, or sync from ORCID or Scopus.'
-                                    : 'No publications recorded yet.')
-                                : 'No publications from supervised students match these filters.'}
+                            {filtersActive
+                                ? (isOwnTab
+                                    ? 'No publications match these filters. Clear a filter to see more.'
+                                    : 'No publications from supervised students match these filters.')
+                                : isOwnTab
+                                    ? (canEdit
+                                        ? 'No publications recorded yet. Add one, or sync from ORCID or Scopus.'
+                                        : 'No publications recorded yet.')
+                                    : 'No publications from supervised students yet.'}
                         </div>
                     )}
                 </div>
@@ -760,6 +788,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
                     onClose={() => { setShowPubForm(false); setEditPub(null); }}
                     maxWidth="900px"
                     minHeight="auto"
+                    closeOnOutsideClick={false}
                 >
                     <AddPublication
                         close={() => { setShowPubForm(false); setEditPub(null); }}

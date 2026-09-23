@@ -164,7 +164,6 @@ const ExternalReview = () => {
         <RecommendationField
           role="Outside Expert"
           allowRejection={false}
-          initialValue={{}}
           lock={false}
           onRecommendationChange={(d) =>
             setDecision(d.approval ? "recommend" : "not_recommend")

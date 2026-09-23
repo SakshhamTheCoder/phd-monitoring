@@ -13,23 +13,28 @@ import { formatDate } from '../../utils/timeParse';
 import ShowPublications from '../../components/publications/ShowPublications';
 import { APIdeletePublication, APIdeletePatent } from '../../api/publication';
 import PageHeader from '../../components/pageHeader/PageHeader';
+import LoadError from '../../components/common/LoadError';
 const Publications = () => {
 
 
     const [formData, setFormData] = useState({});
     const { setLoading } = useLoading();
     const [isLoaded, setIsLoaded] = useState(false);
+    const [loadFailed, setLoadFailed] = useState(false);
     const location = useLocation();
 
 
     const fetchData = () => {
       setLoading(true);
+      setLoadFailed(false);
       const url = baseURL + location.pathname;
       customFetch(url, "GET")
         .then((data) => {
           if (data && data.success) {
             setFormData(data.response);
             setIsLoaded(true);
+          } else {
+            setLoadFailed(true);
           }
           setLoading(false);
         })
@@ -83,7 +88,9 @@ const Publications = () => {
                 "No publications yet" for a scholar who has some. */}
             {isLoaded
               ? <ShowPublications formData={formData} refetchData={fetchData} enableDelete={true} onDelete={handleDelete} canAdd={true}/>
-              : <p className="no-data-cell" aria-busy="true">Loading publications…</p>}
+              : loadFailed
+                ? <LoadError message="Could not load your publications. Check your connection and try again." onRetry={fetchData} />
+                : <p className="no-data-cell" aria-busy="true">Loading publications…</p>}
 
             <CustomModal isOpen={open} onClose={closeModal} title={'Add Publication'}
                 minHeight='200px' maxHeight='600px' minWidth='650px' maxWidth='700px' closeOnOutsideClick={false}>

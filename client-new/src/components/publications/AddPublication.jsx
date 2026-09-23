@@ -13,12 +13,10 @@ const AddPublication = ({ close, editData = null, onSave = null }) => {
   const [body, setBody] = useState(editData || {});
   const [saving, setSaving] = useState(false);
 
+  // Only offered while adding. A new type starts a new body: merging kept the
+  // last type's fields, and they were posted with this one.
   const handleSelect = (value) => {
-    value = JSON.parse(value);
-    setBody((prev) => ({
-      ...prev,
-      ...value,
-    }));
+    setBody(JSON.parse(value));
   };
 
   // Submit stays disabled until the save answers, so a second click cannot
@@ -107,7 +105,8 @@ const AddPublication = ({ close, editData = null, onSave = null }) => {
           />
         )}
 
-        <div className="add-publication-box">
+        {/* Keyed on the type so its form remounts empty, matching the body. */}
+        <div className="add-publication-box" key={body.label}>
           {body.label || editData ? (
             <>
               {body.publication_type === "journal" && (
