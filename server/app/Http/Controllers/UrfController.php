@@ -889,6 +889,12 @@ class UrfController extends Controller
         if (!$user->may('can_manage_urf')) {
             $application->setRelation('fellows', $application->fellows->where('user_id', $user->id)->values());
         }
+        // So are a student's reports, from a teammate on the same project. Only
+        // members are narrowed: the mentor reads this payload too, and reviews
+        // every member's reports.
+        if ($application->hasMember($user)) {
+            $application->setRelation('reports', $application->reports->where('user_id', $user->id)->values());
+        }
 
         // Publications belong to the reports they were linked to, not to the application.
         $data = $application->toArray();

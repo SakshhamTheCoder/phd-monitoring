@@ -154,6 +154,9 @@ class UrfFlowTest extends TestCase
             ->assertJsonPath('data.0.branch', 'URF Test Branch, 3rd Year · URF Test Branch, 2nd Year');
         $this->actingAs($applicant, 'sanctum')->getJson('/api/urf/mine')->assertOk()->assertJsonCount(0, 'applications.0.fellows');
         $this->actingAs($partner, 'sanctum')->getJson('/api/urf/mine')->assertOk()->assertJsonCount(1, 'applications.0.fellows');
+        // Reports too: the applicant filed both, and the partner does not receive them.
+        $this->actingAs($applicant, 'sanctum')->getJson('/api/urf/mine')->assertJsonCount(2, 'applications.0.reports');
+        $this->actingAs($partner, 'sanctum')->getJson('/api/urf/mine')->assertJsonCount(0, 'applications.0.reports');
 
         // The admin's forms grid lists each form's submissions against their project.
         $onThisProject = '?filters=' . urlencode(json_encode(['conditions' => [['key' => 'project_title', 'op' => '=', 'value' => $form['project_title']]]]));
@@ -225,7 +228,9 @@ class UrfFlowTest extends TestCase
             ->assertOk()
             ->assertJsonPath('id', $id)
             // Bank details are the student's own, whoever else is reading.
-            ->assertJsonCount(0, 'fellows');
+            ->assertJsonCount(0, 'fellows')
+            // The mentor reviews every member's reports.
+            ->assertJsonCount(2, 'reports');
 
         // Another faculty member mentors nothing, so there is nothing to read.
         $stranger = Faculty::create([
