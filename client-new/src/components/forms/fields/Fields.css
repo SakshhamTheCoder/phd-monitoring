@@ -57,6 +57,15 @@
     border: 1px solid var(--border-color);
 }
 .custom-button--quiet:hover { background-color: var(--surface); border-color: var(--text-subtle); color: var(--text-color); }
+/* Outlined danger: a destructive action that sits in a row or beside the
+   view's primary button, where a second filled button would compete. The
+   confirming button in a delete dialog stays filled. */
+.custom-button--danger-outline {
+    background-color: var(--surface);
+    color: var(--danger-text);
+    border: 1px solid var(--danger);
+}
+.custom-button--danger-outline:hover { background-color: var(--danger-bg); border-color: var(--danger-text); color: var(--danger-text); }
 .custom-button--success { background-color: var(--success); border-color: var(--success); }
 .custom-button--success:hover { background-color: #12662f; border-color: #12662f; }
 .custom-button:disabled { opacity: 0.6; cursor: not-allowed; }

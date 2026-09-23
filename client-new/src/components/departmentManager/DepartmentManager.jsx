@@ -252,7 +252,7 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
               component: ({ row }) => (
                 <CustomButton
                   text="Remove"
-                  variant="danger"
+                  variant="danger-outline"
                   size="sm"
                   onClick={() => handleRemoveCoordinator(row.actions.coordinator_id, row.actions.faculty_code)}
                 />

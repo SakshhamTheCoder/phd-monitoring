@@ -361,7 +361,7 @@ const ProjectRecruitment = () => {
                   <CustomButton text="Shortlist" variant="secondary" size="sm" onClick={() => setAppStatus('Shortlisted')} />
                   <CustomButton text="Interview" variant="secondary" size="sm" onClick={() => setAppStatus('Interview Scheduled')} />
                   <CustomButton text="Select" variant="success" size="sm" onClick={() => setAppStatus('Selected')} />
-                  <CustomButton text="Reject" variant="danger" size="sm" onClick={() => setAppStatus('Rejected')} />
+                  <CustomButton text="Reject" variant="danger-outline" size="sm" onClick={() => setAppStatus('Rejected')} />
                 </div>
               )}
             </>
