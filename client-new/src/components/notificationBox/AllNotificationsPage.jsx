@@ -9,20 +9,22 @@ import { currentRole } from '../../auth/access';
 
 const AllNotificationsPage = () => {
   const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // A failed load has already toasted, and saying "No notifications yet" after
+  // it would be untrue, so it shows neither the list nor the empty state.
+  const [status, setStatus] = useState("loading"); // "loading" | "ready" | "failed"
 
-  const fetchNotifications = useCallback(() => {
-    APIlistAllNotifications((data) => {
-      setNotifications(data);
-      setLoading(false);
-    });
+  const fetchNotifications = useCallback(async () => {
+    const { success, response } = await APIlistAllNotifications();
+    // After a role switch the old role's list must not linger in the unread count.
+    setNotifications(success ? response : []);
+    setStatus(success ? "ready" : "failed");
   }, []);
 
   // Fetch on mount and whenever the active role changes (no page reload needed).
   useEffect(() => {
     fetchNotifications();
     const onRoleChange = () => {
-      setLoading(true);
+      setStatus("loading");
       fetchNotifications();
     };
     window.addEventListener("rolechange", onRoleChange);
@@ -57,9 +59,9 @@ const AllNotificationsPage = () => {
           )}
         </div>
 
-        {loading ? (
+        {status === "loading" ? (
           <p className="notification-muted">Loading…</p>
-        ) : notifications.length === 0 ? (
+        ) : status === "failed" ? null : notifications.length === 0 ? (
           <div className="empty-state">
             No notifications yet. Anything that needs your attention in this role
             will show up here.

@@ -30,6 +30,9 @@ const LogViewer = () => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [atStart, setAtStart] = useState(false);
+  // No logs after a failed read says nothing about the file, so it is not
+  // reported as empty.
+  const [failed, setFailed] = useState(false);
 
   // Byte offsets of the window we hold. Refs, not state: the poll below is set
   // up once and would otherwise keep reading the first render's values, which
@@ -37,6 +40,7 @@ const LogViewer = () => {
   const from = useRef(null);
   const to = useRef(null);
   const isFetching = useRef(false);
+  const failing = useRef(false);
   const pinnedToBottom = useRef(true);
   const containerRef = useRef(null);
 
@@ -53,9 +57,13 @@ const LogViewer = () => {
     const query = direction === 'tail' ? 'direction=tail' : `direction=${direction}&offset=${offset}`;
 
     try {
+      // Toast the first failure only. The poll retries every few seconds, and
+      // an outage would otherwise stack up one toast per poll.
       const { success, response } = await customFetch(
-        `${baseURL}/admin/logs?${query}`, 'GET', {}, false, false, false,
+        `${baseURL}/admin/logs?${query}`, 'GET', {}, !failing.current,
       );
+      failing.current = !success;
+      setFailed(!success);
       if (!success || !response) return;
 
       // A rotated or truncated file leaves our offsets past the end.
@@ -132,7 +140,7 @@ const LogViewer = () => {
   return (
     <div className="log-terminal" ref={containerRef} onScroll={handleScroll}>
       {loading && <div className="log-empty">Loading the most recent entries...</div>}
-      {!loading && logs.length === 0 && <div className="log-empty">The log file is empty.</div>}
+      {!loading && !failed && logs.length === 0 && <div className="log-empty">The log file is empty.</div>}
       {atStart && logs.length > 0 && <div className="log-boundary">Start of log file</div>}
 
       {logs.map((line, idx) => {

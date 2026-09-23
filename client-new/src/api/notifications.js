@@ -3,52 +3,29 @@
 import { baseURL } from "./urls";
 import { customFetch } from "./base";
 
-// Fetch unread notifications (for the dropdown)
-export const APIlistUnreadNotifications = async (setNotifications) => {
-  customFetch(baseURL + "/notifications/unread", "GET", null, false, false)
-    .then((result) => {
-      if (result.success) {
-        const notif = result.response;
-        setNotifications(notif.reverse());
-      }
-    })
-    .catch((error) => {
-      console.error("Error fetching unread notifications", error);
-    });
+// The list helpers hand back customFetch's { success, response }, newest first,
+// so a caller can tell a failed load from an empty list.
+
+// Unread notifications, for the bell. Silent: it loads on every page, and a
+// toast on each one would bury the page's own messages.
+export const APIlistUnreadNotifications = async () => {
+  const result = await customFetch(baseURL + "/notifications/unread", "GET", null, false);
+  if (result.success) result.response.reverse();
+  return result;
 };
 
 // Mark a specific notification as read
-export const APImarkNotificationAsRead = async (notificationId) => {
-  customFetch(baseURL + "/notifications/mark-as-read/" + notificationId, "PUT", null, false, false)
-    .then((result) => {
-      if (result.success) {
-        // Optional: toast.success(result.response);
-      }
-    })
-    .catch((error) => {
-      console.error("Error marking notification as read", error);
-    });
-};
+export const APImarkNotificationAsRead = (notificationId) =>
+  customFetch(baseURL + "/notifications/mark-as-read/" + notificationId, "PUT", null, false);
 
 // Mark ALL notifications as read (dropdown "Mark all as read" action)
-export const APImarkAllNotificationsAsRead = async () => {
-  return customFetch(baseURL + "/notifications/mark-all-as-read", "PUT", null, false, false)
-    .catch((error) => {
-      console.error("Error marking all notifications as read", error);
-      return { success: false };
-    });
-};
+export const APImarkAllNotificationsAsRead = () =>
+  customFetch(baseURL + "/notifications/mark-all-as-read", "PUT", null, false);
 
-// ✅ New: Fetch ALL notifications (for full notifications page)
-export const APIlistAllNotifications = async (setNotifications) => {
-  customFetch(baseURL + "/notifications", "GET", null, false, false)
-    .then((result) => {
-      if (result.success) {
-        const notif = result.response;
-        setNotifications(notif.reverse());
-      }
-    })
-    .catch((error) => {
-      console.error("Error fetching all notifications", error);
-    });
+// Every notification, for the full page. A failure toasts, since the page has
+// nothing else to show.
+export const APIlistAllNotifications = async () => {
+  const result = await customFetch(baseURL + "/notifications", "GET", null);
+  if (result.success) result.response.reverse();
+  return result;
 };

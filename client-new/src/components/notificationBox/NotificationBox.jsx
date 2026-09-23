@@ -11,14 +11,18 @@ const NotificationBox = () => {
   const notificationRef = useRef(null);
   const [notifications, setNotifications] = useState([]);
   const [allRead, setAllRead] = useState(false);
+  // An empty list after a failed load is not "all caught up".
+  const [loadFailed, setLoadFailed] = useState(false);
 
-  const fetchNotifications = useCallback(() => {
+  const fetchNotifications = useCallback(async () => {
     setAllRead(false);
-    APIlistUnreadNotifications(setNotifications);
+    const { success, response } = await APIlistUnreadNotifications();
+    if (success) setNotifications(response);
+    setLoadFailed(!success);
   }, []);
 
   // Fetch on mount, and re-fetch whenever the active role changes so the bell
-  // reflects the role the user just switched to — without reloading the page.
+  // reflects the role the user just switched to, without reloading the page.
   useEffect(() => {
     fetchNotifications();
     window.addEventListener("rolechange", fetchNotifications);
@@ -104,7 +108,7 @@ const NotificationBox = () => {
           </div>
           <div className="notification_content">
             {notifications.length === 0 ? (
-              <div className="notification_empty">
+              !loadFailed && <div className="notification_empty">
                 <p>You're all caught up.</p>
               </div>
             ) : (
