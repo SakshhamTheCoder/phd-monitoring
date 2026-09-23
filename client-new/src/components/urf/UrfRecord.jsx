@@ -83,6 +83,54 @@ export const TeamTables = ({ record }) => {
   );
 };
 
+// The kinds of publication the portal records. It has no Scopus flag, so a
+// reviewer reads eligibility from these.
+const PUBLICATION_KINDS = {
+  'journal:sci': 'SCI journal',
+  'journal:non-sci': 'Non-SCI journal',
+  'conference:international': 'International conference',
+  'conference:national': 'National conference',
+};
+const publicationSummary = (counts) => {
+  const parts = Object.entries(counts || {}).map(([kind, n]) => `${n} ${PUBLICATION_KINDS[kind] || (kind.startsWith('book') ? 'Book' : kind)}`);
+  return parts.length ? parts.join(', ') : 'None linked';
+};
+const FINAL_REPORT = { approved: 'Approved', filed: 'Filed, in review' };
+
+/**
+ * Each student's other URF projects and what came of them, so a reviewer can
+ * weigh eligibility: a student who finished a fellowship without publishing
+ * may not be eligible again. Only reviewers receive this; students do not.
+ */
+export const OtherProjects = ({ record }) => {
+  if (!record.other_projects) return null;
+
+  const rows = record.other_projects.flatMap(({ student, projects }) => (projects.length
+    ? projects.map((project) => ({
+      student,
+      session: `URF ${project.session}`,
+      project_title: project.project_title,
+      status: capitalize(project.status),
+      final_report: FINAL_REPORT[project.final_report] || 'Not filed',
+      publications: publicationSummary(project.publications),
+    }))
+    : [{ student, session: EMPTY_VALUE, project_title: 'No other URF project', status: EMPTY_VALUE, final_report: EMPTY_VALUE, publications: EMPTY_VALUE }]));
+
+  return (
+    <GridContainer
+      label="Eligibility: Other URF Projects"
+      elements={[
+        <TableComponent
+          data={rows}
+          keys={['student', 'session', 'project_title', 'status', 'final_report', 'publications']}
+          titles={['Student', 'Session', 'Project', 'Status', 'Final Report', 'Publications']}
+        />,
+      ]}
+      space={3}
+    />
+  );
+};
+
 /**
  * One URF project as a profile card, laid out like the PhD student profile:
  * the title and its status beside the actions, then the team, stipend details
@@ -169,6 +217,7 @@ const UrfRecord = ({ record, actions = null }) => {
 
       <TeamTables record={record} />
 
+      <OtherProjects record={record} />
     </div>
   );
 };

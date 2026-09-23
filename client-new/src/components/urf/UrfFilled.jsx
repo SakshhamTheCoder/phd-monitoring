@@ -4,7 +4,7 @@ import InputField from '../forms/fields/InputField';
 import ShowPublications from '../publications/ShowPublications';
 import FileLink from '../common/FileLink';
 import { formatDate, EMPTY_VALUE } from '../../utils/timeParse';
-import { TeamTables, REPORT_TYPES, facultyName } from './UrfRecord';
+import { TeamTables, OtherProjects, REPORT_TYPES, facultyName } from './UrfRecord';
 import './UrfForms.css';
 
 /**
@@ -32,6 +32,7 @@ const Application = ({ formData }) => {
         space={3}
       />
       <TeamTables record={application} />
+      <OtherProjects record={application} />
       <GridContainer
         label="Project Proposal"
         elements={[application.proposal

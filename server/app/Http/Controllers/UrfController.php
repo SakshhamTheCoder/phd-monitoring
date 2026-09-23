@@ -514,6 +514,25 @@ class UrfController extends Controller
             'proposal' => ($editing ? 'nullable' : 'required') . '|file|mimes:pdf|max:20480',
         ]);
 
+        // The applicant was checked above; the second student has to be free
+        // too, or one student ends up on two projects in the same session.
+        if (!empty($data['student2_email'])) {
+            $email = $data['student2_email'];
+            $partnerId = User::where('email', $email)->value('id');
+            $taken = UrfApplication::where('session', $session)
+                ->where('status', '!=', 'rejected')
+                ->when($editing, fn ($query) => $query->whereKeyNot($application->id))
+                ->where(fn ($query) => $query->where('student2_email', $email)
+                    ->when($partnerId, fn ($query) => $query->orWhere('user_id', $partnerId)))
+                ->exists();
+            if ($taken) {
+                return response()->json([
+                    'message' => "{$data['student2_name']} is already on a URF application for {$session}.",
+                    'errors' => ['student2_email' => ["This student is already on a URF application for {$session}."]],
+                ], 422);
+            }
+        }
+
         // Roll number and branch come from the account, not the form, so they
         // cannot drift between applications.
         if ($record = $user->ugStudent) {
@@ -808,12 +827,14 @@ class UrfController extends Controller
                     : 'This report has not been scheduled yet.',
             ], 422);
         }
-        // One report per round. A report already with the chain is replaced only
-        // after a step sends it back: without this a second submit slipped past
-        // the stage-scoped lookup below and filed a duplicate instead.
+        // One report per project per round, filed by either student. A report
+        // already with the chain is replaced only after a step sends it back:
+        // without this a second submit slipped past the stage-scoped lookup
+        // below and filed a duplicate instead. Latest first, for projects that
+        // filed one per student before reports were per project.
         $existing = UrfReport::where('urf_application_id', $application->id)
-            ->where('user_id', $user->id)
             ->where('type', $data['type'])
+            ->latest('id')
             ->first();
         if ($existing && $existing->stage !== 'student') {
             return response()->json(['message' => 'This report has been submitted. You can change it only if a reviewer sends it back to you.'], 422);
@@ -824,13 +845,14 @@ class UrfController extends Controller
         $data['report'] = $this->saveUploadedFile($request->file('report'), 'urf_report', $user->id);
 
         $report = DB::transaction(function () use ($data, $application, $user, $linked) {
-            // A report sent back is replaced rather than filed twice.
+            // A report sent back is replaced rather than filed twice, and is
+            // recorded against whichever student filed it last.
             $report = UrfReport::where('urf_application_id', $application->id)
-                ->where('user_id', $user->id)
                 ->where('type', $data['type'])
                 ->where('stage', 'student')
-                ->first() ?? (new UrfReport())->forceFill(['urf_application_id' => $application->id, 'user_id' => $user->id]);
-            $report->fill($data);
+                ->latest('id')
+                ->first() ?? (new UrfReport())->forceFill(['urf_application_id' => $application->id]);
+            $report->forceFill(['user_id' => $user->id])->fill($data);
             $report->save();
 
             // As a PhD progress form links them: a copy of each chosen entry,
@@ -892,15 +914,13 @@ class UrfController extends Controller
         if (!$user->may('can_manage_urf')) {
             $application->setRelation('fellows', $application->fellows->where('user_id', $user->id)->values());
         }
-        // So are a student's reports, from a teammate on the same project. Only
-        // members are narrowed: the mentor reads this payload too, and reviews
-        // every member's reports.
-        if ($application->hasMember($user)) {
-            $application->setRelation('reports', $application->reports->where('user_id', $user->id)->values());
-        }
-
         // Publications belong to the reports they were linked to, not to the application.
         $data = $application->toArray();
+        // What a reviewer weighs a student's eligibility on: their other URF
+        // projects and what came of them. The students have their own record.
+        if (!$application->hasMember($user)) {
+            $data['other_projects'] = $this->otherProjects($application);
+        }
         foreach ($data['reports'] ?? [] as $i => $report) {
             $data['reports'][$i]['publications'] = Publication::groupedFor('urf_application_id', $application->id, $report['id'], 'urf_report');
         }
@@ -915,6 +935,53 @@ class UrfController extends Controller
         }
 
         return $data;
+    }
+
+    /**
+     * Each student's other URF projects: session, outcome, whether the final
+     * report is in, and the publications linked to its reports. The portal does
+     * not record Scopus indexing, so publications are counted by the kinds it
+     * does record, and the reviewer judges eligibility from those.
+     */
+    private function otherProjects(UrfApplication $application): array
+    {
+        $students = [
+            ['name' => $application->student1_name, 'email' => $application->student1_email, 'id' => $application->user_id],
+            ['name' => $application->student2_name, 'email' => $application->student2_email, 'id' => null],
+        ];
+
+        return collect($students)->filter(fn ($student) => $student['email'])->map(function ($student) use ($application) {
+            $id = $student['id'] ?? User::where('email', $student['email'])->value('id');
+            $projects = UrfApplication::whereKeyNot($application->id)
+                ->where(fn ($query) => $query->where('student2_email', $student['email'])
+                    ->when($id, fn ($query) => $query->orWhere('user_id', $id)))
+                ->with('reports')
+                ->orderByDesc('session')
+                ->get();
+
+            return [
+                'student' => $student['name'],
+                'projects' => $projects->map(function (UrfApplication $project) {
+                    $final = $project->reports->where('type', 'final')->sortByDesc('id')->first();
+                    // The same paper is copied onto each report it is linked to,
+                    // so it is counted once by title.
+                    $publications = Publication::where('urf_application_id', $project->id)
+                        ->where('form_type', 'urf_report')
+                        ->get(['title', 'publication_type', 'type'])
+                        ->unique(fn ($publication) => mb_strtolower(trim((string) $publication->title)))
+                        ->countBy(fn ($publication) => $publication->publication_type . ':' . $publication->type);
+
+                    return [
+                        'id' => $project->id,
+                        'session' => $project->session,
+                        'project_title' => $project->project_title,
+                        'status' => $project->status,
+                        'final_report' => $final ? ($final->isComplete() ? 'approved' : 'filed') : null,
+                        'publications' => $publications,
+                    ];
+                })->values(),
+            ];
+        })->values()->all();
     }
 
     /** The office reads every project, a mentor the ones they are on. */

@@ -37,11 +37,11 @@ const Pending = ({ failed, onRetry }) => (failed
   ? <LoadError message="Could not load your URF projects. Check your connection and try again." onRetry={onRetry} />
   : <p>Loading…</p>);
 
-// Fellowship details and reports are kept per student, and a project's rows
-// could include the teammate's. The server now sends only the student's own,
-// so this is a second guard. Sign-in carries the user id; a session from before
-// it did falls back to the project's two slots, where user_id is the first
-// student and student2_email the second.
+// Fellowship details are kept per student, and the server sends only the
+// student's own, so this is a second guard. Reports are the project's, filed
+// once by either student, and are not filtered. Sign-in carries the user id; a
+// session from before it did falls back to the project's two slots, where
+// user_id is the first student and student2_email the second.
 const own = (application, rows) => {
   const me = signedInUser();
   if (me.id != null) return (rows || []).filter((row) => String(row.user_id) === String(me.id));
@@ -68,7 +68,7 @@ const formsFor = (application, windows) => {
   const base = `/forms/urf/${application.id}`;
   const report = (type, path) => {
     const round = windowFor(windows, application, type);
-    const filed = own(application, application.reports).some((r) => r.type === type);
+    const filed = (application.reports || []).some((r) => r.type === type);
     if (!round?.is_open && !filed) return [];
 
     return [{
@@ -94,7 +94,7 @@ const RoundNotice = ({ application, windows }) => {
 
   const upcoming = ['half_yearly', 'final']
     .map((type) => ({ type, round: windowFor(windows, application, type) }))
-    .filter(({ type, round }) => round && !round.is_open && !own(application, application.reports).some((r) => r.type === type));
+    .filter(({ type, round }) => round && !round.is_open && !(application.reports || []).some((r) => r.type === type));
 
   if (!upcoming.length) return null;
 
@@ -200,8 +200,8 @@ export const UrfFormPage = ({ type }) => {
     }
   } else if (application && REPORT_TYPES[type]) {
     const round = windowFor(state.report_windows, application, type);
-    // One report per round, so the one the student filed is the one they read.
-    const filed = own(application, application.reports).find((report) => report.type === type);
+    // One report per project per round, so whichever student filed it, both read it.
+    const filed = (application.reports || []).find((report) => report.type === type);
 
     if (application.status !== 'selected') {
       body = <p>Reports open once your project is selected.</p>;
