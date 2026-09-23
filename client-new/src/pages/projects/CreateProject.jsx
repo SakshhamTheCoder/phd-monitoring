@@ -12,6 +12,10 @@ import {
 import { formatDate, EMPTY_VALUE, toDateObject, toDateValue } from '../../utils/timeParse';
 import { apiCreateProject, apiGetProject, apiUpdateProjectFromForm, apiUpdateProject, apiCurrentFaculty, apiProjectMeta, apiUploadGanttChart } from '../../api/projects';
 import LoadError from '../../components/common/LoadError';
+import StatusNotice from '../../components/common/StatusNotice';
+import Page from '../../components/page/Page';
+import Panel, { PanelSection } from '../../components/panel/Panel';
+import CustomButton from '../../components/forms/fields/CustomButton';
 import InputSuggestions from '../../components/forms/fields/InputSuggestions';
 import FacultyLink from '../../components/facultyLink/FacultyLink';
 import { baseURL } from '../../api/urls';
@@ -19,7 +23,7 @@ import { toast } from 'react-toastify';
 import ProjectBudgetStep from './ProjectBudgetStep';
 import './CreateProject.css';
 
-const STEPS = ['Basic Info', 'Team', 'Budget', 'Objectives', 'Milestones', 'Review'];
+const STEPS = ['Basic info', 'Team', 'Budget', 'Objectives', 'Milestones', 'Review'];
 
 const emptyForm = {
   title: '', category: '', role: 'PI', focusArea: '', grantType: '',
@@ -197,7 +201,7 @@ const CreateProject = () => {
     const missing = missingField();
     if (missing) {
       setCurrentStep(0);
-      toast.error(`Enter ${missing} on the Basic Info step before submitting.`);
+      toast.error(`Enter ${missing} on the Basic info step before submitting.`);
       return;
     }
     setSubmitting(true);
@@ -228,7 +232,7 @@ const CreateProject = () => {
 
   // Derived from the chosen duration (1-5 years) so the wizard's year columns
   // match the Grand Total's real year list. Shrinking the duration only
-  // hides the extra columns here — it never deletes the budget data stored
+  // hides the extra columns here; it never deletes the budget data stored
   // under those years.
   const leave = () => {
     const changed = JSON.stringify(form) !== JSON.stringify(initialForm);
@@ -237,16 +241,20 @@ const CreateProject = () => {
     navigate('/projects');
   };
 
+  const backLink = (
+    <button type="button" className="page-back-link cp-back" onClick={leave}>
+      <i className="fa fa-arrow-left" aria-hidden="true"></i> Back to projects
+    </button>
+  );
+
   if (!form) {
     return (
-      <div className="cp-container">
-        <button className="page-back-link" onClick={() => navigate('/projects')}>
-          <i className="fa fa-arrow-left"></i> BACK TO PROJECTS
-        </button>
+      <>
+        {backLink}
         {loadFailed
           ? <LoadError message="Could not load this project for editing. Check your connection and try again." onRetry={() => setLoadAttempt((n) => n + 1)} />
-          : <p>Loading the project…</p>}
-      </div>
+          : <StatusNotice tone="loading" title="Loading the project" />}
+      </>
     );
   }
 
@@ -260,51 +268,54 @@ const CreateProject = () => {
   const yTotal = (y) => yearTotal(form.budget, y, meta.budgetHeads);
   const gTotal = grandTotal(form.budget, meta.budgetHeads, budgetYears);
 
-  const renderStep = () => {
+  const required = <span className="req" aria-hidden="true">*</span>;
+  const namedMilestones = form.milestones.filter(m => m.name);
+
+  // Each step is one panel: its title and purpose in the head, its groups as
+  // sections. step.actions sits in the head, at the right.
+  const step = (() => {
     switch (currentStep) {
-      case 0: return (
-        <div className="cp-step-content">
-          <div className="cp-step-header">
-            <h2><i className="fa fa-info-circle"></i> Step 1: Basic Information</h2>
-            <p>Initialize your research project by providing the mandatory core administrative details.</p>
-          </div>
+      case 0: return {
+        title: 'Step 1: Basic information',
+        description: 'Initialize your research project by providing the mandatory core administrative details.',
+        body: (
           <div className="cp-form-grid">
             <div className="cp-field full">
-              <label htmlFor="create-project-project-title">Project Title <span className="req">*</span></label>
-              <input id="create-project-project-title" type="text" value={form.title} onChange={e => updateField('title', e.target.value)} placeholder="Enter the full formal title of the research project" />
+              <label htmlFor="create-project-project-title">Project title {required}</label>
+              <input id="create-project-project-title" type="text" aria-required="true" value={form.title} onChange={e => updateField('title', e.target.value)} placeholder="Enter the full formal title of the research project" />
             </div>
             <div className="cp-field">
-              <label htmlFor="create-project-category">Category <span className="req">*</span></label>
-              <select id="create-project-category" value={form.category} onChange={e => updateField('category', e.target.value)}>
+              <label htmlFor="create-project-category">Category {required}</label>
+              <select id="create-project-category" aria-required="true" value={form.category} onChange={e => updateField('category', e.target.value)}>
                 <option value="">Select category</option>
                 {categoryOptions.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div className="cp-field">
-              <label htmlFor="create-project-funding-agency">Funding Agency <span className="req">*</span></label>
-              <input id="create-project-funding-agency" type="text" value={form.fundingAgency} onChange={e => updateField('fundingAgency', e.target.value)} placeholder="e.g. DST, CSIR, ISRO" />
+              <label htmlFor="create-project-funding-agency">Funding agency {required}</label>
+              <input id="create-project-funding-agency" type="text" aria-required="true" value={form.fundingAgency} onChange={e => updateField('fundingAgency', e.target.value)} placeholder="e.g. DST, CSIR, ISRO" />
             </div>
             <div className="cp-field">
-              <label htmlFor="create-project-focus-area">Focus Area</label>
+              <label htmlFor="create-project-focus-area">Focus area</label>
               <input id="create-project-focus-area" type="text" value={form.focusArea} onChange={e => updateField('focusArea', e.target.value)} placeholder="e.g. AI/ML & IoT" />
             </div>
             <div className="cp-field">
-              <label htmlFor="create-project-grant-type">Grant Type</label>
+              <label htmlFor="create-project-grant-type">Grant type</label>
               <input id="create-project-grant-type" type="text" value={form.grantType} onChange={e => updateField('grantType', e.target.value)} placeholder="e.g. CRG (Core Research Grant)" />
             </div>
             <div className="cp-field full">
-              <label htmlFor="create-project-project-description">Project Description</label>
+              <label htmlFor="create-project-project-description">Project description</label>
               <textarea id="create-project-project-description" rows="4" value={form.description} onChange={e => updateField('description', e.target.value)} placeholder="Provide a brief abstract or summary of the research objectives and expected outcomes..." maxLength={2000} />
               <span className="cp-char-count">{form.description.length} / 2000 characters</span>
             </div>
             <div className="cp-field">
-              <label htmlFor="create-project-start-date">Start Date <span className="req">*</span></label>
-              <input id="create-project-start-date" type="date" value={form.startDate} onChange={e => updateField('startDate', e.target.value)} />
+              <label htmlFor="create-project-start-date">Start date {required}</label>
+              <input id="create-project-start-date" type="date" aria-required="true" value={form.startDate} onChange={e => updateField('startDate', e.target.value)} />
             </div>
             <div className="cp-field">
-              <label htmlFor="create-project-duration">Duration <span className="req">*</span></label>
+              <label htmlFor="create-project-duration">Duration {required}</label>
               <div className="cp-duration-pair">
-                <select id="create-project-duration" value={form.durationYears} onChange={e => updateField('durationYears', e.target.value)} aria-label="Duration in years">
+                <select id="create-project-duration" aria-required="true" value={form.durationYears} onChange={e => updateField('durationYears', e.target.value)} aria-label="Duration in years">
                   {meta.duration.years.map(y => <option key={y} value={y}>{y} {y === 1 ? 'Year' : 'Years'}</option>)}
                 </select>
                 <select value={form.durationMonths} onChange={e => updateField('durationMonths', e.target.value)} aria-label="Additional months">
@@ -316,358 +327,352 @@ const CreateProject = () => {
               <span className="cp-duration-preview">{formatDuration(form.durationYears, form.durationMonths)}</span>
             </div>
             {form.endDate && (
-              <div className="cp-field">
-                <label htmlFor="create-project-end-date">End Date</label>
-                <input id="create-project-end-date" type="date" value={form.endDate} readOnly className="cp-readonly" />
+              <div className="cp-field input-field-container">
+                <label htmlFor="create-project-end-date">End date</label>
+                <input id="create-project-end-date" type="date" value={form.endDate} readOnly className="field-readonly" />
               </div>
             )}
           </div>
-        </div>
-      );
+        ),
+      };
 
-      case 1: return (
-        <div className="cp-step-content">
-          <div className="cp-step-header">
-            <h2><i className="fa fa-users"></i> Step 2: PI / Co-PI Information</h2>
-            <p>Define the project team structure and investigators.</p>
-          </div>
-          {/* PI Section */}
-          <div className="cp-section-card">
-            <h3 className="cp-section-title">Principal Investigator</h3>
-            {pi ? (
-              <div className="cp-pi-card">
-                <div className="cp-pi-avatar">{pi.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</div>
-                <div className="cp-pi-info">
-                  <h4><FacultyLink code={pi.id} name={pi.name} /></h4>
-                  <p className="cp-pi-dept">{pi.department}</p>
-                  <p className="cp-pi-meta">{pi.designation}</p>
+      case 1: return {
+        title: 'Step 2: PI / Co-PI information',
+        description: 'Define the project team structure and investigators.',
+        body: (
+          <>
+            <PanelSection title="Principal investigator">
+              {pi ? (
+                <div className="cp-person">
+                  <div className="cp-avatar" aria-hidden="true">{pi.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</div>
+                  <div className="cp-person-info">
+                    <p className="cp-person-name"><FacultyLink code={pi.id} name={pi.name} /></p>
+                    <p className="cp-person-dept">{pi.department}</p>
+                    <p className="cp-person-meta">{pi.designation}</p>
+                  </div>
+                  <span className="badge badge--accent cp-person-role">PI</span>
                 </div>
-                <span className="badge badge--accent">PI</span>
-              </div>
-            ) : (
-              <p className="cp-pi-none">No faculty record is linked to your account, so no PI can be set.</p>
-            )}
-            <div className="cp-form-grid">
-              <div className="cp-field">
-                <label htmlFor="create-project-role-on-this-project">Role on this project</label>
-                <select id="create-project-role-on-this-project" value={form.role} onChange={e => updateField('role', e.target.value)}>
-                  {roleOptions.map(r => <option key={r} value={r}>{r}</option>)}
-                </select>
-              </div>
-            </div>
-          </div>
-          {/* Co-PIs */}
-          <div className="cp-section-card">
-            <div className="cp-section-header-row">
-              <h3 className="cp-section-title">Co-Investigators</h3>
-              <button className="inline-add-btn" onClick={() => setShowExtForm(!showExtForm)}>
-                <i className="fa fa-plus"></i> Add External Co-PI
-              </button>
-            </div>
-            {/* Internal Search */}
-            <div className="cp-copi-search">
-              <InputSuggestions
-                apiUrl={`${baseURL}/suggestions/faculty`}
-                label="Search Internal Faculty"
-                hint="Type faculty name, code or email..."
-                fields={['name', 'department']}
-                onSelect={addInternalCopi}
-              />
-            </div>
-            {/* External Form */}
-            {showExtForm && (
-              <div className="cp-ext-form">
-                <div className="cp-ext-header"><span className="cp-ext-label">External Partner</span></div>
-                <div className="cp-form-grid">
-                  <div className="cp-field"><label htmlFor="create-project-full-name">Full Name</label><input id="create-project-full-name" type="text" value={extCopi.name} onChange={e => setExtCopi({...extCopi, name: e.target.value})} placeholder="e.g. Prof. Robert Miller" /></div>
-                  <div className="cp-field"><label htmlFor="create-project-designation">Designation</label><input id="create-project-designation" type="text" value={extCopi.designation} onChange={e => setExtCopi({...extCopi, designation: e.target.value})} placeholder="e.g. Associate Professor" /></div>
-                  <div className="cp-field full"><label htmlFor="create-project-institute-organization">Institute / Organization</label><input id="create-project-institute-organization" type="text" value={extCopi.institute} onChange={e => setExtCopi({...extCopi, institute: e.target.value})} placeholder="e.g. MIT, Cambridge" /></div>
-                  <div className="cp-field"><label htmlFor="create-project-email-address">Email Address</label><input id="create-project-email-address" type="email" value={extCopi.email} onChange={e => setExtCopi({...extCopi, email: e.target.value})} /></div>
-                  <div className="cp-field"><label htmlFor="create-project-mobile-number">Mobile Number</label><input id="create-project-mobile-number" type="text" value={extCopi.mobile} onChange={e => setExtCopi({...extCopi, mobile: e.target.value})} /></div>
-                  <div className="cp-field full"><label htmlFor="create-project-website">Website</label><input id="create-project-website" type="url" value={extCopi.website} onChange={e => setExtCopi({...extCopi, website: e.target.value})} /></div>
-                </div>
-                <div className="cp-ext-actions">
-                  <button className="cp-btn-outline" onClick={() => setShowExtForm(false)}>Cancel</button>
-                  <button className="cp-btn-primary" onClick={addExternalCopi}>Save Co-PI</button>
+              ) : (
+                <p className="cp-muted">No faculty record is linked to your account, so no PI can be set.</p>
+              )}
+              <div className="cp-form-grid cp-after">
+                <div className="cp-field">
+                  <label htmlFor="create-project-role-on-this-project">Role on this project</label>
+                  <select id="create-project-role-on-this-project" value={form.role} onChange={e => updateField('role', e.target.value)}>
+                    {roleOptions.map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
                 </div>
               </div>
-            )}
-            {/* Co-PI List */}
-            {form.coPIs.map((c, i) => (
-              <div key={i} className="cp-copi-row">
-                <div className="cp-copi-avatar">{c.name.split(' ').map(n => n[0]).join('').slice(0,2)}</div>
-                <div className="cp-copi-info">
-                  <strong>{c.name}</strong>
-                  <span>{c.type === 'internal' ? c.department : c.institute} &middot; {c.type === 'internal' ? 'Internal' : 'External'}</span>
+            </PanelSection>
+            <PanelSection
+              title="Co-investigators"
+              actions={<CustomButton text="Add external Co-PI" variant="secondary" size="sm" onClick={() => setShowExtForm(!showExtForm)} />}
+            >
+              <div className="cp-copi-search">
+                <InputSuggestions
+                  apiUrl={`${baseURL}/suggestions/faculty`}
+                  label="Search internal faculty"
+                  hint="Type faculty name, code or email..."
+                  fields={['name', 'department']}
+                  onSelect={addInternalCopi}
+                />
+              </div>
+              {showExtForm && (
+                <div className="cp-ext-form">
+                  <p className="cp-ext-header"><span className="badge badge--purple">External partner</span></p>
+                  <div className="cp-form-grid">
+                    <div className="cp-field"><label htmlFor="create-project-full-name">Full name</label><input id="create-project-full-name" type="text" value={extCopi.name} onChange={e => setExtCopi({...extCopi, name: e.target.value})} placeholder="e.g. Prof. Robert Miller" /></div>
+                    <div className="cp-field"><label htmlFor="create-project-designation">Designation</label><input id="create-project-designation" type="text" value={extCopi.designation} onChange={e => setExtCopi({...extCopi, designation: e.target.value})} placeholder="e.g. Associate Professor" /></div>
+                    <div className="cp-field full"><label htmlFor="create-project-institute-organization">Institute / Organization</label><input id="create-project-institute-organization" type="text" value={extCopi.institute} onChange={e => setExtCopi({...extCopi, institute: e.target.value})} placeholder="e.g. MIT, Cambridge" /></div>
+                    <div className="cp-field"><label htmlFor="create-project-email-address">Email address</label><input id="create-project-email-address" type="email" value={extCopi.email} onChange={e => setExtCopi({...extCopi, email: e.target.value})} /></div>
+                    <div className="cp-field"><label htmlFor="create-project-mobile-number">Mobile number</label><input id="create-project-mobile-number" type="text" value={extCopi.mobile} onChange={e => setExtCopi({...extCopi, mobile: e.target.value})} /></div>
+                    <div className="cp-field full"><label htmlFor="create-project-website">Website</label><input id="create-project-website" type="url" value={extCopi.website} onChange={e => setExtCopi({...extCopi, website: e.target.value})} /></div>
+                  </div>
+                  <div className="cp-inline-actions">
+                    <CustomButton text="Save Co-PI" variant="secondary" size="sm" onClick={addExternalCopi} />
+                    <CustomButton text="Cancel" variant="quiet" size="sm" onClick={() => setShowExtForm(false)} />
+                  </div>
                 </div>
-                <button className="cp-remove-btn" onClick={() => removeCopi(i)}><i className="fa fa-trash"></i></button>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-
-      case 2: return (
-        <div className="cp-step-content">
-          <div className="cp-step-header">
-            <h2><i className="fa fa-inr"></i> Step 3: Funding Details</h2>
-            <p>Configure the project budget and funding breakdown.</p>
-          </div>
-          <div className="cp-section-card">
-            <h3 className="cp-section-title">Funding Information</h3>
-            <div className="cp-form-grid">
-              <div className="cp-field"><label htmlFor="create-project-funding-agency-2">Funding Agency</label><input id="create-project-funding-agency-2" type="text" value={form.fundingAgency} readOnly className="cp-readonly" /></div>
-              <div className="cp-field"><label htmlFor="create-project-total-sanctioned-amount">Total Sanctioned Amount (₹)</label><input id="create-project-total-sanctioned-amount" type="number" value={form.sanctionAmount} onChange={e => updateField('sanctionAmount', e.target.value)} placeholder="e.g. 4850000" /></div>
-              <div className="cp-field"><label htmlFor="create-project-tiet-share">TIET Share (₹)</label><input id="create-project-tiet-share" type="number" value={form.tietShare} onChange={e => updateField('tietShare', e.target.value)} /></div>
-              <div className="cp-field"><label htmlFor="create-project-sanction-letter-link">Sanction Letter Link</label><input id="create-project-sanction-letter-link" type="url" value={form.sanctionLetterLink} onChange={e => updateField('sanctionLetterLink', e.target.value)} placeholder="https://..." /></div>
-              <div className="cp-field">
-                <label htmlFor="create-project-sanction-letter-upload">Sanction Letter Upload</label>
-                <input id="create-project-sanction-letter-upload" type="file" accept=".pdf,.doc,.docx" ref={sanctionRef} onChange={handleSanctionFile} />
-                {form.sanctionLetterFileName && <span className="cp-file-hint"><i className="fa fa-check-circle"></i> {form.sanctionLetterFileName}</span>}
-              </div>
-            </div>
-          </div>
-          <ProjectBudgetStep budget={form.budget} years={budgetYears} meta={meta} onChange={(next) => setForm(prev => ({ ...prev, budget: next }))} />
-        </div>
-      );
-
-      case 3: return (
-        <div className="cp-step-content">
-          <div className="cp-step-header">
-            <h2><i className="fa fa-bullseye"></i> Step 4: Research Objectives</h2>
-            <p>Define clear, measurable goals and the SDGs this project contributes to.</p>
-          </div>
-          <div className="cp-section-card">
-            <div className="cp-section-header-row">
-              <h3 className="cp-section-title">Objectives</h3>
-              <button className="inline-add-btn" onClick={() => setForm(p => ({ ...p, objectives: [...p.objectives, ''] }))}>
-                <i className="fa fa-plus"></i> Add Objective
-              </button>
-            </div>
-            <div className="cp-obj-list">
-              {form.objectives.map((obj, i) => (
-                <div key={i} className="cp-obj-row">
-                  <span className="cp-obj-num">{i + 1}</span>
-                  <input
-                    type="text" value={obj} maxLength={500}
-                    placeholder="To develop ABC so as to improve XYZ."
-                    onChange={e => setForm(p => ({ ...p, objectives: p.objectives.map((o, j) => (j === i ? e.target.value : o)) }))}
-                  />
-                  <button
-                    type="button" className="cp-remove-btn" title="Remove objective"
-                    disabled={form.objectives.length === 1}
-                    onClick={() => setForm(p => ({ ...p, objectives: p.objectives.filter((_, j) => j !== i) }))}
-                  >
-                    <i className="fa fa-trash"></i>
-                  </button>
+              )}
+              {form.coPIs.map((c, i) => (
+                <div key={i} className="cp-person cp-copi-row">
+                  <div className="cp-avatar" aria-hidden="true">{c.name.split(' ').map(n => n[0]).join('').slice(0,2)}</div>
+                  <div className="cp-person-info">
+                    <p className="cp-person-name">{c.name}</p>
+                    <p className="cp-person-meta">{c.type === 'internal' ? c.department : c.institute} &middot; {c.type === 'internal' ? 'Internal' : 'External'}</p>
+                  </div>
+                  <button type="button" className="cp-remove-btn" onClick={() => removeCopi(i)} title="Remove Co-PI" aria-label={`Remove ${c.name}`}><i className="fa fa-trash" aria-hidden="true"></i></button>
                 </div>
               ))}
-            </div>
-          </div>
-          <div className="cp-section-card">
-            <div className="cp-section-header-row">
-              <h3 className="cp-section-title">Sustainable Development Goals</h3>
-              <span className="cp-sdg-count">{form.sdgs.length} selected</span>
-            </div>
-            <div className="cp-sdg-grid">
-              {meta.sdgs.map(g => (
-                <label key={g.id} className={`cp-sdg-item${form.sdgs.includes(g.id) ? ' selected' : ''}`}>
-                  <input
-                    type="checkbox"
-                    checked={form.sdgs.includes(g.id)}
-                    onChange={() => updateField('sdgs', form.sdgs.includes(g.id)
-                      ? form.sdgs.filter(id => id !== g.id)
-                      : [...form.sdgs, g.id].sort((a, b) => a - b))}
-                  />
-                  <span className="cp-sdg-num">{g.id}</span>
-                  <span className="cp-sdg-label">{g.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-        </div>
-      );
+            </PanelSection>
+          </>
+        ),
+      };
 
-      case 4: return (
-        <div className="cp-step-content">
-          <div className="cp-step-header">
-            <div>
-              <h2><i className="fa fa-flag"></i> Step 5: Project Milestones</h2>
-              <p>Track timeline and deliverables.</p>
-            </div>
-            <div className="cp-progress-badge">
-              <span className="cp-progress-label">PROPOSAL COMPLETION</span>
-              <div className="cp-progress-bar-mini">
-                <div className="cp-progress-fill-mini" style={{width: `${milestoneProgress()}%`}}></div>
+      case 2: return {
+        title: 'Step 3: Funding details',
+        description: 'Configure the project budget and funding breakdown.',
+        body: (
+          <>
+            <PanelSection title="Funding information">
+              <div className="cp-form-grid">
+                <div className="cp-field input-field-container"><label htmlFor="create-project-funding-agency-2">Funding agency</label><input id="create-project-funding-agency-2" type="text" value={form.fundingAgency} readOnly className="field-readonly" /></div>
+                <div className="cp-field"><label htmlFor="create-project-total-sanctioned-amount">Total sanctioned amount (₹)</label><input id="create-project-total-sanctioned-amount" type="number" value={form.sanctionAmount} onChange={e => updateField('sanctionAmount', e.target.value)} placeholder="e.g. 4850000" /></div>
+                <div className="cp-field"><label htmlFor="create-project-tiet-share">TIET share (₹)</label><input id="create-project-tiet-share" type="number" value={form.tietShare} onChange={e => updateField('tietShare', e.target.value)} /></div>
+                <div className="cp-field"><label htmlFor="create-project-sanction-letter-link">Sanction letter link</label><input id="create-project-sanction-letter-link" type="url" value={form.sanctionLetterLink} onChange={e => updateField('sanctionLetterLink', e.target.value)} placeholder="https://..." /></div>
+                <div className="cp-field">
+                  <label htmlFor="create-project-sanction-letter-upload">Sanction letter upload</label>
+                  <input id="create-project-sanction-letter-upload" type="file" accept=".pdf,.doc,.docx" ref={sanctionRef} onChange={handleSanctionFile} />
+                  {form.sanctionLetterFileName && <span className="cp-file-hint"><i className="fa fa-check-circle" aria-hidden="true"></i> {form.sanctionLetterFileName}</span>}
+                </div>
               </div>
-              <span className="cp-progress-pct">{milestoneProgress()}% Structured</span>
-            </div>
-          </div>
-          <div className="cp-section-card">
-            <h3 className="cp-section-title">Gantt Chart</h3>
-            <p className="cp-derived-note">The schedule behind the milestones below. PDF, image, spreadsheet or document, up to 10 MB.</p>
-            <div className="cp-field">
-              <input
-                type="file" accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls,.doc,.docx" ref={ganttRef}
-                onChange={e => {
-                  const file = e.target.files[0];
-                  if (file) setForm(p => ({ ...p, ganttFile: file, ganttFileName: file.name }));
-                }}
-              />
-              {form.ganttFileName && <span className="cp-file-hint"><i className="fa fa-check-circle"></i> {form.ganttFileName}</span>}
-            </div>
-          </div>
-          <div className="cp-section-card">
-            <table className="cp-milestone-table">
-              <thead>
-                <tr><th>Milestone</th><th>Deliverable</th><th>Due Date</th><th>Status</th><th>Action</th></tr>
-              </thead>
-              <tbody>
-                {form.milestones.map((m, i) => (
-                  <tr key={i}>
-                    <td><input type="text" value={m.name} onChange={e => updateMilestone(i, 'name', e.target.value)} placeholder="e.g. Literature Review" /></td>
-                    <td><input type="text" value={m.deliverable} onChange={e => updateMilestone(i, 'deliverable', e.target.value)} placeholder="e.g. Draft Summary Report" /></td>
-                    <td><input type="date" value={m.dueDate} onChange={e => updateMilestone(i, 'dueDate', e.target.value)} /></td>
-                    <td>
-                      <select value={m.status} onChange={e => updateMilestone(i, 'status', e.target.value)} className={`cp-ms-status ${m.status.toLowerCase().replace(' ', '-')}`}>
-                        {milestoneStatusOptions.map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                    </td>
-                    <td>
-                      {form.milestones.length > 1 && <button className="cp-remove-btn" onClick={() => removeMilestone(i)}><i className="fa fa-trash"></i></button>}
-                    </td>
-                  </tr>
+            </PanelSection>
+            <ProjectBudgetStep budget={form.budget} years={budgetYears} meta={meta} onChange={(next) => setForm(prev => ({ ...prev, budget: next }))} />
+          </>
+        ),
+      };
+
+      case 3: return {
+        title: 'Step 4: Research objectives',
+        description: 'Define clear, measurable goals and the SDGs this project contributes to.',
+        body: (
+          <>
+            <PanelSection
+              title="Objectives"
+              actions={<CustomButton text="Add objective" variant="secondary" size="sm" onClick={() => setForm(p => ({ ...p, objectives: [...p.objectives, ''] }))} />}
+            >
+              <div className="cp-obj-list">
+                {form.objectives.map((obj, i) => (
+                  <div key={i} className="cp-obj-row">
+                    <span className="cp-obj-num" aria-hidden="true">{i + 1}</span>
+                    <input
+                      type="text" value={obj} maxLength={500}
+                      aria-label={`Objective ${i + 1}`}
+                      placeholder="To develop ABC so as to improve XYZ."
+                      onChange={e => setForm(p => ({ ...p, objectives: p.objectives.map((o, j) => (j === i ? e.target.value : o)) }))}
+                    />
+                    <button
+                      type="button" className="cp-remove-btn" title="Remove objective" aria-label={`Remove objective ${i + 1}`}
+                      disabled={form.objectives.length === 1}
+                      onClick={() => setForm(p => ({ ...p, objectives: p.objectives.filter((_, j) => j !== i) }))}
+                    >
+                      <i className="fa fa-trash" aria-hidden="true"></i>
+                    </button>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-            <button className="cp-add-row-btn" onClick={addMilestone}><i className="fa fa-plus"></i> Add Milestone Row</button>
-          </div>
-        </div>
-      );
+              </div>
+            </PanelSection>
+            <PanelSection
+              title="Sustainable development goals"
+              actions={<span className="cp-sdg-count">{form.sdgs.length} selected</span>}
+            >
+              <div className="cp-sdg-grid">
+                {meta.sdgs.map(g => (
+                  <label key={g.id} className={`cp-sdg-item${form.sdgs.includes(g.id) ? ' selected' : ''}`}>
+                    <input
+                      type="checkbox"
+                      checked={form.sdgs.includes(g.id)}
+                      onChange={() => updateField('sdgs', form.sdgs.includes(g.id)
+                        ? form.sdgs.filter(id => id !== g.id)
+                        : [...form.sdgs, g.id].sort((a, b) => a - b))}
+                    />
+                    <span className="cp-sdg-num">{g.id}</span>
+                    <span className="cp-sdg-label">{g.label}</span>
+                  </label>
+                ))}
+              </div>
+            </PanelSection>
+          </>
+        ),
+      };
 
-      case 5: return (
-        <div className="cp-step-content">
-          <div className="cp-step-header">
-            <h2><i className="fa fa-check-square"></i> Step 6: Review & Submit</h2>
-            <p>Review all details before submission.</p>
+      case 4: return {
+        title: 'Step 5: Project milestones',
+        description: 'Track timeline and deliverables.',
+        actions: (
+          <div className="cp-progress">
+            <span className="cp-progress-label">Proposal completion</span>
+            <div className="cp-progress-track" aria-hidden="true">
+              <div className="cp-progress-fill" style={{width: `${milestoneProgress()}%`}}></div>
+            </div>
+            <span className="cp-progress-pct">{milestoneProgress()}% Structured</span>
           </div>
+        ),
+        body: (
+          <>
+            <PanelSection title="Gantt chart" description="The schedule behind the milestones below. PDF, image, spreadsheet or document, up to 10 MB.">
+              <div className="cp-field">
+                <input
+                  type="file" accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls,.doc,.docx" ref={ganttRef}
+                  aria-label="Gantt chart file"
+                  onChange={e => {
+                    const file = e.target.files[0];
+                    if (file) setForm(p => ({ ...p, ganttFile: file, ganttFileName: file.name }));
+                  }}
+                />
+                {form.ganttFileName && <span className="cp-file-hint"><i className="fa fa-check-circle" aria-hidden="true"></i> {form.ganttFileName}</span>}
+              </div>
+            </PanelSection>
+            <PanelSection title="Milestones">
+              <div className="cp-table-wrap">
+                <table className="data-table cp-milestone-table">
+                  <thead>
+                    <tr><th>Milestone</th><th>Deliverable</th><th>Due date</th><th>Status</th><th>Action</th></tr>
+                  </thead>
+                  <tbody>
+                    {form.milestones.map((m, i) => (
+                      <tr key={i}>
+                        <td><input type="text" aria-label={`Milestone ${i + 1} name`} value={m.name} onChange={e => updateMilestone(i, 'name', e.target.value)} placeholder="e.g. Literature Review" /></td>
+                        <td><input type="text" aria-label={`Milestone ${i + 1} deliverable`} value={m.deliverable} onChange={e => updateMilestone(i, 'deliverable', e.target.value)} placeholder="e.g. Draft Summary Report" /></td>
+                        <td><input type="date" aria-label={`Milestone ${i + 1} due date`} value={m.dueDate} onChange={e => updateMilestone(i, 'dueDate', e.target.value)} /></td>
+                        <td>
+                          <select aria-label={`Milestone ${i + 1} status`} value={m.status} onChange={e => updateMilestone(i, 'status', e.target.value)} className="cp-ms-status">
+                            {milestoneStatusOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                        </td>
+                        <td>
+                          {form.milestones.length > 1 && <button type="button" className="cp-remove-btn" onClick={() => removeMilestone(i)} title="Remove milestone" aria-label={`Remove milestone ${i + 1}`}><i className="fa fa-trash" aria-hidden="true"></i></button>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <button type="button" className="cp-add-row-btn" onClick={addMilestone}><i className="fa fa-plus" aria-hidden="true"></i> Add milestone row</button>
+            </PanelSection>
+          </>
+        ),
+      };
+
+      case 5: return {
+        title: 'Step 6: Review and submit',
+        description: 'Review all details before submission.',
+        body: (
           <div className="cp-review-grid">
-            <div className="cp-review-card" style={{ gridColumn: '1 / -1' }}>
-              <h4>Basic Information</h4>
-              <div className="cp-review-row"><span>Title</span><strong>{form.title || EMPTY_VALUE}</strong></div>
-              <div className="cp-review-row"><span>Category</span><strong>{form.category || EMPTY_VALUE}</strong></div>
-              <div className="cp-review-row"><span>Funding Agency</span><strong>{form.fundingAgency || EMPTY_VALUE}</strong></div>
-              <div className="cp-review-row"><span>Duration</span><strong>{formatDuration(form.durationYears, form.durationMonths)}{form.startDate ? ` · ${formatDate(form.startDate)} to ${formatDate(form.endDate)}` : ''}</strong></div>
-              <div className="cp-review-row"><span>SDGs</span><strong>{form.sdgs.length ? form.sdgs.map(id => (meta.sdgs.find(g => g.id === id) || {}).label).filter(Boolean).join(', ') : EMPTY_VALUE}</strong></div>
-              <div className="cp-review-row"><span>Description</span><strong style={{ textAlign: 'right', maxWidth: '75%', fontWeight: '500', fontSize: '0.8rem', lineHeight: '1.4' }}>{form.description ? (form.description.length > 150 ? form.description.substring(0, 150) + '...' : form.description) : EMPTY_VALUE}</strong></div>
-            </div>
-            <div className="cp-review-card">
-              <h4>Team</h4>
-              <div className="cp-review-row"><span>PI</span><strong>{pi ? pi.name : EMPTY_VALUE}</strong></div>
-              <div className="cp-review-row"><span>Your Role</span><strong>{form.role || EMPTY_VALUE}</strong></div>
-              {form.coPIs.length > 0 ? (
-                form.coPIs.map((copi, idx) => (
-                  <div key={idx} className="cp-review-row">
-                    <span>Co-PI {idx + 1}</span>
-                    <strong>{copi.name} ({copi.type === 'internal' ? 'Int' : 'Ext'})</strong>
-                  </div>
-                ))
-              ) : (
-                <div className="cp-review-row"><span>Co-PIs</span><strong>None</strong></div>
-              )}
-            </div>
-            <div className="cp-review-card">
-              <h4>Funding</h4>
-              <div className="cp-review-row"><span>Sanctioned</span><strong>₹{parseInt(form.sanctionAmount || 0).toLocaleString('en-IN')}</strong></div>
-              <div className="cp-review-row"><span>TIET Share</span><strong>₹{parseInt(form.tietShare || 0).toLocaleString('en-IN')}</strong></div>
-              {budgetYears.map((y, i) => (
-                <div key={y} className="cp-review-row"><span>Year {i + 1} Budget</span><strong>₹{yTotal(y).toLocaleString('en-IN')}</strong></div>
-              ))}
-              <div className="cp-review-row"><span>Total Budget</span><strong>₹{gTotal.toLocaleString('en-IN')}</strong></div>
-            </div>
-            <div className="cp-review-card">
-              <h4>Objectives</h4>
-              <div className="cp-review-row"><span>Objectives</span><strong>{form.objectives.filter(o => o.trim()).length} listed</strong></div>
-            </div>
-            <div className="cp-review-card">
-              <h4>Milestones</h4>
-              <div className="cp-review-row"><span>Overall Progress</span><strong>{milestoneProgress()}%</strong></div>
-              {form.milestones.filter(m => m.name).length > 0 ? (
-                form.milestones.filter(m => m.name).slice(0, 3).map((ms, idx) => (
-                  <div key={idx} className="cp-review-row">
-                    <span style={{ maxWidth: '60%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ms.name}</span>
-                    <strong>{ms.status}</strong>
-                  </div>
-                ))
-              ) : (
-                <div className="cp-review-row"><span>Milestones</span><strong>None</strong></div>
-              )}
-              {form.milestones.filter(m => m.name).length > 3 && (
-                <div className="cp-review-row"><span></span><strong>+{form.milestones.filter(m => m.name).length - 3} more</strong></div>
-              )}
-            </div>
+            <section className="cp-review-block full">
+              <h3 className="panel-section-title">Basic information</h3>
+              <dl className="kv">
+                <div><dt>Title</dt><dd>{form.title || EMPTY_VALUE}</dd></div>
+                <div><dt>Category</dt><dd>{form.category || EMPTY_VALUE}</dd></div>
+                <div><dt>Funding agency</dt><dd>{form.fundingAgency || EMPTY_VALUE}</dd></div>
+                <div><dt>Duration</dt><dd>{formatDuration(form.durationYears, form.durationMonths)}{form.startDate ? ` · ${formatDate(form.startDate)} to ${formatDate(form.endDate)}` : ''}</dd></div>
+                <div><dt>SDGs</dt><dd>{form.sdgs.length ? form.sdgs.map(id => (meta.sdgs.find(g => g.id === id) || {}).label).filter(Boolean).join(', ') : EMPTY_VALUE}</dd></div>
+                <div><dt>Description</dt><dd className="cp-review-long">{form.description ? (form.description.length > 150 ? form.description.substring(0, 150) + '...' : form.description) : EMPTY_VALUE}</dd></div>
+              </dl>
+            </section>
+            <section className="cp-review-block">
+              <h3 className="panel-section-title">Team</h3>
+              <dl className="kv">
+                <div><dt>PI</dt><dd>{pi ? pi.name : EMPTY_VALUE}</dd></div>
+                <div><dt>Your role</dt><dd>{form.role || EMPTY_VALUE}</dd></div>
+                {form.coPIs.length > 0 ? (
+                  form.coPIs.map((copi, idx) => (
+                    <div key={idx}>
+                      <dt>Co-PI {idx + 1}</dt>
+                      <dd>{copi.name} ({copi.type === 'internal' ? 'Int' : 'Ext'})</dd>
+                    </div>
+                  ))
+                ) : (
+                  <div><dt>Co-PIs</dt><dd>None</dd></div>
+                )}
+              </dl>
+            </section>
+            <section className="cp-review-block">
+              <h3 className="panel-section-title">Funding</h3>
+              <dl className="kv">
+                <div><dt>Sanctioned</dt><dd>₹{parseInt(form.sanctionAmount || 0).toLocaleString('en-IN')}</dd></div>
+                <div><dt>TIET share</dt><dd>₹{parseInt(form.tietShare || 0).toLocaleString('en-IN')}</dd></div>
+                {budgetYears.map((y, i) => (
+                  <div key={y}><dt>Year {i + 1} budget</dt><dd>₹{yTotal(y).toLocaleString('en-IN')}</dd></div>
+                ))}
+                <div><dt>Total budget</dt><dd>₹{gTotal.toLocaleString('en-IN')}</dd></div>
+              </dl>
+            </section>
+            <section className="cp-review-block">
+              <h3 className="panel-section-title">Objectives</h3>
+              <dl className="kv">
+                <div><dt>Objectives</dt><dd>{form.objectives.filter(o => o.trim()).length} listed</dd></div>
+              </dl>
+            </section>
+            <section className="cp-review-block">
+              <h3 className="panel-section-title">Milestones</h3>
+              <dl className="kv">
+                <div><dt>Overall progress</dt><dd>{milestoneProgress()}%</dd></div>
+                {namedMilestones.length > 0 ? (
+                  namedMilestones.slice(0, 3).map((ms, idx) => (
+                    <div key={idx}>
+                      <dt className="cp-review-clip">{ms.name}</dt>
+                      <dd>{ms.status}</dd>
+                    </div>
+                  ))
+                ) : (
+                  <div><dt>Milestones</dt><dd>None</dd></div>
+                )}
+                {namedMilestones.length > 3 && (
+                  <div><dt></dt><dd>+{namedMilestones.length - 3} more</dd></div>
+                )}
+              </dl>
+            </section>
           </div>
-        </div>
-      );
+        ),
+      };
 
       default: return null;
     }
-  };
+  })();
 
-  return (
-    <div className="cp-container">
-      <button className="page-back-link" onClick={leave}>
-        <i className="fa fa-arrow-left"></i> BACK TO PROJECTS
-      </button>
-      <div className="cp-wizard-header">
-        <h1 className="page-title">{isEditMode ? 'Edit Project' : 'Create New Project Proposal'}</h1>
-        <span className="cp-draft-badge">{isEditMode ? 'EDITING' : 'DRAFT'}</span>
-      </div>
-      {/* Stepper */}
+  const stepNav = (
+    <>
+      {currentStep > 0 && (
+        <CustomButton text="Previous step" variant="quiet" onClick={() => setCurrentStep(currentStep - 1)} />
+      )}
+      {currentStep < STEPS.length - 1 ? (
+        <CustomButton text="Continue" className="cp-nav-next" onClick={() => setCurrentStep(currentStep + 1)} />
+      ) : (
+        <CustomButton text={isEditMode ? 'Save changes' : 'Submit'} className="cp-nav-next" onClick={handleSubmit} disabled={submitting} />
+      )}
+    </>
+  );
+
+  const stepper = (
+    <nav className="cp-stepper-wrap" aria-label="Proposal steps">
       <div className="cp-stepper">
-        {STEPS.map((step, i) => (
-          <React.Fragment key={step}>
+        {STEPS.map((stepName, i) => (
+          <React.Fragment key={stepName}>
             <button
               type="button"
               className={`cp-step-dot ${i < currentStep ? 'done' : ''} ${i === currentStep ? 'active' : ''}`}
               onClick={() => setCurrentStep(i)}
               aria-current={i === currentStep ? 'step' : undefined}
-              aria-label={`Step ${i + 1}: ${step}`}
+              aria-label={`Step ${i + 1}: ${stepName}`}
             >
-              {i < currentStep ? <i className="fa fa-check"></i> : <span>{String(i + 1).padStart(2, '0')}</span>}
+              {i < currentStep ? <i className="fa fa-check" aria-hidden="true"></i> : <span>{String(i + 1).padStart(2, '0')}</span>}
             </button>
             {i < STEPS.length - 1 && <div className={`cp-step-line ${i < currentStep ? 'done' : ''}`}></div>}
           </React.Fragment>
         ))}
       </div>
-      <div className="cp-step-labels">
-        {STEPS.map((step, i) => (
-          <span key={step} className={`cp-step-label ${i === currentStep ? 'active' : ''}`}>{step}</span>
+      <div className="cp-step-labels" aria-hidden="true">
+        {STEPS.map((stepName, i) => (
+          <span key={stepName} className={`cp-step-label ${i === currentStep ? 'active' : ''}`}>{stepName}</span>
         ))}
       </div>
+    </nav>
+  );
 
-      {renderStep()}
-
-      {/* Navigation */}
-      <div className="cp-nav-footer">
-        {currentStep > 0 && (
-          <button className="cp-btn-outline" onClick={() => setCurrentStep(currentStep - 1)}>
-            <i className="fa fa-chevron-left"></i> Previous Step
-          </button>
-        )}
-        <div className="cp-nav-right">
-          {currentStep < STEPS.length - 1 ? (
-            <button className="cp-btn-primary" onClick={() => setCurrentStep(currentStep + 1)}>
-              Continue <i className="fa fa-chevron-right"></i>
-            </button>
-          ) : (
-            <button className="cp-btn-primary" onClick={handleSubmit} disabled={submitting}>
-              <i className={`fa ${isEditMode ? 'fa-save' : 'fa-paper-plane'}`}></i> {isEditMode ? 'Save Changes' : 'Submit'}
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
+  return (
+    <>
+      {backLink}
+      <Page
+        title={isEditMode ? 'Edit project' : 'Create new project proposal'}
+        meta={<span className="badge badge--accent">{isEditMode ? 'Editing' : 'Draft'}</span>}
+        tabs={stepper}
+      >
+        <Panel title={step.title} description={step.description} actions={step.actions} footer={stepNav}>
+          {step.body}
+        </Panel>
+      </Page>
+    </>
   );
 };
 

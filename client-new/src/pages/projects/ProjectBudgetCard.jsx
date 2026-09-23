@@ -12,6 +12,8 @@ import {
 } from '../../data/projectsData';
 import { EMPTY_VALUE } from '../../utils/timeParse';
 import { apiUpdateProject } from '../../api/projects';
+import Panel from '../../components/panel/Panel';
+import CustomButton from '../../components/forms/fields/CustomButton';
 
 /**
  * The project's budget, read and edited in place.
@@ -140,7 +142,7 @@ const ProjectBudgetCard = ({ projectId, budget, meta, canEdit, onSaved }) => {
         <td className="pd-budget-head-name">{HEAD_EQUIPMENT}
           {editingBudget && (
             <button type="button" className="inline-add-btn inline-add-btn--sm" onClick={addEquip}>
-              <i className="fa fa-plus"></i> Add Item
+              <i className="fa fa-plus" aria-hidden="true"></i> Add item
             </button>
           )}
         </td>
@@ -155,9 +157,9 @@ const ProjectBudgetCard = ({ projectId, budget, meta, canEdit, onSaved }) => {
                 <input type="text" className="pd-budget-edit-input" value={row.label}
                   placeholder="e.g. GPU Workstation"
                   onChange={e => renameEquip(row.key, e.target.value)} />
-                <button type="button" className="pd-remove-btn" title="Remove item"
+                <button type="button" className="pd-remove-btn" title="Remove item" aria-label="Remove item"
                   onClick={() => dropEquip(row.key)}>
-                  <i className="fa fa-trash"></i>
+                  <i className="fa fa-trash" aria-hidden="true"></i>
                 </button>
               </span>
             ) : <>↳ {row.label || EMPTY_VALUE}</>}
@@ -195,7 +197,7 @@ const ProjectBudgetCard = ({ projectId, budget, meta, canEdit, onSaved }) => {
           <td className="pd-budget-head-name">{HEAD_OTHER}
             {editingBudget && (
               <button type="button" className="inline-add-btn inline-add-btn--sm" onClick={() => addOther('')}>
-                <i className="fa fa-plus"></i> Add Expense
+                <i className="fa fa-plus" aria-hidden="true"></i> Add expense
               </button>
             )}
           </td>
@@ -213,13 +215,13 @@ const ProjectBudgetCard = ({ projectId, budget, meta, canEdit, onSaved }) => {
                       <input type="text" className="pd-budget-edit-input" value={row.label}
                         placeholder="e.g. Fabrication"
                         onChange={e => renameOther(row.key, e.target.value)} />
-                      <button type="button" className="inline-add-btn inline-add-btn--sm" title="Add sub-item"
+                      <button type="button" className="inline-add-btn inline-add-btn--sm" title="Add sub-item" aria-label="Add sub-item"
                         onClick={() => addOther(row.key)}>
-                        <i className="fa fa-plus"></i>
+                        <i className="fa fa-plus" aria-hidden="true"></i>
                       </button>
-                      <button type="button" className="pd-remove-btn" title="Remove expense"
+                      <button type="button" className="pd-remove-btn" title="Remove expense" aria-label="Remove expense"
                         onClick={() => dropOther(row.key)}>
-                        <i className="fa fa-trash"></i>
+                        <i className="fa fa-trash" aria-hidden="true"></i>
                       </button>
                     </span>
                   ) : <>↳ {row.label || EMPTY_VALUE}</>}
@@ -254,9 +256,9 @@ const ProjectBudgetCard = ({ projectId, budget, meta, canEdit, onSaved }) => {
                         <input type="text" className="pd-budget-edit-input" value={sub.label}
                           placeholder="e.g. Casting"
                           onChange={e => renameOther(sub.key, e.target.value)} />
-                        <button type="button" className="pd-remove-btn" title="Remove sub-item"
+                        <button type="button" className="pd-remove-btn" title="Remove sub-item" aria-label="Remove sub-item"
                           onClick={() => dropOther(sub.key)}>
-                          <i className="fa fa-trash"></i>
+                          <i className="fa fa-trash" aria-hidden="true"></i>
                         </button>
                       </span>
                     ) : <>↳ {sub.label || EMPTY_VALUE}</>}
@@ -302,25 +304,23 @@ const ProjectBudgetCard = ({ projectId, budget, meta, canEdit, onSaved }) => {
   if (budgetYears.length === 0) return null;
 
   return (
-            <div className="pd-card">
-              <div className="pd-budget-header">
-                <h3 className="pd-card-title" style={{ marginBottom: 0 }}><i className="fa fa-table"></i> Budget Breakdown</h3>
-                <div className="pd-budget-actions">
-                  {editingBudget ? (
-                    <>
-                      <button className="pd-ms-cancel" onClick={cancelBudgetEdit}>Cancel</button>
-                      <button className="pd-ms-save" onClick={saveBudgetEdit}><i className="fa fa-check"></i> Save Changes</button>
-                    </>
-                  ) : (
-                    canEdit && <button className="pd-add-ms-btn" onClick={startBudgetEdit}><i className="fa fa-pencil"></i> Edit Budget</button>
-                  )}
-                </div>
-              </div>
-              <div className="pd-budget-wrap">
-                <table className="pd-budget-table">
+            <Panel
+              flush
+              title="Budget breakdown"
+              actions={editingBudget ? (
+                <>
+                  <CustomButton text="Save changes" variant="secondary" size="sm" onClick={saveBudgetEdit} />
+                  <CustomButton text="Cancel" variant="quiet" size="sm" onClick={cancelBudgetEdit} />
+                </>
+              ) : (
+                canEdit && <CustomButton text="Edit budget" variant="secondary" size="sm" onClick={startBudgetEdit} />
+              )}
+            >
+              <div className="data-table-wrap">
+                <table className="data-table pd-budget-table">
                   <thead>
                     <tr>
-                      <th>Budget Head</th>
+                      <th>Budget head</th>
                       {budgetYears.map((y, i) => <th key={y}>Year {i + 1} (₹)</th>)}
                       <th>Total</th>
                     </tr>
@@ -393,14 +393,14 @@ const ProjectBudgetCard = ({ projectId, budget, meta, canEdit, onSaved }) => {
                       );
                     })}
                     <tr className="pd-grand-row">
-                      <td><strong>Grand Total</strong></td>
+                      <td><strong>Grand total</strong></td>
                       {budgetYears.map(y => <td key={y}><strong>₹{yTotal(y).toLocaleString('en-IN')}</strong></td>)}
                       <td className="pd-grand-total"><strong>₹{gTotal.toLocaleString('en-IN')}</strong></td>
                     </tr>
                   </tbody>
                 </table>
               </div>
-            </div>
+            </Panel>
   );
 };
 
