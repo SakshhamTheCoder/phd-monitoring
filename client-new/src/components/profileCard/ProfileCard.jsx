@@ -401,6 +401,26 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
       designation: member.designation || EMPTY_VALUE,
     }));
 
+    // A course tagged by mistake can be taken off again by whoever may tag one;
+    // the server checks the same capability.
+    const mayRemoveCourses = can("can_manage_students");
+    const removeCourse = async (course) => {
+      if (!window.confirm(`Remove ${course.course_code} from this scholar's courses?`)) return;
+      const response = await customFetch(`${baseURL}/courses/student/remove/${course.id}`, "DELETE");
+      if (response.success) {
+        toast.success("Course removed.");
+        fetchCourses();
+      }
+    };
+    const courseActionKey = mayRemoveCourses ? ["remove"] : [];
+    const courseActionTitle = mayRemoveCourses ? ["Actions"] : [];
+    const courseActionCell = mayRemoveCourses ? [{
+      key: "remove",
+      component: ({ row }) => (
+        <CustomButton text="Remove" variant="danger-outline" size="sm" onClick={() => removeCourse(row)} />
+      ),
+    }] : [];
+
     // Page actions first, then the profile's own edit controls. One filled
     // button: View forms for someone reading another scholar's profile, Save
     // for a scholar editing their own. The two never show together.
@@ -653,16 +673,18 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
           <Panel flush title="Enrolled courses">
             <TableComponent
               data={courses?.filter(c => c.status === 'enrolled')}
-              keys={["course_code", "course_name", "credits", "semester"]}
-              titles={["Course code", "Course name", "Credits", "Semester"]}
+              keys={["course_code", "course_name", "credits", "semester", ...courseActionKey]}
+              titles={["Course code", "Course name", "Credits", "Semester", ...courseActionTitle]}
+              components={courseActionCell}
             />
           </Panel>
 
           <Panel flush title="Completed courses">
             <TableComponent
               data={courses?.filter(c => c.status === 'completed')}
-              keys={["course_code", "course_name", "credits", "semester", "grade"]}
-              titles={["Course code", "Course name", "Credits", "Semester", "Grade"]}
+              keys={["course_code", "course_name", "credits", "semester", "grade", ...courseActionKey]}
+              titles={["Course code", "Course name", "Credits", "Semester", "Grade", ...courseActionTitle]}
+              components={courseActionCell}
             />
           </Panel>
         </Page>
