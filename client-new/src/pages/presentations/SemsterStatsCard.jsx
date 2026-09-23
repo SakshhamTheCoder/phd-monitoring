@@ -256,7 +256,7 @@ const SemesterStatsCard = ({ semesterName = null, filtersEnabled = false, setFil
               space={2}
             />
 
-            <Suspense fallback={<Loader />}>
+            <Suspense fallback={<Loader scope="content" />}>
             <label className="input-label" htmlFor="semster-stats-card-evaluation-start-date">Evaluation start date</label>
             <DatePicker id="semster-stats-card-evaluation-start-date"
               selected={createForm.start_date}
@@ -348,7 +348,7 @@ const SemesterStatsCard = ({ semesterName = null, filtersEnabled = false, setFil
             space={2}
           />
 
-          <Suspense fallback={<Loader />}>
+          <Suspense fallback={<Loader scope="content" />}>
           <label className="input-label" htmlFor="semster-stats-card-evaluation-start-date-2">Evaluation start date</label>
           <DatePicker id="semster-stats-card-evaluation-start-date-2"
             selected={createForm.start_date}
@@ -512,7 +512,7 @@ const SemesterStatsCard = ({ semesterName = null, filtersEnabled = false, setFil
             space={2}
           />
 
-          <Suspense fallback={<Loader />}>
+          <Suspense fallback={<Loader scope="content" />}>
           <label className="input-label" htmlFor="semster-stats-card-evaluation-start-date-3">Evaluation start date</label>
           <DatePicker id="semster-stats-card-evaluation-start-date-3"
             selected={editForm.start_date}

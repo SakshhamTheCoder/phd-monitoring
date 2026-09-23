@@ -111,7 +111,7 @@ const MainFormPage = () => {
               // unknown-form notice.
               case "student-leave":
                 return (
-                  <Suspense fallback={<Loader />}>
+                  <Suspense fallback={<Loader scope="content" />}>
                     <StudentLeave formData={formData} />
                   </Suspense>
                 );

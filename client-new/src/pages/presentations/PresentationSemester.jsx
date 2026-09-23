@@ -213,7 +213,7 @@ const PresentationSemester = () => {
             space={2}
           />
 
-          <Suspense fallback={<Loader />}>
+          <Suspense fallback={<Loader scope="content" />}>
           <label className="input-label" htmlFor="presentation-semester-evaluation-start-date">Evaluation start date</label>
           <DatePicker id="presentation-semester-evaluation-start-date"
             selected={editForm.start_date}

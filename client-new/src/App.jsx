@@ -12,7 +12,9 @@ import { ACCESS, currentRole } from './auth/access';
 
 // Every page is split out of the entry chunk. A student signing in should not
 // download the admin surface to see their own forms.
-const Layout = lazy(() => import('./components/dashboard/layout'));
+// The shell is not split out: loading it lazily put a full-screen loader
+// before the shell's own content loader on every first visit.
+import Layout from './components/dashboard/layout';
 const LandingPage = lazy(() => import('./pages/landing/LandingPage'));
 const LoginPage = lazy(() => import('./pages/login/Login'));
 const SignupPage = lazy(() => import('./pages/signup/SignupPage'));
@@ -88,7 +90,7 @@ const Shell = () => {
   return (
     <Layout>
       <ErrorBoundary key={pathname}>
-        <Suspense fallback={<Loader />}>
+        <Suspense fallback={<Loader scope="content" />}>
           <Outlet />
         </Suspense>
       </ErrorBoundary>
@@ -119,7 +121,7 @@ const AppContent = () => {
   }
   return (
     <>
-      {loading && <Loader />}
+      {loading && <Loader scope="app" />}
       <ToastContainer
         position="top-right"
         hideProgressBar={true}

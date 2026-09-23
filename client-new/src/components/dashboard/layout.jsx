@@ -3,6 +3,8 @@ import { useLocation } from 'react-router-dom';
 import './layout.css';
 import TopBar from '../topbar/TopBar';
 import NavBar from '../navbar/CustomNavBar';
+import Loader from '../loader/loader';
+import { useLoading } from '../../context/LoadingContext';
 
 const Layout = ({ children }) => {
     // The sidebar is a fixed column on a desktop and a drawer below the mobile
@@ -10,6 +12,7 @@ const Layout = ({ children }) => {
     const [navOpen, setNavOpen] = useState(false);
     const { pathname } = useLocation();
     const toggleRef = useRef(null);
+    const { loading } = useLoading();
 
     // Following a link should leave the drawer closed behind you.
     useEffect(() => setNavOpen(false), [pathname]);
@@ -54,6 +57,8 @@ const Layout = ({ children }) => {
                     <TopBar />
                 </header>
                 <main className="content" id="main" tabIndex={-1}>
+                    {/* Requests in flight cover the page, not the whole screen. */}
+                    {loading && <Loader scope="content" />}
                     {children}
                 </main>
             </div>

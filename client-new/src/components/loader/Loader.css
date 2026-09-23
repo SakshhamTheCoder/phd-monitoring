@@ -1,26 +1,59 @@
-/* Loader.css */
+/* One loader look, in two scopes. A light veil rather than a dark one, and it
+   fades in only after 200ms, so a request that answers quickly shows nothing
+   instead of flashing the page. */
 .loader {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh; /* Full viewport height */
-    width: 100vw; /* Full viewport width */
-    position: fixed; /* Fixed position */
-    z-index: 999999;
-    background-color: rgba(0, 0, 0, 0.5); /* Translucent background */
+    background-color: color-mix(in srgb, var(--canvas) 70%, transparent);
+    animation: loader-in 150ms ease-out 200ms both;
 }
-  
-  .spinner {
-    border: 8px solid #f3f3f3; /* Light gray */
-    border-top: 8px solid var(--primary-color); /* Blue */
+
+.loader--screen,
+.loader--app {
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+}
+
+/* Over the page area only; .content is its positioned box. */
+.loader--content {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    min-height: 240px;
+}
+
+/* Once the shell is on screen it draws the request loader over the content
+   itself, so the global one steps aside. */
+body:has(.layout):not(:has(.modal-overlay)) .loader--app {
+    display: none;
+}
+
+/* A dialog sits above the content, so while one is open a save made from it
+   shows the screen loader instead, where it can be seen. */
+body:has(.modal-overlay) .content > .loader--content {
+    display: none;
+}
+
+.spinner {
+    border: 4px solid var(--border-subtle);
+    border-top-color: var(--primary-color);
     border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    animation: spin 1s linear infinite; /* Animation for spinning */
-  }
-  
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-  
+    width: 40px;
+    height: 40px;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes loader-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .spinner { animation-duration: 2s; }
+}

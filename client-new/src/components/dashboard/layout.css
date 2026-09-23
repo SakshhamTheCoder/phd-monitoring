@@ -47,6 +47,8 @@
     flex: 1;
     padding: var(--space-5) var(--space-6) var(--space-7);
     width: 100%;
+    /* The content loader covers this box. */
+    position: relative;
     box-sizing: border-box;
 }
 
