@@ -201,8 +201,8 @@ const Openings = () => {
       ) : <StatusNotice tone="empty" title="You haven't applied to any openings yet." />)}
 
       {/* Job Description Modal */}
-      {viewJob && (
-        <CustomModal isOpen={!!viewJob} onClose={() => setViewJob(null)} maxWidth="560px" minHeight="auto">
+      <CustomModal isOpen={!!viewJob} onClose={() => setViewJob(null)} maxWidth="560px" minHeight="auto">
+        {viewJob && (
           <>
             <span className="badge badge--accent">{viewJob.type}</span>
             <h2 className="op-jd-title">{viewJob.title}</h2>
@@ -229,18 +229,18 @@ const Openings = () => {
               )}
             </div>
           </>
-        </CustomModal>
-      )}
+        )}
+      </CustomModal>
 
       {/* Apply Modal */}
-      {applyFor && (
-        <CustomModal
-          isOpen={!!applyFor}
-          onClose={closeApply}
-          title={`Apply: ${applyFor.title}`}
-          maxWidth="560px"
-          minHeight="auto"
-        >
+      <CustomModal
+        isOpen={!!applyFor}
+        onClose={closeApply}
+        title={applyFor && `Apply: ${applyFor.title}`}
+        maxWidth="560px"
+        minHeight="auto"
+      >
+        {applyFor && (
           <>
             <p className="op-modal-sub">{applyFor.type} &middot; {applyFor.projectTitle}</p>
 
@@ -275,8 +275,8 @@ const Openings = () => {
               <CustomButton text="Submit application" onClick={submitApply} busy={submitting} />
             </div>
           </>
-        </CustomModal>
-      )}
+        )}
+      </CustomModal>
     </Page>
   );
 };

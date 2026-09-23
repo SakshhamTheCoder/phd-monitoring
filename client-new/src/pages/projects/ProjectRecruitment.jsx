@@ -324,13 +324,13 @@ const ProjectRecruitment = () => {
         )}
 
         {/* Applicant Detail Modal */}
-        {selectedApplicant && (
-          <CustomModal
-            isOpen={!!selectedApplicant}
-            onClose={() => setSelectedApplicant(null)}
-            maxWidth="520px"
-            minHeight="auto"
-          >
+        <CustomModal
+          isOpen={!!selectedApplicant}
+          onClose={() => setSelectedApplicant(null)}
+          maxWidth="520px"
+          minHeight="auto"
+        >
+          {selectedApplicant && (
             <>
               <div className="pr-modal-header">
                 <div className="pr-modal-avatar" aria-hidden="true">{selectedApplicant.name.split(' ').map(n => n[0]).join('')}</div>
@@ -372,8 +372,8 @@ const ProjectRecruitment = () => {
                 </div>
               )}
             </>
-          </CustomModal>
-        )}
+          )}
+        </CustomModal>
       </Page>
     </>
   );

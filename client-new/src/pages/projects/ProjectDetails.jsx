@@ -704,96 +704,92 @@ const ProjectDetails = () => {
         </div>
 
         {/* Add / Edit Document Modal */}
-        {showDocModal && (
-          <CustomModal
-            isOpen={showDocModal}
-            onClose={() => setShowDocModal(false)}
-            title={editingDocIdx !== null ? 'Edit document' : 'Add document'}
-            maxWidth="520px"
-            minHeight="auto"
-          >
-            <>
-              <div className="pd-modal-field">
-                <label htmlFor="project-details-document-name">Document name {required}</label>
-                <input id="project-details-document-name"
-                  type="text"
-                  aria-required="true"
-                  value={docForm.name}
-                  onChange={e => setDocForm({ ...docForm, name: e.target.value })}
-                  placeholder="e.g. Year 1 Progress Report"
-                />
-              </div>
-              <div className="pd-modal-field">
-                <label htmlFor="project-details-document-file">{editingDocIdx !== null ? 'Replace document' : 'Upload document'} {editingDocIdx !== null && <span className="pd-modal-hint">(optional: leave empty to keep the current file)</span>}</label>
-                {editingDocIdx !== null && docForm.currentLabel && !docForm.fileName && (
-                  <span className="pd-upload-current"><i className="fa fa-paperclip" aria-hidden="true"></i> {docForm.currentLabel}</span>
-                )}
-                <button type="button" className="pd-upload-label" onClick={() => docFileRef.current && docFileRef.current.click()}>
-                  <i className="fa fa-upload" aria-hidden="true"></i> {editingDocIdx !== null ? 'Replace file' : 'Select file from system'}
-                </button>
-                <input
-                  id="project-details-document-file"
-                  type="file"
-                  ref={docFileRef}
-                  style={{ display: 'none' }}
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
-                  onChange={handleDocFileSelect}
-                />
-                {docForm.fileName && <span className="pd-upload-selected"><i className="fa fa-paperclip" aria-hidden="true"></i> {docForm.fileName}</span>}
-              </div>
-              <div className="modal-actions">
-                <CustomButton text="Cancel" variant="quiet" onClick={() => setShowDocModal(false)} />
-                <CustomButton text={editingDocIdx !== null ? 'Save changes' : 'Add document'} onClick={saveDoc} busy={saving} />
-              </div>
-            </>
-          </CustomModal>
-        )}
+        <CustomModal
+          isOpen={showDocModal}
+          onClose={() => setShowDocModal(false)}
+          title={editingDocIdx !== null ? 'Edit document' : 'Add document'}
+          maxWidth="520px"
+          minHeight="auto"
+        >
+          <>
+            <div className="pd-modal-field">
+              <label htmlFor="project-details-document-name">Document name {required}</label>
+              <input id="project-details-document-name"
+                type="text"
+                aria-required="true"
+                value={docForm.name}
+                onChange={e => setDocForm({ ...docForm, name: e.target.value })}
+                placeholder="e.g. Year 1 Progress Report"
+              />
+            </div>
+            <div className="pd-modal-field">
+              <label htmlFor="project-details-document-file">{editingDocIdx !== null ? 'Replace document' : 'Upload document'} {editingDocIdx !== null && <span className="pd-modal-hint">(optional: leave empty to keep the current file)</span>}</label>
+              {editingDocIdx !== null && docForm.currentLabel && !docForm.fileName && (
+                <span className="pd-upload-current"><i className="fa fa-paperclip" aria-hidden="true"></i> {docForm.currentLabel}</span>
+              )}
+              <button type="button" className="pd-upload-label" onClick={() => docFileRef.current && docFileRef.current.click()}>
+                <i className="fa fa-upload" aria-hidden="true"></i> {editingDocIdx !== null ? 'Replace file' : 'Select file from system'}
+              </button>
+              <input
+                id="project-details-document-file"
+                type="file"
+                ref={docFileRef}
+                style={{ display: 'none' }}
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                onChange={handleDocFileSelect}
+              />
+              {docForm.fileName && <span className="pd-upload-selected"><i className="fa fa-paperclip" aria-hidden="true"></i> {docForm.fileName}</span>}
+            </div>
+            <div className="modal-actions">
+              <CustomButton text="Cancel" variant="quiet" onClick={() => setShowDocModal(false)} />
+              <CustomButton text={editingDocIdx !== null ? 'Save changes' : 'Add document'} onClick={saveDoc} busy={saving} />
+            </div>
+          </>
+        </CustomModal>
 
         {/* Sanction Letter Modal (file or link) */}
-        {showSanctionModal && (
-          <CustomModal
-            isOpen={showSanctionModal}
-            onClose={() => setShowSanctionModal(false)}
-            title="Sanction letter"
-            maxWidth="520px"
-            minHeight="auto"
-          >
-            <>
-              <Tabs
-                items={[{ value: 'file', label: 'Choose file' }, { value: 'link', label: 'Paste link' }]}
-                value={sanctionMode}
-                onChange={setSanctionMode}
-                label="Sanction letter source"
-              />
-              {sanctionMode === 'file' ? (
-                <div className="pd-modal-field">
-                  <label htmlFor="project-details-choose-file">Choose file</label>
-                  <button type="button" className="pd-upload-label" onClick={() => sanctionInputRef.current && sanctionInputRef.current.click()}>
-                    <i className="fa fa-upload" aria-hidden="true"></i> {sanctionFileSel ? 'Change file' : 'Select file from system'}
-                  </button>
-                  <input
-                    id="project-details-choose-file"
-                    type="file"
-                    ref={sanctionInputRef}
-                    style={{ display: 'none' }}
-                    accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-                    onChange={handleSanctionFile}
-                  />
-                  {sanctionFileSel && <span className="pd-upload-selected"><i className="fa fa-paperclip" aria-hidden="true"></i> {sanctionFileSel.name}</span>}
-                </div>
-              ) : (
-                <div className="pd-modal-field">
-                  <label htmlFor="project-details-document-link">Document link</label>
-                  <input id="project-details-document-link" type="url" value={sanctionLinkInput} onChange={e => setSanctionLinkInput(e.target.value)} placeholder="https://… link to sanction letter" />
-                </div>
-              )}
-              <div className="modal-actions">
-                <CustomButton text="Cancel" variant="quiet" onClick={() => setShowSanctionModal(false)} />
-                <CustomButton text="Save" onClick={saveSanctionModal} busy={saving} />
+        <CustomModal
+          isOpen={showSanctionModal}
+          onClose={() => setShowSanctionModal(false)}
+          title="Sanction letter"
+          maxWidth="520px"
+          minHeight="auto"
+        >
+          <>
+            <Tabs
+              items={[{ value: 'file', label: 'Choose file' }, { value: 'link', label: 'Paste link' }]}
+              value={sanctionMode}
+              onChange={setSanctionMode}
+              label="Sanction letter source"
+            />
+            {sanctionMode === 'file' ? (
+              <div className="pd-modal-field">
+                <label htmlFor="project-details-choose-file">Choose file</label>
+                <button type="button" className="pd-upload-label" onClick={() => sanctionInputRef.current && sanctionInputRef.current.click()}>
+                  <i className="fa fa-upload" aria-hidden="true"></i> {sanctionFileSel ? 'Change file' : 'Select file from system'}
+                </button>
+                <input
+                  id="project-details-choose-file"
+                  type="file"
+                  ref={sanctionInputRef}
+                  style={{ display: 'none' }}
+                  accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                  onChange={handleSanctionFile}
+                />
+                {sanctionFileSel && <span className="pd-upload-selected"><i className="fa fa-paperclip" aria-hidden="true"></i> {sanctionFileSel.name}</span>}
               </div>
-            </>
-          </CustomModal>
-        )}
+            ) : (
+              <div className="pd-modal-field">
+                <label htmlFor="project-details-document-link">Document link</label>
+                <input id="project-details-document-link" type="url" value={sanctionLinkInput} onChange={e => setSanctionLinkInput(e.target.value)} placeholder="https://… link to sanction letter" />
+              </div>
+            )}
+            <div className="modal-actions">
+              <CustomButton text="Cancel" variant="quiet" onClick={() => setShowSanctionModal(false)} />
+              <CustomButton text="Save" onClick={saveSanctionModal} busy={saving} />
+            </div>
+          </>
+        </CustomModal>
       </Page>
     </>
   );

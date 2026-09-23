@@ -804,25 +804,23 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
         </CustomModal>
 
         {/* Supervisor/Doctoral Committee Management Modal */}
-        {showSupervisorDoctoralModal && (
-          <CustomModal
-            isOpen={showSupervisorDoctoralModal}
-            onClose={() => setShowSupervisorDoctoralModal(false)}
-          >
-            <SupervisorDoctoralManager
-              studentId={profile.roll_no}
-              supervisors={supervisors || []}
-              doctoralCommittee={doctoral || []}
-              onClose={() => {
-                setShowSupervisorDoctoralModal(false);
-                // Refresh profile data to show updated supervisors/doctoral
-                customFetch(profileUrl, "GET", {}, true, false).then((res) => {
-                  if (res?.success) setProfile(res.response.profile);
-                });
-              }}
-            />
-          </CustomModal>
-        )}
+        <CustomModal
+          isOpen={showSupervisorDoctoralModal}
+          onClose={() => setShowSupervisorDoctoralModal(false)}
+        >
+          <SupervisorDoctoralManager
+            studentId={profile.roll_no}
+            supervisors={supervisors || []}
+            doctoralCommittee={doctoral || []}
+            onClose={() => {
+              setShowSupervisorDoctoralModal(false);
+              // Refresh profile data to show updated supervisors/doctoral
+              customFetch(profileUrl, "GET", {}, true, false).then((res) => {
+                if (res?.success) setProfile(res.response.profile);
+              });
+            }}
+          />
+        </CustomModal>
 
       </>
     );
