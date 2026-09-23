@@ -41,26 +41,36 @@ const ClerkForm = ({ onSuccess, onClose }) => {
       toast.error("Please fill required fields: " + missing.join(", "));
       return;
     }
-    if (!clerkRoleId) {
-      toast.error("Clerk role not found. Run migrations first.");
-      return;
-    }
-
-    const payload = {
-      full_name: formData.full_name,
-      email: formData.email,
-      phone: formData.phone,
-      gender: formData.gender || null,
-      role_id: clerkRoleId,
-      current_role_id: clerkRoleId,
-      default_role_id: clerkRoleId,
-      available_roles: ["clerk"],
-      status: formData.status || "active",
-    };
-    if (formData.password) payload.password = formData.password;
-
     setSubmitting(true);
     try {
+      // The role list may have failed to load when the form opened. Asking
+      // again here tells "could not ask" apart from "the role does not exist".
+      let roleId = clerkRoleId;
+      if (!roleId) {
+        const roles = await apiRoleList();
+        // customFetch has already said why the request failed.
+        if (!roles.success) return;
+        roleId = (roles.response || []).find((r) => r.role === "clerk")?.id;
+        if (!roleId) {
+          toast.error("Clerk role not found. Run migrations first.");
+          return;
+        }
+        setClerkRoleId(roleId);
+      }
+
+      const payload = {
+        full_name: formData.full_name,
+        email: formData.email,
+        phone: formData.phone,
+        gender: formData.gender || null,
+        role_id: roleId,
+        current_role_id: roleId,
+        default_role_id: roleId,
+        available_roles: ["clerk"],
+        status: formData.status || "active",
+      };
+      if (formData.password) payload.password = formData.password;
+
       const res = await customFetch(baseURL + "/users", "POST", payload, true);
       if (res.success !== false) {
         // The password and warnings are in the server's answer, not the wrapper.

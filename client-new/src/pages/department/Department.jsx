@@ -94,6 +94,17 @@ CSED,Hod One,hod.one@thapar.edu,hcsed@thapar.edu,Adordc One,adordc.one@thapar.ed
     setRefreshKey(prev => prev + 1);
   };
 
+  // A change inside the manager keeps it open, showing what the server now
+  // holds for that department, and refreshes the table behind it. Closing it
+  // after every change meant reopening it for the next one.
+  const handleManagerUpdate = async () => {
+    setRefreshKey(prev => prev + 1);
+    apiDepartmentList.invalidate();
+    const res = await apiDepartmentList();
+    const fresh = res.success ? (res.response?.data || []).find((d) => d.id === editData?.id) : null;
+    if (fresh) setEditData((current) => (current?.id === fresh.id ? fresh : current));
+  };
+
   return (
     <>
       <PageHeader title="Departments" subtitle="Departments, their HoD and PhD coordinators." />
@@ -141,7 +152,7 @@ CSED,Hod One,hod.one@thapar.edu,hcsed@thapar.edu,Adordc One,adordc.one@thapar.ed
               setIsOpen(false);
               setEditData(null);
             }}
-            onUpdate={handleUpdate}
+            onUpdate={handleManagerUpdate}
           />
         ) : (
           <AddDepartmentForm

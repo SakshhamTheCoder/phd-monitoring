@@ -88,9 +88,8 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
         setShowHodModal(false);
         setSelectedFaculty(null);
         if (onUpdate) onUpdate();
-      } else {
-        toast.error(response.message || 'Failed to assign HOD.');
       }
+      // A refusal was already toasted by customFetch, with the server's reason.
     } catch (error) {
       console.error('Error assigning HOD:', error);
       toast.error('Failed to assign HOD.');
@@ -121,8 +120,6 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
         setShowAdordcModal(false);
         setSelectedFaculty(null);
         if (onUpdate) onUpdate();
-      } else {
-        toast.error(response.message || 'Failed to assign ADORDC.');
       }
     } catch (error) {
       console.error('Error assigning ADORDC:', error);
@@ -153,8 +150,6 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
         setShowCoordinatorModal(false);
         setSelectedFaculty(null);
         if (onUpdate) onUpdate();
-      } else {
-        toast.error(response.message || 'Failed to add coordinator.');
       }
     } catch (error) {
       console.error('Error adding coordinator:', error);
@@ -178,8 +173,6 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
       if (response.success) {
         toast.success('PhD Coordinator removed.');
         if (onUpdate) onUpdate();
-      } else {
-        toast.error(response.message || 'Failed to remove coordinator.');
       }
     } catch (error) {
       console.error('Error removing coordinator:', error);
@@ -279,7 +272,7 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
         minHeight="auto"
       >
         <div className="modal-note">
-          <strong>Note:</strong> Assigning a new HOD will update the faculty's role to HOD (role_id: 3).
+          <strong>Note:</strong> Assigning a new HOD will make this faculty member the HOD.
           {currentHod && ' The current HOD\'s role will be reverted to Faculty.'}
         </div>
 
@@ -357,7 +350,7 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
         minHeight="auto"
       >
         <div className="modal-note">
-          <strong>Note:</strong> Adding a PhD Coordinator will update the faculty's role to PhD Coordinator (role_id: 2).
+          <strong>Note:</strong> Adding a PhD Coordinator will give this faculty member the PhD Coordinator role.
         </div>
 
         <GridContainer

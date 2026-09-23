@@ -285,7 +285,11 @@ const AdminCourseManagement = () => {
             <CustomButton
               text="Tag Student"
               variant="secondary"
-              onClick={() => setShowTagModal(true)}
+              onClick={() => {
+                // Courses added since the page loaded must be taggable too.
+                fetchAllCourses();
+                setShowTagModal(true);
+              }}
             />
             <CustomButton
               text="Bulk Import"
@@ -416,11 +420,7 @@ const AdminCourseManagement = () => {
           <DropdownField
             label="Department"
             options={departments}
-            initialValue={
-              departments?.find(
-                (dept) => String(dept.value) === String(formData.department_id)
-              )?.title || ''
-            }
+            initialValue={formData.department_id}
             onChange={(value) => handleInputChange('department_id', value)}
             required
           />

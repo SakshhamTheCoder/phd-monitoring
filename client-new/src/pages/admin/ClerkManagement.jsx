@@ -11,6 +11,7 @@ import CustomModal from '../../components/forms/modal/CustomModal';
 import ClerkForm from '../../components/clerkForm/ClerkForm';
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
 import { useRowMenu } from '../../hooks/useRowMenu';
+import LoadError from '../../components/common/LoadError';
 
 /**
  * Admin → Clerk Management
@@ -27,6 +28,8 @@ const ClerkManagement = () => {
   const [departments, setDepartments] = useState([]);
   const [filter, setFilter] = useState({ conditions: [] });
   const [loading, setLoading] = useState(true);
+  // A failed load is not "no clerks yet".
+  const [loadFailed, setLoadFailed] = useState(false);
   const [editing, setEditing] = useState(null);
   const [selectedDeptIds, setSelectedDeptIds] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -43,6 +46,7 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
     setLoading(true);
     const res = await customFetch(baseURL + '/clerks', 'GET', {}, true);
     setLoading(false);
+    setLoadFailed(!res.success);
     if (res.success) setClerks(res.response.data || []);
   };
 
@@ -220,10 +224,12 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
 
       {loading ? (
         <div className="empty-state">Loading…</div>
+      ) : loadFailed ? (
+        <LoadError message="Could not load the clerks. Check your connection and try again." onRetry={loadClerks} />
       ) : filteredClerks.length === 0 ? (
         <div className="empty-state">
           {clerks.length === 0
-            ? 'No clerk accounts yet. Add a user with the “clerk” role from Manage Users first.'
+            ? 'No clerk accounts yet. Use Add Clerk to create the first one.'
             : 'No clerks match the current filters.'}
         </div>
       ) : (
@@ -290,6 +296,7 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
       <CustomModal
         isOpen={isCreateOpen}
         onClose={() => closeCreate(false)}
+        closeOnOutsideClick={false}
         width="80vw"
       >
         <ClerkForm
@@ -301,6 +308,7 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
       <CustomModal
         isOpen={!!editing}
         onClose={() => setEditing(null)}
+        closeOnOutsideClick={false}
         title={`Departments for ${editing?.name || ''}`}
         width="560px"
       >

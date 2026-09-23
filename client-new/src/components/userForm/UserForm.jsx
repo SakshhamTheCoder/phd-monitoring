@@ -8,6 +8,7 @@ import InputField from '../forms/fields/InputField';
 import DropdownField from '../forms/fields/DropdownField';
 import GridContainer from '../forms/fields/GridContainer';
 import ToggleSwitch from '../forms/fields/ToggleSwitch';
+import LoadError from '../common/LoadError';
 import useBranches from '../../hooks/useBranches';
 import './UserForm.css';
 
@@ -33,6 +34,7 @@ const UserForm = ({ edit, userData, onClose }) => {
   const [customPassword, setCustomPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [rolesLoaded, setRolesLoaded] = useState(false);
+  const [rolesFailed, setRolesFailed] = useState(false);
   // The URF details behind a ug_student account, which only that role has.
   const branches = useBranches();
 
@@ -40,8 +42,11 @@ const UserForm = ({ edit, userData, onClose }) => {
     fetchRoles();
   }, []);
 
+  // Filled without waiting on the role list: the role selects mount once it
+  // arrives and read these values then, and a failed /roles no longer holds
+  // every other field back.
   useEffect(() => {
-    if (edit && userData && rolesLoaded) {
+    if (edit && userData) {
       setFormData({
         id: userData.id,
         full_name: userData.full_name || [userData.first_name, userData.last_name].filter(Boolean).join(' ') || '',
@@ -62,11 +67,17 @@ const UserForm = ({ edit, userData, onClose }) => {
     }
   // A new user starts from the blank state above. Resetting here as well ran
   // again when the role list arrived and wiped whatever had been typed.
-  }, [edit, userData, rolesLoaded]);
+  }, [edit, userData]);
 
   const fetchRoles = async () => {
+    setRolesFailed(false);
     try {
       const response = await apiRoleList();
+      // customFetch has already said why.
+      if (!response.success) {
+        setRolesFailed(true);
+        return;
+      }
       const roleData = response.response.map(r => ({
         value: r.id,
         title: r.role.charAt(0).toUpperCase() + r.role.slice(1),
@@ -76,6 +87,7 @@ const UserForm = ({ edit, userData, onClose }) => {
       setAllRoleOptions(roleData.map(r => r.role_name));
       setRolesLoaded(true);
     } catch (error) {
+      setRolesFailed(true);
       toast.error('Failed to fetch roles');
     }
   };
@@ -288,6 +300,8 @@ const UserForm = ({ edit, userData, onClose }) => {
               onChange={handleRoleChange}
               key={`role_${formData.id || 'new'}`}
             />
+          ) : rolesFailed ? (
+            <LoadError message="Could not load the roles. Check your connection and try again." onRetry={fetchRoles} />
           ) : (
             <p>Loading roles...</p>
           )}
@@ -305,7 +319,7 @@ const UserForm = ({ edit, userData, onClose }) => {
                   key={`current_role_${formData.id || 'new'}`}
                 />
               ) : (
-                <p>Loading...</p>
+                !rolesFailed && <p>Loading...</p>
               )}
             </div>,
             <div>
@@ -318,7 +332,7 @@ const UserForm = ({ edit, userData, onClose }) => {
                   key={`default_role_${formData.id || 'new'}`}
                 />
               ) : (
-                <p>Loading...</p>
+                !rolesFailed && <p>Loading...</p>
               )}
             </div>
           ]}

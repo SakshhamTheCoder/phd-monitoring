@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import CustomButton from '../../../components/forms/fields/CustomButton';
+import LoadError from '../../../components/common/LoadError';
 import { apiSettings, apiSaveSettings } from '../../../api/settings';
 import './Configuration.css';
 
@@ -22,17 +23,32 @@ const CourseworkCredits = () => {
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Save stays off until the stored figures arrived, so a failed load cannot
+  // be followed by saving the blank form over them.
+  const [loaded, setLoaded] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadFailed(false);
     const res = await apiSettings('coursework');
     setLoading(false);
-    if (res.success) setForm(res.response);
+    if (res.success) {
+      setForm(res.response);
+      setLoaded(true);
+    } else {
+      setLoadFailed(true);
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
   const handleSave = async () => {
+    // Number('') is 0, which would pass the range check and save a blank as 0.
+    if (FIELDS.some(({ key }) => String(form[key] ?? '').trim() === '')) {
+      toast.error('Fill in every field before saving.');
+      return;
+    }
     const values = Object.fromEntries(FIELDS.map(({ key }) => [key, Number(form[key])]));
     if (FIELDS.some(({ key }) => !Number.isInteger(values[key]) || values[key] < 0 || values[key] > 100)) {
       toast.error('Every requirement must be a whole number between 0 and 100.');
@@ -46,6 +62,14 @@ const CourseworkCredits = () => {
       setForm(res.response);
     }
   };
+
+  if (loadFailed) {
+    return (
+      <div className="config-block">
+        <LoadError message="Could not load the coursework requirements. Check your connection and try again." onRetry={load} />
+      </div>
+    );
+  }
 
   return (
     <div className="config-block">
@@ -67,7 +91,7 @@ const CourseworkCredits = () => {
             </div>
           ))}
           <div className="config-push">
-            <CustomButton text={saving ? 'Saving…' : 'Save'} onClick={handleSave} disabled={loading || saving} />
+            <CustomButton text={saving ? 'Saving…' : 'Save'} onClick={handleSave} disabled={!loaded || loading || saving} />
           </div>
         </div>
       </div>

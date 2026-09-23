@@ -28,6 +28,9 @@ const UgBranches = () => {
   const [busy, setBusy] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  // InputSuggestions ignores an empty initialValue, so clearing the form left
+  // the old department in the picker. A new key starts it afresh.
+  const [formResets, setFormResets] = useState(0);
 
   const load = useCallback(async () => {
     // Every write here ends in a reload of this list; the pickers elsewhere
@@ -59,6 +62,7 @@ const UgBranches = () => {
     toast.success(editing ? 'Branch updated' : 'Branch added');
     setForm(EMPTY);
     setEditing(null);
+    setFormResets((count) => count + 1);
     load();
   };
 
@@ -142,10 +146,10 @@ const UgBranches = () => {
           </div>
           <div className="input-field-container config-field-240">
             <InputSuggestions
+              key={`${editing ?? 'new'}-${formResets}`}
               label="Department"
               apiUrl={`${baseURL}/suggestions/department`}
               initialValue={form.department}
-              suggestionManadatory={false}
               onSelect={(picked) => setForm((prev) => ({
                 ...prev,
                 department_id: picked?.id || '',
@@ -158,7 +162,7 @@ const UgBranches = () => {
           {editing && (
             <CustomButton
               text="Cancel"
-              onClick={() => { setEditing(null); setForm(EMPTY); }}
+              onClick={() => { setEditing(null); setForm(EMPTY); setFormResets((count) => count + 1); }}
             />
           )}
         </div>

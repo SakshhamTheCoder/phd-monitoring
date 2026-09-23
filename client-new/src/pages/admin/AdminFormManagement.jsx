@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { customFetch, NETWORK_ERROR_MESSAGE } from "../../api/base";
 import { baseURL } from "../../api/urls";
 import { EMPTY_VALUE } from "../../utils/timeParse";
@@ -29,6 +29,12 @@ const AdminFormManagement = () => {
   const [selectedFormForInstances, setSelectedFormForInstances] = useState(null);
   const { setLoading } = useLoading();
   const [searchParams] = useSearchParams();
+  // Which student's forms the page is waiting for. Picking a second student
+  // before the first answer lands must not show the first student's forms
+  // under the second one's name.
+  const latestFormsRequest = useRef(0);
+  // A double click on Enable created two instances.
+  const creatingForm = useRef(false);
 
   const stageOptions = [
     { label: "Student", value: "student" },
@@ -116,6 +122,7 @@ const AdminFormManagement = () => {
   // Returns the fresh forms (null on failure) so a caller that also needs
   // them for an open modal does not fetch the same list a second time.
   const fetchStudentForms = async (studentId) => {
+    const request = (latestFormsRequest.current += 1);
     setLoading(true);
     try {
       const response = await customFetch(
@@ -124,6 +131,7 @@ const AdminFormManagement = () => {
         {},
         false
       );
+      if (request !== latestFormsRequest.current) return null;
       if (response.success) {
         const forms = response.response.forms || [];
         setStudentForms(forms);
@@ -141,6 +149,7 @@ const AdminFormManagement = () => {
     if (studentId) {
       fetchStudentForms(studentId);
     } else {
+      latestFormsRequest.current += 1;
       setSelectedStudent(null);
       setStudentForms([]);
     }
@@ -310,7 +319,11 @@ const AdminFormManagement = () => {
     }
   };
 
+  // Both creators return whether the call succeeded, so the Enable dialog
+  // stays open, with its choice, when it failed.
   const handleEnableForm = async (formType) => {
+    if (creatingForm.current) return false;
+    creatingForm.current = true;
     setLoading(true);
     try {
       const response = await customFetch(
@@ -328,15 +341,19 @@ const AdminFormManagement = () => {
       if (response.success) {
         toast.success("Form enabled.");
         await fetchStudentForms(selectedStudent.roll_no);
-      } else {
-        toastFailure(response, "Failed to enable form.");
+        return true;
       }
+      toastFailure(response, "Failed to enable form.");
+      return false;
     } finally {
+      creatingForm.current = false;
       setLoading(false);
     }
   };
 
   const handleCreateFormInstance = async (formType) => {
+    if (creatingForm.current) return false;
+    creatingForm.current = true;
     setLoading(true);
     try {
       const response = await customFetch(
@@ -362,10 +379,12 @@ const AdminFormManagement = () => {
             setSelectedFormForInstances(updatedForm);
           }
         }
-      } else {
-        toastFailure(response, "Failed to create form instance.");
+        return true;
       }
+      toastFailure(response, "Failed to create form instance.");
+      return false;
     } finally {
+      creatingForm.current = false;
       setLoading(false);
     }
   };
@@ -377,13 +396,17 @@ const AdminFormManagement = () => {
     }
 
     const selectedForm = studentForms.find(f => f.form_type === createFormType);
-    
-    if (!selectedForm?.exists_in_forms_table) {
-      await handleEnableForm(createFormType);
-    } else {
-      await handleCreateFormInstance(createFormType);
-    }
-    
+
+    const created = selectedForm?.exists_in_forms_table
+      ? await handleCreateFormInstance(createFormType)
+      : await handleEnableForm(createFormType);
+
+    if (created) closeCreateModal();
+  };
+
+  // The dropdown starts at Select every time the dialog opens, so the type
+  // picked last time must go with it or Enable would act on a hidden choice.
+  const closeCreateModal = () => {
     setIsCreateModalOpen(false);
     setCreateFormType("");
   };
@@ -487,11 +510,14 @@ const AdminFormManagement = () => {
             <InputField
               label="Search Student"
               hint="Search by roll number or name..."
+              initialValue={searchTerm}
               onChange={(value) => setSearchTerm(value)}
             />,
+            // Named so a ?roll_no= link shows whose forms these are.
             <DropdownField
               label="Select Student"
               options={studentOptions}
+              initialValue={selectedStudent?.roll_no}
               onChange={(value) => handleStudentSelect(value)}
             />,
           ]}
@@ -585,7 +611,7 @@ const AdminFormManagement = () => {
       {/* Create/Enable Form Modal */}
       <CustomModal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={closeCreateModal}
         title="Enable New Form Type"
         minHeight="300px"
         maxHeight="500px"
@@ -616,7 +642,7 @@ const AdminFormManagement = () => {
             elements={[
               <CustomButton
                 text="Cancel"
-                onClick={() => setIsCreateModalOpen(false)}
+                onClick={closeCreateModal}
               />,
               <CustomButton text="Enable" onClick={handleCreateForm} />,
             ]}

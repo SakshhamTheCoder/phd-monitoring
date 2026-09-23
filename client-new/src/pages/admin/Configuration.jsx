@@ -28,7 +28,6 @@ const SECTIONS = [
 
 const Configuration = () => {
   const [activeTab, setActiveTab] = useState(SECTIONS[0].value);
-  const ActiveSection = SECTIONS.find((s) => s.value === activeTab).Component;
 
   return (
     <>
@@ -43,7 +42,13 @@ const Configuration = () => {
         items={SECTIONS.map(({ value, label }) => ({ value, label }))}
       />
 
-      <ActiveSection />
+      {/* Every section stays mounted and the others are hidden, so an edit
+          not yet saved survives a look at another tab. */}
+      {SECTIONS.map(({ value, Component }) => (
+        <div key={value} hidden={value !== activeTab}>
+          <Component />
+        </div>
+      ))}
     </>
   );
 };

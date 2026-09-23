@@ -243,6 +243,7 @@ const OutsideExperts = () => {
         resetForm();
       }}
       title="Add New Outside Expert"
+      closeOnOutsideClick={false}
     >
       <div className="modal-form">
         <GridContainer
@@ -405,6 +406,7 @@ const OutsideExperts = () => {
         resetForm();
       }}
       title="Edit Outside Expert"
+      closeOnOutsideClick={false}
     >
       <div className="modal-form">
         <GridContainer

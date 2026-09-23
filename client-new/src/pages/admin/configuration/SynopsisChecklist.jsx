@@ -196,7 +196,6 @@ const SynopsisChecklist = () => {
             <InputSuggestions
               label="Add a department"
               apiUrl={`${baseURL}/suggestions/department`}
-              suggestionManadatory={false}
               onSelect={(picked) => {
                 if (!picked?.id) return;
                 setRule((prev) => (

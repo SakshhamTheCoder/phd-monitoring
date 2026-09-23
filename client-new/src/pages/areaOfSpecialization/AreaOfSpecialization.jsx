@@ -27,6 +27,8 @@ const AreaOfSpecialization = () => {
     department_id: '',
   });
   const [submitting, setSubmitting] = useState(false);
+  // Add or Update in flight: a second click created the area twice.
+  const [saving, setSaving] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const { setLoading } = useLoading();
   const location = useLocation();
@@ -75,11 +77,13 @@ const AreaOfSpecialization = () => {
   };
 
   const handleSubmit = async () => {
+    if (saving) return;
     if (!formData.name || !formData.department_id) {
       toast.error('Name and Department are required');
       return;
     }
 
+    setSaving(true);
     setLoading(true);
     try {
       const endpoint = editData
@@ -98,6 +102,7 @@ const AreaOfSpecialization = () => {
         toast.error(response.response?.message || (editData ? 'Failed to update area.' : 'Failed to add area.'));
       }
     } finally {
+      setSaving(false);
       setLoading(false);
     }
   };
@@ -127,7 +132,25 @@ const AreaOfSpecialization = () => {
     }
   };
 
+  // The departments a sheet covers, read the way the server reads it: the
+  // template names one per row, the institute's matrix one per column after
+  // the first.
+  const departmentsInSheet = ({ headers = [], data = [] }) => {
+    const codes = headers.some((header) => header.trim().toLowerCase() === 'name')
+      ? data.map((row) => row.department_code)
+      : headers.slice(1);
+    return [...new Set(codes.map((code) => String(code ?? '').trim()).filter(Boolean))];
+  };
+
   const handleCSVUpload = async (preview, reset) => {
+    // The server deletes every unused area of each department in the sheet
+    // that the sheet leaves out, so say which departments before it does.
+    const covered = departmentsInSheet(preview);
+    if (!window.confirm(
+      `Importing replaces the research areas of ${covered.join(', ') || 'the departments in this sheet'}. `
+      + 'Any area of theirs that is not in the sheet is deleted, unless a scholar or faculty member uses it. Continue?'
+    )) return;
+
     setSubmitting(true);
 
     const response = await customFetch(
@@ -216,6 +239,7 @@ Data Science,CSED`;
       <CustomModal
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
+        closeOnOutsideClick={false}
         title={editData ? 'Edit Area of Specialization' : 'Add Area of Specialization'}
         minWidth="600px"
         maxWidth="800px"
@@ -241,7 +265,7 @@ Data Science,CSED`;
           <GridContainer
             elements={[
               <CustomButton text="Cancel" onClick={() => setIsOpen(false)} />,
-              <CustomButton text={editData ? 'Update' : 'Add'} onClick={handleSubmit} />,
+              <CustomButton text={editData ? 'Update' : 'Add'} onClick={handleSubmit} disabled={saving} />,
             ]}
           />
         </div>

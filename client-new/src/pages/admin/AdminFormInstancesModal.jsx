@@ -1,7 +1,39 @@
-import React from "react";
+import React, { useState } from "react";
 import CustomModal from "../../components/forms/modal/CustomModal";
 import CustomButton from "../../components/forms/fields/CustomButton";
 import { EMPTY_VALUE } from "../../utils/timeParse";
+
+/**
+ * A step number, sent when the user leaves the field or presses Enter.
+ * Sending on every keystroke posted each digit on its way ("1" then "12"),
+ * a cleared field went out as null, and the answers could land out of order.
+ * The caller keys it on the saved value, so a fresh answer resets the draft.
+ */
+const StepInput = ({ id, value, min, max, onCommit }) => {
+  const [draft, setDraft] = useState(String(value));
+  const commit = () => {
+    const next = parseInt(draft, 10);
+    if (Number.isNaN(next) || next === value) {
+      setDraft(String(value));
+      return;
+    }
+    onCommit(next);
+  };
+  return (
+    <input
+      id={id}
+      type="number"
+      value={draft}
+      min={min}
+      max={max}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      // Enter commits by leaving the field, so the blur does not send it twice.
+      onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+      className="control-input"
+    />
+  );
+};
 
 /**
  * Every instance of one form: its stage, its steps, and the locks per role.
@@ -113,13 +145,13 @@ const AdminFormInstancesModal = ({
 
                         <div className="control-group">
                           <label htmlFor={`admin-form-management-current-step-index-in-steps-${instance.id}`}>Current Step (Index in Steps)</label>
-                          <input id={`admin-form-management-current-step-index-in-steps-${instance.id}`}
-                            type="number"
+                          <StepInput
+                            key={instance.current_step || 0}
+                            id={`admin-form-management-current-step-index-in-steps-${instance.id}`}
                             value={instance.current_step || 0}
                             min="0"
                             max={(instance.steps?.length || 1) - 1}
-                            onChange={(e) => {
-                              const newCurrentStep = parseInt(e.target.value);
+                            onCommit={(newCurrentStep) => {
                               const newMaximumStep = Math.max(instance.maximum_step || 0, newCurrentStep);
                               onUpdateSteps(
                                 form.form_type,
@@ -128,26 +160,25 @@ const AdminFormInstancesModal = ({
                                 newMaximumStep
                               );
                             }}
-                            className="control-input"
                           />
                         </div>
 
                         <div className="control-group">
                           <label htmlFor={`admin-form-management-maximum-step-max-reached-${instance.id}`}>Maximum Step (Max Reached)</label>
-                          <input id={`admin-form-management-maximum-step-max-reached-${instance.id}`}
-                            type="number"
+                          <StepInput
+                            key={instance.maximum_step || 0}
+                            id={`admin-form-management-maximum-step-max-reached-${instance.id}`}
                             value={instance.maximum_step || 0}
                             min={instance.current_step || 0}
                             max={(instance.steps?.length || 1) - 1}
-                            onChange={(e) =>
+                            onCommit={(newMaximumStep) =>
                               onUpdateSteps(
                                 form.form_type,
                                 instance.id,
                                 instance.current_step,
-                                parseInt(e.target.value)
+                                newMaximumStep
                               )
                             }
-                            className="control-input"
                           />
                         </div>
 
