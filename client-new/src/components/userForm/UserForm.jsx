@@ -172,8 +172,12 @@ const UserForm = ({ edit, userData, onClose }) => {
     }
   };
 
+  // Ids arrive as numbers from /roles and as strings from the select, so a
+  // strict comparison never matched once a role had been picked.
+  const roleById = (id) => roles.find(r => String(r.value) === String(id));
+
   const handleRoleChange = (roleId) => {
-    const selectedRole = roles.find(r => r.value === roleId);
+    const selectedRole = roleById(roleId);
     setFormData(prev => ({
       ...prev,
       role_id: roleId,
@@ -258,7 +262,7 @@ const UserForm = ({ edit, userData, onClose }) => {
             <DropdownField
               label="Status"
               options={statusOptions}
-              initialValue={statusOptions.find(s => s.value === formData.status)?.title || 'Active'}
+              initialValue={formData.status || 'active'}
               onChange={(value) => setFormData((prev) => ({ ...prev, status: value }))}
               key={`status_${formData.id || 'new'}`}
             />,
@@ -279,7 +283,7 @@ const UserForm = ({ edit, userData, onClose }) => {
               label="Main Role"
               required
               options={roles}
-              initialValue={formData.role_id ? roles.find(r => r.value === formData.role_id)?.title : ''}
+              initialValue={formData.role_id || ''}
               onChange={handleRoleChange}
               key={`role_${formData.id || 'new'}`}
             />
@@ -295,7 +299,7 @@ const UserForm = ({ edit, userData, onClose }) => {
                 <DropdownField
                   label="Current Role"
                   options={roles}
-                  initialValue={formData.current_role_id ? roles.find(r => r.value === formData.current_role_id)?.title : ''}
+                  initialValue={formData.current_role_id || ''}
                   onChange={(value) => setFormData((prev) => ({ ...prev, current_role_id: value }))}
                   key={`current_role_${formData.id || 'new'}`}
                 />
@@ -308,7 +312,7 @@ const UserForm = ({ edit, userData, onClose }) => {
                 <DropdownField
                   label="Default Role"
                   options={roles}
-                  initialValue={formData.default_role_id ? roles.find(r => r.value === formData.default_role_id)?.title : ''}
+                  initialValue={formData.default_role_id || ''}
                   onChange={(value) => setFormData((prev) => ({ ...prev, default_role_id: value }))}
                   key={`default_role_${formData.id || 'new'}`}
                 />
@@ -320,7 +324,7 @@ const UserForm = ({ edit, userData, onClose }) => {
           space={2}
         />
 
-        {roles.find(r => r.value === formData.role_id)?.role_name === 'ug_student' && (
+        {roleById(formData.role_id)?.role_name === 'ug_student' && (
           <>
             <label className="user-form-section-label">
               URF Details
