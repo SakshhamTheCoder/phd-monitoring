@@ -106,8 +106,12 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
     }
   };
   
+  // The route already names the scholar, so these two need not wait for the
+  // profile. Only /students/me has to learn the roll number from it.
+  const scholarRoll = roll_no || profile?.roll_no;
+
   const fetchAttendance = async () => {
-    const roll = profile?.roll_no;
+    const roll = scholarRoll;
     if (!roll) return;
     try {
       const res = await customFetch(
@@ -131,7 +135,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
    * section simply does not appear.
    */
   const fetchScholarSection = async (path, set) => {
-    const roll = profile?.roll_no;
+    const roll = scholarRoll;
     if (!roll) return;
     try {
       const res = await customFetch(`${baseURL}/students/${roll}/${path}`, 'GET', {}, false, false);
@@ -144,12 +148,19 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
     if (studentId) {
       fetchCourses();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.database_id, profile?.id]);
+
+  useEffect(() => {
     fetchAttendance();
     fetchScholarSection('publications', setPublications);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.database_id, profile?.id, profile?.roll_no]);
+  }, [scholarRoll]);
 
+  // The course list does not change while the profile is open, so Tag Course
+  // loads it once rather than on every click.
   const fetchAllCourses = async () => {
+    if (allCourses.length) return;
     try {
       const response = await customFetch(`${baseURL}/courses/all`, "GET", {}, false, false);
       if (response?.success) {
@@ -427,14 +438,14 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
                       the department's list on the supervisor allocation form and
                       settled on the IRB form, so this reports it. */}
                   <div className="inline-field-item" style={{ marginTop: '0.6rem' }}>
-                    <label htmlFor="profile-card-domain">Domain</label>
+                    <label>Domain</label>
                     <p className={profile.broad_area ? "" : "student-value-empty"}>
                       {profile.broad_area || 'Set on your supervisor allocation form'}
                     </p>
                   </div>
                   <div className="inline-field-item" style={{ marginTop: '0.6rem' }}>
                     <label htmlFor="profile-card-description">Description</label>
-                    <textarea id="profile-card-description" id="profile-card-domain"
+                    <textarea id="profile-card-description"
                       placeholder="Briefly describe your proposed research topic, objectives and methodology"
                       value={editForm.tentative_desc ?? ""}
                       disabled={profile.phd_title_locked}

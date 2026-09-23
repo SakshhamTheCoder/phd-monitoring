@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { customFetch } from '../../api/base';
+import { customFetch, NETWORK_ERROR_MESSAGE } from '../../api/base';
+import { apiDepartmentList } from '../../api/lookups';
 import { baseURL } from '../../api/urls';
 import Layout from '../../components/dashboard/layout';
 import { useLoading } from '../../context/LoadingContext';
@@ -57,12 +58,15 @@ const AdminCourseManagement = () => {
 
   const fetchDepartments = async () => {
     try {
-      const response = await customFetch(`${baseURL}/departments?rows=1000`, 'GET');
+      // The shared request is quiet, so this page reports its own failure.
+      const response = await apiDepartmentList();
       if (response.success) {
         setDepartments(response?.response?.data?.map(dept => ({
           value: dept.id,
           title: dept.name
         })));
+      } else {
+        toast.error(response.networkError ? NETWORK_ERROR_MESSAGE : (response.response?.message || 'Could not load departments.'));
       }
     } catch (error) {
       console.error('Error fetching departments:', error);

@@ -12,6 +12,7 @@ import InputField from '../../components/forms/fields/InputField';
 import DropdownField from '../../components/forms/fields/DropdownField';
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
 import { customFetch } from '../../api/base';
+import { apiDepartmentList } from '../../api/lookups';
 import { baseURL } from '../../api/urls';
 import { toast } from 'react-toastify';
 import './AreaOfSpecialization.css';
@@ -37,7 +38,7 @@ const AreaOfSpecialization = () => {
 
   const fetchDepartments = async () => {
     try {
-      const response = await customFetch(baseURL + '/departments?rows=1000', 'GET', {}, false);
+      const response = await apiDepartmentList();
       if (response.success || response.data) {
         const deptData = response.data || response.response?.data || [];
         setDepartments(

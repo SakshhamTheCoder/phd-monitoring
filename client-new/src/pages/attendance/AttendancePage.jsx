@@ -5,6 +5,7 @@ import Tabs from '../../components/tabs/Tabs';
 import { toast } from 'react-toastify';
 import { baseURL } from '../../api/urls';
 import { customFetch, isNetworkError, NETWORK_ERROR_MESSAGE } from '../../api/base';
+import { apiDepartmentList } from '../../api/lookups';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import LeaveRequests from './LeaveRequests';
@@ -76,8 +77,10 @@ const AttendancePage = () => {
   const monthRequest = useRef(0);
 
   useEffect(() => {
-    const url = isAdmin ? '/departments?rows=1000' : '/clerks/my-departments';
-    customFetch(baseURL + url, 'GET', {}, false)
+    const request = isAdmin
+      ? apiDepartmentList()
+      : customFetch(baseURL + '/clerks/my-departments', 'GET', {}, false);
+    request
       .then((res) => {
         const raw = isAdmin
           ? (res.response?.data || res.response?.departments || res.response || [])
@@ -237,12 +240,14 @@ const AttendancePage = () => {
     const token = localStorage.getItem('token');
     const params = new URLSearchParams({ from: exportFrom, to: exportTo, summary: '1' });
     if (exportDept) params.set('department_id', exportDept);
-    const res = await fetch(baseURL + `/clerks/attendance/export?${params.toString()}`, { headers: { Authorization: `Bearer ${token}` } });
-    if (!res.ok) { toast.error('Export failed.'); return; }
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `attendance_${exportFrom}_to_${exportTo}.csv`; a.click(); URL.revokeObjectURL(url);
-    toast.success('Export downloaded.');
+    try {
+      const res = await fetch(baseURL + `/clerks/attendance/export?${params.toString()}`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) { toast.error('Export failed.'); return; }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = `attendance_${exportFrom}_to_${exportTo}.csv`; a.click(); URL.revokeObjectURL(url);
+      toast.success('Export downloaded.');
+    } catch (e) { toast.error(isNetworkError(e) ? NETWORK_ERROR_MESSAGE : 'Export failed: ' + e.message); }
   };
 
   const todayDate = useMemo(() => { const d = new Date(); d.setHours(0,0,0,0); return d; }, []);

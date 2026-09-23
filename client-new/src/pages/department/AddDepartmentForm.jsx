@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
+import { apiDepartmentList } from '../../api/lookups';
 import InputField from '../../components/forms/fields/InputField';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import GridContainer from '../../components/forms/fields/GridContainer';
@@ -27,6 +28,8 @@ const AddDepartmentForm = ({ onClose, onCreated }) => {
     setSubmitting(false);
 
     if (result.success) {
+      // Pickers elsewhere share one cached list; the next one must see this department.
+      apiDepartmentList.invalidate();
       toast.success(result.response?.message || 'Department added successfully');
       if (onCreated) onCreated();
     } else {

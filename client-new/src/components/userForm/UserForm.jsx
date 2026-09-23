@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
+import { apiRoleList } from '../../api/lookups';
 import { toast } from 'react-toastify';
 import CustomButton from '../forms/fields/CustomButton';
 import InputField from '../forms/fields/InputField';
@@ -65,7 +66,7 @@ const UserForm = ({ edit, userData, onClose }) => {
 
   const fetchRoles = async () => {
     try {
-      const response = await customFetch(baseURL + '/roles', 'GET');
+      const response = await apiRoleList();
       const roleData = response.response.map(r => ({
         value: r.id,
         title: r.role.charAt(0).toUpperCase() + r.role.slice(1),

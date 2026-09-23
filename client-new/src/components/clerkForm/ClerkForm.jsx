@@ -6,6 +6,7 @@ import CustomButton from "../forms/fields/CustomButton";
 import DropdownField from "../forms/fields/DropdownField";
 import { customFetch } from "../../api/base";
 import { baseURL } from "../../api/urls";
+import { apiRoleList } from "../../api/lookups";
 
 const ClerkForm = ({ onSuccess, onClose }) => {
   const [submitting, setSubmitting] = useState(false);
@@ -20,7 +21,7 @@ const ClerkForm = ({ onSuccess, onClose }) => {
   });
 
   useEffect(() => {
-    customFetch(baseURL + "/roles", "GET").then((res) => {
+    apiRoleList().then((res) => {
       const clerk = (res.response || []).find((r) => r.role === "clerk");
       if (clerk) setClerkRoleId(clerk.id);
     }).catch(() => {});

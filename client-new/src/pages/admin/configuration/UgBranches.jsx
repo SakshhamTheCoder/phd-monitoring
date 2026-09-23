@@ -7,6 +7,7 @@ import InputSuggestions from '../../../components/forms/fields/InputSuggestions'
 import UnifiedBulkImportModal from '../../../components/bulkImport/UnifiedBulkImportModal';
 import { baseURL } from '../../../api/urls';
 import { apiBranchCreate, apiBranchDelete, apiBranchImport, apiBranchList, apiBranchUpdate } from '../../../api/urf';
+import { apiBranchOptions } from '../../../api/lookups';
 import './Configuration.css';
 
 const EMPTY = { programme: '', code: '', name: '', department_id: '', department: '' };
@@ -29,6 +30,9 @@ const UgBranches = () => {
   const [importOpen, setImportOpen] = useState(false);
 
   const load = useCallback(async () => {
+    // Every write here ends in a reload of this list; the pickers elsewhere
+    // share one cached copy, which has to go with it.
+    apiBranchOptions.invalidate();
     const res = await apiBranchList();
     if (res.success) setBranches(res.response);
   }, []);

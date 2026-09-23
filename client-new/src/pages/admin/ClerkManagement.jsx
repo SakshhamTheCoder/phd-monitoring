@@ -5,6 +5,7 @@ import FilterBar from '../../components/filterBar/FilterBar';
 import { toast } from 'react-toastify';
 import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
+import { apiDepartmentList } from '../../api/lookups';
 import { EMPTY_VALUE } from '../../utils/timeParse';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import CustomModal from '../../components/forms/modal/CustomModal';
@@ -47,7 +48,7 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
 
   useEffect(() => {
     loadClerks();
-    customFetch(baseURL + '/departments?rows=200', 'GET', {}, false).then((res) => {
+    apiDepartmentList().then((res) => {
       if (res.success) setDepartments(res.response.data || []);
     });
   }, []);

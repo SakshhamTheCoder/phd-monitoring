@@ -2,6 +2,11 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import { customFetch } from '../../../api/base';
 import "./Fields.css";
 
+// Shared by every instance, so the preference boxes on one form ask once for
+// the same text. Successes only. Cleared whole past a few hundred entries.
+const suggestionCache = new Map();
+const SUGGESTION_CACHE_LIMIT = 300;
+
 const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = false, showLabel = true, body, suggestionManadatory = true, fields=["name"], required = false, excludeIds = []}) => {
     const [inputValue, setInputValue] = useState(initialValue || '');
     const [suggestions, setSuggestions] = useState([]);
@@ -24,7 +29,6 @@ const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = 
     // The text the latest request was for. customFetch cannot be cancelled, so
     // a slow answer for "ab" could land after the one for "abc" and replace it.
     const currentQueryRef = useRef('');
-    const cacheRef = useRef({});  // Caching previous results
     const debounceTimeout = useRef(null);
 
     const handleInputChange = (event) => {
@@ -46,9 +50,10 @@ const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = 
     };
 
     const fetchSuggestions = async (value) => {
-        if (cacheRef.current[value]) {
+        const cacheKey = apiUrl + JSON.stringify(body) + value;
+        if (suggestionCache.has(cacheKey)) {
             setLoading(false);
-            setSuggestions(cacheRef.current[value]);
+            setSuggestions(suggestionCache.get(cacheKey));
             return;
         }
 
@@ -56,7 +61,10 @@ const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = 
         setLoading(true);
         const data = await customFetch(apiUrl, 'POST', finalBody, false);
         const fetchedSuggestions = data.success ? data.response || [] : [];
-        if (data.success) cacheRef.current[value] = fetchedSuggestions;
+        if (data.success) {
+            if (suggestionCache.size >= SUGGESTION_CACHE_LIMIT) suggestionCache.clear();
+            suggestionCache.set(cacheKey, fetchedSuggestions);
+        }
         if (value !== currentQueryRef.current) return;
         setLoading(false);
         setSuggestions(fetchedSuggestions);

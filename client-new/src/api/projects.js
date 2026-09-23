@@ -108,15 +108,18 @@ export const apiProjectStats = async () => {
 
 // Option lists come from the backend so the wizard cannot drift from the
 // validation. Cached for the life of the page — these change with a deploy,
-// not with a click.
-let metaCache = null;
-export const apiProjectMeta = async () => {
-  if (metaCache) return metaCache;
-  const { success, response } = await customFetch(`${baseURL}/projects/meta`, 'GET', {}, false);
-  metaCache = success
-    ? response
-    : { sdgs: [], manpowerCategories: [], budgetHeads: [], duration: { years: [0, 1, 2, 3, 4, 5], maxMonths: 11 } };
-  return metaCache;
+// not with a click. A failure is not kept, or the wizard would stay without
+// SDGs and budget heads until a reload.
+let metaRequest = null;
+export const apiProjectMeta = () => {
+  if (!metaRequest) {
+    metaRequest = customFetch(`${baseURL}/projects/meta`, 'GET', {}, false).then(({ success, response }) => {
+      if (success) return response;
+      metaRequest = null;
+      return { sdgs: [], manpowerCategories: [], budgetHeads: [], duration: { years: [0, 1, 2, 3, 4, 5], maxMonths: 11 } };
+    });
+  }
+  return metaRequest;
 };
 export const apiGetProject = async (id) => {
   const { success, response } = await customFetch(`${baseURL}/projects/${id}`, 'GET', {}, false);

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { apiUrfBranches } from '../api/urf';
+import { apiBranchOptions } from '../api/lookups';
 
 // Named with the programme, so the two Computer Science branches of different
 // degrees are told apart.
@@ -17,7 +17,9 @@ export const useBranches = () => {
   const [branches, setBranches] = useState([]);
 
   useEffect(() => {
-    apiUrfBranches().then((res) => res.success && setBranches(res.response));
+    let active = true;
+    apiBranchOptions().then((res) => active && res.success && setBranches(res.response));
+    return () => { active = false; };
   }, []);
 
   return branches;

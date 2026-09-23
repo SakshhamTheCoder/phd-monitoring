@@ -15,6 +15,7 @@ import { column } from '../../components/bulkImport/columns';
 import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
 import { toast } from 'react-toastify';
+import { apiDepartmentList } from '../../api/lookups';
 
 const DepartmentPage = () => {
   const [filter, setFilter] = useState([]);
@@ -78,6 +79,7 @@ CSED,Hod One,hod.one@thapar.edu,hcsed@thapar.edu,Adordc One,adordc.one@thapar.ed
       return;
     }
 
+    apiDepartmentList.invalidate();
     const { update_count: updated = 0, errors = [] } = response.response.data || {};
     toast.success(`${updated} departments updated`);
     errors.forEach((message) => toast.warn(message));
