@@ -22,7 +22,7 @@ class UrfDecisionController extends Controller
     use NotificationManager;
 
     private const FORMS = [
-        'urf-application' => [UrfApplication::class, 'URF application'],
+        'urf-application' => [UrfApplication::class, 'application'],
         'urf-additional-info' => [UrfFellow::class, 'additional information form'],
         'urf-half-yearly-report' => [UrfReport::class, 'half-yearly progress report'],
         'urf-final-report' => [UrfReport::class, 'final report'],
