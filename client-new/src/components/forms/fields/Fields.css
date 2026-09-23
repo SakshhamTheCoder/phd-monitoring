@@ -70,6 +70,44 @@
 .custom-button--success:hover { background-color: #12662f; border-color: #12662f; }
 .custom-button:disabled { opacity: 0.6; cursor: not-allowed; }
 
+/* Busy and done draw over the label, which stays in place for the width. */
+.custom-button { position: relative; }
+.custom-button-label { transition: opacity 150ms ease-out; }
+/* A quick action finishes before the delay runs out, so it never flickers. */
+.custom-button.is-busy .custom-button-label { opacity: 0; transition-delay: 120ms; }
+.custom-button.is-done .custom-button-label { opacity: 0; }
+/* Busy is not unavailable; it keeps its colour and says so with the cursor. */
+.custom-button.is-busy:disabled { opacity: 1; cursor: progress; }
+/* A done action that cannot be repeated shows its check at full strength. */
+.custom-button.is-done:disabled { opacity: 1; }
+
+.custom-button-spinner,
+.custom-button-check {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+}
+
+.custom-button-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: button-spin 0.7s linear infinite, fade-in 150ms ease-out 120ms both;
+}
+
+.custom-button-check {
+    width: 1em;
+    height: 1em;
+    font-size: var(--text-md);
+    line-height: 1;
+    animation: check-in 200ms ease-out both;
+}
+
+@keyframes button-spin { to { transform: rotate(360deg); } }
+@keyframes check-in { from { opacity: 0; transform: scale(0.4); } }
+
 .input-suggestions-container {
     position: relative;
     width: 100%;

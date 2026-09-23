@@ -128,6 +128,68 @@
     border-radius: var(--radius-sm);
 }
 
+/* ==========================================================================
+   Motion
+
+   Only to confirm an action, show where something went, or show a change:
+   150 to 250ms, ease-out, no bounce. Shared keyframes live here so a fade is
+   the same fade everywhere.
+   ========================================================================== */
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes slide-in { from { opacity: 0; transform: translateY(-4px); } }
+@keyframes pop-in { from { opacity: 0; transform: scale(0.85); } }
+
+/* Content that replaces a loading or empty state. */
+.reveal { animation: fade-in 200ms ease-out; }
+
+/* An item the user just added or changed, marked where it landed. The tint
+   fades out slower than a transition runs, long enough to be found. */
+@keyframes landed { from { background-color: color-mix(in srgb, var(--primary-color) 12%, transparent); } }
+.just-added { animation: landed 1s ease-out; }
+
+/* An Undo inside a toast (utils/undoToast.jsx). */
+.toast-undo { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.toast-undo button {
+    border: none;
+    background: none;
+    padding: var(--space-1) var(--space-2);
+    font: inherit;
+    font-weight: 600;
+    color: var(--primary-color);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+}
+.toast-undo button:hover { background: var(--primary-wash); }
+
+/* A native select's chevron turns while its list is open. Only browsers with
+   customizable selects can reach the chevron; the rest keep their own. The
+   list itself stays the browser's. :where keeps each page's own select rules
+   in charge of colour and size. */
+@supports (appearance: base-select) {
+    :where(select) {
+        appearance: base-select;
+        background-color: var(--surface);
+        color: inherit;
+    }
+    :where(select)::picker-icon { transition: rotate 200ms ease-out; }
+    :where(select):open::picker-icon { rotate: 180deg; }
+}
+
+/* Someone who asked for less motion gets the end state at once. This has to
+   beat every component's own animation and transition, hence !important. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        animation-delay: 0s !important;
+        transition-duration: 0.01ms !important;
+        transition-delay: 0s !important;
+        scroll-behavior: auto !important;
+    }
+}
+
 /* Read by a screen reader, not drawn. */
 .sr-only {
     position: absolute;
