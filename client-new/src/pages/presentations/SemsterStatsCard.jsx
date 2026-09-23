@@ -18,7 +18,7 @@ import SchedulePresentation from "../../components/forms/presentations/ScheduleP
 import FileUploadField from "../../components/forms/fields/FileUploadField";
 // import FilterBar from "../../components/filterBar/FilterBar";
 import { set } from "react-hook-form";
-import { formatDate } from '../../utils/timeParse';
+import { formatDate, toDateValue } from '../../utils/timeParse';
 import { currentRole } from '../../auth/access';
 
 const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
@@ -117,12 +117,8 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
       formData.append('semester_name', editForm.semester_name);
       
       // Format dates as Y-m-d
-      const startDate = editForm.start_date instanceof Date 
-        ? editForm.start_date.toISOString().split('T')[0]
-        : editForm.start_date;
-      const endDate = editForm.end_date instanceof Date 
-        ? editForm.end_date.toISOString().split('T')[0]
-        : editForm.end_date;
+      const startDate = editForm.start_date instanceof Date ? toDateValue(editForm.start_date) : editForm.start_date;
+      const endDate = editForm.end_date instanceof Date ? toDateValue(editForm.end_date) : editForm.end_date;
       
       formData.append('start_date', startDate);
       formData.append('end_date', endDate);
@@ -160,12 +156,8 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
       formData.append('semester_name', createForm.semester_name);
       
       // Format dates as Y-m-d
-      const startDate = createForm.start_date instanceof Date 
-        ? createForm.start_date.toISOString().split('T')[0]
-        : createForm.start_date;
-      const endDate = createForm.end_date instanceof Date 
-        ? createForm.end_date.toISOString().split('T')[0]
-        : createForm.end_date;
+      const startDate = createForm.start_date instanceof Date ? toDateValue(createForm.start_date) : createForm.start_date;
+      const endDate = createForm.end_date instanceof Date ? toDateValue(createForm.end_date) : createForm.end_date;
       
       formData.append('start_date', startDate);
       formData.append('end_date', endDate);

@@ -62,6 +62,10 @@ const BulkSchedulePresentation = ({semester_name}) => {
         )
           return;
 
+        // The sample file starts with this header row. Posted as a scholar, it
+        // failed validation and took the whole batch down with it.
+        if (String(rowArr[0]).trim() === headers[0]) return;
+
         if (rowArr.length !== expectedColumns) {
           invalidRows++;
           console.warn(`Invalid column count in row ${index + 1}`, rowArr);
@@ -79,7 +83,12 @@ const BulkSchedulePresentation = ({semester_name}) => {
           rowObj['Date'] = formatDate(date);
         } else {
           const parsed = new Date(rawDate);
-          rowObj['Date'] = formatDate(parsed, 'Invalid Date');
+          if (Number.isNaN(parsed.getTime())) {
+            invalidRows++;
+            console.warn(`Invalid date in row ${index + 1}`, rowArr);
+            return;
+          }
+          rowObj['Date'] = formatDate(parsed);
         }
 
         const raw = rowObj['Additional Guest Email'] || '';

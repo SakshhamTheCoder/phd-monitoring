@@ -19,7 +19,8 @@ const SchedulePresentation = ({ close, semester }) => {
   const [reportPeriods, setReportPeriods] = useState([]);
 
     useEffect(() => {
-        const url = baseURL + "/students";
+        // Without all=true the list is paginated and stops at the first 15 names.
+        const url = baseURL + "/students?all=true";
         customFetch(url, "GET")
           .then((data) => {
             if (data && data.success) {

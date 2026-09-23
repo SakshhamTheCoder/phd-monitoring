@@ -22,6 +22,7 @@ import UnifiedBulkImportModal from "../../components/bulkImport/UnifiedBulkImpor
 import { column } from "../../components/bulkImport/columns";
 import { set } from "react-hook-form";
 import { currentRole } from '../../auth/access';
+import { toDateValue } from '../../utils/timeParse';
 
 const PresentationSemester = () => {
   const [role, setRole] = useState("");
@@ -66,9 +67,10 @@ const PresentationSemester = () => {
     try {
       const formData = new FormData();
       formData.append('semester_name', editForm.semester_name);
-      formData.append('start_date', editForm.start_date);
-      formData.append('end_date', editForm.end_date);
-      formData.append('notification', editForm.notification);
+      formData.append('start_date', toDateValue(editForm.start_date));
+      formData.append('end_date', toDateValue(editForm.end_date));
+      // Laravel's boolean rule refuses the strings "true" and "false".
+      formData.append('notification', editForm.notification ? '1' : '0');
       
       if (editForm.ppt_file && editForm.ppt_file instanceof File) {
         formData.append('ppt_file', editForm.ppt_file);
