@@ -15,6 +15,16 @@ const YEARS = [
   { value: 4, label: '4th Year' },
 ];
 
+const field = 'tw-w-full tw-rounded tw-border tw-border-slate-400 tw-px-3 tw-py-2 tw-text-black focus:tw-ring-2 focus:tw-ring-brand tw-outline-none';
+
+const Field = ({ id, label, error, children }) => (
+  <div>
+    <label htmlFor={id} className="tw-block tw-text-sm tw-text-gray-700 tw-mb-1">{label}</label>
+    {children}
+    {error && <p className="tw-text-red-600 tw-text-xs tw-mt-1">{error}</p>}
+  </div>
+);
+
 const SignupPage = () => {
   const { register, handleSubmit, reset } = useForm();
   const branches = useBranches();
