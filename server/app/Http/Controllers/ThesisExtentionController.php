@@ -155,11 +155,14 @@ class ThesisExtentionController extends Controller
                     $formInstance->student->save();
                 }
                 if($formInstance->student->thesisExtentions->count()>0){
+                    // A resubmission after a send-back keeps the stored PDF unless a new one comes.
                     $request->validate([
-                        'previous_extention_pdf' => 'required|file|mimes:pdf|max:20480',
+                        'previous_extention_pdf' => ($formInstance->previous_extention_pdf ? 'nullable' : 'required').'|file|mimes:pdf|max:20480',
                     ]);
-                    $link=$this->replaceUploadedFile($formInstance->previous_extention_pdf, $request->file('previous_extention_pdf'), 'thesis_extention', $user->student->roll_no);
-                    $formInstance->previous_extention_pdf = $link;
+                    if($request->hasFile('previous_extention_pdf')){
+                        $link=$this->replaceUploadedFile($formInstance->previous_extention_pdf, $request->file('previous_extention_pdf'), 'thesis_extention', $user->student->roll_no);
+                        $formInstance->previous_extention_pdf = $link;
+                    }
                 }
                 $formInstance->reason = $request->reason;
         }

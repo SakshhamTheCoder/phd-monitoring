@@ -155,7 +155,7 @@ class ConstituteOfIRBController extends Controller
             'form_ids' => 'required|array',
         ]);
         $request->validate([
-            'form_ids.*' => 'integer|exists:constitute_of_irbs,id',
+            'form_ids.*' => 'integer|exists:constitute_of_irb,id',
         ]);
         $request->merge(['approval' => true]);
         foreach ($request->form_ids as $formId) {
@@ -172,26 +172,34 @@ class ConstituteOfIRBController extends Controller
     {
         $request->validate([
             'semester' => 'integer',
-            'gender' => 'string|in:Male,Female',
-            'cgpa' => 'numeric',
+            'gender' => 'nullable|string|in:Male,Female',
+            'cgpa' => 'nullable|numeric',
             'objectives' => 'required|array',
             'title' => 'required|string',
-            'irb_pdf' => 'required|file|mimes:pdf|max:20480',
+            'irb_pdf' => 'nullable|file|mimes:pdf|max:20480',
             'address' => 'required|string',
             'broad_area_of_research' => 'nullable|string|max:255',
             'subdomains' => 'nullable|array',
             'subdomains.*' => 'string',
         ]);
         return $this->submitForm($user,$request, $form_id, ConstituteOfIRB::class, 'student','student','faculty',  function ($formInstance) use ($request, $user) {
-            if(!$formInstance->student->gender) {
+            // Each is asked for only when the profile lacks it. Gender lives on
+            // the user, not the student.
+            if(!$formInstance->student->cgpa) {
                 $request->validate([
                     'cgpa' => 'required|numeric',
                 ]);
             }
-            if(!$formInstance->student->cgpa) {
+            if(!$formInstance->student->user?->gender) {
                 $request->validate([
-                    'gender' => 'required|string|in: Male,Female'
+                    'gender' => 'required|string|in:Male,Female'
                 ]);}
+            // A resubmission after a send-back keeps the stored PDF unless a new one comes.
+            if(!$formInstance->irb_pdf) {
+                $request->validate([
+                    'irb_pdf' => 'required|file|mimes:pdf|max:20480',
+                ]);
+            }
             $formInstance->update([
                 'semester' => $request->semester,
             ]);
@@ -222,7 +230,9 @@ class ConstituteOfIRBController extends Controller
                 ]);
             }
             //save pdf
-            $link=$this->replaceUploadedFile($formInstance->irb_pdf, $request->file('irb_pdf'), 'irb_const', $user->student->roll_no);
+            $link = $request->hasFile('irb_pdf')
+                ? $this->replaceUploadedFile($formInstance->irb_pdf, $request->file('irb_pdf'), 'irb_const', $user->student->roll_no)
+                : $formInstance->irb_pdf;
            
             $formInstance->student->address = $request->address;
             

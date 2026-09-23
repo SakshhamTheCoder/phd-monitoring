@@ -283,7 +283,8 @@ const Student = ({ formData, refetchData = null, }) => {
                     <InputField required={true}
                       label="No. of papers in SCI/SCIE/SSCI/ABDC/AHCI journal"
                       initialValue={formData.no_paper_sci_journal}
-                      isLocked={lock}
+                      // Counted by the server from the linked publications; an edit here was never saved.
+                      isLocked={true}
                       onChange={(value) => {
                         setBody((prev) => ({
                           ...prev,
@@ -299,7 +300,7 @@ const Student = ({ formData, refetchData = null, }) => {
                     <InputField required={true}
                       label="No. of papers in Scopus journal"
                       initialValue={formData.no_paper_scopus_journal}
-                      isLocked={lock}
+                      isLocked={true}
                       onChange={(value) => {
                         setBody((prev) => ({
                           ...prev,
@@ -315,7 +316,7 @@ const Student = ({ formData, refetchData = null, }) => {
                     <InputField required={true}
                       label="No. of papers in conferences under report"
                       initialValue={formData.no_paper_conference}
-                      isLocked={lock}
+                      isLocked={true}
                       onChange={(value) => {
                         setBody((prev) => ({
                           ...prev,
@@ -374,14 +375,13 @@ const Student = ({ formData, refetchData = null, }) => {
           </div>
           <GridContainer
             elements={[
-              <FileUploadField required={true}
+              <FileUploadField required={!formData.presentation_pdf}
                 label={"Upload presentation PDF"}
                 onChange={(file) => {
                   setFiles([{ key: "presentation_pdf", file }]);
                 }}
                  isLocked={lock}
                 initialValue={formData.presentation_pdf}
-                required={true}
               />,
               // Only show the sample when one has actually been set for this semester.
               ...(formData.ppt_file

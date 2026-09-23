@@ -18,6 +18,9 @@ class StudentStatusChange extends Model
         'student_id',
         'previous_status',
         'new_status',
+        // Student::initialStatus() reads this; without it every change was
+        // stored with a null type and read back as part-time.
+        'type_of_change',
         'reason',
         'status',
         'date',

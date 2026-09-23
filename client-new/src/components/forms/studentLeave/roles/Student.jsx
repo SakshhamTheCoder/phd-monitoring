@@ -96,7 +96,7 @@ const Student = ({ formData, onReload }) => {
   const handleSubmit = async () => {
     if (!fromDate || !toDate) { toast.error('Select the from and to dates'); return; }
     if (!reason.trim()) { toast.error('A reason is required'); return; }
-    if (leaveType === 'academic' && !file) { toast.error('Attach a supporting PDF for an academic leave'); return; }
+    if (leaveType === 'academic' && !file && !instance?.supporting_document) { toast.error('Attach a supporting PDF for an academic leave'); return; }
 
     const body = new FormData();
     body.append('leave_type', leaveType);
@@ -211,7 +211,7 @@ const Student = ({ formData, onReload }) => {
       {leaveType === 'academic' && (
         <FileUploadField
           label="Supporting document"
-          required
+          required={!instance?.supporting_document}
           initialValue={instance?.supporting_document}
           isLocked={lock}
           onChange={setFile}

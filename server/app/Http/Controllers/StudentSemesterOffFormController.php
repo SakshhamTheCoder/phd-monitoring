@@ -161,7 +161,8 @@ class StudentSemesterOffFormController extends Controller
                 $prev_semester_off=StudentSemesterOff::where('student_id',$user->student->roll_no);
                 if ($prev_semester_off->count() > 0) {
                     $request->validate([
-                        'previous_approval_pdf' => 'required|file|mimes:pdf|max:20480',
+                        // A resubmission after a send-back keeps the stored PDF unless a new one comes.
+                        'previous_approval_pdf' => ($formInstance->previous_approval_pdf ? 'nullable' : 'required').'|file|mimes:pdf|max:20480',
                     ]);
                     if($request->hasFile('previous_approval_pdf')){
                         $link=$this->replaceUploadedFile($formInstance->previous_approval_pdf, $request->file('previous_approval_pdf'), 'semester_off', $user->student->roll_no);

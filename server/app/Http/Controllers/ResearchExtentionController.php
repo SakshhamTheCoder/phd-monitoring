@@ -161,7 +161,7 @@ class ResearchExtentionController extends Controller
         }
         $request->validate([
             'form_ids' => 'required|array',
-            'form_ids.*' => 'exists:research_extentions_forms,id',
+            'form_ids.*' => 'exists:research_extentions_form,id',
         ]);
         $request->merge(['approval' => true]);
         foreach ($request->form_ids as $form_id) {
@@ -174,17 +174,20 @@ class ResearchExtentionController extends Controller
         $model = ResearchExtentionsForm::class;
         return $this->submitForm($user, $request, $form_id, $model, 'student', 'student', 'faculty',
         function ($formInstance) use ($request, $user) {
+            // A resubmission after a send-back keeps the stored PDF unless a new one comes.
             $request->validate([
                 'reason' => 'required|string',
-                'duration' => 'integer',
-                'research_pdf' => 'required|file|mimes:pdf|max:20480',
+                'period_of_extention' => 'nullable|integer',
+                'research_pdf' => ($formInstance->research_pdf ? 'nullable' : 'required').'|file|mimes:pdf|max:20480',
             ]);
             $formInstance->reason = $request->reason;
-            if($request->has('duration')){
-                $formInstance->duration = $request->duration;
+            // The column defaults to six months; only an explicit period overrides it.
+            if($request->filled('period_of_extention')){
+                $formInstance->period_of_extention = $request->period_of_extention;
             }
-            $filePath=$this->replaceUploadedFile($formInstance->research_pdf, $request->file('research_pdf'), 'research_extentions', $user->student->roll_no);
-            $formInstance->research_pdf = $filePath;
+            if($request->hasFile('research_pdf')){
+                $formInstance->research_pdf = $this->replaceUploadedFile($formInstance->research_pdf, $request->file('research_pdf'), 'research_extentions', $user->student->roll_no);
+            }
         });
     }
 

@@ -149,7 +149,7 @@ const Student = ({ formData }) => {
         <GridContainer
           elements={[
             <FileUploadField
-              required={true}
+              required={!formData.previous_extention_pdf}
               label="Previous extension approval"
               maxSizeMB={20}
               isLocked={lock}

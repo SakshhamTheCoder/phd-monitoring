@@ -60,6 +60,8 @@ class SupervisorChangeForm extends Model
                     'name' => $faculty?->user->name(),
                     'designation' => $faculty?->designation,
                     'department' => $faculty?->department->name,
+                    // The form seeds a resubmission from these codes.
+                    'faculty_code' => $supervisor,
                 ];
                 }),
             'prefrences' => collect($this->prefrences)->map(function ($preference) {
@@ -71,6 +73,7 @@ class SupervisorChangeForm extends Model
                 'name' => $faculty->user->name(),
                 'designation' => $faculty->designation,
                 'department' => $faculty->department->name,
+                'faculty_code' => $preference,
             ];
             }),
             'current_supervisors' => collect($this->current_supervisors)->map(function ($supervisor) {
@@ -87,6 +90,7 @@ class SupervisorChangeForm extends Model
                 'name' => $faculty->user->name(),
                 'designation' => $faculty->designation,
                 'department' => $faculty->department->name,
+                'faculty_code' => $supervisor,
             ];
             }),
             'irb_submitted' => $this->irb_submitted,

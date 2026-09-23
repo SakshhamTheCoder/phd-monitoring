@@ -355,7 +355,7 @@ const Student = ({ formData }) => {
 
           <GridContainer
             elements={[
-              <FileUploadField required={true}
+              <FileUploadField required={!formData.thesis_pdf}
                 label={"Upload thesis PDF"}
                 onChange={(file) => {
                   setFiles((prev) => {
@@ -366,7 +366,7 @@ const Student = ({ formData }) => {
                 isLocked={lock}
                 initialValue={formData.thesis_pdf}
               />,
-              <FileUploadField required={true}
+              <FileUploadField required={!formData.fee_receipt}
                 label={"Upload fee receipt"}
                 onChange={(file) => {
                   setFiles((prev) => {

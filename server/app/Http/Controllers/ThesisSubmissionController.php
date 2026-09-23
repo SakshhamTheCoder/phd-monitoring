@@ -269,12 +269,13 @@ class ThesisSubmissionController extends Controller
             'student',
             'faculty',
             function ($formInstance) use ($request, $user) {
+                // A resubmission after a send-back keeps the stored files unless new ones come.
                 $request->validate([
                     'date_of_synopsis' => 'required|date',
                     'reciept_no' => 'required|string',
                     'date_of_fee_submission' => 'required|date',
-                    'thesis_pdf' => 'required|file|mimes:pdf|max:20480',
-                    'fee_receipt' => 'required|file|mimes:pdf,jpg,jpeg,png|max:20480',
+                    'thesis_pdf' => ($formInstance->thesis_pdf ? 'nullable' : 'required').'|file|mimes:pdf|max:20480',
+                    'fee_receipt' => ($formInstance->fee_receipt ? 'nullable' : 'required').'|file|mimes:pdf,jpg,jpeg,png|max:20480',
                 ]);
                 $formInstance->date_of_synopsis = $request->date_of_synopsis;
                 if ($formInstance->student->date_of_synopsis == null) {
@@ -283,8 +284,12 @@ class ThesisSubmissionController extends Controller
                 }
                 $formInstance->reciept_no = $request->reciept_no;
                 $formInstance->date_of_fee_submission = $request->date_of_fee_submission;
-                $formInstance->thesis_pdf = $this->replaceUploadedFile($formInstance->thesis_pdf, $request->file('thesis_pdf'), 'thesis', $user->student->roll_no);
-                $formInstance->fee_receipt = $this->replaceUploadedFile($formInstance->fee_receipt, $request->file('fee_receipt'), 'fee_receipt', $user->student->roll_no);
+                if ($request->hasFile('thesis_pdf')) {
+                    $formInstance->thesis_pdf = $this->replaceUploadedFile($formInstance->thesis_pdf, $request->file('thesis_pdf'), 'thesis', $user->student->roll_no);
+                }
+                if ($request->hasFile('fee_receipt')) {
+                    $formInstance->fee_receipt = $this->replaceUploadedFile($formInstance->fee_receipt, $request->file('fee_receipt'), 'fee_receipt', $user->student->roll_no);
+                }
                
         }
         );

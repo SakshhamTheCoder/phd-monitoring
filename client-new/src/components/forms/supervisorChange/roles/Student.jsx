@@ -22,14 +22,20 @@ const Student = ({ formData }) => {
 
   useEffect(() => {
     const prefrences = (formData?.prefrences || []).map(
-      (prefrence) => prefrence.faculty_code
+      (prefrence) => prefrence?.faculty_code ?? null
     );
     if (prefrences.length < 3) {
       for (let i = prefrences.length; i < 3; i++) prefrences.push(null);
     }
+    // Seeded from a sent-back form, so resubmitting without retyping sends the
+    // earlier answers instead of failing validation.
     setBody({
       prefrences: prefrences,
+      reason: formData?.reason,
     });
+    setSelectedSupervisors(
+      (formData?.to_change || []).map((sup) => sup?.faculty_code).filter(Boolean)
+    );
     setLock(formData.locks?.student);
     setIsLoaded(true);
   }, [formData]);

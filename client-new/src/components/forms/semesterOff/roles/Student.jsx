@@ -133,7 +133,7 @@ const Student = ({ formData }) => {
               <>
                 {prevOff && (
                   <FileUploadField
-                    required={true}
+                    required={!formData.previous_approval_pdf}
                     label={"Attach previous approval"}
                     onChange={(file) => handleFileChange("previous_approval_pdf", file)}
                     isLocked={prevOff && lock}

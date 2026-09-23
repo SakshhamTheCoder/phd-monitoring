@@ -258,7 +258,7 @@ const Student = ({ formData }) => {
           <GridContainer
             label="Upload IRB PDF file"
             elements={[
-              <FileUploadField required={true}
+              <FileUploadField required={!formData.irb_pdf}
                 initialValue={formData.irb_pdf}
                 showLabel={false}
                 isLocked={lock || formData.form_type === "revised"}

@@ -377,7 +377,7 @@ const Student = ({ formData }) => {
 
           <GridContainer
             elements={[
-              <FileUploadField required={true}
+              <FileUploadField required={!formData.synopsis_pdf}
                 label={"Upload PDF"}
                 onChange={(file) => {
                   setFiles([{ key: "synopsis_pdf", file }]);

@@ -187,7 +187,7 @@ class IrbSubController extends Controller
         $request->validate([
             'revised_phd_objectives' => 'required|array',
             'revised_phd_title' => 'required|string',
-            'irb_pdf' => 'required|file|mimes:pdf|max:20480',
+            'irb_pdf' => 'nullable|file|mimes:pdf|max:20480',
             'date_of_irb' => 'required|string',
         ]);
 
@@ -195,8 +195,13 @@ class IrbSubController extends Controller
 
         return $this->submitForm($user, $request, $form_id, $model,'student', 'student','faculty',
         function ($formInstance) use ($request, $user) {
-        
-            $link=$this->replaceUploadedFile($formInstance->revised_irb_pdf, $request->file('irb_pdf'), 'irb_sub_rev', $user->student->roll_no);
+            // A resubmission after a send-back keeps the stored PDF unless a new one comes.
+            if (!$formInstance->revised_irb_pdf) {
+                $request->validate(['irb_pdf' => 'required|file|mimes:pdf|max:20480']);
+            }
+            $link = $request->hasFile('irb_pdf')
+                ? $this->replaceUploadedFile($formInstance->revised_irb_pdf, $request->file('irb_pdf'), 'irb_sub_rev', $user->student->roll_no)
+                : $formInstance->revised_irb_pdf;
           
                 $formInstance->revised_phd_title = $request->revised_phd_title;
                 $formInstance->revised_irb_pdf = $link;
@@ -349,7 +354,8 @@ class IrbSubController extends Controller
         
         }
         else{
-            $formInstance->supervisorApprovals()->where('supervisor_id', $faculty_code)->update([
+            // A committee member's rejection belongs on the committee's approvals.
+            $formInstance->doctoralApprovals()->where('doctoral_id', $faculty_code)->update([
               'status' => 'rejected',
             ]);
         }

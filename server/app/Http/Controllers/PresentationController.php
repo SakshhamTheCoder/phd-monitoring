@@ -955,7 +955,8 @@ class PresentationController extends Controller
             function ($formInstance) use ($request, $user) {
                 $request->validate([
                     'teaching_work' => 'required| in:UG,PG,Both,None',
-                    'presentation_pdf' => 'required|file|mimes:pdf|max:20480',
+                    // A resubmission after a send-back keeps the stored PDF unless a new one comes.
+                    'presentation_pdf' => ($formInstance->presentation_pdf ? 'nullable' : 'required').'|file|mimes:pdf|max:20480',
                 ]);
 
 
@@ -964,7 +965,9 @@ class PresentationController extends Controller
                 // $formInstance->no_paper_scopus_journal=$request->no_paper_scopus_journal;
                 // $formInstance->no_paper_conference=$request->no_paper_conference;
 
-                $formInstance->presentation_pdf = $this->replaceUploadedFile($formInstance->presentation_pdf, $request->file('presentation_pdf'), 'presentation_pdf', $user->student->roll_no);
+                if ($request->hasFile('presentation_pdf')) {
+                    $formInstance->presentation_pdf = $this->replaceUploadedFile($formInstance->presentation_pdf, $request->file('presentation_pdf'), 'presentation_pdf', $user->student->roll_no);
+                }
                 $formInstance->missed=0;
 
                 $formInstance->supervisor_lock = 0;
