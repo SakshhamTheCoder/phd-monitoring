@@ -646,7 +646,9 @@ const CreateProject = () => {
               aria-current={i === currentStep ? 'step' : undefined}
               aria-label={`Step ${i + 1}: ${stepName}`}
             >
-              {i < currentStep ? <i className="fa fa-check" aria-hidden="true"></i> : <span>{String(i + 1).padStart(2, '0')}</span>}
+              {/* Both are drawn so a finished step's number can turn into the check. */}
+              <span className="cp-step-num">{String(i + 1).padStart(2, '0')}</span>
+              <i className="fa fa-check cp-step-check" aria-hidden="true"></i>
             </button>
             {i < STEPS.length - 1 && <div className={`cp-step-line ${i < currentStep ? 'done' : ''}`}></div>}
           </React.Fragment>

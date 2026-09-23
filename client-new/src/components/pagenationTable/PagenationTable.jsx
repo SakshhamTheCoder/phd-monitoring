@@ -277,7 +277,8 @@ const PagenationTable = ({
             return (
               <tr
                 key={formId}
-                className={`form-row ${clickable ? "row-link" : ""} ${selecting && selectedForms.has(formId) ? "selected-row" : ""}`}
+                // reveal: a row arriving (first load, a new page, a filter) fades in.
+                className={`form-row reveal ${clickable ? "row-link" : ""} ${selecting && selectedForms.has(formId) ? "selected-row" : ""}`}
                 tabIndex={clickable ? 0 : -1}
                 onClick={clickable ? () => selectMode ? toggleSelectOne(formId) : openForm(form) : undefined}
                 // Only Enter on the row itself. Enter on a button, link or tick

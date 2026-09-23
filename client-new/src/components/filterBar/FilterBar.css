@@ -129,6 +129,8 @@
   color: var(--text-color);
   font-size: var(--text-sm);
   font-weight: 400;
+  /* A new chip pops in where it landed, confirming the filter took. */
+  animation: pop-in 150ms ease-out;
 }
 
 .filter-chip button {

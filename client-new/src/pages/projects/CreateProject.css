@@ -27,8 +27,25 @@
 .cp-step-dot.active { border-color: var(--primary-color); color: var(--primary-color); box-shadow: 0 0 0 4px var(--primary-tint); }
 .cp-step-dot.done { border-color: var(--primary-color); background: var(--primary-color); color: var(--surface); }
 .cp-step-dot:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 2px; }
-.cp-step-line { flex: 1; height: 2px; background: var(--border-color); margin: 0 var(--space-1); }
-.cp-step-line.done { background: var(--primary-color); }
+/* The number and the check share the dot; finishing a step swaps them. */
+.cp-step-dot { position: relative; }
+.cp-step-num,
+.cp-step-check { transition: opacity 200ms ease-out, transform 200ms ease-out; }
+.cp-step-check { position: absolute; opacity: 0; transform: scale(0.4); }
+.cp-step-dot.done .cp-step-num { opacity: 0; transform: scale(0.4); }
+.cp-step-dot.done .cp-step-check { opacity: 1; transform: none; }
+/* The connector fills from the finished step towards the next one. */
+.cp-step-line { flex: 1; height: 2px; background: var(--border-color); margin: 0 var(--space-1); position: relative; }
+.cp-step-line::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--primary-color);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 250ms ease-out;
+}
+.cp-step-line.done::after { transform: none; }
 .cp-step-labels { display: flex; justify-content: space-between; }
 .cp-step-label { font-size: var(--text-xs); color: var(--text-muted); font-weight: 500; text-align: center; width: 80px; }
 .cp-step-label.active { color: var(--primary-color); font-weight: 600; }
