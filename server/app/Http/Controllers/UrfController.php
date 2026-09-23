@@ -17,6 +17,7 @@ use App\Models\UrfReport;
 use App\Models\UrfReportWindow;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -414,6 +415,8 @@ class UrfController extends Controller
         }
 
         $window->fill($data)->save();
+        // A round that opens today is announced now rather than at tomorrow's run.
+        Artisan::call('urf:announce-report-rounds');
 
         return response()->json($window, 201);
     }

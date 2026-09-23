@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Department;
 use App\Models\UgBranch;
 use App\Models\Faculty;
+use App\Models\Notifications;
 use App\Models\Role;
 use App\Models\UrfApplication;
 use App\Models\UrfReportWindow;
@@ -113,6 +114,14 @@ class UrfFlowTest extends TestCase
         $this->actingAs($applicant, 'sanctum')->postJson("/api/urf/{$id}/reports", $report)->assertStatus(422);
         $this->actingAs($admin, 'sanctum')->postJson("/api/urf/{$id}/status", ['status' => 'ongoing'])->assertStatus(422);
         $this->actingAs($admin, 'sanctum')->postJson("/api/urf/{$id}/status", ['status' => 'selected'])->assertOk();
+
+        // Both students hear of each open round once, however often it runs.
+        $roundNotices = fn () => Notifications::whereIn('user_id', [$applicant->id, $partner->id])
+            ->where('link', 'like', '/forms?urf_round=%')->count();
+        $this->artisan('urf:announce-report-rounds')->assertSuccessful();
+        $this->assertSame(4, $roundNotices());
+        $this->artisan('urf:announce-report-rounds')->assertSuccessful();
+        $this->assertSame(4, $roundNotices());
         $this->actingAs($partner, 'sanctum')->postJson("/api/urf/{$id}/fellow", [
             'full_name' => 'Ravi Kumar', 'dob' => '2004-05-06', 'gender' => 'Male', 'father_name' => 'Mohan Kumar',
             'pan' => 'abcde1234f', 'aadhaar' => '1234 5678 9012', 'bank_name' => 'SBI', 'account_no' => '123456789012', 'ifsc' => 'sbin0001234',

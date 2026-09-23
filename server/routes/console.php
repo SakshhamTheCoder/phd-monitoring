@@ -17,3 +17,7 @@ Schedule::command('queue:work --stop-when-empty')->everyMinute()->withoutOverlap
 // One pass a day is enough: the warning window is a month wide and the command
 // will not send the same warning twice.
 Schedule::command('thesis:notify-deadlines')->dailyAt('06:00');
+
+// A URF report round is announced on the day it opens. Saving a round also
+// runs this, so today's rounds do not wait for tomorrow.
+Schedule::command('urf:announce-report-rounds')->dailyAt('06:00');
