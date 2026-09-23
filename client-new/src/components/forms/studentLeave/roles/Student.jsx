@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import CustomButton from '../../fields/CustomButton';
 import FileUploadField from '../../fields/FileUploadField';
 import RadioButtonGroup from '../../fields/RadioButtonGroup';
-import { apiLeaveBalance, apiLeaveLoad, apiLeaveSubmit } from '../../../../api/leave';
+import { apiLeaveBalance, apiLeaveLoad, apiLeaveSubmit, apiLeaveDelete } from '../../../../api/leave';
 import { overageOf, formatDays, localDateString } from '../../../../utils/leaveBalance';
 import { currentRole } from '../../../../auth/access';
 
@@ -43,7 +43,7 @@ const daysBetween = (from, to) => {
  */
 // `onReload` hears the application as reloaded after a submit, so the page
 // around this can show its new status.
-const Student = ({ formData, onReload }) => {
+const Student = ({ formData, onReload, onDraftDeleted }) => {
   const [instance, setInstance] = useState(formData);
   const [leaveType, setLeaveType] = useState(formData?.leave_type || 'casual');
   const [fromDate, setFromDate] = useState(localDateString(formData?.from_date));
@@ -117,6 +117,13 @@ const Student = ({ formData, onReload }) => {
         onReload?.(reloaded.response);
       }
     }
+  };
+
+
+  const handleDeleteDraft = async () => {
+    if (!window.confirm('Delete this draft application?')) return;
+    const res = await apiLeaveDelete(instance.form_id);
+    if (res.success) onDraftDeleted?.();
   };
 
   return (
@@ -229,12 +236,16 @@ const Student = ({ formData, onReload }) => {
       )}
 
       {instance?.role === 'student' && !lock && (
-        <div className="input-field-container">
+        <div className="input-field-container leave-actions">
           <CustomButton
             text="Submit"
             onClick={handleSubmit}
             busy={submitting}
           />
+          {/* The server deletes only drafts, so it is offered only on one. */}
+          {instance?.status === 'draft' && (
+            <CustomButton text="Delete draft" variant="danger-outline" onClick={handleDeleteDraft} />
+          )}
         </div>
       )}
     </div>

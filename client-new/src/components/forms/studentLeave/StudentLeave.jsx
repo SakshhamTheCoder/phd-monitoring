@@ -11,7 +11,7 @@ import { currentRole } from '../../../auth/access';
 // (/forms/student-leave/:id) need not pass it, but a page like
 // HodAttendancePage that renders it elsewhere (/attendance) must, so
 // Recommendation's Submit button posts to the right form endpoint.
-const StudentLeave = ({ formData, submitPath }) => {
+const StudentLeave = ({ formData, submitPath, onDraftDeleted }) => {
   // The scholar has no decision to make on their own application, so they get
   // the outcome rather than a locked set of radio buttons. Everyone else sees
   // the HOD's decision: live for the HOD, and locked by Recommendation for an
@@ -30,7 +30,7 @@ const StudentLeave = ({ formData, submitPath }) => {
           HOD's decision on it. */}
       <div className="form-container">
         <PanelSection title="Student" className="form-step">
-          <Student formData={formData} onReload={setCurrent} />
+          <Student formData={formData} onReload={setCurrent} onDraftDeleted={onDraftDeleted} />
         </PanelSection>
 
         <PanelSection title="HOD" className="form-step">

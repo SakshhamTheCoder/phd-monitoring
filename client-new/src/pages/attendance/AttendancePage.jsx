@@ -482,15 +482,23 @@ const AttendancePage = () => {
           <Panel flush title="Sessions">
             <div className="data-table-wrap">
               <table className="data-table">
-                <thead><tr><th>Date</th><th>Status</th><th>Marked by</th></tr></thead>
+                <thead><tr><th>Date</th><th>Status</th><th>Marked by</th><th>Actions</th></tr></thead>
                 <tbody>
-                  {scholarHistoryLoading ? <tr><td colSpan={3} className="no-data-cell">Loading…</td></tr>
-                    : !scholarHistory || scholarHistory.records.length === 0 ? <tr><td colSpan={3} className="no-data-cell">No attendance recorded for this scholar yet.</td></tr>
+                  {scholarHistoryLoading ? <tr><td colSpan={4} className="no-data-cell">Loading…</td></tr>
+                    : !scholarHistory || scholarHistory.records.length === 0 ? <tr><td colSpan={4} className="no-data-cell">No attendance recorded for this scholar yet.</td></tr>
                     : scholarHistory.records.map((r) => (
                       <tr key={`${r.date}-${r.lecture_id}`} className="reveal">
                         <td>{r.date?.slice?.(0, 10) || r.date}</td>
                         <td className={r.status === 'absent' ? 'attendance-status-absent' : 'attendance-status-present'}>{r.status}</td>
                         <td>{r.marked_by_name || EMPTY_VALUE}</td>
+                        {/* Opens that day on the Mark tab to correct it, the same
+                            way a past session does. */}
+                        <td><CustomButton text="View" variant="secondary" size="sm" onClick={() => {
+                          const viewed = r.date.slice(0, 10);
+                          if (viewed !== date && !confirmDiscardMarks()) return;
+                          setDate(viewed);
+                          setActiveTab('mark');
+                        }} /></td>
                       </tr>
                     ))}
                 </tbody>
