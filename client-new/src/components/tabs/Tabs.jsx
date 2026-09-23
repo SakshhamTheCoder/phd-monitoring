@@ -29,6 +29,8 @@ const Tabs = ({ items, value, onChange, className = '', label }) => {
     };
     place();
     // Labels change width when the web font arrives or the window resizes.
+    // Absent in jsdom and very old browsers; the underline still lands once.
+    if (typeof ResizeObserver === 'undefined') return undefined;
     const observer = new ResizeObserver(place);
     observer.observe(bar);
     return () => observer.disconnect();
