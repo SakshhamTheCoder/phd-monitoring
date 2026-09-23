@@ -35,6 +35,10 @@ export const ACCESS = {
     courses: ['student', 'hod', 'phd_coordinator', 'admin'],
     courseManagement: ['hod', 'phd_coordinator', 'admin'],
 
+    // HoD and coordinators manage their own department's areas only; the
+    // server scopes them.
+    areasOfSpecialization: ['hod', 'phd_coordinator', 'admin'],
+
     publications: ['student', 'ug_student'],
     openings: ['student'],
 

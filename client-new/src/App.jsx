@@ -261,10 +261,10 @@ const AppContent = () => {
                 </>
               )}
               {may('attendance') && <Route path="/attendance" element={<AttendanceRoute />} />}
+              {may('areasOfSpecialization') && <Route path="/areasOfSpecialization" element={<AreaOfSpecialization />} />}
               {may('admin') && (
                 <>
                   <Route path="/forms/manage" element={<AdminFormManagement />} />
-                  <Route path="/areasOfSpecialization" element={<AreaOfSpecialization />} />
                   <Route path="/courses/manage" element={<AdminCourseManagement />} />
                   <Route path="/outside-experts" element={<OutsideExperts />} />
                   <Route path="/logs" element={<Logs />} />

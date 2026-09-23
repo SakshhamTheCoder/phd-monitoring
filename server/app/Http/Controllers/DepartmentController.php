@@ -150,10 +150,8 @@ class DepartmentController extends Controller
     {
         try {
             $loggedInUser = Auth::user();
-            if(!$loggedInUser->may('can_add_department')){
-                return response()->json([
-                    'message' => 'You do not have permission to add area of specialization'
-                ], 403);
+            if ($denied = $this->denyAreaWrite($loggedInUser, [$request->department_id], 'You can add areas of specialization only for your own department.')) {
+                return $denied;
             }
 
             $request->validate($this->areaRules());
@@ -222,19 +220,15 @@ class DepartmentController extends Controller
 
             $query = \App\Models\AreaOfSpecialization::with('department');
 
-            // Apply role-based filtering
-            if ($role === 'hod') {
-                $facultyCode = $loggedInUser->faculty->faculty_code;
-                $hodDepartment = Department::where('hod_id', $facultyCode)->first();
-                if ($hodDepartment) {
-                    $query->where('department_id', $hodDepartment->id);
-                }
-            } elseif ($role === 'phd_coordinator') {
-                $facultyCode = $loggedInUser->faculty->faculty_code;
-                $coordinator = \App\Models\PhdCoordinator::where('faculty_id', $facultyCode)->first();
-                if ($coordinator) {
-                    $query->where('department_id', $coordinator->department_id);
-                }
+            // HoD and PhD coordinator see only their own department. One whose
+            // department cannot be resolved sees nothing rather than everything.
+            // The department goes back in the response so the page can fix its
+            // form's department field even before the department has any areas.
+            $scopedDepartment = null;
+            if ($role === 'hod' || $role === 'phd_coordinator') {
+                $scopedDepartmentId = $this->areaWriteDepartmentId($loggedInUser);
+                $query->where('department_id', $scopedDepartmentId ?? 0);
+                $scopedDepartment = $scopedDepartmentId ? Department::find($scopedDepartmentId) : null;
             }
 
             // Apply dynamic filters
@@ -264,6 +258,10 @@ class DepartmentController extends Controller
                 'role' => $role,
                 'fields' => ['name', 'department_name'],
                 'fieldsTitles' => ['Area Name', 'Department'],
+                'scoped_department' => $scopedDepartment ? [
+                    'id' => $scopedDepartment->id,
+                    'name' => $scopedDepartment->name,
+                ] : null,
             ], 200);
         } catch(\Exception $e) {
             return response()->json([
@@ -286,29 +284,10 @@ class DepartmentController extends Controller
                 ], 404);
             }
 
-            // Check authorization
-            $role = $loggedInUser->current_role->role;
-            if ($role === 'hod' || $role === 'phd_coordinator') {
-                $facultyCode = $loggedInUser->faculty->faculty_code;
-                $allowedDepartmentId = null;
-                
-                if ($role === 'hod') {
-                    $hodDepartment = Department::where('hod_id', $facultyCode)->first();
-                    $allowedDepartmentId = $hodDepartment->id ?? null;
-                } else {
-                    $coordinator = \App\Models\PhdCoordinator::where('faculty_id', $facultyCode)->first();
-                    $allowedDepartmentId = $coordinator->department_id ?? null;
-                }
-
-                if ($area->department_id !== $allowedDepartmentId) {
-                    return response()->json([
-                        'message' => 'You do not have permission to update this area'
-                    ], 403);
-                }
-            } elseif (!$loggedInUser->may('can_add_department')) {
-                // Everyone else needs what adding an area needs. Without this any
-                // signed-in account could rename or delete any area.
-                return $this->refuse();
+            // Both ends are checked so a HoD cannot move an area out of their
+            // department into another one.
+            if ($denied = $this->denyAreaWrite($loggedInUser, [$area->department_id, $request->department_id], 'You can edit areas of specialization only for your own department.')) {
+                return $denied;
             }
 
             $area->name = $request->name;
@@ -339,29 +318,8 @@ class DepartmentController extends Controller
                 ], 404);
             }
 
-            // Check authorization
-            $role = $loggedInUser->current_role->role;
-            if ($role === 'hod' || $role === 'phd_coordinator') {
-                $facultyCode = $loggedInUser->faculty->faculty_code;
-                $allowedDepartmentId = null;
-                
-                if ($role === 'hod') {
-                    $hodDepartment = Department::where('hod_id', $facultyCode)->first();
-                    $allowedDepartmentId = $hodDepartment->id ?? null;
-                } else {
-                    $coordinator = \App\Models\PhdCoordinator::where('faculty_id', $facultyCode)->first();
-                    $allowedDepartmentId = $coordinator->department_id ?? null;
-                }
-
-                if ($area->department_id !== $allowedDepartmentId) {
-                    return response()->json([
-                        'message' => 'You do not have permission to delete this area'
-                    ], 403);
-                }
-            } elseif (!$loggedInUser->may('can_add_department')) {
-                // Everyone else needs what adding an area needs. Without this any
-                // signed-in account could rename or delete any area.
-                return $this->refuse();
+            if ($denied = $this->denyAreaWrite($loggedInUser, [$area->department_id], 'You can delete areas of specialization only for your own department.')) {
+                return $denied;
             }
 
             // Faculty are listed under this area by id, so deleting it would
@@ -418,10 +376,10 @@ class DepartmentController extends Controller
     {
         try {
             $loggedInUser = Auth::user();
-            if (!$loggedInUser->may('can_add_department')) {
-                return response()->json([
-                    'message' => 'You do not have permission to import research areas'
-                ], 403);
+            // Refuses a HoD or coordinator with no resolvable department here,
+            // because below a null allowed department means "any department".
+            if ($denied = $this->denyAreaWrite($loggedInUser, [], 'You can import areas of specialization only for your own department.')) {
+                return $denied;
             }
 
             $request->validate([
@@ -580,16 +538,47 @@ class DepartmentController extends Controller
     {
         $role = $user->current_role->role;
 
+        $facultyCode = $user->faculty?->faculty_code;
+        if (!$facultyCode) {
+            return null;
+        }
+
         if ($role === 'hod') {
-            return Department::where('hod_id', $user->faculty->faculty_code)->value('id');
-        }
-
-        if ($role === 'phd_coordinator') {
-            return \App\Models\PhdCoordinator::where('faculty_id', $user->faculty->faculty_code)
+            $departmentId = Department::where('hod_id', $facultyCode)->value('id');
+        } elseif ($role === 'phd_coordinator') {
+            $departmentId = \App\Models\PhdCoordinator::where('faculty_id', $facultyCode)
                 ->value('department_id');
+        } else {
+            return null;
         }
 
-        return null;
+        return $departmentId ? (int) $departmentId : null;
+    }
+
+    /**
+     * Refuse an area write unless this user may write to every department it
+     * touches. HoD and PhD coordinator write only their own department, and
+     * one whose department cannot be resolved writes none. Everyone else needs
+     * can_add_department, which covers every department.
+     */
+    private function denyAreaWrite($user, array $departmentIds, string $message)
+    {
+        $role = $user->current_role->role;
+
+        if ($role === 'hod' || $role === 'phd_coordinator') {
+            $allowedDepartmentId = $this->areaWriteDepartmentId($user);
+            foreach ($departmentIds as $departmentId) {
+                if ((int) $departmentId !== $allowedDepartmentId) {
+                    return $this->refuse($message);
+                }
+            }
+
+            return $allowedDepartmentId ? null : $this->refuse($message);
+        }
+
+        return $user->may('can_add_department')
+            ? null
+            : $this->refuse('You do not have permission to manage areas of specialization. Contact your administrator if you believe this is a mistake.');
     }
 
     private function areaIsInUse(\App\Models\AreaOfSpecialization $area): bool

@@ -34,7 +34,7 @@ export const buttonConfig = [
     { path: '/logs', icon: 'fa fa-history', text: 'Logs', roles: ACCESS.admin },
     { path: '/users', icon: 'fa fa-cogs', text: 'Manage Users', roles: ACCESS.admin },
     { path: '/notifications', icon: 'fa fa-bell', text: 'Notifications', roles: ACCESS.notifications },
-    { path: '/areasOfSpecialization', icon: 'fa fa-list', text: 'Areas of Specialization', roles: ACCESS.admin },
+    { path: '/areasOfSpecialization', icon: 'fa fa-list', text: 'Areas of Specialization', roles: ACCESS.areasOfSpecialization },
     { path: '/outside-experts', icon: 'fa fa-user-o', text: 'Outside Experts', roles: ACCESS.admin },
 ];
 

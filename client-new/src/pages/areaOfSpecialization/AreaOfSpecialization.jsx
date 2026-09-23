@@ -12,6 +12,7 @@ import DropdownField from '../../components/forms/fields/DropdownField';
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
 import { customFetch } from '../../api/base';
 import { apiDepartmentList } from '../../api/lookups';
+import { currentRole } from '../../auth/access';
 import { baseURL } from '../../api/urls';
 import { toast } from 'react-toastify';
 
@@ -32,9 +33,39 @@ const AreaOfSpecialization = () => {
   const { setLoading } = useLoading();
   const location = useLocation();
 
+  // The server keeps HoD and coordinators to their own department, so for
+  // them the department field is fixed to it.
+  const role = currentRole();
+  const isDepartmentScoped = role === 'hod' || role === 'phd_coordinator';
+  const [myDepartmentId, setMyDepartmentId] = useState('');
+
   useEffect(() => {
-    fetchDepartments();
+    if (isDepartmentScoped) {
+      fetchMyDepartment();
+    } else {
+      fetchDepartments();
+    }
   }, []);
+
+  // GET /departments needs can_edit_department, so their department comes from
+  // the areas list, which resolves it to scope that same list.
+  const fetchMyDepartment = async () => {
+    try {
+      const response = await customFetch(
+        `${baseURL}/departments/area-of-specialization/list?rows=1&page=1`,
+        'GET',
+        {},
+        false
+      );
+      const scoped = response.response?.scoped_department;
+      if (scoped) {
+        setMyDepartmentId(scoped.id);
+        setDepartments([{ title: scoped.name, value: scoped.id }]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch your department:', error);
+    }
+  };
 
   const fetchDepartments = async () => {
     try {
@@ -68,8 +99,7 @@ const AreaOfSpecialization = () => {
       setEditData(null);
       setFormData({
         name: '',
-        department_id: '',
-
+        department_id: isDepartmentScoped ? myDepartmentId : '',
       });
     }
     setIsOpen(true);
@@ -248,6 +278,7 @@ Data Science,CSED`;
               initialValue={formData.department_id}
               options={departments}
               onChange={(value) => setFormData({ ...formData, department_id: value })}
+              isLocked={isDepartmentScoped}
             />,
           ]}
         />
