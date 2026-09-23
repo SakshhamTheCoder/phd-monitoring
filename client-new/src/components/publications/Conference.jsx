@@ -8,7 +8,7 @@ import InputSuggestions from '../forms/fields/InputSuggestions';
 import { baseURL } from '../../api/urls';
 import { currentRole } from '../../auth/access';
 
-const Conference = ({callback,updateValue,data={}}) => {
+const Conference = ({callback,disabled,updateValue,data={}}) => {
     const [body, setBody] = useState(data);
     const year = new Date().getFullYear();
     const yearRange = Array.from({ length: 7 }, (_, i) => year - 3 + i); 
@@ -77,7 +77,7 @@ const Conference = ({callback,updateValue,data={}}) => {
 
             
             <GridContainer elements={[
-               <CustomButton text="Submit" onClick={()=>{callback(body)}}/>
+               <CustomButton text="Submit" disabled={disabled} onClick={()=>{callback(body)}}/>
             ]}/>
         </>
     );

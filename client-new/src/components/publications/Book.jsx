@@ -5,7 +5,7 @@ import DropdownField from "../forms/fields/DropdownField";
 import FileUploadField from "../forms/fields/FileUploadField";
 import CustomButton from "../forms/fields/CustomButton";
 
-const Book = ({ callback, updateValue, data = {} }) => {
+const Book = ({ callback, disabled, updateValue, data = {} }) => {
   const [body, setBody] = useState(data);
   const year = new Date().getFullYear();
   const yearRange = Array.from({ length: 7 }, (_, i) => year - 3 + i);
@@ -163,6 +163,7 @@ const Book = ({ callback, updateValue, data = {} }) => {
         elements={[
           <CustomButton
             text="Submit"
+            disabled={disabled}
             onClick={() => {
               callback(body);
             }}

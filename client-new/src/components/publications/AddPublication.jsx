@@ -11,6 +11,7 @@ import { APIaddPublication, APIupdatePublication } from "../../api/publication";
 // publication endpoints; the field forms below stay the same either way.
 const AddPublication = ({ close, editData = null, onSave = null }) => {
   const [body, setBody] = useState(editData || {});
+  const [saving, setSaving] = useState(false);
 
   const handleSelect = (value) => {
     value = JSON.parse(value);
@@ -20,23 +21,27 @@ const AddPublication = ({ close, editData = null, onSave = null }) => {
     }));
   };
 
-  const callback = async (newData) => {
-    if (onSave) {
-      await onSave(body);
-      return;
-    }
-    if (editData && editData.id) {
+  // Submit stays disabled until the save answers, so a second click cannot
+  // post the same publication twice.
+  const callback = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      if (onSave) {
+        await onSave(body);
+      } else if (editData && editData.id) {
         if (body.publication_type === "patents") {
-            await APIupdatePublication(editData.id, body, close, "/patents");
+          await APIupdatePublication(editData.id, body, close, "/patents");
         } else {
-            await APIupdatePublication(editData.id, body, close);
+          await APIupdatePublication(editData.id, body, close);
         }
-    } else {
-        if (body.publication_type === "patents") {
-            await APIaddPublication(body, close, "/patents");
-        } else {
-            await APIaddPublication(body, close);
-        }
+      } else if (body.publication_type === "patents") {
+        await APIaddPublication(body, close, "/patents");
+      } else {
+        await APIaddPublication(body, close);
+      }
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -106,14 +111,14 @@ const AddPublication = ({ close, editData = null, onSave = null }) => {
           {body.label || editData ? (
             <>
               {body.publication_type === "journal" && (
-                <SCIJournal callback={callback} updateValue={updateValue} data={body} />
+                <SCIJournal callback={callback} disabled={saving} updateValue={updateValue} data={body} />
               )}
-              {body.publication_type === "book" && <Book callback={callback} updateValue={updateValue} data={body} />}
+              {body.publication_type === "book" && <Book callback={callback} disabled={saving} updateValue={updateValue} data={body} />}
               {body.publication_type === "conference" && (
-                <Conference callback={callback} updateValue={updateValue} data={body} />
+                <Conference callback={callback} disabled={saving} updateValue={updateValue} data={body} />
               )}
               {body.publication_type === "patents" && (
-                <Patents callback={callback} updateValue={updateValue} data={body} />
+                <Patents callback={callback} disabled={saving} updateValue={updateValue} data={body} />
               )}
             </>
           ) : null}

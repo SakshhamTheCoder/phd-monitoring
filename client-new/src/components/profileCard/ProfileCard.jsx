@@ -39,6 +39,10 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   const [isEditingInline, setIsEditingInline] = useState(false);
   const [editForm, setEditForm] = useState({});
+  // Save and Tag Course stay disabled while their request runs, so a second
+  // click cannot send it twice.
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [taggingCourse, setTaggingCourse] = useState(false);
   const [showSupervisorDoctoralModal, setShowSupervisorDoctoralModal] = useState(false);
   const [courses, setCourses] = useState([]);
   const [allCourses, setAllCourses] = useState([]);
@@ -157,6 +161,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
   };
 
   const handleTagCourse = async () => {
+    setTaggingCourse(true);
     try {
       const studentId = profile.database_id || profile.id;
       const payload = {
@@ -170,11 +175,13 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
         setTagData({ course_id: '', semester: '', status: 'enrolled', grade: '' });
         fetchCourses();
       } else {
-        toast.error(response.message || 'Failed to tag course');
+        toast.error(response?.response?.message || 'Failed to tag course');
       }
     } catch (error) {
       console.error('Error tagging course:', error);
       toast.error('Failed to tag course');
+    } finally {
+      setTaggingCourse(false);
     }
   };
 
@@ -211,7 +218,9 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
       delete payload.phd_title;
       delete payload.tentative_desc;
     }
+    setSavingProfile(true);
     const response = await customFetch(`${baseURL}/students/${profile.roll_no}/profile`, 'POST', payload);
+    setSavingProfile(false);
     if (response?.success) {
       toast.success('Profile updated successfully');
       // The server answers with what it actually saved. Merging the payload
@@ -450,7 +459,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
                 )}
                 {isEditingInline && (
                   <>
-                    <CustomButton text="Save" onClick={handleInlineSave} />
+                    <CustomButton text="Save" onClick={handleInlineSave} disabled={savingProfile} />
                     <CustomButton text="Cancel" variant="secondary" onClick={cancelInlineEdit} />
                   </>
                 )}
@@ -799,7 +808,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
               
               <div className="modal-actions">
                 <CustomButton text="Cancel" onClick={() => setIsTagModalOpen(false)} />
-                <CustomButton text="Tag Course" onClick={handleTagCourse} />
+                <CustomButton text="Tag Course" onClick={handleTagCourse} disabled={taggingCourse} />
               </div>
             </div>
           </div>

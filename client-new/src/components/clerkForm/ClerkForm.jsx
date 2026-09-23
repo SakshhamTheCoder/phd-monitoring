@@ -62,12 +62,14 @@ const ClerkForm = ({ onSuccess, onClose }) => {
     try {
       const res = await customFetch(baseURL + "/users", "POST", payload, true);
       if (res.success !== false) {
-        if (res.password) {
-          toast.success("Clerk created. Password: " + res.password);
+        // The password and warnings are in the server's answer, not the wrapper.
+        const saved = res.response || {};
+        if (saved.password) {
+          toast.success("Clerk created. Password: " + saved.password);
         } else {
           toast.success("Clerk created. They are emailed a link to set their password.");
         }
-        (res.warnings || []).forEach((w) => toast.warn(w, { autoClose: 10000 }));
+        (saved.warnings || []).forEach((w) => toast.warn(w, { autoClose: 10000 }));
         if (onSuccess) onSuccess();
         else if (onClose) onClose();
       }
