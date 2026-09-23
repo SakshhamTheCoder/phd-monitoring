@@ -90,7 +90,7 @@ const SupervisorDoctoralApproval = () => {
       const response = await customFetch(
         `${baseURL}/supervisor-doctoral-changes/reject/${selectedChange.id}`,
         'PUT',
-        { reason: rejectReason },
+        { rejection_reason: rejectReason },
         false,
         false
       );

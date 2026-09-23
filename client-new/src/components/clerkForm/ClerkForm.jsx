@@ -137,7 +137,6 @@ const ClerkForm = ({ onSuccess, onClose }) => {
             options={[
               { value: "active", title: "Active" },
               { value: "inactive", title: "Inactive" },
-              { value: "suspended", title: "Suspended" },
             ]}
             onChange={(val) => handleChange("status", val)}
           />,

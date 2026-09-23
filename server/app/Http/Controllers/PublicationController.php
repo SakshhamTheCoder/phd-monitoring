@@ -121,7 +121,7 @@ class PublicationController extends Controller
             case 'book':
                 $request->validate(
                 [
-                    'issn' => 'required|integer',
+                    'issn' => 'required|string|max:20',
                     'volume' => 'required|string',
                     'page_no' => 'required|string',
                     'publisher' => 'required|string',
@@ -235,7 +235,7 @@ class PublicationController extends Controller
                 break;
             case 'book':
                 $request->validate([
-                    'issn' => 'required|integer',
+                    'issn' => 'required|string|max:20',
                     'volume' => 'required|string',
                     'page_no' => 'required|string',
                     'publisher' => 'required|string',

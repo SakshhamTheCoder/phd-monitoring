@@ -402,9 +402,9 @@ const SupervisorDoctoralManager = ({ studentId, supervisors = [], doctoralCommit
                     elements={[
                       <InputSuggestions
                         label="Select Outside Expert*"
-                        apiUrl={`${baseURL}/outside-experts/all`}
+                        apiUrl={`${baseURL}/suggestions/outside-expert`}
                         onSelect={(val) => setSelectedOutsideExpert(val.id)}
-                        fields={['first_name', 'last_name', 'institution', 'designation']}
+                        fields={['name', 'institution', 'designation']}
                       />,
                     ]}
                   />

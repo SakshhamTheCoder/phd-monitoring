@@ -5,7 +5,7 @@ import DropdownField from '../forms/fields/DropdownField';
 import FileUploadField from '../forms/fields/FileUploadField';
 import CustomButton from '../forms/fields/CustomButton';
 
-const Patents = ({callback,disabled,updateValue,data={}}) => {
+const Patents = ({callback,disabled,updateValue,data={},facultyRecord=false}) => {
     const [body, setBody] = useState(data);
     const year = new Date().getFullYear();
     const yearRange = Array.from({ length: 7 }, (_, i) => year - 3 + i);  
@@ -34,20 +34,20 @@ const Patents = ({callback,disabled,updateValue,data={}}) => {
 
             <GridContainer elements={[
                 <DropdownField label={"Type of Patent"} initialValue={data.country} options={[{title:"National",value:"National"},{title:"International",value:"International"}]} onChange={(value)=>{setBodyValue("country",value)}} />,
-                <DropdownField label={"Status of Patent:"} initialValue={data.status} options={[
+                !facultyRecord && <DropdownField label={"Status of Patent:"} initialValue={data.status} options={[
                     {title:"Granted",value:"granted"},
                     {title:"Filed",value:"filed"},
                     {title:"Published",value:"published"},
                 ]} onChange={(value)=>{setBodyValue("status",value)}} />,
-            ]} />
+            ].filter(Boolean)} />
 
             <GridContainer elements={[
                 <InputField label={"DOI Link"} hint={"DOI Link"} initialValue={data.doi_link} onChange={(value)=>{setBodyValue("doi_link",value)}} />,
             ]}/>
 
-            <GridContainer elements={[
+            {!facultyRecord && <GridContainer elements={[
                 <FileUploadField label={"Upload First Page"} initialValue={data.first_page} onChange={(value)=>{setBodyValue("first_page",value)}} />,
-            ]}/>
+            ]}/>}
 
             
             <GridContainer elements={[

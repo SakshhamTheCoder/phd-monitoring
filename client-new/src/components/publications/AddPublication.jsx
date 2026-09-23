@@ -10,7 +10,11 @@ import { APIaddPublication, APIupdatePublication } from "../../api/publication";
 // onSave lets a caller send the record somewhere other than the student
 // publication endpoints; the field forms below stay the same either way.
 const AddPublication = ({ close, editData = null, onSave = null }) => {
-  const [body, setBody] = useState(editData || {});
+  // The faculty profile stores a patent as the singular 'patent'; the form
+  // below is keyed on 'patents', and apiUpdateFacultyPublication maps it back.
+  const [body, setBody] = useState(
+    editData?.publication_type === "patent" ? { ...editData, publication_type: "patents" } : editData || {}
+  );
   const [saving, setSaving] = useState(false);
 
   // Only offered while adding. A new type starts a new body: merging kept the
@@ -106,18 +110,20 @@ const AddPublication = ({ close, editData = null, onSave = null }) => {
         )}
 
         {/* Keyed on the type so its form remounts empty, matching the body. */}
+        {/* The faculty profile (onSave) keeps no status, mode, funding or first
+            page, so those inputs are hidden there rather than silently dropped. */}
         <div className="add-publication-box" key={body.label}>
           {body.label || editData ? (
             <>
               {body.publication_type === "journal" && (
-                <SCIJournal callback={callback} disabled={saving} updateValue={updateValue} data={body} />
+                <SCIJournal callback={callback} disabled={saving} updateValue={updateValue} data={body} facultyRecord={!!onSave} />
               )}
-              {body.publication_type === "book" && <Book callback={callback} disabled={saving} updateValue={updateValue} data={body} />}
+              {body.publication_type === "book" && <Book callback={callback} disabled={saving} updateValue={updateValue} data={body} facultyRecord={!!onSave} />}
               {body.publication_type === "conference" && (
-                <Conference callback={callback} disabled={saving} updateValue={updateValue} data={body} />
+                <Conference callback={callback} disabled={saving} updateValue={updateValue} data={body} facultyRecord={!!onSave} />
               )}
               {body.publication_type === "patents" && (
-                <Patents callback={callback} disabled={saving} updateValue={updateValue} data={body} />
+                <Patents callback={callback} disabled={saving} updateValue={updateValue} data={body} facultyRecord={!!onSave} />
               )}
             </>
           ) : null}

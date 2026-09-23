@@ -114,7 +114,8 @@ class StudentController extends Controller {
         $student->current_status = $request->current_status;
         $student->address = $request->address;
         $student->cgpa = $request->cgpa;
-        $student->is_jrf = $request->has('is_jrf') ? $request->boolean('is_jrf') : null;
+        // A null is "not stated"; boolean() would read it as No.
+        $student->is_jrf = $request->input('is_jrf') === null ? null : $request->boolean('is_jrf');
         $student->net_gate = $request->input('net_gate') ?: null;
         if($request->has('overall_progress'))
              $student->overall_progress = $request->overall_progress;
@@ -1166,7 +1167,8 @@ class StudentController extends Controller {
         $student->cgpa = $request->cgpa;
         // Says where the scholar's stipend comes from, so it stays on the
         // privileged path rather than the scholar's own profile edit.
-        if ($request->has('is_jrf')) $student->is_jrf = $request->boolean('is_jrf');
+        // A sent null is "not stated" and stays null; boolean() would read it as No.
+        if ($request->has('is_jrf')) $student->is_jrf = $request->input('is_jrf') === null ? null : $request->boolean('is_jrf');
         // Off the office's sheet, like JRF, so it stays on the privileged path.
         if ($request->has('net_gate')) $student->net_gate = $request->input('net_gate') ?: null;
         if ($request->has('overall_progress')) $student->overall_progress = $request->overall_progress;

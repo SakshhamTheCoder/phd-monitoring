@@ -282,14 +282,14 @@ class FacultyController extends Controller
         $faculty->type = $type;
         $faculty->institution = $request->institution ?? 'Thapar Institute of Engineering and Technology';
         $faculty->website_link = $request->website_link;
-        // `has` is true for a field the client sent empty, which is how an edit
-        // form that never received the stored expertise erased it on every save.
-        // Only a field the request actually carries a value for is written.
-        if ($request->filled('expertise')) {
+        // `has`, so a field sent empty clears it. The edit form now prefills both
+        // from the list row, so empty means the admin cleared it; a caller that
+        // leaves the key out still keeps the stored value.
+        if ($request->has('expertise')) {
             $faculty->expertise = Faculty::normalizeExpertise($request->input('expertise'));
         }
-        if ($request->filled('area_of_specialization_id')) {
-            $faculty->area_of_specialization_id = $request->input('area_of_specialization_id');
+        if ($request->has('area_of_specialization_id')) {
+            $faculty->area_of_specialization_id = $request->input('area_of_specialization_id') ?: null;
         }
         $faculty->save();
 
@@ -402,11 +402,6 @@ class FacultyController extends Controller
         ]);
     }
     
-
-    public function showUploadForm()
-    {
-        return view('upload-faculty');
-    }
 
     public function upload(Request $request)
     {

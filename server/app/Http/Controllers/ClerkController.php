@@ -864,7 +864,8 @@ class ClerkController extends Controller
         }
 
         $request->validate([
-            'department_ids' => 'required|array',
+            // present, not required: an empty list is "untick all" and must clear them.
+            'department_ids' => 'present|array',
             'department_ids.*' => 'integer|exists:departments,id',
         ]);
 

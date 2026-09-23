@@ -223,7 +223,6 @@ const UserForm = ({ edit, userData, onClose }) => {
   const statusOptions = [
     { value: 'active', title: 'Active' },
     { value: 'inactive', title: 'Inactive' },
-    { value: 'suspended', title: 'Suspended' },
   ];
 
 

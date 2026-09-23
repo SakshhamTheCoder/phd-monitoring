@@ -118,7 +118,12 @@ const ShowPublications = ({
        else if (type === 'international') data = formData.international.find(p => p.id === id);
        else if (type === 'national') data = formData.national.find(p => p.id === id);
        else if (type === 'book') data = formData.book.find(p => p.id === id);
-       else if (type === 'patents') data = formData.patents.find(p => p.id === id);
+       // Patent rows carry no publication_type, and AddPublication picks its
+       // form by it, so an edit opened blank without this.
+       else if (type === 'patents') {
+           const patent = formData.patents.find(p => p.id === id);
+           if (patent) data = { ...patent, publication_type: 'patents' };
+       }
 
        if (data) {
            setEditData(data);
