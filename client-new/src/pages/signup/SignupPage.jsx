@@ -16,13 +16,13 @@ const YEARS = [
   { value: 4, label: '4th Year' },
 ];
 
-const field = 'tw-w-full tw-rounded tw-border tw-border-slate-400 tw-px-3 tw-py-2 tw-text-black focus:tw-ring-2 focus:tw-ring-brand tw-outline-none';
+const field = 'tw-w-full tw-rounded tw-border tw-border-[color:var(--border-color)] tw-px-3 tw-py-2 tw-text-[color:var(--text-color)] focus:tw-ring-2 focus:tw-ring-brand tw-outline-none';
 
 const Field = ({ id, label, error, children }) => (
   <div>
-    <label htmlFor={id} className="tw-block tw-text-sm tw-text-gray-700 tw-mb-1">{label}</label>
+    <label htmlFor={id} className="tw-block tw-text-sm tw-text-[color:var(--text-color)] tw-mb-1">{label}</label>
     {children}
-    {error && <p className="tw-text-red-600 tw-text-xs tw-mt-1">{error}</p>}
+    {error && <p className="tw-text-[color:var(--danger-text)] tw-text-xs tw-mt-1">{error}</p>}
   </div>
 );
 
@@ -157,18 +157,18 @@ const SignupPage = () => {
         className="tw-bg-cover tw-bg-center tw-min-h-screen tw-flex tw-items-center tw-justify-center tw-py-8"
         style={{ backgroundImage: "url('/image-1@2x.png')" }}
       >
-        <div className="tw-bg-white tw-p-8 tw-rounded-lg tw-shadow-lg tw-w-full tw-max-w-2xl sm:tw-p-6">
+        <div className="tw-bg-[color:var(--surface)] tw-p-8 tw-rounded-lg tw-shadow-lg tw-w-full tw-max-w-2xl sm:tw-p-6">
           <img src="/images/tiet_logo.png" alt="TIET Logo" className="tw-mx-auto tw-mb-4 tw-w-20" />
 
           {sentTo ? (
             <div className="tw-text-center">
               <h1 className="tw-text-xl tw-font-semibold tw-mb-2">Confirm your email</h1>
-              <p className="tw-text-gray-700">
+              <p className="tw-text-[color:var(--text-color)]">
                 We sent a link to <strong>{sentTo}</strong>. Open it to finish creating your
                 account, then sign in and apply.
               </p>
               <div className="tw-mt-6 tw-flex tw-justify-center tw-items-center tw-gap-4">
-                <Link to="/login" className="tw-bg-brand tw-text-white tw-px-5 tw-py-2 tw-rounded-md tw-font-bold hover:tw-bg-brand-hover">
+                <Link to="/login" className="tw-bg-brand tw-text-white tw-px-5 tw-py-2 tw-rounded-md tw-font-semibold hover:tw-bg-brand-hover">
                   Go to sign in
                 </Link>
                 <button type="button" onClick={resend} disabled={resending} className="tw-text-brand hover:tw-underline">
@@ -179,12 +179,12 @@ const SignupPage = () => {
           ) : (
             <>
               <h1 className="tw-text-xl tw-font-semibold tw-text-center">Create your URF account</h1>
-              <p className="tw-text-sm tw-text-gray-600 tw-text-center tw-mt-1 tw-mb-6">
+              <p className="tw-text-sm tw-text-[color:var(--text-muted)] tw-text-center tw-mt-1 tw-mb-6">
                 For undergraduates applying to the Undergraduate Research Fellowship.
               </p>
 
               {google ? (
-                <p className="tw-text-sm tw-text-center tw-mb-6 tw-text-gray-700">
+                <p className="tw-text-sm tw-text-center tw-mb-6 tw-text-[color:var(--text-color)]">
                   Signed in with Google as <strong>{google.email}</strong>. Fill in the rest and
                   your account is ready.
                 </p>
@@ -193,7 +193,7 @@ const SignupPage = () => {
                   <button
                     type="button"
                     onClick={signUpWithGoogle}
-                    className="tw-bg-white tw-border-2 tw-border-gray-300 tw-text-gray-700 tw-px-6 tw-py-3 tw-rounded-md tw-font-semibold hover:tw-bg-gray-50 hover:tw-border-gray-400 tw-duration-200 tw-w-full tw-flex tw-items-center tw-justify-center tw-gap-3"
+                    className="tw-bg-[color:var(--surface)] tw-border tw-border-[color:var(--border-color)] tw-text-[color:var(--text-color)] tw-px-6 tw-py-3 tw-rounded-md tw-font-semibold hover:tw-bg-[color:var(--canvas)] hover:tw-border-[color:var(--text-subtle)] tw-duration-200 tw-w-full tw-flex tw-items-center tw-justify-center tw-gap-3"
                   >
                     <svg className="tw-w-5 tw-h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -204,9 +204,9 @@ const SignupPage = () => {
                     Sign up with your institute Google account
                   </button>
                   <div className="tw-flex tw-items-center tw-justify-center tw-my-5">
-                    <span className="tw-border-t tw-border-gray-300 tw-flex-grow"></span>
-                    <span className="tw-px-4 tw-text-gray-600 tw-text-sm">or fill it in yourself</span>
-                    <span className="tw-border-t tw-border-gray-300 tw-flex-grow"></span>
+                    <span className="tw-border-t tw-border-[color:var(--border-color)] tw-flex-grow"></span>
+                    <span className="tw-px-4 tw-text-[color:var(--text-muted)] tw-text-sm">or fill it in yourself</span>
+                    <span className="tw-border-t tw-border-[color:var(--border-color)] tw-flex-grow"></span>
                   </div>
                 </>
               )}
@@ -279,7 +279,7 @@ const SignupPage = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="sm:tw-col-span-2 tw-bg-brand tw-text-white tw-py-2 tw-rounded-md tw-font-bold hover:tw-bg-brand-hover tw-duration-200"
+                  className="sm:tw-col-span-2 tw-bg-brand tw-text-white tw-py-2 tw-rounded-md tw-font-semibold hover:tw-bg-brand-hover tw-duration-200"
                 >
                   Create account
                 </button>

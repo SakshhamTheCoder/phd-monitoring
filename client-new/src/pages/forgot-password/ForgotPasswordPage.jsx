@@ -52,15 +52,15 @@ const ForgotPasswordPage = () => {
         className="tw-bg-cover tw-bg-center tw-min-h-screen tw-flex tw-items-center tw-justify-center tw-p-4"
         style={{ backgroundImage: "url('/image-1@2x.png')" }}
       >
-            <form onSubmit={handleSubmit(onSubmit)} className="tw-bg-white tw-p-8 tw-rounded tw-shadow-md tw-w-full tw-max-w-sm">
+            <form onSubmit={handleSubmit(onSubmit)} className="tw-bg-[color:var(--surface)] tw-p-8 tw-rounded tw-shadow-md tw-w-full tw-max-w-sm">
                 <img
                     src="/images/tiet_logo.png"
                     alt="TIETLogo"
                     className="tw-mx-auto tw-mb-4 tw-w-24 sm:tw-w-20"
                 />
-                <h2 className="tw-text-xl tw-font-semibold tw-mb-4 tw-text-center">Forgot Password</h2>
+                <h2 className="tw-text-xl tw-font-semibold tw-mb-4 tw-text-center">Forgot password</h2>
                 <div className="tw-mb-4">
-                    <label className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-2" htmlFor="forgot-password-page-email">
+                    <label className="tw-block tw-text-sm tw-font-medium tw-text-[color:var(--text-color)] tw-mb-2" htmlFor="forgot-password-page-email">
                         Email
                     </label>
                     <input
@@ -69,7 +69,7 @@ const ForgotPasswordPage = () => {
                         type="email"
                         placeholder="Enter your email"
                         required
-                        className="tw-w-full tw-px-4 tw-py-2 tw-border tw-rounded"
+                        className="tw-w-full tw-px-4 tw-py-2 tw-border tw-border-[color:var(--border-color)] tw-rounded"
                     />
                 </div>
                 
@@ -82,11 +82,11 @@ const ForgotPasswordPage = () => {
                     className="tw-w-full tw-bg-brand tw-text-white tw-py-2 tw-rounded hover:tw-bg-brand-hover"
                     disabled={loading}
                 >
-                    {loading ? 'Sending...' : 'Send Reset Link'}
+                    {loading ? 'Sending...' : 'Send reset link'}
                 </button>
                 {message && (
-                    <div className="tw-mt-4 tw-p-3 tw-bg-green-50 tw-border tw-border-green-200 tw-rounded">
-                        <p className="tw-text-sm tw-text-green-800 tw-text-center">{message}</p>
+                    <div className="tw-mt-4 tw-p-3 tw-bg-[color:var(--success-bg)] tw-border tw-border-[color:var(--success-bg)] tw-rounded">
+                        <p className="tw-text-sm tw-text-[color:var(--success)] tw-text-center">{message}</p>
                     </div>
                 )}
             </form>

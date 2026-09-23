@@ -176,7 +176,7 @@ const LoginPage = () => {
         className="tw-bg-cover tw-bg-center tw-min-h-screen tw-flex tw-items-center tw-justify-center tw-p-4"
         style={{ backgroundImage: "url('/image-1@2x.png')" }}
       >
-        <div className="tw-bg-white tw-p-8 tw-rounded-lg tw-shadow-lg tw-w-full tw-max-w-md sm:tw-p-6 sm:tw-max-w-sm">
+        <div className="tw-bg-[color:var(--surface)] tw-p-8 tw-rounded-lg tw-shadow-lg tw-w-full tw-max-w-md sm:tw-p-6 sm:tw-max-w-sm">
           <img
             src="/images/tiet_logo.png"
             alt="TIETLogo"
@@ -187,7 +187,7 @@ const LoginPage = () => {
           <div className="tw-flex tw-flex-col tw-items-center tw-mb-3">
             <button
               onClick={handleGoogleSignIn}
-              className="tw-bg-white tw-border-2 tw-border-gray-300 tw-text-gray-700 tw-px-6 tw-py-3 tw-rounded-md tw-font-semibold hover:tw-bg-gray-50 hover:tw-border-gray-400 tw-duration-200 tw-w-full tw-max-w-[350px] tw-flex tw-items-center tw-justify-center tw-gap-3"
+              className="tw-bg-[color:var(--surface)] tw-border tw-border-[color:var(--border-color)] tw-text-[color:var(--text-color)] tw-px-6 tw-py-3 tw-rounded-md tw-font-semibold hover:tw-bg-[color:var(--canvas)] hover:tw-border-[color:var(--text-subtle)] tw-duration-200 tw-w-full tw-max-w-[350px] tw-flex tw-items-center tw-justify-center tw-gap-3"
             >
               <svg className="tw-w-5 tw-h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -204,13 +204,13 @@ const LoginPage = () => {
             <div className="tw-flex tw-justify-center tw-mt-3">
               <button
                 onClick={() => setShowEmailForm(true)}
-                className="tw-bg-white tw-border-2 tw-border-gray-300 tw-text-gray-700 tw-px-6 tw-py-3 tw-rounded-md tw-font-semibold hover:tw-bg-gray-50 hover:tw-border-gray-400 tw-duration-200 tw-w-full tw-max-w-[350px] tw-flex tw-items-center tw-justify-center tw-gap-3"
+                className="tw-bg-[color:var(--surface)] tw-border tw-border-[color:var(--border-color)] tw-text-[color:var(--text-color)] tw-px-6 tw-py-3 tw-rounded-md tw-font-semibold hover:tw-bg-[color:var(--canvas)] hover:tw-border-[color:var(--text-subtle)] tw-duration-200 tw-w-full tw-max-w-[350px] tw-flex tw-items-center tw-justify-center tw-gap-3"
               >
                 <svg className="tw-w-5 tw-h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                   <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
                   <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
                 </svg>
-                Sign in with Email & Password
+                Sign in with email and password
               </button>
             </div>
           )}
@@ -219,9 +219,9 @@ const LoginPage = () => {
           {showEmailForm && (
             <>
               <div className="tw-flex tw-items-center tw-justify-center tw-mt-4">
-                <span className="tw-border-t tw-border-gray-600 tw-flex-grow"></span>
-                <span className="tw-px-4 tw-text-gray-700 tw-text-sm">Or sign in with email</span>
-                <span className="tw-border-t tw-border-gray-600 tw-flex-grow"></span>
+                <span className="tw-border-t tw-border-[color:var(--border-color)] tw-flex-grow"></span>
+                <span className="tw-px-4 tw-text-[color:var(--text-color)] tw-text-sm">Or sign in with email</span>
+                <span className="tw-border-t tw-border-[color:var(--border-color)] tw-flex-grow"></span>
               </div>
               <form
                 onSubmit={handleSubmit(onSubmit)}
@@ -233,11 +233,11 @@ const LoginPage = () => {
                     id="email"
                     type="email"
                     placeholder=""
-                    className="tw-peer tw-bg-opacity-50 tw-px-4 tw-pt-6 tw-pb-2.5 tw-w-full tw-rounded tw-border tw-border-slate-600 tw-text-black focus:tw-ring-2 focus:tw-ring-white tw-outline-none invalid:tw-border-red-500"
+                    className="tw-peer tw-bg-opacity-50 tw-px-4 tw-pt-6 tw-pb-2.5 tw-w-full tw-rounded tw-border tw-border-[color:var(--border-color)] tw-text-[color:var(--text-color)] focus:tw-border-brand tw-outline-none invalid:tw-border-[color:var(--danger)]"
                   />
                   <label
                     htmlFor="email"
-                    className="tw-absolute tw-text-slate-500 tw-left-3 tw-duration-300 tw-scale-75 tw-top-1 peer-placeholder-shown:tw-scale-100 peer-placeholder-shown:tw-top-4 peer-focus:tw-left-3 peer-focus:tw-scale-75 peer-focus:tw-top-1"
+                    className="tw-absolute tw-text-[color:var(--text-muted)] tw-left-3 tw-duration-300 tw-scale-75 tw-top-1 peer-placeholder-shown:tw-scale-100 peer-placeholder-shown:tw-top-4 peer-focus:tw-left-3 peer-focus:tw-scale-75 peer-focus:tw-top-1"
                   >
                     Email
                   </label>
@@ -248,14 +248,14 @@ const LoginPage = () => {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder=""
-                    className="tw-peer tw-bg-opacity-50 tw-px-4 tw-pt-6 tw-pb-2.5 tw-pr-12 tw-w-full tw-rounded tw-border tw-border-slate-600 tw-text-black focus:tw-ring-2 focus:tw-ring-white tw-outline-none invalid:tw-border-red-500"
+                    className="tw-peer tw-bg-opacity-50 tw-px-4 tw-pt-6 tw-pb-2.5 tw-pr-12 tw-w-full tw-rounded tw-border tw-border-[color:var(--border-color)] tw-text-[color:var(--text-color)] focus:tw-border-brand tw-outline-none invalid:tw-border-[color:var(--danger)]"
                   />
 
                   <button
                     type="button"
                     onClick={() => setShowPassword((s) => !s)}
                     aria-label={showPassword ? "Hide password" : "Show password"}
-                    className="tw-absolute tw-right-3 tw-top-1/2 tw-text-gray-600 hover:tw-text-gray-800 focus:tw-outline-none"
+                    className="tw-absolute tw-right-3 tw-top-1/2 tw-text-[color:var(--text-muted)] hover:tw-text-[color:var(--text-color)] focus:tw-outline-none"
                     style={{ transform: 'translateY(-50%)' }}
                   >
                     {showPassword ? (
@@ -267,7 +267,7 @@ const LoginPage = () => {
 
                   <label
                     htmlFor="password"
-                    className="tw-absolute tw-text-slate-500 tw-left-3 tw-duration-300 tw-scale-75 tw-top-1 peer-placeholder-shown:tw-scale-100 peer-placeholder-shown:tw-top-4 peer-focus:tw-left-3 peer-focus:tw-scale-75 peer-focus:tw-top-1"
+                    className="tw-absolute tw-text-[color:var(--text-muted)] tw-left-3 tw-duration-300 tw-scale-75 tw-top-1 peer-placeholder-shown:tw-scale-100 peer-placeholder-shown:tw-top-4 peer-focus:tw-left-3 peer-focus:tw-scale-75 peer-focus:tw-top-1"
                   >
                     Password
                   </label>
@@ -277,7 +277,7 @@ const LoginPage = () => {
                     to="/forgot-password"
                     className="tw-text-brand hover:tw-underline"
                   >
-                    Forgot Password?
+                    Forgot password?
                   </Link>
                   {unverifiedEmail && (
                     <button
@@ -306,7 +306,7 @@ const LoginPage = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="tw-bg-brand tw-w-4/5 tw-mx-auto tw-block tw-text-center tw-text-white tw-py-2 tw-rounded-md tw-font-bold hover:tw-bg-brand-hover tw-duration-200"
+                  className="tw-bg-brand tw-w-4/5 tw-mx-auto tw-block tw-text-center tw-text-white tw-py-2 tw-rounded-md tw-font-semibold hover:tw-bg-brand-hover tw-duration-200"
                 >
                   Login
                 </button>
@@ -322,24 +322,24 @@ const LoginPage = () => {
           </p>
 
           {/* Footer Links */}
-          <div className="tw-mt-6 tw-pt-4 tw-border-t tw-border-gray-200 tw-flex tw-flex-wrap tw-justify-center tw-gap-4 tw-text-sm">
+          <div className="tw-mt-6 tw-pt-4 tw-border-t tw-border-[color:var(--border-subtle)] tw-flex tw-flex-wrap tw-justify-center tw-gap-4 tw-text-sm">
             <Link
               to="/privacy"
-              className="tw-text-gray-600 hover:tw-text-brand hover:tw-underline"
+              className="tw-text-[color:var(--text-muted)] hover:tw-text-brand hover:tw-underline"
             >
-              Privacy Policy
+              Privacy policy
             </Link>
-            <span className="tw-text-gray-400">|</span>
+            <span className="tw-text-[color:var(--text-subtle)]">|</span>
             <Link
               to="/support"
-              className="tw-text-gray-600 hover:tw-text-brand hover:tw-underline"
+              className="tw-text-[color:var(--text-muted)] hover:tw-text-brand hover:tw-underline"
             >
               Support
             </Link>
-            <span className="tw-text-gray-400">|</span>
+            <span className="tw-text-[color:var(--text-subtle)]">|</span>
             <Link
               to="/team"
-              className="tw-text-gray-600 hover:tw-text-brand hover:tw-underline"
+              className="tw-text-[color:var(--text-muted)] hover:tw-text-brand hover:tw-underline"
             >
               Team
             </Link>

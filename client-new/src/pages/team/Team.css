@@ -1,7 +1,9 @@
-/* Team.css */
+/* Team page. Every class carries a team- or person- prefix: this sheet stays
+   loaded after the visitor leaves, and plain names like .title and .avatar
+   would restyle any later page that used them. */
 
 .team-page-wrapper {
-  background-color: #f9fafb;
+  background-color: var(--canvas);
   min-height: 100vh;
   width: 100%;
   box-sizing: border-box;
@@ -12,26 +14,25 @@
      cards across need the room. */
   max-width: 1320px;
   margin: 0 auto;
-  padding: 12px 20px;
+  padding: var(--space-3) var(--space-5);
   text-align: center;
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: #2d3748;
+  color: var(--text-color);
 }
 
-.subheading {
+.team-subheading {
   /* One step under the bar's page title, so the two section labels read as
      labels rather than as a second and third title. The space that frees goes
      to the gap above them, off the bar. */
   font-size: var(--text-xl);
   font-weight: 600;
   color: var(--text-color);
-  margin: 12px 0 24px;
+  margin: var(--space-3) 0 var(--space-5);
   position: relative;
   display: inline-block;
-  padding-bottom: 6px;
+  padding-bottom: var(--space-2);
 }
 
-.subheading::after {
+.team-subheading::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -39,7 +40,7 @@
   transform: translateX(-50%);
   width: 40px;
   height: 3px;
-  background: linear-gradient(90deg, var(--primary-color), #c44040);
+  background: var(--primary-color);
   border-radius: var(--radius-sm);
 }
 
@@ -52,12 +53,12 @@
 .team-layout {
   display: grid;
   grid-template-columns: minmax(300px, 360px) 1fr;
-  gap: 24px;
+  gap: var(--space-5);
   /* The columns are the same height, so the mentor can sit in the middle of
      hers rather than at the top of a column the team fills twice over. */
   align-items: stretch;
   text-align: center;
-  margin-top: 8px;
+  margin-top: var(--space-2);
 }
 
 .team-mentor,
@@ -71,7 +72,7 @@
 }
 
 /* Centred in what is left of the column under the heading, which stays level
-   with "The Team". */
+   with the team's heading. */
 .team-mentor .person-card {
   margin: auto;
 }
@@ -81,28 +82,27 @@
   /* Four across, so the eight of them read as two even rows. Fewer as the
      column narrows, or the longest name stops fitting on one line. */
   grid-template-columns: repeat(4, 1fr);
-  /* 12 rather than 15: the mentor column took the width, and the longest name
+  /* 12 rather than 16: the mentor column took the width, and the longest name
      needs what is left to stay on one line. */
-  gap: 12px;
-  margin: 0 auto 24px auto;
+  gap: var(--space-3);
+  margin: 0 auto var(--space-5) auto;
   justify-items: center;
 }
 
-/* Base Person Card Redesign (Compact by default for developers) */
+/* Compact by default, for the developers; .mentor-card scales it up. */
 .person-card {
-  background: #fff;
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
   width: 100%;
   max-width: 260px;
-  padding: 16px 14px;
+  padding: var(--space-4) var(--space-3);
   display: flex;
   flex-direction: column;
   align-items: center;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: border-color var(--transition) ease-out;
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.03);
 }
 
 .person-card::before {
@@ -113,89 +113,46 @@
   right: 0;
   height: 4px;
   background: var(--primary-color);
-  border-radius: var(--radius-xl) 16px 0 0;
-  transition: background-color 0.3s ease;
 }
 
 .person-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 20px 30px var(--primary-wash), 0 4px 12px rgba(0, 0, 0, 0.03);
-  border-color: var(--primary-tint);
+  border-color: var(--secondary-color);
 }
 
-.person-card:hover::before {
-  background: var(--hover-color);
-}
-
-/* Avatar Container and Image Sizes */
-.avatar-container {
+.person-avatar-wrap {
   position: relative;
   width: 74px;
   height: 74px;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.avatar-container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
   border-radius: 50%;
-  padding: 3px;
-  background: linear-gradient(135deg, var(--primary-color) 0%, #c44040 100%);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  transition: transform 0.5s ease;
+  border: 2px solid var(--primary-color);
 }
 
-.person-card:hover .avatar-container::before {
-  transform: rotate(180deg);
-}
-
-.avatar {
+.person-avatar,
+.person-avatar-fallback {
   width: 66px;
   height: 66px;
   border-radius: 50%;
+}
+
+.person-avatar {
   object-fit: cover;
-  border: 3px solid #fff;
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.3s ease;
-  z-index: 1;
 }
 
-.person-card:hover .avatar {
-  transform: scale(1.05);
-}
-
-.avatar-fallback {
-  width: 66px;
-  height: 66px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary-wash) 0%, var(--primary-tint) 100%);
+.person-avatar-fallback {
+  background: var(--primary-wash);
   color: var(--primary-color);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: var(--text-2xl);
-  font-weight: 700;
-  border: 3px solid #fff;
-  box-shadow: var(--shadow-sm);
-  z-index: 1;
-  transition: transform 0.3s ease;
+  font-weight: 600;
 }
 
-.person-card:hover .avatar-fallback {
-  transform: scale(1.05);
-}
-
-.card-content {
+.person-content {
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -205,12 +162,11 @@
   flex: 1;
 }
 
-.card-content h3 {
+.person-content h3 {
   font-size: var(--text-base);
   font-weight: 600;
   margin: 0;
   color: var(--text-color);
-  letter-spacing: -0.2px;
 }
 
 /* The batch, between the name and the role. Quiet: it says when someone was
@@ -219,17 +175,16 @@
   font-size: var(--text-2xs);
   font-weight: 400;
   color: var(--text-subtle);
-  margin: 4px 0 0;
-  letter-spacing: 0.1px;
+  margin: var(--space-1) 0 0;
 }
 
-/* Capsule badge style for developer tags */
-.card-content .title {
+/* The role, as a tag */
+.person-title {
   font-size: var(--text-2xs);
   font-weight: 600;
   color: var(--primary-color);
   background: var(--primary-wash);
-  padding: 3px 9px;
+  padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-lg);
   display: inline-flex;
   justify-content: center;
@@ -237,154 +192,127 @@
   text-align: center;
   max-width: 90%;
   white-space: normal;
-  word-break: keep-all;
   line-height: 1.3;
-  margin: 6px 0 10px 0;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
+  margin: var(--space-2) 0 var(--space-3);
   box-sizing: border-box;
 }
 
-.social-icons {
+.person-social {
   display: flex;
   justify-content: center;
-  gap: 10px;
+  gap: var(--space-2);
   margin-top: auto;
 }
 
-.social-icons a {
-  color: #4a5568;
-  background: #f7fafc;
-  width: 28px;
-  height: 28px;
+.person-social a {
+  color: var(--text-muted);
+  background: var(--canvas);
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: var(--text-sm);
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  border: 1px solid #edf2f7;
-  text-decoration: none;
+  transition: color var(--transition) ease-out, background-color var(--transition) ease-out;
+  border: 1px solid var(--border-subtle);
 }
 
-.social-icons a:hover {
-  color: #fff;
+.person-social a:hover {
+  color: var(--surface);
   background: var(--primary-color);
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-sm);
   border-color: var(--primary-color);
 }
 
 /* ==========================================================================
-   Mentor Card Styling Override (Showcasing Importance)
+   Mentor card: the same card, a size up
    ========================================================================== */
 .mentor-card {
   max-width: 360px;
   width: 100%;
-  padding: 22px 24px 20px;
-  border-top-width: 6px;
-  box-shadow: 0 10px 25px var(--primary-wash), 0 3px 6px rgba(0, 0, 0, 0.03);
+  padding: var(--space-5) var(--space-5) var(--space-5);
 }
 
 .mentor-card::before {
   height: 6px;
 }
 
-.mentor-card:hover {
-  transform: translateY(-10px);
-  box-shadow: var(--shadow);
-}
-
-.mentor-card .avatar-container {
+.mentor-card .person-avatar-wrap {
   width: 124px;
   height: 124px;
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
+  border-width: 3px;
 }
 
-.mentor-card .avatar {
+.mentor-card .person-avatar,
+.mentor-card .person-avatar-fallback {
   width: 114px;
   height: 114px;
-  border-width: 4px;
 }
 
-.mentor-card .avatar-fallback {
-  width: 114px;
-  height: 114px;
+.mentor-card .person-avatar-fallback {
   font-size: var(--text-4xl);
-  border-width: 4px;
 }
 
-.mentor-card .card-content h3 {
+.mentor-card .person-content h3 {
   font-size: var(--text-xl);
-  font-weight: 700;
 }
 
-.mentor-card .card-content .title {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  padding: 4px 12px;
-  margin: 8px 0 6px 0;
-  background: var(--primary-wash);
-  height: auto;
-}
-
-/* "Associate Dean of Strategic Initiatives" is 39 characters in capitals. One
-   step down the type scale and no tracking holds it on one line in the card's
-   310px; if a platform's font runs wider it wraps, as it did before. */
-.mentor-card .card-content .title:not(.title--second) {
+/* "Associate Dean of Strategic Initiatives" is 39 characters. The small step
+   holds it on one line in the card's 310px; if a platform's font runs wider it
+   wraps, as it did before. */
+.mentor-card .person-title {
   font-size: var(--text-xs);
-  letter-spacing: 0;
+  padding: var(--space-1) var(--space-3);
+  margin: var(--space-2) 0 var(--space-2);
   max-width: 100%;
 }
 
-.mentor-card .card-content .title--second {
-  margin: 0 0 10px 0;
-  background: #F3F4F6;
+.mentor-card .person-title--second {
+  margin: 0 0 var(--space-3);
+  background: var(--canvas);
+  border: 1px solid var(--border-subtle);
   color: var(--text-muted);
   font-size: var(--text-2xs);
-  font-weight: 600;
 }
 
-.mentor-card .social-icons a {
-  width: 32px;
-  height: 32px;
+.mentor-card .person-social a {
+  width: 36px;
+  height: 36px;
   font-size: var(--text-base);
 }
 
 /* ==========================================================================
    Footer
    ========================================================================== */
-.contact {
+.team-contact {
   /* A line of contact detail, not a call to action, so it is sized like one.
      What it gave up pays for the gap between the section labels and the cards. */
   font-size: var(--text-sm);
-  color: #1a202c;
-  margin-top: 8px;
-  background: #fff;
+  color: var(--text-color);
+  margin-top: var(--space-2);
+  background: var(--surface);
   display: inline-block;
-  padding: 6px 20px;
-  border-radius: 30px;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid rgba(147, 47, 47, 0.15);
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-subtle);
 }
 
-.contact a {
+.team-contact a {
   color: var(--primary-color);
   font-weight: 600;
-  text-decoration: none;
-  border-bottom: 2px solid rgba(147, 47, 47, 0.3);
+  border-bottom: 2px solid var(--secondary-color);
   padding-bottom: 1px;
-  transition: all 0.2s ease;
+  transition: color var(--transition) ease-out, border-color var(--transition) ease-out;
 }
 
-.contact a:hover {
+.team-contact a:hover {
   color: var(--hover-color);
   border-bottom-color: var(--hover-color);
-  text-decoration: none;
 }
 
 /* ==========================================================================
-   Responsiveness
+   Narrower screens
    ========================================================================== */
 @media (max-width: 1200px) {
   .team-grid {
@@ -397,7 +325,7 @@
      so the mentor goes back above the team. */
   .team-layout {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: var(--space-4);
   }
 
   .team-mentor .person-card {
@@ -412,7 +340,7 @@
 @media (max-width: 480px) {
   .team-grid {
     grid-template-columns: 1fr;
-    max-width: 250px;
+    max-width: 252px;
     margin-left: auto;
     margin-right: auto;
   }

@@ -13,33 +13,46 @@
   min-width: 0;
 }
 .xr-brand .user_name { font-size: var(--text-base); }
-.xr-brand .user_role { font-size: var(--text-2xs); color: #555; }
+.xr-brand .user_role { font-size: var(--text-2xs); color: var(--text-muted); }
 
 /* The external review renders inside the portal shell (ExternalLayout) using the real
-   form components; only the review-specific bits (PDF viewer, status notes) are styled here. */
-.xr-note {
-  padding: 12px 14px;
-  border-radius: var(--radius);
-  margin: 10px 0;
-  font-size: var(--text-base);
-  background: #f3f4f6;
-  color: #374151;
+   form components; only the review-specific bits (PDF viewer, the recorded
+   confirmation) are styled here. */
+/* Paragraphs one after another in a panel: a confirmation and what was
+   recorded, or an opening's project. */
+.xr-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
-.xr-note-success { background: #ecfdf3; color: #027a48; }
-.xr-note-error { background: #fef3f2; color: #b42318; }
-.xr-muted { color: #6b7280; font-size: var(--text-sm); }
+.xr-stack p { margin: 0; }
+
+/* A review that went through. StatusNotice has no success tone; this is the
+   same shape in the success colours. */
+.xr-note-success {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  font-size: var(--text-sm);
+  background: var(--success-bg);
+  color: var(--success);
+}
+.xr-note-success i { margin-top: 3px; }
+.xr-muted { color: var(--text-muted); font-size: var(--text-sm); }
 
 .xr-pdf { width: 100%; }
 .xr-pdf-frame {
   width: 100%;
   height: 460px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--border-color);
   border-radius: var(--radius);
 }
 .xr-pdf-link {
   display: inline-block;
-  margin-top: 8px;
-  color: var(--primary-color, var(--primary-color));
+  margin-top: var(--space-2);
+  color: var(--primary-color);
   font-size: var(--text-sm);
   text-decoration: underline;
 }
@@ -52,7 +65,7 @@
    for someone who does have an account. */
 .xr-sidebar-foot {
   margin-top: auto;
-  padding: 1.5rem 1rem;
+  padding: var(--space-5) var(--space-4);
   text-align: center;
 }
 .xr-sidebar-foot a {

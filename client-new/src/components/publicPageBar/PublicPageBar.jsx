@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import './PublicPageBar.css';
 
 /**
  * The bar on the pages a signed-out visitor can reach: team, support, privacy.

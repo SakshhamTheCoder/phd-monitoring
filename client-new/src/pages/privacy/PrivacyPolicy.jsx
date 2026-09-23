@@ -1,141 +1,113 @@
 import React from 'react';
 import PublicPageBar from '../../components/publicPageBar/PublicPageBar';
+import Page from '../../components/page/Page';
+import Panel, { PanelSection } from '../../components/panel/Panel';
+
+const ContactEmails = () => (
+  <>
+    <a href="mailto:tarunpreet@thapar.edu">tarunpreet@thapar.edu</a> or{' '}
+    <a href="mailto:sbhagat_be23@thapar.edu">sbhagat_be23@thapar.edu</a>
+  </>
+);
 
 const PrivacyPolicy = () => {
   return (
-    <div className="tw-min-h-screen tw-bg-white tw-flex tw-flex-col">
-      <PublicPageBar containerClassName="tw-max-w-4xl" />
-      <div className="tw-flex-1 tw-py-8 tw-px-4">
-        <div className="tw-max-w-4xl tw-mx-auto tw-p-2 tw-w-full">
-          
-          <h1 className="tw-text-4xl tw-font-bold tw-text-gray-900 tw-mb-4">
-            Privacy Policy for the Doctoral, Research and Innovation Management Portal
-          </h1>
-          
-          <p className="tw-text-sm tw-text-gray-600 tw-mb-8">
-            Effective Date: December 1, 2025
-          </p>
+    <div className="public-page">
+      <PublicPageBar />
+      <main className="public-page-main">
+        <Page
+          title="Privacy policy for the Doctoral, Research and Innovation Management Portal"
+          description="Effective date: December 1, 2025"
+        >
+          <Panel className="public-doc">
+            <PanelSection title="Introduction">
+              <p>
+                Welcome to phdportal.thapar.edu (the "Website"). We are committed to protecting your privacy
+                and ensuring that your personal information is handled in a safe and responsible manner. This
+                Privacy Policy outlines the types of information we collect from you, how we use it, how we
+                store it, and the steps we take to ensure it is protected in compliance with Google OAuth requirements.
+              </p>
+            </PanelSection>
 
-          <section className="tw-mb-8">
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-brand tw-pl-4">
-              Introduction
-            </h2>
-            <p className="tw-text-gray-700 tw-leading-relaxed">
-              Welcome to phdportal.thapar.edu (the "Website"). We are committed to protecting your privacy 
-              and ensuring that your personal information is handled in a safe and responsible manner. This 
-              Privacy Policy outlines the types of information we collect from you, how we use it, how we 
-              store it, and the steps we take to ensure it is protected in compliance with Google OAuth requirements.
-            </p>
-          </section>
+            <PanelSection title="Information we collect">
+              <p>When you use our Website and Google OAuth to sign in, we collect the following information:</p>
+              <ul>
+                <li><strong>Name:</strong> We collect your name as provided by your Google account.</li>
+                <li><strong>Email address:</strong> We collect your email address as provided by your Google account.</li>
+                <li><strong>Profile image:</strong> We collect your profile image as provided by your Google account.</li>
+              </ul>
+            </PanelSection>
 
-          <section className="tw-mb-8">
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-brand tw-pl-4">
-              Information We Collect
-            </h2>
-            <p className="tw-text-gray-700 tw-leading-relaxed tw-mb-3">
-              When you use our Website and Google OAuth to sign in, we collect the following information:
-            </p>
-            <ul className="tw-list-disc tw-list-inside tw-text-gray-700 tw-space-y-2 tw-ml-4">
-              <li><strong>Name:</strong> We collect your name as provided by your Google account.</li>
-              <li><strong>Email Address:</strong> We collect your email address as provided by your Google account.</li>
-              <li><strong>Profile Image:</strong> We collect your profile image as provided by your Google account.</li>
-            </ul>
-          </section>
+            <PanelSection title="How we use your information">
+              <p>The information we collect is used for the following purposes:</p>
+              <ul>
+                <li><strong>Authentication:</strong> To authenticate your identity and provide you with access to our services.</li>
+                <li><strong>Personalization:</strong> To personalize your experience on our Website.</li>
+                <li><strong>Communication:</strong> To send you updates, notifications, and other information related to our services.</li>
+              </ul>
+            </PanelSection>
 
-          <section className="tw-mb-8">
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-brand tw-pl-4">
-              How We Use Your Information
-            </h2>
-            <p className="tw-text-gray-700 tw-leading-relaxed tw-mb-3">
-              The information we collect is used for the following purposes:
-            </p>
-            <ul className="tw-list-disc tw-list-inside tw-text-gray-700 tw-space-y-2 tw-ml-4">
-              <li><strong>Authentication:</strong> To authenticate your identity and provide you with access to our services.</li>
-              <li><strong>Personalization:</strong> To personalize your experience on our Website.</li>
-              <li><strong>Communication:</strong> To send you updates, notifications, and other information related to our services.</li>
-            </ul>
-          </section>
+            <PanelSection title="Data storage and security">
+              <p>
+                We take the security of your personal information seriously and implement appropriate technical
+                and organizational measures to protect it against unauthorized or unlawful processing and against
+                accidental loss, destruction, or damage.
+              </p>
+              <ul>
+                <li><strong>Data storage:</strong> Your data is stored securely on our servers and is only accessible by authorized personnel.</li>
+                <li><strong>Encryption:</strong> We use industry-standard encryption to protect your data during transmission and storage.</li>
+              </ul>
+            </PanelSection>
 
-          <section className="tw-mb-8">
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-brand tw-pl-4">
-              Data Storage and Security
-            </h2>
-            <p className="tw-text-gray-700 tw-leading-relaxed tw-mb-3">
-              We take the security of your personal information seriously and implement appropriate technical 
-              and organizational measures to protect it against unauthorized or unlawful processing and against 
-              accidental loss, destruction, or damage.
-            </p>
-            <ul className="tw-list-disc tw-list-inside tw-text-gray-700 tw-space-y-2 tw-ml-4">
-              <li><strong>Data Storage:</strong> Your data is stored securely on our servers and is only accessible by authorized personnel.</li>
-              <li><strong>Encryption:</strong> We use industry-standard encryption to protect your data during transmission and storage.</li>
-            </ul>
-          </section>
+            <PanelSection title="Sharing your information">
+              <p>
+                We do not share your personal information with third-party services except as necessary to provide
+                our services or as required by law. Your information is shared with Google OAuth for authentication purposes.
+              </p>
+            </PanelSection>
 
-          <section className="tw-mb-8">
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-brand tw-pl-4">
-              Sharing Your Information
-            </h2>
-            <p className="tw-text-gray-700 tw-leading-relaxed">
-              We do not share your personal information with third-party services except as necessary to provide 
-              our services or as required by law. Your information is shared with Google OAuth for authentication purposes.
-            </p>
-          </section>
+            <PanelSection title="Your rights">
+              <p>You have the following rights regarding your personal information:</p>
+              <ul>
+                <li><strong>Access:</strong> You have the right to access the personal information we hold about you.</li>
+                <li><strong>Correction:</strong> You have the right to correct any inaccuracies in your personal information.</li>
+                <li><strong>Deletion:</strong> You have the right to request the deletion of your personal information, subject to legal and contractual restrictions.</li>
+              </ul>
+              <p>To exercise these rights, please contact us at <ContactEmails />.</p>
+            </PanelSection>
 
-          <section className="tw-mb-8">
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-brand tw-pl-4">
-              Your Rights
-            </h2>
-            <p className="tw-text-gray-700 tw-leading-relaxed tw-mb-3">
-              You have the following rights regarding your personal information:
-            </p>
-            <ul className="tw-list-disc tw-list-inside tw-text-gray-700 tw-space-y-2 tw-ml-4">
-              <li><strong>Access:</strong> You have the right to access the personal information we hold about you.</li>
-              <li><strong>Correction:</strong> You have the right to correct any inaccuracies in your personal information.</li>
-              <li><strong>Deletion:</strong> You have the right to request the deletion of your personal information, subject to legal and contractual restrictions.</li>
-            </ul>
-            <p className="tw-text-gray-700 tw-leading-relaxed tw-mt-3">
-              To exercise these rights, please contact us at <a href="mailto:tarunpreet@thapar.edu" className="tw-text-brand hover:tw-underline tw-font-semibold">tarunpreet@thapar.edu</a> or <a href="mailto:sbhagat_be23@thapar.edu" className="tw-text-brand hover:tw-underline tw-font-semibold">sbhagat_be23@thapar.edu</a>.
-            </p>
-          </section>
+            <PanelSection title="Changes to this privacy policy">
+              <p>
+                We may update this Privacy Policy from time to time to reflect changes in our practices or legal
+                requirements. We will notify you of any significant changes by posting the new Privacy Policy on
+                our Website and updating the effective date at the top of this page.
+              </p>
+            </PanelSection>
 
-          <section className="tw-mb-8">
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-brand tw-pl-4">
-              Changes to This Privacy Policy
-            </h2>
-            <p className="tw-text-gray-700 tw-leading-relaxed">
-              We may update this Privacy Policy from time to time to reflect changes in our practices or legal 
-              requirements. We will notify you of any significant changes by posting the new Privacy Policy on 
-              our Website and updating the effective date at the top of this page.
-            </p>
-          </section>
+            <PanelSection title="Contact us">
+              <p>If you have any questions or concerns about this Privacy Policy or our data practices, please contact us at:</p>
+              <dl className="facts">
+                <div>
+                  <dt>Email</dt>
+                  <dd><ContactEmails /></dd>
+                </div>
+                <div>
+                  <dt>Address</dt>
+                  <dd>Thapar Institute of Engineering &amp; Technology, Patiala</dd>
+                </div>
+              </dl>
+            </PanelSection>
 
-          <section className="tw-mb-8">
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-brand tw-pl-4">
-              Contact Us
-            </h2>
-            <p className="tw-text-gray-700 tw-leading-relaxed tw-mb-3">
-              If you have any questions or concerns about this Privacy Policy or our data practices, please contact us at:
-            </p>
-            <div className="tw-bg-gray-50 tw-p-6 tw-rounded-r-lg tw-border-l-4 tw-border-l-brand tw-shadow-sm tw-space-y-2">
-              <p><strong>Email:</strong> <a href="mailto:tarunpreet@thapar.edu" className="tw-text-brand hover:tw-underline tw-font-semibold">tarunpreet@thapar.edu</a> or <a href="mailto:sbhagat_be23@thapar.edu" className="tw-text-brand hover:tw-underline tw-font-semibold">sbhagat_be23@thapar.edu</a></p>
-              <p><strong>Address:</strong> Thapar Institute of Engineering & Technology, Patiala</p>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-3 tw-border-l-4 tw-border-l-brand tw-pl-4">
-              Links
-            </h2>
-            <p className="tw-text-gray-700 tw-leading-relaxed">
-              Our Privacy Policy is available at the following locations:
-            </p>
-            <ul className="tw-list-disc tw-list-inside tw-text-gray-700 tw-space-y-2 tw-ml-4 tw-mt-2">
-              <li>App Home Page</li>
-              <li>The privacy policy URL linked to the OAuth consent screen on the Google Cloud Console matches the privacy policy link on our app homepage.</li>
-            </ul>
-          </section>
-        </div>
-      </div>
+            <PanelSection title="Links">
+              <p>Our Privacy Policy is available at the following locations:</p>
+              <ul>
+                <li>App Home Page</li>
+                <li>The privacy policy URL linked to the OAuth consent screen on the Google Cloud Console matches the privacy policy link on our app homepage.</li>
+              </ul>
+            </PanelSection>
+          </Panel>
+        </Page>
+      </main>
     </div>
   );
 };

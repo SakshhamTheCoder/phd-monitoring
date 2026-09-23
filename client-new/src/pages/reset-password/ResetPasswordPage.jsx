@@ -52,12 +52,12 @@ const ResetPasswordPage = () => {
       {loading && <Loader />}
       <div className="tw-bg-cover tw-bg-center tw-min-h-screen tw-flex tw-items-center tw-justify-center tw-p-4"
            style={{ backgroundImage: "url('/image-1@2x.png')" }}>
-        <div className="tw-bg-white tw-p-8 tw-rounded-lg tw-shadow-lg tw-w-full tw-max-w-md">
+        <div className="tw-bg-[color:var(--surface)] tw-p-8 tw-rounded-lg tw-shadow-lg tw-w-full tw-max-w-md">
           <img src="/images/tiet_logo.png" alt="TIETLogo"
                className="tw-mx-auto tw-mb-4 tw-w-24"/>
-          <h2 className="tw-text-xl tw-font-bold tw-text-center tw-mb-4">Reset Password</h2>
+          <h2 className="tw-text-xl tw-font-semibold tw-text-center tw-mb-4">Reset password</h2>
           <form onSubmit={handleSubmit(onSubmit)} className="tw-space-y-4">
-            <input {...register("email")} type="email" placeholder="Email" aria-label="Email" className="tw-w-full tw-p-2 tw-border tw-rounded tw-bg-gray-100" disabled value={email || ""} />
+            <input {...register("email")} type="email" placeholder="Email" aria-label="Email" className="tw-w-full tw-p-2 tw-border tw-border-[color:var(--border-color)] tw-rounded tw-bg-[color:var(--readonly-bg)]" disabled value={email || ""} />
             
             <div className="tw-relative">
               <input 
@@ -66,14 +66,14 @@ const ResetPasswordPage = () => {
                 placeholder="New Password" 
                 aria-label="New password"
 
-                className="tw-w-full tw-p-2 tw-border tw-rounded tw-pr-10" 
+                className="tw-w-full tw-p-2 tw-border tw-border-[color:var(--border-color)] tw-rounded tw-pr-10" 
                 autoComplete="new-password"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
-                className="tw-absolute tw-right-2 tw-top-1/2 tw-transform -tw-translate-y-1/2 tw-text-gray-600 hover:tw-text-gray-800"
+                className="tw-absolute tw-right-2 tw-top-1/2 tw-transform -tw-translate-y-1/2 tw-text-[color:var(--text-muted)] hover:tw-text-[color:var(--text-color)]"
               >
                 {showPassword ? (
                   <i className="fa fa-eye-slash"></i>
@@ -90,14 +90,14 @@ const ResetPasswordPage = () => {
                 placeholder="Confirm Password" 
                 aria-label="Confirm new password"
 
-                className="tw-w-full tw-p-2 tw-border tw-rounded tw-pr-10" 
+                className="tw-w-full tw-p-2 tw-border tw-border-[color:var(--border-color)] tw-rounded tw-pr-10" 
                 autoComplete="new-password"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                className="tw-absolute tw-right-2 tw-top-1/2 tw-transform -tw-translate-y-1/2 tw-text-gray-600 hover:tw-text-gray-800"
+                className="tw-absolute tw-right-2 tw-top-1/2 tw-transform -tw-translate-y-1/2 tw-text-[color:var(--text-muted)] hover:tw-text-[color:var(--text-color)]"
               >
                 {showConfirmPassword ? (
                   <i className="fa fa-eye-slash"></i>
@@ -108,7 +108,7 @@ const ResetPasswordPage = () => {
             </div>
 
             <button type="submit" disabled={loading} className="tw-bg-brand tw-text-white tw-py-2 tw-rounded tw-w-full hover:tw-bg-brand-hover">
-              Reset Password
+              Reset password
             </button>
           </form>
         </div>

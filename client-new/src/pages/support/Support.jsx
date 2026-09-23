@@ -1,149 +1,107 @@
 import React from 'react';
 import PublicPageBar from '../../components/publicPageBar/PublicPageBar';
+import Page from '../../components/page/Page';
+import Panel, { PanelSection } from '../../components/panel/Panel';
+
+const ContactEmails = () => (
+  <>
+    <a href="mailto:tarunpreet@thapar.edu">tarunpreet@thapar.edu</a> or{' '}
+    <a href="mailto:sbhagat_be23@thapar.edu">sbhagat_be23@thapar.edu</a>
+  </>
+);
 
 const Support = () => {
   return (
-    <div className="tw-min-h-screen tw-bg-white tw-flex tw-flex-col">
-      <PublicPageBar containerClassName="tw-max-w-4xl" />
-      <div className="tw-flex-1 tw-py-8 tw-px-4">
-        <div className="tw-max-w-4xl tw-mx-auto tw-p-2 tw-w-full">
-          
-          <h1 className="tw-text-4xl tw-font-bold tw-text-gray-900 tw-mb-4">
-            Support & Help
-          </h1>
-          
-          <p className="tw-text-gray-600 tw-mb-8 tw-leading-relaxed">
-            Need assistance with the Doctoral, Research and Innovation Management Portal? We're here to help!
-          </p>
+    <div className="public-page">
+      <PublicPageBar />
+      <main className="public-page-main">
+        <Page
+          title="Support and help"
+          description="Need assistance with the Doctoral, Research and Innovation Management Portal? We're here to help!"
+        >
+          <Panel className="public-doc">
+            <PanelSection title="Contact information">
+              <dl className="facts">
+                <div>
+                  <dt>Email support</dt>
+                  <dd>
+                    For technical support and general inquiries:<br />
+                    <ContactEmails />
+                  </dd>
+                </div>
+                <div>
+                  <dt>Office address</dt>
+                  <dd>
+                    Dean of Research &amp; Doctoral Committee<br />
+                    Thapar Institute of Engineering &amp; Technology<br />
+                    Patiala - 147004, Punjab, India
+                  </dd>
+                </div>
+              </dl>
+            </PanelSection>
 
-          <section className="tw-mb-8">
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-4 tw-border-l-4 tw-border-l-brand tw-pl-4">
-              Contact Information
-            </h2>
-            <div className="tw-bg-gray-50 tw-p-6 tw-rounded-r-lg tw-border-l-4 tw-border-l-brand tw-shadow-sm tw-space-y-4">
-              <div>
-                <h3 className="tw-font-bold tw-text-gray-900 tw-mb-2">Email Support</h3>
-                <p className="tw-text-gray-700">
-                  For technical support and general inquiries: <br/>
-                  <a href="mailto:tarunpreet@thapar.edu" className="tw-text-brand hover:tw-underline tw-font-semibold">
-                    tarunpreet@thapar.edu
-                  </a>
-                  {' '}or{' '}
-                  <a href="mailto:sbhagat_be23@thapar.edu" className="tw-text-brand hover:tw-underline tw-font-semibold">
-                    sbhagat_be23@thapar.edu
-                  </a>
-                </p>
-              </div>
-              
-              <div className="tw-border-t tw-border-gray-200 tw-pt-4">
-                <h3 className="tw-font-bold tw-text-gray-900 tw-mb-2">Office Address</h3>
-                <p className="tw-text-gray-700">
-                  Dean of Research & Doctoral Committee<br/>
-                  Thapar Institute of Engineering & Technology<br/>
-                  Patiala - 147004, Punjab, India
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <section className="tw-mb-8">
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-4 tw-border-l-4 tw-border-l-brand tw-pl-4">
-              Frequently Asked Questions
-            </h2>
-            
-            <div className="tw-space-y-4">
-              <div className="tw-border-l-4 tw-border-brand tw-pl-4">
-                <h3 className="tw-font-bold tw-text-gray-900 tw-mb-2">
-                  How do I login to the portal?
-                </h3>
-                <p className="tw-text-gray-700">
-                  You can login using your Thapar email credentials or use the "Login with Thapar ID" 
+            <PanelSection title="Frequently asked questions">
+              <dl className="public-faq">
+                <dt>How do I login to the portal?</dt>
+                <dd>
+                  You can login using your Thapar email credentials or use the "Sign in with Google"
                   button to sign in with your Google account.
-                </p>
-              </div>
+                </dd>
 
-              <div className="tw-border-l-4 tw-border-brand tw-pl-4">
-                <h3 className="tw-font-bold tw-text-gray-900 tw-mb-2">
-                  I forgot my password. What should I do?
-                </h3>
-                <p className="tw-text-gray-700">
-                  Click on the "Forgot Password?" link on the login page and follow the instructions 
+                <dt>I forgot my password. What should I do?</dt>
+                <dd>
+                  Click on the "Forgot password?" link on the login page and follow the instructions
                   to reset your password. You'll receive a reset link via email.
-                </p>
-              </div>
+                </dd>
 
-              <div className="tw-border-l-4 tw-border-brand tw-pl-4">
-                <h3 className="tw-font-bold tw-text-gray-900 tw-mb-2">
-                  Can I login with Google if I don't have a portal account?
-                </h3>
-                <p className="tw-text-gray-700">
-                  No, only users who have been registered in the system by the administrator can login. 
+                <dt>Can I login with Google if I don't have a portal account?</dt>
+                <dd>
+                  No, only users who have been registered in the system by the administrator can login.
                   If you don't have access, please contact the support team.
-                </p>
-              </div>
+                </dd>
 
-              <div className="tw-border-l-4 tw-border-brand tw-pl-4">
-                <h3 className="tw-font-bold tw-text-gray-900 tw-mb-2">
-                  Who can I contact for account-related issues?
-                </h3>
-                <p className="tw-text-gray-700">
-                  For account creation, access issues, or role-related queries, please email 
-                  <a href="mailto:tarunpreet@thapar.edu" className="tw-text-brand hover:tw-underline tw-font-semibold tw-ml-1">
-                    tarunpreet@thapar.edu
-                  </a>
-                  {' '}or{' '}
-                  <a href="mailto:sbhagat_be23@thapar.edu" className="tw-text-brand hover:tw-underline tw-font-semibold">
-                    sbhagat_be23@thapar.edu
-                  </a>
-                </p>
-              </div>
+                <dt>Who can I contact for account-related issues?</dt>
+                <dd>
+                  For account creation, access issues, or role-related queries, please email <ContactEmails />
+                </dd>
 
-              <div className="tw-border-l-4 tw-border-brand tw-pl-4">
-                <h3 className="tw-font-bold tw-text-gray-900 tw-mb-2">
-                  How do I submit my research progress reports?
-                </h3>
-                <p className="tw-text-gray-700">
-                  After logging in, navigate to the Forms section from your dashboard. Select the 
-                  appropriate form type and fill in the required details. Make sure to upload all 
+                <dt>How do I submit my research progress reports?</dt>
+                <dd>
+                  After logging in, navigate to the Forms section from your dashboard. Select the
+                  appropriate form type and fill in the required details. Make sure to upload all
                   necessary documents before submission.
-                </p>
-              </div>
-            </div>
-          </section>
+                </dd>
+              </dl>
+            </PanelSection>
 
-          <section className="tw-mb-8">
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-4 tw-border-l-4 tw-border-l-brand tw-pl-4">
-              Technical Issues
-            </h2>
-            <div className="tw-bg-blue-50 tw-border-l-4 tw-border-blue-500 tw-p-4 tw-rounded-r-lg tw-shadow-sm">
-              <p className="tw-text-gray-700">
-                If you're experiencing technical difficulties or have found a bug, please send us an email with:
-              </p>
-              <ul className="tw-list-disc tw-list-inside tw-text-gray-700 tw-mt-2 tw-space-y-1 tw-ml-4">
+            <PanelSection title="Technical issues">
+              <p>If you're experiencing technical difficulties or have found a bug, please send us an email with:</p>
+              <ul>
                 <li>A detailed description of the issue</li>
                 <li>Screenshots (if applicable)</li>
                 <li>The browser and device you're using</li>
                 <li>Steps to reproduce the problem</li>
               </ul>
-            </div>
-          </section>
+            </PanelSection>
 
-          <section className="tw-mb-8">
-            <h2 className="tw-text-2xl tw-font-bold tw-text-gray-900 tw-mb-4 tw-border-l-4 tw-border-l-brand tw-pl-4">
-              Office Hours
-            </h2>
-            <div className="tw-bg-gray-50 tw-p-6 tw-rounded-r-lg tw-border-l-4 tw-border-l-brand tw-shadow-sm">
-              <p className="tw-text-gray-700">
-                <strong>Monday - Friday:</strong> 9:00 AM - 5:00 PM<br/>
-                <strong>Saturday - Sunday:</strong> Closed
+            <PanelSection title="Office hours">
+              <dl className="facts">
+                <div>
+                  <dt>Monday - Friday</dt>
+                  <dd>9:00 AM - 5:00 PM</dd>
+                </div>
+                <div>
+                  <dt>Saturday - Sunday</dt>
+                  <dd>Closed</dd>
+                </div>
+              </dl>
+              <p className="public-doc-note">
+                Response time may vary. We strive to respond to all queries within 24-48 hours during business days.
               </p>
-              <p className="tw-text-sm tw-text-gray-600 tw-mt-3 tw-italic">
-                * Response time may vary. We strive to respond to all queries within 24-48 hours during business days.
-              </p>
-            </div>
-          </section>
-        </div>
-      </div>
+            </PanelSection>
+          </Panel>
+        </Page>
+      </main>
     </div>
   );
 };

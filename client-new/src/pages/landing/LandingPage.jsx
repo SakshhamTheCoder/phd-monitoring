@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useFeatures } from '../../context/FeaturesContext';
+// Signed out, nothing else has loaded the button styles the links borrow.
+import '../../components/forms/fields/Fields.css';
 import './LandingPage.css';
 
 // The PhD workflow section is off the page for now. It is switched rather than
@@ -12,11 +14,11 @@ const LandingPage = () => {
   const featureFlags = useFeatures();
   const features = [
     {
-      title: 'Online Form Submission',
+      title: 'Online form submission',
       description: 'Submit and track important PhD forms digitally without manual paperwork'
     },
     {
-      title: 'Supervisor Management',
+      title: 'Supervisor management',
       description: 'Streamlined supervisor allocation and change request workflows'
     },
     {
@@ -24,7 +26,7 @@ const LandingPage = () => {
       description: 'Institutional Review Board setup and related submission management'
     },
     {
-      title: 'Progress Tracking',
+      title: 'Progress tracking',
       description: 'Real-time visibility of academic progress for students and supervisors'
     },
     {
@@ -32,19 +34,19 @@ const LandingPage = () => {
       description: 'Schedule semester presentations and record doctoral committee evaluation'
     },
     {
-      title: 'Publication Records',
+      title: 'Publication records',
       description: 'Log journal and conference publications in one verified record'
     },
     {
-      title: 'Synopsis & Thesis',
+      title: 'Synopsis and thesis',
       description: 'Digital submission and approval workflow for synopsis and thesis'
     },
     {
-      title: 'Research Projects',
+      title: 'Research projects',
       description: 'Create projects, track milestones, and manage project teams'
     },
     {
-      title: 'Centralized Communication',
+      title: 'Centralized communication',
       description: 'All academic documents and communication in one platform'
     }
   ];
@@ -79,16 +81,16 @@ const LandingPage = () => {
     <div className="landing-page">
       {/* Navigation */}
       <nav className="landing-nav">
-        <div className="nav-container">
-          <div className="nav-brand">
-            <img src="/images/tiet_logo.png" alt="University Logo" className="nav-logo" />
-            <span className="nav-title">Doctoral, Research and Innovation Management Portal <span className="beta-badge">BETA</span></span>
+        <div className="landing-nav-inner">
+          <div className="landing-brand">
+            <img src="/images/tiet_logo.png" alt="University Logo" className="landing-logo" />
+            <span className="landing-brand-name">Doctoral, Research and Innovation Management Portal <span className="badge badge--accent">Beta</span></span>
           </div>
-          <div className="nav-links">
+          <div className="landing-links">
             <a href="#features">Features</a>
             {SHOW_WORKFLOW && <a href="#workflow">Workflow</a>}
             <Link to="/team">Team</Link>
-            <Link to="/login" className="nav-login-btn">Login</Link>
+            <Link to="/login" className="custom-button custom-button--secondary">Login</Link>
           </div>
         </div>
       </nav>
@@ -100,7 +102,7 @@ const LandingPage = () => {
             <h1 className="hero-title">Doctoral, Research and Innovation Management Portal</h1>
             <div className="beta-notice">
               <span className="beta-highlight">●</span>
-              <span>Currently in Beta Testing Phase</span>
+              <span>Currently in beta testing phase</span>
             </div>
             <p className="hero-subtitle">
               Platform to streamline and automate every stage of the research and innovation journey
@@ -109,8 +111,8 @@ const LandingPage = () => {
               Bringing scholars, supervisors, doctoral committees, and administrative authorities together on a unified system
             </p>
             <div className="hero-buttons">
-              <Link to="/login" className="btn btn-primary">Login to Portal</Link>
-              <a href="#features" className="btn btn-secondary">Explore Features</a>
+              <Link to="/login" className="custom-button">Login to portal</Link>
+              <a href="#features" className="custom-button custom-button--secondary">Explore features</a>
             </div>
           </div>
           <div className="hero-image">
@@ -125,8 +127,8 @@ const LandingPage = () => {
 
       {/* About Section */}
       <section className="about-section">
-        <div className="container">
-          <h2 className="section-title">About the Portal</h2>
+        <div className="landing-container">
+          <h2 className="landing-section-title">About the portal</h2>
           <div className="about-content">
             <p className="about-text">
               The Doctoral, Research and Innovation Management Portal is a comprehensive digital platform designed to streamline and automate every stage of the research and innovation journey. 
@@ -143,9 +145,9 @@ const LandingPage = () => {
 
       {/* Features Section */}
       <section id="features" className="features-section">
-        <div className="container">
-          <h2 className="section-title">Key Features</h2>
-          <p className="section-subtitle">
+        <div className="landing-container">
+          <h2 className="landing-section-title">Key features</h2>
+          <p className="landing-section-subtitle">
             Comprehensive tools to manage every aspect of the PhD journey
           </p>
           <div className="features-grid">
@@ -162,9 +164,9 @@ const LandingPage = () => {
       {/* Workflow Section */}
       {SHOW_WORKFLOW && (
       <section id="workflow" className="workflow-section">
-        <div className="container">
-          <h2 className="section-title">PhD Workflow</h2>
-          <p className="section-subtitle">
+        <div className="landing-container">
+          <h2 className="landing-section-title">PhD workflow</h2>
+          <p className="landing-section-subtitle">
             Track your progress through the complete PhD lifecycle
           </p>
           
@@ -239,9 +241,9 @@ const LandingPage = () => {
 
             {/* Optional Forms */}
             <div className="optional-forms-section">
-              <h3 className="optional-forms-title">Optional Forms</h3>
+              <h3 className="optional-forms-title">Optional forms</h3>
               <p className="optional-forms-subtitle">
-                Available Anytime
+                Available anytime
               </p>
               <div className="optional-forms-grid">
                 {optionalForms.map((form, index) => (
@@ -259,20 +261,20 @@ const LandingPage = () => {
 
       {/* CTA Section */}
       <section className="cta-section">
-        <div className="container">
+        <div className="landing-container">
           <div className="cta-content">
-            <h2 className="cta-title">Empowering Research Through Technology</h2>
+            <h2 className="cta-title">Empowering research through technology</h2>
             <p className="cta-subtitle">
               Simplifying processes. Enhancing collaboration. Supporting excellence in research.
             </p>
-            <Link to="/login" className="btn btn-large">Login to Continue →</Link>
+            <Link to="/login" className="cta-button">Login to continue</Link>
           </div>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="landing-footer">
-        <div className="container">
+        <div className="landing-container">
           <div className="footer-content">
             <div className="footer-section">
               <img src="/images/tiet_logo.png" alt="University Logo" className="footer-logo" />
@@ -280,13 +282,13 @@ const LandingPage = () => {
               <p className="footer-text">Thapar Institute of Engineering & Technology</p>
             </div>
             <div className="footer-section">
-              <h4>Quick Links</h4>
+              <h4>Quick links</h4>
               <ul className="footer-links">
                 <li><Link to="/login">Login</Link></li>
-                {featureFlags.job_openings && <li><Link to="/openings">Research Openings</Link></li>}
+                {featureFlags.job_openings && <li><Link to="/openings">Research openings</Link></li>}
                 <li><Link to="/support">Support</Link></li>
-                <li><Link to="/privacy">Privacy Policy</Link></li>
-                <li><Link to="/team">Our Team</Link></li>
+                <li><Link to="/privacy">Privacy policy</Link></li>
+                <li><Link to="/team">Our team</Link></li>
               </ul>
             </div>
             <div className="footer-section">

@@ -19,7 +19,7 @@ const mentor = {
 const team = [
   {
     name: 'Aadi Jain',
-    role: 'UI and UX Designer',
+    role: 'UI and UX designer',
     batch: 'B.E. COE (2021-2025)',
     image: '/images/aadi.png',
     github: 'https://github.com/nandinnijainn',
@@ -28,7 +28,7 @@ const team = [
   },
   {
     name: 'Abhinav Jain',
-    role: 'Mobile App Developer',
+    role: 'Mobile app developer',
     batch: 'B.E. COE (2022-2026)',
     image: '/images/abhinav.jpeg',
     github: 'https://github.com/AbhinavJain1234',
@@ -37,7 +37,7 @@ const team = [
   },
   {
     name: 'Akarsh Srivastava',
-    role: 'Backend Developer',
+    role: 'Backend developer',
     batch: 'B.E. COE (2022-2026)',
     image: '/images/akarsh.jpeg',
     github: 'https://github.com/akarsh911',
@@ -46,7 +46,7 @@ const team = [
   },
   {
     name: 'Nandini Jain',
-    role: 'Frontend Developer',
+    role: 'Frontend developer',
     batch: 'B.E. COE (2022-2026)',
     image: '/images/nandini.jpeg',
     github: 'https://github.com/nandinnijainn',
@@ -55,7 +55,7 @@ const team = [
   },
   {
     name: 'Arnav Raj Singh',
-    role: 'Backend Developer',
+    role: 'Backend developer',
     batch: 'B.E. ECE (2023-2027)',
     image: '/images/arnav.png',
     github: 'https://github.com/arnavrajsingh19',
@@ -64,7 +64,7 @@ const team = [
   },
   {
     name: 'Manjot Kaur',
-    role: 'Frontend Developer and UI/UX',
+    role: 'Frontend developer and UI/UX',
     batch: 'B.E. COE (2023-2027)',
     image: '/images/manjot.jpeg',
     github: 'https://github.com/kaurmanjot20',
@@ -73,7 +73,7 @@ const team = [
   },
   {
     name: 'Sakshham Bhagat',
-    role: 'Backend & App Developer',
+    role: 'Backend and app developer',
     batch: 'B.E. COE (2023-2027)',
     image: '/images/sakshham.png',
     github: 'https://github.com/SakshhamTheCoder',
@@ -82,7 +82,7 @@ const team = [
   },
   {
     name: 'Saumil Makkar',
-    role: 'Backend Developer',
+    role: 'Backend developer',
     batch: 'B.E. COE (2023-2027)',
     image: '/images/saumil.png',
     github: 'https://github.com/SaumilMakkar',
@@ -104,36 +104,36 @@ const PersonCard = ({ name, title, secondTitle, batch, image, github, linkedin, 
 
   return (
     <div className={`person-card ${isMentor ? 'mentor-card' : ''}`}>
-      <div className='avatar-container'>
+      <div className='person-avatar-wrap'>
         {imgError || !image ? (
-          <div className='avatar-fallback'>{getInitials(name)}</div>
+          <div className='person-avatar-fallback'>{getInitials(name)}</div>
         ) : (
           <img 
             src={image} 
             alt={name} 
-            className='avatar' 
+            className='person-avatar' 
             onError={() => setImgError(true)} 
           />
         )}
       </div>
-      <div className='card-content'>
+      <div className='person-content'>
         <h3>{name}</h3>
         {batch && <p className='person-batch'>{batch}</p>}
-        <p className='title'>{cleanTitle}</p>
-        {secondTitle && <p className='title title--second'>{secondTitle}</p>}
-        <div className='social-icons'>
+        <p className='person-title'>{cleanTitle}</p>
+        {secondTitle && <p className='person-title person-title--second'>{secondTitle}</p>}
+        <div className='person-social'>
           {github && (
-            <a href={github} target='_blank' rel='noopener noreferrer' title="GitHub">
+            <a href={github} target='_blank' rel='noopener noreferrer' title="GitHub" aria-label={`${name} on GitHub`}>
               <i className="fa fa-github" aria-hidden="true"></i>
             </a>
           )}
           {linkedin && (
-            <a href={linkedin} target='_blank' rel='noopener noreferrer' title="LinkedIn">
+            <a href={linkedin} target='_blank' rel='noopener noreferrer' title="LinkedIn" aria-label={`${name} on LinkedIn`}>
               <i className="fa fa-linkedin-square" aria-hidden="true"></i>
             </a>
           )}
           {email && (
-            <a href={`mailto:${email}`} title="Email">
+            <a href={`mailto:${email}`} title="Email" aria-label={`Email ${name}`}>
               <i className="fa fa-envelope" aria-hidden="true"></i>
             </a>
           )}
@@ -145,17 +145,17 @@ const PersonCard = ({ name, title, secondTitle, batch, image, github, linkedin, 
 
 const Team = () => (
     <div className='team-page-wrapper'>
-      <PublicPageBar title="Meet the Portal Team" />
+      <PublicPageBar title="Meet the portal team" />
       
       <div className='team-container'>
         <div className='team-layout'>
           <div className='team-mentor'>
-            <h2 className='subheading'>Mentor</h2>
+            <h2 className='team-subheading'>Mentor</h2>
             <PersonCard {...mentor} isMentor={true} />
           </div>
 
           <div className='team-members'>
-            <h2 className='subheading'>Development Team</h2>
+            <h2 className='team-subheading'>Development team</h2>
             <div className='team-grid'>
               {team.map((person) => (
                 <PersonCard key={person.name} {...person} title={person.role} />
@@ -164,7 +164,7 @@ const Team = () => (
           </div>
         </div>
 
-        <p className='contact'>
+        <p className='team-contact'>
           For queries, you can reach us at{' '}
           <a href='mailto:tarunpreet@thapar.edu'>tarunpreet@thapar.edu</a>
           {' '}or{' '}
