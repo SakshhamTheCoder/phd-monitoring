@@ -291,10 +291,10 @@ class DoctoralChangeReconciliationBugTest extends TestCase
         // approval at all - they get a crash-shaped 403, not even a normal
         // "you're not authorized". Once reconciled, their approval is the
         // third and last the live committee needs, and it should carry the
-        // form on to 'hod' like anyone else's would.
+        // form on to 'phd_coordinator' (the IRB chain's next step) like anyone else's would.
         $thirdResponse->assertStatus(200, 'a committee member in good standing should be able to cast an approval, not crash on a missing row');
         $this->assertSame(
-            'hod',
+            'phd_coordinator',
             $form->fresh()->stage,
             'once every live committee member (including one added after seeding) has approved, the form should leave the doctoral stage'
         );
@@ -353,7 +353,7 @@ class DoctoralChangeReconciliationBugTest extends TestCase
 
         // Only once third also approves should the stage complete.
         $this->submitIrbDoctoral($form, $third)->assertOk();
-        $this->assertSame('hod', $form->fresh()->stage);
+        $this->assertSame('phd_coordinator', $form->fresh()->stage);
     }
 
     // ------------------------------------------------------------------

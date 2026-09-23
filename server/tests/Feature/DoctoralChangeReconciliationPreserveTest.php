@@ -322,7 +322,7 @@ class DoctoralChangeReconciliationPreserveTest extends TestCase
             'comments' => 'approved',
         ])->assertOk();
 
-        $this->assertSame('hod', $form->fresh()->stage);
+        $this->assertSame('phd_coordinator', $form->fresh()->stage);
     }
 
     // ------------------------------------------------------------------
