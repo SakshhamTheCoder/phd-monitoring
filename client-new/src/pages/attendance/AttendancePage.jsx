@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import Tabs from '../../components/tabs/Tabs';
@@ -67,6 +67,14 @@ const AttendancePage = () => {
   const role = currentRole();
   const isAdmin = role === 'admin';
 
+  // Switching date or department while a load is in flight leaves two answers
+  // racing back. If the older roster landed last, Save posted its marks under
+  // the newer date. Each loader numbers its requests and only the newest writes.
+  const rosterRequest = useRef(0);
+  const historyRequest = useRef(0);
+  const summaryRequest = useRef(0);
+  const monthRequest = useRef(0);
+
   useEffect(() => {
     const url = isAdmin ? '/departments?rows=1000' : '/clerks/my-departments';
     customFetch(baseURL + url, 'GET', {}, false)
@@ -85,12 +93,14 @@ const AttendancePage = () => {
   }, [isAdmin]);
 
   const loadRoster = useCallback(async () => {
+    const request = ++rosterRequest.current;
     setLoading(true);
     setStudents([]);
     setStatuses({});
     const params = new URLSearchParams({ date });
     if (departmentFilter) params.set('department_id', departmentFilter);
     const res = await customFetch(baseURL + `/clerks/attendance?${params.toString()}`, 'GET', {}, true);
+    if (request !== rosterRequest.current) return;
     setLoading(false);
     if (!res.success) { setStudents([]); return; }
     const list = res.response.students || [];
@@ -113,11 +123,13 @@ const AttendancePage = () => {
   useEffect(() => { if (activeTab === 'mark' || activeTab === 'history') loadRoster(); }, [loadRoster, activeTab]);
 
   const loadHistory = useCallback(async () => {
+    const request = ++historyRequest.current;
     setHistoryLoading(true);
     setHistory([]);
     const params = new URLSearchParams({ page: String(historyPage), per_page: '15' });
     if (departmentFilter) params.set('department_id', departmentFilter);
     const res = await customFetch(baseURL + `/clerks/attendance/history?${params.toString()}`, 'GET', {}, true);
+    if (request !== historyRequest.current) return;
     setHistoryLoading(false);
     if (!res.success) { setHistory([]); return; }
     setHistory(res.response.data || res.response || []);
@@ -128,21 +140,24 @@ const AttendancePage = () => {
   useEffect(() => { if (activeTab === 'history') loadHistory(); }, [activeTab, loadHistory]);
 
   const loadDaySummary = useCallback(async () => {
+    const request = ++summaryRequest.current;
     setDaySummary(null);
     const params = new URLSearchParams({ date });
     if (departmentFilter) params.set('department_id', departmentFilter);
     const res = await customFetch(baseURL + `/clerks/attendance/summary?${params.toString()}`, 'GET', {}, false);
-    if (res.success) setDaySummary(res.response);
+    if (request === summaryRequest.current && res.success) setDaySummary(res.response);
   }, [date, departmentFilter]);
 
   useEffect(() => { if (activeTab === 'history') loadDaySummary(); }, [activeTab, loadDaySummary]);
 
   const loadMonth = useCallback(async () => {
+    const request = ++monthRequest.current;
     setMonthLoading(true);
     setMonthData(null);
     const params = new URLSearchParams({ month });
     if (departmentFilter) params.set('department_id', departmentFilter);
     const res = await customFetch(baseURL + `/clerks/attendance/month?${params.toString()}`, 'GET', {}, false);
+    if (request !== monthRequest.current) return;
     setMonthLoading(false);
     if (res.success) setMonthData(res.response);
   }, [month, departmentFilter]);
