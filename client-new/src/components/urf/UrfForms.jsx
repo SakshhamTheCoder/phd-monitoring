@@ -241,14 +241,15 @@ export const FellowForm = ({ applicationId, initial, prefill, onSaved }) => {
  * application; publications are linked from the student's own library the way
  * a PhD progress form links them.
  */
-export const ReportForm = ({ application, type, onSaved }) => {
+export const ReportForm = ({ application, type, filed, onSaved }) => {
   // Read once per mount: parsing localStorage on each keystroke gains nothing.
   const [me] = useState(signedInUser);
-  const [body, set] = useBody({ type });
+  // A report sent back opens with what was filed, so correcting it is not retyping it.
+  const [body, set] = useBody({ type, conference_presentation: filed?.conference_presentation });
   const [library, setLibrary] = useState(null);
   const [picking, setPicking] = useState(false);
   const [selection, setSelection] = useState({});
-  const [linked, setLinked] = useState({});
+  const [linked, setLinked] = useState(filed?.publications || {});
 
   const slot = application.student2_email?.toLowerCase() === me.email?.toLowerCase() ? 2 : 1;
   const mentors = [application.mentor1, application.mentor2].filter(Boolean);

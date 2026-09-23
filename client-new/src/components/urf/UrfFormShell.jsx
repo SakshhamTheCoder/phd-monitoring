@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import FormTitleBar from '../forms/formTitleBar/FormTitleBar';
 import FormLadder from '../forms/formLadder/FormLadder';
 import UrfFilled from './UrfFilled';
+import LoadError from '../common/LoadError';
 import { useLoading } from '../../context/LoadingContext';
 import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
@@ -18,15 +19,30 @@ import { baseURL } from '../../api/urls';
  */
 const UrfFormShell = ({ path }) => {
   const [formData, setFormData] = useState(null);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const { setLoading } = useLoading();
 
   useEffect(() => {
+    let cancelled = false;
+    // Another form starts clean, so the last one is neither shown nor decided
+    // under this path.
+    setFormData(null);
+    setFailed(false);
     setLoading(true);
     customFetch(baseURL + path, 'GET')
-      .then((res) => res?.success && setFormData(res.response))
+      .then((res) => {
+        if (cancelled) return;
+        if (res.success) setFormData(res.response);
+        else setFailed(true);
+      })
       .finally(() => setLoading(false));
-  }, [path]);
+    return () => { cancelled = true; };
+  }, [path, attempt]);
 
+  if (failed) {
+    return <LoadError message="Could not load this form. Check your connection and try again." onRetry={() => setAttempt((n) => n + 1)} />;
+  }
   if (!formData) return null;
 
   return (

@@ -241,17 +241,19 @@ const UrfList = () => {
   // reads the projects they are on; deciding them is the office's.
   const decidable = tab === 'applied' && can('can_manage_urf');
 
+  // Waits for the capabilities: before they land can() says no to everything,
+  // and the office fetched a queue it holds no step on.
   useEffect(() => {
-    if (can('can_manage_urf')) return;
+    if (!capabilitiesKnown || managesUrf) return;
     apiUrfQueue().then((res) => res.success && setQueue(res.response.data || []));
-  }, [refreshKey]);
+  }, [refreshKey, capabilitiesKnown, managesUrf]);
 
   return (
     <>
       <PageHeader
         title="URF"
         subtitle={can('can_manage_urf')
-          ? `Undergraduate Research Fellowship. Applications are ${open ? 'open' : 'closed'}.`
+          ? `Undergraduate Research Fellowship.${open === null ? '' : ` Applications are ${open ? 'open' : 'closed'}.`}`
           : 'The Undergraduate Research Fellowship projects you mentor.'}
         actions={can('can_manage_urf') && (
           <>

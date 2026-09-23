@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import UrfRecord from '../../components/urf/UrfRecord';
+import LoadError from '../../components/common/LoadError';
 import { apiUrfShow, apiUrfStatus } from '../../api/urf';
 
 // An application is decided once: selected or rejected. A decided project
@@ -21,13 +22,28 @@ const UrfDetails = () => {
   const [record, setRecord] = useState(null);
   const [pending, setPending] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
+  // Refreshes the record after a decision, on the same id.
   const load = useCallback(async () => {
     const res = await apiUrfShow(id);
     if (res.success) setRecord(res.response);
   }, [id]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    let cancelled = false;
+    // Another project starts clean, so a decision cannot land on the last one.
+    setRecord(null);
+    setPending(null);
+    setFailed(false);
+    apiUrfShow(id).then((res) => {
+      if (cancelled) return;
+      if (res.success) setRecord(res.response);
+      else setFailed(true);
+    });
+    return () => { cancelled = true; };
+  }, [id, attempt]);
 
   // Every change notifies the students, so it is confirmed before it is sent.
   const decide = async () => {
@@ -43,6 +59,9 @@ const UrfDetails = () => {
 
   return (
     <>
+      {failed && (
+        <LoadError message="Could not load this URF project. Check your connection and try again." onRetry={() => setAttempt((n) => n + 1)} />
+      )}
       {record && (
         <UrfRecord
           record={record}
