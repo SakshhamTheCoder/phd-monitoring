@@ -9,6 +9,7 @@ import InputSuggestions from '../forms/fields/InputSuggestions';
 import DropdownField from '../forms/fields/DropdownField';
 import TableComponent from '../forms/table/TableComponent';
 import { facultyNameCell } from '../facultyLink/FacultyLink';
+import './SupervisorDoctoralManager.css';
 
 
 const SupervisorDoctoralManager = ({ studentId, supervisors = [], doctoralCommittee = [], onClose }) => {
@@ -335,11 +336,6 @@ const SupervisorDoctoralManager = ({ studentId, supervisors = [], doctoralCommit
         <CustomButton text="Close" onClick={onClose} />
       </div>
 
-      <style jsx>{`
-        .supervisor-doctoral-manager {
-          padding: 1rem;
-        }
-      `}</style>
     </div>
   );
 };

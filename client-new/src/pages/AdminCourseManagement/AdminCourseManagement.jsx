@@ -13,6 +13,7 @@ import InputField from '../../components/forms/fields/InputField';
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import { currentRole } from '../../auth/access';
+import './AdminCourseManagement.css';
 const AdminCourseManagement = () => {
   // Heads and coordinators manage their own department's courses; the server
   // fills the department in for them, so only admin picks one.
@@ -541,76 +542,6 @@ const AdminCourseManagement = () => {
         onImport={handleBulkImport}
         submitting={submitting}
       />
-
-      <style jsx>{`
-        .admin-course-management {
-        }
-
-        .page-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 2rem;
-        }
-
-        .header-actions {
-          display: flex;
-          gap: 1rem;
-        }
-
-        .action-button {
-          padding: 0.5rem;
-          border: none;
-          border-radius: 0.25rem;
-          cursor: pointer;
-          transition: all 0.3s;
-          font-size: 0.875rem;
-        }
-
-        .edit-button {
-          background: var(--primary-wash);
-          color: var(--primary-color);
-        }
-
-        .edit-button:hover {
-          background: #dbeafe;
-        }
-
-        .delete-button {
-          background: #fef2f2;
-          color: #ef4444;
-        }
-
-        .delete-button:hover {
-          background: var(--danger-bg);
-        }
-
-        .modal-form {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-
-        .modal-actions {
-          display: flex;
-          justify-content: flex-end;
-          gap: 1rem;
-          margin-top: 1rem;
-        }
-
-        @media (max-width: 768px) {
-          .page-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 1rem;
-          }
-
-          .header-actions {
-            width: 100%;
-            flex-direction: column;
-          }
-        }
-      `}</style>
     </div>
     </Layout>
   );

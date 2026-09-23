@@ -389,11 +389,6 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
         <CustomButton text="Close" onClick={onClose} />
       </div>
 
-      <style jsx>{`
-        .department-manager {
-          padding: 1rem;
-        }
-      `}</style>
     </div>
   );
 };

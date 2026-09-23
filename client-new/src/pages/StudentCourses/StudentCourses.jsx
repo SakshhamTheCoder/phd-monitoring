@@ -6,6 +6,7 @@ import Loader from '../../components/loader/loader';
 import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import Tabs from '../../components/tabs/Tabs';
+import './StudentCourses.css';
 
 const StudentCourses = () => {
   const [activeTab, setActiveTab] = useState('ongoing'); // 'ongoing' or 'past'
@@ -120,104 +121,6 @@ const StudentCourses = () => {
           </div>
         )}
       </div>
-
-      <style jsx>{`
-        .student-courses-container {
-          max-width: 1400px;
-          margin: 0 auto;
-        }
-
-        /* Header, tabs and empty state come from styles/ui.css */
-
-        .courses-content {
-          margin-top: 2rem;
-        }
-
-        .courses-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-          gap: 1.5rem;
-        }
-
-        .course-card {
-          background: white;
-          border: 1px solid #e5e7eb;
-          border-radius: 0.5rem;
-          padding: 1.5rem;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-          transition: all 0.3s;
-        }
-
-        .course-card:hover {
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-          transform: translateY(-2px);
-        }
-
-        .course-header {
-          margin-bottom: 1rem;
-          border-bottom: 1px solid #e5e7eb;
-          padding-bottom: 0.75rem;
-        }
-
-        .course-header h3 {
-          font-size: 1.25rem;
-          font-weight: 600;
-          color: #1f2937;
-          margin-bottom: 0.5rem;
-        }
-
-        .course-code {
-          display: inline-block;
-          background: var(--primary-wash);
-          color: var(--primary-color);
-          padding: 0.25rem 0.75rem;
-          border-radius: 0.25rem;
-          font-size: 0.875rem;
-          font-weight: 500;
-        }
-
-        .course-details {
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
-        }
-
-        .detail-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-
-        .detail-label {
-          color: #6b7280;
-          font-size: 0.875rem;
-          font-weight: 500;
-        }
-
-        .detail-value {
-          color: #1f2937;
-          font-size: 0.875rem;
-          font-weight: 600;
-        }
-
-        .detail-value.grade {
-          background: var(--success-bg);
-          color: #16a34a;
-          padding: 0.25rem 0.75rem;
-          border-radius: 0.25rem;
-          font-size: 1rem;
-        }
-
-        /* Spans the grid; the rest comes from styles/ui.css */
-        .empty-state { grid-column: 1 / -1; }
-        .empty-state p { margin: 0; }
-
-        @media (max-width: 768px) {
-          .courses-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-      `}</style>
     </div>
      </Layout>
   );
