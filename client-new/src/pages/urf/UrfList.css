@@ -1,13 +1,19 @@
-/* body sets font-weight 600 app-wide, so the rows arrived semi-bold. The column
-   titles carry the emphasis; the rows are data. */
-.urf-list .form-table td { font-weight: 400; }
+/* The projects table under its heading, with the stage tabs, the session and
+   the search close above it rather than a page gap apart. */
+.urf-projects {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
 
-/* The stage tabs and the session they apply to, on one line. The tab bar
-   already carries the bottom margin, so the picker matches it. */
+.urf-projects .section-heading { margin: 0; }
+
+/* The stage tabs and the session they apply to, on one line. */
 .urf-stage-bar {
   display: flex;
   align-items: flex-end;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 /* Three tabs never need to scroll. The shared rule sets overflow-x, which makes
@@ -28,31 +34,12 @@
   margin-bottom: 0;
 }
 
-.urf-stage-bar {
-  margin-bottom: 1.5rem;
-}
-
-/* A cell that opens what it names, drawn as the link it behaves like. */
-.urf-link-cell {
-  border: none;
-  background: none;
-  padding: 0;
-  color: #991b1b;
-  font: inherit;
-  cursor: pointer;
-  text-align: left;
-}
-
-.urf-link-cell:hover {
-  text-decoration: underline;
-}
-
 /* The tabs and the session picker do not fit one line on a phone. */
 @media (max-width: 768px) {
   .urf-stage-bar {
     flex-wrap: wrap;
     align-items: stretch;
-    gap: 0.75rem;
+    gap: var(--space-3);
   }
 
   .urf-session-picker {

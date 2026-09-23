@@ -1,72 +1,56 @@
-/* Maroon theme for react-datepicker, from --primary-color */
+/* Brand theme for react-datepicker, from --primary-color. Every rule is
+   prefixed with a second class so it outranks the library's single-class
+   rules without !important. */
 .react-datepicker {
   border-color: var(--border-color);
   font-family: inherit;
 }
-.react-datepicker__header {
-  background-color: var(--primary-color) !important;
-  border-bottom-color: var(--hover-color) !important;
+.react-datepicker .react-datepicker__header {
+  background-color: var(--primary-color);
+  border-bottom-color: var(--hover-color);
 }
-.react-datepicker__current-month,
-.react-datepicker-time__header,
-.react-datepicker-year-header {
-  color: #fff !important;
+.react-datepicker .react-datepicker__current-month,
+.react-datepicker .react-datepicker-time__header,
+.react-datepicker .react-datepicker-year-header,
+.react-datepicker .react-datepicker__day-name {
+  color: var(--surface);
 }
-.react-datepicker__day-name {
-  color: #fff !important;
+.react-datepicker .react-datepicker__day-name { font-weight: 600; }
+.react-datepicker .react-datepicker__day--today {
   font-weight: 600;
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  background: var(--primary-wash);
+  border-radius: 50%;
 }
-.react-datepicker__day--today {
-  font-weight: 700 !important;
-  border: 1px solid var(--primary-color) !important;
-  color: var(--primary-color) !important;
-  background: var(--primary-wash) !important;
-  border-radius: 50% !important;
+.react-datepicker .react-datepicker__day--selected,
+.react-datepicker .react-datepicker__day--keyboard-selected,
+.react-datepicker .react-datepicker__day--chosen,
+.react-datepicker .react-datepicker__month-text--selected,
+.react-datepicker .react-datepicker__quarter-text--selected,
+.react-datepicker .react-datepicker__year-text--selected {
+  background-color: var(--primary-color);
+  color: var(--surface);
+  border-color: var(--primary-color);
 }
-.react-datepicker__day--today.react-datepicker__day--selected,
-.react-datepicker__day--today.react-datepicker__day--keyboard-selected {
-  background: var(--primary-color) !important;
-  color: #fff !important;
-  border-color: var(--primary-color) !important;
+.react-datepicker .react-datepicker__day--selected:hover,
+.react-datepicker .react-datepicker__day--keyboard-selected:hover {
+  background-color: var(--hover-color);
 }
-.react-datepicker__day--selected,
-.react-datepicker__day--keyboard-selected,
-.react-datepicker__day--chosen {
-  background-color: var(--primary-color) !important;
-  color: #fff !important;
-}
-.react-datepicker__day--selected:hover,
-.react-datepicker__day--keyboard-selected:hover {
-  background-color: var(--hover-color) !important;
-}
-.react-datepicker__day:hover {
+.react-datepicker .react-datepicker__day:hover {
   background-color: var(--primary-wash);
 }
-.react-datepicker__navigation-icon::before {
-  border-color: #fff;
-}
-.react-datepicker__month-text--selected,
-.react-datepicker__quarter-text--selected,
-.react-datepicker__year-text--selected {
-  background-color: var(--primary-color) !important;
-  color: #fff !important;
-}
-.react-datepicker__day--outside-month {
-  color: #bbb;
-}
-.react-datepicker__day--disabled {
-  color: #ccc !important;
+.react-datepicker .react-datepicker__navigation-icon::before {
+  border-color: var(--surface);
 }
 
-/* Fix cropping inside modal — portal ensures calendar floats above overlay */
-.react-datepicker-popper {
-  z-index: 1100 !important;
-}
-.react-datepicker__portal {
-  z-index: 1100 !important;
+/* The calendar floats above a dialog's overlay rather than being cropped by it. */
+body .react-datepicker-popper,
+body .react-datepicker__portal {
+  z-index: 1100;
 }
 
-/* Ensure input filled by DatePicker matches .input-field height */
+/* A DatePicker's input fills its field like any other .input-field. */
 .react-datepicker-wrapper {
   display: block;
   width: 100%;
@@ -75,133 +59,64 @@
   width: 100%;
 }
 
-/* Shared department/date filter strip above the tab panels */
-.attendance-filters { margin: 1rem 0; }
-.attendance-filters .filter-row { gap: 1rem; flex-wrap: wrap; }
-.attendance-today-pill { margin-left: 0.5rem; font-size: var(--text-2xs); }
-.attendance-filter-meta {
-  margin-left: auto;
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  font-weight: 600;
-}
-@media (max-width: 768px) {
-  .attendance-filter-meta { margin-left: 0; width: 100%; }
-}
-
-/* Day and month aggregate cards */
-.attendance-summary-cards {
+/* Filters: one row of fields that wraps to one column on a phone. */
+.attendance-filters {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+  align-items: end;
 }
-.attendance-summary-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.85rem 1rem;
-  background: #fff;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius);
-}
-.attendance-summary-label {
-  font-size: var(--text-2xs);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-weight: 700;
-  color: var(--text-subtle);
-}
-.attendance-summary-value { font-size: var(--text-2xl); font-weight: 700; line-height: 1; color: var(--text-color, #111827); }
-.attendance-summary-value.present { color: var(--success); }
-.attendance-summary-value.absent { color: var(--danger-text); }
-.attendance-summary-caption {
-  grid-column: 1 / -1;
-  margin: 0;
-  font-size: var(--text-xs);
-  color: var(--text-muted);
+.attendance-filters .input-field-container { margin: 0; }
+.attendance-filters-action { display: flex; justify-content: flex-end; }
+.attendance-today-badge { margin-left: var(--space-2); }
+.attendance-date-warning { margin-top: var(--space-4); }
+
+/* Counts beside a table's title. */
+.attendance-counts {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
 }
 
-/* The leave application a notification link named (?tab=leaves&leave=42) —
+/* The figures above a table (AttendanceSummary). */
+.facts .attendance-stat-value {
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  line-height: 1.2;
+}
+.facts .attendance-stat-value--present { color: var(--success); }
+.facts .attendance-stat-value--absent { color: var(--danger-text); }
+.facts .attendance-stat-note { margin-top: var(--space-2); font-weight: 400; }
+
+/* The application a notification link named (?tab=leaves&leave=42);
    StudentAttendancePage scrolls this row into view on mount. */
-.form-table tr.leave-row--highlight td {
+.data-table tr.leave-row--highlight td {
   background: var(--primary-wash);
 }
 
-/* Discard a draft application from the list. Only drafts carry it, so the
-   column is empty for anything the HOD has already seen. */
-.leave-draft-delete {
-    background: none;
-    border: none;
-    color: #9ca3af;
-    cursor: pointer;
-    padding: 0.25rem 0.4rem;
-}
+.attendance-capitalize { text-transform: capitalize; }
 
-.leave-draft-delete:hover {
-    color: #c0392b;
-}
-
-
-/* ==========================================================================
-   Page furniture that used to be written inline
-
-   Every declaration below is the value the inline style carried, moved
-   verbatim. An inline style wins over any stylesheet, so while these lived in
-   the markup no rule here could correct one.
-   ========================================================================== */
-.attendance-header-actions {
+/* The reviewer's dialog: balance, any over-quota warning, then the form. */
+.attendance-review {
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  gap: var(--space-4);
 }
-
-.attendance-filter-row { align-items: flex-end; }
-
-.attendance-field-lg { min-width: 220px; }
-.attendance-field-md { min-width: 190px; }
-.attendance-field-sm { min-width: 160px; }
-
-.attendance-filter-push { margin-left: auto; }
-
-.attendance-tab-panel { margin-top: 1rem; }
-.attendance-tab-head { margin-bottom: 0.75rem; }
 
 /* Mark tab */
-.attendance-mark-actions {
-  display: flex;
-  gap: 0.5rem;
-  justify-content: flex-end;
-  align-items: center;
-  margin-bottom: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.attendance-action-divider {
-  width: 1px;
-  height: 24px;
-  background: var(--border-subtle);
-  margin: 0 0.25rem;
-}
-
-.attendance-save-row {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 1rem;
-}
+.attendance-foot-end { margin-left: auto; }
 
 .attendance-status-choice {
   display: inline-flex;
-  gap: 1rem;
+  gap: var(--space-4);
   align-items: center;
 }
 
 .attendance-status-option {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: var(--space-1);
   cursor: pointer;
   font-weight: 400;
 }
@@ -211,11 +126,10 @@
 .attendance-status-option.is-chosen { font-weight: 600; }
 .attendance-status-option.is-chosen.is-absent { color: var(--danger-text); }
 
-/* A cell, so it has to out-rank `.form-table td` in styles/ui.css, which sets
-   the table's own colour and size. The container class does that without an
-   !important. */
-.form-list-container .attendance-marked-by {
-  font-size: 0.82rem;
+/* Cells, so they have to out-rank `.data-table td` in styles/ui.css, which
+   sets the table's own colour and size. */
+.data-table .attendance-marked-by {
+  font-size: var(--text-xs);
   color: var(--text-muted);
 }
 
@@ -224,138 +138,14 @@
   font-style: italic;
 }
 
-.form-list-container .attendance-status-present { color: var(--success); }
-.form-list-container .attendance-status-absent { color: var(--danger-text); }
+.data-table .attendance-status-present { color: var(--success); }
+.data-table .attendance-status-absent { color: var(--danger-text); }
 
-/* History tab */
+/* Past sessions pager */
 .attendance-pager {
   display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 1rem;
   align-items: center;
-}
-
-.attendance-pager-label {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-}
-
-/* Export tab */
-.attendance-export-filters { margin-bottom: 1rem; }
-
-.attendance-date-warning {
-  margin-top: 0.75rem;
-  background: #FFF1F2;
-  border: 1px solid #FECDD3;
-  color: #9F1239;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
-  font-size: 0.85rem;
-}
-
-.attendance-export-note {
-  padding: 1rem;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
-
-/* CSV dialog */
-.attendance-csv-info {
-  background: #f0f9ff;
-  border: 1px solid #bae6fd;
-  border-radius: 0.5rem;
-  padding: 1rem;
-  margin-bottom: 1rem;
-}
-
-.attendance-csv-line {
-  margin: 0.25rem 0;
-  font-size: 0.875rem;
-}
-
-.attendance-csv-required { margin: 0.5rem 0 0.25rem 0; }
-
-.attendance-csv-code {
-  font-family: monospace;
-  background: #e0f2fe;
-  padding: 0.5rem;
-  border-radius: 0.25rem;
-}
-
-.attendance-csv-warn { color: #92400e; }
-
-.attendance-csv-template { margin-bottom: 1rem; }
-
-/* The one orange button in the product, matching the bulk import pattern the
-   other CSV dialogs use. Compound selector so it beats .custom-button whatever
-   order the two stylesheets load in. */
-.custom-button.attendance-csv-template-btn {
-  background-color: #FF9800;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-weight: 500;
-  margin-bottom: 1rem;
-}
-
-.attendance-csv-file {
-  padding: 0.5rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius);
-  font-size: 1rem;
-  cursor: pointer;
-  margin-bottom: 1rem;
+  justify-content: center;
+  gap: var(--space-4);
   width: 100%;
-  box-sizing: border-box;
-}
-
-.attendance-csv-preview {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-  max-height: 400px;
-  overflow-y: auto;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius);
-}
-
-.attendance-csv-preview-head {
-  padding: 0.75rem;
-  background: #f9fafb;
-  border-bottom: 1px solid var(--border-color);
-  font-weight: 600;
-}
-
-.attendance-csv-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.attendance-csv-cancel,
-.attendance-csv-upload {
-  padding: 0.75rem 1.5rem;
-  border-radius: var(--radius);
-  font-size: 1rem;
-  font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-}
-
-.attendance-csv-cancel {
-  background: white;
-  color: var(--text-muted);
-  border: 1px solid var(--border-color);
-}
-
-.attendance-csv-upload {
-  background: var(--primary-color);
-  color: white;
-  border: none;
-}
-
-.attendance-csv-upload:disabled {
-  background: var(--text-subtle);
-  cursor: not-allowed;
 }

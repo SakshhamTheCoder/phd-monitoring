@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import PageHeader from '../../components/pageHeader/PageHeader';
+import Page from '../../components/page/Page';
 import FilterBar from '../../components/filterBar/FilterBar';
 import PagenationTable from '../../components/pagenationTable/PagenationTable';
 import DropdownField from '../../components/forms/fields/DropdownField';
@@ -16,7 +16,7 @@ const TITLES = {
 };
 
 /**
- * Admin → URF → one form: who filled it in, listed the way the PhD form lists
+ * Admin, URF, one form: who filled it in, listed the way the PhD form lists
  * are. The table and filter bar read the page's own path as their endpoint,
  * and a row opens that submission's own page, which holds what was filled in
  * and what each step of the chain said about it.
@@ -67,35 +67,35 @@ const UrfFormList = () => {
   }), [filters, session]);
 
   return (
-    <>
-      <PageHeader title={TITLES[pathname.split('/').pop()]} subtitle="Undergraduate Research Fellowship" />
-      {sessions?.length > 0 && (
-        <div className="urf-stage-bar">
-          <div className="urf-session-picker">
-            <DropdownField
-              options={sessions.map((year) => ({ value: String(year), title: `URF ${year}` }))}
-              initialValue={session}
-              onChange={setSession}
-            />
-          </div>
+    <Page
+      title={TITLES[pathname.split('/').pop()]}
+      description="Undergraduate Research Fellowship"
+      actions={sessions?.length > 0 && (
+        <div className="urf-session-picker">
+          <DropdownField
+            options={sessions.map((year) => ({ value: String(year), title: `URF ${year}` }))}
+            initialValue={session}
+            onChange={setSession}
+          />
         </div>
       )}
-      <FilterBar
-        placeholder="Search by project, student, roll no or mentor…"
-        exclude={['session']}
-        onSearch={setFilters}
-      />
-      <div className="urf-list">
-        {sessions !== null && (
-          <PagenationTable
-            endpoint={pathname}
-            filters={query}
-            enableSelect={false}
-            customOpenForm={(row) => navigate(`${pathname}/${row.id}`)}
-          />
-        )}
-      </div>
-    </>
+    >
+      {sessions !== null && (
+        <PagenationTable
+          endpoint={pathname}
+          filters={query}
+          search={(
+            <FilterBar
+              placeholder="Search by project, student, roll no or mentor…"
+              exclude={['session']}
+              onSearch={setFilters}
+            />
+          )}
+          enableSelect={false}
+          customOpenForm={(row) => navigate(`${pathname}/${row.id}`)}
+        />
+      )}
+    </Page>
   );
 };
 

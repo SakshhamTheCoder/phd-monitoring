@@ -16,7 +16,7 @@ const DECISIONS = {
   ],
 };
 
-/** Admin → URF → one project, shown like a scholar's profile, with the decision on it. */
+/** Admin, URF, one project, shown like a scholar's profile, with the decision on it. */
 const UrfDetails = () => {
   const { id } = useParams();
   const [record, setRecord] = useState(null);
@@ -83,7 +83,7 @@ const UrfDetails = () => {
           The students on the project are notified.
         </p>
         <div className="modal-actions">
-          <CustomButton text="Cancel" variant="secondary" onClick={() => setPending(null)} />
+          <CustomButton text="Cancel" variant="quiet" onClick={() => setPending(null)} />
           <CustomButton text={saving ? 'Saving…' : pending?.label} onClick={decide} disabled={saving} />
         </div>
       </CustomModal>

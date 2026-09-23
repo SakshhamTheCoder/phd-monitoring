@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import PageHeader from '../../components/pageHeader/PageHeader';
+import Page from '../../components/page/Page';
+import Panel from '../../components/panel/Panel';
 import Tabs from '../../components/tabs/Tabs';
 import FilterBar from '../../components/filterBar/FilterBar';
 import PagenationTable from '../../components/pagenationTable/PagenationTable';
@@ -15,7 +16,6 @@ import { URF_STATUSES, capitalize } from '../../components/urf/UrfRecord';
 import { apiSettings, apiSaveSettings } from '../../api/settings';
 import useCapabilities, { useCapabilitiesKnown } from '../../context/CapabilitiesContext';
 import TableComponent from '../../components/forms/table/TableComponent';
-import GridContainer from '../../components/forms/fields/GridContainer';
 import { apiUrfQueue } from '../../api/urf';
 import UrfReportSchedule from '../../components/urf/UrfReportSchedule';
 import CustomModal from '../../components/forms/modal/CustomModal';
@@ -23,7 +23,7 @@ import { apiUrfSessions, apiUrfStatus, apiUrfImportAwarded } from '../../api/urf
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
 import './UrfList.css';
 
-/** Admin → URF: every application, by stage, with the filters the students page has. */
+/** Admin, URF: every application, by stage, with the filters the students page has. */
 // The URF forms, as cards like the PhD forms page. Each opens its own list.
 const FORM_NAMES = {
   'urf-application': 'Application',
@@ -249,27 +249,26 @@ const UrfList = () => {
   }, [refreshKey, capabilitiesKnown, managesUrf]);
 
   return (
-    <>
-      <PageHeader
-        title="URF"
-        subtitle={can('can_manage_urf')
-          ? `Undergraduate Research Fellowship.${open === null ? '' : ` Applications are ${open ? 'open' : 'closed'}.`}`
-          : 'The Undergraduate Research Fellowship projects you mentor.'}
-        actions={can('can_manage_urf') && (
-          <>
-            <CustomButton text="Import Awarded" onClick={() => setImportOpen(true)} />
-            {open !== null && (
-              <CustomButton text={open ? 'Close Applications' : 'Open Applications'} onClick={toggleApplications} />
-            )}
-          </>
-        )}
-      />
+    <Page
+      title="URF"
+      description={can('can_manage_urf')
+        ? `Undergraduate Research Fellowship.${open === null ? '' : ` Applications are ${open ? 'open' : 'closed'}.`}`
+        : 'The Undergraduate Research Fellowship projects you mentor.'}
+      actions={can('can_manage_urf') && (
+        <>
+          <CustomButton text="Import awarded" variant="secondary" onClick={() => setImportOpen(true)} />
+          {open !== null && (
+            <CustomButton text={open ? 'Close applications' : 'Open applications'} onClick={toggleApplications} />
+          )}
+        </>
+      )}
+    >
       {readsUrf && <FormGrid forms={formCards} />}
 
       <UnifiedBulkImportModal
         isOpen={importOpen}
         onClose={() => setImportOpen(false)}
-        title="Import Awarded Projects"
+        title="Import awarded projects"
         required={['project_title', 'student1_name', 'student1_roll_no', 'student1_email', 'mentor1_email']}
         rules={[
           'For projects awarded before the portal. They are created already selected.',
@@ -287,62 +286,60 @@ const UrfList = () => {
       />
 
       {can('can_manage_urf') && (
-        <>
-          <div className="grid-label">Report Rounds</div>
-          <UrfReportSchedule
-            session={Number(session) || new Date().getFullYear()}
-            sessions={sessions || []}
-          />
-        </>
+        <UrfReportSchedule
+          session={Number(session) || new Date().getFullYear()}
+          sessions={sessions || []}
+        />
       )}
       {queue.length > 0 && (
-        <GridContainer
-          label={`Waiting on you (${queue.length})`}
-          elements={[
-            <TableComponent
-              data={queue}
-              keys={['session', 'project_title', 'students', 'form', 'waiting_since']}
-              titles={['Session', 'Project Title', 'Students', 'Form', 'Waiting Since']}
-              components={[{
-                key: 'project_title',
-                component: ({ row, data }) => (
-                  <button type="button" className="urf-link-cell" onClick={() => navigate(`/urf/${row.form}/${row.id}`)}>
-                    {data}
-                  </button>
-                ),
-              }, {
-                key: 'form',
-                component: ({ data }) => FORM_NAMES[data] || data,
-              }]}
-            />,
-          ]}
-          space={3}
-        />
+        <Panel flush title={`Waiting on you (${queue.length})`}>
+          <TableComponent
+            data={queue}
+            keys={['session', 'project_title', 'students', 'form', 'waiting_since']}
+            titles={['Session', 'Project title', 'Students', 'Form', 'Waiting since']}
+            components={[{
+              key: 'project_title',
+              component: ({ row, data }) => (
+                <button type="button" className="cell-link" onClick={() => navigate(`/urf/${row.form}/${row.id}`)}>
+                  {data}
+                </button>
+              ),
+            }, {
+              key: 'form',
+              component: ({ data }) => FORM_NAMES[data] || data,
+            }]}
+          />
+        </Panel>
       )}
 
-      <div className="grid-label">{can('can_manage_urf') ? 'All Projects' : 'Projects You Mentor'}</div>
-      <div className="urf-stage-bar">
-        <Tabs
-          items={URF_STATUSES.map((s) => ({ value: s, label: capitalize(s) }))}
-          value={tab}
-          onChange={setTab}
+      {/* The stage tabs and the session scope the table under them, so the
+          three sit together under one heading. */}
+      <section className="urf-projects">
+        <h2 className="section-heading">{can('can_manage_urf') ? 'All projects' : 'Projects you mentor'}</h2>
+        <div className="urf-stage-bar">
+          <Tabs
+            items={URF_STATUSES.map((s) => ({ value: s, label: capitalize(s) }))}
+            value={tab}
+            onChange={setTab}
+          />
+          {sessions?.length > 0 && (
+            <div className="urf-session-picker">
+              <DropdownField
+                options={sessions.map((year) => ({ value: String(year), title: `URF ${year}` }))}
+                initialValue={session}
+                onChange={setSession}
+              />
+            </div>
+          )}
+        </div>
+        {/* Not the table's search slot: the table is keyed on the tab, and the
+            box would be remounted empty on every tab while the search it had
+            sent stayed applied. */}
+        <FilterBar
+          placeholder="Search projects by title, student, roll no or mentor…"
+          exclude={['session']}
+          onSearch={setFilter}
         />
-        {sessions?.length > 0 && (
-          <div className="urf-session-picker">
-            <DropdownField
-              options={sessions.map((year) => ({ value: String(year), title: `URF ${year}` }))}
-              initialValue={session}
-              onChange={setSession}
-            />
-          </div>
-        )}
-      </div>
-      <FilterBar
-        placeholder="Search projects by title, student, roll no or mentor…"
-        exclude={['session']}
-        onSearch={setFilter}
-      />
-      <div className="urf-list">
         {ready && (
           <PagenationTable
             // The tab is part of the key, so leaving it drops what was ticked
@@ -362,7 +359,7 @@ const UrfList = () => {
             customOpenForm={(row) => navigate(`/urf/${row.id}`)}
           />
         )}
-      </div>
+      </section>
 
       <CustomModal
         isOpen={!!pending}
@@ -385,11 +382,11 @@ const UrfList = () => {
           </p>
         )}
         <div className="modal-actions">
-          <CustomButton text="Cancel" variant="secondary" onClick={() => setPending(null)} />
+          <CustomButton text="Cancel" variant="quiet" onClick={() => setPending(null)} />
           <CustomButton text={saving ? 'Saving…' : pending?.label} onClick={decide} disabled={saving} />
         </div>
       </CustomModal>
-    </>
+    </Page>
   );
 };
 

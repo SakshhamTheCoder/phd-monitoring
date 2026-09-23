@@ -7,6 +7,9 @@ import { fileUrlFrom } from '../common/FileLink';
 import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
 import { stageLine } from './UrfApproval';
 import FormGrid from '../forms/formGrid/FormGrid';
+import Page from '../page/Page';
+import Panel from '../panel/Panel';
+import CustomButton from '../forms/fields/CustomButton';
 
 export const URF_STATUSES = ['applied', 'selected', 'rejected'];
 export const REPORT_TYPES = { half_yearly: 'Half-yearly Progress Report', final: 'Final Report' };
@@ -16,13 +19,8 @@ export const facultyName = (faculty) => [faculty?.user?.first_name, faculty?.use
 // "3rd Year" for 3, as the server names it.
 export const yearLabel = (year) => (year ? `${year}${['', 'st', 'nd', 'rd'][year] || 'th'} Year` : EMPTY_VALUE);
 
-// A labelled block, used by the URF forms.
-export const Section = ({ title, children }) => (
-  <div className="grid-container-wrapper">
-    <div className="grid-label">{title}</div>
-    {children}
-  </div>
-);
+// A URF form's panel. Its children are PanelSections.
+export const Section = ({ title, children }) => <Panel title={title}>{children}</Panel>;
 
 // Plain text, as statuses read elsewhere in the portal.
 export const StatusText = ({ status }) => <span>{capitalize(status)}</span>;
@@ -57,18 +55,18 @@ export const TeamTables = ({ record }) => {
   return (
     <>
       <GridContainer
-        label="Team Members"
+        label="Team members"
         elements={[
           <TableComponent
             data={students}
             keys={['name', 'roll_no', 'branch', 'year', 'gender', 'email', 'phone']}
-            titles={['Name', 'Roll Number', 'Branch', 'Year', 'Gender', 'Official Email', 'Phone']}
+            titles={['Name', 'Roll number', 'Branch', 'Year', 'Gender', 'Official email', 'Phone']}
           />,
         ]}
         space={3}
       />
       <GridContainer
-        label="Faculty Mentors"
+        label="Faculty mentors"
         elements={[
           <TableComponent
             data={mentors}
@@ -118,12 +116,12 @@ export const OtherProjects = ({ record }) => {
 
   return (
     <GridContainer
-      label="Eligibility: Other URF Projects"
+      label="Eligibility: other URF projects"
       elements={[
         <TableComponent
           data={rows}
           keys={['student', 'session', 'project_title', 'status', 'final_report', 'publications']}
-          titles={['Student', 'Session', 'Project', 'Status', 'Final Report', 'Publications']}
+          titles={['Student', 'Session', 'Project', 'Status', 'Final report', 'Publications']}
         />,
       ]}
       space={3}
@@ -131,12 +129,6 @@ export const OtherProjects = ({ record }) => {
   );
 };
 
-/**
- * One URF project as a profile card, laid out like the PhD student profile:
- * the title and its status beside the actions, then the team, stipend details
- * and reports, each report with the publications linked to it. The server
- * leaves out stipend details a student is not entitled to see.
- */
 /**
  * The project's forms, each opening its own page. The project page holds the
  * project; what a form asked, and what each step of the chain said about it,
@@ -169,12 +161,7 @@ const UrfForms = ({ record }) => {
     })),
   ];
 
-  return (
-    <div className="grid-container-wrapper">
-      <div className="grid-label">Forms</div>
-      <FormGrid forms={forms} title={null} />
-    </div>
-  );
+  return <FormGrid forms={forms} title="Forms" />;
 };
 
 /**
@@ -186,39 +173,42 @@ const UrfForms = ({ record }) => {
  * whether a report was in.
  */
 const UrfRecord = ({ record, actions = null }) => {
+  const facts = [
+    ['Status', <StatusText status={record.status} />],
+    ['Session', record.session && `URF ${record.session}`],
+    ['Applied on', formatDate(record.created_at)],
+    ['Approval', stageLine(record)],
+    // Beside the facts, not with the decisions, so it never reads as one of them.
+    ['Proposal', record.proposal && (
+      <CustomButton
+        text="View proposal"
+        variant="secondary"
+        size="sm"
+        onClick={() => window.open(fileUrlFrom(record.proposal), '_blank', 'noopener,noreferrer')}
+      />
+    )],
+  ];
+
   return (
-    <div className="student-container">
-      <div className="student-header">
-        <div className="student-header-text">
-          <h2>{record.project_title}</h2>
-          <div className="student-research">
-            <HeaderLine label="Status" title><StatusText status={record.status} /></HeaderLine>
-            <HeaderLine label="Session">{record.session && `URF ${record.session}`}</HeaderLine>
-            <HeaderLine label="Applied On">{formatDate(record.created_at)}</HeaderLine>
-            <HeaderLine label="Approval">{stageLine(record)}</HeaderLine>
-            {/* Beside the facts, not with the decisions, so it never reads as one of them. */}
-            <HeaderLine label="Proposal">
-              {record.proposal && (
-                <button
-                  type="button"
-                  className="profile-edit-small"
-                  onClick={() => window.open(fileUrlFrom(record.proposal), '_blank', 'noopener,noreferrer')}
-                >
-                  <i className="fa fa-file-pdf-o" aria-hidden="true"></i> View Proposal
-                </button>
-              )}
-            </HeaderLine>
-          </div>
-        </div>
-        {actions && <div className="profile-actions">{actions}</div>}
-      </div>
+    <Page title={record.project_title} actions={actions}>
+      <Panel title="Project">
+        <dl className="facts">
+          {facts.map(([label, value]) => (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd>{value || EMPTY_VALUE}</dd>
+            </div>
+          ))}
+        </dl>
+      </Panel>
 
       <UrfForms record={record} />
 
-      <TeamTables record={record} />
-
-      <OtherProjects record={record} />
-    </div>
+      <Panel>
+        <TeamTables record={record} />
+        <OtherProjects record={record} />
+      </Panel>
+    </Page>
   );
 };
 

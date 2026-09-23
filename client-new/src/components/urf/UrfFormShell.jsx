@@ -11,7 +11,7 @@ import { baseURL } from '../../api/urls';
  * One URF form, read the way a PhD form is read: the title bar with its id,
  * stage and status view, then what was filled in, then the recommendation of
  * each step up to the reader's own. A student holds only the first step, so
- * they get their own answers and the history behind View Status, as they do on
+ * they get their own answers and the history behind View status, as they do on
  * a PhD form.
  *
  * `path` is the form's API path. It is the page's own path on the URF pages,
@@ -45,8 +45,10 @@ const UrfFormShell = ({ path }) => {
   }
   if (!formData) return null;
 
+  // A form page like any other: the header band, then the form panel, with the
+  // page's gap between them.
   return (
-    <>
+    <div className="page">
       <FormTitleBar formName={formData.form_name} formData={formData} />
       <p className="viewing-scholar">
         URF {formData.session} · <strong>{formData.project_title}</strong>
@@ -64,7 +66,7 @@ const UrfFormShell = ({ path }) => {
           }]))}
         />
       </div>
-    </>
+    </div>
   );
 };
 

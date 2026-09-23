@@ -96,26 +96,36 @@ const AttendanceCsvDialog = ({ isOpen, onClose, onImported, editWindow }) => {
   };
 
   return (
-    <CustomModal isOpen={isOpen} onClose={close} title="Upload Attendance CSV" width="90vw">
-      <div className="modal-form">
-        <div className="info-box attendance-csv-info">
-          <p className="attendance-csv-line"><strong>CSV Format:</strong></p>
-          <p className="attendance-csv-line attendance-csv-code">roll_no,date,status</p>
-          <p className="attendance-csv-line attendance-csv-required"><strong>Required:</strong> roll_no, date (YYYY-MM-DD ≤ today, ≥ registration), status (present/absent)</p>
-          <p className="attendance-csv-line attendance-csv-warn">Only roll numbers in your tagged departments are accepted. Clerks can edit only within {editWindow} days.</p>
+    <CustomModal isOpen={isOpen} onClose={close} title="Upload attendance CSV" width="90vw">
+      <section className="csv-import-section">
+        <h4 className="csv-import-heading">CSV format</h4>
+        <ul className="csv-import-columns" aria-label="Columns, in order: roll_no, date, status">
+          <li className="is-required">roll_no</li>
+          <li className="is-required">date</li>
+          <li className="is-required">status</li>
+        </ul>
+        <p className="csv-import-note">Required: roll_no, date (YYYY-MM-DD ≤ today, ≥ registration), status (present/absent)</p>
+      </section>
+      <section className="csv-import-section">
+        <h4 className="csv-import-heading">Who can be imported</h4>
+        <ul className="csv-import-rules">
+          <li>Only roll numbers in your tagged departments are accepted.</li>
+          <li>Clerks can edit only within {editWindow} days.</li>
+        </ul>
+      </section>
+      <div className="csv-import-file">
+        <CustomButton text="Download template" variant="secondary" onClick={downloadTemplate} />
+        <input type="file" accept=".csv" onChange={handleFileChange} className="csv-import-input" aria-label="CSV file" />
+      </div>
+      {csvPreview && (
+        <div className="csv-import-preview">
+          <div className="csv-import-preview-head">Preview: {csvPreview.total} row(s) found, showing 5</div>
+          <div className="csv-preview-wrap"><table className="csv-preview"><thead><tr><th>Row</th>{csvPreview.headers.map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>{csvPreview.data.map(r => <tr key={r._row}><td className="csv-rownum">{r._row}</td>{csvPreview.headers.map(h => <td key={h}>{r[h] || <span className="csv-import-empty">empty</span>}</td>)}</tr>)}</tbody></table></div>
         </div>
-        <div className="attendance-csv-template"><CustomButton text="Download Template" onClick={downloadTemplate} className="attendance-csv-template-btn" /></div>
-        <input type="file" accept=".csv" onChange={handleFileChange} className="attendance-csv-file" />
-        {csvPreview && (
-          <div className="attendance-csv-preview">
-            <div className="attendance-csv-preview-head">Preview: {csvPreview.total} row(s) found, showing 5</div>
-            <div className="csv-preview-wrap"><table className="csv-preview"><thead><tr><th>Row</th>{csvPreview.headers.map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>{csvPreview.data.map(r => <tr key={r._row}><td className="csv-rownum">{r._row}</td>{csvPreview.headers.map(h => <td key={h}>{r[h] || <span className="attendance-note-muted">empty</span>}</td>)}</tr>)}</tbody></table></div>
-          </div>
-        )}
-        <div className="attendance-csv-actions">
-          <button type="button" className="attendance-csv-cancel" onClick={close}>Cancel</button>
-          <button type="button" className="attendance-csv-upload" onClick={handleCsvUpload} disabled={uploading || !csvFile}>{uploading ? 'Uploading…' : 'Upload'}</button>
-        </div>
+      )}
+      <div className="modal-actions">
+        <CustomButton text="Cancel" variant="quiet" onClick={close} />
+        <CustomButton text={uploading ? 'Uploading…' : 'Upload'} onClick={handleCsvUpload} disabled={uploading || !csvFile} />
       </div>
     </CustomModal>
   );

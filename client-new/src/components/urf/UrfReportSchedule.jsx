@@ -7,9 +7,12 @@ import DateField from '../forms/fields/DateField';
 import InputField from '../forms/fields/InputField';
 import GridContainer from '../forms/fields/GridContainer';
 import TableComponent from '../forms/table/TableComponent';
+import FormActions from '../common/FormActions';
+import Panel, { PanelSection } from '../panel/Panel';
 import { apiUrfDeleteReportWindow, apiUrfReportWindows, apiUrfSaveReportWindow } from '../../api/urf';
 import { REPORT_TYPES } from './UrfRecord';
 import { localDateString } from '../../utils/leaveBalance';
+import './UrfForms.css';
 
 const TYPES = Object.entries(REPORT_TYPES).map(([value, title]) => ({ value, title }));
 
@@ -136,74 +139,69 @@ const UrfReportSchedule = ({ session, sessions = [] }) => {
   };
 
   return (
-    <div className="urf-report-schedule">
-      <div className="grid-label">
-        {round
+    <Panel title="Report rounds" className="urf-schedule">
+      <PanelSection
+        title={round
           ? `${REPORT_TYPES[round.type]}: ${stateOf(round).toLowerCase()}`
           : `No round scheduled for URF ${form.session}`}
-      </div>
-      {!round && (
-        <p className="urf-round-notice">
-          One round runs at a time. Schedule the next one here; it will open on
-          the day you set and close itself on the last.
-        </p>
-      )}
+      >
+        {!round && (
+          <p className="urf-round-notice">
+            One round runs at a time. Schedule the next one here; it will open on
+            the day you set and close itself on the last.
+          </p>
+        )}
 
-      <GridContainer
-        elements={[
-          <DropdownField label="Session" options={sessionOptions} initialValue={form.session} onChange={set('session')} required />,
-          <DropdownField label="Report" options={TYPES} initialValue={form.type} onChange={set('type')} isLocked={!!round} required />,
-          <DateField
-            label="Opens On"
-            initialValue={form.opens_on}
-            onChange={set('opens_on')}
-            max={form.closes_on || undefined}
-            isLocked={running}
-            required
-          />,
-          <DateField label="Closes On" initialValue={form.closes_on} onChange={set('closes_on')} min={form.opens_on || undefined} required />,
-          <InputField label="Note for fellows" initialValue={form.notes} onChange={set('notes')} />,
-        ]}
-      />
+        <GridContainer
+          elements={[
+            <DropdownField label="Session" options={sessionOptions} initialValue={form.session} onChange={set('session')} required />,
+            <DropdownField label="Report" options={TYPES} initialValue={form.type} onChange={set('type')} isLocked={!!round} required />,
+            <DateField
+              label="Opens On"
+              initialValue={form.opens_on}
+              onChange={set('opens_on')}
+              max={form.closes_on || undefined}
+              isLocked={running}
+              required
+            />,
+            <DateField label="Closes On" initialValue={form.closes_on} onChange={set('closes_on')} min={form.opens_on || undefined} required />,
+            <InputField label="Note for fellows" initialValue={form.notes} onChange={set('notes')} />,
+          ]}
+        />
 
-      <GridContainer
-        elements={[
+        <FormActions>
           <CustomButton
             text={saving ? 'Saving…' : (existing ? 'Update round' : 'Schedule round')}
             onClick={save}
             disabled={saving}
-          />,
-        ]}
-      />
+          />
+        </FormActions>
+      </PanelSection>
 
       {rows.length > 0 && (
-        <GridContainer
-          elements={[
-            <TableComponent
-              label="Other rounds this session"
-              data={rows}
-              keys={['session', 'report', 'opens_on', 'closes_on', 'state', 'notes', 'id']}
-              titles={['Session', 'Report', 'Opens On', 'Closes On', 'Status', 'Note', ' ']}
-              components={[{
-                // The round it names, opened into the form above to be moved.
-                key: 'report',
-                component: ({ row, data }) => (
-                  <button type="button" className="urf-link-cell" onClick={() => openRound(row)}>
-                    {data}
-                  </button>
-                ),
-              }, {
-                key: 'id',
-                component: ({ row }) => (
-                  <button type="button" className="icon-action" onClick={() => setPending(row)} title="Call off this round" aria-label="Call off this round">
-                    <i className="fa fa-trash" aria-hidden="true"></i>
-                  </button>
-                ),
-              }]}
-            />,
-          ]}
-          space={3}
-        />
+        <PanelSection title="Other rounds this session">
+          <TableComponent
+            data={rows}
+            keys={['session', 'report', 'opens_on', 'closes_on', 'state', 'notes', 'id']}
+            titles={['Session', 'Report', 'Opens on', 'Closes on', 'Status', 'Note', ' ']}
+            components={[{
+              // The round it names, opened into the form above to be moved.
+              key: 'report',
+              component: ({ row, data }) => (
+                <button type="button" className="cell-link" onClick={() => openRound(row)}>
+                  {data}
+                </button>
+              ),
+            }, {
+              key: 'id',
+              component: ({ row }) => (
+                <button type="button" className="icon-action" onClick={() => setPending(row)} title="Call off this round" aria-label="Call off this round">
+                  <i className="fa fa-trash" aria-hidden="true"></i>
+                </button>
+              ),
+            }]}
+          />
+        </PanelSection>
       )}
 
       <CustomModal
@@ -218,11 +216,11 @@ const UrfReportSchedule = ({ session, sessions = [] }) => {
           Reports already filed stay where they are, and the form closes to anyone who has not filed one.
         </p>
         <div className="modal-actions">
-          <CustomButton text="Cancel" variant="secondary" onClick={() => setPending(null)} />
-          <CustomButton text="Call off round" onClick={remove} />
+          <CustomButton text="Cancel" variant="quiet" onClick={() => setPending(null)} />
+          <CustomButton text="Call off round" variant="danger" onClick={remove} />
         </div>
       </CustomModal>
-    </div>
+    </Panel>
   );
 };
 

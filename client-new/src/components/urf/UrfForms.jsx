@@ -7,6 +7,8 @@ import DateField from '../forms/fields/DateField';
 import FileUploadField from '../forms/fields/FileUploadField';
 import InputSuggestions from '../forms/fields/InputSuggestions';
 import CustomButton from '../forms/fields/CustomButton';
+import FormActions from '../common/FormActions';
+import { PanelSection } from '../panel/Panel';
 import CustomModal from '../forms/modal/CustomModal';
 import ShowPublications from '../publications/ShowPublications';
 import { baseURL } from '../../api/urls';
@@ -42,7 +44,13 @@ const Submit = ({ text, onClick }) => {
     await onClick();
     setSaving(false);
   };
-  return <GridContainer elements={[<CustomButton text={saving ? 'Saving…' : text} onClick={run} disabled={saving} />]} />;
+  return (
+    <PanelSection>
+      <FormActions>
+        <CustomButton text={saving ? 'Saving…' : text} onClick={run} disabled={saving} />
+      </FormActions>
+    </PanelSection>
+  );
 };
 
 /**
@@ -154,50 +162,49 @@ export const ApplyForm = ({ initial, student, onSaved }) => {
   };
 
   return (
-    <Section title={initial ? 'Edit Application' : 'Application'}>
-      <GridContainer elements={[
-        <InputField label="Project Title" initialValue={body.project_title} onChange={set('project_title')} required />,
-      ]} space={3} />
+    <Section title={initial ? 'Edit application' : 'Application'}>
+      <PanelSection>
+        <GridContainer elements={[
+          <InputField label="Project Title" initialValue={body.project_title} onChange={set('project_title')} required />,
+        ]} space={3} />
+      </PanelSection>
 
-      <div className="urf-subhead"><h3>Your Details</h3></div>
-      <StudentFields n={1} body={body} set={set} branches={branches} account={account} />
+      <PanelSection title="Your details">
+        <StudentFields n={1} body={body} set={set} branches={branches} account={account} />
+      </PanelSection>
 
-      <div className="urf-subhead">
-        <h3>Team Member</h3>
-        {teammate ? (
-          <button type="button" className="urf-remove-btn" onClick={removeTeammate}>
-            <i className="fa fa-trash" aria-hidden="true"></i> Remove Team Member
-          </button>
-        ) : (
-          <button type="button" className="urf-add-btn" onClick={() => setTeammate(true)}>
-            <i className="fa fa-plus" aria-hidden="true"></i> Add Team Member
-          </button>
+      <PanelSection
+        title="Team member"
+        actions={teammate
+          ? <CustomButton text="Remove team member" variant="quiet" size="sm" onClick={removeTeammate} />
+          : <CustomButton text="Add team member" variant="secondary" size="sm" onClick={() => setTeammate(true)} />}
+      >
+        {teammate && <StudentFields n={2} body={body} set={set} branches={branches} />}
+      </PanelSection>
+
+      <PanelSection
+        title="Faculty mentors"
+        actions={!secondMentor && (
+          <CustomButton text="Add faculty mentor" variant="secondary" size="sm" onClick={() => setSecondMentor(true)} />
         )}
-      </div>
-      {teammate && <StudentFields n={2} body={body} set={set} branches={branches} />}
-
-      <div className="urf-subhead">
-        <h3>Faculty Mentors</h3>
-        {!secondMentor && (
-          <button type="button" className="urf-add-btn" onClick={() => setSecondMentor(true)}>
-            <i className="fa fa-plus" aria-hidden="true"></i> Add Faculty Mentor
-          </button>
+      >
+        <MentorRow initial={initial?.mentor1} onPick={set('mentor1_faculty_code')} required />
+        {secondMentor && (
+          <MentorRow initial={initial?.mentor2} onPick={set('mentor2_faculty_code')} onRemove={removeMentor} />
         )}
-      </div>
-      <MentorRow initial={initial?.mentor1} onPick={set('mentor1_faculty_code')} required />
-      {secondMentor && (
-        <MentorRow initial={initial?.mentor2} onPick={set('mentor2_faculty_code')} onRemove={removeMentor} />
-      )}
+      </PanelSection>
 
-      <GridContainer elements={[
-        <FileUploadField
-          label={initial ? 'Replace Project Proposal (PDF)' : 'Project Proposal (PDF)'}
-          onChange={set('proposal')}
-          maxSizeMB={20}
-          required={!initial}
-        />,
-      ]} />
-      <Submit text={initial ? 'Update Application' : 'Submit Application'} onClick={submit} />
+      <PanelSection>
+        <GridContainer elements={[
+          <FileUploadField
+            label={initial ? 'Replace Project Proposal (PDF)' : 'Project Proposal (PDF)'}
+            onChange={set('proposal')}
+            maxSizeMB={20}
+            required={!initial}
+          />,
+        ]} />
+      </PanelSection>
+      <Submit text={initial ? 'Update application' : 'Submit application'} onClick={submit} />
     </Section>
   );
 };
@@ -218,19 +225,21 @@ export const FellowForm = ({ applicationId, initial, prefill, onSaved }) => {
   };
 
   return (
-    <Section title="Fellowship Details">
-      <GridContainer elements={[
-        <InputField label="Full Name (as per PAN Card)" initialValue={body.full_name} onChange={set('full_name')} required />,
-        <DateField label="Date of Birth" initialValue={body.dob} onChange={set('dob')} required />,
-        <DropdownField label="Gender" options={GENDERS} initialValue={body.gender} onChange={set('gender')} required />,
-        <InputField label="Father's Name" initialValue={body.father_name} onChange={set('father_name')} required />,
-        <InputField label="PAN Card Number" initialValue={body.pan} onChange={set('pan')} required />,
-        <InputField label="Aadhaar Card Number" initialValue={body.aadhaar} onChange={set('aadhaar')} required />,
-        <InputField label="Bank Name" initialValue={body.bank_name} onChange={set('bank_name')} required />,
-        <InputField label="Bank Account Number" initialValue={body.account_no} onChange={set('account_no')} required />,
-        <InputField label="IFSC Code" initialValue={body.ifsc} onChange={set('ifsc')} required />,
-      ]} />
-      <Submit text={initial ? 'Update Details' : 'Submit Details'} onClick={submit} />
+    <Section title="Fellowship details">
+      <PanelSection>
+        <GridContainer elements={[
+          <InputField label="Full Name (as per PAN Card)" initialValue={body.full_name} onChange={set('full_name')} required />,
+          <DateField label="Date of Birth" initialValue={body.dob} onChange={set('dob')} required />,
+          <DropdownField label="Gender" options={GENDERS} initialValue={body.gender} onChange={set('gender')} required />,
+          <InputField label="Father's Name" initialValue={body.father_name} onChange={set('father_name')} required />,
+          <InputField label="PAN Card Number" initialValue={body.pan} onChange={set('pan')} required />,
+          <InputField label="Aadhaar Card Number" initialValue={body.aadhaar} onChange={set('aadhaar')} required />,
+          <InputField label="Bank Name" initialValue={body.bank_name} onChange={set('bank_name')} required />,
+          <InputField label="Bank Account Number" initialValue={body.account_no} onChange={set('account_no')} required />,
+          <InputField label="IFSC Code" initialValue={body.ifsc} onChange={set('ifsc')} required />,
+        ]} />
+      </PanelSection>
+      <Submit text={initial ? 'Update details' : 'Submit details'} onClick={submit} />
     </Section>
   );
 };
@@ -297,33 +306,36 @@ export const ReportForm = ({ application, type, filed, onSaved }) => {
   };
 
   return (
-    <Section title="Report Details">
+    <Section title="Report details">
       {/* Filled in from the application and locked: the student cannot change them here. */}
-      <GridContainer elements={[
-        <InputField label="Title of Project" initialValue={application.project_title || ''} isLocked />,
-      ]} space={3} />
-      <GridContainer elements={[
-        <InputField label="Name" initialValue={application[`student${slot}_name`] || ''} isLocked />,
-        <InputField label="Roll No." initialValue={application[`student${slot}_roll_no`] || ''} isLocked />,
-        <InputField label="Branch" initialValue={application[`student${slot}_branch`]?.name || ''} isLocked />,
-        <InputField label="Email" initialValue={application[`student${slot}_email`] || ''} isLocked />,
-        <InputField label="Contact No." initialValue={application[`student${slot}_phone`] || ''} isLocked />,
-        <InputField label="Faculty Mentor Name" initialValue={mentors.map(facultyName).join(', ')} isLocked />,
-        <InputField label="Faculty Mentor Department" initialValue={mentors.map((m) => m.department?.name).filter(Boolean).join(', ')} isLocked />,
-      ]} />
+      <PanelSection>
+        <GridContainer elements={[
+          <InputField label="Title of Project" initialValue={application.project_title || ''} isLocked />,
+        ]} space={3} />
+        <GridContainer elements={[
+          <InputField label="Name" initialValue={application[`student${slot}_name`] || ''} isLocked />,
+          <InputField label="Roll No." initialValue={application[`student${slot}_roll_no`] || ''} isLocked />,
+          <InputField label="Branch" initialValue={application[`student${slot}_branch`]?.name || ''} isLocked />,
+          <InputField label="Email" initialValue={application[`student${slot}_email`] || ''} isLocked />,
+          <InputField label="Contact No." initialValue={application[`student${slot}_phone`] || ''} isLocked />,
+          <InputField label="Faculty Mentor Name" initialValue={mentors.map(facultyName).join(', ')} isLocked />,
+          <InputField label="Faculty Mentor Department" initialValue={mentors.map((m) => m.department?.name).filter(Boolean).join(', ')} isLocked />,
+        ]} />
+      </PanelSection>
 
-      <div className="urf-subhead">
-        <h3>Publication Details</h3>
-        <button type="button" className="urf-add-btn" onClick={() => setPicking(true)}>
-          <i className="fa fa-plus" aria-hidden="true"></i> Add Publications
-        </button>
-      </div>
-      <ShowPublications formData={linked} enableEdit={false} enableDelete onDelete={unlink} />
+      <PanelSection
+        title="Publication details"
+        actions={<CustomButton text="Add publications" variant="secondary" size="sm" onClick={() => setPicking(true)} />}
+      >
+        <ShowPublications formData={linked} enableEdit={false} enableDelete onDelete={unlink} />
+      </PanelSection>
 
-      <GridContainer elements={[
-        <InputField label="Conference Presentation (if any)" initialValue={body.conference_presentation} onChange={set('conference_presentation')} />,
-        <FileUploadField label="Upload the Report (PDF)" onChange={set('report')} maxSizeMB={20} required />,
-      ]} />
+      <PanelSection>
+        <GridContainer elements={[
+          <InputField label="Conference Presentation (if any)" initialValue={body.conference_presentation} onChange={set('conference_presentation')} />,
+          <FileUploadField label="Upload the Report (PDF)" onChange={set('report')} maxSizeMB={20} required />,
+        ]} />
+      </PanelSection>
       <Submit text={`Submit ${REPORT_TYPES[type]}`} onClick={submit} />
 
       {/* The project's library, as the PhD progress form shows it: add a new
@@ -331,7 +343,7 @@ export const ReportForm = ({ application, type, filed, onSaved }) => {
       <CustomModal
         isOpen={picking}
         onClose={() => setPicking(false)}
-        title="Add Publications"
+        title="Add publications"
         minHeight="200px"
         maxHeight="600px"
         minWidth="650px"

@@ -34,7 +34,7 @@ const Application = ({ formData }) => {
       <TeamTables record={application} />
       <OtherProjects record={application} />
       <GridContainer
-        label="Project Proposal"
+        label="Project proposal"
         elements={[application.proposal
           ? <FileLink value={application.proposal} label="View Proposal" />
           : <p>{EMPTY_VALUE}</p>]}

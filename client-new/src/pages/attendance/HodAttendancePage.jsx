@@ -1,4 +1,5 @@
 import React from 'react';
+import Page from '../../components/page/Page';
 import LeaveRequests from './LeaveRequests';
 
 /**
@@ -9,11 +10,9 @@ import LeaveRequests from './LeaveRequests';
  * department, so there is nothing to filter and no department column here.
  */
 const HodAttendancePage = () => (
-  <>
-    <h1 className="page-title">Attendance</h1>
-
+  <Page title="Attendance">
     <LeaveRequests />
-  </>
+  </Page>
 );
 
 export default HodAttendancePage;
