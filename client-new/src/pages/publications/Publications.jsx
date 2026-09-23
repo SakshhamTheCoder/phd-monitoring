@@ -93,7 +93,7 @@ const Publications = () => {
                 ? <LoadError message="Could not load your publications. Check your connection and try again." onRetry={fetchData} />
                 : <Panel><StatusNotice tone="loading" title="Loading publications" /></Panel>}
 
-            <CustomModal isOpen={open} onClose={closeModal} title={'Add publication'}
+            <CustomModal isOpen={open} onClose={closeModal}
                 minHeight='200px' maxHeight='600px' minWidth='650px' maxWidth='700px' closeOnOutsideClick={false}>
              <AddPublication close={closeModal}/>
              </CustomModal>

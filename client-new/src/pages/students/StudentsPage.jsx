@@ -386,7 +386,6 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
         onClose={closeForm}
         setIsOpen={setIsModalOpen}
         closeOnOutsideClick={false}
-        title={editMode ? "Edit student" : "Add student"}
         width="80vw"
       >
         <StudentForm
@@ -402,7 +401,6 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
         onClose={() => {
           setIsModalEditStudentOpen(false);
         }}
-        title="Add student panel"
       >
           {/* {role=== "admin" && <AssignPanel roll_no={studentToEdit?.roll_no}/>} */}
         {can("can_propose_supervisor_changes") && (

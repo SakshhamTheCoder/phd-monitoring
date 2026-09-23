@@ -30,7 +30,6 @@ const FormTitleBar = ({ formName,formData }) => {
                 minWidth="700px"
                 maxWidth="800px"
                 minHeight="300px"
-                maxHeight="500px"
             >
                  <StatusBox formData={formData}/>
         </CustomModal>

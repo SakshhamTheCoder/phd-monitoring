@@ -10,11 +10,7 @@
     padding: var(--space-5);
 }
 
-.status-box-container-box {
-    max-height: 350px;
-    overflow-y: auto;
-}
-
+/* No scroll box of its own: the dialog scrolls, so there is one scrollbar. */
 .status-box-history {
     border-right: 1px solid var(--border-color);
 }

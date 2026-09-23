@@ -301,7 +301,7 @@ const ShowPublications = ({
                             space={3}
                         ></GridContainer>
                      )}
-                <CustomModal isOpen={open} onClose={closeModal} title={editData ? 'Edit publication' : 'Add publication'}
+                <CustomModal isOpen={open} onClose={closeModal}
                     minHeight='200px' maxHeight='600px' minWidth='650px' maxWidth='700px' closeOnOutsideClick={false}>
                  <AddPublication close={closeModal} editData={editData} />
                  </CustomModal>

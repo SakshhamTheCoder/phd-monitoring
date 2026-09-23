@@ -55,6 +55,17 @@ const CustomModal = ({
         const previousOverflow = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
 
+        // A dialog whose content carries its own heading (StudentForm, the
+        // publication picker) is named by that heading, so it is not given a
+        // second title on top.
+        if (!title && panelRef.current) {
+            const heading = panelRef.current.querySelector('.modal-title');
+            if (heading) {
+                heading.id = heading.id || `${titleId}-inner`;
+                panelRef.current.setAttribute('aria-labelledby', heading.id);
+                panelRef.current.removeAttribute('aria-label');
+            }
+        }
         // Focus the panel itself rather than guessing at a field, so the reader
         // hears the dialog's name before its contents.
         panelRef.current?.focus();

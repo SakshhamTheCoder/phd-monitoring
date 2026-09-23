@@ -682,7 +682,9 @@
     border-bottom: 1px solid var(--border-subtle);
     color: var(--text-color);
     text-align: left;
-    vertical-align: top;
+    /* Middle, not top: the row's height is usually set by the 32px action
+       button, and top-aligned text left an empty band under every row. */
+    vertical-align: middle;
 }
 
 .data-table tbody tr:last-child td,
@@ -801,8 +803,8 @@
   display: inline-block;
 }
 .row-actions-trigger {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border: none;
   border-radius: var(--radius);
   background: transparent;

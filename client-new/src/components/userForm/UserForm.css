@@ -1,17 +1,3 @@
-/* The dialog pads and scrolls its own content; the form only caps its height so
-   the password block under a long role list stays reachable. */
-.user-form {
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
-.user-form-title {
-  margin: 0 0 var(--space-5);
-  font-size: var(--text-xl);
-  font-weight: 600;
-  color: var(--text-color);
-}
-
 .user-form-row {
   margin: var(--space-4) 0;
 }

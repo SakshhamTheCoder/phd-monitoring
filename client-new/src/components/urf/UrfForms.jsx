@@ -343,7 +343,6 @@ export const ReportForm = ({ application, type, filed, onSaved }) => {
       <CustomModal
         isOpen={picking}
         onClose={() => setPicking(false)}
-        title="Add publications"
         minHeight="200px"
         maxHeight="600px"
         minWidth="650px"

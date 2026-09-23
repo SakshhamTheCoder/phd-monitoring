@@ -227,7 +227,7 @@ const UserForm = ({ edit, userData, onClose }) => {
 
   return (
     <div className="user-form">
-      <h2 className="user-form-title">{edit ? 'Edit user' : 'Create new user'}</h2>
+      <h2 className="modal-title">{edit ? 'Edit user' : 'Create new user'}</h2>
       
       <form onSubmit={handleSubmit}>
         <GridContainer

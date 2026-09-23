@@ -382,7 +382,6 @@ const Student = ({ formData }) => {
           <CustomModal
             isOpen={open}
             onClose={closeModal}
-            title={"Add publication"}
             minHeight="200px"
             maxHeight="600px"
             minWidth="650px"
