@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatCurrency, formatDuration } from '../../data/projectsData';
 import { badgeClass } from '../../data/badges';
+import { EMPTY_VALUE } from '../../utils/timeParse';
 import { apiListProjects, apiProjectStats, apiDeleteProject } from '../../api/projects';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import CustomButton from '../../components/forms/fields/CustomButton';
@@ -60,8 +61,8 @@ const ProjectsOverview = () => {
   };
 
   const handleExportCSV = () => {
-    const headers = ['Project Title', 'Category', 'Role', 'Funding Agency', 'Amount', 'Duration', 'Status'];
-    const rows = projects.map(p => [p.title, p.category, p.role, p.fundingAgency, p.amount, formatDuration(p.durationYears, p.durationMonths), p.status]);
+    const headers = ['Project Title', 'Category', 'Your role', 'Funding Agency', 'Amount', 'Duration', 'Status'];
+    const rows = projects.map(p => [p.title, p.category, p.viewerRole, p.fundingAgency, p.amount, formatDuration(p.durationYears, p.durationMonths), p.status]);
     const csvContent = [headers, ...rows].map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -76,8 +77,8 @@ const ProjectsOverview = () => {
   const facts = [
     { label: 'Active projects', value: String(stats.active).padStart(2, '0') },
     { label: 'Completed', value: String(stats.completed).padStart(2, '0') },
-    { label: 'Total funding received', value: formatCurrency(stats.totalFunding) },
-    { label: 'Consultancy', value: String(stats.consultancy).padStart(2, '0'), note: 'Current active' },
+    { label: 'Total sanctioned', value: formatCurrency(stats.totalFunding) },
+    { label: 'Consultancy', value: String(stats.consultancy).padStart(2, '0') },
     { label: 'International', value: String(stats.international).padStart(2, '0'), note: 'Collaborative' },
   ];
 
@@ -116,7 +117,7 @@ const ProjectsOverview = () => {
               <tr>
                 <th>Project title</th>
                 <th>Category</th>
-                <th>Role</th>
+                <th>Your role</th>
                 <th>Funding agency</th>
                 <th>Amount</th>
                 <th>Duration</th>
@@ -143,7 +144,7 @@ const ProjectsOverview = () => {
                       {project.category}
                     </span>
                   </td>
-                  <td>{project.role}</td>
+                  <td>{project.viewerRole || EMPTY_VALUE}</td>
                   <td>{project.fundingAgency}</td>
                   <td>{formatCurrency(project.amount)}</td>
                   <td>{formatDuration(project.durationYears, project.durationMonths)}</td>

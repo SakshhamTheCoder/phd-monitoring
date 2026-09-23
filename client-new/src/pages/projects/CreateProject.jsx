@@ -372,7 +372,7 @@ const CreateProject = () => {
                 <div className="cp-person">
                   <div className="cp-avatar" aria-hidden="true">{pi.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</div>
                   <div className="cp-person-info">
-                    <p className="cp-person-name"><FacultyLink code={pi.id} name={pi.name} /></p>
+                    <p className="cp-person-name"><FacultyLink code={pi.id ?? pi.code} name={pi.name} /></p>
                     <p className="cp-person-dept">{pi.department}</p>
                     <p className="cp-person-meta">{pi.designation}</p>
                   </div>
@@ -607,7 +607,7 @@ const CreateProject = () => {
               <h3 className="panel-section-title">Funding</h3>
               <dl className="kv">
                 <div><dt>Sanctioned</dt><dd>₹{parseInt(form.sanctionAmount || 0).toLocaleString('en-IN')}</dd></div>
-                <div><dt>TIET share</dt><dd>₹{parseInt(form.tietShare || 0).toLocaleString('en-IN')}</dd></div>
+                <div><dt>TIET share</dt><dd>{form.tietShare === '' ? EMPTY_VALUE : `₹${parseInt(form.tietShare).toLocaleString('en-IN')}`}</dd></div>
                 {budgetYears.map((y, i) => (
                   <div key={y}><dt>Year {i + 1} budget</dt><dd>₹{yTotal(y).toLocaleString('en-IN')}</dd></div>
                 ))}

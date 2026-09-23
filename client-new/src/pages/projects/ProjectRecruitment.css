@@ -67,3 +67,6 @@ a.pr-field-hint { color: var(--primary-color); }
   .pr-app-stats,
   .pr-state { padding: var(--space-4); }
 }
+
+/* Kept as typed: an applicant writes it in paragraphs. */
+.pr-cover-note { white-space: pre-line; }

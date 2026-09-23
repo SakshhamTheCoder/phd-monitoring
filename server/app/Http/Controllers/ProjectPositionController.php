@@ -22,7 +22,8 @@ class ProjectPositionController extends Controller {
             ProjectPosition::where('project_id', $project->id)
                 ->withCount([
                     'applications',
-                    'applications as shortlisted_count' => function ($q) { $q->where('status', 'Shortlisted'); },
+                    // An interview comes after the shortlist, so those still count as shortlisted.
+                    'applications as shortlisted_count' => function ($q) { $q->whereIn('status', ['Shortlisted', 'Interview Scheduled']); },
                     'applications as selected_count' => function ($q) { $q->where('status', 'Selected'); },
                 ])
                 ->orderByDesc('id')->get()

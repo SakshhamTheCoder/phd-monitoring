@@ -292,7 +292,7 @@ const ProjectRecruitment = () => {
               <div className="data-table-wrap">
                 <table className="data-table">
                   <thead>
-                    <tr><th>Applicant name</th><th>Position</th><th>Institute</th><th>CGPA</th><th>Status</th><th>Actions</th></tr>
+                    <tr><th>Applicant name</th><th>Institute</th><th>CGPA</th><th>Status</th><th>Actions</th></tr>
                   </thead>
                   <tbody>
                     {posApps.map(app => (
@@ -301,7 +301,6 @@ const ProjectRecruitment = () => {
                           {app.name}
                           {!app.verified && <span className="badge badge--neutral pr-app-flag">Unconfirmed email</span>}
                         </td>
-                        <td>{app.position}</td>
                         <td>{app.institute}</td>
                         <td>{app.cgpa}</td>
                         <td>
@@ -351,6 +350,7 @@ const ProjectRecruitment = () => {
                 <div><dt>Applied on</dt><dd>{formatDate(selectedApplicant.appliedDate)}</dd></div>
                 <div className="full"><dt>Research interest</dt><dd>{selectedApplicant.research}</dd></div>
                 <div className="full"><dt>Skills</dt><dd>{(selectedApplicant.skills || []).join(', ')}</dd></div>
+                {selectedApplicant.coverNote && <div className="full"><dt>Cover note</dt><dd className="pr-cover-note">{selectedApplicant.coverNote}</dd></div>}
               </dl>
               <div className="pr-modal-resume">
                 <div className="pr-resume-info"><i className="fa fa-file-pdf-o" aria-hidden="true"></i> <span>{selectedApplicant.resume || 'No resume attached'}</span></div>

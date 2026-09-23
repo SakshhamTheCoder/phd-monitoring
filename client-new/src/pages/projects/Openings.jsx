@@ -47,8 +47,9 @@ const Openings = () => {
   const ready = !loading && !loadFailed;
   const posByKey = (key) => positions.find(p => p.posKey === key);
   const appliedKeys = new Set(myApps.map(a => String(a.posKey)));
+  // The server sends only open positions; this drops any whose last day has
+  // passed here but not yet on the server's clock.
   const openPositions = positions.filter(p => !p.deadline || p.deadline >= today);
-  const closedPositions = positions.filter(p => p.deadline && p.deadline < today);
 
   // Prefill the apply form from the logged-in student's profile; all fields stay editable.
   const openApply = (pos) => {
@@ -106,7 +107,7 @@ const Openings = () => {
 
   const skillList = (skills) => (Array.isArray(skills) ? skills : String(skills || '').split(',')).map(s => (typeof s === 'string' ? s.trim() : s)).filter(Boolean);
 
-  const renderPosCard = (pos, closed) => (
+  const renderPosCard = (pos) => (
     <Panel key={pos.posKey} className="op-posting">
       <div className="op-card-top">
         <div className="op-card-head">
@@ -115,8 +116,8 @@ const Openings = () => {
           <p className="op-project"><i className="fa fa-flask" aria-hidden="true"></i> {pos.projectTitle}</p>
         </div>
         {pos.deadline && (
-          <span className={`badge ${closed ? 'badge--neutral' : 'badge--warning'}`}>
-            <i className="fa fa-calendar" aria-hidden="true"></i> {closed ? 'Closed on' : 'Apply by'} {formatDate(pos.deadline)}
+          <span className="badge badge--warning">
+            <i className="fa fa-calendar" aria-hidden="true"></i> Apply by {formatDate(pos.deadline)}
           </span>
         )}
       </div>
@@ -132,9 +133,7 @@ const Openings = () => {
       )}
       <div className="op-card-actions">
         <CustomButton text="View details" variant="quiet" onClick={() => setViewJob(pos)} />
-        {closed ? (
-          <span className="badge badge--neutral">Applications closed</span>
-        ) : appliedKeys.has(String(pos.posKey)) ? (
+        {appliedKeys.has(String(pos.posKey)) ? (
           <span className="badge badge--success"><i className="fa fa-check" aria-hidden="true"></i> Applied</span>
         ) : (
           <CustomButton text="Apply now" variant="secondary" onClick={() => openApply(pos)} />
@@ -156,7 +155,6 @@ const Openings = () => {
           items={[
             { value: 'All', label: `All (${openPositions.length})` },
             { value: 'Applied', label: `Applied (${myApps.length})` },
-            { value: 'Closed', label: `Closed (${closedPositions.length})` },
           ]}
         />
       }
@@ -167,12 +165,8 @@ const Openings = () => {
       )}
 
       {ready && tab === 'All' && (openPositions.length ? (
-        <div className="op-grid reveal">{openPositions.map(p => renderPosCard(p, false))}</div>
+        <div className="op-grid reveal">{openPositions.map(p => renderPosCard(p))}</div>
       ) : <StatusNotice tone="empty" title="No open positions right now. Check back soon." />)}
-
-      {ready && tab === 'Closed' && (closedPositions.length ? (
-        <div className="op-grid reveal">{closedPositions.map(p => renderPosCard(p, true))}</div>
-      ) : <StatusNotice tone="empty" title="No closed positions." />)}
 
       {ready && tab === 'Applied' && (myApps.length ? (
         <div className="op-grid reveal">

@@ -302,7 +302,7 @@ const ProjectDetails = () => {
   const openPositions = (project.positions || []).filter((p) => p.status === 'Open');
 
   const progress = getMilestoneProgress(milestones);
-  const nextMilestone = milestones.filter(m => m.status === 'Completed').length + 1;
+  const completedMilestones = milestones.filter(m => m.status === 'Completed').length;
   // The badge beside each milestone names the status; the icon only helps the
   // eye run down the timeline.
   const msIcons = { Completed: 'fa-check', 'In Progress': 'fa-hourglass-half', 'Not Started': 'fa-circle-o', Delayed: 'fa-exclamation' };
@@ -333,8 +333,8 @@ const ProjectDetails = () => {
             <Panel title="Project metadata">
               <dl className="kv">
                 <div><dt>Primary category</dt><dd>{project.category}</dd></div>
-                <div><dt>Focus area</dt><dd>{project.focusArea}</dd></div>
-                <div><dt>Grant type</dt><dd>{project.grantType}</dd></div>
+                <div><dt>Focus area</dt><dd>{project.focusArea || EMPTY_VALUE}</dd></div>
+                <div><dt>Grant type</dt><dd>{project.grantType || EMPTY_VALUE}</dd></div>
                 <div><dt>Project status</dt><dd><span className={badgeClass(project.status)}>{project.status}</span></dd></div>
               </dl>
             </Panel>
@@ -658,11 +658,9 @@ const ProjectDetails = () => {
               <dt>Current progress</dt>
               <dd>{progress}%</dd>
               <dd className="pd-progress-track" aria-hidden="true"><div className="pd-progress-fill" style={{ width: `${progress}%` }}></div></dd>
-              <dd className="pd-progress-note">
-                {progress < 100
-                  ? `On track for Milestone ${nextMilestone} completion.`
-                  : 'All milestones completed!'}
-              </dd>
+              {milestones.length > 0 && (
+                <dd className="pd-progress-note">{completedMilestones} of {milestones.length} milestones completed</dd>
+              )}
             </div>
           </dl>
         </Panel>
@@ -674,9 +672,8 @@ const ProjectDetails = () => {
         <div className="pd-tab-panel" role="tabpanel" hidden={activeTab !== 'Funding and budget'}>
           <Panel title="Funding summary">
             <dl className="facts">
-              <div><dt>Funding agency</dt><dd>{project.fundingAgency}</dd></div>
               <div><dt>Total sanctioned</dt><dd>{formatCurrency(project.amount)}</dd></div>
-              <div><dt>TIET share</dt><dd>{formatCurrency(project.tietShare)}</dd></div>
+              <div><dt>TIET share</dt><dd>{project.tietShare == null ? EMPTY_VALUE : formatCurrency(project.tietShare)}</dd></div>
               <div>
                 <dt>Sanction letter</dt>
                 <dd className="pd-sanction-view">

@@ -32,7 +32,15 @@ class ProjectController extends Controller {
         }
 
         $projects = $query->orderByDesc('id')->get();
-        $projects->each(fn ($project) => $project->can_edit = $this->owns($user, $project));
+        // The stored role is what the creator picked, so the list says how the
+        // viewer stands on each project instead: PI, Co-PI, or neither.
+        $code = optional($user->faculty)->faculty_code;
+        $projects->each(function ($project) use ($user, $code) {
+            $project->can_edit = $this->owns($user, $project);
+            $coPiCodes = collect($project->co_pis ?: [])->pluck('faculty_code')->filter()->map(fn ($c) => (int) $c);
+            $project->viewer_role = $code === null ? null
+                : ($code == $project->pi_faculty_code ? 'PI' : ($coPiCodes->contains((int) $code) ? 'Co-PI' : null));
+        });
         return response()->json($projects);
     }
 
@@ -193,6 +201,8 @@ class ProjectController extends Controller {
         foreach (['amount','tiet_share','duration_years','duration_months'] as $f) {
             if ($request->exists($f)) $project->$f = (int) $request->input($f);
         }
+        // A blank TIET share means not known yet, which a 0 would misstate.
+        if ($request->exists('tiet_share') && $request->input('tiet_share') === null) $project->tiet_share = null;
         foreach (['co_pis','objectives','budget','equipment_details','sdgs'] as $f) {
             if ($request->exists($f)) {
                 $val = $request->input($f);
