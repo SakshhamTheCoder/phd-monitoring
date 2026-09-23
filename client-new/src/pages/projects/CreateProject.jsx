@@ -10,7 +10,7 @@ import {
   grandTotal,
   emptyBudget,
 } from '../../data/projectsData';
-import { formatDate, EMPTY_VALUE } from '../../utils/timeParse';
+import { formatDate, EMPTY_VALUE, toDateObject, toDateValue } from '../../utils/timeParse';
 import { apiCreateProject, apiUpdateProjectFromForm, apiUpdateProject, apiCurrentFaculty, apiProjectMeta, apiUploadGanttChart } from '../../api/projects';
 import InputSuggestions from '../../components/forms/fields/InputSuggestions';
 import FacultyLink from '../../components/facultyLink/FacultyLink';
@@ -90,10 +90,13 @@ const CreateProject = () => {
       const dy = field === 'durationYears' ? parseInt(value) || 0 : parseInt(form.durationYears) || 0;
       const dm = field === 'durationMonths' ? parseInt(value) || 0 : parseInt(form.durationMonths) || 0;
       if (sd) {
-        const d = new Date(sd);
+        // Local midnight in and a local date out. new Date('YYYY-MM-DD') is
+        // UTC midnight and toISOString is UTC, so mixing them with the local
+        // setters can land the end date a day off.
+        const d = toDateObject(sd);
         d.setFullYear(d.getFullYear() + dy);
         d.setMonth(d.getMonth() + dm);
-        updated.endDate = d.toISOString().split('T')[0];
+        updated.endDate = toDateValue(d);
       }
     }
     setForm(updated);
@@ -242,7 +245,7 @@ const CreateProject = () => {
             <div className="cp-field">
               <label htmlFor="create-project-duration">Duration <span className="req">*</span></label>
               <div className="cp-duration-pair">
-                <select value={form.durationYears} onChange={e => updateField('durationYears', e.target.value)} aria-label="Duration in years">
+                <select id="create-project-duration" value={form.durationYears} onChange={e => updateField('durationYears', e.target.value)} aria-label="Duration in years">
                   {meta.duration.years.map(y => <option key={y} value={y}>{y} {y === 1 ? 'Year' : 'Years'}</option>)}
                 </select>
                 <select value={form.durationMonths} onChange={e => updateField('durationMonths', e.target.value)} aria-label="Additional months">
@@ -256,7 +259,7 @@ const CreateProject = () => {
             {form.endDate && (
               <div className="cp-field">
                 <label htmlFor="create-project-end-date">End Date</label>
-                <input id="create-project-end-date" id="create-project-duration" type="date" value={form.endDate} readOnly className="cp-readonly" />
+                <input id="create-project-end-date" type="date" value={form.endDate} readOnly className="cp-readonly" />
               </div>
             )}
           </div>
@@ -317,8 +320,8 @@ const CreateProject = () => {
               <div className="cp-ext-form">
                 <div className="cp-ext-header"><span className="cp-ext-label">External Partner</span></div>
                 <div className="cp-form-grid">
-                  <div className="cp-field"><label htmlFor="create-project-full-name">Full Name</label><input type="text" value={extCopi.name} onChange={e => setExtCopi({...extCopi, name: e.target.value})} placeholder="e.g. Prof. Robert Miller" /></div>
-                  <div className="cp-field"><label htmlFor="create-project-designation">Designation</label><input type="text" value={extCopi.designation} onChange={e => setExtCopi({...extCopi, designation: e.target.value})} placeholder="e.g. Associate Professor" /></div>
+                  <div className="cp-field"><label htmlFor="create-project-full-name">Full Name</label><input id="create-project-full-name" type="text" value={extCopi.name} onChange={e => setExtCopi({...extCopi, name: e.target.value})} placeholder="e.g. Prof. Robert Miller" /></div>
+                  <div className="cp-field"><label htmlFor="create-project-designation">Designation</label><input id="create-project-designation" type="text" value={extCopi.designation} onChange={e => setExtCopi({...extCopi, designation: e.target.value})} placeholder="e.g. Associate Professor" /></div>
                   <div className="cp-field full"><label htmlFor="create-project-institute-organization">Institute / Organization</label><input id="create-project-institute-organization" type="text" value={extCopi.institute} onChange={e => setExtCopi({...extCopi, institute: e.target.value})} placeholder="e.g. MIT, Cambridge" /></div>
                   <div className="cp-field"><label htmlFor="create-project-email-address">Email Address</label><input id="create-project-email-address" type="email" value={extCopi.email} onChange={e => setExtCopi({...extCopi, email: e.target.value})} /></div>
                   <div className="cp-field"><label htmlFor="create-project-mobile-number">Mobile Number</label><input id="create-project-mobile-number" type="text" value={extCopi.mobile} onChange={e => setExtCopi({...extCopi, mobile: e.target.value})} /></div>
@@ -360,7 +363,7 @@ const CreateProject = () => {
               <div className="cp-field"><label htmlFor="create-project-sanction-letter-link">Sanction Letter Link</label><input id="create-project-sanction-letter-link" type="url" value={form.sanctionLetterLink} onChange={e => updateField('sanctionLetterLink', e.target.value)} placeholder="https://..." /></div>
               <div className="cp-field">
                 <label htmlFor="create-project-sanction-letter-upload">Sanction Letter Upload</label>
-                <input id="create-project-sanction-letter-upload" id="create-project-designation" id="create-project-full-name" type="file" accept=".pdf,.doc,.docx" ref={sanctionRef} onChange={handleSanctionFile} />
+                <input id="create-project-sanction-letter-upload" type="file" accept=".pdf,.doc,.docx" ref={sanctionRef} onChange={handleSanctionFile} />
                 {form.sanctionLetterFileName && <span className="cp-file-hint"><i className="fa fa-check-circle"></i> {form.sanctionLetterFileName}</span>}
               </div>
             </div>

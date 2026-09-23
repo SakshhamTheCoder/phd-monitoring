@@ -55,7 +55,7 @@ const ProjectsOverview = () => {
   const handleExportCSV = () => {
     const headers = ['Project Title', 'Category', 'Role', 'Funding Agency', 'Amount', 'Duration', 'Status'];
     const rows = projects.map(p => [p.title, p.category, p.role, p.fundingAgency, p.amount, formatDuration(p.durationYears, p.durationMonths), p.status]);
-    const csvContent = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+    const csvContent = [headers, ...rows].map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

@@ -70,8 +70,8 @@ const AdminFormInstancesModal = ({
                     <div className="instance-card-body">
                       <div className="instance-controls">
                         <div className="control-group">
-                          <label htmlFor="admin-form-management-stage">Stage</label>
-                          <select id="admin-form-management-stage" id="admin-form-management-current-stage" id="admin-form-management-form-type"
+                          <label htmlFor={`admin-form-management-stage-${instance.id}`}>Stage</label>
+                          <select id={`admin-form-management-stage-${instance.id}`}
                             value={instance.stage}
                             onChange={(e) => {
                               const newStage = e.target.value;
@@ -112,8 +112,8 @@ const AdminFormInstancesModal = ({
                         </div>
 
                         <div className="control-group">
-                          <label htmlFor="admin-form-management-current-step-index-in-steps">Current Step (Index in Steps)</label>
-                          <input id="admin-form-management-current-step-index-in-steps"
+                          <label htmlFor={`admin-form-management-current-step-index-in-steps-${instance.id}`}>Current Step (Index in Steps)</label>
+                          <input id={`admin-form-management-current-step-index-in-steps-${instance.id}`}
                             type="number"
                             value={instance.current_step || 0}
                             min="0"
@@ -133,8 +133,8 @@ const AdminFormInstancesModal = ({
                         </div>
 
                         <div className="control-group">
-                          <label htmlFor="admin-form-management-maximum-step-max-reached">Maximum Step (Max Reached)</label>
-                          <input id="admin-form-management-maximum-step-max-reached"
+                          <label htmlFor={`admin-form-management-maximum-step-max-reached-${instance.id}`}>Maximum Step (Max Reached)</label>
+                          <input id={`admin-form-management-maximum-step-max-reached-${instance.id}`}
                             type="number"
                             value={instance.maximum_step || 0}
                             min={instance.current_step || 0}

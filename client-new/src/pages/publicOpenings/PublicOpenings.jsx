@@ -19,7 +19,9 @@ const PublicOpenings = () => {
 
   useEffect(() => {
     let active = true;
-    apiPublicOpenings().then(({ ok, body }) => {
+    // fetch rejects when the network is down. Treat that as a failed answer so
+    // the page shows its error instead of loading forever.
+    apiPublicOpenings().catch(() => ({ ok: false, body: {} })).then(({ ok, body }) => {
       if (!active) return;
       if (ok) setOpenings(body || []);
       else setError(body.message || 'Could not load the openings. Please try again.');

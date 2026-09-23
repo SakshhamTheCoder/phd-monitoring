@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import StudentLeave from '../../components/forms/studentLeave/StudentLeave';
@@ -78,6 +78,7 @@ const LeaveRequests = ({ departmentId = '', showDepartment = false }) => {
           // with no dates and nothing to review. It has no business in a
           // review queue. Mirrors StudentAttendancePage's own leaveRows filter.
           setRows((res.response?.data || []).filter((r) => r.from_date));
+          setError(null);
         } else {
           setError('Could not load leave applications. Please try again later.');
         }
@@ -87,10 +88,17 @@ const LeaveRequests = ({ departmentId = '', showDepartment = false }) => {
 
   useEffect(() => { loadList(); }, [loadList]);
 
+  // Only the most recently clicked application may open: a slower answer for
+  // an earlier row must not replace it.
+  const latestOpenRef = useRef(0);
+
   const openApplication = useCallback((id) => {
+    const requestId = ++latestOpenRef.current;
+    const isLatest = () => latestOpenRef.current === requestId;
     setLoadingForm(true);
     setBalance(null);
     apiLeaveLoad(id).then((res) => {
+      if (!isLatest()) return;
       if (res.success) {
         setOpenForm(res.response);
         // GET /forms/student-leave/balance answers "what is MY balance" for
@@ -100,10 +108,10 @@ const LeaveRequests = ({ departmentId = '', showDepartment = false }) => {
         // an admin for any (see ClerkController::studentAttendance).
         if (res.response?.roll_no) {
           customFetch(`${baseURL}/clerks/attendance/student/${res.response.roll_no}`, 'GET', {}, true)
-            .then((r) => { if (r.success) setBalance(r.response.balance); });
+            .then((r) => { if (r.success && isLatest()) setBalance(r.response.balance); });
         }
       }
-    }).finally(() => setLoadingForm(false));
+    }).finally(() => { if (isLatest()) setLoadingForm(false); });
   }, []);
 
   // Deep link from a notification: open the named application directly

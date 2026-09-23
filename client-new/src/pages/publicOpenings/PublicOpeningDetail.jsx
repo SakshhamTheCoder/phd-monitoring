@@ -37,7 +37,9 @@ const PublicOpeningDetail = () => {
 
   useEffect(() => {
     let active = true;
-    apiPublicOpening(id).then(({ ok, body }) => {
+    // fetch rejects when the network is down. Treat that as a failed answer so
+    // the page shows its error instead of loading forever.
+    apiPublicOpening(id).catch(() => ({ ok: false, body: {} })).then(({ ok, body }) => {
       if (!active) return;
       if (ok) setOpening(body);
       else setError(body.message || 'This opening is no longer available.');
@@ -81,7 +83,7 @@ const PublicOpeningDetail = () => {
     fd.append('website', form.website);
     fd.append('resume', form.resumeFile);
 
-    const { ok, body } = await apiPublicApply(id, fd);
+    const { ok, body } = await apiPublicApply(id, fd).catch(() => ({ ok: false, body: {} }));
     setSubmitting(false);
     if (ok) {
       setSubmitted(body.token);
@@ -202,8 +204,8 @@ const PublicOpeningDetail = () => {
 
           <div className="op-modal-section">Contact details</div>
           <div className="op-form-grid">
-            <div className="op-field"><label htmlFor="public-opening-detail-full-name">Full Name *</label><input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Your full name" /></div>
-            <div className="op-field"><label htmlFor="public-opening-detail-email">Email *</label><input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" /></div>
+            <div className="op-field"><label htmlFor="public-opening-detail-full-name">Full Name *</label><input id="public-opening-detail-full-name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Your full name" /></div>
+            <div className="op-field"><label htmlFor="public-opening-detail-email">Email *</label><input id="public-opening-detail-email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" /></div>
             <div className="op-field"><label htmlFor="public-opening-detail-phone">Phone *</label><input id="public-opening-detail-phone" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+91-" /></div>
           </div>
 
@@ -228,7 +230,7 @@ const PublicOpeningDetail = () => {
 
           <div className="op-hp" aria-hidden="true">
             <label htmlFor="public-opening-detail-website">Website</label>
-            <input id="public-opening-detail-email" id="public-opening-detail-full-name" id="public-opening-detail-website" tabIndex="-1" autoComplete="off" value={form.website} onChange={e => setForm({ ...form, website: e.target.value })} />
+            <input id="public-opening-detail-website" tabIndex="-1" autoComplete="off" value={form.website} onChange={e => setForm({ ...form, website: e.target.value })} />
           </div>
 
           {formError && <p className="op-form-error">{formError}</p>}

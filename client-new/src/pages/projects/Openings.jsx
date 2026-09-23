@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Layout from '../../components/dashboard/layout';
-import { formatDate } from '../../utils/timeParse';
+import { formatDate, toDateValue } from '../../utils/timeParse';
 import { badgeClass } from '../../data/badges';
 import { apiOpenings, apiApply, apiMyApplications, apiApplicantProfile } from '../../api/openings';
 import CustomModal from '../../components/forms/modal/CustomModal';
@@ -13,7 +13,9 @@ import PageHeader from '../../components/pageHeader/PageHeader';
 const emptyApply = { name: '', email: '', phone: '', degree: '', institute: '', cgpa: '', skills: '', research: '', resume: '', resumeFile: null, coverNote: '' };
 
 const Openings = () => {
-  const today = new Date().toISOString().split('T')[0];
+  // Local date: the UTC one is still yesterday in IST until 05:30, which
+  // would close a position on its last day.
+  const today = toDateValue(new Date());
   const [tab, setTab] = useState('All');
   const [applyFor, setApplyFor] = useState(null);
   const [viewJob, setViewJob] = useState(null);

@@ -18,10 +18,12 @@ const ApplicationStatus = ({ verify = false }) => {
     let active = true;
     const load = async () => {
       if (verify) {
-        const confirmed = await apiVerifyApplication(token);
+        // fetch rejects when the network is down. Treat that as a failed answer
+        // so the page shows its error instead of loading forever.
+        const confirmed = await apiVerifyApplication(token).catch(() => ({ ok: false }));
         if (active && confirmed.ok) setJustVerified(true);
       }
-      const { ok, body } = await apiApplicationStatus(token);
+      const { ok, body } = await apiApplicationStatus(token).catch(() => ({ ok: false, body: {} }));
       if (!active) return;
       if (ok) setApplication(body);
       else setError(body.message || 'This link is not valid.');

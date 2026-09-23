@@ -59,8 +59,10 @@ const StudentAttendancePage = () => {
     setLoading(true);
     customFetch(`${baseURL}/clerks/attendance/student/${rollNo}`, 'GET', {}, true)
       .then((res) => {
-        if (res?.success) setData(res.response);
-        else setError('Could not load your attendance records. Please try again later.');
+        if (res?.success) {
+          setData(res.response);
+          setError(null);
+        } else setError('Could not load your attendance records. Please try again later.');
       })
       .finally(() => setLoading(false));
   }, [rollNo]);

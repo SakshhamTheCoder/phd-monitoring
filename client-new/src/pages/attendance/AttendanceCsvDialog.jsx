@@ -31,10 +31,19 @@ const AttendanceCsvDialog = ({ isOpen, onClose, onImported, editWindow }) => {
 
   const downloadTemplate = async () => {
     const token = localStorage.getItem('token');
-    const res = await fetch(baseURL + '/clerks/attendance/template', { headers: { Authorization: `Bearer ${token}` } });
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'attendance_template.csv'; a.click(); URL.revokeObjectURL(url);
+    try {
+      const res = await fetch(baseURL + '/clerks/attendance/template', { headers: { Authorization: `Bearer ${token}` } });
+      // An error answer is JSON, and saving it would hand the clerk a
+      // "template" that is really an error message.
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.message || 'Template download failed.');
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'attendance_template.csv'; a.click(); URL.revokeObjectURL(url);
+    } catch (e) { toast.error(isNetworkError(e) ? NETWORK_ERROR_MESSAGE : 'Template download failed: ' + e.message); }
   };
 
   const handleFileChange = async (e) => {

@@ -158,22 +158,22 @@ const ProjectRecruitment = () => {
                 <label htmlFor="project-recruitment-position-title">Position Title *</label>
                 <input id="project-recruitment-position-title" type="text" value={posForm.title} onChange={e => setPosForm({...posForm, title: e.target.value})} placeholder="e.g. Junior Research Fellow — NAS Project" />
               </div>
-              <div className="pr-field"><label htmlFor="project-recruitment-number-of-openings">Number of Openings</label><input type="number" min="1" value={posForm.openings} onChange={e => setPosForm({...posForm, openings: e.target.value})} /></div>
+              <div className="pr-field"><label htmlFor="project-recruitment-number-of-openings">Number of Openings</label><input id="project-recruitment-number-of-openings" type="number" min="1" value={posForm.openings} onChange={e => setPosForm({...posForm, openings: e.target.value})} /></div>
               <div className="pr-field">
                 <label htmlFor="project-recruitment-status">Status</label>
-                <select id="project-recruitment-status" id="project-recruitment-number-of-openings" value={posForm.status} onChange={e => setPosForm({...posForm, status: e.target.value})}>
+                <select id="project-recruitment-status" value={posForm.status} onChange={e => setPosForm({...posForm, status: e.target.value})}>
                   <option value="Open">Open</option>
                   <option value="Closed">Closed</option>
                 </select>
               </div>
-              <div className="pr-field"><label htmlFor="project-recruitment-eligibility">Eligibility</label><input type="text" value={posForm.eligibility} onChange={e => setPosForm({...posForm, eligibility: e.target.value})} placeholder="e.g. M.Tech in CS/ECE" /></div>
-              <div className="pr-field"><label htmlFor="project-recruitment-required-skills">Required Skills</label><input type="text" value={posForm.skills} onChange={e => setPosForm({...posForm, skills: e.target.value})} placeholder="e.g. Python, PyTorch, ML" /></div>
+              <div className="pr-field"><label htmlFor="project-recruitment-eligibility">Eligibility</label><input id="project-recruitment-eligibility" type="text" value={posForm.eligibility} onChange={e => setPosForm({...posForm, eligibility: e.target.value})} placeholder="e.g. M.Tech in CS/ECE" /></div>
+              <div className="pr-field"><label htmlFor="project-recruitment-required-skills">Required Skills</label><input id="project-recruitment-required-skills" type="text" value={posForm.skills} onChange={e => setPosForm({...posForm, skills: e.target.value})} placeholder="e.g. Python, PyTorch, ML" /></div>
               <div className="pr-field"><label htmlFor="project-recruitment-min-cgpa">Min CGPA</label><input id="project-recruitment-min-cgpa" type="text" value={posForm.cgpa} onChange={e => setPosForm({...posForm, cgpa: e.target.value})} placeholder="e.g. 7.5" /></div>
               <div className="pr-field"><label htmlFor="project-recruitment-stipend">Stipend</label><input id="project-recruitment-stipend" type="text" value={posForm.stipend} onChange={e => setPosForm({...posForm, stipend: e.target.value})} placeholder="e.g. ₹31,000/month" /></div>
               <div className="pr-field"><label htmlFor="project-recruitment-application-deadline">Application Deadline</label><input id="project-recruitment-application-deadline" type="date" value={posForm.deadline} onChange={e => setPosForm({...posForm, deadline: e.target.value})} /></div>
               <div className="pr-field">
                 <label htmlFor="project-recruitment-advertisement-pdf">Advertisement PDF</label>
-                <input id="project-recruitment-advertisement-pdf" id="project-recruitment-required-skills" id="project-recruitment-eligibility" type="file" accept=".pdf" ref={adRef} onChange={handleAdvertisement} />
+                <input id="project-recruitment-advertisement-pdf" type="file" accept=".pdf" ref={adRef} onChange={handleAdvertisement} />
                 {posForm.advertisementName
                   ? <span className="pr-field-hint"><i className="fa fa-check-circle"></i> {posForm.advertisementName}</span>
                   : posForm.advertisementPath && <a className="pr-field-hint" href={fileUrl(posForm.advertisementPath)} target="_blank" rel="noopener noreferrer"><i className="fa fa-file-pdf-o"></i> Current advertisement</a>}
