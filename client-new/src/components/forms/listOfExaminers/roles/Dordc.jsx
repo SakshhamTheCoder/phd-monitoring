@@ -110,7 +110,6 @@ const Dordc = ({ formData }) => {
                   "Department",
                   "Designation",
                   "Institution",
-                  "Type",
                   "Status",
                 ]}
                 keys={[
@@ -119,7 +118,6 @@ const Dordc = ({ formData }) => {
                   "department",
                   "designation",
                   "institution",
-                  "type",
                   "buttons",
                 ]}
                 components={[
@@ -157,7 +155,6 @@ const Dordc = ({ formData }) => {
                   "Department",
                   "Designation",
                   "Institution",
-                  "Type",
                   "Status",
                 ]}
                 keys={[
@@ -166,7 +163,6 @@ const Dordc = ({ formData }) => {
                   "department",
                   "designation",
                   "institution",
-                  "type",
                   "buttons",
                 ]}
                 components={[

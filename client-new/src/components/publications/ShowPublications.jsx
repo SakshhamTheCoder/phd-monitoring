@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import GridContainer from '../forms/fields/GridContainer';
 import TableComponent from '../forms/table/TableComponent';
-import { formatDate, EMPTY_VALUE } from '../../utils/timeParse';
+import { EMPTY_VALUE } from '../../utils/timeParse';
 import CustomButton from '../forms/fields/CustomButton';
 import AddPublication from './AddPublication';
 import CollapsibleSection from '../common/CollapsibleSection';
@@ -258,7 +258,7 @@ const ShowPublications = ({
                                     data={formData.book}
                                     leading={selectCell('book')}
                                     keys={['name', 'title', 'year', 'publisher','id']}
-                                    titles={['Name of book', 'Title of paper', 'Year of publication', 'Name of publisher',' ']}
+                                    titles={['Name of book', 'Chapter title', 'Year of publication', 'Name of publisher',' ']}
                                     components={[
                                          {key: 'id', component: ({ data }) => renderActions(data, 'book') }
                                     ]}
@@ -278,7 +278,7 @@ const ShowPublications = ({
                                     keys={['authors', 'year', 'status', 'title', 'country','id']}
                                     titles={['Author(s)', 'Year of award', 'Status', 'Title of patent', 'International/national',' ']}
                                     components={[authorsCell,
-                                        { key: 'year', component: ({ data }) => <span>{formatDate(data)}</span> },
+                                        { key: 'year', component: ({ data }) => <span>{data || EMPTY_VALUE}</span> },
                                        {key: 'id', component: ({ data }) => renderActions(data, 'patents') }
                                     ]}
                                     rowStyle={(data) => getRowStyle(data.id, 'patents')}

@@ -39,7 +39,6 @@ const statedYesNo = (value) =>
 
 const ProfileCard = ({ dataIP = null, link = false }) => {
   const can = useCapabilities();
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   const [isEditingInline, setIsEditingInline] = useState(false);
   const [editForm, setEditForm] = useState({});
@@ -663,94 +662,6 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
             />
           </Panel>
         </Page>
-        {
-          <CustomModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            children={[
-              <>
-                <p>Edit the student Committee/supervisors</p>
-                <GridContainer
-                  label="Doctoral Committee"
-                  elements={[
-                    <TableComponent
-                      data={doctoral}
-                      keys={[
-                        "name",
-                        "email",
-                        "phone",
-                        "designation",
-                        "actions",
-                      ]}
-                      titles={[
-                        "Name",
-                        "Email",
-                        "Phone",
-                        "Designation",
-                        "Actions",
-                      ]}
-                      components={[
-                        facultyNameCell,
-                        {
-                          key: "actions",
-                          component: ({ row }) => (
-                            <GridContainer
-                              space={1}
-                              elements={[
-                                <CustomButton text="Edit" variant="secondary" />,
-                                <CustomButton text="Delete" variant="danger" />,
-                              ]}
-                            />
-                          ),
-                        },
-                      ]}
-                    />,
-                  ]}
-                  space={3}
-                />
-                <GridContainer
-                  label="Supervisors"
-                  elements={[
-                    <TableComponent
-                      data={supervisorTableData}
-                      keys={[
-                        "name",
-                        "email",
-                        "phone",
-                        "designation",
-                        "actions",
-                      ]}
-                      titles={[
-                        "Name",
-                        "Email",
-                        "Phone",
-                        "Designation",
-                        "Actions",
-                      ]}
-                      components={[
-                        facultyNameCell,
-                        {
-                          key: "actions",
-                          component: ({ row }) => (
-                            <GridContainer
-                              space={1}
-                              elements={[
-                                <CustomButton text="Edit" variant="secondary" onClick={() => toast.warn("Disabled by admin")} />,
-                                <CustomButton text="Delete" variant="danger" onClick={()=>{toast.info("Disabled by Admin")}}/>,
-                              ]}
-                            />
-                          ),
-                        },
-                      ]}
-                    />,
-                  ]}
-                  space={3}
-                />
-              </>,
-            ]}
-          />
-        }
-        
         {/* Tag Course Modal */}
         <CustomModal
           isOpen={isTagModalOpen}

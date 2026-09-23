@@ -36,7 +36,6 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
     email: currentHod.user?.email || EMPTY_VALUE,
     phone: currentHod.user?.phone || EMPTY_VALUE,
     designation: currentHod.designation || EMPTY_VALUE,
-    department: currentHod.department?.name || EMPTY_VALUE,
     actions: { faculty_code: currentHod.faculty_code }
   }] : [];
 
@@ -46,7 +45,6 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
     email: currentAdordc.user?.email || EMPTY_VALUE,
     phone: currentAdordc.user?.phone || EMPTY_VALUE,
     designation: currentAdordc.designation || EMPTY_VALUE,
-    department: currentAdordc.department?.name || EMPTY_VALUE,
     actions: { faculty_code: currentAdordc.faculty_code }
   }] : [];
 
@@ -56,7 +54,6 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
     email: coord.faculty?.user?.email || EMPTY_VALUE,
     phone: coord.faculty?.user?.phone || EMPTY_VALUE,
     designation: coord.faculty?.designation || EMPTY_VALUE,
-    department: coord.faculty?.department?.name || EMPTY_VALUE,
     actions: { 
       faculty_code: coord.faculty?.faculty_code,
       coordinator_id: coord.id
@@ -179,8 +176,8 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
   };
 
   const roleColumns = {
-    keys: ['name', 'email', 'phone', 'designation', 'department'],
-    titles: ['Name', 'Email', 'Phone', 'Designation', 'Department'],
+    keys: ['name', 'email', 'phone', 'designation'],
+    titles: ['Name', 'Email', 'Phone', 'Designation'],
     components: [facultyNameCell],
   };
 

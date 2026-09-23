@@ -41,8 +41,8 @@ const ProfileBox = () => {
 
   // The avatar is drawn on a canvas, too costly to redo on every render.
   const image = useMemo(
-    () => user.profile_image || generateAvatar(user.first_name, user.last_name),
-    [user.profile_image, user.first_name, user.last_name]
+    () => generateAvatar(user.first_name, user.last_name),
+    [user.first_name, user.last_name]
   );
 
   const toggleProfileMenu = () => {

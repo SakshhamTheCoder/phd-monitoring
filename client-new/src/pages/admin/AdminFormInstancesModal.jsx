@@ -104,7 +104,8 @@ const AdminFormInstancesModal = ({
                         <div className="afm-control">
                           <label className="afm-control-label" htmlFor={`admin-form-management-stage-${instance.id}`}>Stage</label>
                           <select id={`admin-form-management-stage-${instance.id}`}
-                            value={instance.stage}
+                            // The record stores the supervisor stage as 'supervisor'; the steps call it 'faculty'.
+                            value={instance.stage === 'supervisor' ? 'faculty' : instance.stage}
                             onChange={(e) => {
                               const newStage = e.target.value;
                               const stageIndex = instance.steps?.indexOf(newStage);

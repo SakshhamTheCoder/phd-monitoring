@@ -68,7 +68,9 @@ const Dashboard = () => {
           {failed ? (
             <LoadError message="Could not load your home page. Check your connection and try again." onRetry={fetchData} />
           ) : view === 'student' ? (
-            <ProfileCard data={data} />
+            // /home sends a thinner profile than /students/me, and ProfileCard
+            // needs that endpoint for its permissions anyway, so it loads its own.
+            <ProfileCard />
           ) : view === 'ug_student' ? (
             <UgProfile />
           ) : view === 'admin' ? (

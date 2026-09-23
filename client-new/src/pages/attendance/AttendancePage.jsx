@@ -487,7 +487,7 @@ const AttendancePage = () => {
                       <tr key={`${r.date}-${r.lecture_id}`} className="reveal">
                         <td>{r.date?.slice?.(0, 10) || r.date}</td>
                         <td className={r.status === 'absent' ? 'attendance-status-absent' : 'attendance-status-present'}>{r.status}</td>
-                        <td>{r.marked_by || EMPTY_VALUE}</td>
+                        <td>{r.marked_by_name || EMPTY_VALUE}</td>
                       </tr>
                     ))}
                 </tbody>
