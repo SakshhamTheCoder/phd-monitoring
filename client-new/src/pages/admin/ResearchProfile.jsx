@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import Layout from '../../components/dashboard/layout';
 import AddPublication from '../../components/publications/AddPublication';
@@ -7,7 +7,6 @@ import CustomButton from '../../components/forms/fields/CustomButton';
 import TableComponent from '../../components/forms/table/TableComponent';
 import Tabs from '../../components/tabs/Tabs';
 import InfoGrid from '../../components/profileFields/InfoGrid';
-import { generateAvatar } from '../../utils/profileImage';
 import { customFetch, isNetworkError, NETWORK_ERROR_MESSAGE } from '../../api/base';
 import { baseURL } from '../../api/urls';
 import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
@@ -133,6 +132,44 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
         };
     }, [departmentId]);
 
+    const tab = activeTab ?? 'faculty';
+    const isOwnTab = tab === 'faculty';
+    const groups = !data ? null : (isOwnTab ? data.publications : (data.student_publications || {}));
+    const profileName = data?.profile?.name;
+
+    // Memoised, and above the loading guard, so a search keystroke refilters
+    // once instead of rebuilding every derived list on each render.
+    const filtered = useMemo(() => {
+        const needle = search.trim().toLowerCase();
+        const matchesFilters = (pub) => {
+            const year = pub.year ? String(pub.year) : '';
+            if (filterYears.length && !filterYears.includes(year)) return false;
+            if (filterSource !== 'All' && (pub.source || 'manual') !== filterSource) return false;
+            if (needle) {
+                const haystack = `${pub.title || ''} ${pub.authors || ''} ${pub.name || ''}`.toLowerCase();
+                if (!haystack.includes(needle)) return false;
+            }
+            return true;
+        };
+        const result = {};
+        Object.keys(groups || {}).forEach(key => {
+            if (filterType !== 'All' && filterType !== key) return;
+            result[key] = (groups[key] || []).filter(matchesFilters);
+        });
+        return result;
+    }, [groups, filterType, filterYears, filterSource, search]);
+
+    const allYears = useMemo(
+        () => [...new Set(Object.values(groups || {}).flat().map(p => p.year).filter(Boolean).map(String))].sort().reverse(),
+        [groups]
+    );
+    const availableSources = useMemo(
+        () => [...new Set(Object.values(groups || {}).flat().map(p => p.source || 'manual'))],
+        [groups]
+    );
+    const authorIdentity = useMemo(() => profileIdentity(profileName), [profileName]);
+    const selectedIds = useMemo(() => new Set(selected), [selected]);
+
     if (!data) return <Shell><div className="loading-state">Loading Profile…</div></Shell>;
 
     const {
@@ -143,40 +180,10 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
         is_self: isSelf = false,
         counts = {},
     } = data;
-    const tab = activeTab ?? 'faculty';
-    const isOwnTab = tab === 'faculty';
-    const groups = isOwnTab ? data.publications : (data.student_publications || {});
-
-    const profileImage = profile.name
-        ? (() => {
-            const parts = profile.name.replace('Dr.', '').trim().split(' ');
-            return generateAvatar(parts[0], parts[parts.length - 1] || '');
-        })()
-        : '';
-
-    const matchesFilters = (pub) => {
-        const year = pub.year ? String(pub.year) : '';
-        if (filterYears.length && !filterYears.includes(year)) return false;
-        if (filterSource !== 'All' && (pub.source || 'manual') !== filterSource) return false;
-        if (search.trim()) {
-            const haystack = `${pub.title || ''} ${pub.authors || ''} ${pub.name || ''}`.toLowerCase();
-            if (!haystack.includes(search.trim().toLowerCase())) return false;
-        }
-        return true;
-    };
-
-    const filtered = {};
-    Object.keys(groups || {}).forEach(key => {
-        if (filterType !== 'All' && filterType !== key) return;
-        filtered[key] = (groups[key] || []).filter(matchesFilters);
-    });
-
-    const allYears = [...new Set(Object.values(groups || {}).flat().map(p => p.year).filter(Boolean).map(String))].sort().reverse();
-    const availableSources = [...new Set(Object.values(groups || {}).flat().map(p => p.source || 'manual'))];
 
     const formatAuthors = (authors) => {
         if (!authors) return '';
-        const id = profileIdentity(profile.name);
+        const id = authorIdentity;
         if (!id) return authors;
         return splitAuthors(authors).map((piece, i) =>
             isProfileAuthor(piece, id) ? <strong key={i}>{piece}</strong> : piece
@@ -336,7 +343,8 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
         });
         if (!rows.length) { toast.error('Nothing to export for the current filters.'); return; }
         const csv = [headers, ...rows]
-            .map(row => row.map(cell => `"${cell ?? ''}"`).join(','))
+            // A quote inside a title would otherwise end the cell early.
+            .map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','))
             .join('\n');
         const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
         const a = document.createElement('a');
@@ -356,7 +364,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
 
     const toggleGroup = (key) => {
         const ids = (filtered[key] || []).map(p => p.id);
-        const allChosen = ids.length > 0 && ids.every(id => selected.includes(id));
+        const allChosen = ids.length > 0 && ids.every(id => selectedIds.has(id));
         setSelected(prev => allChosen
             ? prev.filter(id => !ids.includes(id))
             : [...new Set([...prev, ...ids])]);
@@ -401,7 +409,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
             <td className="rp-select-col">
                 <input
                     type="checkbox"
-                    checked={selected.includes(pub.id)}
+                    checked={selectedIds.has(pub.id)}
                     onChange={() => toggleSelected(pub.id)}
                     aria-label={`Select ${pub.title || 'publication'}`}
                 />

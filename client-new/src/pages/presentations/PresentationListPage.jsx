@@ -1,18 +1,10 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../../components/dashboard/layout";
 import Tabs from "../../components/tabs/Tabs";
-import FormList from "../../components/forms/formList/FormList";
-import CustomModal from "../../components/forms/modal/CustomModal";
-import CustomButton from "../../components/forms/fields/CustomButton";
-import GridContainer from "../../components/forms/fields/GridContainer";
-import BulkSchedulePresentation from "../../components/forms/presentations/BulkSchedulePresentation";
-import SchedulePresentation from "../../components/forms/presentations/SchedulePresentation";
-import FormTable from "../../components/forms/formTable/FormTable";
 import FilterBar from "../../components/filterBar/FilterBar";
 import PagenationTable from "../../components/pagenationTable/PagenationTable";
 import SemesterStatsCard from "./SemsterStatsCard";
-import { set } from "react-hook-form";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import PageHeader from '../../components/pageHeader/PageHeader';
 import { currentRole } from '../../auth/access';
 
@@ -28,102 +20,47 @@ const NOT_SCHEDULED_TAB = 3;
 const SEMESTER_OFF_TAB = 4;
 const ALL_TAB = 6;
 
+const onlyWhere = (key, value, op) => ({
+  mandatory_filter: [{ key, ...(op ? { op } : {}), value }],
+});
+
+// What each tab asks the list for. Not Scheduled is its own endpoint, which
+// reads no filters. Module constants, so the table sees the same object
+// until the tab changes and fetches once.
+const NO_FILTERS = {};
+const TAB_FILTERS = {
+  0: onlyWhere("action", 1),
+  1: onlyWhere("upcoming", 1),
+  2: onlyWhere("missed", 0, "="),
+  5: onlyWhere("missed", 1),
+};
+
 const PresentationListPage = () => {
   const { semester_id } = useParams();
+  const { pathname } = useLocation();
   const [extraFilter, setExtraFilter] = useState(false);
-  const [location, setLocation] = useState(window.location.pathname);
-  const [num, setNum] = useState(0);
   const role = currentRole() || "student";
   const [presentationTab, setPresentationTab] = useState(REVIEWS_NOTHING.includes(role) ? ALL_TAB : ACTION_TAB);
-  // const [filters, setFilters] = useState(role==="student"?{}:{
-  //   mandatory_filter: [
-  //     {
-  //       key: "action",
-  //       value: 1,
-  //     },
-  //   ],
-  // });
+  // A search from the filter bar stands in for the tab's filters until the
+  // tab changes.
+  const [searchFilters, setSearchFilters] = useState(null);
 
-  const handleSearch = (query) => {
-    setFilters(query);
+  const selectTab = (tab) => {
+    setPresentationTab(tab);
+    setSearchFilters(null);
   };
 
-  const [enableApproval, setEnableApproval] = useState(false);
-  const getInitialFilters = () => {
-    if (role === "student" || REVIEWS_NOTHING.includes(role)) {
-      return {};
-    } else {
-      return {
-        mandatory_filter: [
-          {
-            key: "action",
-            value: 1,
-          },
-        ],
-      };
-    }
-  };
-  
-  const [filters, setFilters] = useState(getInitialFilters);
-  
+  // Derived rather than set from an effect: the effect handed the table a
+  // second filters object right after mount, so it fetched the list twice.
+  const tabFilters = role === "student" ? NO_FILTERS : (TAB_FILTERS[presentationTab] ?? NO_FILTERS);
+  const filters = searchFilters ?? tabFilters;
+  const enableApproval = presentationTab === ACTION_TAB && BULK_APPROVERS.includes(role);
+  const endpoint = presentationTab === NOT_SCHEDULED_TAB ? `${pathname}/not-scheduled` : pathname;
+
+  // The stats card turns the filter bar off as it mounts, so the All tab
+  // turns it back on after.
   useEffect(() => {
-    setNum(num + 1);
-    if(role==='student') return;
-    setLocation(window.location.pathname);
-    if (presentationTab === 0) {
-      setFilters({
-        mandatory_filter: [
-          {
-            key: "action",
-            value: 1,
-          },
-        ],
-      });
-      setEnableApproval(BULK_APPROVERS.includes(role));
-    } else if (presentationTab === 1) {
-      //new
-      setFilters({
-        mandatory_filter: [
-          {
-            key: "upcoming",
-            value: 1,
-          },
-        ],
-      });
-      setEnableApproval(false);
-    } else if (presentationTab === 2) {
-      //new route
-      setFilters({
-        mandatory_filter: [
-          {
-            key: "missed",
-            op: "=",
-            value: 0,
-          },
-        ],
-      });
-      setEnableApproval(false);
-    } else if (presentationTab === 3) {
-      //new route
-      setEnableApproval(false);
-      setLocation(window.location.pathname + "/not-scheduled");
-    } else if (presentationTab === 4) {
-      //semester off
-    } else if (presentationTab === 5) {
-      setFilters({
-        mandatory_filter: [
-          {
-            key: "missed",
-            value: 1,
-          },
-        ],
-      });
-      setEnableApproval(false);
-    } else if (presentationTab === 6) {
-      setFilters({});
-      setEnableApproval(false);
-      setExtraFilter(true);
-    }
+    if (presentationTab === ALL_TAB) setExtraFilter(true);
   }, [presentationTab]);
 
   return (
@@ -137,7 +74,7 @@ const PresentationListPage = () => {
           {role !== "student" && (
             <Tabs
               value={presentationTab}
-              onChange={setPresentationTab}
+              onChange={selectTab}
               items={[
                 'Action Required',
                 'Upcoming Progress Monitoring',
@@ -153,10 +90,9 @@ const PresentationListPage = () => {
                 .filter((tab) => !(tab.value === NOT_SCHEDULED_TAB && !READS_NOT_SCHEDULED.includes(role)))}
             />
           )}
-          {extraFilter && <FilterBar onSearch={handleSearch} />}
+          {extraFilter && <FilterBar onSearch={setSearchFilters} />}
           <PagenationTable
-            num={num}
-            endpoint={location}
+            endpoint={endpoint}
             filters={filters}
             enableApproval={enableApproval}
             enableSelect={enableApproval}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { customFetch, NETWORK_ERROR_MESSAGE } from "../../api/base";
 import { baseURL } from "../../api/urls";
 import { EMPTY_VALUE } from "../../utils/timeParse";
@@ -114,6 +114,8 @@ const AdminFormManagement = () => {
     }
   };
 
+  // Returns the fresh forms (null on failure) so a caller that also needs
+  // them for an open modal does not fetch the same list a second time.
   const fetchStudentForms = async (studentId) => {
     setLoading(true);
     try {
@@ -124,11 +126,13 @@ const AdminFormManagement = () => {
         false
       );
       if (response.success) {
-        setStudentForms(response.response.forms || []);
+        const forms = response.response.forms || [];
+        setStudentForms(forms);
         setSelectedStudent(response.response.student);
-      } else {
-        toastFailure(response, "Failed to fetch student forms.");
+        return forms;
       }
+      toastFailure(response, "Failed to fetch student forms.");
+      return null;
     } finally {
       setLoading(false);
     }
@@ -194,11 +198,10 @@ const AdminFormManagement = () => {
         }
 
         toast.success("Stage updated.");
-        await fetchStudentForms(selectedStudent.roll_no);
-        
+        const updatedForms = await fetchStudentForms(selectedStudent.roll_no);
+
         // Update the selected form for instances modal if it's open
-        if (selectedFormForInstances && selectedFormForInstances.form_type === formType) {
-          const updatedForms = await getUpdatedForms();
+        if (updatedForms && selectedFormForInstances && selectedFormForInstances.form_type === formType) {
           const updatedForm = updatedForms.find(f => f.form_type === formType);
           if (updatedForm) {
             setSelectedFormForInstances(updatedForm);
@@ -210,19 +213,6 @@ const AdminFormManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getUpdatedForms = async () => {
-    const response = await customFetch(
-      baseURL + `/admin/forms/student/${selectedStudent.roll_no}`,
-      "GET",
-      {},
-      false
-    );
-    if (response.success) {
-      return response.response.forms || [];
-    }
-    return studentForms;
   };
 
   const handleToggleAvailability = async (formType, role, currentValue) => {
@@ -241,11 +231,10 @@ const AdminFormManagement = () => {
       );
       if (response.success) {
         toast.success(`${roleLabels[role]} availability ${!currentValue ? "enabled" : "disabled"}.`);
-        const updatedForms = await getUpdatedForms();
-        setStudentForms(updatedForms);
-        
+        const updatedForms = await fetchStudentForms(selectedStudent.roll_no);
+
         // Update the selected form for management modal if it's open
-        if (selectedFormForManagement && selectedFormForManagement.form_type === formType) {
+        if (updatedForms && selectedFormForManagement &&selectedFormForManagement.form_type === formType) {
           const updatedForm = updatedForms.find(f => f.form_type === formType);
           if (updatedForm) {
             setSelectedFormForManagement(updatedForm);
@@ -305,11 +294,10 @@ const AdminFormManagement = () => {
       );
       if (response.success) {
         toast.success(`Lock ${!currentValue ? "enabled" : "disabled"}.`);
-        await fetchStudentForms(selectedStudent.roll_no);
-        
+        const updatedForms = await fetchStudentForms(selectedStudent.roll_no);
+
         // Update the selected form for instances modal if it's open
-        if (selectedFormForInstances && selectedFormForInstances.form_type === formType) {
-          const updatedForms = await getUpdatedForms();
+        if (updatedForms && selectedFormForInstances && selectedFormForInstances.form_type === formType) {
           const updatedForm = updatedForms.find(f => f.form_type === formType);
           if (updatedForm) {
             setSelectedFormForInstances(updatedForm);
@@ -366,11 +354,10 @@ const AdminFormManagement = () => {
       );
       if (response.success) {
         toast.success("Form instance created.");
-        await fetchStudentForms(selectedStudent.roll_no);
-        
+        const updatedForms = await fetchStudentForms(selectedStudent.roll_no);
+
         // Update the selected form for instances modal if it's open
-        if (selectedFormForInstances && selectedFormForInstances.form_type === formType) {
-          const updatedForms = await getUpdatedForms();
+        if (updatedForms && selectedFormForInstances && selectedFormForInstances.form_type === formType) {
           const updatedForm = updatedForms.find(f => f.form_type === formType);
           if (updatedForm) {
             setSelectedFormForInstances(updatedForm);
@@ -421,11 +408,10 @@ const AdminFormManagement = () => {
       );
       if (response.success) {
         toast.success("Form deleted.");
-        await fetchStudentForms(selectedStudent.roll_no);
-        
+        const updatedForms = await fetchStudentForms(selectedStudent.roll_no);
+
         // Update the selected form for instances modal if it's open
-        if (selectedFormForInstances && selectedFormForInstances.form_type === formType) {
-          const updatedForms = await getUpdatedForms();
+        if (updatedForms && selectedFormForInstances && selectedFormForInstances.form_type === formType) {
           const updatedForm = updatedForms.find(f => f.form_type === formType);
           if (updatedForm) {
             setSelectedFormForInstances(updatedForm);
@@ -456,11 +442,10 @@ const AdminFormManagement = () => {
       );
       if (response.success) {
         toast.success("Steps updated.");
-        await fetchStudentForms(selectedStudent.roll_no);
-        
+        const updatedForms = await fetchStudentForms(selectedStudent.roll_no);
+
         // Update the selected form for instances modal if it's open
-        if (selectedFormForInstances && selectedFormForInstances.form_type === formType) {
-          const updatedForms = await getUpdatedForms();
+        if (updatedForms && selectedFormForInstances && selectedFormForInstances.form_type === formType) {
           const updatedForm = updatedForms.find(f => f.form_type === formType);
           if (updatedForm) {
             setSelectedFormForInstances(updatedForm);
@@ -474,11 +459,21 @@ const AdminFormManagement = () => {
     }
   };
 
-  const filteredStudents = students.filter(
-    (student) =>
-      student.roll_no?.toString().includes(searchTerm) ||
-      student.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // The full student list is large, so the options are rebuilt only when
+  // the list or the search changes, not on every render.
+  const studentOptions = useMemo(() => {
+    const needle = searchTerm.toLowerCase();
+    return students
+      .filter(
+        (student) =>
+          student.roll_no?.toString().includes(searchTerm) ||
+          student.name?.toLowerCase().includes(needle)
+      )
+      .map((s) => ({
+        title: `${s.roll_no} - ${s.name}`,
+        value: s.roll_no,
+      }));
+  }, [students, searchTerm]);
 
   return (
     <Layout>
@@ -498,10 +493,7 @@ const AdminFormManagement = () => {
             />,
             <DropdownField
               label="Select Student"
-              options={filteredStudents.map((s) => ({
-                title: `${s.roll_no} - ${s.name}`,
-                value: s.roll_no,
-              }))}
+              options={studentOptions}
               onChange={(value) => handleStudentSelect(value)}
             />,
           ]}

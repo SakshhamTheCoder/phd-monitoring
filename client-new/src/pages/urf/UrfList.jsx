@@ -110,7 +110,11 @@ const UrfList = () => {
     errors.forEach((message) => toast.warn(message, { autoClose: 10000 }));
     reset();
     setImportOpen(false);
-    window.location.reload();
+    // An import can open a new session, so the session list is read again and
+    // the page lands on the newest one. The table waits for it, then mounts once.
+    setSessions(null);
+    loadSessions();
+    setRefreshKey((key) => key + 1);
   };
   const capabilitiesKnown = useCapabilitiesKnown();
 
@@ -121,21 +125,23 @@ const UrfList = () => {
 
   // One session at a time, so the table never mixes two years. The newest is
   // the one to land on.
+  const loadSessions = () => apiUrfSessions()
+    .then((res) => (res.success && Array.isArray(res.response) ? res.response : []))
+    // An empty list still settles the page: the table shows what it has
+    // rather than waiting for a year that is never coming.
+    .catch(() => [])
+    .then((years) => {
+      setSessions(years);
+      setSession(years.length ? String(years[0]) : '');
+    });
+
   useEffect(() => {
     if (!capabilitiesKnown) return;
     if (!readsUrf) {
       setSessions([]);
       return;
     }
-    apiUrfSessions()
-      .then((res) => (res.success && Array.isArray(res.response) ? res.response : []))
-      // An empty list still settles the page: the table shows what it has
-      // rather than waiting for a year that is never coming.
-      .catch(() => [])
-      .then((years) => {
-        setSessions(years);
-        setSession(years.length ? String(years[0]) : '');
-      });
+    loadSessions();
   }, [capabilitiesKnown, readsUrf]);
 
   const toggleApplications = async () => {

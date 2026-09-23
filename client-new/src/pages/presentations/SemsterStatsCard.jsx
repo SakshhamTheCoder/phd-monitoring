@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { Suspense, lazy, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { customFetch } from "../../api/base";
 import { baseURL } from "../../api/urls";
 import "./SemesterStatsCard.css";
@@ -6,8 +7,6 @@ import CustomButton from "../../components/forms/fields/CustomButton";
 import CustomModal from "../../components/forms/modal/CustomModal";
 import Tabs from "../../components/tabs/Tabs";
 import ToggleSwitch from "../../components/forms/fields/ToggleSwitch";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import DropdownField from "../../components/forms/fields/DropdownField";
 import GridContainer from "../../components/forms/fields/GridContainer";
 import { generateReportPeriods } from "../../utils/semester";
@@ -17,9 +16,26 @@ import BulkSchedulePresentation from "../../components/forms/presentations/BulkS
 import SchedulePresentation from "../../components/forms/presentations/SchedulePresentation";
 import FileUploadField from "../../components/forms/fields/FileUploadField";
 // import FilterBar from "../../components/filterBar/FilterBar";
-import { set } from "react-hook-form";
 import { formatDate, toDateValue } from '../../utils/timeParse';
 import { currentRole } from '../../auth/access';
+import Loader from "../../components/loader/loader";
+
+// The picker and its stylesheet are only needed inside the admin/DoRDC
+// create and edit dialogs, while this card renders for every role.
+const DatePicker = lazy(() =>
+  Promise.all([
+    import("react-datepicker"),
+    import("react-datepicker/dist/react-datepicker.css"),
+  ]).then(([picker]) => picker)
+);
+
+const blankCreateForm = () => ({
+  semester_name: "",
+  start_date: new Date(),
+  end_date: new Date(),
+  notification: false,
+  ppt_file: null,
+});
 
 const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
   const [semesterStats, setSemesterStats] = useState(null);
@@ -48,13 +64,21 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
   const [tabIndex, setTabIndex] = useState(0);
 
   const role = currentRole() || "student";
-  const [createForm, setCreateForm] = useState({
-    semester_name: "",
-    start_date: new Date(),
-    end_date: new Date(),
-    notification: false,
-    ppt_file: null,
-  });
+  const [createForm, setCreateForm] = useState(blankCreateForm);
+  const navigate = useNavigate();
+
+  // Closing without saving drops what was typed. Nothing reached the server,
+  // so there is nothing to reload.
+  const closeCreateModal = () => {
+    setOpenCreateModal(false);
+    setCreateForm(blankCreateForm());
+  };
+
+  // The refetch puts the saved dates back into the edit form.
+  const closeEditModal = () => {
+    setOpenEditModal(false);
+    fetchSemesterStats();
+  };
 
   const openModal = () => {
     setOpen(true);
@@ -207,7 +231,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
           
           <CustomModal
             isOpen={openCreateModal}
-            onClose={() => {setOpenCreateModal(false); window.location.reload();}}
+            onClose={closeCreateModal}
             title="Create New Semester Progress Monitoring"
             minWidth="300px"
             minHeight="300px"
@@ -225,6 +249,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
               space={2}
             />
 
+            <Suspense fallback={<Loader />}>
             <label className="input-label" htmlFor="semster-stats-card-evaluation-start-date">Evaluation Start Date</label>
             <DatePicker id="semster-stats-card-evaluation-start-date"
               selected={createForm.start_date}
@@ -268,6 +293,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
             <div style={{ textAlign: "right", marginTop: "10px" }}>
               <CustomButton onClick={handleCreateSubmit} text="Create" />
             </div>
+            </Suspense>
           </CustomModal>
         </div>
       );
@@ -307,7 +333,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
 
         <CustomModal
           isOpen={openCreateModal}
-          onClose={() => {setOpenCreateModal(false);window.location.reload();}}
+          onClose={closeCreateModal}
           title="Create New Semester Progress Monitoring"
           minWidth="300px"
           minHeight="300px"
@@ -325,6 +351,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
             space={2}
           />
 
+          <Suspense fallback={<Loader />}>
           <label className="input-label" htmlFor="semster-stats-card-evaluation-start-date-2">Evaluation Start Date</label>
           <DatePicker id="semster-stats-card-evaluation-start-date-2"
             selected={createForm.start_date}
@@ -368,6 +395,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
           <div style={{ textAlign: "right", marginTop: "10px" }}>
             <CustomButton onClick={handleCreateSubmit} text="Create" />
           </div>
+          </Suspense>
         </CustomModal>
       </div>
     );
@@ -420,7 +448,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
           <div className="semester-actions">
             {isInSemester && !semesterName && (
               <CustomButton
-                onClick={() => window.location.href = location + `/semester/${semester_name}`}
+                onClick={() => navigate(location + `/semester/${semester_name}`)}
                 text="View Current Semester Details"
               />
             )}
@@ -473,8 +501,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
       {(role === "admin" || role === "dordc") && (
         <CustomModal
           isOpen={openEditModal}
-          onClose={() => {setOpenEditModal(false); 
-            window.location.reload();}}
+          onClose={closeEditModal}
           title="Edit Semester Deadline"
           minWidth="300px"
           minHeight="300px"
@@ -490,6 +517,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
             space={2}
           />
 
+          <Suspense fallback={<Loader />}>
           <label className="input-label" htmlFor="semster-stats-card-evaluation-start-date-3">Evaluation Start Date</label>
           <DatePicker id="semster-stats-card-evaluation-start-date-3"
             selected={editForm.start_date}
@@ -530,6 +558,7 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
           <div style={{ textAlign: "right", marginTop: "10px" }}>
             <CustomButton onClick={handleEditSubmit} text="Save Changes" />
           </div>
+          </Suspense>
         </CustomModal>
       )}
     </div>

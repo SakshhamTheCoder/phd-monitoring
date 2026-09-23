@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { toast } from 'react-toastify';
 import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
 import Loader from '../../components/loader/loader';
@@ -19,34 +18,23 @@ const StudentCourses = () => {
   }, []);
 
   const fetchCourses = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch ongoing courses
-      const ongoingResponse = await customFetch(
-        `${baseURL}/courses/student/my-courses?status=enrolled`,
-        'GET'
-      );
-      
-      // Fetch past courses
-      const pastResponse = await customFetch(
-        `${baseURL}/courses/student/my-courses?status=completed`,
-        'GET'
-      );
+    setLoading(true);
 
-      if (ongoingResponse.success) {
-        setOngoingCourses(ongoingResponse.response.data);
-      }
-      
-      if (pastResponse.success) {
-        setPastCourses(pastResponse.response.data);
-      }
-    } catch (error) {
-      console.error('Error fetching courses:', error);
-      toast.error('Failed to load courses');
-    } finally {
-      setLoading(false);
+    // Independent lists, so neither waits on the other. customFetch never
+    // throws and toasts its own failures.
+    const [ongoingResponse, pastResponse] = await Promise.all([
+      customFetch(`${baseURL}/courses/student/my-courses?status=enrolled`, 'GET'),
+      customFetch(`${baseURL}/courses/student/my-courses?status=completed`, 'GET'),
+    ]);
+
+    if (ongoingResponse.success) {
+      setOngoingCourses(ongoingResponse.response.data);
     }
+
+    if (pastResponse.success) {
+      setPastCourses(pastResponse.response.data);
+    }
+    setLoading(false);
   };
 
   const renderCourseCard = (course) => (

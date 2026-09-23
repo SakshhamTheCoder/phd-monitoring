@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { Suspense, lazy, useEffect, useState } from "react";
 import Layout from "../../components/dashboard/layout";
 import SupervisorAllocation from "../../components/forms/supervisorAllocation/SupervisorAllocation";
 import { useLoading } from "../../context/LoadingContext";
@@ -16,9 +16,14 @@ import IrbExtention from "../../components/forms/irbExtention/IrbExtention";
 import SupervisorChange from "../../components/forms/supervisorChange/SupervisorChange";
 import ListOfExaminers from "../../components/forms/listOfExaminers/ListOfExaminers";
 import ReviseTitle from "../../components/forms/reviseTitle/ReviseTitle";
-import StudentLeave from "../../components/forms/studentLeave/StudentLeave";
 import ThesisExtention from "../../components/forms/thesisExtention/ThesisExtention";
 import useScholarInPath from "../../hooks/useScholarInPath";
+import Loader from "../../components/loader/loader";
+
+// Lazy because it brings react-datepicker and its stylesheet, which no other
+// form on this page needs.
+const StudentLeave = lazy(() => import("../../components/forms/studentLeave/StudentLeave"));
+
 const MainFormPage = () => {
   const [formData, setFormData] = useState({});
   const { setLoading } = useLoading();
@@ -92,7 +97,11 @@ const MainFormPage = () => {
                   // endpoint. Without this the canonical URL fell through to the
                   // "Are You Sure this is a FORM?" default.
                   case "student-leave":
-                    return <StudentLeave formData={formData} />
+                    return (
+                      <Suspense fallback={<Loader />}>
+                        <StudentLeave formData={formData} />
+                      </Suspense>
+                    );
                   default:
                     return <p>Are You Sure this is a FORM?</p>;
                 }

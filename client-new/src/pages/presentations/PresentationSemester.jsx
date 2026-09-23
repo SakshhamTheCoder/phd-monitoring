@@ -1,18 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { Suspense, lazy, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Layout from "../../components/dashboard/layout";
 import PageHeader from '../../components/pageHeader/PageHeader';
-import FormList from "../../components/forms/formList/FormList";
 import CustomModal from "../../components/forms/modal/CustomModal";
 import CustomButton from "../../components/forms/fields/CustomButton";
 import GridContainer from "../../components/forms/fields/GridContainer";
-import BulkSchedulePresentation from "../../components/forms/presentations/BulkSchedulePresentation";
-import SchedulePresentation from "../../components/forms/presentations/SchedulePresentation";
-import FormTable from "../../components/forms/formTable/FormTable";
 import PagenationTable from "../../components/pagenationTable/PagenationTable";
 import SemesterStatsCard from "./SemsterStatsCard";
 import InputField from "../../components/forms/fields/InputField";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import ToggleSwitch from "../../components/forms/fields/ToggleSwitch";
 import FileUploadField from "../../components/forms/fields/FileUploadField";
 import { customFetch } from "../../api/base";
@@ -20,12 +15,22 @@ import { baseURL } from "../../api/urls";
 import { toast } from "react-toastify";
 import UnifiedBulkImportModal from "../../components/bulkImport/UnifiedBulkImportModal";
 import { column } from "../../components/bulkImport/columns";
-import { set } from "react-hook-form";
 import { currentRole } from '../../auth/access';
 import { toDateValue } from '../../utils/timeParse';
+import Loader from "../../components/loader/loader";
+
+// Only the admin/DoRDC edit dialog uses the picker, so it and its
+// stylesheet load when that dialog opens.
+const DatePicker = lazy(() =>
+  Promise.all([
+    import("react-datepicker"),
+    import("react-datepicker/dist/react-datepicker.css"),
+  ]).then(([picker]) => picker)
+);
 
 const PresentationSemester = () => {
   const [role, setRole] = useState("");
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [location, setLocation] = useState(window.location.pathname);
@@ -87,7 +92,8 @@ const PresentationSemester = () => {
       toast.success("Semester updated.");
 
       setOpenEditModal(false);
-      window.location.reload();
+      // Remounts the table and the stats card, both of which show this semester.
+      setRefreshKey((prev) => prev + 1);
     } catch (err) {
       console.error("PUT error:", err);
     }
@@ -135,7 +141,7 @@ const PresentationSemester = () => {
       children={
         <>
           <PageHeader title="Progress Monitoring" subtitle="Evaluation semesters and their deadlines." />
-         <SemesterStatsCard />
+         <SemesterStatsCard key={refreshKey} />
          <PagenationTable
             key={refreshKey}
             endpoint={location}
@@ -143,7 +149,7 @@ const PresentationSemester = () => {
             enableSelect={false}
             tableTitle="Past Semesters"
             customOpenForm={(semester) => {
-                window.location.href=location+`/semester/${semester.semester_name}`;
+                navigate(location + `/semester/${semester.semester_name}`);
             }}
             extraTopbarComponents={
               (role === "admin" || role === "dordc") ? (
@@ -195,6 +201,7 @@ const PresentationSemester = () => {
                 space={2}
               />
 
+              <Suspense fallback={<Loader />}>
               <label className="input-label" htmlFor="presentation-semester-evaluation-start-date">Evaluation Start Date</label>
               <DatePicker id="presentation-semester-evaluation-start-date"
                 selected={editForm.start_date}
@@ -235,6 +242,7 @@ const PresentationSemester = () => {
               <div style={{ textAlign: "right", marginTop: "10px" }}>
                 <CustomButton onClick={handleEditSubmit} text="Save Changes" />
               </div>
+              </Suspense>
             </CustomModal>
           )}
         </>

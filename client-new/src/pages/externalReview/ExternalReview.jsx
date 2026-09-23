@@ -9,6 +9,17 @@ import CustomButton from "../../components/forms/fields/CustomButton";
 import "../../components/forms/formTitleBar/FormTitleBar.css";
 import "./ExternalReview.css";
 
+const TitleBar = ({ formId }) => (
+  <div className="form-title-bar">
+    <h1 className="form-title-bar-t">IRB Submission Review</h1>
+    {formId && (
+      <div className="form-title-bar-right">
+        <span className="form-title-bar-right-item">Ref #{formId}</span>
+      </div>
+    )}
+  </div>
+);
+
 // Public, token-authenticated page. Uses plain fetch (NOT the authed customFetch) so a 401
 // elsewhere can never redirect the expert to login — there is no account. Rendered inside the
 // portal shell (ExternalLayout) with the real form components so it matches an in-portal form.
@@ -67,17 +78,6 @@ const ExternalReview = () => {
     }
   };
 
-  const TitleBar = () => (
-    <div className="form-title-bar">
-      <h1 className="form-title-bar-t">IRB Submission Review</h1>
-      {data?.form_id && (
-        <div className="form-title-bar-right">
-          <span className="form-title-bar-right-item">Ref #{data.form_id}</span>
-        </div>
-      )}
-    </div>
-  );
-
   if (loading) {
     return (
       <ExternalLayout crumbs={[{ label: "Outside Expert Review" }]}>
@@ -89,7 +89,7 @@ const ExternalReview = () => {
   if (error) {
     return (
       <ExternalLayout crumbs={[{ label: "Outside Expert Review" }]}>
-        <TitleBar />
+        <TitleBar formId={data?.form_id} />
         <div className="form-container"><div className="xr-note xr-note-error">{error}</div></div>
       </ExternalLayout>
     );
@@ -100,7 +100,7 @@ const ExternalReview = () => {
     const cmt = done ? comment.trim() : data?.comment;
     return (
       <ExternalLayout crumbs={[{ label: "Outside Expert Review" }]}>
-        <TitleBar />
+        <TitleBar formId={data?.form_id} />
         <div className="form-container">
           <div className="xr-note xr-note-success">
             {done
@@ -120,7 +120,7 @@ const ExternalReview = () => {
   if (data?.state === "closed") {
     return (
       <ExternalLayout crumbs={[{ label: "Outside Expert Review" }]}>
-        <TitleBar />
+        <TitleBar formId={data?.form_id} />
         <div className="form-container">
           <div className="xr-note">This submission is no longer awaiting your review. No action is needed.</div>
         </div>
@@ -131,7 +131,7 @@ const ExternalReview = () => {
   // pending
   return (
     <ExternalLayout crumbs={[{ label: "Outside Expert Review" }]}>
-      <TitleBar />
+      <TitleBar formId={data?.form_id} />
       <div className="form-container">
         <GridContainer
           elements={[
