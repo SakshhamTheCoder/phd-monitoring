@@ -143,11 +143,12 @@ const StudentAttendancePage = () => {
       title="My attendance"
       actions={
         <CustomButton
-          text={applying ? 'Opening…' : 'Apply for leave'}
+          text="Apply for leave"
           onClick={handleApply}
+          busy={applying}
           // Until the leaves have loaded, an existing draft cannot be found
           // and a quick click would create a second one.
-          disabled={applying || !data}
+          disabled={!data}
         />
       }
       tabs={

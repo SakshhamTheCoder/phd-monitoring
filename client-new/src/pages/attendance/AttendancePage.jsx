@@ -18,6 +18,7 @@ import { currentRole } from '../../auth/access';
 import AttendanceCsvDialog from './AttendanceCsvDialog';
 import LoadError from '../../components/common/LoadError';
 import AttendanceSummary from './AttendanceSummary';
+import useDoneFlash from '../../hooks/useDoneFlash';
 
 const EDIT_WINDOW = 7;
 
@@ -59,6 +60,8 @@ const AttendancePage = () => {
   const [monthFailed, setMonthFailed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showCsvModal, setShowCsvModal] = useState(false);
+  const [saved, flashSaved] = useDoneFlash();
+  const [exported, flashExported] = useDoneFlash();
   // history
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -257,6 +260,7 @@ const AttendancePage = () => {
     setSaving(false);
     if (res.success) {
       toast.success(buildSaveMessage(res.response.message, res.response.skipped_on_leave));
+      flashSaved();
       loadRoster();
     }
   };
@@ -273,6 +277,7 @@ const AttendancePage = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a'); a.href = url; a.download = `attendance_${exportFrom}_to_${exportTo}.csv`; a.click(); URL.revokeObjectURL(url);
       toast.success('Export downloaded.');
+      flashExported();
     } catch (e) { toast.error(isNetworkError(e) ? NETWORK_ERROR_MESSAGE : 'Export failed: ' + e.message); }
   };
 
@@ -282,7 +287,7 @@ const AttendancePage = () => {
     const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - EDIT_WINDOW); return d;
   }, [isAdmin]);
 
-  const saveButton = <CustomButton text={saving ? 'Saving…' : 'Save attendance'} onClick={handleSave} disabled={saving || loading} />;
+  const saveButton = <CustomButton text="Save attendance" onClick={handleSave} busy={saving} done={saved} disabled={loading} />;
   const departmentName = (id) => departments.find((d) => String(d.id) === String(id))?.name;
 
   return (
@@ -394,13 +399,14 @@ const AttendancePage = () => {
             description={
               <span className="attendance-counts">
                 <span>{visibleStudents.length} scholar(s){scholarFilter.trim() && ` of ${students.length}`}</span>
-                <span className="badge badge--danger">{absentCount} absent</span>
+                <span key={absentCount} className="badge badge--danger attendance-absent-count">{absentCount} absent</span>
               </span>
             }
             actions={visibleStudents.length > 0 && !loading && (
               <>
                 <CustomButton text="Mark all present" variant="secondary" onClick={() => markAll('present')} />
                 <CustomButton text="Mark all absent" variant="secondary" onClick={() => markAll('absent')} />
+                <CustomButton text="Reset marks" variant="quiet" onClick={() => setStatuses(loadedStatuses.current)} disabled={!hasUnsavedMarks} />
                 {saveButton}
               </>
             )}
@@ -416,7 +422,7 @@ const AttendancePage = () => {
                     : visibleStudents.map((s) => {
                       const cur = statuses[s.roll_no];
                       return (
-                        <tr key={s.roll_no}>
+                        <tr key={s.roll_no} className="reveal">
                           <td>{s.roll_no}</td><td>{s.name}</td><td>{s.department_name || s.department_code || '-'}</td>
                           <td>
                             {s.on_leave ? (
@@ -470,7 +476,7 @@ const AttendancePage = () => {
                   {scholarHistoryLoading ? <tr><td colSpan={3} className="no-data-cell">Loading…</td></tr>
                     : !scholarHistory || scholarHistory.records.length === 0 ? <tr><td colSpan={3} className="no-data-cell">No attendance recorded for this scholar yet.</td></tr>
                     : scholarHistory.records.map((r) => (
-                      <tr key={`${r.date}-${r.lecture_id}`}>
+                      <tr key={`${r.date}-${r.lecture_id}`} className="reveal">
                         <td>{r.date?.slice?.(0, 10) || r.date}</td>
                         <td className={r.status === 'absent' ? 'attendance-status-absent' : 'attendance-status-present'}>{r.status}</td>
                         <td>{r.marked_by || EMPTY_VALUE}</td>
@@ -526,7 +532,7 @@ const AttendancePage = () => {
                     : historyFailed ? <tr><td colSpan={5} className="no-data-cell"><LoadError message="Could not load past sessions. Check your connection and try again." onRetry={loadHistory} /></td></tr>
                     : history.length === 0 ? <tr><td colSpan={5} className="no-data-cell">No past sessions yet.</td></tr>
                     : history.map((h) => (
-                      <tr key={`${h.date}-${h.lecture_id}`}>
+                      <tr key={`${h.date}-${h.lecture_id}`} className="reveal">
                         <td>{h.date?.slice?.(0,10) || h.date}</td><td>{h.total}</td><td className="attendance-status-present">{h.present_count}</td><td className="attendance-status-absent">{h.absent_count}</td>
                         <td><CustomButton text="View" variant="secondary" size="sm" onClick={() => {
                           const viewed = h.date.slice(0, 10);
@@ -569,7 +575,7 @@ const AttendancePage = () => {
                   ) : !monthData || visibleMonthStudents.length === 0 ? (
                     <tr><td colSpan={7} className="no-data-cell">{scholarFilter.trim() ? 'No scholar matches that roll number or name.' : 'No scholars for this selection.'}</td></tr>
                   ) : visibleMonthStudents.map((s) => (
-                    <tr key={s.roll_no}>
+                    <tr key={s.roll_no} className="reveal">
                       <td>{s.roll_no}</td>
                       <td>{s.name}</td>
                       <td>{s.department_name || EMPTY_VALUE}</td>
@@ -609,7 +615,7 @@ const AttendancePage = () => {
               </select>
             </div>
             <div className="attendance-filters-action">
-              <CustomButton text="Download CSV" onClick={confirmExport} disabled={exportFrom > exportTo} />
+              <CustomButton text="Download CSV" onClick={confirmExport} done={exported} disabled={exportFrom > exportTo} />
             </div>
           </div>
           {exportFrom > exportTo && (

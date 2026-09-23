@@ -6,6 +6,7 @@ import { baseURL } from '../../api/urls';
 import { isNetworkError, NETWORK_ERROR_MESSAGE } from '../../api/base';
 import { parseCsv } from '../../utils/csv';
 import { buildSaveMessage } from '../../utils/attendanceMark';
+import useDoneFlash from '../../hooks/useDoneFlash';
 
 /**
  * Uploading a day's attendance as a file.
@@ -18,6 +19,7 @@ const AttendanceCsvDialog = ({ isOpen, onClose, onImported, editWindow }) => {
   const [csvFile, setCsvFile] = useState(null);
   const [csvPreview, setCsvPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [templateSaved, flashTemplateSaved] = useDoneFlash();
 
   const reset = () => {
     setCsvFile(null);
@@ -43,6 +45,7 @@ const AttendanceCsvDialog = ({ isOpen, onClose, onImported, editWindow }) => {
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a'); a.href = url; a.download = 'attendance_template.csv'; a.click(); URL.revokeObjectURL(url);
+      flashTemplateSaved();
     } catch (e) { toast.error(isNetworkError(e) ? NETWORK_ERROR_MESSAGE : 'Template download failed: ' + e.message); }
   };
 
@@ -114,7 +117,7 @@ const AttendanceCsvDialog = ({ isOpen, onClose, onImported, editWindow }) => {
         </ul>
       </section>
       <div className="csv-import-file">
-        <CustomButton text="Download template" variant="secondary" onClick={downloadTemplate} />
+        <CustomButton text="Download template" variant="secondary" onClick={downloadTemplate} done={templateSaved} />
         <input type="file" accept=".csv" onChange={handleFileChange} className="csv-import-input" aria-label="CSV file" />
       </div>
       {csvPreview && (
@@ -125,7 +128,7 @@ const AttendanceCsvDialog = ({ isOpen, onClose, onImported, editWindow }) => {
       )}
       <div className="modal-actions">
         <CustomButton text="Cancel" variant="quiet" onClick={close} />
-        <CustomButton text={uploading ? 'Uploading…' : 'Upload'} onClick={handleCsvUpload} disabled={uploading || !csvFile} />
+        <CustomButton text="Upload" onClick={handleCsvUpload} busy={uploading} disabled={!csvFile} />
       </div>
     </CustomModal>
   );

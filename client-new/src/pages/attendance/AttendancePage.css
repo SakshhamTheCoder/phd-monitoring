@@ -88,3 +88,6 @@
   gap: var(--space-4);
   width: 100%;
 }
+
+/* Keyed on the count, so each change remounts it where the mark was made. */
+.attendance-absent-count { animation: pop-in 150ms ease-out; }
