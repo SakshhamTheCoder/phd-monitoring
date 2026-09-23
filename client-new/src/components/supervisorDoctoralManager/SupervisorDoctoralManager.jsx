@@ -11,6 +11,8 @@ import TableComponent from '../forms/table/TableComponent';
 import { facultyNameCell } from '../facultyLink/FacultyLink';
 import Panel, { PanelSection } from '../panel/Panel';
 import StatusNotice from '../common/StatusNotice';
+import OutsideExpertFields, { EMPTY_EXPERT } from '../outsideExperts/OutsideExpertFields';
+import useCapabilities from '../../context/CapabilitiesContext';
 
 
 /**
@@ -33,6 +35,30 @@ const SupervisorDoctoralManager = ({ studentId, supervisors = [], doctoralCommit
   const [pickingExpert, setPickingExpert] = useState(false);
   const [expertPick, setExpertPick] = useState(null);
   const [savingExpert, setSavingExpert] = useState(false);
+  // Adding to the expert list is the Outside Experts page's job, so only
+  // someone who may manage that list is offered the shortcut here.
+  const can = useCapabilities();
+  const [addingExpert, setAddingExpert] = useState(false);
+  const [newExpert, setNewExpert] = useState(EMPTY_EXPERT);
+  const [creatingExpert, setCreatingExpert] = useState(false);
+
+  const createOutsideExpert = async () => {
+    setCreatingExpert(true);
+    const res = await customFetch(`${baseURL}/outside-experts/add`, 'POST', newExpert, false);
+    setCreatingExpert(false);
+    if (!res.success) {
+      // 422 carries a bare "Validation failed"; the field errors say what to fix.
+      const { errors, message } = res.response || {};
+      toast.error(errors ? Object.values(errors).flat().join(' ') : message || 'The expert could not be added.');
+      return;
+    }
+    const created = res.response.data;
+    toast.success('Outside expert added to the list.');
+    // Picked at once, so Save sets them for this scholar.
+    setExpertPick({ id: created.id, name: `${created.first_name} ${created.last_name}`.trim() });
+    setAddingExpert(false);
+    setNewExpert(EMPTY_EXPERT);
+  };
 
   const saveOutsideExpert = async () => {
     setSavingExpert(true);
@@ -307,15 +333,24 @@ const SupervisorDoctoralManager = ({ studentId, supervisors = [], doctoralCommit
             {pickingExpert && (
               <div className="outside-expert-picker">
                 <InputSuggestions
+                  // Remounted with the name once a new expert is added and picked.
+                  key={expertPick?.id ?? 'search'}
+                  initialValue={expertPick?.name}
                   label={outsideExpert ? 'New outside expert' : 'Outside expert'}
                   apiUrl={`${baseURL}/suggestions/outside-expert`}
-                  hint="Search by name, email or institution"
+                  hint="Search the expert list by name, email or institution"
                   fields={['name', 'institution']}
                   onSelect={setExpertPick}
                 />
                 <CustomButton text="Save" onClick={saveOutsideExpert} busy={savingExpert} disabled={!expertPick} />
                 <CustomButton text="Cancel" variant="quiet" onClick={() => { setPickingExpert(false); setExpertPick(null); }} />
               </div>
+            )}
+            {pickingExpert && can('can_manage_users') && (
+              <p className="outside-expert-add">
+                An expert already on the list can serve any number of scholars; search for them first.{' '}
+                <button type="button" className="cell-link" onClick={() => setAddingExpert(true)}>Not on the list? Add a new expert</button>
+              </p>
             )}
           </PanelSection>
         )}
@@ -400,6 +435,20 @@ const SupervisorDoctoralManager = ({ studentId, supervisors = [], doctoralCommit
             onClick={handleProposeChange}
             busy={loading}
           />
+        </div>
+      </CustomModal>
+
+      <CustomModal
+        isOpen={addingExpert}
+        onClose={() => { setAddingExpert(false); setNewExpert(EMPTY_EXPERT); }}
+        title="Add new outside expert"
+        closeOnOutsideClick={false}
+      >
+        <p className="modal-note">They join the expert list, so any scholar's committee can use them after this.</p>
+        <OutsideExpertFields values={newExpert} onChange={(field, value) => setNewExpert((prev) => ({ ...prev, [field]: value }))} />
+        <div className="modal-actions">
+          <CustomButton text="Cancel" variant="quiet" onClick={() => { setAddingExpert(false); setNewExpert(EMPTY_EXPERT); }} />
+          <CustomButton text="Add expert" onClick={createOutsideExpert} busy={creatingExpert} />
         </div>
       </CustomModal>
 

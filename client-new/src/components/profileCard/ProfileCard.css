@@ -231,3 +231,4 @@
 /* The outside expert picker in Manage supervisors/doctoral. */
 .outside-expert-picker { display: flex; align-items: flex-end; gap: var(--space-2); margin-top: var(--space-3); }
 .outside-expert-picker .input-suggestions-container { max-width: 420px; }
+.outside-expert-add { margin: var(--space-2) 0 0; font-size: var(--text-sm); color: var(--text-muted); }
