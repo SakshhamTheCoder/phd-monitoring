@@ -5,6 +5,7 @@ import TableComponent from '../../../components/forms/table/TableComponent';
 import GridContainer from '../../../components/forms/fields/GridContainer';
 import InputSuggestions from '../../../components/forms/fields/InputSuggestions';
 import { baseURL } from '../../../api/urls';
+import useDoneFlash from '../../../hooks/useDoneFlash';
 import './Configuration.css';
 import {
   apiChecklistCreate,
@@ -46,6 +47,8 @@ const SynopsisChecklist = () => {
   const [option, setOption] = useState(EMPTY_OPTION);
   const [editingOption, setEditingOption] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [ruleSaved, flashRuleSaved] = useDoneFlash();
+  const [optionSaved, flashOptionSaved] = useDoneFlash();
 
   // A category half edited under one condition must not be saved into the
   // next one opened, since the save sends the open condition as its rule.
@@ -88,6 +91,7 @@ const SynopsisChecklist = () => {
     if (!res.success) return;
 
     toast.success(editingRule ? 'Condition updated' : 'Condition added');
+    flashRuleSaved();
     setRule(EMPTY_RULE);
     setEditingRule(null);
     load();
@@ -135,6 +139,7 @@ const SynopsisChecklist = () => {
     if (!res.success) return;
 
     toast.success(editingOption ? 'Category updated' : 'Category added');
+    flashOptionSaved();
     setOption(EMPTY_OPTION);
     setEditingOption(null);
     load();
@@ -260,7 +265,7 @@ const SynopsisChecklist = () => {
               {' '}Apply this condition
             </label>
           </div>
-          <CustomButton text={editingRule ? 'Save changes' : 'Add condition'} onClick={saveRule} disabled={busy} />
+          <CustomButton text={editingRule ? 'Save changes' : 'Add condition'} onClick={saveRule} done={ruleSaved} disabled={busy} />
           {editingRule && (
             <CustomButton text="Cancel" variant="quiet" onClick={() => { setEditingRule(null); setRule(EMPTY_RULE); }} />
           )}
@@ -351,7 +356,7 @@ const SynopsisChecklist = () => {
                   {' '}Offer this category
                 </label>
               </div>
-              <CustomButton text={editingOption ? 'Save changes' : 'Add category'} variant="secondary" onClick={saveOption} disabled={busy} />
+              <CustomButton text={editingOption ? 'Save changes' : 'Add category'} variant="secondary" onClick={saveOption} done={optionSaved} disabled={busy} />
               {editingOption && (
                 <CustomButton text="Cancel" variant="quiet" onClick={() => { setEditingOption(null); setOption(EMPTY_OPTION); }} />
               )}

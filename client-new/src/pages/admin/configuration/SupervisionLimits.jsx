@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import CustomButton from '../../../components/forms/fields/CustomButton';
 import LoadError from '../../../components/common/LoadError';
 import { apiSettings, apiSaveSettings } from '../../../api/settings';
+import useDoneFlash from '../../../hooks/useDoneFlash';
 import './Configuration.css';
 
 const FIELDS = [
@@ -29,6 +30,9 @@ const SupervisionLimits = () => {
   // be followed by saving the blank form over them.
   const [loaded, setLoaded] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
+  // What the server holds, for Reset and for telling whether anything changed.
+  const [stored, setStored] = useState(null);
+  const [saved, flashSaved] = useDoneFlash();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -37,6 +41,7 @@ const SupervisionLimits = () => {
     setLoading(false);
     if (res.success) {
       setForm(res.response);
+      setStored(res.response);
       setLoaded(true);
     } else {
       setLoadFailed(true);
@@ -67,8 +72,13 @@ const SupervisionLimits = () => {
     if (res.success) {
       toast.success('Supervision limits saved');
       setForm(res.response);
+      setStored(res.response);
+      flashSaved();
     }
   };
+
+  const changed = stored !== null
+    && FIELDS.some(({ key }) => String(form[key] ?? '') !== String(stored[key] ?? ''));
 
   if (loadFailed) {
     return (
@@ -98,7 +108,8 @@ const SupervisionLimits = () => {
             </div>
           ))}
           <div className="config-push">
-            <CustomButton text={saving ? 'Saving…' : 'Save'} onClick={handleSave} disabled={!loaded || loading || saving} />
+            <CustomButton text="Save" onClick={handleSave} busy={saving} done={saved} disabled={!loaded || loading} />
+            <CustomButton text="Reset" variant="quiet" onClick={() => setForm(stored)} disabled={!changed || saving} />
           </div>
         </div>
       </div>

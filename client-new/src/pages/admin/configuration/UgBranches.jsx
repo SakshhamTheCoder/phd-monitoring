@@ -8,6 +8,7 @@ import UnifiedBulkImportModal from '../../../components/bulkImport/UnifiedBulkIm
 import { baseURL } from '../../../api/urls';
 import { apiBranchCreate, apiBranchDelete, apiBranchImport, apiBranchList, apiBranchUpdate } from '../../../api/urf';
 import { apiBranchOptions } from '../../../api/lookups';
+import useDoneFlash from '../../../hooks/useDoneFlash';
 import './Configuration.css';
 
 const EMPTY = { programme: '', code: '', name: '', department_id: '', department: '' };
@@ -26,6 +27,7 @@ const UgBranches = () => {
   const [form, setForm] = useState(EMPTY);
   const [editing, setEditing] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [saved, flashSaved] = useDoneFlash();
   const [importing, setImporting] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   // InputSuggestions ignores an empty initialValue, so clearing the form left
@@ -60,6 +62,7 @@ const UgBranches = () => {
     if (!res.success) return;
 
     toast.success(editing ? 'Branch updated' : 'Branch added');
+    flashSaved();
     setForm(EMPTY);
     setEditing(null);
     setFormResets((count) => count + 1);
@@ -157,7 +160,7 @@ const UgBranches = () => {
               }))}
             />
           </div>
-          <CustomButton text={editing ? 'Save changes' : 'Add branch'} onClick={save} disabled={busy} />
+          <CustomButton text={editing ? 'Save changes' : 'Add branch'} onClick={save} done={saved} disabled={busy} />
           {!editing && <CustomButton text="Import from CSV" variant="secondary" onClick={() => setImportOpen(true)} />}
           {editing && (
             <CustomButton

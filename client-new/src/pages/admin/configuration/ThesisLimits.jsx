@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import CustomButton from '../../../components/forms/fields/CustomButton';
 import { apiSettings, apiSaveSettings } from '../../../api/settings';
+import useDoneFlash from '../../../hooks/useDoneFlash';
 import './Configuration.css';
 
 const FIELDS = [
@@ -20,12 +21,18 @@ const ThesisLimits = () => {
   const [form, setForm] = useState({ min_years: '', base_years_male: '', base_years_female_ph: '' });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  // What the server holds, for Reset and for telling whether anything changed.
+  const [stored, setStored] = useState(null);
+  const [saved, flashSaved] = useDoneFlash();
 
   const load = useCallback(async () => {
     setLoading(true);
     const res = await apiSettings('thesis');
     setLoading(false);
-    if (res.success) setForm(res.response);
+    if (res.success) {
+      setForm(res.response);
+      setStored(res.response);
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -50,8 +57,13 @@ const ThesisLimits = () => {
     if (res.success) {
       toast.success('Thesis duration limits saved');
       setForm(res.response);
+      setStored(res.response);
+      flashSaved();
     }
   };
+
+  const changed = stored !== null
+    && FIELDS.some(({ key }) => String(form[key] ?? '') !== String(stored[key] ?? ''));
 
   return (
     <>
@@ -75,7 +87,8 @@ const ThesisLimits = () => {
             </div>
           ))}
           <div className="config-push">
-            <CustomButton text={saving ? 'Saving…' : 'Save'} onClick={handleSave} disabled={loading || saving} />
+            <CustomButton text="Save" onClick={handleSave} busy={saving} done={saved} disabled={loading} />
+            <CustomButton text="Reset" variant="quiet" onClick={() => setForm(stored)} disabled={!changed || saving} />
           </div>
         </div>
       </div>
