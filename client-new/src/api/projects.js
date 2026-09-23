@@ -129,27 +129,46 @@ export const apiGetProject = async (id) => {
   // A 404 or 403 means there is no project to show; anything else is worth a retry.
   return { project: success ? mapProject(response) : null, failed: !success && status !== 404 && status !== 403 };
 };
+// Milestones live in their own table, so the project body cannot carry them.
+// Brings the stored rows (`before`) in line with the wizard's (`after`): rows
+// without an id are added, changed rows updated, and stored rows that were
+// removed or emptied deleted. Sequential, because the server has no ordering
+// column and parallel inserts could land out of order. Returns how many failed.
+const syncMilestones = async (projectId, before, after) => {
+  const url = `${baseURL}/projects/${projectId}/milestones`;
+  const body = (m) => ({ name: m.name, deliverable: m.deliverable, due_date: m.dueDate || null, status: m.status });
+  const named = (m) => m && m.name && m.name.trim();
+  const kept = new Set(after.filter((m) => m.id && named(m)).map((m) => m.id));
+  const stored = new Map(before.map((m) => [m.id, m]));
+  let failed = 0;
+  for (const m of before) {
+    if (!kept.has(m.id) && !(await customFetch(`${url}/${m.id}`, 'DELETE', {}, false)).success) failed += 1;
+  }
+  for (const m of after.filter(named)) {
+    const old = m.id && stored.get(m.id);
+    if (old && JSON.stringify(body(old)) === JSON.stringify(body(m))) continue;
+    const saved = await customFetch(old ? `${url}/${m.id}` : url, 'POST', body(m), false);
+    if (!saved.success) failed += 1;
+  }
+  return failed;
+};
+
 export const apiCreateProject = async (form) => {
   const res = await customFetch(`${baseURL}/projects`, 'POST', toProjectBody(form), false);
   if (!res.success) return { success: false };
   const project = res.response;
-  // milestones live in their own table — create them after the project exists
-  let failedMilestones = 0;
-  for (const m of (form.milestones || [])) {
-    if (m && m.name && m.name.trim()) {
-      const saved = await customFetch(`${baseURL}/projects/${project.id}/milestones`, 'POST', {
-        name: m.name, deliverable: m.deliverable, due_date: m.dueDate || null, status: m.status,
-      }, false);
-      if (!saved.success) failedMilestones += 1;
-    }
-  }
+  const failedMilestones = await syncMilestones(project.id, [], form.milestones || []);
   // The project exists either way, so this is still a success; the caller
   // reports the milestones that did not save.
   return { success: true, project: mapProject(project), failedMilestones };
 };
-export const apiUpdateProjectFromForm = async (id, form) => {
+// `storedMilestones` are the rows the wizard opened with, so the edit can tell
+// which of them were changed or removed.
+export const apiUpdateProjectFromForm = async (id, form, storedMilestones = []) => {
   const res = await customFetch(`${baseURL}/projects/${id}`, 'POST', toProjectBody(form), true);
-  return res.success ? { success: true, project: mapProject(res.response.project || res.response) } : { success: false };
+  if (!res.success) return { success: false };
+  const failedMilestones = await syncMilestones(id, storedMilestones, form.milestones || []);
+  return { success: true, project: mapProject(res.response.project || res.response), failedMilestones };
 };
 export const apiUpdateProject = async (id, body, isFormData = false) => {
   return customFetch(`${baseURL}/projects/${id}`, 'POST', body, true, isFormData);

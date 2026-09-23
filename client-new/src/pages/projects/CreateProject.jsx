@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   categoryOptions,
   roleOptions,
@@ -10,7 +10,8 @@ import {
   emptyBudget,
 } from '../../data/projectsData';
 import { formatDate, EMPTY_VALUE, toDateObject, toDateValue } from '../../utils/timeParse';
-import { apiCreateProject, apiUpdateProjectFromForm, apiUpdateProject, apiCurrentFaculty, apiProjectMeta, apiUploadGanttChart } from '../../api/projects';
+import { apiCreateProject, apiGetProject, apiUpdateProjectFromForm, apiUpdateProject, apiCurrentFaculty, apiProjectMeta, apiUploadGanttChart } from '../../api/projects';
+import LoadError from '../../components/common/LoadError';
 import InputSuggestions from '../../components/forms/fields/InputSuggestions';
 import FacultyLink from '../../components/facultyLink/FacultyLink';
 import { baseURL } from '../../api/urls';
@@ -68,7 +69,11 @@ const CreateProject = () => {
   const editProject = location.state?.editProject || null;
   const isEditMode = !!editProject;
   const [currentStep, setCurrentStep] = useState(0);
-  const [initialForm] = useState(() => (editProject ? buildFormFromProject(editProject) : { ...emptyForm }));
+  // Edit opens from the projects list too, whose rows carry no milestones, so
+  // the wizard loads the whole project before it shows the form.
+  const [stored, setStored] = useState(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [initialForm, setInitialForm] = useState(() => (isEditMode ? null : { ...emptyForm }));
   const [form, setForm] = useState(initialForm);
   const [showExtForm, setShowExtForm] = useState(false);
   const [extCopi, setExtCopi] = useState({ name: '', designation: '', institute: '', email: '', mobile: '', website: '' });
@@ -82,6 +87,26 @@ const CreateProject = () => {
     apiProjectMeta().then(setMeta);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  useEffect(() => {
+    if (!isEditMode) return undefined;
+    let cancelled = false;
+    setLoadFailed(false);
+    apiGetProject(editProject.id).then(({ project }) => {
+      if (cancelled) return;
+      if (!project) {
+        setLoadFailed(true);
+        return;
+      }
+      const built = buildFormFromProject(project);
+      setStored(project);
+      setInitialForm(built);
+      setForm(built);
+      if (project.pi) setPi(project.pi);
+    });
+    return () => { cancelled = true; };
+  }, [isEditMode, editProject?.id, loadAttempt]);
 
   const updateField = (field, value) => {
     const updated = { ...form, [field]: value };
@@ -177,7 +202,7 @@ const CreateProject = () => {
     }
     setSubmitting(true);
     const res = isEditMode
-      ? await apiUpdateProjectFromForm(editProject.id, form)
+      ? await apiUpdateProjectFromForm(editProject.id, form, stored.milestones)
       : await apiCreateProject(form);
     const failedParts = [];
     if (res.success) {
@@ -211,6 +236,19 @@ const CreateProject = () => {
     if (changed && !window.confirm(`Leave this page? ${lost}`)) return;
     navigate('/projects');
   };
+
+  if (!form) {
+    return (
+      <div className="cp-container">
+        <button className="page-back-link" onClick={() => navigate('/projects')}>
+          <i className="fa fa-arrow-left"></i> BACK TO PROJECTS
+        </button>
+        {loadFailed
+          ? <LoadError message="Could not load this project for editing. Check your connection and try again." onRetry={() => setLoadAttempt((n) => n + 1)} />
+          : <p>Loading the project…</p>}
+      </div>
+    );
+  }
 
   const budgetYears = Array.from(
     { length: Math.min(5, Math.max(1, parseInt(form.durationYears, 10) || 1)) },
@@ -457,15 +495,13 @@ const CreateProject = () => {
               <h2><i className="fa fa-flag"></i> Step 5: Project Milestones</h2>
               <p>Track timeline and deliverables.</p>
             </div>
-            {!isEditMode && (
-              <div className="cp-progress-badge">
-                <span className="cp-progress-label">PROPOSAL COMPLETION</span>
-                <div className="cp-progress-bar-mini">
-                  <div className="cp-progress-fill-mini" style={{width: `${milestoneProgress()}%`}}></div>
-                </div>
-                <span className="cp-progress-pct">{milestoneProgress()}% Structured</span>
+            <div className="cp-progress-badge">
+              <span className="cp-progress-label">PROPOSAL COMPLETION</span>
+              <div className="cp-progress-bar-mini">
+                <div className="cp-progress-fill-mini" style={{width: `${milestoneProgress()}%`}}></div>
               </div>
-            )}
+              <span className="cp-progress-pct">{milestoneProgress()}% Structured</span>
+            </div>
           </div>
           <div className="cp-section-card">
             <h3 className="cp-section-title">Gantt Chart</h3>
@@ -481,15 +517,6 @@ const CreateProject = () => {
               {form.ganttFileName && <span className="cp-file-hint"><i className="fa fa-check-circle"></i> {form.ganttFileName}</span>}
             </div>
           </div>
-          {/* Saving an edit updates the project record only, so milestone rows
-              here would be dropped. They are added and changed on the project page. */}
-          {isEditMode ? (
-          <div className="cp-section-card">
-            <p className="cp-derived-note">
-              Milestones are managed on the <Link to={`/projects/${editProject.id}`}>project page</Link>.
-            </p>
-          </div>
-          ) : (
           <div className="cp-section-card">
             <table className="cp-milestone-table">
               <thead>
@@ -515,7 +542,6 @@ const CreateProject = () => {
             </table>
             <button className="cp-add-row-btn" onClick={addMilestone}><i className="fa fa-plus"></i> Add Milestone Row</button>
           </div>
-          )}
         </div>
       );
 
@@ -563,7 +589,6 @@ const CreateProject = () => {
               <h4>Objectives</h4>
               <div className="cp-review-row"><span>Objectives</span><strong>{form.objectives.filter(o => o.trim()).length} listed</strong></div>
             </div>
-            {!isEditMode && (
             <div className="cp-review-card">
               <h4>Milestones</h4>
               <div className="cp-review-row"><span>Overall Progress</span><strong>{milestoneProgress()}%</strong></div>
@@ -581,7 +606,6 @@ const CreateProject = () => {
                 <div className="cp-review-row"><span></span><strong>+{form.milestones.filter(m => m.name).length - 3} more</strong></div>
               )}
             </div>
-            )}
           </div>
         </div>
       );
