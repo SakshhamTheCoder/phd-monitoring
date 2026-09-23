@@ -168,7 +168,11 @@ const FacultyForm = ({ edit = false, facultyData = {}, onSuccess, onClose }) => 
             label="Department*"
             initialValue={departmentName}
             onSelect={(val) => {
-              handleChange("department_id", val.id);
+              // A broad area belongs to one department, so a new department
+              // drops the old choice rather than saving it against the wrong one.
+              setFormData((prev) => (String(prev.department_id) === String(val.id)
+                ? prev
+                : { ...prev, department_id: val.id, area_of_specialization_id: "" }));
               setDepartmentName(val.name);
             }}
             apiUrl={baseURL + "/suggestions/department"}
@@ -216,6 +220,9 @@ const FacultyForm = ({ edit = false, facultyData = {}, onSuccess, onClose }) => 
       <GridContainer
         elements={[
           <DropdownField
+            // DropdownField ignores an initialValue cleared to "", so it is
+            // remounted per department to show the cleared choice.
+            key={formData.department_id}
             label="Broad Area of Expertise"
             options={researchAreas}
             initialValue={formData.area_of_specialization_id}

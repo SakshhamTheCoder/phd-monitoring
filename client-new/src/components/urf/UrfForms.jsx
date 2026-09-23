@@ -108,7 +108,8 @@ const APPLICATION_FIELDS = ['project_title', 'mentor1_faculty_code', 'mentor2_fa
  * application still waiting for a result.
  */
 export const ApplyForm = ({ initial, student, onSaved }) => {
-  const me = signedInUser();
+  // Read once per mount: parsing localStorage on each keystroke gains nothing.
+  const [me] = useState(signedInUser);
   // `student` is what they gave at sign-up. An account an admin created has
   // none, and then roll number and branch are asked for here as before.
   const account = {
@@ -241,7 +242,8 @@ export const FellowForm = ({ applicationId, initial, prefill, onSaved }) => {
  * a PhD progress form links them.
  */
 export const ReportForm = ({ application, type, onSaved }) => {
-  const me = signedInUser();
+  // Read once per mount: parsing localStorage on each keystroke gains nothing.
+  const [me] = useState(signedInUser);
   const [body, set] = useBody({ type });
   const [library, setLibrary] = useState(null);
   const [picking, setPicking] = useState(false);

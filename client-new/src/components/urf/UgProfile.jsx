@@ -54,7 +54,9 @@ const UgProfile = () => {
 
   useEffect(() => { load(); }, []);
 
-  const me = signedInUser();
+  // Read once per mount and updated on save, instead of parsing localStorage
+  // on every render.
+  const [me, setMe] = useState(signedInUser);
   const applications = state?.applications || [];
   const applied = applications.length > 0;
 
@@ -77,7 +79,9 @@ const UgProfile = () => {
 
     // The header reads the account stored at sign-in, so the two fields this
     // changes are kept in step with it.
-    localStorage.setItem('user', JSON.stringify({ ...me, phone: form.phone, gender: form.gender }));
+    const updated = { ...me, phone: form.phone, gender: form.gender };
+    localStorage.setItem('user', JSON.stringify(updated));
+    setMe(updated);
     toast.success('Your details are saved');
     setEditing(false);
     load();

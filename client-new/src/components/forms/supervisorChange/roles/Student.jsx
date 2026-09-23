@@ -21,7 +21,7 @@ const Student = ({ formData }) => {
   const { setLoading } = useLoading();
 
   useEffect(() => {
-    const prefrences = formData?.prefrences?.map(
+    const prefrences = (formData?.prefrences || []).map(
       (prefrence) => prefrence.faculty_code
     );
     if (prefrences.length < 3) {
@@ -126,7 +126,7 @@ const Student = ({ formData }) => {
           />
 
           <GridContainer
-            elements={formData.supervisors.map((sup, index) => {
+            elements={(formData.supervisors || []).map((sup, index) => {
               return (
                 <InputField
                   label={"Supervisor " + (index + 1)}
@@ -173,7 +173,7 @@ const Student = ({ formData }) => {
             space={2}
           />
           <GridContainer
-            elements={formData.supervisors.map((sup, index) => {
+            elements={(formData.supervisors || []).map((sup, index) => {
               const isSelected = selectedSupervisors.includes(sup.faculty_code);
 
               return (
@@ -197,21 +197,21 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputSuggestions
-                initialValue={formData.prefrences[0]?.name}
+                initialValue={formData.prefrences?.[0]?.name}
                 apiUrl={apiUrl_suggestion}
                 onSelect={(value) => handlePrefrenceSelect(value, 0)}
                 lock={lock}
                 label={"Preference 1"}
               />,
               <InputSuggestions
-                initialValue={formData.prefrences[1]?.name}
+                initialValue={formData.prefrences?.[1]?.name}
                 apiUrl={apiUrl_suggestion}
                 onSelect={(value) => handlePrefrenceSelect(value, 1)}
                 lock={lock}
                 label={"Preference 2"}
               />,
               <InputSuggestions
-                initialValue={formData.prefrences[2]?.name}
+                initialValue={formData.prefrences?.[2]?.name}
                 apiUrl={apiUrl_suggestion}
                 onSelect={(value) => handlePrefrenceSelect(value, 2)}
                 lock={lock}

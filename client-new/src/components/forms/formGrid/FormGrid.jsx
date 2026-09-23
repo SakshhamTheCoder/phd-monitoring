@@ -1,6 +1,6 @@
 import React from "react";
 import "./FormGrid.css";
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 // Required lifecycle milestones (left column) vs situational / as-needed forms
 // (right column). The order within each column is fixed, so the layout stays
@@ -33,6 +33,7 @@ const OPTIONAL_ORDER = [
 // page that shows several grids under headings of its own.
 const FormGrid = ({ forms, title = "Available Forms", loading = false }) => {
     const location = useLocation();
+    const navigate = useNavigate();
 
     const handleClick = (form) => {
         let path = location.pathname;
@@ -40,7 +41,14 @@ const FormGrid = ({ forms, title = "Available Forms", loading = false }) => {
             path = path.slice(0, -1);
         }
         const newUrl = `${path}/${form.form_type}`;
-        window.location.href = form.path || newUrl;
+        const target = form.path || newUrl;
+        // An app path is routed in place; a full page load would restart the app.
+        // Anything else, such as an absolute URL, still gets a real navigation.
+        if (target.startsWith('/') && !target.startsWith('//')) {
+            navigate(target);
+        } else {
+            window.location.href = target;
+        }
     };
 
     const pick = (order) =>

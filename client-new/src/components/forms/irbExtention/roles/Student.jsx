@@ -107,7 +107,7 @@ const Student = ({ formData }) => {
           />
 
             <GridContainer
-            elements={formData.supervisors.map((sup,index)=>{
+            elements={(formData.supervisors || []).map((sup,index)=>{
               return (
                 <InputField 
                 isLocked={true}
@@ -123,7 +123,7 @@ const Student = ({ formData }) => {
             elements={[
               <InputField
                 label="Extension availed if any earlier (for submission of research proposal)"
-                initialValue={formData.researchExtentions[0]?.period_of_extension?formData.researchExtentions[0]?.period_of_extension:"N/A"}
+                initialValue={formData.researchExtentions?.[0]?.period_of_extension?formData.researchExtentions?.[0]?.period_of_extension:"N/A"}
                 isLocked={true}
                
               />,

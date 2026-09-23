@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import GridContainer from '../forms/fields/GridContainer';
 import TableComponent from '../forms/table/TableComponent';
 import { formatDate, EMPTY_VALUE } from '../../utils/timeParse';
@@ -37,6 +37,17 @@ const Authors = ({ text, names }) => {
     });
 };
 
+// Defined here rather than inside ShowPublications so the tick box keeps its
+// identity, and its keyboard focus, when a toggle re-renders the tables.
+const SelectCell = ({ checked, onToggle }) => (
+    <input
+        type="checkbox"
+        aria-label="Select publication"
+        checked={checked}
+        onChange={onToggle}
+    />
+);
+
 const ShowPublications = ({
     formData,
     enableSelect = false,
@@ -59,7 +70,9 @@ const ShowPublications = ({
     collapsible = false,
     summaryLabel = 'Publications and Patents',
 }) => {
-   const highlighted = highlightNames || [accountName()];
+   // localStorage is read once per mount rather than on every render.
+   const ownName = useMemo(accountName, []);
+   const highlighted = highlightNames || [ownName];
    const authorsCell = { key: 'authors', component: ({ data }) => <Authors text={data} names={highlighted} /> };
    const [editData, setEditData] = useState(null);
    const [selectedRows, setSelectedRows] = useState({});
@@ -120,11 +133,9 @@ const ShowPublications = ({
    // The selection tick box leads each row, so it is the first thing seen.
    const selectCell = (publicationType) => (enableSelect
        ? ({ row }) => (
-           <input
-               type="checkbox"
-               aria-label="Select publication"
+           <SelectCell
                checked={!!selectedRows[publicationType]?.[row.id]}
-               onChange={() => handleSelect(row.id, publicationType)}
+               onToggle={() => handleSelect(row.id, publicationType)}
            />
        )
        : null);
@@ -244,7 +255,7 @@ const ShowPublications = ({
                                     components={[
                                          {key: 'id', component: ({ data }) => renderActions(data, 'book') }
                                     ]}
-                                    getRowStyle={(data) => getRowStyle(data.id, 'book')}
+                                    rowStyle={(data) => getRowStyle(data.id, 'book')}
                                 />
                             ]} space={3} />
                         </>

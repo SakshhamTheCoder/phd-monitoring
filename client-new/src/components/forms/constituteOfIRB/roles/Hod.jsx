@@ -31,7 +31,7 @@ const Hod = ({ formData }) => {
     if (!cognates || cognates.length === 0 || cognates[0] === null) {
       cognates = [-1];
     }
-    let outside_experts = formData.outside_experts.map((item) => {
+    let outside_experts = formData.outside_experts?.map((item) => {
       return item.id;
     });
     if (
@@ -44,8 +44,8 @@ const Hod = ({ formData }) => {
     setBody({
       // The approval column defaults to 0, which would submit as "Not Recommend"
       // if Submit is pressed before choosing. Unanswered means nothing chosen.
-      approval: formData.locks?.hod ? formData.approvals.hod : null,
-      comments: formData.comments.hod,
+      approval: formData.locks?.hod ? formData.approvals?.hod : null,
+      comments: formData.comments?.hod,
       chairman_experts: cognates,
       outside_experts: outside_experts,
     });
@@ -82,7 +82,7 @@ const Hod = ({ formData }) => {
             <>
             <p style={{ fontWeight: "bold", textAlign: "left" }}>List of 3 outside experts proposed by the HOD</p>
 
-          {greater && lock && formData.outside_experts.length === 3 ? (
+          {greater && lock && formData.outside_experts?.length === 3 ? (
             <>
               <GridContainer
                 elements={[
@@ -107,7 +107,7 @@ const Hod = ({ formData }) => {
                   <InputSuggestion
                     apiUrl={apiURL2}
                     showLabel={false}
-                    initialValue={formData.outside_experts[0]?.name}
+                    initialValue={formData.outside_experts?.[0]?.name}
                     onSelect={(value) => {
                       body.outside_experts[0] = value.id;
                     }}
@@ -116,7 +116,7 @@ const Hod = ({ formData }) => {
                   <InputSuggestion
                     apiUrl={apiURL2}
                     showLabel={false}
-                    initialValue={formData.outside_experts[1]?.name}
+                    initialValue={formData.outside_experts?.[1]?.name}
                     onSelect={(value) => {
                       body.outside_experts[1] = value.id;
                     }}
@@ -125,7 +125,7 @@ const Hod = ({ formData }) => {
                   <InputSuggestion
                     apiUrl={apiURL2}
                     showLabel={false}
-                    initialValue={formData.outside_experts[2]?.name}
+                    initialValue={formData.outside_experts?.[2]?.name}
                     onSelect={(value) => {
                       body.outside_experts[2] = value.id;
                     }}
@@ -169,7 +169,7 @@ const Hod = ({ formData }) => {
                     <InputSuggestion
                         apiUrl={apiURL}
                         label={`Expert ${index + 1}`}
-                        initialValue={formData.chairman_experts[index]?.name}
+                        initialValue={formData.chairman_experts?.[index]?.name}
                         onSelect={(value) => {
                         body.chairman_experts[index] = value.id;
                         }}

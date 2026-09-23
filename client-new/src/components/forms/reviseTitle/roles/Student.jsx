@@ -25,21 +25,21 @@ const Student = ({ formData }) => {
   const [showPublication, setShowPublication] = useState(false);
   const [temp, setTemp] = useState([]);
   const [files, setFiles] = useState([]);
-  const objectivesData = formData.objectives.map((obj) => ({ objective: obj }));
-  const robjectivesData = formData.revised_objectives.map((obj) => ({
+  const objectivesData = (formData?.objectives || []).map((obj) => ({ objective: obj }));
+  const robjectivesData = (formData?.revised_objectives || []).map((obj) => ({
     objective: obj,
   }));
 
   useEffect(() => {
     setBody({
        objectives:
-        formData.revised_objectives.length > 0
+        formData?.revised_objectives?.length > 0
           ? formData.revised_objectives
           : [""],
-      revisedOBJ: formData.revised_objectives.length && formData?.locks?.student> 0?true:false
+      revisedOBJ: formData?.revised_objectives?.length && formData?.locks?.student> 0?true:false
     });
     setLock(formData?.locks?.student);
-    if (formData.publication_count > 0 || formData.patents.length > 0) {
+    if (formData?.publication_count > 0 || formData?.patents?.length > 0) {
       setBody((prev) => ({
         ...prev,
         publication_under_report: true,
@@ -79,7 +79,7 @@ const Student = ({ formData }) => {
         }
 
         // Find the publication object with a matching id
-        const publication = formData.student_publications[type].find(
+        const publication = formData.student_publications?.[type]?.find(
           (pub) => pub.id === parseInt(id, 10)
         );
 

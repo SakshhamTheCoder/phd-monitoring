@@ -23,19 +23,19 @@ const Dordc = ({ formData }) => {
       setLoading(true);
 
       setSelected([
-        ...formData.national
+        ...(formData.national || [])
           .filter((item) => item.recommendation === "approved")
           .map((item) => item.id),
-        ...formData.international
+        ...(formData.international || [])
           .filter((item) => item.recommendation === "approved")
           .map((item) => item.id),
       ]);
 
       setRejected([
-        ...formData.national
+        ...(formData.national || [])
           .filter((item) => item.recommendation === "rejected")
           .map((item) => item.id),
-        ...formData.international
+        ...(formData.international || [])
           .filter((item) => item.recommendation === "rejected")
           .map((item) => item.id),
       ]);
@@ -76,17 +76,20 @@ const Dordc = ({ formData }) => {
   // announced success even when the server had refused the submission.
   const handleSubmit = () => submitForm(body, location, setLoading);
 
+  const nationalRows = formData?.national || [];
+  const internationalRows = formData?.international || [];
+
   const examiners = [
-    ...formData.national.map((item) => ({ ...item, type: "National" })),
-    ...formData.international.map((item) => ({ ...item, type: "International" })),
+    ...nationalRows.map((item) => ({ ...item, type: "National" })),
+    ...internationalRows.map((item) => ({ ...item, type: "International" })),
   ];
 
-  const national = formData.national.map((item) => ({
+  const national = nationalRows.map((item) => ({
     ...item,
     type: "National",
   }));
 
-  const international= formData.international.map((item) => ({
+  const international= internationalRows.map((item) => ({
     ...item,
     type: "International",
   }));

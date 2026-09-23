@@ -3,7 +3,8 @@ import './Timeline.css'; // Add your styling here
 import { getRoleName } from '../../../utils/roleName';
 
 const StepTimeline = ({ formData}) => {
-    const { steps, current_step } = formData;
+    const steps = formData?.steps || [];
+    const current_step = formData?.current_step;
     return (
         <div className="timeline-container">
             {steps.map((step, index) => {

@@ -112,7 +112,7 @@ const Student = ({ formData }) => {
             elements={[
               <InputField
                 label={"Chairman, Board of Studies of the Concerned Department"}
-                initialValue={formData.chairman.name}
+                initialValue={formData.chairman?.name}
                 isLocked={true}
               />,
             ]}
@@ -215,7 +215,7 @@ const Student = ({ formData }) => {
               <GridContainer
                 elements={[
                   <TableComponent
-                    data={formData.objectives.map((obj) => ({
+                    data={(formData.objectives || []).map((obj) => ({
                       objective: obj,
                     }))}
                     keys={["objective"]}

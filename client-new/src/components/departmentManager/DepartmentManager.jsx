@@ -12,6 +12,20 @@ import { useLoading } from '../../context/LoadingContext';
 import TableComponent from '../forms/table/TableComponent';
 import './DepartmentManager.css';
 
+// The same shape three times: a role, the action that changes it, and who
+// currently holds it. It was three GridContainers used only for their label,
+// which stacked a button straight onto a full-width table with no grouping.
+// Kept outside DepartmentManager so the sections are not remounted each render.
+const RoleSection = ({ title, action, isEmpty, emptyText, children }) => (
+  <section className="card dm-section">
+    <div className="dm-section-head">
+      <h3 className="section-heading">{title}</h3>
+      {action}
+    </div>
+    {isEmpty ? <p className="dm-none">{emptyText}</p> : children}
+  </section>
+);
+
 const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod, currentAdordc, currentCoordinators = [], onClose, onUpdate }) => {
   const [showHodModal, setShowHodModal] = useState(false);
   const [showAdordcModal, setShowAdordcModal] = useState(false);
@@ -174,19 +188,6 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
       setLoading(false);
     }
   };
-
-  // The same shape three times: a role, the action that changes it, and who
-  // currently holds it. It was three GridContainers used only for their label,
-  // which stacked a button straight onto a full-width table with no grouping.
-  const RoleSection = ({ title, action, isEmpty, emptyText, children }) => (
-    <section className="card dm-section">
-      <div className="dm-section-head">
-        <h3 className="section-heading">{title}</h3>
-        {action}
-      </div>
-      {isEmpty ? <p className="dm-none">{emptyText}</p> : children}
-    </section>
-  );
 
   const roleColumns = {
     keys: ['name', 'email', 'phone', 'designation', 'department'],

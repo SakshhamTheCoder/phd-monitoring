@@ -19,7 +19,7 @@ const PhDCoordinator = ({ formData }) => {
   const location = useLocation();
 
   useEffect(() => {
-    const supervisors = formData?.new_supervisors.map(
+    const supervisors = (formData?.new_supervisors || []).map(
       (Supervisor) => Supervisor.faculty_code
     );
     if (supervisors.length == 0) {
@@ -64,7 +64,7 @@ const PhDCoordinator = ({ formData }) => {
                   <InputSuggestions
                     apiUrl={apiUrl_suggestion}
                     label={`Supervisor ${index + 1}`}
-                    initialValue={formData.new_supervisors[index]?.name}
+                    initialValue={formData.new_supervisors?.[index]?.name}
                     onSelect={(value) => handleSupervisorSelect(value, index)}
                     lock={lock}
                   />

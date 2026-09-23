@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./FormList.css";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { baseURL } from "../../../api/urls";
 import { customFetch } from "../../../api/base";
 import { useLoading } from "../../../context/LoadingContext";
@@ -11,6 +11,7 @@ const FormList = () => {
   const [forms, setForms] = useState([]);
   const { setLoading } = useLoading();
   const location = useLocation();
+  const navigate = useNavigate();
   const [role, setRole] = useState();
   useEffect(() => {
     setRole(currentRole());
@@ -37,7 +38,8 @@ const FormList = () => {
     }
     if (form.form_id === undefined) form.form_id = form.id;
     const newUrl = `${path}/${form.form_id}`;
-    window.location.href = newUrl;
+    // Routed in place: a full page load would restart the app for an in-app path.
+    navigate(newUrl);
   };
 
   return (
