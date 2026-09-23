@@ -57,18 +57,20 @@ class SupervisorAllocationController extends Controller
             'fields' => [
                 "name",
                 "roll_no",
-                "progress",
+                "area_preferences",
                 "email"
             ],
             'extra_fields' => [
-                "progress" => function ($form) {
-                    return $form->student->overall_progress;
+                // What the scholar asked to work in, which is what allocation
+                // decides on. Progress was here and is 0 until presentations start.
+                "area_preferences" => function ($form) {
+                    return $form->student->areaPreferences->pluck('broad_area')->filter()->join(', ') ?: null;
                 },
                 "email" => function ($form) {
                     return $form->student->user->email;
                 },
             ],
-            'titles' => ["Name", "Roll No", "Progress", "Email",],
+            'titles' => ["Name", "Roll No", "Area Preferences", "Email",],
         ]);
     }
 

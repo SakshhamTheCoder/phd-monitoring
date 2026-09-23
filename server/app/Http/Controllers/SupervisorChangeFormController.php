@@ -42,10 +42,11 @@ class SupervisorChangeFormController extends Controller {
         ),
         'extra_fields' => array_merge(
             [
+                // The supervisors the form asks to change, not all of them.
                 "to_change" => function ($form) {
-                    return $form->student->supervisors->map(function ($supervisor) {
-                        return $supervisor->user->name();
-                    })->join(', ');
+                    return \App\Models\Faculty::whereIn('faculty_code', $form->to_change ?? [])
+                        ->with('user')->get()
+                        ->map(fn ($faculty) => $faculty->user->name())->join(', ');
                 },
             ],
             $canReadReason ? ["reason"] : []

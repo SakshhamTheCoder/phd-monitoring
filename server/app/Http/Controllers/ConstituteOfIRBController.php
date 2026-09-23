@@ -46,14 +46,11 @@ class ConstituteOfIRBController extends Controller
          return $this->listFormsStudent($user, ConstituteOfIRB::class, $student_id);
        return $this->listForms($user, ConstituteOfIRB::class,$request,null,false,[
         'fields' => [
-            "name","roll_no", "email","supervisors"
+            "name","roll_no", "email","supervisors","broad_area_of_research"
         ],
         'extra_fields' => [
             "email" => function ($form) {
             return $form->student->user->email;
-            },
-            "semester" => function ($form) {
-            return $form->id;
             },
             "supervisors" => function ($form) {
             return $form->student->supervisors->map(function ($supervisor) {
@@ -61,7 +58,7 @@ class ConstituteOfIRBController extends Controller
             })->join(', ');
             },
             'broad_area_of_research' => function ($form) {
-                return $form->student->broad_area;
+                return $form->student->broadAreaLabel();
             },
         ],
         'titles' => [ "Name", "Roll No",  "Email","Supervisors","Broad Area of Research"],

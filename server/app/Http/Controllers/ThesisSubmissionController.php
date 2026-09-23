@@ -41,7 +41,9 @@ class ThesisSubmissionController extends Controller
             })->join(', ');
             },
             "date_of_synopsis" => function ($form) {
-                return \Carbon\Carbon::parse($form->student->date_of_synopsis)->format('Y-m-d');
+                // The form records its own synopsis date, which the scholar's record
+                // often lacks. Carbon::parse(null) is today, so it is not used.
+                return $form->date_of_synopsis ?: $form->student->date_of_synopsis?->format('Y-m-d');
         
             },
         ],

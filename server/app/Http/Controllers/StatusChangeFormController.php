@@ -40,8 +40,12 @@ class StatusChangeFormController extends Controller
         ),
         'extra_fields' => array_merge(
             [
+                // What the form asked for. Read from the scholar's status today, an
+                // approved change showed backwards; that is only a fallback for
+                // forms made before the choice was stored.
                 "type_of_change" => function ($form) {
-                    return $form->student->current_status == "full-time" ? "full-time to part-time" : "part-time to full-time";
+                    return $form->type_of_change
+                        ?: ($form->student->current_status == "full-time" ? "full-time to part-time" : "part-time to full-time");
                 },
             ],
             $canReadReason ? ["reason"] : []

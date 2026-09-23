@@ -341,6 +341,17 @@ class Student extends Model
         return $this->hasMany(StudentAreaPreference::class, 'student_id', 'roll_no');
     }
 
+    /**
+     * The broad area to show: the settled one once the IRB form sets it, the
+     * areas asked for at allocation until then. Most scholars are in the second
+     * group, so reading broad_area alone left the column blank.
+     */
+    public function broadAreaLabel(): ?string
+    {
+        return $this->broad_area
+            ?: ($this->areaPreferences->pluck('broad_area')->filter()->join(', ') ?: null);
+    }
+
     public function subdomains()
     {
         return $this->hasMany(StudentSubdomain::class, 'student_id', 'roll_no');

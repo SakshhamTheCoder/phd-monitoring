@@ -193,7 +193,7 @@ class PresentationController extends Controller
                 'op' => '=',
                 'value' => 1
             ];
-            $titles = ["Name", "Roll No", "Date", "Time", "Meet Link", "Supervisors"];
+            $titles = ["Name", "Roll No", "Date", "Time", "Venue", "Supervisors"];
             $fields = ["name", "roll_no", "date", "time", "venue", "supervisors"];
         }
         

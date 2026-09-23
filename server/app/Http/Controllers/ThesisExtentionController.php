@@ -41,7 +41,8 @@ class ThesisExtentionController extends Controller
             })->join(', ');
             },
             "date_of_synopsis" => function ($form) {
-                return \Carbon\Carbon::parse($form->student->date_of_synopsis)->format('Y-m-d');
+                // Carbon::parse(null) is today, so a missing date showed as today.
+                return $form->student->date_of_synopsis?->format('Y-m-d');
         
             },
         ],
