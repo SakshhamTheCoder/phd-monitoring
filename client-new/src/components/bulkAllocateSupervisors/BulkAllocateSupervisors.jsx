@@ -122,7 +122,8 @@ const BulkAllocateSupervisors = ({ onSuccess }) => {
 
     customFetch(baseURL + '/forms/supervisor-allocation/bulk-allocate', 'POST', { batch_data: rows })
       .then((data) => {
-        const result = data?.data;
+        // customFetch wraps the body as { success, response }.
+        const result = data?.response?.data;
         if (data && data.success && result) {
           if (result.success_count > 0) {
             toast.success(`Allocated supervisors for ${result.success_count} student(s)`);
@@ -137,7 +138,7 @@ const BulkAllocateSupervisors = ({ onSuccess }) => {
             if (onSuccess) onSuccess();
           }
         } else {
-          toast.error(data?.message || 'Bulk allocation failed');
+          toast.error(data?.response?.message || 'Bulk allocation failed');
         }
         setLoading(false);
       })
