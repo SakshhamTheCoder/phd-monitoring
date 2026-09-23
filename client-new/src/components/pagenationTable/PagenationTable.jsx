@@ -255,7 +255,9 @@ const PagenationTable = ({
                 className={`form-row ${clickable ? "row-link" : ""} ${selecting && selectedForms.has(formId) ? "selected-row" : ""}`}
                 tabIndex={clickable ? 0 : -1}
                 onClick={clickable ? () => selectMode ? toggleSelectOne(formId) : openForm(form) : undefined}
-                onKeyDown={clickable ? (e) => e.key === "Enter" && (selectMode ? toggleSelectOne(formId) : openForm(form)) : undefined}
+                // Only Enter on the row itself. Enter on a button, link or tick
+                // box inside it activates that control and bubbles up here too.
+                onKeyDown={clickable ? (e) => e.target === e.currentTarget && e.key === "Enter" && (selectMode ? toggleSelectOne(formId) : openForm(form)) : undefined}
               >
                 {selecting && (
                   <td>
@@ -289,9 +291,6 @@ const PagenationTable = ({
                           type="button"
                           className="cell-link"
                           onClick={(e) => { e.stopPropagation(); (onLinkClick || openForm)(form); }}
-                          // Enter on the button activates it; without this the
-                          // same keypress also reaches the row and opens both.
-                          onKeyDown={(e) => e.key === "Enter" && e.stopPropagation()}
                         >
                           {content}
                         </button>

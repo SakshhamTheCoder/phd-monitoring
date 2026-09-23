@@ -143,6 +143,10 @@ const FilterBar = ({ placeholder = 'Search…', mandatory = [], exclude = [], pa
     if (filter.options) {
       return (
         <DropdownField
+          // The select keeps its own value. Remounting whenever this field's
+          // chips change puts it back on "Select", so a removed value shows
+          // as removed and can be picked again.
+          key={JSON.stringify(chosen[filter.key_name]?.values ?? [])}
           label={filter.label}
           options={filter.options.map((o) => (typeof o === 'string' ? { title: o, value: o } : o))}
           initialValue=""
@@ -197,7 +201,12 @@ const FilterBar = ({ placeholder = 'Search…', mandatory = [], exclude = [], pa
           value={text}
           placeholder={placeholder}
           aria-label={placeholder}
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => {
+            setText(e.target.value);
+            // An emptied box (backspace, or the box's own clear button) has no
+            // Enter to wait for; the table must drop the old query now.
+            if (e.target.value === '') emit('', chosen);
+          }}
           onKeyDown={(e) => e.key === 'Enter' && runSearch()}
         />
         <button type="button" className="filter-bar-go" onClick={runSearch}>Search</button>
