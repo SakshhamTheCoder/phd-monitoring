@@ -81,7 +81,9 @@ const ProgressChart = ({ points = [], milestones = [] }) => {
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         className="progress-chart-svg"
-        role="img"
+        // A group, not an image: an image hides its children, and the points
+        // below are focusable and named.
+        role="group"
         aria-label={`Progress over time. ${points.length} evaluations, latest ${points[points.length - 1].progress} percent.`}
       >
         {/* Grid and axis, recessive: they locate the data, they are not the data. */}
@@ -138,6 +140,7 @@ const ProgressChart = ({ points = [], milestones = [] }) => {
             onFocus={() => setHovered(point)}
             onBlur={() => setHovered(null)}
             tabIndex={0}
+            role="img"
             aria-label={`${point.semester || formatDate(point.date)}: ${point.progress} percent`}
           />
         ))}
