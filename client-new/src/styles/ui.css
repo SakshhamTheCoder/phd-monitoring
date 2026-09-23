@@ -113,15 +113,22 @@
     font-weight: 600;
 }
 
-.tab.active::after {
-    content: '';
+/* One underline for the bar, placed under the chosen tab by Tabs.jsx. It is
+   1px wide and scaled to the tab, so the slide is a transform, not a resize. */
+.tabs { position: relative; }
+
+.tabs-underline {
     position: absolute;
     left: 0;
-    right: 0;
-    bottom: -1px;
+    bottom: 0;
+    width: 1px;
     height: 2px;
     background: var(--primary-color);
+    transform-origin: left;
+    pointer-events: none;
 }
+
+.tabs-underline--moves { transition: transform 200ms ease-out; }
 
 .tab:focus-visible {
     outline: 2px solid var(--primary-color);
@@ -307,6 +314,12 @@
     font-size: var(--text-sm);
     text-align: left;
 }
+
+/* A message arriving (a failure, a note) slides in a few pixels so it is
+   noticed; empty and loading states are the page at rest and stay still. */
+.status-notice--error,
+.status-notice--info,
+.status-notice--warning { animation: slide-in 200ms ease-out; }
 
 .status-notice-icon { margin-top: 3px; flex-shrink: 0; }
 .status-notice-body { min-width: 0; }

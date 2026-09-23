@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 
 // The one tab bar. Styles live in styles/ui.css.
 //
@@ -11,6 +11,28 @@ import React from 'react';
 // is expected to behave.
 const Tabs = ({ items, value, onChange, className = '', label }) => {
   const options = items.map((item) => (typeof item === 'object' ? item : { value: item, label: item }));
+  const barRef = useRef(null);
+  // One underline that slides to the chosen tab, so the eye follows the move.
+  // null until measured; it only starts to animate after its first placement,
+  // or it would slide in from the left edge on every page load.
+  const [underline, setUnderline] = useState(null);
+  const activeIndex = options.findIndex((option) => option.value === value);
+
+  useLayoutEffect(() => {
+    const bar = barRef.current;
+    if (!bar) return undefined;
+    const place = () => {
+      const tab = bar.querySelectorAll('[role="tab"]')[activeIndex];
+      setUnderline((previous) => (tab
+        ? { left: tab.offsetLeft, width: tab.offsetWidth, placed: previous !== null }
+        : null));
+    };
+    place();
+    // Labels change width when the web font arrives or the window resizes.
+    const observer = new ResizeObserver(place);
+    observer.observe(bar);
+    return () => observer.disconnect();
+  }, [activeIndex, options.length]);
 
   const onKeyDown = (event) => {
     const step = { ArrowRight: 1, ArrowLeft: -1 }[event.key];
@@ -25,7 +47,7 @@ const Tabs = ({ items, value, onChange, className = '', label }) => {
   };
 
   return (
-    <div className={`tabs ${className}`.trim()} role="tablist" aria-label={label} onKeyDown={onKeyDown}>
+    <div ref={barRef} className={`tabs ${className}`.trim()} role="tablist" aria-label={label} onKeyDown={onKeyDown}>
       {options.map((option) => {
         const isActive = value === option.value;
         return (
@@ -42,6 +64,13 @@ const Tabs = ({ items, value, onChange, className = '', label }) => {
           </button>
         );
       })}
+      {underline && (
+        <span
+          className={`tabs-underline${underline.placed ? ' tabs-underline--moves' : ''}`}
+          style={{ transform: `translateX(${underline.left}px) scaleX(${underline.width})` }}
+          aria-hidden="true"
+        />
+      )}
     </div>
   );
 };
