@@ -8,7 +8,7 @@ import { cellClass, isStatusKey, statusTone } from '../../../utils/tableCell';
 // functions rather than used as component types: callers define them inline,
 // so as types they would be new on every render and remount every cell,
 // dropping focus and local state. They must not call hooks for that reason.
-const TableComponent = ({ data, keys, titles, components = [], rowStyle, label, leading = null }) => {
+const TableComponent = ({ data, keys, titles, components = [], rowStyle, rowClassName, label, leading = null }) => {
     // Create a dictionary from components for easy lookup
     const componentMap = components.reduce((acc, comp) => {
         acc[comp.key] = comp.component;
@@ -30,7 +30,7 @@ const TableComponent = ({ data, keys, titles, components = [], rowStyle, label, 
                 </thead>
                 <tbody>
                     {data?.map((row, index) => (
-                        <tr key={index} style={rowStyle ? rowStyle(row) : {}}>
+                        <tr key={index} style={rowStyle ? rowStyle(row) : {}} className={rowClassName?.(row)}>
                             {leading && <td>{leading({ row })}</td>}
                             <td>{index + 1}</td>
                             {keys?.map((key, keyIndex) => {

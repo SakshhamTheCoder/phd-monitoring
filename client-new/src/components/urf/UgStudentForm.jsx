@@ -71,9 +71,9 @@ const UgStudentForm = ({ student, onClose, onSaved }) => {
       <div className="modal-actions">
         <CustomButton text="Cancel" variant="quiet" onClick={onClose} />
         <CustomButton
-          text={saving ? 'Saving…' : (student ? 'Save changes' : 'Add student')}
+          text={student ? 'Save changes' : 'Add student'}
           onClick={save}
-          disabled={saving}
+          busy={saving}
         />
       </div>
     </div>

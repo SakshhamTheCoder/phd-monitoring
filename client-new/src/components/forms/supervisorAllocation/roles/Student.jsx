@@ -24,6 +24,8 @@ const Student = ({ formData }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [recs, setRecs] = useState([]);
   const [recLoading, setRecLoading] = useState(false);
+  // The slot a recommendation just filled, marked so the eye finds it.
+  const [landedSlot, setLandedSlot] = useState(null);
   const fetchTimer = useRef(null);
   const recCache = useRef(null);
   // Numbers each request. Only the latest may set the list, so a slow answer
@@ -109,6 +111,7 @@ const Student = ({ formData }) => {
       faculty_code: row.faculty_code,
     };
     setBody({ ...body });
+    setLandedSlot(target);
     toast.info(`Preference ${target + 1} set to ${row.name}`);
   };
 
@@ -252,6 +255,7 @@ const Student = ({ formData }) => {
                 lock={lock}
                 fields={["name","department"]}
                 label={"Preference 1"}
+                inputClassName={landedSlot === 0 ? "just-added" : undefined}
               />,
               <InputSuggestions
                 initialValue={body.prefrences[1] ? [body.prefrences[1].name, body.prefrences[1].department].filter(Boolean).join(' - ') : ''}
@@ -261,6 +265,7 @@ const Student = ({ formData }) => {
                 lock={lock}
                 fields={["name","department"]}
                 label={"Preference 2"}
+                inputClassName={landedSlot === 1 ? "just-added" : undefined}
               />,
               <InputSuggestions
                 initialValue={body.prefrences[2] ? [body.prefrences[2].name, body.prefrences[2].department].filter(Boolean).join(' - ') : ''}
@@ -270,6 +275,7 @@ const Student = ({ formData }) => {
                 lock={lock}
                 fields={["name","department"]}
                 label={"Preference 3"}
+                inputClassName={landedSlot === 2 ? "just-added" : undefined}
               />,
             ]}
           />
@@ -284,6 +290,7 @@ const Student = ({ formData }) => {
                 lock={lock}
                 fields={["name","department"]}
                 label={"Preference 4"}
+                inputClassName={landedSlot === 3 ? "just-added" : undefined}
               />,
               <InputSuggestions
                 initialValue={body.prefrences[4] ? [body.prefrences[4].name, body.prefrences[4].department].filter(Boolean).join(' - ') : ''}
@@ -293,6 +300,7 @@ const Student = ({ formData }) => {
                 lock={lock}
                 fields={["name","department"]}
                 label={"Preference 5"}
+                inputClassName={landedSlot === 4 ? "just-added" : undefined}
               />,
               <InputSuggestions
                 initialValue={body.prefrences[5] ? [body.prefrences[5].name, body.prefrences[5].department].filter(Boolean).join(' - ') : ''}
@@ -302,6 +310,7 @@ const Student = ({ formData }) => {
                 lock={lock}
                 fields={["name","department"]}
                 label={"Preference 6"}
+                inputClassName={landedSlot === 5 ? "just-added" : undefined}
               />,
             ]}
           />

@@ -15,6 +15,7 @@ import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
 import { apiUrfApply, apiUrfFellow, apiUrfReport } from '../../api/urf';
 import useBranches from '../../hooks/useBranches';
+import { insertAt, toastUndo } from '../../utils/undoToast';
 import { Section, facultyName, yearLabel, REPORT_TYPES } from './UrfRecord';
 import './UrfForms.css';
 
@@ -47,7 +48,7 @@ const Submit = ({ text, onClick }) => {
   return (
     <PanelSection>
       <FormActions>
-        <CustomButton text={saving ? 'Saving…' : text} onClick={run} disabled={saving} />
+        <CustomButton text={text} onClick={run} busy={saving} />
       </FormActions>
     </PanelSection>
   );
@@ -75,9 +76,12 @@ const StudentFields = ({ n, body, set, branches, account = {} }) => {
   );
 };
 
-/** One faculty mentor on one row: the search, what it fills in, and remove. */
-const MentorRow = ({ initial, onPick, onRemove, required }) => {
-  const [picked, setPicked] = useState(null);
+/**
+ * One faculty mentor on one row: the search, what it fills in, and remove.
+ * `restored` is a pick being put back by Undo after the row was removed.
+ */
+const MentorRow = ({ initial, restored, onPick, onRemove, required }) => {
+  const [picked, setPicked] = useState(restored || null);
   const shown = picked || (initial && {
     name: facultyName(initial),
     email: initial.user?.email,
@@ -91,7 +95,7 @@ const MentorRow = ({ initial, onPick, onRemove, required }) => {
         body={{ type: 'internal' }}
         label="Faculty Name"
         initialValue={shown?.name}
-        onSelect={(faculty) => { setPicked(faculty); onPick(faculty.id); }}
+        onSelect={(faculty) => { setPicked(faculty); onPick(faculty.id, faculty); }}
         required={required}
       />
       <InputField label="Email" initialValue={shown?.email || ''} isLocked />
@@ -142,15 +146,31 @@ export const ApplyForm = ({ initial, student, onSaved }) => {
     });
   const [teammate, setTeammate] = useState(!!initial?.student2_name);
   const [secondMentor, setSecondMentor] = useState(!!initial?.mentor2_faculty_code);
+  // Kept so Undo can show the removed mentor again, not just restore the code.
+  const [mentor2Picked, setMentor2Picked] = useState(null);
 
-  // Removing clears the fields, so the server drops them on save.
+  // Removing clears the fields, so the server drops them on save. Nothing is
+  // saved until Submit, so Undo puts back what was typed.
   const removeTeammate = () => {
+    const typed = STUDENT_FIELDS.map((f) => [f, body[`student2_${f}`]]);
     STUDENT_FIELDS.forEach((f) => set(`student2_${f}`)(''));
     setTeammate(false);
+    toastUndo('Team member removed.', () => {
+      typed.forEach(([f, value]) => set(`student2_${f}`)(value));
+      setTeammate(true);
+    });
   };
   const removeMentor = () => {
+    const code = body.mentor2_faculty_code;
+    const picked = mentor2Picked;
     set('mentor2_faculty_code')('');
+    setMentor2Picked(null);
     setSecondMentor(false);
+    toastUndo('Faculty mentor removed.', () => {
+      set('mentor2_faculty_code')(code);
+      setMentor2Picked(picked);
+      setSecondMentor(true);
+    });
   };
 
   const submit = async () => {
@@ -190,7 +210,12 @@ export const ApplyForm = ({ initial, student, onSaved }) => {
       >
         <MentorRow initial={initial?.mentor1} onPick={set('mentor1_faculty_code')} required />
         {secondMentor && (
-          <MentorRow initial={initial?.mentor2} onPick={set('mentor2_faculty_code')} onRemove={removeMentor} />
+          <MentorRow
+            initial={initial?.mentor2}
+            restored={mentor2Picked}
+            onPick={(id, faculty) => { set('mentor2_faculty_code')(id); setMentor2Picked(faculty); }}
+            onRemove={removeMentor}
+          />
         )}
       </PanelSection>
 
@@ -283,11 +308,24 @@ export const ReportForm = ({ application, type, filed, onSaved }) => {
     setPicking(false);
   };
 
-  // Taking a publication off this report leaves it in the library for later reports.
-  const unlink = (id, group) => setLinked((prev) => ({
-    ...prev,
-    [group]: (prev[group] || []).filter((row) => row.id !== id),
-  }));
+  // Taking a publication off this report leaves it in the library for later
+  // reports. Nothing is saved until Submit, so Undo puts it back in its place.
+  const unlink = (id, group) => {
+    const rows = linked[group] || [];
+    const index = rows.findIndex((row) => row.id === id);
+    if (index === -1) return;
+    const removed = rows[index];
+    setLinked((prev) => ({
+      ...prev,
+      [group]: (prev[group] || []).filter((row) => row.id !== id),
+    }));
+    toastUndo('Publication taken off this report.', () => setLinked((prev) => {
+      const now = prev[group] || [];
+      // Picked again from the library in the meantime: already back.
+      if (now.some((row) => row.id === id)) return prev;
+      return { ...prev, [group]: insertAt(now, index, removed) };
+    }));
+  };
 
   const idsIn = (wanted) => Object.entries(linked)
     .filter(([group]) => wanted(group))

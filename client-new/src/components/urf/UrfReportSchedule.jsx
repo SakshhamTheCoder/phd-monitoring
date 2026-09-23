@@ -12,6 +12,7 @@ import Panel, { PanelSection } from '../panel/Panel';
 import { apiUrfDeleteReportWindow, apiUrfReportWindows, apiUrfSaveReportWindow } from '../../api/urf';
 import { REPORT_TYPES } from './UrfRecord';
 import { localDateString } from '../../utils/leaveBalance';
+import useDoneFlash from '../../hooks/useDoneFlash';
 import './UrfForms.css';
 
 const TYPES = Object.entries(REPORT_TYPES).map(([value, title]) => ({ value, title }));
@@ -59,6 +60,7 @@ const UrfReportSchedule = ({ session, sessions = [] }) => {
   // blank form and a table to hunt through.
   const [round, setRound] = useState(null);
   const [pending, setPending] = useState(null);
+  const [saved, flashSaved] = useDoneFlash();
 
   const load = useCallback(async () => {
     const res = await apiUrfReportWindows();
@@ -126,6 +128,7 @@ const UrfReportSchedule = ({ session, sessions = [] }) => {
     if (!res.success) return;
 
     toast.success(existing ? 'Round updated' : 'Round scheduled');
+    flashSaved();
     load();
   };
 
@@ -171,9 +174,10 @@ const UrfReportSchedule = ({ session, sessions = [] }) => {
 
         <FormActions>
           <CustomButton
-            text={saving ? 'Saving…' : (existing ? 'Update round' : 'Schedule round')}
+            text={existing ? 'Update round' : 'Schedule round'}
             onClick={save}
-            disabled={saving}
+            busy={saving}
+            done={saved}
           />
         </FormActions>
       </PanelSection>

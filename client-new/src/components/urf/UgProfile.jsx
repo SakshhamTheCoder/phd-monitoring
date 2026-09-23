@@ -150,7 +150,7 @@ const UgProfile = () => {
   // profiles do.
   const actions = state?.student && (editing ? (
     <>
-      <CustomButton text={saving ? 'Saving…' : 'Save'} onClick={save} disabled={saving} />
+      <CustomButton text="Save" onClick={save} busy={saving} />
       <CustomButton text="Cancel" variant="quiet" onClick={() => setEditing(false)} />
     </>
   ) : (

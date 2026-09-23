@@ -7,7 +7,7 @@ import "./Fields.css";
 const suggestionCache = new Map();
 const SUGGESTION_CACHE_LIMIT = 300;
 
-const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = false, showLabel = true, body, suggestionManadatory = true, fields=["name"], required = false, excludeIds = []}) => {
+const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = false, showLabel = true, body, suggestionManadatory = true, fields=["name"], required = false, excludeIds = [], inputClassName}) => {
     const [inputValue, setInputValue] = useState(initialValue || '');
     const [suggestions, setSuggestions] = useState([]);
     const [isLocked, setIsLocked] = useState(lock || false);
@@ -180,7 +180,7 @@ useEffect(() => {
                     onFocus={() => setIsFocused(true)}
                     onKeyDown={handleKeyDown}
                     placeholder={isLocked && !inputValue ? 'Not provided' : hintText}
-                    className="input-field"
+                    className={inputClassName ? `input-field ${inputClassName}` : "input-field"}
                     disabled={isLocked}
                 />
             </div>

@@ -11,6 +11,7 @@ import { useLoading } from '../../../../context/LoadingContext';
 import { useLocation } from 'react-router-dom';
 import RadioButtonGroup from '../../fields/RadioButtonGroup';
 import { toast } from 'react-toastify';
+import { insertAt, toastUndo } from '../../../../utils/undoToast';
 
 // `examiners` is the list Supervisor submits. A second copy kept here drifted
 // from it: this one dropped a row by identity, that one by email, so two blank
@@ -28,6 +29,8 @@ const ExaminerManager = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   // The saved row being deleted, so its button cannot send a second DELETE.
   const [removing, setRemoving] = useState(null);
+  // Marks where the examiner just added landed in the table.
+  const [lastAdded, setLastAdded] = useState(null);
 
   const canEdit = !formData.locks.supervisor && formData.role === 'faculty';
 
@@ -47,6 +50,7 @@ const ExaminerManager = ({
 
   const handleAddExaminer = (examiner) => {
     onAddExaminer(examiner);
+    setLastAdded(examiner);
     setIsModalOpen(false);
   };
 
@@ -109,6 +113,7 @@ const ExaminerManager = ({
             elements={[
               <TableComponent
                 data={examiners}
+                rowClassName={(row) => (row === lastAdded ? 'just-added' : undefined)}
                 titles={[
                   'Name',
                   'Email',
@@ -176,8 +181,15 @@ const Supervisor = ({ formData }) => {
     setInternational([...international, examiner]);
   };
 
-  const removeFrom = (setList) => (examiner) =>
+  // A saved examiner is already gone from the server, so only an unsaved one
+  // can be put back.
+  const removeFrom = (list, setList) => (examiner) => {
+    const index = list.indexOf(examiner);
     setList((prev) => prev.filter((item) => item !== examiner));
+    if (!examiner.id) {
+      toastUndo(`${examiner.name || 'Examiner'} removed.`, () => setList((now) => insertAt(now, index, examiner)));
+    }
+  };
 
   const submitExaminers = () => {
     setSubmitting(true);
@@ -206,7 +218,7 @@ const Supervisor = ({ formData }) => {
         allExaminers={[...national, ...international]}
         apiUrl={`${baseURL}/suggestions/examiner`}
         onAddExaminer={handleAddNationalExaminer}
-        onRemoveExaminer={removeFrom(setNational)}
+        onRemoveExaminer={removeFrom(national, setNational)}
       />
       <ExaminerManager
         type='International'
@@ -215,7 +227,7 @@ const Supervisor = ({ formData }) => {
         allExaminers={[...national, ...international]}
         apiUrl={`${baseURL}/suggestions/examiner`}
         onAddExaminer={handleAddInternationalExaminer}
-        onRemoveExaminer={removeFrom(setInternational)}
+        onRemoveExaminer={removeFrom(international, setInternational)}
       />
        {!formData.locks.supervisor && formData.role === 'faculty' && (
       <GridContainer

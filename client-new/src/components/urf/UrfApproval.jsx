@@ -92,7 +92,7 @@ const UrfApproval = ({ form, formKey, onDecided }) => {
 
       <GridContainer
         elements={[
-          <CustomButton text={saving ? 'Submitting…' : 'Submit'} onClick={submit} disabled={saving} />,
+          <CustomButton text="Submit" onClick={submit} busy={saving} />,
         ]}
       />
     </div>
