@@ -77,3 +77,13 @@
   color: var(--primary-color);
   text-decoration: underline;
 }
+
+/* On a phone the sidebar, and the logo in it, is off screen with no toggle
+   (there is no menu here), and the portal's full name has no room beside the
+   breadcrumb. The logo stands in for both. */
+.xr-brand-logo { display: none; }
+@media (max-width: 768px) {
+  .xr-brand-logo { display: block; height: 32px; width: auto; }
+  .xr-brand .user_name,
+  .xr-brand .user_role { display: none; }
+}

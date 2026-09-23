@@ -1101,6 +1101,10 @@
         gap: var(--space-3);
     }
 
+    /* Stacked, a flex-basis is a height: the desktop 20rem left a tall empty
+       band between the title and the actions. */
+    .page-header-text { flex: none; }
+
     .page-actions { justify-content: flex-start; }
 
     .panel-columns { grid-template-columns: 1fr; }

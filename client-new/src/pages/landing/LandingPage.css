@@ -540,6 +540,12 @@
     gap: var(--space-4);
   }
 
+  /* The hero right below says the portal's name in full; beside the logo on a
+     phone it only wrapped into a column of five lines. */
+  .landing-brand-name {
+    display: none;
+  }
+
   .landing-links a:not(.custom-button) {
     display: none;
   }
