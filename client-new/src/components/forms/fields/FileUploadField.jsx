@@ -1,7 +1,7 @@
 import React, { useId, useState } from 'react';
 import './Fields.css';
 import { toast } from 'react-toastify';
-import {  rootURL } from '../../../api/urls';
+import { storedFileUrl, storedFileClick } from '../../../api/fileAccess';
 
 const FileUploadField = ({
   label,
@@ -64,10 +64,11 @@ const FileUploadField = ({
       {isLocked ? (
         initialValue ? (
           <a
-            href={rootURL + initialValue.replace('app/public', 'storage')}
+            href={storedFileUrl(initialValue)}
             target='_blank'
             rel='noopener noreferrer'
             className='file-link'
+            onClick={storedFileClick(initialValue)}
           >
             <div className='preview-file'> {fileName}</div>
           </a>

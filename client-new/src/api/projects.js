@@ -1,14 +1,7 @@
 // API layer for the Projects module. Wraps customFetch and maps between the
 // backend's snake_case shape and the camelCase shape the React pages expect.
-import { baseURL, rootURL } from './urls';
+import { baseURL } from './urls';
 import { customFetch } from './base';
-
-// Turn a stored `/app/public/...` path into a servable URL; pass links through.
-export const fileUrl = (p) => {
-  if (!p) return '';
-  if (/^https?:\/\//i.test(p)) return p;
-  return rootURL + String(p).replace('app/public', 'storage');
-};
 
 // ---- mappers: backend -> frontend ----
 export const mapMilestone = (m) => ({
@@ -16,7 +9,8 @@ export const mapMilestone = (m) => ({
 });
 export const mapDocument = (d) => ({
   id: d.id, name: d.name, type: d.type, date: d.doc_date,
-  url: d.file_path ? fileUrl(d.file_path) : d.link, file_path: d.file_path, link: d.link,
+  // A stored file or an external link; open it with openStoredFile.
+  url: d.file_path || d.link, file_path: d.file_path, link: d.link,
 });
 export const mapPosition = (p) => ({
   id: p.id, type: p.type, title: p.title, openings: p.openings, stipend: p.stipend,
@@ -36,7 +30,7 @@ export const mapApplication = (a) => ({
   applicantType: a.applicant_type || 'internal',
   verified: a.email_verified_at !== null && a.email_verified_at !== undefined,
   resume: a.resume_path ? a.resume_path.split('/').pop() : '',
-  resumeUrl: a.resume_path ? fileUrl(a.resume_path) : '',
+  resumePath: a.resume_path || '',
   position: a.position ? a.position.type : a.position_type,
   positionTitle: a.position ? a.position.title : a.position_title,
   projectId: a.project_id,
@@ -57,7 +51,7 @@ export const mapProject = (p) => (p ? {
   coPIs: p.co_pis || [], objectives: p.objectives || [], budget: p.budget || {},
   sdgs: p.sdgs || [],
   ganttChartName: p.gantt_chart_name || '',
-  ganttChartUrl: p.gantt_chart_path ? fileUrl(p.gantt_chart_path) : '',
+  ganttChartPath: p.gantt_chart_path || '',
   sanctionLetterLink: p.sanction_letter_link, sanctionLetterName: p.sanction_letter_name,
   pi: p.pi ? {
     code: p.pi.faculty_code,

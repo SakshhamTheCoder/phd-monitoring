@@ -3,7 +3,7 @@ import '../profileCard/ProfileCard.css';
 import GridContainer from '../forms/fields/GridContainer';
 import TableComponent from '../forms/table/TableComponent';
 import { facultyNameCell } from '../facultyLink/FacultyLink';
-import { fileUrlFrom } from '../common/FileLink';
+import { openStoredFile } from '../../api/fileAccess';
 import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
 import { stageLine } from './UrfApproval';
 import FormGrid from '../forms/formGrid/FormGrid';
@@ -184,7 +184,7 @@ const UrfRecord = ({ record, actions = null }) => {
         text="View proposal"
         variant="secondary"
         size="sm"
-        onClick={() => window.open(fileUrlFrom(record.proposal), '_blank', 'noopener,noreferrer')}
+        onClick={() => openStoredFile(record.proposal)}
       />
     )],
   ];

@@ -315,6 +315,8 @@ Route::prefix('roles')->group(function () {
     require base_path('routes/base/roles.php');
 });
 Route::get('/home', [HomeController::class, 'getHomeData'])->middleware('auth:sanctum');
+// Stored uploads, for whoever may read the record they belong to.
+Route::get('/files', [\App\Http\Controllers\FileController::class, 'show'])->middleware('auth:sanctum');
 
 Route::prefix('notifications')->group(function () {
     require base_path('routes/base/notifications.php');

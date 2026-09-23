@@ -9,7 +9,7 @@ import PagenationTable from '../../components/pagenationTable/PagenationTable';
 import FormGrid from '../../components/forms/formGrid/FormGrid';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import DropdownField from '../../components/forms/fields/DropdownField';
-import { fileUrlFrom } from '../../components/common/FileLink';
+import { openStoredFile } from '../../api/fileAccess';
 import FacultyLink from '../../components/facultyLink/FacultyLink';
 import { EMPTY_VALUE } from '../../utils/timeParse';
 import { URF_STATUSES, capitalize } from '../../components/urf/UrfRecord';
@@ -201,7 +201,7 @@ const UrfList = () => {
       toast.info('No proposal was uploaded for this project.');
       return;
     }
-    window.open(fileUrlFrom(row.proposal), '_blank', 'noopener,noreferrer');
+    openStoredFile(row.proposal);
   };
 
   // The stage and the session are the page's own scope; the search box is the

@@ -8,13 +8,14 @@ import {
 } from '../../data/projectsData';
 import { formatDate, EMPTY_VALUE } from '../../utils/timeParse';
 import { badgeClass } from '../../data/badges';
-import { apiGetProject, apiUpdateProject, apiAddMilestone, apiUpdateMilestone, apiAddDocument, apiUpdateDocument, apiDeleteDocument, fileUrl, mapMilestone, mapDocument, apiProjectMeta, apiUploadGanttChart } from '../../api/projects';
+import { apiGetProject, apiUpdateProject, apiAddMilestone, apiUpdateMilestone, apiAddDocument, apiUpdateDocument, apiDeleteDocument, mapMilestone, mapDocument, apiProjectMeta, apiUploadGanttChart } from '../../api/projects';
 import InputSuggestions from '../../components/forms/fields/InputSuggestions';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import Tabs from '../../components/tabs/Tabs';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import FacultyLink from '../../components/facultyLink/FacultyLink';
 import { baseURL } from '../../api/urls';
+import { storedFileUrl, storedFileClick } from '../../api/fileAccess';
 import { toast } from 'react-toastify';
 import ProjectBudgetCard from './ProjectBudgetCard';
 import LoadError from '../../components/common/LoadError';
@@ -29,7 +30,7 @@ import useDoneFlash from '../../hooks/useDoneFlash';
 const sanctionFromProject = (p) => {
   if (!p || !p.sanctionLetterLink || p.sanctionLetterLink === '#') return null;
   const isLink = /^https?:\/\//i.test(p.sanctionLetterLink);
-  return { name: p.sanctionLetterName || 'Sanction Letter', url: fileUrl(p.sanctionLetterLink), isLink };
+  return { name: p.sanctionLetterName || 'Sanction Letter', url: p.sanctionLetterLink, isLink };
 };
 
 const TABS = ['Overview', 'Funding and budget', 'Milestones', 'Project team', 'Documents'];
@@ -371,8 +372,8 @@ const ProjectDetails = () => {
               </>
             )}
           >
-            {project.ganttChartUrl ? (
-              <a className="pd-doc-link" href={project.ganttChartUrl} target="_blank" rel="noreferrer">
+            {project.ganttChartPath ? (
+              <a className="pd-doc-link" href={storedFileUrl(project.ganttChartPath)} target="_blank" rel="noreferrer" onClick={storedFileClick(project.ganttChartPath)}>
                 <i className="fa fa-file-o" aria-hidden="true"></i> {project.ganttChartName || 'Gantt chart'}
               </a>
             ) : (
@@ -601,7 +602,7 @@ const ProjectDetails = () => {
                     <i className="fa fa-file-pdf-o pd-doc-icon" aria-hidden="true"></i>
                     <div className="pd-doc-info"><strong>{d.name}</strong><span>{d.type} &middot; {formatDate(d.date)}</span></div>
                     <div className="pd-doc-actions">
-                      {d.url && <a className="pd-icon-btn" href={d.url} target="_blank" rel="noopener noreferrer" title="View document" aria-label="View document"><i className="fa fa-eye" aria-hidden="true"></i></a>}
+                      {d.url && <a className="pd-icon-btn" href={storedFileUrl(d.url)} target="_blank" rel="noopener noreferrer" onClick={storedFileClick(d.url)} title="View document" aria-label="View document"><i className="fa fa-eye" aria-hidden="true"></i></a>}
                       {canEdit && (
                         <>
                           <button type="button" className="pd-icon-btn" onClick={() => openEditDoc(i)} title="Edit document" aria-label="Edit document"><i className="fa fa-pencil" aria-hidden="true"></i></button>
@@ -678,7 +679,7 @@ const ProjectDetails = () => {
                 <dt>Sanction letter</dt>
                 <dd className="pd-sanction-view">
                   {sanctionDoc ? (
-                    <a href={sanctionDoc.url} target="_blank" rel="noopener noreferrer"><i className={`fa ${sanctionDoc.isLink ? 'fa-link' : 'fa-file-pdf-o'}`} aria-hidden="true"></i> {sanctionDoc.name}</a>
+                    <a href={storedFileUrl(sanctionDoc.url)} target="_blank" rel="noopener noreferrer" onClick={storedFileClick(sanctionDoc.url)}><i className={`fa ${sanctionDoc.isLink ? 'fa-link' : 'fa-file-pdf-o'}`} aria-hidden="true"></i> {sanctionDoc.name}</a>
                   ) : (
                     <span className="pd-muted">Not uploaded</span>
                   )}

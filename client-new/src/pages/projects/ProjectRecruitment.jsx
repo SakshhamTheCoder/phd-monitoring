@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { positionTypes } from '../../data/projectsData';
 import { formatDate, EMPTY_VALUE } from '../../utils/timeParse';
 import { badgeClass } from '../../data/badges';
-import { apiGetProject, apiListPositions, apiAddPosition, apiUpdatePosition, apiDeletePosition, apiListApplications, apiSetApplicationStatus, fileUrl } from '../../api/projects';
+import { apiGetProject, apiListPositions, apiAddPosition, apiUpdatePosition, apiDeletePosition, apiListApplications, apiSetApplicationStatus } from '../../api/projects';
+import { storedFileUrl, storedFileClick } from '../../api/fileAccess';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import { toast } from 'react-toastify';
@@ -208,7 +209,7 @@ const ProjectRecruitment = () => {
                 <input id="project-recruitment-advertisement-pdf" type="file" accept=".pdf" ref={adRef} onChange={handleAdvertisement} />
                 {posForm.advertisementName
                   ? <span className="pr-field-hint"><i className="fa fa-paperclip" aria-hidden="true"></i> {posForm.advertisementName}</span>
-                  : posForm.advertisementPath && <a className="pr-field-hint" href={fileUrl(posForm.advertisementPath)} target="_blank" rel="noopener noreferrer"><i className="fa fa-file-pdf-o" aria-hidden="true"></i> Current advertisement</a>}
+                  : posForm.advertisementPath && <a className="pr-field-hint" href={storedFileUrl(posForm.advertisementPath)} target="_blank" rel="noopener noreferrer" onClick={storedFileClick(posForm.advertisementPath)}><i className="fa fa-file-pdf-o" aria-hidden="true"></i> Current advertisement</a>}
               </div>
               <div className="pr-field full"><label htmlFor="project-recruitment-job-description">Job description</label><textarea id="project-recruitment-job-description" rows="4" value={posForm.description} onChange={e => setPosForm({...posForm, description: e.target.value})} placeholder="Describe the role, responsibilities, and what the candidate will work on. This is shown to students on the Openings portal." /></div>
             </div>
@@ -356,8 +357,8 @@ const ProjectRecruitment = () => {
                 <div className="pr-resume-info"><i className="fa fa-file-pdf-o" aria-hidden="true"></i> <span>{selectedApplicant.resume || 'No resume attached'}</span></div>
                 {selectedApplicant.resume && (
                   <div className="pr-resume-btns">
-                    <a className="custom-button custom-button--secondary custom-button--sm" href={selectedApplicant.resumeUrl} target="_blank" rel="noopener noreferrer">View resume</a>
-                    <a className="custom-button custom-button--quiet custom-button--sm" href={selectedApplicant.resumeUrl} download target="_blank" rel="noopener noreferrer">Download</a>
+                    <a className="custom-button custom-button--secondary custom-button--sm" href={storedFileUrl(selectedApplicant.resumePath)} target="_blank" rel="noopener noreferrer" onClick={storedFileClick(selectedApplicant.resumePath)}>View resume</a>
+                    <a className="custom-button custom-button--quiet custom-button--sm" href={storedFileUrl(selectedApplicant.resumePath)} download target="_blank" rel="noopener noreferrer" onClick={storedFileClick(selectedApplicant.resumePath, { download: true })}>Download</a>
                   </div>
                 )}
               </div>
