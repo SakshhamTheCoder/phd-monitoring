@@ -30,12 +30,12 @@ class ProjectWorkflowTest extends TestCase
 
     private function relative(string $stored): string
     {
-        return preg_replace('#^/?app/public/#', '', $stored);
+        return preg_replace('#^/?app/#', '', $stored);
     }
 
     public function test_a_project_from_creation_to_deletion(): void
     {
-        Storage::fake('public');
+        Storage::fake('local');
         $pi = $this->account('supervisor@fixture.test');
         $head = $this->account('hod@fixture.test');
         $outsider = $this->account('outsider@fixture.test');
@@ -72,7 +72,7 @@ class ProjectWorkflowTest extends TestCase
             'file' => UploadedFile::fake()->create('report.pdf', 20, 'application/pdf'),
         ], ['Accept' => 'application/json'])->assertCreated();
         $documentPath = $this->relative($document->json('file_path'));
-        Storage::disk('public')->assertExists($documentPath);
+        Storage::disk('local')->assertExists($documentPath);
         $this->actingAs($pi)->postJson("/api/projects/{$id}/documents", ['name' => 'Site', 'link' => 'https://example.invalid'])->assertCreated();
         $this->actingAs($pi)->postJson("/api/projects/{$id}/documents", ['name' => 'Empty'])->assertStatus(400);
 
@@ -86,8 +86,8 @@ class ProjectWorkflowTest extends TestCase
             'gantt_chart' => UploadedFile::fake()->create('gantt-2.pdf', 10, 'application/pdf'),
         ], ['Accept' => 'application/json'])->assertOk();
         $secondGantt = $this->relative($second->json('project.gantt_chart_path'));
-        Storage::disk('public')->assertMissing($firstGantt);
-        Storage::disk('public')->assertExists($secondGantt);
+        Storage::disk('local')->assertMissing($firstGantt);
+        Storage::disk('local')->assertExists($secondGantt);
         $this->assertSame('Sweep project, renamed', $second->json('project.title'));
 
         $this->actingAs($head)->postJson("/api/projects/{$id}", ['title' => 'Taken'])->assertForbidden();
@@ -97,7 +97,7 @@ class ProjectWorkflowTest extends TestCase
         $this->actingAs($pi)->deleteJson("/api/projects/{$id}")->assertOk();
         $this->assertDatabaseMissing('projects', ['id' => $id]);
         $this->assertDatabaseMissing('project_milestones', ['project_id' => $id]);
-        Storage::disk('public')->assertMissing($documentPath);
-        Storage::disk('public')->assertMissing($secondGantt);
+        Storage::disk('local')->assertMissing($documentPath);
+        Storage::disk('local')->assertMissing($secondGantt);
     }
 }
