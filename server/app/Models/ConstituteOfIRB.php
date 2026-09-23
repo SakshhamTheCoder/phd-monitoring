@@ -106,7 +106,13 @@ class ConstituteOfIRB extends Model
                 'email' => $this->expertOutside->email,
                 'phone' => $this->expertOutside->phone
             ] : null,
-
+            'doctoral' => $this->student->doctoralCommittee->map(function ($faculty) {
+                return [
+                    'name' => $faculty->user->name(),
+                    'designation' => $faculty->designation,
+                    'email' => $faculty->user->email,
+                ];
+            }),
         ]);
     }
 

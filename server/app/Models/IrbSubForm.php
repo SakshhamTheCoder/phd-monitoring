@@ -93,7 +93,7 @@ class IrbSubForm extends Model
                 'name' => $supervisor->user->name(),
                 'designation' => $supervisor->designation,
                 'department' => $supervisor->department->name,
-                'supervised_campus'=>$supervisor->supervised_campus+1,
+                'supervised_campus'=>$supervisor->supervised_campus,
                 'supervised_outside'=>$supervisor->supervised_outside,
             ];
         });

@@ -116,7 +116,6 @@ class StudentController extends Controller {
         $student->cgpa = $request->cgpa;
         $student->is_jrf = $request->has('is_jrf') ? $request->boolean('is_jrf') : null;
         $student->is_net_gate_qualified = $request->has('is_net_gate_qualified') ? $request->boolean('is_net_gate_qualified') : null;
-        $student->date_of_thesis_awarded = $request->date_of_thesis_awarded;
         if($request->has('overall_progress'))
              $student->overall_progress = $request->overall_progress;
         else
@@ -1159,6 +1158,7 @@ class StudentController extends Controller {
         $student->date_of_irb = $request->date_of_irb;
         $student->date_of_synopsis = $request->date_of_synopsis;
         $student->date_of_thesis = $request->date_of_thesis;
+        $student->date_of_thesis_awarded = $request->date_of_thesis_awarded;
         $student->phd_title = $request->phd_title;
         $student->fathers_name = $request->fathers_name;
         $student->current_status = $request->current_status;

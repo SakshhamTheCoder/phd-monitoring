@@ -277,6 +277,10 @@ class ThesisSubmissionController extends Controller
                     'fee_receipt' => 'required|file|mimes:pdf,jpg,jpeg,png|max:20480',
                 ]);
                 $formInstance->date_of_synopsis = $request->date_of_synopsis;
+                if ($formInstance->student->date_of_synopsis == null) {
+                    $formInstance->student->date_of_synopsis = $request->date_of_synopsis;
+                    $formInstance->student->save();
+                }
                 $formInstance->reciept_no = $request->reciept_no;
                 $formInstance->date_of_fee_submission = $request->date_of_fee_submission;
                 $formInstance->thesis_pdf = $this->replaceUploadedFile($formInstance->thesis_pdf, $request->file('thesis_pdf'), 'thesis', $user->student->roll_no);
@@ -375,6 +379,10 @@ class ThesisSubmissionController extends Controller
                 if ($request->approval) {
                     $formInstance->completion='complete';
                     $formInstance->status = 'approved';
+                    if ($formInstance->student->date_of_thesis == null) {
+                        $formInstance->student->date_of_thesis = now()->toDateString();
+                        $formInstance->student->save();
+                    }
                     $formInstance->addHistoryEntry("Thesis approved by DORDC", $user->name());
                 }
             }

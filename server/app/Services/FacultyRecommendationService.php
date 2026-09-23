@@ -98,7 +98,7 @@ class FacultyRecommendationService
             $scored[] = [
                 'faculty_code' => $f->faculty_code, 'name' => $f->user?->name() ?? '—',
                 'email' => $f->user?->email ?? '—', 'department' => $f->department->name ?? '—',
-                'designation' => $f->designation, 'expertise' => $f->expertise ?? [],
+                'designation' => $f->designation, 'expertise' => $f->expertise ?: array_filter([$f->areaOfSpecialization?->name]),
                 'score' => round($score, 3), 'percent' => (int) round(min(0.99, $score) * 100),
             ];
         }

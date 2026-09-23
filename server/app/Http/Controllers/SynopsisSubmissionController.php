@@ -541,6 +541,9 @@ class SynopsisSubmissionController extends Controller
         $student = $formInstance->student;
         $student->phd_title = $formInstance->revised_title;
         $student->overall_progress = $formInstance->total_progress;
+        if (!$student->date_of_synopsis) {
+            $student->date_of_synopsis = now()->toDateString();
+        }
         $student->save();
 
         $formInstance->addHistoryEntry('Synopsis approved by DORDC after the viva', $user->name());

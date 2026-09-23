@@ -8,7 +8,6 @@ use App\Models\ConstituteOfIRB;
 use App\Models\IrbSubForm;
 use App\Models\ResearchExtentionsForm;
 use App\Models\ListOfExaminersForm;
-use App\Models\Presentation;
 use App\Models\StudentSemesterOffForm;
 use App\Models\SupervisorChangeForm;
 use App\Models\SupervisorAllocation;
@@ -28,7 +27,6 @@ class AdminFormController extends Controller
         'irb-submission' => IrbSubForm::class,
         'irb-extension' => ResearchExtentionsForm::class,
         'list-of-examiners' => ListOfExaminersForm::class,
-        'presentation' => Presentation::class,
         'semester-off' => StudentSemesterOffForm::class,
         'status-change' => StudentStatusChangeForms::class,
         'supervisor-allocation' => SupervisorAllocation::class,
@@ -111,11 +109,6 @@ class AdminFormController extends Controller
             // The special one carries on to the Vice Chancellor.
             'steps' => ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc', 'director', 'complete']
         ],
-        // 'presentation' => [
-        //     'form_name' => 'Presentation',
-        //     'max_count' => 100,
-        //     'steps' => ['student', 'external']
-        // ],
     ];
 
     private $lockFields = [
@@ -184,7 +177,7 @@ class AdminFormController extends Controller
                                 'steps' => $instance->steps,
                                 'locks' => [
                                     'student' => $instance->student_lock,
-                                    'supervisor' => $instance->supervisor_lock,
+                                    'faculty' => $instance->supervisor_lock,
                                     'phd_coordinator' => $instance->phd_coordinator_lock,
                                     'hod' => $instance->hod_lock,
                                     'dordc' => $instance->dordc_lock,
