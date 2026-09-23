@@ -1,6 +1,7 @@
 import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import LoadError from '../common/LoadError';
 import './LogViewer.css';
 
 const POLL_MS = 5000;
@@ -177,6 +178,11 @@ const LogViewer = () => {
     <div className="log-terminal" ref={containerRef} onScroll={handleScroll}>
       {loading && <div className="log-empty">Loading the most recent entries...</div>}
       {!loading && !failed && logs.length === 0 && <div className="log-empty">The log file is empty.</div>}
+      {/* The poll only follows a tail it has read, so a failed first read would
+          otherwise stay blank for good. */}
+      {!loading && failed && logs.length === 0 && (
+        <LoadError message="Could not read the log file. Check your connection and try again." onRetry={() => fetchLogs('tail')} />
+      )}
       {atStart && logs.length > 0 && <div className="log-boundary">Start of log file</div>}
 
       {logs.map((entry) => {

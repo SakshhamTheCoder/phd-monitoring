@@ -13,7 +13,7 @@ import FacultyForm from '../../components/facultyForm/FacultyForm';
 import ClerkForm from '../../components/clerkForm/ClerkForm';
 import { baseURL } from '../../api/urls';
 import CustomButton from '../../components/forms/fields/CustomButton';
-import { customFetch, isNetworkError, NETWORK_ERROR_MESSAGE } from '../../api/base';
+import { customFetch, NETWORK_ERROR_MESSAGE } from '../../api/base';
 import { formatDate } from '../../utils/timeParse';
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
 import useCapabilities from '../../context/CapabilitiesContext';
@@ -195,68 +195,28 @@ Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,d
         let batchSuccess = false;
 
         while (retryCount <= maxRetries && !batchSuccess) {
-          try {
-            const response = await fetch(`${baseURL}/users/bulk-import`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-              },
-              body: JSON.stringify({ batch_data: batchData }),
-            });
+          // Quiet, so a failed batch is reported once below rather than once
+          // per attempt. A 401 still sends customFetch to the sign-in page,
+          // after it clears the session, and there is no point going on.
+          const res = await customFetch(`${baseURL}/users/bulk-import`, 'POST', { batch_data: batchData }, false);
+          if (!res.success && !localStorage.getItem('token')) return;
 
-            if (response.status === 302 || response.redirected) {
-              toast.error('Session expired. Please login again.');
-              setLoading(false);
-              setSubmitting(false);
-              return;
-            }
-
-            let data;
-            try {
-              data = await response.json();
-            } catch (jsonError) {
-              throw new Error('Invalid server response');
-            }
-
-            if (!response.ok) {
-              if (retryCount < maxRetries) {
-                retryCount++;
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                continue;
-              }
-              
-              toast.error(`Batch ${batchIndex + 1} failed: ${data.message || 'Server error'}`);
-              totalErrors += batch.length;
-              break;
-            }
-
-            if (data.success) {
-              totalSuccess += data.data.success_count || 0;
-              totalUpdated += data.data.update_count || 0;
-              totalErrors += data.data.error_count || 0;
-              allErrors = allErrors.concat(data.data.errors || []);
-              batchSuccess = true;
-            } else {
-              if (retryCount < maxRetries) {
-                retryCount++;
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                continue;
-              }
-              toast.error(`Batch ${batchIndex + 1} failed: ${data.message}`);
-              totalErrors += batch.length;
-            }
-          } catch (fetchError) {
-            if (retryCount < maxRetries) {
-              retryCount++;
-              await new Promise(resolve => setTimeout(resolve, 1000));
-              continue;
-            }
-            toast.error(isNetworkError(fetchError)
-                            ? NETWORK_ERROR_MESSAGE
-                            : `Batch ${batchIndex + 1} network error: ${fetchError.message}`);
+          const data = res.response || {};
+          if (res.success && data.success) {
+            totalSuccess += data.data?.success_count || 0;
+            totalUpdated += data.data?.update_count || 0;
+            totalErrors += data.data?.error_count || 0;
+            allErrors = allErrors.concat(data.data?.errors || []);
+            batchSuccess = true;
+          } else if (retryCount < maxRetries) {
+            retryCount++;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          } else {
+            toast.error(res.networkError
+              ? NETWORK_ERROR_MESSAGE
+              : `Batch ${batchIndex + 1} failed: ${data.message || 'Server error'}`);
             totalErrors += batch.length;
+            break;
           }
         }
       }
@@ -337,6 +297,7 @@ Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,d
       <CustomModal
         isOpen={isOpen}
         onClose={() => closeUserModal(false)}
+        closeOnOutsideClick={false}
         width={createKind === null && !editData ? '520px' : '80vw'}
       >
         {/* These forms only invoke onSuccess/onClose after a save completes,
@@ -353,7 +314,9 @@ Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,d
           <StudentForm onSuccess={() => closeUserModal(true)} onClose={() => closeUserModal(true)} />
         ) : createKind === 'faculty' ? (
           // Creates the User and Faculty record in one call.
-          <FacultyForm onSuccess={() => closeUserModal(true)} onClose={() => closeUserModal(true)} />
+          // FacultyForm calls both onSuccess and onClose after a save, so only
+          // one of them may refetch.
+          <FacultyForm onSuccess={() => closeUserModal(true)} />
         ) : createKind === 'clerk' ? (
           <ClerkForm onSuccess={() => closeUserModal(true)} onClose={() => closeUserModal(true)} />
         ) : (

@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import FileLink, { isFilePath } from "../common/FileLink";
 import { EMPTY_VALUE } from "../../utils/timeParse";
 import { useRowMenu } from "../../hooks/useRowMenu";
+import LoadError from "../common/LoadError";
 
 const PagenationTable = ({
   endpoint,
@@ -41,6 +42,10 @@ const PagenationTable = ({
   // shared by every request on the page, so it could already be off while this
   // table was still waiting, and the table said "No results yet." meanwhile.
   const [fetching, setFetching] = useState(true);
+  // A failed load clears the rows: keeping the previous ones showed an answer
+  // to a question the user was no longer asking.
+  const [loadFailed, setLoadFailed] = useState(false);
+  const approving = useRef(false);
 
   const { setLoading } = useLoading();
   // Which request the table is waiting for. A filter changing while one is
@@ -94,6 +99,10 @@ const PagenationTable = ({
         // Approving rows can empty the last page; step back to one that exists.
         if (page > pageCount) setCurrentPage(pageCount);
         setRole(data.response.role || "student");
+        setLoadFailed(false);
+      } else if (isCurrent()) {
+        setForms([]);
+        setLoadFailed(true);
       }
     } catch (err) {
       console.error(err);
@@ -138,31 +147,33 @@ const PagenationTable = ({
 
   const handleApproval = async () => {
     const selectedIds = Array.from(selectedForms);
+    if (approving.current || selectedIds.length === 0) return;
+    if (!window.confirm(`Approve ${selectedIds.length} selected form${selectedIds.length === 1 ? "" : "s"}? This cannot be undone.`)) return;
+
+    approving.current = true;
     setLoading(true);
+    try {
+      if (customBulkAction) {
+        await customBulkAction(selectedIds);
+        fetchData(currentPage, rowsPerPage, filters);
+        return;
+      }
 
-    if (customBulkAction) {
-      await customBulkAction(selectedIds);
-      fetchData(currentPage, rowsPerPage, filters);
+      const data = await customFetch(`${baseURL}${endpoint}/bulk`, "POST", { form_ids: selectedIds, approval: true });
+      if (data.success) {
+        toast.success("Selected forms approved successfully.");
+        setSelectedForms(new Set());
+        fetchData(currentPage, rowsPerPage, filters);
+      } else {
+        toast.error("Failed to approve selected forms.");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("An error occurred while approving forms.");
+    } finally {
+      approving.current = false;
       setLoading(false);
-      return;
     }
-
-    const url = `${baseURL}${endpoint}/bulk`;
-    customFetch(url, "POST", { form_ids: selectedIds,approval:true })
-      .then((data) => {
-        if (data.success) {
-          toast.success("Selected forms approved successfully.");
-          setSelectedForms(new Set());
-          fetchData(currentPage, rowsPerPage, filters);
-        } else {
-          toast.error("Failed to approve selected forms.");
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-        toast.error("An error occurred while approving forms.");
-      })
-      .finally(() => setLoading(false));
   };
 
   return (
@@ -238,7 +249,12 @@ const PagenationTable = ({
       colSpan={fields.length + 1 + (selecting ? 1 : 0) + (actions.length > 0 ? 1 : 0) + (rowClickable && !selectMode ? 1 : 0)}
       className="no-data-cell"
     >
-      {fetching ? "Loading…" : hasFilters ? "No results match your filters." : "No results yet."}
+      {loadFailed && !fetching ? (
+        <LoadError
+          message="Could not load this list. Check your connection and try again."
+          onRetry={() => fetchData(currentPage, rowsPerPage, filters)}
+        />
+      ) : fetching ? "Loading…" : hasFilters ? "No results match your filters." : "No results yet."}
     </td>
   </tr>
 )}

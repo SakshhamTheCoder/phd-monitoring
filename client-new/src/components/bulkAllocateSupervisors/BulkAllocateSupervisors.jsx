@@ -20,6 +20,7 @@ const HEADERS = [
 const BulkAllocateSupervisors = ({ onSuccess }) => {
   const { setLoading } = useLoading();
   const [rows, setRows] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
 
   const downloadSampleCSV = () => {
     const sampleRows = [
@@ -54,12 +55,15 @@ const BulkAllocateSupervisors = ({ onSuccess }) => {
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    // Cleared so picking the same file again, once corrected, loads it again.
+    e.target.value = '';
 
     file.text().then((text) => {
       const rawData = parseCsv(text);
 
       const parsed = [];
-      let invalidRows = 0;
+      // One toast for the whole sheet: one per bad row buried the screen.
+      const rowErrors = [];
 
       rawData.forEach((rowArr, index) => {
         if (index === 0) return; // Skip header row
@@ -73,8 +77,7 @@ const BulkAllocateSupervisors = ({ onSuccess }) => {
 
         const rollNo = (rowArr[0] || '').toString().trim();
         if (!rollNo) {
-          invalidRows++;
-          toast.error(`Row ${rowNumber}: Missing Roll Number`);
+          rowErrors.push(`Row ${rowNumber}: missing roll number`);
           return;
         }
 
@@ -84,22 +87,22 @@ const BulkAllocateSupervisors = ({ onSuccess }) => {
           .filter((cell) => cell !== '');
 
         if (supervisors.length === 0) {
-          invalidRows++;
-          toast.error(`Row ${rowNumber}: At least one supervisor is required`);
+          rowErrors.push(`Row ${rowNumber}: no supervisor given`);
           return;
         }
 
         if (new Set(supervisors).size !== supervisors.length) {
-          invalidRows++;
-          toast.error(`Row ${rowNumber}: Supervisors must be unique`);
+          rowErrors.push(`Row ${rowNumber}: the same supervisor is named twice`);
           return;
         }
 
         parsed.push({ row_number: rowNumber, roll_no: rollNo, supervisors });
       });
 
-      if (invalidRows > 0) {
-        toast.warn(`${invalidRows} row(s) ignored due to errors`);
+      if (rowErrors.length > 0) {
+        const shown = rowErrors.slice(0, 5).join('; ');
+        const more = rowErrors.length > 5 ? `; and ${rowErrors.length - 5} more` : '';
+        toast.error(`${rowErrors.length} row(s) ignored. ${shown}${more}. Correct the file and choose it again.`, { autoClose: 10000 });
       }
 
       if (parsed.length === 0) {
@@ -113,11 +116,13 @@ const BulkAllocateSupervisors = ({ onSuccess }) => {
   };
 
   const confirmBulkAllocate = () => {
+    if (submitting) return;
     if (rows.length === 0) {
       toast.warn('Please upload a CSV file before confirming.');
       return;
     }
 
+    setSubmitting(true);
     setLoading(true);
 
     customFetch(baseURL + '/forms/supervisor-allocation/bulk-allocate', 'POST', { batch_data: rows })
@@ -140,10 +145,12 @@ const BulkAllocateSupervisors = ({ onSuccess }) => {
         } else {
           toast.error(data?.response?.message || 'Bulk allocation failed');
         }
-        setLoading(false);
       })
       .catch((error) => {
         toast.error('Error in bulk allocation: ' + error);
+      })
+      .finally(() => {
+        setSubmitting(false);
         setLoading(false);
       });
   };
@@ -225,8 +232,9 @@ const BulkAllocateSupervisors = ({ onSuccess }) => {
 
           <div className="bulk-preview-actions">
             <CustomButton
-              text='Confirm Bulk Allocation'
+              text={submitting ? 'Allocating...' : 'Confirm Bulk Allocation'}
               onClick={confirmBulkAllocate}
+              disabled={submitting}
               className="bulk-preview-confirm"
             />
           </div>

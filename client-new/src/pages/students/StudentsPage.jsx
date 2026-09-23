@@ -264,7 +264,13 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
       {readsUrf && (
         <Tabs
           value={tab}
-          onChange={setTab}
+          // Each tab's FilterBar unmounts when the other opens, so a search
+          // it kept would still filter the list with nothing on screen to say so.
+          onChange={(next) => {
+            setTab(next);
+            setFilter([]);
+            setUgFilter({ conditions: [] });
+          }}
           items={[
             { value: 'phd', label: 'PhD Scholars' },
             { value: 'ug', label: 'UG Students' },
@@ -364,6 +370,7 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
       <CustomModal
         isOpen={ugFormOpen}
         onClose={() => setUgFormOpen(false)}
+        closeOnOutsideClick={false}
         title={ugStudent ? "Edit UG Student" : "Add UG Student"}
         width="60vw"
       >
@@ -395,6 +402,7 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
         isOpen={isModalOpen}
         onClose={closeForm}
         setIsOpen={setIsModalOpen}
+        closeOnOutsideClick={false}
         title={editMode ? "Edit Student" : "Add Student"}
         width="80vw"
       >
