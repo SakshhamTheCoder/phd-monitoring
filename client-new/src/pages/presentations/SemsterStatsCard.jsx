@@ -19,6 +19,7 @@ import FileUploadField from "../../components/forms/fields/FileUploadField";
 import { formatDate, toDateValue } from '../../utils/timeParse';
 import { currentRole } from '../../auth/access';
 import Loader from "../../components/loader/loader";
+import LoadError from "../../components/common/LoadError";
 
 // The picker and its stylesheet are only needed inside the admin/DoRDC
 // create and edit dialogs, while this card renders for every role.
@@ -37,15 +38,18 @@ const blankCreateForm = () => ({
   ppt_file: null,
 });
 
-const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
+// The list page owns whether its filter bar shows; this card only offers the
+// toggle. Owning a copy here as well let the two disagree, so the first press
+// could appear to do nothing.
+const SemesterStatsCard = ({ semesterName = null, filtersEnabled = false, setFilters = null }) => {
   const [semesterStats, setSemesterStats] = useState(null);
   // null stats meant both "still loading" and "there is no semester", so the
   // card told DoRDC to create the first semester while the real one loaded.
   const [statsLoaded, setStatsLoaded] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openCreateModal, setOpenCreateModal] = useState(false);
   const [body, setBody] = useState({});
-  const [filtersEnabled, setFiltersEnabled] = useState(false);
  const [location, setLocation] = useState(window.location.pathname);
  
   const [reportPeriods, setReportPeriods] = useState([]);
@@ -56,10 +60,6 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
     notification: false,
     ppt_file: null,
   });
-  useEffect(() => {
-    if(setFilters) 
-    setFilters(filtersEnabled);
-  },[filtersEnabled]);
   const [open, setOpen] = useState(false);
   const [tabIndex, setTabIndex] = useState(0);
 
@@ -102,14 +102,19 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
   }, []);
 
   const fetchSemesterStats = async () => {
-    try {
-      let url = baseURL + "/semester/recent";
-      if (semesterName) {
-        url = baseURL + "/semester/" + semesterName;
-      }
-      const res = await customFetch(url, "GET", {}, false);
-      const data = res.response?.data || res.data;
-      setSemesterStats(data);
+    let url = baseURL + "/semester/recent";
+    if (semesterName) {
+      url = baseURL + "/semester/" + semesterName;
+    }
+    const res = await customFetch(url, "GET", {}, false);
+    // The server says there is no semester with a 404. Any other failure is no
+    // answer at all, and offering to create the first semester then invites a
+    // duplicate of the one that failed to load.
+    const noSemester = !res.success && res.status === 404;
+    const data = res.success ? res.response?.data : null;
+    setLoadError(!res.success && !noSemester);
+    setSemesterStats(data || null);
+    if (data) {
       setEditForm({
         semester_name: data.semester_name,
         start_date: new Date(data.start_date),
@@ -117,13 +122,8 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
         notification: data.notification,
         ppt_file: data.ppt_file || null,
       });
-    } catch (error) {
-      console.error("Error fetching semester stats:", error);
-      // Set empty state when no semesters exist
-      setSemesterStats(null);
-    } finally {
-      setStatsLoaded(true);
     }
+    setStatsLoaded(true);
   };
 
   const currentDate = new Date();
@@ -207,6 +207,17 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
 
   if (!statsLoaded) {
     return <div className="semester-card" aria-busy="true"><p className="semester-stats-line">Loading semester…</p></div>;
+  }
+
+  if (loadError) {
+    return (
+      <div className="semester-card">
+        <LoadError
+          message="Could not load the evaluation semester. Check your connection and try again."
+          onRetry={fetchSemesterStats}
+        />
+      </div>
+    );
   }
 
   if (!semesterStats) {
@@ -458,9 +469,9 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
             {(isInSemester || isBeforeSemester) && (role === "admin" || role === "dordc") && (
               <CustomButton text="Edit Evaluation Semester" onClick={() => setOpenEditModal(true)} />
             )}
-            {(role === "admin" || role === "dordc" || role === "faculty" || role === "phd_coordinator") && (
+            {setFilters && (role === "admin" || role === "dordc" || role === "faculty" || role === "phd_coordinator") && (
               <CustomButton
-                onClick={() => setFiltersEnabled((prev) => !prev)}
+                onClick={() => setFilters(!filtersEnabled)}
                 text={filtersEnabled ? "Disable Advanced Filters" : "Enable Advanced Filters"}
                 variant="secondary"
               />
@@ -487,12 +498,19 @@ const SemesterStatsCard = ({ semesterName = null,setFilters=null}) => {
           ]}
         />
 
-        {tabIndex === 0 && (
-          <SchedulePresentation semester={semester_name} />
-        )}
-        {tabIndex === 1 && (
+        {/* Both stay mounted so switching tabs keeps what was entered. */}
+        <div hidden={tabIndex !== 0}>
+          <SchedulePresentation
+            semester={semester_name}
+            close={() => {
+              closeModal();
+              fetchSemesterStats();
+            }}
+          />
+        </div>
+        <div hidden={tabIndex !== 1}>
           <BulkSchedulePresentation semester_name={semester_name} />
-        )}
+        </div>
       </>
     </CustomModal>
         </div>

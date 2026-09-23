@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Tabs from "../../components/tabs/Tabs";
 import FilterBar from "../../components/filterBar/FilterBar";
 import PagenationTable from "../../components/pagenationTable/PagenationTable";
@@ -37,9 +37,11 @@ const TAB_FILTERS = {
 const PresentationListPage = () => {
   const { semester_id } = useParams();
   const { pathname } = useLocation();
-  const [extraFilter, setExtraFilter] = useState(false);
   const role = currentRole() || "student";
   const [presentationTab, setPresentationTab] = useState(REVIEWS_NOTHING.includes(role) ? ALL_TAB : ACTION_TAB);
+  // The All tab opens with the filter bar showing; the stats card's toggle
+  // changes this same flag.
+  const [extraFilter, setExtraFilter] = useState(presentationTab === ALL_TAB);
   // A search from the filter bar stands in for the tab's filters until the
   // tab changes.
   const [searchFilters, setSearchFilters] = useState(null);
@@ -47,6 +49,7 @@ const PresentationListPage = () => {
   const selectTab = (tab) => {
     setPresentationTab(tab);
     setSearchFilters(null);
+    if (tab === ALL_TAB) setExtraFilter(true);
   };
 
   // Derived rather than set from an effect: the effect handed the table a
@@ -56,17 +59,11 @@ const PresentationListPage = () => {
   const enableApproval = presentationTab === ACTION_TAB && BULK_APPROVERS.includes(role);
   const endpoint = presentationTab === NOT_SCHEDULED_TAB ? `${pathname}/not-scheduled` : pathname;
 
-  // The stats card turns the filter bar off as it mounts, so the All tab
-  // turns it back on after.
-  useEffect(() => {
-    if (presentationTab === ALL_TAB) setExtraFilter(true);
-  }, [presentationTab]);
-
   return (
     <>
       <PageHeader title="Progress Monitoring List" />
 
-      <SemesterStatsCard semesterName={semester_id} setFilters={setExtraFilter} />
+      <SemesterStatsCard semesterName={semester_id} filtersEnabled={extraFilter} setFilters={setExtraFilter} />
 
       {role !== "student" && (
         <Tabs
@@ -87,7 +84,8 @@ const PresentationListPage = () => {
             .filter((tab) => !(tab.value === NOT_SCHEDULED_TAB && !READS_NOT_SCHEDULED.includes(role)))}
         />
       )}
-      {extraFilter && <FilterBar onSearch={setSearchFilters} />}
+      {/* Keyed by tab: a tab change drops the search, so the box must empty too. */}
+      {extraFilter && <FilterBar key={presentationTab} onSearch={setSearchFilters} />}
       <PagenationTable
         endpoint={endpoint}
         filters={filters}

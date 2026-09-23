@@ -17,6 +17,7 @@ import { column } from "../../components/bulkImport/columns";
 import { currentRole } from '../../auth/access';
 import { toDateValue } from '../../utils/timeParse';
 import Loader from "../../components/loader/loader";
+import { useLoading } from "../../context/LoadingContext";
 
 // Only the admin/DoRDC edit dialog uses the picker, so it and its
 // stylesheet load when that dialog opens.
@@ -36,6 +37,10 @@ const PresentationSemester = () => {
   const [showProgressImport, setShowProgressImport] = useState(false);
   const [importing, setImporting] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  // Saving carries a file, so a second press while the first is in flight
+  // posted it twice.
+  const [saving, setSaving] = useState(false);
+  const { setLoading } = useLoading();
   const [editForm, setEditForm] = useState({
     semester_name: "",
     start_date: null,
@@ -50,9 +55,14 @@ const PresentationSemester = () => {
   }, []);
 
   const handleEditClick = async (semester) => {
+    setLoading(true);
     try {
       const res = await customFetch(`${baseURL}/semester/${semester.semester_name}`, "GET", {}, false);
-      const data = res.response?.data || res.data;
+      const data = res.success ? res.response?.data : null;
+      if (!data) {
+        toast.error("Could not load that semester. Try again.");
+        return;
+      }
       setEditForm({
         semester_name: data.semester_name,
         start_date: new Date(data.start_date),
@@ -64,10 +74,14 @@ const PresentationSemester = () => {
     } catch (error) {
       console.error("Error fetching semester data:", error);
       toast.error("Failed to load semester data");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleEditSubmit = async () => {
+    if (saving) return;
+    setSaving(true);
     try {
       const formData = new FormData();
       formData.append('semester_name', editForm.semester_name);
@@ -95,6 +109,8 @@ const PresentationSemester = () => {
       setRefreshKey((prev) => prev + 1);
     } catch (err) {
       console.error("PUT error:", err);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -237,7 +253,7 @@ const PresentationSemester = () => {
           />
 
           <div style={{ textAlign: "right", marginTop: "10px" }}>
-            <CustomButton onClick={handleEditSubmit} text="Save Changes" />
+            <CustomButton onClick={handleEditSubmit} text={saving ? "Saving…" : "Save Changes"} disabled={saving} />
           </div>
           </Suspense>
         </CustomModal>
