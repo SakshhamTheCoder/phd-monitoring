@@ -1,6 +1,7 @@
 import React from 'react';
 import './TableComponent.css';
 import FileLink, { isFilePath } from '../../common/FileLink';
+import { cellClass, isStatusKey, statusTone } from '../../../utils/tableCell';
 
 // `leading`, when given, draws a column before S.No, such as a row's selection
 // tick box. It and each `components[].component` are called as plain render
@@ -16,7 +17,7 @@ const TableComponent = ({ data, keys, titles, components = [], rowStyle, label, 
 
     return (
         <div className="table-container">
-            {label && <h3 className="table-label" style={{ textAlign: 'left', fontWeight: 'bold' }}>{label}</h3>}
+            {label && <h3 className="table-label">{label}</h3>}
             <table className="custom-table">
                 <thead>
                     <tr className="table-header">
@@ -36,8 +37,9 @@ const TableComponent = ({ data, keys, titles, components = [], rowStyle, label, 
                                 const value = row[key];
                                 const renderCell = componentMap[key];
 
+                                const plain = !renderCell && !isFilePath(value);
                                 return (
-                                    <td key={keyIndex}>
+                                    <td key={keyIndex} className={plain ? cellClass(value) || undefined : undefined}>
                                         {renderCell ? (
                                             renderCell({ row, data: value })
                                         ) : isFilePath(value) ? (
@@ -45,6 +47,8 @@ const TableComponent = ({ data, keys, titles, components = [], rowStyle, label, 
                                         ) : (
                                             typeof value === 'string' && value.startsWith('http') ? (
                                                 <a href={value} target="_blank" rel="noopener noreferrer">link</a>
+                                            ) : isStatusKey(key) && value != null && value !== '' ? (
+                                                <span className={`badge badge--${statusTone(value)}`}>{value}</span>
                                             ) : (
                                                 value
                                             )

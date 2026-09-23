@@ -23,25 +23,26 @@
     --primary-wash: rgba(178, 38, 38, 0.05);  /* hover background */
     --secondary-color: #deacac;
 
-    /* Surface and text */
-    --background-color: #EBEBEB;
+    /* Type. Figtree: plain, open letters that stay readable in dense tables. */
+    --font-sans: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+    /* Surface and text: cool slate neutrals, so the brand red is the only
+       warm colour on the page. */
+    --background-color: #F1F5F9;
     /* The ground every signed-in page sits on. Panels are white on it. */
-    --canvas: #FAFAFA;
+    --canvas: #F8FAFC;
     --surface: #FFFFFF;
     /* A value the reader cannot change (a roll number carried into a form). Kept
        at full-contrast text on a quiet fill: it is something to check, not a
        dead control to skip. */
-    --readonly-bg: #F4F4F5;
-    --text-color: #1a1a1a;
-    --text-muted: #666666;
-    /* #888 was 3.54:1 on white, below the 4.5:1 AA needs for body text, and
-       it is used on 0.72rem notes. #707070 is 4.95:1 on white and 4.74:1 on
-       the canvas. */
-    --text-subtle: #707070;
-    --border-color: #DDDDDD;
-    /* #EEE all but vanished against the #FAFAFA canvas, so a panel's edge was
-       only visible where it also had a shadow. */
-    --border-subtle: #E8E8E8;
+    --readonly-bg: #F1F5F9;
+    --text-color: #0F172A;
+    --text-muted: #475569;
+    /* The lightest text. #64748B is 4.76:1 on white and 4.55:1 on the canvas,
+       so it still passes AA on the small notes it is used for. */
+    --text-subtle: #64748B;
+    --border-color: #CBD5E1;
+    --border-subtle: #E2E8F0;
 
     /* Semantic. Never use these for branding. */
     --danger: #dc2626;

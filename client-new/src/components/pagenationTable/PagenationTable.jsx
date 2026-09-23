@@ -8,6 +8,7 @@ import FileLink, { isFilePath } from "../common/FileLink";
 import { EMPTY_VALUE } from "../../utils/timeParse";
 import { useRowMenu } from "../../hooks/useRowMenu";
 import LoadError from "../common/LoadError";
+import { cellClass, isStatusKey, statusTone } from "../../utils/tableCell";
 
 const PagenationTable = ({
   endpoint,
@@ -302,14 +303,18 @@ const PagenationTable = ({
                   // shown, so a bare number here reads as a count of something.
                   const shown = field === 'overall_progress' && val != null ? `${val}%` : val;
                   const Custom = componentMap[field];
+                  const plain = !Custom && !isFilePath(val);
                   const content = Custom
                     ? <Custom row={form} data={val} />
-                    : isFilePath(val) ? <FileLink value={val} /> : (shown ?? EMPTY_VALUE);
+                    : isFilePath(val) ? <FileLink value={val} />
+                    : shown == null ? <span className="cell-empty">{EMPTY_VALUE}</span>
+                    : isStatusKey(field) ? <span className={`badge badge--${statusTone(shown)}`}>{shown}</span>
+                    : shown;
 
                   return (
                     // The field name rides along as a class so a page can style
                     // one of its own columns.
-                    <td key={idx} className={`cell-${field}`}>
+                    <td key={idx} className={`cell-${field} ${plain ? cellClass(shown) : ""}`.trim()}>
                       {linkField === field && !selectMode ? (
                         <button
                           type="button"

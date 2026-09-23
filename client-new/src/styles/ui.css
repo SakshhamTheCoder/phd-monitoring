@@ -387,9 +387,9 @@
 .modal-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 0.6rem;
-    margin-top: 1.25rem;
-    padding-top: 1rem;
+    gap: var(--space-2);
+    margin-top: var(--space-5);
+    padding-top: var(--space-4);
     border-top: 1px solid var(--border-subtle);
 }
 
@@ -1183,3 +1183,76 @@ body .react-datepicker__portal {
 
 /* A TableComponent inside a panel: the panel spaces it. */
 .panel .table-container { margin: 0; }
+
+/* --- Table content ---------------------------------------------------------
+   utils/tableCell.js tags plain values. Short ones hold a line, prose gets room
+   to wrap at a readable width, and figures line up by digit. */
+.data-table,
+.form-table,
+.custom-table { font-variant-numeric: tabular-nums; line-height: 1.45; }
+
+.cell-nowrap { white-space: nowrap; }
+
+/* min-width is ignored on a table cell, and a width gives way when the table
+   is squeezed. An empty block of the floor's width sets the cell's smallest
+   possible width instead. */
+.cell-text::before {
+    content: '';
+    display: block;
+    width: 10rem;
+}
+
+.cell-empty { color: var(--text-subtle); }
+
+/* The serial number is a row marker, not data. */
+.form-table tbody td:first-child:not(:has(input)),
+.custom-table tbody td:first-child {
+    width: 1%;
+    color: var(--text-subtle);
+}
+
+/* The heading a TableComponent carries above its rows. */
+.table-label {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--text-color);
+    text-align: left;
+}
+
+/* Record read-outs line their figures up too. */
+.facts dd,
+.kv dd,
+.badge { font-variant-numeric: tabular-nums; }
+
+/* --- Dialog content ----------------------------------------------------------
+   The footer stays in view while a long dialog scrolls, so Save is never
+   below the fold. It sticks to the dialog's bottom edge, over the padding; the
+   clipped shadow paints the side and bottom padding white so rows scrolling
+   under it do not show beside the buttons. A footer nested inside a padded
+   wrapper still sticks, with no negative margins to overshoot. */
+.modal-content .modal-actions {
+    position: sticky;
+    bottom: calc(-1 * var(--space-5));
+    z-index: 2;
+    margin-bottom: calc(-1 * var(--space-5));
+    padding-bottom: var(--space-5);
+    background: var(--surface);
+    box-shadow: 0 0 0 var(--space-5) var(--surface);
+    clip-path: inset(0 calc(-1 * var(--space-5)) calc(-1 * var(--space-5)));
+}
+
+/* A dialog is often narrower than a page. Field rows follow the dialog's own
+   width, not the window's: three columns in a 520px dialog left each field
+   about 140px. */
+.modal-body { container-type: inline-size; }
+
+@container (max-width: 640px) {
+    .grid-container { grid-template-columns: 1fr; }
+    .span-1,
+    .span-2,
+    .span-3 { grid-column: span 1; }
+}
+
+/* Room between the title's rule and the first field. */
+.modal-title + .modal-body { padding-top: var(--space-4); }
