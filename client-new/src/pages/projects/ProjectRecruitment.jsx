@@ -9,6 +9,7 @@ import CustomButton from '../../components/forms/fields/CustomButton';
 import { toast } from 'react-toastify';
 import './ProjectRecruitment.css';
 import PageHeader from '../../components/pageHeader/PageHeader';
+import LoadError from '../../components/common/LoadError';
 
 const emptyPos = {
   type: '', title: '', openings: 1, status: 'Open', eligibility: '', skills: '',
@@ -40,6 +41,9 @@ const ProjectRecruitment = () => {
   const navigate = useNavigate();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [publishing, setPublishing] = useState(false);
   const [selectedPosition, setSelectedPosition] = useState(null);
   const [showPostForm, setShowPostForm] = useState(false);
   const [editingPosIdx, setEditingPosIdx] = useState(null);
@@ -54,15 +58,30 @@ const ProjectRecruitment = () => {
     if (file) setPosForm(prev => ({ ...prev, advertisementFile: file, advertisementName: file.name }));
   };
 
-  const loadAll = async () => {
-    const [p, pos, apps] = await Promise.all([apiGetProject(id), apiListPositions(id), apiListApplications(id)]);
-    setProject(p); setPositions(pos); setApplications(apps); setLoading(false);
-  };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { loadAll(); }, [id]);
+  useEffect(() => {
+    let cancelled = false;
+    // Another project starts clean, so the last one's positions and open
+    // forms neither show nor save under this id.
+    setLoading(true);
+    setLoadFailed(false);
+    setProject(null);
+    setSelectedPosition(null);
+    setShowPostForm(false);
+    setEditingPosIdx(null);
+    setSelectedApplicant(null);
+    setPosForm(emptyPos);
+    Promise.all([apiGetProject(id), apiListPositions(id), apiListApplications(id)]).then(([{ project: p, failed }, pos, apps]) => {
+      if (cancelled) return;
+      setProject(p); setLoadFailed(failed); setPositions(pos); setApplications(apps); setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [id, loadAttempt]);
 
   if (loading) {
     return <div style={{ textAlign: 'center', padding: '4rem', color: '#999' }}>Loading…</div>;
+  }
+  if (loadFailed) {
+    return <LoadError message="Could not load this project's recruitment. Check your connection and try again." onRetry={() => setLoadAttempt((n) => n + 1)} />;
   }
   if (!project) {
     return <div style={{ textAlign: 'center', padding: '4rem', color: '#999' }}>Project not found.</div>;
@@ -92,10 +111,14 @@ const ProjectRecruitment = () => {
   const publishPosition = async () => {
     if (!posForm.type) { toast.error('Please select a position type.'); return; }
     if (!posForm.title.trim()) { toast.error('Position title is required.'); return; }
+    // A second click while the first was on its way published the opening twice.
+    if (publishing) return;
+    setPublishing(true);
     const body = posForm.advertisementFile ? toPositionForm(posForm) : toPositionBody(posForm);
     const res = editingPosIdx !== null
       ? await apiUpdatePosition(project.id, positions[editingPosIdx].id, body)
       : await apiAddPosition(project.id, body);
+    setPublishing(false);
     if (res.success) {
       setPositions(await apiListPositions(project.id));
       toast.success(editingPosIdx !== null ? 'Position updated.' : 'Position published.');
@@ -113,6 +136,10 @@ const ProjectRecruitment = () => {
   };
 
   const deletePosition = async (i) => {
+    const pos = positions[i];
+    const count = pos.applicants ?? 0;
+    const apps = count ? ` and its ${count === 1 ? '1 application' : `${count} applications`}` : '';
+    if (!window.confirm(`Delete the position "${pos.title}"${apps}? This cannot be undone.`)) return;
     const res = await apiDeletePosition(project.id, positions[i].id);
     if (res.success) { setPositions(prev => prev.filter((_, idx) => idx !== i)); toast.success('Position deleted.'); }
   };
@@ -180,7 +207,7 @@ const ProjectRecruitment = () => {
           </div>
           <div className="pr-form-actions">
             <button className="pr-btn-outline" onClick={closePostForm}>Cancel</button>
-            <button className="pr-btn-primary" onClick={publishPosition}>
+            <button className="pr-btn-primary" onClick={publishPosition} disabled={publishing}>
               <i className="fa fa-paper-plane"></i> {editingPosIdx !== null ? 'Save Changes' : 'Publish Opening'}
             </button>
           </div>

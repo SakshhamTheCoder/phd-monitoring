@@ -96,10 +96,11 @@ export const apiCurrentFaculty = async () => {
 };
 
 // ---- projects CRUD ----
+// null on failure, so a list that could not load is not read as an empty one.
 export const apiListProjects = async (filters) => {
   const qs = filters ? `?filters=${encodeURIComponent(JSON.stringify(filters))}` : '';
   const { success, response } = await customFetch(`${baseURL}/projects${qs}`, 'GET', {}, false);
-  return success ? (response || []).map(mapProject) : [];
+  return success ? (response || []).map(mapProject) : null;
 };
 export const apiProjectStats = async () => {
   const { success, response } = await customFetch(`${baseURL}/projects/stats`, 'GET', {}, false);
@@ -121,9 +122,12 @@ export const apiProjectMeta = () => {
   }
   return metaRequest;
 };
+// `failed` means the request got no answer, so the project may still exist and
+// a retry can help; no project without it means the server refused or has none.
 export const apiGetProject = async (id) => {
-  const { success, response } = await customFetch(`${baseURL}/projects/${id}`, 'GET', {}, false);
-  return success ? mapProject(response) : null;
+  const { success, response, status } = await customFetch(`${baseURL}/projects/${id}`, 'GET', {}, false);
+  // A 404 or 403 means there is no project to show; anything else is worth a retry.
+  return { project: success ? mapProject(response) : null, failed: !success && status !== 404 && status !== 403 };
 };
 export const apiCreateProject = async (form) => {
   const res = await customFetch(`${baseURL}/projects`, 'POST', toProjectBody(form), false);

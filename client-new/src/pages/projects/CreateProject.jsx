@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   categoryOptions,
   roleOptions,
@@ -68,7 +68,8 @@ const CreateProject = () => {
   const editProject = location.state?.editProject || null;
   const isEditMode = !!editProject;
   const [currentStep, setCurrentStep] = useState(0);
-  const [form, setForm] = useState(() => (editProject ? buildFormFromProject(editProject) : { ...emptyForm }));
+  const [initialForm] = useState(() => (editProject ? buildFormFromProject(editProject) : { ...emptyForm }));
+  const [form, setForm] = useState(initialForm);
   const [showExtForm, setShowExtForm] = useState(false);
   const [extCopi, setExtCopi] = useState({ name: '', designation: '', institute: '', email: '', mobile: '', website: '' });
   const [pi, setPi] = useState(editProject?.pi || null);
@@ -158,8 +159,22 @@ const CreateProject = () => {
     return null;
   };
 
+  // The server only names a missing field as "Validation failed", so say which
+  // one here and open the step it is on.
+  const missingField = () => {
+    if (!form.title.trim()) return 'the project title';
+    if (!form.category) return 'a category';
+    return null;
+  };
+
   const handleSubmit = async () => {
     if (submitting) return;
+    const missing = missingField();
+    if (missing) {
+      setCurrentStep(0);
+      toast.error(`Enter ${missing} on the Basic Info step before submitting.`);
+      return;
+    }
     setSubmitting(true);
     const res = isEditMode
       ? await apiUpdateProjectFromForm(editProject.id, form)
@@ -190,6 +205,13 @@ const CreateProject = () => {
   // match the Grand Total's real year list. Shrinking the duration only
   // hides the extra columns here — it never deletes the budget data stored
   // under those years.
+  const leave = () => {
+    const changed = JSON.stringify(form) !== JSON.stringify(initialForm);
+    const lost = isEditMode ? 'Your unsaved changes to this project will be lost.' : 'The project details you have entered will be lost.';
+    if (changed && !window.confirm(`Leave this page? ${lost}`)) return;
+    navigate('/projects');
+  };
+
   const budgetYears = Array.from(
     { length: Math.min(5, Math.max(1, parseInt(form.durationYears, 10) || 1)) },
     (_, i) => `year${i + 1}`
@@ -435,13 +457,15 @@ const CreateProject = () => {
               <h2><i className="fa fa-flag"></i> Step 5: Project Milestones</h2>
               <p>Track timeline and deliverables.</p>
             </div>
-            <div className="cp-progress-badge">
-              <span className="cp-progress-label">PROPOSAL COMPLETION</span>
-              <div className="cp-progress-bar-mini">
-                <div className="cp-progress-fill-mini" style={{width: `${milestoneProgress()}%`}}></div>
+            {!isEditMode && (
+              <div className="cp-progress-badge">
+                <span className="cp-progress-label">PROPOSAL COMPLETION</span>
+                <div className="cp-progress-bar-mini">
+                  <div className="cp-progress-fill-mini" style={{width: `${milestoneProgress()}%`}}></div>
+                </div>
+                <span className="cp-progress-pct">{milestoneProgress()}% Structured</span>
               </div>
-              <span className="cp-progress-pct">{milestoneProgress()}% Structured</span>
-            </div>
+            )}
           </div>
           <div className="cp-section-card">
             <h3 className="cp-section-title">Gantt Chart</h3>
@@ -457,6 +481,15 @@ const CreateProject = () => {
               {form.ganttFileName && <span className="cp-file-hint"><i className="fa fa-check-circle"></i> {form.ganttFileName}</span>}
             </div>
           </div>
+          {/* Saving an edit updates the project record only, so milestone rows
+              here would be dropped. They are added and changed on the project page. */}
+          {isEditMode ? (
+          <div className="cp-section-card">
+            <p className="cp-derived-note">
+              Milestones are managed on the <Link to={`/projects/${editProject.id}`}>project page</Link>.
+            </p>
+          </div>
+          ) : (
           <div className="cp-section-card">
             <table className="cp-milestone-table">
               <thead>
@@ -482,6 +515,7 @@ const CreateProject = () => {
             </table>
             <button className="cp-add-row-btn" onClick={addMilestone}><i className="fa fa-plus"></i> Add Milestone Row</button>
           </div>
+          )}
         </div>
       );
 
@@ -529,6 +563,7 @@ const CreateProject = () => {
               <h4>Objectives</h4>
               <div className="cp-review-row"><span>Objectives</span><strong>{form.objectives.filter(o => o.trim()).length} listed</strong></div>
             </div>
+            {!isEditMode && (
             <div className="cp-review-card">
               <h4>Milestones</h4>
               <div className="cp-review-row"><span>Overall Progress</span><strong>{milestoneProgress()}%</strong></div>
@@ -546,6 +581,7 @@ const CreateProject = () => {
                 <div className="cp-review-row"><span></span><strong>+{form.milestones.filter(m => m.name).length - 3} more</strong></div>
               )}
             </div>
+            )}
           </div>
         </div>
       );
@@ -556,7 +592,7 @@ const CreateProject = () => {
 
   return (
     <div className="cp-container">
-      <button className="page-back-link" onClick={() => navigate('/projects')}>
+      <button className="page-back-link" onClick={leave}>
         <i className="fa fa-arrow-left"></i> BACK TO PROJECTS
       </button>
       <div className="cp-wizard-header">

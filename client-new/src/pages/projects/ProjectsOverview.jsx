@@ -8,6 +8,7 @@ import CustomButton from '../../components/forms/fields/CustomButton';
 import FilterBar from '../../components/filterBar/FilterBar';
 import './ProjectsOverview.css';
 import PageHeader from '../../components/pageHeader/PageHeader';
+import LoadError from '../../components/common/LoadError';
 
 const emptyStats = { active: 0, completed: 0, totalFunding: 0, consultancy: 0, industry: 0, international: 0 };
 
@@ -17,6 +18,8 @@ const ProjectsOverview = () => {
   const [projects, setProjects] = useState([]);
   const [stats, setStats] = useState(emptyStats);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   useEffect(() => {
@@ -24,12 +27,13 @@ const ProjectsOverview = () => {
     let cancelled = false;
     Promise.all([apiListProjects(query), apiProjectStats()]).then(([list, s]) => {
       if (cancelled) return;
-      setProjects(list);
+      setProjects(list || []);
+      setLoadFailed(!list);
       setStats(s);
       setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [query]);
+  }, [query, loadAttempt]);
 
   const handleEdit = (e, project) => {
     e.stopPropagation();
@@ -193,6 +197,8 @@ const ProjectsOverview = () => {
         </table>
         {loading ? (
           <div className="empty-state">Loading projects…</div>
+        ) : loadFailed ? (
+          <LoadError message="Could not load your projects. Check your connection and try again." onRetry={() => setLoadAttempt((n) => n + 1)} />
         ) : projects.length === 0 && (
           <div className="empty-state">{query ? 'No projects match these filters.' : 'No projects yet.'}</div>
         )}

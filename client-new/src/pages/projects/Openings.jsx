@@ -8,6 +8,7 @@ import CustomButton from '../../components/forms/fields/CustomButton';
 import { toast } from 'react-toastify';
 import './Openings.css';
 import PageHeader from '../../components/pageHeader/PageHeader';
+import LoadError from '../../components/common/LoadError';
 
 const emptyApply = { name: '', email: '', phone: '', degree: '', institute: '', cgpa: '', skills: '', research: '', resume: '', resumeFile: null, coverNote: '' };
 
@@ -23,16 +24,25 @@ const Openings = () => {
   const [myApps, setMyApps] = useState([]);
   const [profile, setProfile] = useState({});
   const resumeRef = useRef(null);
+  const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  // The form as the modal opened, prefilled, so closing asks only after typing.
+  const applyStart = useRef(emptyApply);
 
   const loadData = async () => {
+    setLoading(true);
     const [pos, apps, prof] = await Promise.all([apiOpenings(), apiMyApplications(), apiApplicantProfile()]);
-    setPositions(pos);
-    setMyApps(apps);
+    setPositions(pos || []);
+    setMyApps(apps || []);
     setProfile(prof || {});
+    setLoadFailed(!pos || !apps);
+    setLoading(false);
   };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { loadData(); }, []);
 
+  const ready = !loading && !loadFailed;
   const posByKey = (key) => positions.find(p => p.posKey === key);
   const appliedKeys = new Set(myApps.map(a => String(a.posKey)));
   const openPositions = positions.filter(p => !p.deadline || p.deadline >= today);
@@ -40,7 +50,7 @@ const Openings = () => {
 
   // Prefill the apply form from the logged-in student's profile; all fields stay editable.
   const openApply = (pos) => {
-    setForm({
+    applyStart.current = {
       ...emptyApply,
       name: profile.name || '',
       email: profile.email || '',
@@ -49,8 +59,14 @@ const Openings = () => {
       institute: profile.institute || '',
       cgpa: profile.cgpa || '',
       research: profile.research || '',
-    });
+    };
+    setForm(applyStart.current);
     setApplyFor(pos);
+  };
+  const closeApply = () => {
+    const typed = JSON.stringify(form) !== JSON.stringify(applyStart.current);
+    if (typed && !window.confirm('Close this application? The details you entered will be lost.')) return;
+    setApplyFor(null);
   };
   const handleResume = (e) => {
     const f = e.target.files && e.target.files[0];
@@ -61,6 +77,8 @@ const Openings = () => {
     if (!form.name.trim() || !form.email.trim() || !form.phone.trim()) { toast.error('Please fill in your contact details.'); return; }
     if (!form.degree.trim() || !form.institute.trim() || !form.cgpa.trim()) { toast.error('Please fill in your academic details.'); return; }
     if (!form.resumeFile) { toast.error('Please attach your resume.'); return; }
+    // A second click while the first was on its way applied twice.
+    if (submitting) return;
     const fd = new FormData();
     fd.append('name', form.name.trim());
     fd.append('email', form.email.trim());
@@ -72,9 +90,12 @@ const Openings = () => {
     fd.append('cover_note', form.coverNote.trim());
     fd.append('skills', form.skills.trim());
     fd.append('resume', form.resumeFile);
+    setSubmitting(true);
     const res = await apiApply(applyFor.id, fd);
+    setSubmitting(false);
     if (res.success) {
-      setMyApps(await apiMyApplications());
+      const apps = await apiMyApplications();
+      if (apps) setMyApps(apps);
       setApplyFor(null);
       toast.success('Application submitted.');
       setTab('Applied');
@@ -137,15 +158,20 @@ const Openings = () => {
         ]}
       />
 
-      {tab === 'All' && (openPositions.length ? (
+      {loading && <div className="empty-state">Loading openings…</div>}
+      {!loading && loadFailed && (
+        <LoadError message="Could not load the openings. Check your connection and try again." onRetry={loadData} />
+      )}
+
+      {ready && tab === 'All' && (openPositions.length ? (
         <div className="op-grid">{openPositions.map(p => renderPosCard(p, false))}</div>
       ) : <div className="empty-state">No open positions right now. Check back soon.</div>)}
 
-      {tab === 'Closed' && (closedPositions.length ? (
+      {ready && tab === 'Closed' && (closedPositions.length ? (
         <div className="op-grid">{closedPositions.map(p => renderPosCard(p, true))}</div>
       ) : <div className="empty-state">No closed positions.</div>)}
 
-      {tab === 'Applied' && (myApps.length ? (
+      {ready && tab === 'Applied' && (myApps.length ? (
         <div className="op-grid">
           {myApps.map(a => (
             <div key={a.id} className="op-card">
@@ -207,7 +233,7 @@ const Openings = () => {
       {applyFor && (
         <CustomModal
           isOpen={!!applyFor}
-          onClose={() => setApplyFor(null)}
+          onClose={closeApply}
           title={`Apply: ${applyFor.title}`}
           maxWidth="560px"
           minHeight="auto"
@@ -242,8 +268,8 @@ const Openings = () => {
             <div className="op-field full"><label htmlFor="openings-cover-note">Cover Note</label><textarea id="openings-cover-note" rows="3" value={form.coverNote} onChange={e => setForm({ ...form, coverNote: e.target.value })} placeholder="A short statement of purpose (optional)…" /></div>
 
             <div className="modal-actions">
-              <CustomButton text="Cancel" variant="secondary" onClick={() => setApplyFor(null)} />
-              <CustomButton text="Submit Application" onClick={submitApply} />
+              <CustomButton text="Cancel" variant="secondary" onClick={closeApply} />
+              <CustomButton text="Submit Application" onClick={submitApply} disabled={submitting} />
             </div>
           </>
         </CustomModal>

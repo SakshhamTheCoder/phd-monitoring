@@ -17,6 +17,7 @@ import FacultyLink from '../../components/facultyLink/FacultyLink';
 import { baseURL } from '../../api/urls';
 import { toast } from 'react-toastify';
 import ProjectBudgetCard from './ProjectBudgetCard';
+import LoadError from '../../components/common/LoadError';
 import './ProjectDetails.css';
 import { useFeatures } from '../../context/FeaturesContext';
 
@@ -36,6 +37,16 @@ const ProjectDetails = () => {
   const [activeTab, setActiveTab] = useState('Overview');
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  // One flag for the add and upload saves below: a second click while the
+  // first was on its way posted a second milestone or document.
+  const [saving, setSaving] = useState(false);
+  const whileSaving = async (task) => {
+    if (saving) return;
+    setSaving(true);
+    try { await task(); } finally { setSaving(false); }
+  };
   const [milestones, setMilestones] = useState([]);
   const [editingIdx, setEditingIdx] = useState(null);
   const [editForm, setEditForm] = useState({ name: '', deliverable: '', dueDate: '', status: 'Not Started' });
@@ -67,13 +78,15 @@ const ProjectDetails = () => {
   };
   const addMilestone = async () => {
     if (!validateMilestone(newMs)) return;
-    const res = await apiAddMilestone(project.id, newMs);
-    if (res.success) {
-      setMilestones(prev => [...prev, mapMilestone(res.response)]);
-      setNewMs({ name: '', deliverable: '', dueDate: '', status: 'Not Started' });
-      setShowAddForm(false);
-      toast.success('Milestone added.');
-    }
+    await whileSaving(async () => {
+      const res = await apiAddMilestone(project.id, newMs);
+      if (res.success) {
+        setMilestones(prev => [...prev, mapMilestone(res.response)]);
+        setNewMs({ name: '', deliverable: '', dueDate: '', status: 'Not Started' });
+        setShowAddForm(false);
+        toast.success('Milestone added.');
+      }
+    });
   };
 
   // Budget breakdown inline editing (heads + sub-items, kept reconciled).
@@ -148,15 +161,17 @@ const ProjectDetails = () => {
     const fd = new FormData();
     fd.append('name', docForm.name.trim());
     if (docForm.file) fd.append('file', docForm.file);
-    const res = editingDocIdx !== null
-      ? await apiUpdateDocument(project.id, documents[editingDocIdx].id, fd)
-      : await apiAddDocument(project.id, fd);
-    if (res.success) {
-      const doc = mapDocument((res.response && res.response.document) || res.response);
-      setDocuments(prev => (editingDocIdx !== null ? prev.map((d, i) => (i === editingDocIdx ? doc : d)) : [...prev, doc]));
-      setShowDocModal(false);
-      toast.success(editingDocIdx !== null ? 'Document updated.' : 'Document uploaded.');
-    }
+    await whileSaving(async () => {
+      const res = editingDocIdx !== null
+        ? await apiUpdateDocument(project.id, documents[editingDocIdx].id, fd)
+        : await apiAddDocument(project.id, fd);
+      if (res.success) {
+        const doc = mapDocument((res.response && res.response.document) || res.response);
+        setDocuments(prev => (editingDocIdx !== null ? prev.map((d, i) => (i === editingDocIdx ? doc : d)) : [...prev, doc]));
+        setShowDocModal(false);
+        toast.success(editingDocIdx !== null ? 'Document updated.' : 'Document uploaded.');
+      }
+    });
   };
   const removeDoc = async (i) => {
     const d = documents[i];
@@ -190,42 +205,80 @@ const ProjectDetails = () => {
       if (!sanctionFileSel || !sanctionFileSel.file) { toast.error('Please select a file.'); return; }
       const fd = new FormData();
       fd.append('sanction_letter', sanctionFileSel.file);
-      const res = await apiUpdateProject(project.id, fd, true);
-      if (res.success) {
-        const p = await apiGetProject(id);
-        if (p) setSanctionDoc(sanctionFromProject(p));
-        setShowSanctionModal(false);
-        toast.success('Sanction letter updated.');
-      }
+      await whileSaving(async () => {
+        const res = await apiUpdateProject(project.id, fd, true);
+        if (res.success) {
+          const { project: p } = await apiGetProject(id);
+          if (p) setSanctionDoc(sanctionFromProject(p));
+          setShowSanctionModal(false);
+          toast.success('Sanction letter updated.');
+        }
+      });
     } else {
       if (!sanctionLinkInput.trim()) { toast.error('Please enter a link.'); return; }
-      const res = await apiUpdateProject(project.id, { sanction_letter_link: sanctionLinkInput.trim(), sanction_letter_name: 'Sanction Letter' });
-      if (res.success) {
-        setSanctionDoc({ name: 'Sanction Letter', url: sanctionLinkInput.trim(), isLink: true });
-        setShowSanctionModal(false);
-        toast.success('Sanction letter updated.');
-      }
+      await whileSaving(async () => {
+        const res = await apiUpdateProject(project.id, { sanction_letter_link: sanctionLinkInput.trim(), sanction_letter_name: 'Sanction Letter' });
+        if (res.success) {
+          setSanctionDoc({ name: 'Sanction Letter', url: sanctionLinkInput.trim(), isLink: true });
+          setShowSanctionModal(false);
+          toast.success('Sanction letter updated.');
+        }
+      });
     }
   };
 
-  // Load the project on mount and sync all sub-states from it.
-  const loadProject = async () => {
-    const p = await apiGetProject(id);
-    if (p) {
-      setProject(p);
-      setMilestones(p.milestones || []);
-      setBudgetData(p.budget || {});
-      setCoPIs(p.coPIs || []);
-      setDocuments(p.documents || []);
-      setSanctionDoc(sanctionFromProject(p));
-    }
-    setLoading(false);
+  const ganttInputRef = useRef(null);
+  const uploadGantt = async (e) => {
+    const file = e.target.files[0];
+    // Cleared so picking the same file again still fires a change.
+    e.target.value = '';
+    if (!file) return;
+    const res = await apiUploadGanttChart(project.id, file);
+    if (res.success) { toast.success('Gantt chart uploaded.'); refreshProject(); }
   };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { loadProject(); }, [id]);
+
+  // Sync all sub-states from a loaded project.
+  const applyProject = (p) => {
+    setProject(p);
+    setMilestones(p.milestones || []);
+    setBudgetData(p.budget || {});
+    setCoPIs(p.coPIs || []);
+    setDocuments(p.documents || []);
+    setSanctionDoc(sanctionFromProject(p));
+  };
+  const refreshProject = async () => {
+    const { project: p } = await apiGetProject(id);
+    if (p) applyProject(p);
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    // Another project starts clean: the last one's data and half-made edits
+    // would otherwise show, and save, under this id.
+    setLoading(true);
+    setLoadFailed(false);
+    setProject(null);
+    setEditingIdx(null);
+    setShowAddForm(false);
+    setEditingCopiIdx(null);
+    setShowCopiForm(false);
+    setShowDocModal(false);
+    setShowSanctionModal(false);
+    apiGetProject(id).then(({ project: p, failed }) => {
+      if (cancelled) return;
+      if (p) applyProject(p);
+      setLoadFailed(failed);
+      setLoading(false);
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, loadAttempt]);
 
   if (loading) {
     return <div className="pd-empty">Loading project…</div>;
+  }
+  if (loadFailed) {
+    return <LoadError message="Could not load this project. Check your connection and try again." onRetry={() => setLoadAttempt((n) => n + 1)} />;
   }
   if (!project) {
     return <div className="pd-empty">Project not found. <button onClick={() => navigate('/projects')}>Go Back</button></div>;
@@ -289,55 +342,18 @@ const ProjectDetails = () => {
         </div>
       );
 
-      case 'Funding & Budget': return (
-        <div className="pd-tab-content">
-          <div className="pd-card">
-            <h3 className="pd-card-title"><i className="fa fa-inr"></i> Funding Summary</h3>
-            <div className="pd-funding-summary">
-              <div className="pd-fund-item"><span>Funding Agency</span><strong>{project.fundingAgency}</strong></div>
-              <div className="pd-fund-item"><span>Total Sanctioned</span><strong>{formatCurrency(project.amount)}</strong></div>
-              <div className="pd-fund-item"><span>TIET Share</span><strong>{formatCurrency(project.tietShare)}</strong></div>
-              <div className="pd-fund-item">
-                <span>Sanction Letter</span>
-                <div className="pd-sanction-view">
-                  {sanctionDoc ? (
-                    <a href={sanctionDoc.url} target="_blank" rel="noopener noreferrer"><i className={`fa ${sanctionDoc.isLink ? 'fa-link' : 'fa-file-pdf-o'}`}></i> {sanctionDoc.name}</a>
-                  ) : (
-                    <span className="pd-sanction-none">Not uploaded</span>
-                  )}
-                  {canEdit && (
-                    <button
-                      className="pd-sanction-edit-btn"
-                      onClick={openSanctionModal}
-                      title={sanctionDoc ? 'Edit sanction letter' : 'Add sanction letter'}
-                    >
-                      <i className={`fa ${sanctionDoc ? 'fa-pencil' : 'fa-plus'}`}></i>
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-          <ProjectBudgetCard projectId={project.id} budget={budgetData} meta={meta} canEdit={canEdit} onSaved={setBudgetData} />
-        </div>
-      );
-
       case 'Milestones': return (
         <div className="pd-tab-content">
           <div className="pd-card">
             <div className="pd-budget-header">
               <h3 className="pd-card-title" style={{ marginBottom: 0 }}><i className="fa fa-bar-chart"></i> Gantt Chart</h3>
               {canEdit && (
-                <label className="pd-add-ms-btn" style={{ cursor: 'pointer' }}>
-                  <i className="fa fa-upload"></i> {project.ganttChartName ? 'Replace' : 'Upload Gantt Chart'}
-                  <input type="file" accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls,.doc,.docx" style={{ display: 'none' }}
-                    onChange={async (e) => {
-                      const file = e.target.files[0];
-                      if (!file) return;
-                      const res = await apiUploadGanttChart(project.id, file);
-                      if (res.success) { toast.success('Gantt chart uploaded.'); loadProject(); }
-                    }} />
-                </label>
+                <>
+                  <button type="button" className="pd-add-ms-btn" onClick={() => ganttInputRef.current && ganttInputRef.current.click()}>
+                    <i className="fa fa-upload"></i> {project.ganttChartName ? 'Replace Gantt Chart' : 'Upload Gantt Chart'}
+                  </button>
+                  <input type="file" ref={ganttInputRef} accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls,.doc,.docx" style={{ display: 'none' }} onChange={uploadGantt} />
+                </>
               )}
             </div>
             {project.ganttChartUrl ? (
@@ -380,7 +396,7 @@ const ProjectDetails = () => {
                 </div>
                 <div className="pd-ms-form-actions">
                   <button className="pd-ms-cancel" onClick={() => setShowAddForm(false)}>Cancel</button>
-                  <button className="pd-ms-save" onClick={addMilestone}><i className="fa fa-plus"></i> Add</button>
+                  <button className="pd-ms-save" onClick={addMilestone} disabled={saving}><i className="fa fa-plus"></i> Add</button>
                 </div>
               </div>
             )}
@@ -661,6 +677,39 @@ const ProjectDetails = () => {
       <Tabs items={TABS} value={activeTab} onChange={setActiveTab} className="pd-tabs" />
 
       {renderTab()}
+      {/* Hidden rather than unmounted with the other tabs, so an unsaved budget
+          edit survives a look at another tab. Keyed so another project does
+          not inherit an open draft. */}
+      <div className="pd-tab-content" hidden={activeTab !== 'Funding & Budget'}>
+        <div className="pd-card">
+          <h3 className="pd-card-title"><i className="fa fa-inr"></i> Funding Summary</h3>
+          <div className="pd-funding-summary">
+            <div className="pd-fund-item"><span>Funding Agency</span><strong>{project.fundingAgency}</strong></div>
+            <div className="pd-fund-item"><span>Total Sanctioned</span><strong>{formatCurrency(project.amount)}</strong></div>
+            <div className="pd-fund-item"><span>TIET Share</span><strong>{formatCurrency(project.tietShare)}</strong></div>
+            <div className="pd-fund-item">
+              <span>Sanction Letter</span>
+              <div className="pd-sanction-view">
+                {sanctionDoc ? (
+                  <a href={sanctionDoc.url} target="_blank" rel="noopener noreferrer"><i className={`fa ${sanctionDoc.isLink ? 'fa-link' : 'fa-file-pdf-o'}`}></i> {sanctionDoc.name}</a>
+                ) : (
+                  <span className="pd-sanction-none">Not uploaded</span>
+                )}
+                {canEdit && (
+                  <button
+                    className="pd-sanction-edit-btn"
+                    onClick={openSanctionModal}
+                    title={sanctionDoc ? 'Edit sanction letter' : 'Add sanction letter'}
+                  >
+                    <i className={`fa ${sanctionDoc ? 'fa-pencil' : 'fa-plus'}`}></i>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+        <ProjectBudgetCard key={project.id} projectId={project.id} budget={budgetData} meta={meta} canEdit={canEdit} onSaved={setBudgetData} />
+      </div>
 
       {/* Add / Edit Document Modal */}
       {showDocModal && (
@@ -701,7 +750,7 @@ const ProjectDetails = () => {
             </div>
             <div className="modal-actions">
               <CustomButton text="Cancel" variant="secondary" onClick={() => setShowDocModal(false)} />
-              <CustomButton text={editingDocIdx !== null ? 'Save Changes' : 'Add Document'} onClick={saveDoc} />
+              <CustomButton text={editingDocIdx !== null ? 'Save Changes' : 'Add Document'} onClick={saveDoc} disabled={saving} />
             </div>
           </>
         </CustomModal>
@@ -749,7 +798,7 @@ const ProjectDetails = () => {
             )}
             <div className="modal-actions">
               <CustomButton text="Cancel" variant="secondary" onClick={() => setShowSanctionModal(false)} />
-              <CustomButton text="Save" onClick={saveSanctionModal} />
+              <CustomButton text="Save" onClick={saveSanctionModal} disabled={saving} />
             </div>
           </>
         </CustomModal>
