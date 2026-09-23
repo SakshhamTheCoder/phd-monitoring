@@ -36,19 +36,11 @@ class CourseController extends Controller
 
             $query = Course::with('department');
 
-            // Apply role-based filtering
-            if ($role === 'hod') {
-                $facultyCode = $loggedInUser->faculty->faculty_code;
-                $hodDepartment = Department::where('hod_id', $facultyCode)->first();
-                if ($hodDepartment) {
-                    $query->where('department_id', $hodDepartment->id);
-                }
-            } elseif ($role === 'phd_coordinator') {
-                $facultyCode = $loggedInUser->faculty->faculty_code;
-                $coordinator = \App\Models\PhdCoordinator::where('faculty_id', $facultyCode)->first();
-                if ($coordinator) {
-                    $query->where('department_id', $coordinator->department_id);
-                }
+            // A head or coordinator sees their own department's courses only,
+            // and none when the account is not attached to a department.
+            $scope = $this->departmentScope();
+            if ($scope !== null) {
+                $query->where('department_id', $scope);
             }
 
             // Apply dynamic filters
@@ -107,9 +99,17 @@ class CourseController extends Controller
     private function departmentScope(): ?int
     {
         $user = Auth::user();
+        $role = $user->current_role->role;
+        if (!in_array($role, ['hod', 'phd_coordinator'], true)) {
+            return null;
+        }
+        // where('hod_id', null) matches a department with no head at all.
         $facultyCode = $user->faculty?->faculty_code;
+        if (!$facultyCode) {
+            return 0;
+        }
 
-        return match ($user->current_role->role) {
+        return match ($role) {
             'hod' => (int) Department::where('hod_id', $facultyCode)->value('id'),
             'phd_coordinator' => (int) \App\Models\PhdCoordinator::where('faculty_id', $facultyCode)->value('department_id'),
             default => null,
@@ -267,6 +267,13 @@ class CourseController extends Controller
             $departmentId = $request->query('department_id');
             
             $query = Course::with('department');
+
+            // The same courses list() shows, so a head or coordinator only
+            // offers their own department's courses when tagging a scholar.
+            $scope = $this->departmentScope();
+            if ($scope !== null) {
+                $query->where('department_id', $scope);
+            }
             
             if ($departmentId) {
                 $query->where('department_id', $departmentId);
@@ -293,6 +300,10 @@ class CourseController extends Controller
         if (!$this->managesCourses()) {
             return $this->refuse();
         }
+        $scope = $this->departmentScope();
+        if ($scope === 0) {
+            return $this->refuse('You are not attached to a department.');
+        }
         try {
             $request->validate([
                 'csv_file' => 'required|file|mimes:csv,txt',
@@ -317,7 +328,7 @@ class CourseController extends Controller
                     $course->course_code = trim($row[0]);
                     $course->course_name = trim($row[1]);
                     $course->credits = floatval(trim($row[2]));
-                    $course->department_id = $this->departmentScope() ?: intval(trim($row[3]));
+                    $course->department_id = $scope ?: intval(trim($row[3]));
                     $course->save();
                     $imported++;
                 } catch (\Exception $e) {

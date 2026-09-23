@@ -401,9 +401,10 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
       designation: member.designation || EMPTY_VALUE,
     }));
 
-    // A course tagged by mistake can be taken off again by whoever may tag one;
-    // the server checks the same capability.
-    const mayRemoveCourses = can("can_manage_students");
+    // A course tagged by mistake can be taken off again by whoever may tag one:
+    // those who manage students, and a HOD or coordinator for their own
+    // department. The server holds each to their scope.
+    const mayRemoveCourses = can("can_manage_students") || ["hod", "phd_coordinator"].includes(role);
     const removeCourse = async (course) => {
       if (!window.confirm(`Remove ${course.course_code} from this scholar's courses?`)) return;
       const response = await customFetch(`${baseURL}/courses/student/remove/${course.id}`, "DELETE");

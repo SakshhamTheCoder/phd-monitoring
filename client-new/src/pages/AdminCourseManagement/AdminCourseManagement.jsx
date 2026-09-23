@@ -16,13 +16,16 @@ import { currentRole } from '../../auth/access';
 import useCapabilities from '../../context/CapabilitiesContext';
 
 const AdminCourseManagement = () => {
-  // Tagging and the coursework import are refused without can_manage_students,
-  // which the HOD and coordinator do not hold; adding a course is theirs.
+  // Tagging and the coursework import need can_manage_students, except for a
+  // head or coordinator, whom the server holds to their own department's
+  // scholars and courses. The student search and course list are already
+  // limited to that department for them.
   const can = useCapabilities();
-  const mayTagStudents = can('can_manage_students');
+  const role = currentRole();
+  const mayTagStudents = can('can_manage_students') || role === 'hod' || role === 'phd_coordinator';
   // Heads and coordinators manage their own department's courses; the server
   // fills the department in for them, so only admin picks one.
-  const picksDepartment = currentRole() === 'admin';
+  const picksDepartment = role === 'admin';
   const [courses, setCourses] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0);
