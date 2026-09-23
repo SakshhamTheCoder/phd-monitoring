@@ -27,21 +27,26 @@ const MainFormPage = () => {
   const scholar = useScholarInPath();
   const { form_type } = useParams();
 
+  // Back and forward between two forms reuse this page, so the old form is
+  // dropped and a late answer for it is ignored. A failed load is toasted by
+  // customFetch.
   useEffect(() => {
+    let cancelled = false;
+    setIsLoaded(false);
     setLoading(true);
-    const url = baseURL + location.pathname;
-    customFetch(url, "GET")
-      .then((data) => {
-        if (data && data.success) {
-          setFormData(data.response);
-          setIsLoaded(true);
-        }
-        setLoading(false);
-      })
-      .catch((error) => {
-        setLoading(false);
-      });
-  }, []);
+    customFetch(baseURL + location.pathname, "GET").then((data) => {
+      if (cancelled) return;
+      if (data.success) {
+        setFormData(data.response);
+        setIsLoaded(true);
+      }
+      setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+      setLoading(false);
+    };
+  }, [location.pathname]);
 
   return (
     <Layout

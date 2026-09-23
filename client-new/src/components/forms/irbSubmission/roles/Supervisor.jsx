@@ -76,8 +76,9 @@ const Supervisor = ({ formData }) => {
             formData={formData}
             role="supervisor"
             allowRejection={false}
-           
-            moreFields={formData.form_type === "revised"  ? false : (true && !lock)}
+            // The role draws its own Submit, which also sends supervised_outside,
+            // so Recommendation must never add a second one, revised form or not.
+            moreFields={true}
             handleRecommendationChange={handleApprovalChange}
           />
          

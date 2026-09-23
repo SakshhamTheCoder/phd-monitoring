@@ -252,21 +252,23 @@ const Student = ({ formData, refetchData = null, }) => {
                   { title: "No", value: false },
                 ]}
                 isLocked={lock}
-                initialValue={body.publication_under_report ? "Yes" : "No"}
+                initialValue={!!body.publication_under_report}
                 onChange={(value) => {
+                  // A select hands back the string "false", which is truthy, so it
+                  // is turned back into the boolean the options are keyed on.
+                  const published = value === "true";
                   setBody((prev) => ({
                     ...prev,
-                    publication_under_report: value,
+                    publication_under_report: published,
                   }));
-                  setShowPublication(value);
+                  setShowPublication(published);
                 }}
               />,
             ]}
             space={2}
           />
 
-          {(showPublication === "true" ||
-            showPublication === true) && (
+          {showPublication && (
               <>      
                <GridContainer
                   elements={[

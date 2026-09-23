@@ -33,9 +33,13 @@ const FormListPage = () => {
     .replace(/\b\w/g, (c) => c.toUpperCase());
   const [role, setRole] = useState();
   const [showBar, setShowBar] = useState(false);
+  // Read from the path on every render: this page is reused across form
+  // types, so state copied from an earlier path would carry over.
+  const scholarFormMatch = location.pathname.match(/^\/students\/(\d+)\/forms\/([\w-]+)$/);
   // The entry from RAISED_FOR_A_SCHOLAR this page offers, or null.
-  const [raisable, setRaisable] = useState(null);
-  const [modalButtonShow, setModalButtonShow] = useState(false);
+  const raisable = (scholarFormMatch && RAISED_FOR_A_SCHOLAR[scholarFormMatch[2]]) || null;
+  const modalButtonShow = location.pathname === "/forms/list-of-examiners";
+  // Typed into the list of examiners modal.
   const [rollNumber, setRollNumber] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBulkAllocateOpen, setIsBulkAllocateOpen] = useState(false);
@@ -51,23 +55,13 @@ const FormListPage = () => {
   useEffect(() => {
     // Set the user role from localStorage
     setRole(currentRole());
-    const match = location.pathname.match(/^\/students\/(\d+)\/forms\/([\w-]+)$/);
-    const matchPath2 = location.pathname.match(/^\/forms\/list-of-examiners$/);
-    if (match && RAISED_FOR_A_SCHOLAR[match[2]]) {
-      setRaisable(RAISED_FOR_A_SCHOLAR[match[2]]);
-      setRollNumber(match[1]);
-    } else if (matchPath2) {
-      setModalButtonShow(true);
-    } else {
-      setRaisable(null);
-    }
   }, [location]);
   // One place for the page's primary action, so it sits in the header next to
   // the title instead of floating in a band of its own.
   const headerAction =
     role === "student" ? <CreateNewBar />
     : raisable && role === raisable.role
-      ? <CreateNewBar rollNumber={rollNumber} label={raisable.label} />
+      ? <CreateNewBar rollNumber={scholarFormMatch[1]} label={raisable.label} />
     : role === "faculty" && modalButtonShow ? (
       <CustomButton onClick={() => setIsModalOpen(true)} text="Create New Form +" />
     ) : null;

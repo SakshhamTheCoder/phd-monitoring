@@ -21,13 +21,11 @@ const SchedulePresentation = ({ close, semester }) => {
     useEffect(() => {
         // Without all=true the list is paginated and stops at the first 15 names.
         const url = baseURL + "/students?all=true";
+        // customFetch toasts a failed load itself. The form still opens so the
+        // dialog is not left blank.
         customFetch(url, "GET")
           .then((data) => {
-            if (data && data.success) {
-                for (let i = 0; i < data.response.length; i++) {
-                    data.response[i].value = data.response[i].roll_no;
-                    data.response[i].title = data.response[i].name;
-                }
+            if (data.success) {
                 let stu=data.response.data.map((student) => {
                     return {
                         value: student.roll_no,
@@ -35,13 +33,9 @@ const SchedulePresentation = ({ close, semester }) => {
                     };
                 });
               setStudents(stu);
-              setIsLoaded(true);
-              setLoading(false);
             }
+            setIsLoaded(true);
             setLoading(false);
-          })
-          .catch((error) => {
-            // setLoading(false);
           });
           const periods = generateReportPeriods(2,1,true);
           const pp=[];

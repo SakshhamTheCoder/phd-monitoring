@@ -69,14 +69,21 @@ const Student = ({ formData }) => {
 
   const handlePrefrenceSelect = (value, index) => {
     const fc = value.faculty_code || (typeof value === 'object' && value.id ? value.id : value);
-    if (alreadySelected(fc, index)) { toast.warn('This faculty already selected in another slot'); return; }
+    // false tells InputSuggestions to put the slot's saved choice back.
+    if (alreadySelected(fc, index)) { toast.warn('This faculty already selected in another slot'); return false; }
     body.prefrences[index] = {
       name: value.name || value,
       email: value.email || '',
       department: value.department || '',
       faculty_code: fc,
     };
+    // Re-render so the other slots stop suggesting this faculty.
+    setBody({ ...body });
   };
+
+  const chosenElsewhere = (index) => body.prefrences
+    .filter((p, i) => i !== index && p?.faculty_code)
+    .map((p) => p.faculty_code);
 
   const handleBroadAreaSelect = (value, index) => {
     body.broad_area_of_research[index] = value?.name ?? value ?? '';
@@ -232,6 +239,7 @@ const Student = ({ formData }) => {
                 initialValue={body.prefrences[0] ? [body.prefrences[0].name, body.prefrences[0].department].filter(Boolean).join(' - ') : ''}
                 apiUrl={apiUrl_suggestion}
                 onSelect={(value) => handlePrefrenceSelect(value, 0)}
+                excludeIds={chosenElsewhere(0)}
                 lock={lock}
                 fields={["name","department"]}
                 label={"Preference 1"}
@@ -240,6 +248,7 @@ const Student = ({ formData }) => {
                 initialValue={body.prefrences[1] ? [body.prefrences[1].name, body.prefrences[1].department].filter(Boolean).join(' - ') : ''}
                 apiUrl={apiUrl_suggestion}
                 onSelect={(value) => handlePrefrenceSelect(value, 1)}
+                excludeIds={chosenElsewhere(1)}
                 lock={lock}
                 fields={["name","department"]}
                 label={"Preference 2"}
@@ -248,6 +257,7 @@ const Student = ({ formData }) => {
                 initialValue={body.prefrences[2] ? [body.prefrences[2].name, body.prefrences[2].department].filter(Boolean).join(' - ') : ''}
                 apiUrl={apiUrl_suggestion}
                 onSelect={(value) => handlePrefrenceSelect(value, 2)}
+                excludeIds={chosenElsewhere(2)}
                 lock={lock}
                 fields={["name","department"]}
                 label={"Preference 3"}
@@ -261,6 +271,7 @@ const Student = ({ formData }) => {
                 initialValue={body.prefrences[3] ? [body.prefrences[3].name, body.prefrences[3].department].filter(Boolean).join(' - ') : ''}
                 apiUrl={apiUrl_suggestion}
                 onSelect={(value) => handlePrefrenceSelect(value, 3)}
+                excludeIds={chosenElsewhere(3)}
                 lock={lock}
                 fields={["name","department"]}
                 label={"Preference 4"}
@@ -269,6 +280,7 @@ const Student = ({ formData }) => {
                 initialValue={body.prefrences[4] ? [body.prefrences[4].name, body.prefrences[4].department].filter(Boolean).join(' - ') : ''}
                 apiUrl={apiUrl_suggestion}
                 onSelect={(value) => handlePrefrenceSelect(value, 4)}
+                excludeIds={chosenElsewhere(4)}
                 lock={lock}
                 fields={["name","department"]}
                 label={"Preference 5"}
@@ -277,6 +289,7 @@ const Student = ({ formData }) => {
                 initialValue={body.prefrences[5] ? [body.prefrences[5].name, body.prefrences[5].department].filter(Boolean).join(' - ') : ''}
                 apiUrl={apiUrl_suggestion}
                 onSelect={(value) => handlePrefrenceSelect(value, 5)}
+                excludeIds={chosenElsewhere(5)}
                 lock={lock}
                 fields={["name","department"]}
                 label={"Preference 6"}

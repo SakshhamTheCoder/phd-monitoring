@@ -2,7 +2,7 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import { customFetch } from '../../../api/base';
 import "./Fields.css";
 
-const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = false, showLabel = true, body, suggestionManadatory = true, fields=["name"], required = false}) => {
+const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = false, showLabel = true, body, suggestionManadatory = true, fields=["name"], required = false, excludeIds = []}) => {
     const [inputValue, setInputValue] = useState(initialValue || '');
     const [suggestions, setSuggestions] = useState([]);
     const [isLocked, setIsLocked] = useState(lock || false);
@@ -21,7 +21,9 @@ const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = 
     const fieldId = useId();
     const containerRef = useRef(null);
     const listRef = useRef(null);
-    const abortControllerRef = useRef(null);
+    // The text the latest request was for. customFetch cannot be cancelled, so
+    // a slow answer for "ab" could land after the one for "abc" and replace it.
+    const currentQueryRef = useRef('');
     const cacheRef = useRef({});  // Caching previous results
     const debounceTimeout = useRef(null);
 
@@ -30,6 +32,7 @@ const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = 
         setInputValue(value);
         setShowHint(true);
         setUserSelected(false);
+        currentQueryRef.current = value;
 
         if (value) {
             if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
@@ -44,37 +47,24 @@ const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = 
 
     const fetchSuggestions = async (value) => {
         if (cacheRef.current[value]) {
+            setLoading(false);
             setSuggestions(cacheRef.current[value]);
             return;
         }
-    
-        if (abortControllerRef.current) {
-            abortControllerRef.current.abort();
-        }
-    
-        abortControllerRef.current = new AbortController();
-        const { signal } = abortControllerRef.current;
-    
+
         const finalBody = body ? { ...body, text: value } : { text: value };
-        try {
-            setLoading(true);
-            const data = await customFetch(apiUrl, 'POST', finalBody, false);
-            setLoading(false);
-    
-            if (data && data.success) {
-                const fetchedSuggestions = data.response || [];
-                cacheRef.current[value] = fetchedSuggestions;
-                setSuggestions(fetchedSuggestions);
-            } else {
-                setSuggestions([]);
-            }
-        } catch (error) {
-            if (error.name !== 'AbortError') {
-                console.error('Fetch error:', error);
-            }
-            setLoading(false);
-        }
+        setLoading(true);
+        const data = await customFetch(apiUrl, 'POST', finalBody, false);
+        const fetchedSuggestions = data.success ? data.response || [] : [];
+        if (data.success) cacheRef.current[value] = fetchedSuggestions;
+        if (value !== currentQueryRef.current) return;
+        setLoading(false);
+        setSuggestions(fetchedSuggestions);
     };
+
+    // Rows the caller would refuse, such as faculty already picked in another
+    // slot, are not offered at all.
+    const visibleSuggestions = suggestions.filter((suggestion) => !excludeIds.some((id) => String(id) === String(suggestion.id)));
     
 useEffect(() => { setActiveIndex(-1); }, [suggestions]);
 
@@ -94,13 +84,15 @@ useEffect(() => {
         setUserSelected(true);
         setInputValue(renderSuggestionText(suggestion));
         setSuggestions([]);
-        if (onSelect) {
-            onSelect(suggestion); 
+        // A caller that refuses the pick returns false; put back the value it kept
+        // so the field does not show a choice that will not be saved.
+        if (onSelect && onSelect(suggestion) === false) {
+            setInputValue(initialValue || '');
         }
     };
 
     const handleKeyDown = (event) => {
-        const count = suggestions.length;
+        const count = visibleSuggestions.length;
         if (event.key === 'ArrowDown' && count) {
             event.preventDefault();
             setActiveIndex((i) => (i + 1) % count);
@@ -110,7 +102,7 @@ useEffect(() => {
         } else if (event.key === 'Enter' && activeIndex >= 0 && activeIndex < count) {
             // Only swallow Enter when it picks a row, so it still submits otherwise.
             event.preventDefault();
-            handleSuggestionClick(suggestions[activeIndex]);
+            handleSuggestionClick(visibleSuggestions[activeIndex]);
         } else if (event.key === 'Escape') {
             setSuggestions([]);
         }
@@ -159,7 +151,7 @@ useEffect(() => {
                 />
             </div>
 
-            {isFocused && inputValue && (loading || suggestions.length > 0 || showHint) && (
+            {isFocused && inputValue && (loading || visibleSuggestions.length > 0 || showHint) && (
                 <ul
                     className="suggestions-list"
                     ref={listRef}
@@ -171,7 +163,7 @@ useEffect(() => {
                     {loading && (
                         <li className="suggestion-item loading">Loading...</li>
                     )}
-                    {!loading && suggestions.length > 0 && suggestions.map((suggestion, index) => (
+                    {!loading && visibleSuggestions.length > 0 && visibleSuggestions.map((suggestion, index) => (
                         <li
                             key={suggestion.id}
                             aria-selected={index === activeIndex}
@@ -185,7 +177,7 @@ useEffect(() => {
                               {renderSuggestionText(suggestion)}
                         </li>
                     ))}
-                    {!loading && suggestions.length === 0 && showHint && (
+                    {!loading && visibleSuggestions.length === 0 && showHint && (
                         <li className="suggestion-item no-suggestions-message">No suggestions available</li>
                     )}
                 </ul>

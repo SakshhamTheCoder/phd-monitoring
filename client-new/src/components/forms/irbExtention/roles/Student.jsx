@@ -28,17 +28,7 @@ const Student = ({ formData }) => {
   const [temp, setTemp] = useState([]);
   const [files, setFiles] = useState([]);
 
-  const [prevOff, setPrevOff] = useState(null);
-  const [prevDate,setPrevDate] = useState(null);
   useEffect(() => {
-    if (formData.previous_changes?.length > 0) {
-      setPrevOff("Yes");
-      setPrevDate(formData.previous_changes[formData.previous_changes?.length-1].created_at)
-    }
-    else
-    {
-      setPrevOff("No");
-    }
     setLock(formData?.locks?.student);
     setIsLoaded(true);
   }, []);
@@ -115,31 +105,6 @@ const Student = ({ formData }) => {
             ]}
             space={2}
           />
-
-          <GridContainer
-            elements={[
-              <InputField
-                label="Change of Status Availed (if any earlier)"
-                initialValue={prevOff?prevOff:"No"}
-                isLocked={true}
-              />,
-            ]}
-             space={2}/>
-
-            <>
-              {prevOff==="Yes" && (
-                <GridContainer elements={[
-               <InputField label={"Date of Previous Extension"}
-               initialValue={prevDate}
-               isLocked={true}
-               />,
-               <InputField label={"Date of IRB Meeting"}
-               initialValue={formatDate(formData.date_of_irb)}
-               isLocked={true}
-               />,
-              ]}/>
-              )}
-            </>
 
             <GridContainer
             elements={formData.supervisors.map((sup,index)=>{

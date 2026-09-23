@@ -144,6 +144,8 @@ const BulkSchedulePresentation = ({semester_name}) => {
       .then((data) => {
         if (data && data.success) {
           toast.success('Bulk Presentations Scheduled');
+          // Drop the scheduled batch so Confirm goes away and cannot post it again.
+          setCsvData([]);
         }
         setLoading(false);
       })
