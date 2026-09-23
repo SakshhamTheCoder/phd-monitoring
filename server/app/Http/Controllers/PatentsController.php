@@ -14,17 +14,6 @@ class PatentsController extends Controller
 {
     use SaveFile;
     use FilterLogicTrait;
-    /**
-     * Display a listing of the patents.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        $patents = Patent::all();
-        return response()->json($patents);
-    }
-
     public function listFilters(Request $request){
         return response()->json($this->getAvailableFilters("patents"));
     }
