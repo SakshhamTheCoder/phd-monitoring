@@ -89,7 +89,7 @@ const FormGrid = ({ forms, title = "Available forms", loading = false }) => {
     };
 
     const grid = forms.length > 0 ? (
-        <div className="form-grid-container">
+        <div className="form-grid-container reveal">
             <div className="form-grid-column">{mandatory.map(renderCard)}</div>
             <div className="form-grid-column">{optional.map(renderCard)}</div>
         </div>
