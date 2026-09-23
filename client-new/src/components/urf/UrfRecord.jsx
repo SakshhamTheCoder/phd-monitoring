@@ -176,7 +176,7 @@ const UrfRecord = ({ record, actions = null }) => {
   const facts = [
     ['Status', <StatusText status={record.status} />],
     ['Session', record.session && `URF ${record.session}`],
-    ['Applied on', formatDate(record.created_at)],
+    ['Applied on', formatDate(record.applied_on)],
     ['Approval', stageLine(record)],
     // Beside the facts, not with the decisions, so it never reads as one of them.
     ['Proposal', record.proposal && (

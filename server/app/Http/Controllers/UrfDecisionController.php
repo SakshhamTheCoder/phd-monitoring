@@ -110,23 +110,26 @@ class UrfDecisionController extends Controller
                 ? $model::with(['student1Branch', 'mentor1', 'mentor2'])->where('stage', '!=', UrfApplication::COMPLETE)->get()
                 : $model::with(['application.student1Branch'])->where('stage', '!=', UrfApplication::COMPLETE)->get();
 
-            $waiting = $waiting->merge($rows->filter(fn ($row) => $row->awaits($user))->map(function ($row) use ($model) {
-                $application = $row->approvalApplication();
-
-                return [
-                    'id' => $row->id,
-                    'form' => $this->formKey($row),
-                    'application_id' => $application?->id,
-                    'project_title' => $application?->project_title,
-                    'session' => $application?->session,
-                    'students' => collect([$application?->student1_name, $application?->student2_name])->filter()->join(', '),
-                    'waiting_since' => $row->updated_at?->format('d M Y'),
-                ];
-            }));
+            $waiting = $waiting->concat($rows->filter(fn ($row) => $row->awaits($user)));
         }
 
+        // Oldest first, on the time itself: the 'd M Y' text sorts by day of the month.
+        $waiting = $waiting->sortBy(fn ($row) => $row->updated_at?->getTimestamp() ?? 0)->values()->map(function ($row) {
+            $application = $row->approvalApplication();
+
+            return [
+                'id' => $row->id,
+                'form' => $this->formKey($row),
+                'application_id' => $application?->id,
+                'project_title' => $application?->project_title,
+                'session' => $application?->session,
+                'students' => collect([$application?->student1_name, $application?->student2_name])->filter()->join(', '),
+                'waiting_since' => $row->updated_at?->format('d M Y'),
+            ];
+        });
+
         return response()->json([
-            'data' => $waiting->sortBy('waiting_since')->values(),
+            'data' => $waiting,
             'total' => $waiting->count(),
             'fields' => ['session', 'project_title', 'students', 'form', 'waiting_since'],
             'fieldsTitles' => ['Session', 'Project Title', 'Students', 'Form', 'Waiting Since'],

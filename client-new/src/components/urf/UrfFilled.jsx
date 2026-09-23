@@ -43,7 +43,7 @@ const Application = ({ formData }) => {
       {/* The mentors are in the table above; this is who the chain starts with. */}
       <Locked fields={[
         ['Session', application.session ? `URF ${application.session}` : ''],
-        ['Applied On', formatDate(application.created_at)],
+        ['Applied On', formatDate(application.applied_on)],
         ['Faculty Mentors', mentors.map(facultyName).join(', ')],
       ]} />
     </>
@@ -85,7 +85,7 @@ const Report = ({ formData }) => {
         ['Faculty Mentor Name', mentors.map(facultyName).join(', ')],
         ['Faculty Mentor Department', mentors.map((mentor) => mentor.department?.name).filter(Boolean).join(', ')],
         ['Conference Presentation', filled.conference_presentation],
-        ['Submitted On', formatDate(filled.created_at)],
+        ['Submitted On', formatDate(filled.submitted_on)],
       ]} />
       <GridContainer
         label={REPORT_TYPES[filled.type] || 'Report'}

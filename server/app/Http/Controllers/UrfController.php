@@ -115,8 +115,9 @@ class UrfController extends Controller
                 ])->values(),
                 'status' => ucfirst($a->status),
                 // Where it has reached, which is not whether the project is on.
-                'stage' => $a->isComplete() ? 'Approved' : 'With ' . ucfirst($a->stage),
-                'applied_on' => $a->created_at?->format('d M Y'),
+                // A complete form waits on nobody, and was not always approved.
+                'stage' => $a->isComplete() ? null : 'With ' . ucfirst($a->stage),
+                'applied_on' => $this->submittedOn($a)?->format('d M Y'),
                 // Not a column of its own: the title opens it.
                 'proposal' => $a->proposal,
             ]),
@@ -166,13 +167,15 @@ class UrfController extends Controller
             'application_id' => $row->urf_application_id,
             'session' => $row->application->session,
             'project_title' => $row->application->project_title,
-            'submitted_on' => $row->created_at?->format('d M Y'),
+            'submitted_on' => $this->submittedOn($row, true)?->format('d M Y'),
         ];
 
         return response()->json([
             'data' => $page->getCollection()->map(fn ($row) => $common($row) + $student($row) + ($details ? [
                 'student' => $row->full_name,
-                'status' => ucfirst($row->application->status),
+                // Only a selected project has stipend details, so its status said
+                // nothing; where the form itself stands does.
+                'stage' => $row->isComplete() ? null : 'With ' . ucfirst($row->stage),
             ] : [
                 'submitted_by' => $row->user->name(),
                 'conference_presentation' => $row->conference_presentation,
@@ -182,10 +185,10 @@ class UrfController extends Controller
             'totalPages' => $page->lastPage(),
             'role' => $user->current_role->role,
             'fields' => $details
-                ? ['session', 'student', 'branch', 'project_title', 'status', 'submitted_on']
+                ? ['session', 'student', 'branch', 'project_title', 'stage', 'submitted_on']
                 : ['session', 'project_title', 'submitted_by', 'branch', 'conference_presentation', 'submitted_on', 'report'],
             'fieldsTitles' => $details
-                ? ['Session', 'Student', 'Branch and Year', 'Project Title', 'Project Status', 'Submitted On']
+                ? ['Session', 'Student', 'Branch and Year', 'Project Title', 'Waiting On', 'Submitted On']
                 : ['Session', 'Project Title', 'Submitted By', 'Branch and Year', 'Conference Presentation', 'Submitted On', 'Report'],
         ]);
     }
@@ -218,7 +221,19 @@ class UrfController extends Controller
         // A step is answered once the form has moved past it. Sending a form
         // back puts it on the student again and clears what the approvers said,
         // so the position alone is the truth here.
-        $answered = fn (string $one) => $reached > array_search($one, $steps, true);
+        //
+        // Not on a closed form, though: the office's decision or an import
+        // closes it wherever it stood. There the approvers heard from since the
+        // last filing are the ones who answered, and the rest were never reached.
+        $heard = null;
+        if ($instance->isComplete() && !empty($instance->history)) {
+            $history = collect($instance->history)->values();
+            $lastFiling = $history->keys()->filter(fn ($i) => ($history[$i]['decision'] ?? null) === 'submitted')->last() ?? -1;
+            $heard = $history->slice($lastFiling + 1)->pluck('step')->intersect(UrfApplication::APPROVERS)->all();
+        }
+        $answered = fn (string $one) => $heard !== null && in_array($one, UrfApplication::APPROVERS, true)
+            ? in_array($one, $heard, true)
+            : $reached > array_search($one, $steps, true);
 
         $said = fn (string $key) => collect(UrfApplication::APPROVERS)
             ->mapWithKeys(fn ($approver) => [$approver => $instance->{$approver . '_' . $key}])
@@ -235,14 +250,20 @@ class UrfController extends Controller
             'stage' => $instance->stage,
             'steps' => $steps,
             'current_step' => $reached === false ? 0 : $reached,
+            // How far the approvers got on a closed form, so the ladder shows
+            // the steps after it as not reached. Null leaves every step reached.
+            'maximum_step' => $heard === null ? null
+                : collect($heard)->map(fn ($one) => array_search($one, $steps, true))->push(0)->max(),
             // FormLadder shows every step to "admin" and the steps up to their
             // own to anyone else. The office holds no step on the chain, so it
             // reads the form the way an admin reads a PhD one.
             'role' => $office ? 'admin' : $step,
             'comments' => ['student' => null] + $said('comments'),
             // Booleans, as the PhD forms answer them: the column is an int
-            // here, and the radios read a 0 as an answer already given.
-            'approvals' => array_map('boolval', $said('approval')),
+            // here, and the radios read a 0 as an answer already given. A step
+            // that never answered has no answer to give.
+            'approvals' => collect($said('approval'))
+                ->map(fn ($approval, $one) => $answered($one) ? (bool) $approval : null)->all(),
             'locks' => collect($steps)->mapWithKeys(fn ($one) => [$one => $answered($one)])->all(),
             'history' => $this->historyOf($instance),
             'awaiting_me' => $instance->awaits($user),
@@ -292,6 +313,7 @@ class UrfController extends Controller
 
         $row = $instance->toArray();
         $row['submitted_by'] = $instance->user?->name();
+        $row['submitted_on'] = $this->submittedOn($instance, true)?->toIso8601String();
 
         if ($form === 'urf-additional-info') {
             $mine = $instance->user_id === Auth::id();
@@ -307,6 +329,20 @@ class UrfController extends Controller
         $row['publications'] = Publication::groupedFor('urf_application_id', $application->id, $instance->id, 'urf_report');
 
         return $row;
+    }
+
+    /**
+     * When the student filed the form, from its history: the row's own date is
+     * the import's for a project carried over, which nobody filed here. The
+     * first filing, or with $latest the last one after a send back. Null when
+     * it was never filed in the portal.
+     */
+    private function submittedOn($instance, bool $latest = false): ?\Illuminate\Support\Carbon
+    {
+        $filed = collect($instance->history ?? [])->where('decision', 'submitted');
+        $entry = $latest ? $filed->last() : $filed->first();
+
+        return isset($entry['at']) ? \Illuminate\Support\Carbon::parse($entry['at']) : null;
     }
 
     private function lastFour(?string $value): string
@@ -447,6 +483,8 @@ class UrfController extends Controller
             // What they gave at sign-up. Absent for an account the office made,
             // and then the application form asks for it.
             'student' => $user->ugStudent()->with('branch:id,programme,code,name')->first(),
+            // The account as it stands now, not as it was at sign-in.
+            'account' => $user->only(['email', 'phone', 'gender']),
             'report_windows' => UrfReportWindow::orderByDesc('session')->get(),
             'applications' => UrfApplication::forMember($user)->with(self::DETAIL)->orderByDesc('session')->latest('id')->get()
                 ->map(fn (UrfApplication $application) => $this->payload($application, $user))
@@ -925,6 +963,7 @@ class UrfController extends Controller
             $data['reports'][$i]['publications'] = Publication::groupedFor('urf_application_id', $application->id, $report['id'], 'urf_report');
         }
 
+        $data['applied_on'] = $this->submittedOn($application)?->toIso8601String();
         $data['awaiting_me'] = $application->awaits($user);
         $data['may_reject'] = $application->awaits($user) && $application->stepFor($user) === 'dordc';
         foreach ($application->reports as $i => $report) {

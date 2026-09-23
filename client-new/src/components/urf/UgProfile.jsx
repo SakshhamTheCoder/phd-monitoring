@@ -55,16 +55,16 @@ const UgProfile = () => {
 
   useEffect(() => { load(); }, []);
 
-  // Read once per mount and updated on save, instead of parsing localStorage
-  // on every render.
-  const [me, setMe] = useState(signedInUser);
+  // Read once per mount, instead of parsing localStorage on every render.
+  const [me] = useState(signedInUser);
+  const account = state?.account || {};
   const applications = state?.applications || [];
   const applied = applications.length > 0;
 
   const startEdit = () => {
     setForm({
-      phone: me.phone || '',
-      gender: me.gender || '',
+      phone: account.phone || '',
+      gender: account.gender || '',
       roll_no: state?.student?.roll_no || '',
       branch_id: state?.student?.branch_id || '',
       year: state?.student?.year || '',
@@ -80,9 +80,7 @@ const UgProfile = () => {
 
     // The header reads the account stored at sign-in, so the two fields this
     // changes are kept in step with it.
-    const updated = { ...me, phone: form.phone, gender: form.gender };
-    localStorage.setItem('user', JSON.stringify(updated));
-    setMe(updated);
+    localStorage.setItem('user', JSON.stringify({ ...signedInUser(), phone: form.phone, gender: form.gender }));
     toast.success('Your details are saved');
     setEditing(false);
     load();
@@ -90,7 +88,7 @@ const UgProfile = () => {
   // The server sends the newest session first, so the current project leads.
   const [current, ...past] = applications;
   const slotOn = (application) => (
-    application?.student2_email?.toLowerCase() === me.email?.toLowerCase() ? 2 : 1
+    application?.student2_email?.toLowerCase() === account.email?.toLowerCase() ? 2 : 1
   );
   const slot = slotOn(current);
 
@@ -139,9 +137,9 @@ const UgProfile = () => {
     },
     // Counted from the year rather than stored, so there is nothing to edit.
     { label: 'Semester', value: state?.student?.semester_of_study },
-    { label: 'Email', value: me.email },
-    { label: 'Phone', value: me.phone, field: 'phone' },
-    { label: 'Gender', value: me.gender, field: 'gender', options: GENDERS },
+    { label: 'Email', value: account.email },
+    { label: 'Phone', value: account.phone, field: 'phone' },
+    { label: 'Gender', value: account.gender, field: 'gender', options: GENDERS },
     { label: 'Programme', value: state?.student?.branch?.programme },
   ];
 

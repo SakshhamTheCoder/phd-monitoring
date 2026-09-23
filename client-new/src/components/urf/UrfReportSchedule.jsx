@@ -186,8 +186,8 @@ const UrfReportSchedule = ({ session, sessions = [] }) => {
         <PanelSection title="Other rounds this session">
           <TableComponent
             data={rows}
-            keys={['session', 'report', 'opens_on', 'closes_on', 'state', 'notes', 'id']}
-            titles={['Session', 'Report', 'Opens on', 'Closes on', 'Status', 'Note', ' ']}
+            keys={['report', 'opens_on', 'closes_on', 'state', 'notes', 'id']}
+            titles={['Report', 'Opens on', 'Closes on', 'Status', 'Note', ' ']}
             components={[{
               // The round it names, opened into the form above to be moved.
               key: 'report',
