@@ -38,10 +38,14 @@ const Pending = ({ failed, onRetry }) => (failed
   : <p>Loading…</p>);
 
 // Fellowship details and reports are kept per student, and a project's rows
-// include the teammate's. A project has two members at most: user_id is the
-// first student and student2_email the second.
+// could include the teammate's. The server now sends only the student's own,
+// so this is a second guard. Sign-in carries the user id; a session from before
+// it did falls back to the project's two slots, where user_id is the first
+// student and student2_email the second.
 const own = (application, rows) => {
-  const second = application.student2_email?.toLowerCase() === signedInUser().email?.toLowerCase();
+  const me = signedInUser();
+  if (me.id != null) return (rows || []).filter((row) => String(row.user_id) === String(me.id));
+  const second = application.student2_email?.toLowerCase() === me.email?.toLowerCase();
   return (rows || []).filter((row) => (String(row.user_id) === String(application.user_id)) !== second);
 };
 

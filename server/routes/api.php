@@ -66,6 +66,8 @@ Route::post('/login', function (Request $request) {
                 $user->save();
             }
         }
+        // The id lets the client tell its own rows from a teammate's.
+        $ret['id'] = $user->id;
         $ret['first_name'] = $user->first_name;
         $ret['last_name'] = $user->last_name;
         $ret['email'] = $user->email;
@@ -286,6 +288,7 @@ Route::post('/switch-role', function (Request $request) {
             $user->save();
             $user->refresh();
 
+            $ret['id'] = $user->id;
             $ret['first_name'] = $user->first_name;
             $ret['last_name'] = $user->last_name;
             $ret['email'] = $user->email;
