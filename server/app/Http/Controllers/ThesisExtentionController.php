@@ -41,7 +41,8 @@ class ThesisExtentionController extends Controller
             })->join(', ');
             },
             "date_of_synopsis" => function ($form) {
-                return \Carbon\Carbon::parse($form->student->date_of_synopsis)->format('Y-m-d');
+                // Carbon::parse(null) is today, so a missing date showed as today.
+                return $form->student->date_of_synopsis?->format('Y-m-d');
         
             },
         ],
@@ -154,11 +155,14 @@ class ThesisExtentionController extends Controller
                     $formInstance->student->save();
                 }
                 if($formInstance->student->thesisExtentions->count()>0){
+                    // A resubmission after a send-back keeps the stored PDF unless a new one comes.
                     $request->validate([
-                        'previous_extention_pdf' => 'required|file|mimes:pdf|max:20480',
+                        'previous_extention_pdf' => ($formInstance->previous_extention_pdf ? 'nullable' : 'required').'|file|mimes:pdf|max:20480',
                     ]);
-                    $link=$this->replaceUploadedFile($formInstance->previous_extention_pdf, $request->file('previous_extention_pdf'), 'thesis_extention', $user->student->roll_no);
-                    $formInstance->previous_extention_pdf = $link;
+                    if($request->hasFile('previous_extention_pdf')){
+                        $link=$this->replaceUploadedFile($formInstance->previous_extention_pdf, $request->file('previous_extention_pdf'), 'thesis_extention', $user->student->roll_no);
+                        $formInstance->previous_extention_pdf = $link;
+                    }
                 }
                 $formInstance->reason = $request->reason;
         }
@@ -178,9 +182,7 @@ class ThesisExtentionController extends Controller
             'approval' => 'required|boolean',
         ]);
         $request->merge(['approval' => true]);
-        foreach ($request->form_ids as $form_id) {
-            $this->submit($request, $form_id);
-        }
+        return $this->bulkResults($request->form_ids, fn ($form_id) => $this->submit($request, $form_id));
     }
     private function supervisorSubmit($user, $request, $form_id)
     {

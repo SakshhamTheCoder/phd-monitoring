@@ -1,18 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { loginAPI } from "../../api/login";
 import { apiUrfResendVerification } from "../../api/urf";
-import { CLOUDFLARE_SITE_KEY, rootURL } from "../../api/urls";
+import { rootURL } from "../../api/urls";
 import Loader from "../../components/loader/loader";
 import { toast } from "react-toastify";
+import { NETWORK_ERROR_MESSAGE } from "../../api/base";
+import { mountTurnstile } from "./turnstile";
 
 // Where to go once signed in: the page that sent the visitor here, or home.
-// Only a path on this site. Anything else ("https://...", "//host") was followed
-// as given, which made the login page an open redirect.
+// Only a path on this site. Anything else ("https://...", "//host", and "/\host",
+// which browsers read as "//host") was followed as given, which made the login
+// page an open redirect. `onLogin` is the older name, still in old links.
 const afterLogin = () => {
-  const target = new URLSearchParams(window.location.search).get('onLogin') || '';
-  return target.startsWith('/') && !target.startsWith('//') ? target : '/home';
+  const params = new URLSearchParams(window.location.search);
+  const target = params.get('next') || params.get('onLogin') || '';
+  return /^\/(?![/\\])/.test(target) ? target : '/home';
 };
 
 const LoginPage = () => {
@@ -22,13 +26,17 @@ const LoginPage = () => {
   const [showEmailForm, setShowEmailForm] = useState(false);
   // Set when the account exists but its email is unconfirmed.
   const [unverifiedEmail, setUnverifiedEmail] = useState(null);
+  const [resending, setResending] = useState(false);
   const { register, handleSubmit } = useForm();
+  const navigate = useNavigate();
 
   // Check if user is already logged in
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      window.location.href = "/home";
+      // Replace, so Back does not return to a login page that bounces again.
+      window.location.replace(afterLogin());
+      return undefined;
     }
 
     const verified = new URLSearchParams(window.location.search).get("verified");
@@ -46,46 +54,8 @@ const LoginPage = () => {
 
   // Separate effect for Turnstile - only render when email form is shown
   useEffect(() => {
-    if (!showEmailForm) return;
-
-    let widgetId = null;
-
-    // Wait for Turnstile to be available and render widget
-    const renderWidget = () => {
-      if (window.turnstile) {
-        const container = document.getElementById('turnstile-container');
-        if (container && !container.hasChildNodes()) {
-          try {
-            widgetId = window.turnstile.render('#turnstile-container', {
-              sitekey: CLOUDFLARE_SITE_KEY,
-              theme: 'light',
-              callback: (token) => {
-                setCaptchaToken(token);
-              },
-            });
-          } catch (error) {
-            console.error('Turnstile render error:', error);
-          }
-        }
-      } else {
-        // Retry if turnstile is not loaded yet
-        setTimeout(renderWidget, 100);
-      }
-    };
-
-    const timer = setTimeout(renderWidget, 100);
-
-    // Cleanup function
-    return () => {
-      clearTimeout(timer);
-      if (widgetId !== null && window.turnstile) {
-        try {
-          window.turnstile.remove(widgetId);
-        } catch (error) {
-          console.error('Turnstile cleanup error:', error);
-        }
-      }
-    };
+    if (!showEmailForm) return undefined;
+    return mountTurnstile(setCaptchaToken);
   }, [showEmailForm]);
 
   // Handle Google Sign-In with popup (more reliable than FedCM)
@@ -105,12 +75,29 @@ const LoginPage = () => {
       `width=${width},height=${height},left=${left},top=${top}`
     );
 
+    const stop = () => {
+      clearTimeout(timeout);
+      clearInterval(closedPoll);
+      window.removeEventListener('message', messageListener);
+    };
+
     // Set a timeout to stop loading if no response after 60 seconds
     const timeout = setTimeout(() => {
+      stop();
       setLoading(false);
-      window.removeEventListener('message', messageListener);
       toast.error('Google Sign-In timed out. Please try again.');
     }, 60000);
+
+    // Closed by hand, the popup never answers, and the page sat behind the
+    // loader until the timeout. Only the loader goes: Google's pages can cut the
+    // opener link so `closed` reads true while sign-in is still under way, and
+    // the listener has to be there when the callback posts back.
+    const closedPoll = setInterval(() => {
+      if (popup && popup.closed) {
+        clearInterval(closedPoll);
+        setLoading(false);
+      }
+    }, 500);
 
     // Listen for messages from the popup
     const messageListener = (event) => {
@@ -120,9 +107,8 @@ const LoginPage = () => {
       }
 
       if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
-        clearTimeout(timeout);
-        window.removeEventListener('message', messageListener);
-        
+        stop();
+
         // Store the auth data
         localStorage.setItem('token', event.data.token);
         localStorage.setItem('userRole', event.data.user.role.role);
@@ -131,11 +117,17 @@ const LoginPage = () => {
         
         // Redirect to appropriate page
         window.location.href = afterLogin();
-      } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
-        clearTimeout(timeout);
-        window.removeEventListener('message', messageListener);
+      } else if (event.data.type === 'GOOGLE_SIGNUP') {
+        // The address has no account yet: finish on the sign-up form, as the
+        // callback does when it has no opener.
+        stop();
         setLoading(false);
-        
+        const { ticket, email, name } = event.data;
+        navigate(`/signup?ticket=${encodeURIComponent(ticket)}&email=${encodeURIComponent(email || '')}&name=${encodeURIComponent(name || '')}`);
+      } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
+        stop();
+        setLoading(false);
+
         toast.error(event.data.error || 'Google login failed');
       }
     };
@@ -144,15 +136,16 @@ const LoginPage = () => {
 
     // Check if popup was blocked
     if (!popup) {
-      clearTimeout(timeout);
+      stop();
       setLoading(false);
-      window.removeEventListener('message', messageListener);
       toast.error('Popup was blocked. Please allow popups for this site.');
     }
   };
 
   // Define the onSubmit function
   const onSubmit = async (data) => {
+    // Enter in a field submits again while the first request is in flight.
+    if (loading) return;
     setLoading(true);
 
     const result = await loginAPI(data.email, data.password, captchaToken);
@@ -183,7 +176,7 @@ const LoginPage = () => {
         className="tw-bg-cover tw-bg-center tw-min-h-screen tw-flex tw-items-center tw-justify-center tw-p-4"
         style={{ backgroundImage: "url('/image-1@2x.png')" }}
       >
-        <div className="tw-bg-white tw-p-8 tw-rounded-lg tw-shadow-lg tw-w-full tw-max-w-md sm:tw-p-6 sm:tw-max-w-sm">
+        <div className="tw-bg-[color:var(--surface)] tw-p-8 tw-rounded-lg tw-shadow-lg tw-w-full tw-max-w-md sm:tw-p-6 sm:tw-max-w-sm">
           <img
             src="/images/tiet_logo.png"
             alt="TIETLogo"
@@ -194,7 +187,7 @@ const LoginPage = () => {
           <div className="tw-flex tw-flex-col tw-items-center tw-mb-3">
             <button
               onClick={handleGoogleSignIn}
-              className="tw-bg-white tw-border-2 tw-border-gray-300 tw-text-gray-700 tw-px-6 tw-py-3 tw-rounded-md tw-font-semibold hover:tw-bg-gray-50 hover:tw-border-gray-400 tw-duration-200 tw-w-full tw-max-w-[350px] tw-flex tw-items-center tw-justify-center tw-gap-3"
+              className="tw-bg-[color:var(--surface)] tw-border tw-border-[color:var(--border-color)] tw-text-[color:var(--text-color)] tw-px-6 tw-py-3 tw-rounded-md tw-font-semibold hover:tw-bg-[color:var(--canvas)] hover:tw-border-[color:var(--text-subtle)] tw-duration-200 tw-w-full tw-max-w-[350px] tw-flex tw-items-center tw-justify-center tw-gap-3"
             >
               <svg className="tw-w-5 tw-h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -211,13 +204,13 @@ const LoginPage = () => {
             <div className="tw-flex tw-justify-center tw-mt-3">
               <button
                 onClick={() => setShowEmailForm(true)}
-                className="tw-bg-white tw-border-2 tw-border-gray-300 tw-text-gray-700 tw-px-6 tw-py-3 tw-rounded-md tw-font-semibold hover:tw-bg-gray-50 hover:tw-border-gray-400 tw-duration-200 tw-w-full tw-max-w-[350px] tw-flex tw-items-center tw-justify-center tw-gap-3"
+                className="tw-bg-[color:var(--surface)] tw-border tw-border-[color:var(--border-color)] tw-text-[color:var(--text-color)] tw-px-6 tw-py-3 tw-rounded-md tw-font-semibold hover:tw-bg-[color:var(--canvas)] hover:tw-border-[color:var(--text-subtle)] tw-duration-200 tw-w-full tw-max-w-[350px] tw-flex tw-items-center tw-justify-center tw-gap-3"
               >
                 <svg className="tw-w-5 tw-h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                   <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
                   <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
                 </svg>
-                Sign in with Email & Password
+                Sign in with email and password
               </button>
             </div>
           )}
@@ -226,9 +219,9 @@ const LoginPage = () => {
           {showEmailForm && (
             <>
               <div className="tw-flex tw-items-center tw-justify-center tw-mt-4">
-                <span className="tw-border-t tw-border-gray-600 tw-flex-grow"></span>
-                <span className="tw-px-4 tw-text-gray-700 tw-text-sm">Or sign in with email</span>
-                <span className="tw-border-t tw-border-gray-600 tw-flex-grow"></span>
+                <span className="tw-border-t tw-border-[color:var(--border-color)] tw-flex-grow"></span>
+                <span className="tw-px-4 tw-text-[color:var(--text-color)] tw-text-sm">Or sign in with email</span>
+                <span className="tw-border-t tw-border-[color:var(--border-color)] tw-flex-grow"></span>
               </div>
               <form
                 onSubmit={handleSubmit(onSubmit)}
@@ -240,11 +233,11 @@ const LoginPage = () => {
                     id="email"
                     type="email"
                     placeholder=""
-                    className="tw-peer tw-bg-opacity-50 tw-px-4 tw-pt-6 tw-pb-2.5 tw-w-full tw-rounded tw-border tw-border-slate-600 tw-text-black focus:tw-ring-2 focus:tw-ring-white tw-outline-none invalid:tw-border-red-500"
+                    className="tw-peer tw-bg-opacity-50 tw-px-4 tw-pt-6 tw-pb-2.5 tw-w-full tw-rounded tw-border tw-border-[color:var(--border-color)] tw-text-[color:var(--text-color)] focus:tw-border-brand tw-outline-none invalid:tw-border-[color:var(--danger)]"
                   />
                   <label
                     htmlFor="email"
-                    className="tw-absolute tw-text-slate-500 tw-left-3 tw-duration-300 tw-scale-75 tw-top-1 peer-placeholder-shown:tw-scale-100 peer-placeholder-shown:tw-top-4 peer-focus:tw-left-3 peer-focus:tw-scale-75 peer-focus:tw-top-1"
+                    className="tw-absolute tw-text-[color:var(--text-muted)] tw-left-3 tw-duration-300 tw-scale-75 tw-top-1 peer-placeholder-shown:tw-scale-100 peer-placeholder-shown:tw-top-4 peer-focus:tw-left-3 peer-focus:tw-scale-75 peer-focus:tw-top-1"
                   >
                     Email
                   </label>
@@ -255,14 +248,14 @@ const LoginPage = () => {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder=""
-                    className="tw-peer tw-bg-opacity-50 tw-px-4 tw-pt-6 tw-pb-2.5 tw-pr-12 tw-w-full tw-rounded tw-border tw-border-slate-600 tw-text-black focus:tw-ring-2 focus:tw-ring-white tw-outline-none invalid:tw-border-red-500"
+                    className="tw-peer tw-bg-opacity-50 tw-px-4 tw-pt-6 tw-pb-2.5 tw-pr-12 tw-w-full tw-rounded tw-border tw-border-[color:var(--border-color)] tw-text-[color:var(--text-color)] focus:tw-border-brand tw-outline-none invalid:tw-border-[color:var(--danger)]"
                   />
 
                   <button
                     type="button"
                     onClick={() => setShowPassword((s) => !s)}
                     aria-label={showPassword ? "Hide password" : "Show password"}
-                    className="tw-absolute tw-right-3 tw-top-1/2 tw-text-gray-600 hover:tw-text-gray-800 focus:tw-outline-none"
+                    className="tw-absolute tw-right-3 tw-top-1/2 tw-text-[color:var(--text-muted)] hover:tw-text-[color:var(--text-color)] focus:tw-outline-none"
                     style={{ transform: 'translateY(-50%)' }}
                   >
                     {showPassword ? (
@@ -274,7 +267,7 @@ const LoginPage = () => {
 
                   <label
                     htmlFor="password"
-                    className="tw-absolute tw-text-slate-500 tw-left-3 tw-duration-300 tw-scale-75 tw-top-1 peer-placeholder-shown:tw-scale-100 peer-placeholder-shown:tw-top-4 peer-focus:tw-left-3 peer-focus:tw-scale-75 peer-focus:tw-top-1"
+                    className="tw-absolute tw-text-[color:var(--text-muted)] tw-left-3 tw-duration-300 tw-scale-75 tw-top-1 peer-placeholder-shown:tw-scale-100 peer-placeholder-shown:tw-top-4 peer-focus:tw-left-3 peer-focus:tw-scale-75 peer-focus:tw-top-1"
                   >
                     Password
                   </label>
@@ -284,14 +277,21 @@ const LoginPage = () => {
                     to="/forgot-password"
                     className="tw-text-brand hover:tw-underline"
                   >
-                    Forgot Password?
+                    Forgot password?
                   </Link>
                   {unverifiedEmail && (
                     <button
                       type="button"
+                      disabled={resending}
                       onClick={async () => {
+                        setResending(true);
                         const result = await apiUrfResendVerification(unverifiedEmail);
-                        toast.info(result.response?.message || 'The link is on its way.');
+                        setResending(false);
+                        if (result.success) {
+                          toast.info(result.response?.message || 'The link is on its way.');
+                        } else {
+                          toast.error(result.networkError ? NETWORK_ERROR_MESSAGE : result.response?.message || 'Could not send the confirmation email. Try again in a moment.');
+                        }
                       }}
                       className="tw-text-brand hover:tw-underline"
                     >
@@ -305,7 +305,8 @@ const LoginPage = () => {
 
                 <button
                   type="submit"
-                  className="tw-bg-brand tw-w-4/5 tw-mx-auto tw-block tw-text-center tw-text-white tw-py-2 tw-rounded-md tw-font-bold hover:tw-bg-brand-hover tw-duration-200"
+                  disabled={loading}
+                  className="tw-bg-brand tw-w-4/5 tw-mx-auto tw-block tw-text-center tw-text-white tw-py-2 tw-rounded-md tw-font-semibold hover:tw-bg-brand-hover tw-duration-200"
                 >
                   Login
                 </button>
@@ -321,24 +322,24 @@ const LoginPage = () => {
           </p>
 
           {/* Footer Links */}
-          <div className="tw-mt-6 tw-pt-4 tw-border-t tw-border-gray-200 tw-flex tw-flex-wrap tw-justify-center tw-gap-4 tw-text-sm">
+          <div className="tw-mt-6 tw-pt-4 tw-border-t tw-border-[color:var(--border-subtle)] tw-flex tw-flex-wrap tw-justify-center tw-gap-4 tw-text-sm">
             <Link
               to="/privacy"
-              className="tw-text-gray-600 hover:tw-text-brand hover:tw-underline"
+              className="tw-text-[color:var(--text-muted)] hover:tw-text-brand hover:tw-underline"
             >
-              Privacy Policy
+              Privacy policy
             </Link>
-            <span className="tw-text-gray-400">|</span>
+            <span className="tw-text-[color:var(--text-subtle)]">|</span>
             <Link
               to="/support"
-              className="tw-text-gray-600 hover:tw-text-brand hover:tw-underline"
+              className="tw-text-[color:var(--text-muted)] hover:tw-text-brand hover:tw-underline"
             >
               Support
             </Link>
-            <span className="tw-text-gray-400">|</span>
+            <span className="tw-text-[color:var(--text-subtle)]">|</span>
             <Link
               to="/team"
-              className="tw-text-gray-600 hover:tw-text-brand hover:tw-underline"
+              className="tw-text-[color:var(--text-muted)] hover:tw-text-brand hover:tw-underline"
             >
               Team
             </Link>

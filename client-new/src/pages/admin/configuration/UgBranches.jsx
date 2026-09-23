@@ -7,6 +7,8 @@ import InputSuggestions from '../../../components/forms/fields/InputSuggestions'
 import UnifiedBulkImportModal from '../../../components/bulkImport/UnifiedBulkImportModal';
 import { baseURL } from '../../../api/urls';
 import { apiBranchCreate, apiBranchDelete, apiBranchImport, apiBranchList, apiBranchUpdate } from '../../../api/urf';
+import { apiBranchOptions } from '../../../api/lookups';
+import useDoneFlash from '../../../hooks/useDoneFlash';
 import './Configuration.css';
 
 const EMPTY = { programme: '', code: '', name: '', department_id: '', department: '' };
@@ -25,10 +27,17 @@ const UgBranches = () => {
   const [form, setForm] = useState(EMPTY);
   const [editing, setEditing] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [saved, flashSaved] = useDoneFlash();
   const [importing, setImporting] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  // InputSuggestions ignores an empty initialValue, so clearing the form left
+  // the old department in the picker. A new key starts it afresh.
+  const [formResets, setFormResets] = useState(0);
 
   const load = useCallback(async () => {
+    // Every write here ends in a reload of this list; the pickers elsewhere
+    // share one cached copy, which has to go with it.
+    apiBranchOptions.invalidate();
     const res = await apiBranchList();
     if (res.success) setBranches(res.response);
   }, []);
@@ -53,8 +62,10 @@ const UgBranches = () => {
     if (!res.success) return;
 
     toast.success(editing ? 'Branch updated' : 'Branch added');
+    flashSaved();
     setForm(EMPTY);
     setEditing(null);
+    setFormResets((count) => count + 1);
     load();
   };
 
@@ -103,9 +114,9 @@ const UgBranches = () => {
   }));
 
   return (
-    <div className="config-block">
-      <div className="filter-bar">
-        <div className="filter-row config-filter-row">
+    <>
+      <div className="config-fields">
+        <div className="config-filter-row">
           <div className="input-field-container config-field-140">
             <label className="input-label" htmlFor="ug-branches-programme">Programme</label>
             <input
@@ -138,10 +149,10 @@ const UgBranches = () => {
           </div>
           <div className="input-field-container config-field-240">
             <InputSuggestions
+              key={`${editing ?? 'new'}-${formResets}`}
               label="Department"
               apiUrl={`${baseURL}/suggestions/department`}
               initialValue={form.department}
-              suggestionManadatory={false}
               onSelect={(picked) => setForm((prev) => ({
                 ...prev,
                 department_id: picked?.id || '',
@@ -149,12 +160,13 @@ const UgBranches = () => {
               }))}
             />
           </div>
-          <CustomButton text={editing ? 'Save changes' : 'Add branch'} onClick={save} disabled={busy} />
-          {!editing && <CustomButton text="Import CSV" onClick={() => setImportOpen(true)} />}
+          <CustomButton text={editing ? 'Save changes' : 'Add branch'} onClick={save} done={saved} disabled={busy} />
+          {!editing && <CustomButton text="Import from CSV" variant="secondary" onClick={() => setImportOpen(true)} />}
           {editing && (
             <CustomButton
               text="Cancel"
-              onClick={() => { setEditing(null); setForm(EMPTY); }}
+              variant="quiet"
+              onClick={() => { setEditing(null); setForm(EMPTY); setFormResets((count) => count + 1); }}
             />
           )}
         </div>
@@ -188,7 +200,7 @@ const UgBranches = () => {
       <UnifiedBulkImportModal
         isOpen={importOpen}
         onClose={() => setImportOpen(false)}
-        title="Import Branches"
+        title="Import branches from CSV"
         required={['programme', 'code', 'name']}
         rules={[
           'Matched on programme and code, so importing the same file twice renames rather than duplicates.',
@@ -200,7 +212,7 @@ const UgBranches = () => {
         onImport={importRows}
         submitting={importing}
       />
-    </div>
+    </>
   );
 };
 

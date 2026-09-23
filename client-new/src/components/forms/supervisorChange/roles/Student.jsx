@@ -21,15 +21,21 @@ const Student = ({ formData }) => {
   const { setLoading } = useLoading();
 
   useEffect(() => {
-    const prefrences = formData?.prefrences?.map(
-      (prefrence) => prefrence.faculty_code
+    const prefrences = (formData?.prefrences || []).map(
+      (prefrence) => prefrence?.faculty_code ?? null
     );
     if (prefrences.length < 3) {
       for (let i = prefrences.length; i < 3; i++) prefrences.push(null);
     }
+    // Seeded from a sent-back form, so resubmitting without retyping sends the
+    // earlier answers instead of failing validation.
     setBody({
       prefrences: prefrences,
+      reason: formData?.reason,
     });
+    setSelectedSupervisors(
+      (formData?.to_change || []).map((sup) => sup?.faculty_code).filter(Boolean)
+    );
     setLock(formData.locks?.student);
     setIsLoaded(true);
   }, [formData]);
@@ -67,7 +73,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Roll Number"
+                label="Roll number"
                 initialValue={formData.roll_no}
                 isLocked={true}
               />,
@@ -82,7 +88,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Date Of Admission"
+                label="Date of admission"
                 initialValue={formatDate(formData.date_of_registration)}
                 isLocked={true}
               />,
@@ -97,7 +103,7 @@ const Student = ({ formData }) => {
                 isLocked={true}
               />,
               <InputField
-                label="Mobile Number"
+                label="Mobile number"
                 initialValue={formData.phone}
                 isLocked={true}
               />,
@@ -107,7 +113,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="IRB Completed:"
+                label="IRB completed"
                 initialValue={formData.irb_submitted ? "Yes" : "No"}
                 isLocked={true}
               />,
@@ -117,7 +123,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Title of Phd Thesis"
+                label="Title of PhD thesis"
                 initialValue={formData.phd_title}
                 isLocked={true}
               />,
@@ -126,7 +132,7 @@ const Student = ({ formData }) => {
           />
 
           <GridContainer
-            elements={formData.supervisors.map((sup, index) => {
+            elements={(formData.supervisors || []).map((sup, index) => {
               return (
                 <InputField
                   label={"Supervisor " + (index + 1)}
@@ -140,7 +146,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label={"Date of Allocation of Supervisor"}
+                label={"Date of allocation of supervisor"}
                 isLocked={true}
                 initialValue={formatDate(formData.date_of_allocation)}
               />,
@@ -152,7 +158,7 @@ const Student = ({ formData }) => {
 <GridContainer
             elements={[
               <InputField required={true}
-                label="Reason for Supervisor Change"
+                label="Reason for supervisor change"
                 initialValue={formData.reason}
                 isLocked={lock}
                 onChange={(value) => {
@@ -169,11 +175,8 @@ const Student = ({ formData }) => {
       {formData.role === "student" && !lock ? (
         <>
           <GridContainer
-            elements={[<p>Select Supervisors to change</p>]}
-            space={2}
-          />
-          <GridContainer
-            elements={formData.supervisors.map((sup, index) => {
+            label="Select supervisors to change"
+            elements={(formData.supervisors || []).map((sup, index) => {
               const isSelected = selectedSupervisors.includes(sup.faculty_code);
 
               return (
@@ -191,27 +194,24 @@ const Student = ({ formData }) => {
           />
 
           <GridContainer
-            elements={[<p>Select 3 Tentative Name of Supervisor (in order)</p>]}
-            space={2}
-          />
-          <GridContainer
+            label="Select 3 tentative names of supervisors (in order)"
             elements={[
               <InputSuggestions
-                initialValue={formData.prefrences[0]?.name}
+                initialValue={formData.prefrences?.[0]?.name}
                 apiUrl={apiUrl_suggestion}
                 onSelect={(value) => handlePrefrenceSelect(value, 0)}
                 lock={lock}
                 label={"Preference 1"}
               />,
               <InputSuggestions
-                initialValue={formData.prefrences[1]?.name}
+                initialValue={formData.prefrences?.[1]?.name}
                 apiUrl={apiUrl_suggestion}
                 onSelect={(value) => handlePrefrenceSelect(value, 1)}
                 lock={lock}
                 label={"Preference 2"}
               />,
               <InputSuggestions
-                initialValue={formData.prefrences[2]?.name}
+                initialValue={formData.prefrences?.[2]?.name}
                 apiUrl={apiUrl_suggestion}
                 onSelect={(value) => handlePrefrenceSelect(value, 2)}
                 lock={lock}
@@ -233,24 +233,24 @@ const Student = ({ formData }) => {
         </>
       ) : (
         <>
-           <GridContainer elements={[<p>Supervisor(s) to be changed</p>]} space={2} />
           <GridContainer
+            label="Supervisor(s) to be changed"
             elements={[
               <TableComponent
                 data={formData.to_change}
                 keys={["name", "department"]}
-                titles={["Supervisor Name", "Department"]}
+                titles={["Supervisor name", "Department"]}
               />,
             ]}
             space={3}
           />
-          <GridContainer elements={[<p>Student Preferences</p>]} space={2} />
           <GridContainer
+            label="Student preferences"
             elements={[
               <TableComponent
                 data={formData.prefrences}
                 keys={["name", "department"]}
-                titles={["Supervisor Name", "Department"]}
+                titles={["Supervisor name", "Department"]}
               />,
             ]}
             space={3}

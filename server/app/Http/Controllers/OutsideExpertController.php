@@ -90,6 +90,11 @@ class OutsideExpertController extends Controller
                 'phone' => 'nullable|string|unique:outside_experts,phone',
                 'area_of_expertise' => 'nullable|string',
                 'website' => 'nullable',
+            ], [
+                // An expert serves any number of scholars; a second record for
+                // the same person splits their history in two.
+                'email.unique' => 'An outside expert with this email is already on the list. Pick them from the list instead of adding them again.',
+                'phone.unique' => 'An outside expert with this phone number is already on the list. Pick them from the list instead of adding them again.',
             ]);
 
             if ($validator->fails()) {

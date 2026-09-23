@@ -3,39 +3,29 @@
     display: inline-block;
   }
   
-  .profile_icon {
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-  }
-  
-  .profile_icon_img {
-    width: 24px;
-    height: 24px;
-  }
-  
   .profile_box {
     position: absolute;
     top: 100%;
     right: 0;
-    margin-top: 10px;
+    margin-top: var(--space-2);
     width: 200px;
-    border: 1px solid #ccc;
-    background-color: white;
-    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-subtle);
+    background-color: var(--surface);
+    border-radius: var(--radius);
     box-shadow: var(--shadow);
     z-index: 100;
   }
   
   .profile_header {
-    padding: 10px;
-    border-bottom: 1px solid var(--border-color);
+    padding: var(--space-3);
+    border-bottom: 1px solid var(--border-subtle);
   }
   
   .profile_header h3 {
     margin: 0;
-    font-size: var(--text-md);
-    color: #000;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--text-color);
   }
   
   .profile_content {
@@ -50,8 +40,8 @@
     background: none;
     font: inherit;
     text-align: left;
-    padding: 10px;
-    color: #3c3c3c;
+    padding: var(--space-3);
+    color: var(--text-color);
     font-weight: 400;
     cursor: pointer;
     transition: background-color 0.2s ease;
@@ -59,7 +49,7 @@
   
   .profile_item:hover {
     color: var(--primary-color);
-    background-color: #f0f0f0;
+    background-color: var(--primary-wash);
   }
   
 /* Was a div until it became a real button, so the button chrome is cleared and
@@ -80,3 +70,7 @@
     outline-offset: 2px;
     border-radius: var(--radius-sm);
 }
+
+/* Grows from the top bar and fades back into it; keyframes in styles/ui.css. */
+.profile_box { animation: menu-in 150ms ease-out; transform-origin: top right; }
+.profile_box.is-closing { animation: menu-out 100ms ease-out forwards; pointer-events: none; }

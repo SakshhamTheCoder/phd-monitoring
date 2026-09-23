@@ -63,7 +63,7 @@ class StudentController extends Controller {
                 'gender' => 'required|in:Male,Female',
                 'physically_handicapped' => 'nullable|boolean',
                 'is_jrf' => 'nullable|boolean',
-                'is_net_gate_qualified' => 'nullable|boolean',
+                'net_gate' => 'nullable|string|max:40',
                 'date_of_irb' => 'nullable|date',
                 'date_of_synopsis' => 'nullable|date',
                 'date_of_thesis' => 'nullable|date',
@@ -75,6 +75,10 @@ class StudentController extends Controller {
                 'cgpa' => 'nullable|numeric'
             ]
         );
+
+        if ($this->outsideWritableDepartments($request->department_id)) {
+            return response()->json(['message' => 'You can only add scholars to your own departments.'], 403);
+        }
         // Nobody is told this one. The account is mailed a link and chooses
         // its own, the same way a UG student or any other new account does.
         $password = Str::password(8, true, true, true, false);
@@ -114,9 +118,9 @@ class StudentController extends Controller {
         $student->current_status = $request->current_status;
         $student->address = $request->address;
         $student->cgpa = $request->cgpa;
-        $student->is_jrf = $request->has('is_jrf') ? $request->boolean('is_jrf') : null;
-        $student->is_net_gate_qualified = $request->has('is_net_gate_qualified') ? $request->boolean('is_net_gate_qualified') : null;
-        $student->date_of_thesis_awarded = $request->date_of_thesis_awarded;
+        // A null is "not stated"; boolean() would read it as No.
+        $student->is_jrf = $request->input('is_jrf') === null ? null : $request->boolean('is_jrf');
+        $student->net_gate = $request->input('net_gate') ?: null;
         if($request->has('overall_progress'))
              $student->overall_progress = $request->overall_progress;
         else
@@ -154,7 +158,7 @@ class StudentController extends Controller {
         'address',
         'cgpa',
         'is_jrf',
-        'is_net_gate_qualified',
+        'net_gate',
         'overall_progress',
         'current_status',
         'date_of_registration',
@@ -533,7 +537,7 @@ class StudentController extends Controller {
             'students.*.cgpa' => 'nullable|numeric',
             'students.*.gender' => 'nullable|string',
             'students.*.is_jrf' => 'nullable|boolean',
-            'students.*.is_net_gate_qualified' => 'nullable|boolean',
+            'students.*.net_gate' => 'nullable|string|max:40',
             'students.*.date_of_synopsis' => 'nullable|date',
             'students.*.date_of_thesis' => 'nullable|date',
             'students.*.date_of_thesis_awarded' => 'nullable|date',
@@ -592,6 +596,11 @@ class StudentController extends Controller {
                     }
 
                     if ($existingUser && $existingStudent) {
+                        if ($this->outsideWritableDepartments($existingStudent->department_id)
+                            || ($department && $this->outsideWritableDepartments($department->id))) {
+                            $errors[] = "Row " . ($index + 1) . ": this scholar or department is outside your departments";
+                            $failed++; continue;
+                        }
                         // A blank cell means "not supplied", never "clear this".
                         // A spreadsheet carries every column on every row, so
                         // treating a present-but-empty cell as a value emptied
@@ -636,6 +645,10 @@ class StudentController extends Controller {
                         $errors[] = "Row " . ($index + 1) . ": missing required fields for new student (full_name, phone, roll_no, department_code, date_of_registration, current_status)";
                         $failed++; continue;
                     }
+                    if ($this->outsideWritableDepartments($department->id)) {
+                        $errors[] = "Row " . ($index + 1) . ": department '{$studentData['department_code']}' is outside your departments";
+                        $failed++; continue;
+                    }
                     // Generated, never shown: the row is mailed a link below.
                     $password = Str::password(8, true, true, true, false);
 
@@ -667,7 +680,7 @@ class StudentController extends Controller {
                     $student->address = $studentData['address'] ?? null;
                     $student->cgpa = $studentData['cgpa'] ?? null;
                     $student->is_jrf = $studentData['is_jrf'] ?? null;
-                    $student->is_net_gate_qualified = $studentData['is_net_gate_qualified'] ?? null;
+                    $student->net_gate = $studentData['net_gate'] ?? null;
                     $student->overall_progress = $studentData['overall_progress'] ?? 0.0;
                     $student->import_batch = $batch;
                     $student->imported_at = $importedAt;
@@ -749,6 +762,13 @@ class StudentController extends Controller {
                     $student = null;
                     if (!empty($data['roll_no'])) $student = Student::where('roll_no', $data['roll_no'])->first();
                     if (!$user && !$student) { $errors[] = "Row ".($index+1).": no matching student for email {$data['email']} or roll {$data['roll_no']}"; $failed++; continue; }
+                    // Found before anything is written, so a scholar outside the
+                    // caller's departments is refused untouched.
+                    $target = $student ?? Student::where('user_id', $user->id)->first();
+                    if (!$target) { $errors[] = "Row ".($index+1).": student record not found"; $failed++; continue; }
+                    if ($this->outsideWritableDepartments($target->department_id)) {
+                        $errors[] = "Row ".($index+1).": this scholar is outside your departments"; $failed++; continue;
+                    }
                     if ($user) {
                         $name = PersonName::fromRow($data);
                         if ($name !== null) {
@@ -758,11 +778,12 @@ class StudentController extends Controller {
                         if (!empty($data['phone'])) $user->phone = $data['phone'];
                         $user->save();
                     }
-                    $target = $student ?? Student::where('user_id', $user->id)->first();
-                    if (!$target) { $errors[] = "Row ".($index+1).": student record not found"; $failed++; continue; }
                     if (!empty($data['department_code'])) {
                         $dept = \App\Support\DepartmentCodes::resolve($data['department_code']);
                         if (!$dept) { $errors[] = "Row ".($index+1).": department code '{$data['department_code']}' not found"; $failed++; continue; }
+                        if ($this->outsideWritableDepartments($dept->id)) {
+                            $errors[] = "Row ".($index+1).": department '{$data['department_code']}' is outside your departments"; $failed++; continue;
+                        }
                         $target->department_id = $dept->id;
                     }
                     if (isset($data['phd_title'])) $target->phd_title = $data['phd_title'];
@@ -1061,6 +1082,26 @@ class StudentController extends Controller {
         return optional(Auth::user())->id === $student->user_id;
     }
 
+    /**
+     * The departments an ADoRDC may write to, or null when writes are not
+     * limited. ADoRDC is the one role with can_manage_students that reads only
+     * its own departments, so its writes are held to the same departments.
+     */
+    private function writableDepartmentIds(): ?array
+    {
+        $user = Auth::user();
+        if ($user->current_role->role !== 'adordc') {
+            return null;
+        }
+        return $user->faculty?->adordcDepartments->pluck('id')->map(fn ($id) => (int) $id)->all() ?? [];
+    }
+
+    private function outsideWritableDepartments($departmentId): bool
+    {
+        $ids = $this->writableDepartmentIds();
+        return $ids !== null && !in_array((int) $departmentId, $ids, true);
+    }
+
     private function canManageStudents(): bool
     {
         return optional(Auth::user()?->current_role)->can_manage_students === 'true';
@@ -1074,6 +1115,34 @@ class StudentController extends Controller {
 
         return $this->isSelf($student)
             && (bool) optional(Auth::user())?->may('can_edit_own_student_profile');
+    }
+
+    /**
+     * Set the scholar's IRB outside expert, the person the revised IRB's
+     * external review goes to. A form already waiting at that step does not
+     * send itself; Resend review request on the form mails the new expert.
+     */
+    public function setOutsideExpert(Request $request, $roll_no)
+    {
+        if (!$this->canManageStudents()) {
+            return response()->json(['message' => 'You do not have permission to edit student'], 403);
+        }
+
+        $student = Student::where('roll_no', $roll_no)->first();
+        if (!$student) {
+            return response()->json(['message' => 'Student not found'], 404);
+        }
+        if ($this->outsideWritableDepartments($student->department_id)) {
+            return response()->json(['message' => 'You can only edit scholars in your own departments.'], 403);
+        }
+
+        $request->validate(['outside_expert_id' => 'required|integer|exists:outside_experts,id']);
+        $expert = OutsideExpert::find($request->outside_expert_id);
+        ScholarCommittee::setOutsideExpert($student, $expert);
+
+        return response()->json([
+            'message' => 'Outside expert set to ' . trim($expert->first_name . ' ' . $expert->last_name) . '.',
+        ], 200);
     }
 
     // Admin/privileged update of any student, keyed by roll_no. Distinct from
@@ -1090,6 +1159,9 @@ class StudentController extends Controller {
         if (!$student) {
             return response()->json(['message' => 'Student not found'], 404);
         }
+        if ($this->outsideWritableDepartments($student->department_id)) {
+            return response()->json(['message' => 'You can only edit scholars in your own departments.'], 403);
+        }
         $user = $student->user;
 
         $request->validate([
@@ -1104,7 +1176,7 @@ class StudentController extends Controller {
             'gender' => 'required|in:Male,Female',
             'physically_handicapped' => 'nullable|boolean',
             'is_jrf' => 'nullable|boolean',
-            'is_net_gate_qualified' => 'nullable|boolean',
+            'net_gate' => 'nullable|string|max:40',
             'date_of_irb' => 'nullable|date',
             'date_of_synopsis' => 'nullable|date',
             'date_of_thesis' => 'nullable|date',
@@ -1115,6 +1187,12 @@ class StudentController extends Controller {
             'overall_progress' => 'nullable|numeric',
             'cgpa' => 'nullable|numeric',
         ]);
+
+        // Moving a scholar to another department would take them out of reach,
+        // or bring one in from outside.
+        if ($this->outsideWritableDepartments($request->department_id)) {
+            return response()->json(['message' => 'You can only move scholars into your own departments.'], 403);
+        }
 
         $name = $request->filled('full_name')
             ? PersonName::split($request->input('full_name'))
@@ -1134,6 +1212,7 @@ class StudentController extends Controller {
         $student->date_of_irb = $request->date_of_irb;
         $student->date_of_synopsis = $request->date_of_synopsis;
         $student->date_of_thesis = $request->date_of_thesis;
+        $student->date_of_thesis_awarded = $request->date_of_thesis_awarded;
         $student->phd_title = $request->phd_title;
         $student->fathers_name = $request->fathers_name;
         $student->current_status = $request->current_status;
@@ -1141,9 +1220,10 @@ class StudentController extends Controller {
         $student->cgpa = $request->cgpa;
         // Says where the scholar's stipend comes from, so it stays on the
         // privileged path rather than the scholar's own profile edit.
-        if ($request->has('is_jrf')) $student->is_jrf = $request->boolean('is_jrf');
+        // A sent null is "not stated" and stays null; boolean() would read it as No.
+        if ($request->has('is_jrf')) $student->is_jrf = $request->input('is_jrf') === null ? null : $request->boolean('is_jrf');
         // Off the office's sheet, like JRF, so it stays on the privileged path.
-        if ($request->has('is_net_gate_qualified')) $student->is_net_gate_qualified = $request->boolean('is_net_gate_qualified');
+        if ($request->has('net_gate')) $student->net_gate = $request->input('net_gate') ?: null;
         if ($request->has('overall_progress')) $student->overall_progress = $request->overall_progress;
         $student->save();
 

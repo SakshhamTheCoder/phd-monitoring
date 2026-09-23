@@ -19,7 +19,9 @@ import DateField from "../../fields/DateField";
 import { generateReportPeriods } from "../../../../utils/semester";
 
 const Student = ({ formData }) => {
-  const [body, setBody] = useState({});
+  // Seeded with what the fields show prefilled. A form sent back shows the
+  // earlier answers, and leaving one as shown sent nothing for it.
+  const [body, setBody] = useState(() => ({ reason: formData.reason }));
   const [lock, setLock] = useState(formData?.locks?.student);
   const [isLoaded, setIsLoaded] = useState(true);
   const location = useLocation();
@@ -28,17 +30,7 @@ const Student = ({ formData }) => {
   const [temp, setTemp] = useState([]);
   const [files, setFiles] = useState([]);
 
-  const [prevOff, setPrevOff] = useState(null);
-  const [prevDate,setPrevDate] = useState(null);
   useEffect(() => {
-    if (formData.previous_changes?.length > 0) {
-      setPrevOff("Yes");
-      setPrevDate(formData.previous_changes[formData.previous_changes?.length-1].created_at)
-    }
-    else
-    {
-      setPrevOff("No");
-    }
     setLock(formData?.locks?.student);
     setIsLoaded(true);
   }, []);
@@ -53,7 +45,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Roll Number"
+                label="Roll number"
                 initialValue={formData.roll_no}
                 isLocked={true}
               />,
@@ -68,7 +60,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Date of Admission"
+                label="Date of admission"
                 initialValue={formatDate(formData.date_of_registration)}
                 isLocked={true}
               />,
@@ -88,7 +80,7 @@ const Student = ({ formData }) => {
                 isLocked={true}
               />,
               <InputField
-                label="Phone Number"
+                label="Phone number"
                 initialValue={formData.phone}
                 isLocked={true}
               />,
@@ -97,7 +89,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Tentative Title of Phd Thesis"
+                label="Tentative title of PhD thesis"
                 initialValue={formData.phd_title}
                 isLocked={true}
               />,
@@ -108,7 +100,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Status of Student at Time of Admission"
+                label="Status of student at time of admission"
                 initialValue={formData.initial_status}
                 isLocked={true}
               />,
@@ -116,33 +108,8 @@ const Student = ({ formData }) => {
             space={2}
           />
 
-          <GridContainer
-            elements={[
-              <InputField
-                label="Change of Status Availed (if any earlier)"
-                initialValue={prevOff?prevOff:"No"}
-                isLocked={true}
-              />,
-            ]}
-             space={2}/>
-
-            <>
-              {prevOff==="Yes" && (
-                <GridContainer elements={[
-               <InputField label={"Date of Previous Extension"}
-               initialValue={prevDate}
-               isLocked={true}
-               />,
-               <InputField label={"Date of IRB Meeting"}
-               initialValue={formatDate(formData.date_of_irb)}
-               isLocked={true}
-               />,
-              ]}/>
-              )}
-            </>
-
             <GridContainer
-            elements={formData.supervisors.map((sup,index)=>{
+            elements={(formData.supervisors || []).map((sup,index)=>{
               return (
                 <InputField 
                 isLocked={true}
@@ -158,7 +125,7 @@ const Student = ({ formData }) => {
             elements={[
               <InputField
                 label="Extension availed if any earlier (for submission of research proposal)"
-                initialValue={formData.researchExtentions[0]?.period_of_extension?formData.researchExtentions[0]?.period_of_extension:"N/A"}
+                initialValue={formData.researchExtentions?.[0]?.period_of_extension?formData.researchExtentions?.[0]?.period_of_extension:"N/A"}
                 isLocked={true}
                
               />,
@@ -171,7 +138,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField required={true}
-                label="Reason for Extension"
+                label="Reason for extension"
                 initialValue={formData.reason}
                 isLocked={lock}
                 onChange={(value) => {
@@ -187,8 +154,8 @@ const Student = ({ formData }) => {
 
           <GridContainer
             elements={[
-              <FileUploadField required={true}
-                label={"Upload Research Proposal"}
+              <FileUploadField required={!formData.research_pdf}
+                label={"Upload research proposal"}
                 onChange={(file) => {
                   setFiles([{ key: "research_pdf", file }]);
                 }}

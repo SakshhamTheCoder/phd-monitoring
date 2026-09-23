@@ -21,6 +21,7 @@ class Patent extends Model
         'title',
         'patent_number',
         'first_page',
+        'authors',
         'year',
         'doi_link',
         'status',

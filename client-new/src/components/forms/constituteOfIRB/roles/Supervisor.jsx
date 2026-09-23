@@ -25,7 +25,7 @@ const Supervisor = ({ formData }) => {
   
   useEffect(() => {
     setLock(formData.locks?.supervisor);
-    let cognates = formData.nominee_cognates.map((item) => {
+    let cognates = formData.nominee_cognates?.map((item) => {
       return item.faculty_code;
     });
     if (!cognates || cognates.length !== 3 || cognates[0] === null) {
@@ -70,10 +70,10 @@ const Supervisor = ({ formData }) => {
     <>
       {isLoaded && formData && (
         <>
-          <p>List of nominees of the DoRDC in cognate area from the institute</p>
-          {greater && lock && formData.nominee_cognates.length === 3 ? (
+          {greater && lock && formData.nominee_cognates?.length === 3 ? (
             <>
               <GridContainer
+                label="List of nominees of the DoRDC in cognate area from the institute"
                 elements={[
                   <TableComponent
                     data={formData.nominee_cognates}
@@ -87,11 +87,12 @@ const Supervisor = ({ formData }) => {
           ) : (
             <>
               <GridContainer
+                label="List of nominees of the DoRDC in cognate area from the institute"
                 elements={[
                   <InputSuggestion
                     apiUrl={apiURL}
                     showLabel={false}
-                    initialValue={formData.nominee_cognates[0]?.name}
+                    initialValue={formData.nominee_cognates?.[0]?.name}
                     onSelect={(value) => {
                       body.nominee_cognates[0] = value.id;
                     }}
@@ -102,7 +103,7 @@ const Supervisor = ({ formData }) => {
                   <InputSuggestion
                     apiUrl={apiURL}
                     showLabel={false}
-                    initialValue={formData.nominee_cognates[1]?.name}
+                    initialValue={formData.nominee_cognates?.[1]?.name}
                     onSelect={(value) => {
                       body.nominee_cognates[1] = value.id;
                     }}
@@ -113,7 +114,7 @@ const Supervisor = ({ formData }) => {
                   <InputSuggestion
                     apiUrl={apiURL}
                     showLabel={false}
-                    initialValue={formData.nominee_cognates[2]?.name}
+                    initialValue={formData.nominee_cognates?.[2]?.name}
                     onSelect={(value) => {
                       body.nominee_cognates[2] = value.id;
                     }}

@@ -1,5 +1,4 @@
 import React, { useEffect,useState } from 'react';
-import Layout from '../../components/dashboard/layout';
 import FormGrid from '../../components/forms/formGrid/FormGrid';
 import ProfileBar from '../../components/profileBar/ProfileBar';
 import { customFetch } from '../../api/base';
@@ -7,6 +6,7 @@ import { baseURL, ENDPOINTS } from '../../api/urls';
 import { useLoading } from '../../context/LoadingContext';
 import { useLocation } from 'react-router-dom';
 import { currentRole } from '../../auth/access';
+import Page from '../../components/page/Page';
 
 const FacultyFormsPage = () => {
     const role = currentRole();
@@ -74,15 +74,9 @@ const FacultyFormsPage = () => {
     }, [role]);
 
   return (
-    <>
-
-       <Layout children={
-        <>
-          <FormGrid forms={forms}/>
-        </>
-        }/>
-
-    </>
+    <Page title="Forms">
+      <FormGrid forms={forms}/>
+    </Page>
   );
 }
 

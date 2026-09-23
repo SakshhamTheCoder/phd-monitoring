@@ -1,12 +1,13 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import Layout from '../../components/dashboard/layout';
-import PageHeader from '../../components/pageHeader/PageHeader';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Page from '../../components/page/Page';
+import Panel from '../../components/panel/Panel';
+import StatusNotice from '../../components/common/StatusNotice';
 import Tabs from '../../components/tabs/Tabs';
 import { toast } from 'react-toastify';
 import { baseURL } from '../../api/urls';
 import { customFetch, isNetworkError, NETWORK_ERROR_MESSAGE } from '../../api/base';
+import { apiDepartmentList } from '../../api/lookups';
 import CustomButton from '../../components/forms/fields/CustomButton';
-import CustomModal from '../../components/forms/modal/CustomModal';
 import LeaveRequests from './LeaveRequests';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -15,6 +16,9 @@ import { EMPTY_VALUE, toDateValue as formatDate, toDateObject as parseDate } fro
 import './AttendancePage.css';
 import { currentRole } from '../../auth/access';
 import AttendanceCsvDialog from './AttendanceCsvDialog';
+import LoadError from '../../components/common/LoadError';
+import AttendanceSummary from './AttendanceSummary';
+import useDoneFlash from '../../hooks/useDoneFlash';
 
 const EDIT_WINDOW = 7;
 
@@ -44,9 +48,20 @@ const AttendancePage = () => {
     () => new URLSearchParams(window.location.search).get('roll_no') || ''
   );
   const [statuses, setStatuses] = useState({});
+  // The marks as loaded, so a date or department change can tell whether it
+  // would throw away marks the user made and has not saved.
+  const loadedStatuses = useRef({});
   const [loading, setLoading] = useState(false);
+  // One flag per loader: a failed answer otherwise read as "nothing here", or
+  // left a caption saying it was still loading.
+  const [rosterFailed, setRosterFailed] = useState(false);
+  const [historyFailed, setHistoryFailed] = useState(false);
+  const [summaryFailed, setSummaryFailed] = useState(false);
+  const [monthFailed, setMonthFailed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showCsvModal, setShowCsvModal] = useState(false);
+  const [saved, flashSaved] = useDoneFlash();
+  const [exported, flashExported] = useDoneFlash();
   // history
   const [history, setHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -67,9 +82,19 @@ const AttendancePage = () => {
   const role = currentRole();
   const isAdmin = role === 'admin';
 
+  // Switching date or department while a load is in flight leaves two answers
+  // racing back. If the older roster landed last, Save posted its marks under
+  // the newer date. Each loader numbers its requests and only the newest writes.
+  const rosterRequest = useRef(0);
+  const historyRequest = useRef(0);
+  const summaryRequest = useRef(0);
+  const monthRequest = useRef(0);
+
   useEffect(() => {
-    const url = isAdmin ? '/departments?rows=1000' : '/clerks/my-departments';
-    customFetch(baseURL + url, 'GET', {}, false)
+    const request = isAdmin
+      ? apiDepartmentList()
+      : customFetch(baseURL + '/clerks/my-departments', 'GET', {}, false);
+    request
       .then((res) => {
         const raw = isAdmin
           ? (res.response?.data || res.response?.departments || res.response || [])
@@ -85,14 +110,18 @@ const AttendancePage = () => {
   }, [isAdmin]);
 
   const loadRoster = useCallback(async () => {
+    const request = ++rosterRequest.current;
     setLoading(true);
+    setRosterFailed(false);
     setStudents([]);
     setStatuses({});
+    loadedStatuses.current = {};
     const params = new URLSearchParams({ date });
     if (departmentFilter) params.set('department_id', departmentFilter);
     const res = await customFetch(baseURL + `/clerks/attendance?${params.toString()}`, 'GET', {}, true);
+    if (request !== rosterRequest.current) return;
     setLoading(false);
-    if (!res.success) { setStudents([]); return; }
+    if (!res.success) { setStudents([]); setRosterFailed(true); return; }
     const list = res.response.students || [];
     setStudents(list);
     const next = {};
@@ -107,19 +136,29 @@ const AttendancePage = () => {
       // toast's skip notice from ever firing on the common same-day case.
       else next[s.roll_no] = isToday ? 'present' : null;
     });
+    loadedStatuses.current = next;
     setStatuses(next);
   }, [date, departmentFilter]);
 
-  useEffect(() => { if (activeTab === 'mark' || activeTab === 'history') loadRoster(); }, [loadRoster, activeTab]);
+  // Reloads on a new date or department only. Reloading on a tab switch reset
+  // every mark, so glancing at Monthly threw away unsaved attendance.
+  useEffect(() => { loadRoster(); }, [loadRoster]);
+
+  const hasUnsavedMarks = students.some((s) => statuses[s.roll_no] !== loadedStatuses.current[s.roll_no]);
+  const confirmDiscardMarks = () => !hasUnsavedMarks
+    || window.confirm(`Discard the attendance you marked for ${date} and have not saved?`);
 
   const loadHistory = useCallback(async () => {
+    const request = ++historyRequest.current;
     setHistoryLoading(true);
+    setHistoryFailed(false);
     setHistory([]);
     const params = new URLSearchParams({ page: String(historyPage), per_page: '15' });
     if (departmentFilter) params.set('department_id', departmentFilter);
     const res = await customFetch(baseURL + `/clerks/attendance/history?${params.toString()}`, 'GET', {}, true);
+    if (request !== historyRequest.current) return;
     setHistoryLoading(false);
-    if (!res.success) { setHistory([]); return; }
+    if (!res.success) { setHistory([]); setHistoryFailed(true); return; }
     setHistory(res.response.data || res.response || []);
     setHistoryTotal(res.response.total || 0);
     setHistoryLastPage(res.response.last_page || 1);
@@ -128,23 +167,31 @@ const AttendancePage = () => {
   useEffect(() => { if (activeTab === 'history') loadHistory(); }, [activeTab, loadHistory]);
 
   const loadDaySummary = useCallback(async () => {
+    const request = ++summaryRequest.current;
     setDaySummary(null);
+    setSummaryFailed(false);
     const params = new URLSearchParams({ date });
     if (departmentFilter) params.set('department_id', departmentFilter);
     const res = await customFetch(baseURL + `/clerks/attendance/summary?${params.toString()}`, 'GET', {}, false);
+    if (request !== summaryRequest.current) return;
     if (res.success) setDaySummary(res.response);
+    else setSummaryFailed(true);
   }, [date, departmentFilter]);
 
   useEffect(() => { if (activeTab === 'history') loadDaySummary(); }, [activeTab, loadDaySummary]);
 
   const loadMonth = useCallback(async () => {
+    const request = ++monthRequest.current;
     setMonthLoading(true);
+    setMonthFailed(false);
     setMonthData(null);
     const params = new URLSearchParams({ month });
     if (departmentFilter) params.set('department_id', departmentFilter);
     const res = await customFetch(baseURL + `/clerks/attendance/month?${params.toString()}`, 'GET', {}, false);
+    if (request !== monthRequest.current) return;
     setMonthLoading(false);
     if (res.success) setMonthData(res.response);
+    else setMonthFailed(true);
   }, [month, departmentFilter]);
 
   useEffect(() => { if (activeTab === 'monthly') loadMonth(); }, [activeTab, loadMonth]);
@@ -206,13 +253,14 @@ const AttendancePage = () => {
     // report them in skipped_on_leave below — see the matching note in
     // loadRoster. Excluding them here would drop that signal just as quietly.
     const records = students.filter((s) => statuses[s.roll_no] === 'present' || statuses[s.roll_no] === 'absent').map((s) => ({ roll_no: s.roll_no, status: statuses[s.roll_no] }));
-    if (records.length === 0) { toast.info('No attendance marked — treated as no session (nothing saved)'); return; }
+    if (records.length === 0) { toast.info('No attendance marked, so it is treated as no session (nothing saved)'); return; }
     if (records.length < students.length) toast.info(`${students.length - records.length} unmarked scholar(s) will be left as no session`);
     setSaving(true);
     const res = await customFetch(baseURL + '/clerks/attendance', 'POST', { date, records }, true);
     setSaving(false);
     if (res.success) {
       toast.success(buildSaveMessage(res.response.message, res.response.skipped_on_leave));
+      flashSaved();
       loadRoster();
     }
   };
@@ -222,12 +270,18 @@ const AttendancePage = () => {
     const token = localStorage.getItem('token');
     const params = new URLSearchParams({ from: exportFrom, to: exportTo, summary: '1' });
     if (exportDept) params.set('department_id', exportDept);
-    const res = await fetch(baseURL + `/clerks/attendance/export?${params.toString()}`, { headers: { Authorization: `Bearer ${token}` } });
-    if (!res.ok) { toast.error('Export failed.'); return; }
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `attendance_${exportFrom}_to_${exportTo}.csv`; a.click(); URL.revokeObjectURL(url);
-    toast.success('Export downloaded.');
+    // A scholar named in the filter narrows the export to them, the same way
+    // it narrows the history tab.
+    if (filteredRoll) params.set('roll_no', filteredRoll);
+    try {
+      const res = await fetch(baseURL + `/clerks/attendance/export?${params.toString()}`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) { toast.error('Export failed.'); return; }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = `attendance_${filteredRoll ? `${filteredRoll}_` : ''}${exportFrom}_to_${exportTo}.csv`; a.click(); URL.revokeObjectURL(url);
+      toast.success('Export downloaded.');
+      flashExported();
+    } catch (e) { toast.error(isNetworkError(e) ? NETWORK_ERROR_MESSAGE : 'Export failed: ' + e.message); }
   };
 
   const todayDate = useMemo(() => { const d = new Date(); d.setHours(0,0,0,0); return d; }, []);
@@ -236,50 +290,60 @@ const AttendancePage = () => {
     const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - EDIT_WINDOW); return d;
   }, [isAdmin]);
 
+  const saveButton = <CustomButton text="Save attendance" onClick={handleSave} busy={saving} done={saved} disabled={loading} />;
+  const departmentName = (id) => departments.find((d) => String(d.id) === String(id))?.name;
+
   return (
-    <Layout>
-      <PageHeader
-        title="Attendance"
-        subtitle={!departmentsLoaded ? 'Loading departments…' : departments.length > 0 ? `${departments.map((d) => d.name).join(', ')}` : (isAdmin ? 'No departments exist yet.' : 'Your departments will appear here once an admin tags you.')}
-        actions={
-          <div className="attendance-header-actions">
-            <CustomButton text="Upload CSV" variant="secondary" onClick={() => setShowCsvModal(true)} />
-          </div>
-        }
-      />
-
-      <Tabs
-        value={activeTab}
-        onChange={setActiveTab}
-        items={[
-          { value: 'mark', label: 'Mark Attendance' },
-          { value: 'history', label: 'Past Sessions' },
-          { value: 'monthly', label: 'Monthly' },
-          { value: 'export', label: 'Export' },
-          // The HOD decides leave; an admin reads every department's
-          // applications alongside, without a decision of their own.
-          ...(isAdmin ? [{ value: 'leaves', label: 'Leave Requests' }] : []),
-        ]}
-      />
-
+    <Page
+      title="Attendance"
+      description={!departmentsLoaded ? 'Loading departments…' : departments.length > 0 ? `${departments.map((d) => d.name).join(', ')}` : (isAdmin ? 'No departments exist yet.' : 'Your departments will appear here once an admin tags you.')}
+      actions={(
+        <CustomButton
+          text="Upload CSV"
+          variant="secondary"
+          // The import reloads the roster, which would drop unsaved marks
+          // after the fact; ask while backing out still costs nothing.
+          onClick={() => confirmDiscardMarks() && setShowCsvModal(true)}
+        />
+      )}
+      tabs={
+        <Tabs
+          value={activeTab}
+          onChange={setActiveTab}
+          items={[
+            { value: 'mark', label: 'Mark attendance' },
+            { value: 'history', label: 'Past sessions' },
+            { value: 'monthly', label: 'Monthly' },
+            { value: 'export', label: 'Export' },
+            // The HOD decides leave; an admin reads every department's
+            // applications alongside, without a decision of their own.
+            ...(isAdmin ? [{ value: 'leaves', label: 'Leave requests' }] : []),
+          ]}
+        />
+      }
+    >
       {activeTab !== 'export' && (
-        <div className="filter-bar attendance-filters">
-          <div className="filter-row attendance-filter-row">
-            <div className="input-field-container attendance-field-lg">
+        <Panel>
+          <div className="attendance-filters">
+            <div className="input-field-container">
               <label className="input-label" htmlFor="attendance-page-department">Department</label>
               <select id="attendance-page-department"
                 className="input-field"
                 value={departmentFilter}
-                onChange={(e) => { setDepartmentFilter(e.target.value); setHistoryPage(1); }}
+                onChange={(e) => {
+                  if (!confirmDiscardMarks()) return;
+                  setDepartmentFilter(e.target.value);
+                  setHistoryPage(1);
+                }}
                 disabled={!isAdmin && departments.length <= 1}
               >
-                {(isAdmin || departments.length > 1) && <option value="">All Departments</option>}
+                {(isAdmin || departments.length > 1) && <option value="">All departments</option>}
                 {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
             </div>
 
             {(activeTab === 'mark' || activeTab === 'monthly' || activeTab === 'history') && (
-              <div className="input-field-container attendance-field-lg">
+              <div className="input-field-container">
                 <label className="input-label" htmlFor="attendance-page-scholar">Scholar</label>
                 <input
                   id="attendance-page-scholar"
@@ -293,13 +357,13 @@ const AttendancePage = () => {
             )}
 
             {(activeTab === 'mark' || activeTab === 'history') && (
-              <div className="input-field-container attendance-field-md">
+              <div className="input-field-container">
                 <label className="input-label" htmlFor="attendance-page-date">
-                  Date {date === todayString() && <span className="badge badge--success attendance-today-pill">Today</span>}
+                  Date {date === todayString() && <span className="badge badge--success attendance-today-badge">Today</span>}
                 </label>
                 <DatePicker id="attendance-page-date"
                   selected={parseDate(date)}
-                  onChange={(d) => d && setDate(formatDate(d))}
+                  onChange={(d) => d && formatDate(d) !== date && confirmDiscardMarks() && setDate(formatDate(d))}
                   dateFormat="yyyy-MM-dd"
                   className="input-field"
                   placeholderText="YYYY-MM-DD"
@@ -313,7 +377,7 @@ const AttendancePage = () => {
             )}
 
             {activeTab === 'monthly' && (
-              <div className="input-field-container attendance-field-md">
+              <div className="input-field-container">
                 <label className="input-label" htmlFor="attendance-page-month">Month</label>
                 <DatePicker id="attendance-page-month"
                   selected={parseDate(month + '-01')}
@@ -325,17 +389,8 @@ const AttendancePage = () => {
                 />
               </div>
             )}
-
-            <div className="attendance-filter-meta">
-              {activeTab === 'mark' && (
-                <>
-                  <span>{visibleStudents.length} scholar(s){scholarFilter.trim() && ` of ${students.length}`}</span>
-                  <span className="badge badge--danger">{absentCount} absent</span>
-                </>
-              )}
-            </div>
           </div>
-        </div>
+        </Panel>
       )}
 
       {activeTab === 'leaves' && isAdmin && (
@@ -344,28 +399,41 @@ const AttendancePage = () => {
 
       {/* Mark tab */}
       {activeTab === 'mark' && (
-        <>
-          {visibleStudents.length > 0 && !loading && (
-            <div className="attendance-mark-actions">
-              <CustomButton text="Mark all Present" variant="secondary" onClick={() => markAll('present')} />
-              <CustomButton text="Mark all Absent" variant="secondary" onClick={() => markAll('absent')} />
-              <span className="attendance-action-divider" />
-              <CustomButton text={saving ? 'Saving…' : 'Save Attendance'} onClick={handleSave} disabled={saving || loading} />
-            </div>
-          )}
-          {departmentsLoaded && departments.length === 0 && !loading ? (
-            <div className="empty-state">{isAdmin ? 'No departments exist yet.' : 'No departments are assigned to you yet. Please contact an administrator.'}</div>
-          ) : (
-            <div className="form-list-container">
-              <table className="form-table">
-                <thead><tr><th>Roll No</th><th>Name</th><th>Department</th><th>Status</th><th>Record</th></tr></thead>
+        departmentsLoaded && departments.length === 0 && !loading ? (
+          <Panel>
+            <StatusNotice tone="empty">{isAdmin ? 'No departments exist yet.' : 'No departments are assigned to you yet. Please contact an administrator.'}</StatusNotice>
+          </Panel>
+        ) : (
+          <Panel
+            flush
+            title="Scholars"
+            description={
+              <span className="attendance-counts">
+                <span>{visibleStudents.length} scholar(s){scholarFilter.trim() && ` of ${students.length}`}</span>
+                <span key={absentCount} className="badge badge--danger attendance-absent-count">{absentCount} absent</span>
+              </span>
+            }
+            actions={visibleStudents.length > 0 && !loading && (
+              <>
+                <CustomButton text="Mark all present" variant="secondary" onClick={() => markAll('present')} />
+                <CustomButton text="Mark all absent" variant="secondary" onClick={() => markAll('absent')} />
+                <CustomButton text="Reset marks" variant="quiet" onClick={() => setStatuses(loadedStatuses.current)} disabled={!hasUnsavedMarks} />
+                {saveButton}
+              </>
+            )}
+            footer={visibleStudents.length > 0 && <span className="attendance-foot-end">{saveButton}</span>}
+          >
+            <div className="data-table-wrap">
+              <table className="data-table">
+                <thead><tr><th>Roll no</th><th>Name</th><th>Department</th><th>Status</th><th>Record</th></tr></thead>
                 <tbody>
                   {loading ? <tr><td colSpan={5} className="no-data-cell">Loading…</td></tr>
+                    : rosterFailed ? <tr><td colSpan={5} className="no-data-cell"><LoadError message="Could not load the scholars for this date. Check your connection and try again." onRetry={loadRoster} /></td></tr>
                     : visibleStudents.length === 0 ? <tr><td colSpan={5} className="no-data-cell">{scholarFilter.trim() ? 'No scholar matches that roll number or name.' : 'No PhD scholars found for this selection.'}</td></tr>
                     : visibleStudents.map((s) => {
                       const cur = statuses[s.roll_no];
                       return (
-                        <tr key={s.roll_no}>
+                        <tr key={s.roll_no} className="reveal">
                           <td>{s.roll_no}</td><td>{s.name}</td><td>{s.department_name || s.department_code || '-'}</td>
                           <td>
                             {s.on_leave ? (
@@ -389,199 +457,192 @@ const AttendancePage = () => {
                     })}
                 </tbody>
               </table>
-              {visibleStudents.length > 0 && <div className="attendance-save-row"><CustomButton text={saving ? 'Saving…' : 'Save Attendance'} onClick={handleSave} disabled={saving || loading} /></div>}
             </div>
-          )}
-        </>
+          </Panel>
+        )
       )}
 
       {/* History tab, one scholar */}
       {activeTab === 'history' && filteredRoll && (
-        <div className="attendance-tab-panel">
-          <div className="attendance-summary-cards">
-            <div className="attendance-summary-card">
-              <span className="attendance-summary-label">Present</span>
-              <span className="attendance-summary-value present">{scholarHistory ? scholarHistory.summary.present : EMPTY_VALUE}</span>
+        <>
+          <AttendanceSummary
+            title="Scholar summary"
+            caption={scholarHistoryLoading
+              ? 'Loading the scholar’s record…'
+              : scholarHistory
+                ? `${scholarHistory.student.name} (${scholarHistory.student.roll_no}) · all sessions to date · days covered by an approved leave are left out`
+                : 'No record for that scholar.'}
+            stats={[
+              { label: 'Present', tone: 'present', value: scholarHistory ? scholarHistory.summary.present : EMPTY_VALUE },
+              { label: 'Absent', tone: 'absent', value: scholarHistory ? scholarHistory.summary.absent : EMPTY_VALUE },
+              { label: 'Sessions', value: scholarHistory ? scholarHistory.summary.total : EMPTY_VALUE },
+              { label: 'Attendance', value: scholarHistory && scholarHistory.summary.percent != null ? `${scholarHistory.summary.percent}%` : EMPTY_VALUE },
+            ]}
+          />
+          <Panel flush title="Sessions">
+            <div className="data-table-wrap">
+              <table className="data-table">
+                <thead><tr><th>Date</th><th>Status</th><th>Marked by</th><th>Actions</th></tr></thead>
+                <tbody>
+                  {scholarHistoryLoading ? <tr><td colSpan={4} className="no-data-cell">Loading…</td></tr>
+                    : !scholarHistory || scholarHistory.records.length === 0 ? <tr><td colSpan={4} className="no-data-cell">No attendance recorded for this scholar yet.</td></tr>
+                    : scholarHistory.records.map((r) => (
+                      <tr key={`${r.date}-${r.lecture_id}`} className="reveal">
+                        <td>{r.date?.slice?.(0, 10) || r.date}</td>
+                        <td className={r.status === 'absent' ? 'attendance-status-absent' : 'attendance-status-present'}>{r.status}</td>
+                        <td>{r.marked_by_name || EMPTY_VALUE}</td>
+                        {/* Opens that day on the Mark tab to correct it, the same
+                            way a past session does. */}
+                        <td><CustomButton text="View" variant="secondary" size="sm" onClick={() => {
+                          const viewed = r.date.slice(0, 10);
+                          if (viewed !== date && !confirmDiscardMarks()) return;
+                          setDate(viewed);
+                          setActiveTab('mark');
+                        }} /></td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
             </div>
-            <div className="attendance-summary-card">
-              <span className="attendance-summary-label">Absent</span>
-              <span className="attendance-summary-value absent">{scholarHistory ? scholarHistory.summary.absent : EMPTY_VALUE}</span>
-            </div>
-            <div className="attendance-summary-card">
-              <span className="attendance-summary-label">Sessions</span>
-              <span className="attendance-summary-value">{scholarHistory ? scholarHistory.summary.total : EMPTY_VALUE}</span>
-            </div>
-            <div className="attendance-summary-card">
-              <span className="attendance-summary-label">Attendance</span>
-              <span className="attendance-summary-value">
-                {scholarHistory && scholarHistory.summary.percent != null ? `${scholarHistory.summary.percent}%` : EMPTY_VALUE}
-              </span>
-            </div>
-            <p className="attendance-summary-caption">
-              {scholarHistoryLoading
-                ? 'Loading the scholar’s record…'
-                : scholarHistory
-                  ? `${scholarHistory.student.name} (${scholarHistory.student.roll_no}) · all sessions to date · days covered by an approved leave are left out`
-                  : 'No record for that scholar.'}
-            </p>
-          </div>
-          <div className="form-list-container">
-            <table className="form-table">
-              <thead><tr><th>Date</th><th>Status</th><th>Marked by</th></tr></thead>
-              <tbody>
-                {scholarHistoryLoading ? <tr><td colSpan={3} className="no-data-cell">Loading…</td></tr>
-                  : !scholarHistory || scholarHistory.records.length === 0 ? <tr><td colSpan={3} className="no-data-cell">No attendance recorded for this scholar yet.</td></tr>
-                  : scholarHistory.records.map((r) => (
-                    <tr key={`${r.date}-${r.lecture_id}`}>
-                      <td>{r.date?.slice?.(0, 10) || r.date}</td>
-                      <td className={r.status === 'absent' ? 'attendance-status-absent' : 'attendance-status-present'}>{r.status}</td>
-                      <td>{r.marked_by || EMPTY_VALUE}</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+          </Panel>
+        </>
       )}
 
       {/* History tab, the whole department */}
       {activeTab === 'history' && !filteredRoll && (
-        <div className="attendance-tab-panel">
+        <>
           {scholarFilter.trim() && (
-            <p className="attendance-summary-caption attendance-tab-head">
+            <StatusNotice tone="info">
               That matches no single scholar, so the sessions below are still the whole selection.
-            </p>
+            </StatusNotice>
           )}
-          <div className="attendance-summary-cards">
-            <div className="attendance-summary-card">
-              <span className="attendance-summary-label">Present</span>
-              <span className="attendance-summary-value present">{daySummary ? daySummary.present : EMPTY_VALUE}</span>
-            </div>
-            <div className="attendance-summary-card">
-              <span className="attendance-summary-label">Absent</span>
-              <span className="attendance-summary-value absent">{daySummary ? daySummary.absent : EMPTY_VALUE}</span>
-            </div>
-            <div className="attendance-summary-card">
-              <span className="attendance-summary-label">Not recorded</span>
-              <span className="attendance-summary-value">{daySummary ? daySummary.not_recorded : EMPTY_VALUE}</span>
-            </div>
-            <div className="attendance-summary-card">
-              <span className="attendance-summary-label">Attendance</span>
-              <span className="attendance-summary-value">
-                {daySummary && daySummary.percent != null ? `${daySummary.percent}%` : EMPTY_VALUE}
-              </span>
-            </div>
-            <p className="attendance-summary-caption">
-              {daySummary
-                ? `${departmentFilter ? (departments.find((d) => String(d.id) === String(departmentFilter))?.name || 'Selected department') : 'All departments'} · ${date} · ${daySummary.scholars} scholar(s) on the roster`
-                : 'Loading the day’s figures…'}
-            </p>
-          </div>
-          <div className="form-list-container">
-            <table className="form-table">
-              <thead><tr><th>Date (not filtered by the date above)</th><th>Total</th><th>Present</th><th>Absent</th><th>Action</th></tr></thead>
-              <tbody>
-                {historyLoading ? <tr><td colSpan={5} className="no-data-cell">Loading…</td></tr>
-                  : history.length === 0 ? <tr><td colSpan={5} className="no-data-cell">No past sessions yet.</td></tr>
-                  : history.map((h) => (
-                    <tr key={`${h.date}-${h.lecture_id}`}>
-                      <td>{h.date?.slice?.(0,10) || h.date}</td><td>{h.total}</td><td className="attendance-status-present">{h.present_count}</td><td className="attendance-status-absent">{h.absent_count}</td>
-                      <td><CustomButton text="View" variant="secondary" onClick={() => { setDate(h.date.slice(0,10)); setActiveTab('mark'); }} /></td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-            {historyTotal > 15 && (
+          <AttendanceSummary
+            title="Day summary"
+            caption={summaryFailed ? undefined : daySummary
+              ? `${departmentFilter ? (departmentName(departmentFilter) || 'Selected department') : 'All departments'} · ${date} · ${daySummary.scholars} scholar(s) on the roster`
+              : 'Loading the day’s figures…'}
+            stats={[
+              { label: 'Present', tone: 'present', value: daySummary ? daySummary.present : EMPTY_VALUE },
+              { label: 'Absent', tone: 'absent', value: daySummary ? daySummary.absent : EMPTY_VALUE },
+              { label: 'Not recorded', value: daySummary ? daySummary.not_recorded : EMPTY_VALUE },
+              { label: 'Attendance', value: daySummary && daySummary.percent != null ? `${daySummary.percent}%` : EMPTY_VALUE },
+            ]}
+          >
+            {summaryFailed && (
+              <LoadError message="Could not load the figures for this day. Check your connection and try again." onRetry={loadDaySummary} />
+            )}
+          </AttendanceSummary>
+          <Panel
+            flush
+            title="Past sessions"
+            footer={historyTotal > 15 && (
               <div className="attendance-pager">
-                <CustomButton text="Prev" variant="secondary" disabled={historyPage <= 1} onClick={() => setHistoryPage((p) => Math.max(1, p-1))} />
-                <span className="attendance-pager-label">Page {historyPage} / {historyLastPage}</span>
-                <CustomButton text="Next" variant="secondary" disabled={historyPage >= historyLastPage} onClick={() => setHistoryPage((p) => p+1)} />
+                <CustomButton text="Previous" variant="quiet" size="sm" disabled={historyPage <= 1} onClick={() => setHistoryPage((p) => Math.max(1, p-1))} />
+                <span>Page {historyPage} / {historyLastPage}</span>
+                <CustomButton text="Next" variant="quiet" size="sm" disabled={historyPage >= historyLastPage} onClick={() => setHistoryPage((p) => p+1)} />
               </div>
             )}
-          </div>
-        </div>
+          >
+            <div className="data-table-wrap">
+              <table className="data-table">
+                <thead><tr><th>Date (not filtered by the date above)</th><th>Total</th><th>Present</th><th>Absent</th><th>Action</th></tr></thead>
+                <tbody>
+                  {historyLoading ? <tr><td colSpan={5} className="no-data-cell">Loading…</td></tr>
+                    : historyFailed ? <tr><td colSpan={5} className="no-data-cell"><LoadError message="Could not load past sessions. Check your connection and try again." onRetry={loadHistory} /></td></tr>
+                    : history.length === 0 ? <tr><td colSpan={5} className="no-data-cell">No past sessions yet.</td></tr>
+                    : history.map((h) => (
+                      <tr key={`${h.date}-${h.lecture_id}`} className="reveal">
+                        <td>{h.date?.slice?.(0,10) || h.date}</td><td>{h.total}</td><td className="attendance-status-present">{h.present_count}</td><td className="attendance-status-absent">{h.absent_count}</td>
+                        <td><CustomButton text="View" variant="secondary" size="sm" onClick={() => {
+                          const viewed = h.date.slice(0, 10);
+                          if (viewed !== date && !confirmDiscardMarks()) return;
+                          setDate(viewed);
+                          setActiveTab('mark');
+                        }} /></td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </Panel>
+        </>
       )}
 
       {/* Monthly tab */}
       {activeTab === 'monthly' && (
-        <div className="attendance-tab-panel">
-          <div className="attendance-summary-cards">
-            <div className="attendance-summary-card">
-              <span className="attendance-summary-label">Sessions held</span>
-              <span className="attendance-summary-value">{monthData ? monthData.days_with_sessions : EMPTY_VALUE}</span>
+        <>
+          <AttendanceSummary
+            title="Month summary"
+            caption={monthFailed ? undefined : monthData ? `${monthData.label} · per-scholar totals for the month` : 'Loading the month…'}
+            stats={[
+              { label: 'Sessions held', value: monthData ? monthData.days_with_sessions : EMPTY_VALUE },
+              { label: 'Total present', tone: 'present', value: monthData ? monthData.totals.present : EMPTY_VALUE },
+              { label: 'Total absent', tone: 'absent', value: monthData ? monthData.totals.absent : EMPTY_VALUE },
+            ]}
+          />
+          <Panel flush title="Scholars">
+            <div className="data-table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr><th>Roll no</th><th>Name</th><th>Department</th><th>Present</th><th>Absent</th><th>Sessions</th><th>Attendance</th></tr>
+                </thead>
+                <tbody>
+                  {monthLoading ? (
+                    <tr><td colSpan={7} className="no-data-cell">Loading…</td></tr>
+                  ) : monthFailed ? (
+                    <tr><td colSpan={7} className="no-data-cell"><LoadError message="Could not load this month's attendance. Check your connection and try again." onRetry={loadMonth} /></td></tr>
+                  ) : !monthData || visibleMonthStudents.length === 0 ? (
+                    <tr><td colSpan={7} className="no-data-cell">{scholarFilter.trim() ? 'No scholar matches that roll number or name.' : 'No scholars for this selection.'}</td></tr>
+                  ) : visibleMonthStudents.map((s) => (
+                    <tr key={s.roll_no} className="reveal">
+                      <td>{s.roll_no}</td>
+                      <td>{s.name}</td>
+                      <td>{s.department_name || EMPTY_VALUE}</td>
+                      <td className="attendance-status-present">{s.present}</td>
+                      <td className="attendance-status-absent">{s.absent}</td>
+                      <td>{s.total}</td>
+                      <td>{s.percent != null ? `${s.percent}%` : EMPTY_VALUE}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <div className="attendance-summary-card">
-              <span className="attendance-summary-label">Total present</span>
-              <span className="attendance-summary-value present">{monthData ? monthData.totals.present : EMPTY_VALUE}</span>
-            </div>
-            <div className="attendance-summary-card">
-              <span className="attendance-summary-label">Total absent</span>
-              <span className="attendance-summary-value absent">{monthData ? monthData.totals.absent : EMPTY_VALUE}</span>
-            </div>
-            <p className="attendance-summary-caption">
-              {monthData ? `${monthData.label} · per-scholar totals for the month` : 'Loading the month…'}
-            </p>
-          </div>
-
-          <div className="form-list-container">
-            <table className="form-table">
-              <thead>
-                <tr><th>Roll No</th><th>Name</th><th>Department</th><th>Present</th><th>Absent</th><th>Sessions</th><th>Attendance</th></tr>
-              </thead>
-              <tbody>
-                {monthLoading ? (
-                  <tr><td colSpan={7} className="no-data-cell">Loading…</td></tr>
-                ) : !monthData || visibleMonthStudents.length === 0 ? (
-                  <tr><td colSpan={7} className="no-data-cell">{scholarFilter.trim() ? 'No scholar matches that roll number or name.' : 'No scholars for this selection.'}</td></tr>
-                ) : visibleMonthStudents.map((s) => (
-                  <tr key={s.roll_no}>
-                    <td>{s.roll_no}</td>
-                    <td>{s.name}</td>
-                    <td>{s.department_name || EMPTY_VALUE}</td>
-                    <td className="attendance-status-present">{s.present}</td>
-                    <td className="attendance-status-absent">{s.absent}</td>
-                    <td>{s.total}</td>
-                    <td>{s.percent != null ? `${s.percent}%` : EMPTY_VALUE}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+          </Panel>
+        </>
       )}
 
-      {/* Export tab - same filter-bar + form-list-container look as other tabs */}
+      {/* Export tab */}
       {activeTab === 'export' && (
-        <div className="attendance-tab-panel">
-          <div className="filter-bar attendance-export-filters">
-            <div className="filter-row attendance-filter-row">
-              <div className="input-field-container attendance-field-sm">
-                <label className="input-label" htmlFor="attendance-page-from">From</label>
-                <DatePicker id="attendance-page-from" selected={parseDate(exportFrom)} onChange={(d) => d && setExportFrom(formatDate(d))} dateFormat="yyyy-MM-dd" className="input-field" placeholderText="YYYY-MM-DD" maxDate={todayDate} />
-              </div>
-              <div className="input-field-container attendance-field-sm">
-                <label className="input-label" htmlFor="attendance-page-to">To</label>
-                <DatePicker id="attendance-page-to" selected={parseDate(exportTo)} onChange={(d) => d && setExportTo(formatDate(d))} dateFormat="yyyy-MM-dd" className="input-field" placeholderText="YYYY-MM-DD" minDate={parseDate(exportFrom)} maxDate={todayDate} />
-              </div>
-              <div className="input-field-container attendance-field-lg">
-                <label className="input-label" htmlFor="attendance-page-department-2">Department</label>
-                <select id="attendance-page-department-2" className="input-field" value={exportDept} onChange={(e) => setExportDept(e.target.value)}>
-                  <option value="">All departments</option>
-                  {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
-              </div>
-              <div className="attendance-filter-push">
-                <CustomButton text="Download CSV" onClick={confirmExport} disabled={exportFrom > exportTo} />
-              </div>
+        <Panel
+          title="Export attendance"
+          description={`${exportDept ? `Exports all scholars in ${departmentName(exportDept) || 'the selected department'} for the chosen range.` : 'Exports all scholars you can access for the chosen range.'} Includes present counts per scholar.`}
+        >
+          <div className="attendance-filters">
+            <div className="input-field-container">
+              <label className="input-label" htmlFor="attendance-page-from">From</label>
+              <DatePicker id="attendance-page-from" selected={parseDate(exportFrom)} onChange={(d) => d && setExportFrom(formatDate(d))} dateFormat="yyyy-MM-dd" className="input-field" placeholderText="YYYY-MM-DD" maxDate={todayDate} />
             </div>
-            {exportFrom > exportTo && <div className="attendance-date-warning">From date cannot be after To date.</div>}
-          </div>
-          <div className="form-list-container">
-            <div className="attendance-export-note">
-              {exportDept ? `Exports all scholars in ${departments.find((d) => String(d.id) === String(exportDept))?.name || 'the selected department'} for the chosen range.` : 'Exports all scholars you can access for the chosen range.'} Includes present counts per scholar.
+            <div className="input-field-container">
+              <label className="input-label" htmlFor="attendance-page-to">To</label>
+              <DatePicker id="attendance-page-to" selected={parseDate(exportTo)} onChange={(d) => d && setExportTo(formatDate(d))} dateFormat="yyyy-MM-dd" className="input-field" placeholderText="YYYY-MM-DD" minDate={parseDate(exportFrom)} maxDate={todayDate} />
+            </div>
+            <div className="input-field-container">
+              <label className="input-label" htmlFor="attendance-page-department-2">Department</label>
+              <select id="attendance-page-department-2" className="input-field" value={exportDept} onChange={(e) => setExportDept(e.target.value)}>
+                <option value="">All departments</option>
+                {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
+            </div>
+            <div className="attendance-filters-action">
+              <CustomButton text={filteredRoll ? `Download CSV for ${filteredRoll}` : 'Download CSV'} onClick={confirmExport} done={exported} disabled={exportFrom > exportTo} />
             </div>
           </div>
-        </div>
+          {exportFrom > exportTo && (
+            <div className="attendance-date-warning">
+              <StatusNotice tone="error">From date cannot be after To date.</StatusNotice>
+            </div>
+          )}
+        </Panel>
       )}
 
       <AttendanceCsvDialog
@@ -590,7 +651,7 @@ const AttendancePage = () => {
         onImported={loadRoster}
         editWindow={EDIT_WINDOW}
       />
-    </Layout>
+    </Page>
   );
 };
 export default AttendancePage;

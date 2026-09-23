@@ -8,7 +8,7 @@ use App\Models\ConstituteOfIRB;
 use App\Models\IrbSubForm;
 use App\Models\ResearchExtentionsForm;
 use App\Models\ListOfExaminersForm;
-use App\Models\Presentation;
+use App\Models\ReviseTitleForm;
 use App\Models\StudentSemesterOffForm;
 use App\Models\SupervisorChangeForm;
 use App\Models\SupervisorAllocation;
@@ -28,7 +28,7 @@ class AdminFormController extends Controller
         'irb-submission' => IrbSubForm::class,
         'irb-extension' => ResearchExtentionsForm::class,
         'list-of-examiners' => ListOfExaminersForm::class,
-        'presentation' => Presentation::class,
+        'revise-title' => ReviseTitleForm::class,
         'semester-off' => StudentSemesterOffForm::class,
         'status-change' => StudentStatusChangeForms::class,
         'supervisor-allocation' => SupervisorAllocation::class,
@@ -99,6 +99,14 @@ class AdminFormController extends Controller
             // listed once, because that is what the row stores.
             'steps' => ['student', 'faculty', 'doctoral', 'phd_coordinator', 'hod', 'dordc', 'complete']
         ],
+        'revise-title' => [
+            'form_name' => 'Revise Title',
+            // As-needed, like IRB Extension and Supervisor Change: each revision
+            // is its own form, and createForms allows one open at a time.
+            'max_count' => 10,
+            // The synopsis's first round, with no viva after it.
+            'steps' => ['student', 'faculty', 'doctoral', 'phd_coordinator', 'hod', 'dordc', 'complete']
+        ],
         'thesis-submission' => [
             'form_name' => 'Thesis Submission',
             'max_count' => 1,
@@ -111,11 +119,6 @@ class AdminFormController extends Controller
             // The special one carries on to the Vice Chancellor.
             'steps' => ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc', 'director', 'complete']
         ],
-        // 'presentation' => [
-        //     'form_name' => 'Presentation',
-        //     'max_count' => 100,
-        //     'steps' => ['student', 'external']
-        // ],
     ];
 
     private $lockFields = [
@@ -184,7 +187,7 @@ class AdminFormController extends Controller
                                 'steps' => $instance->steps,
                                 'locks' => [
                                     'student' => $instance->student_lock,
-                                    'supervisor' => $instance->supervisor_lock,
+                                    'faculty' => $instance->supervisor_lock,
                                     'phd_coordinator' => $instance->phd_coordinator_lock,
                                     'hod' => $instance->hod_lock,
                                     'dordc' => $instance->dordc_lock,
@@ -390,6 +393,14 @@ class AdminFormController extends Controller
                     $formInstance->stage='supervisor';
                 else
                 $formInstance->stage = $request->stage;
+
+                // Moving a finished form back to a step reopens it: submitting
+                // a complete form is refused, so whoever it was sent to could
+                // not have acted on it.
+                if ($request->stage !== 'complete' && $formInstance->completion === 'complete') {
+                    $formInstance->completion = 'incomplete';
+                    $formInstance->status = 'pending';
+                }
             }
 
             // Update steps

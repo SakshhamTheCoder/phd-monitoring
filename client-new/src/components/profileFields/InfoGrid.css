@@ -2,26 +2,29 @@
    inline field looks like. */
 .profile-inline-input {
   width: 100%;
-  padding: 0.35rem 0.5rem;
-  border: 1px solid #d1d5db;
+  padding: 6px var(--space-2);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   box-sizing: border-box;
+  font: inherit;
   font-size: var(--text-sm);
   font-weight: 400;
+  color: var(--text-color);
+  background: var(--surface);
 }
 
 .profile-inline-input:disabled {
-  background: #f3f4f6;
-  color: #6b7280;
+  background: var(--readonly-bg);
+  color: var(--text-muted);
   cursor: not-allowed;
 }
 
 .profile-field-hint {
   display: block;
-  margin-top: 0.25rem;
+  margin-top: var(--space-1);
   font-size: var(--text-xs);
   font-weight: 400;
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 /* Every profile lays the matrix out the same way. A page may still add its own
@@ -29,9 +32,9 @@
 .profile-info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-  font-size: var(--text-base);
-  color: #374151;
+  gap: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--text-color);
 }
 
 .profile-info-grid .span-all { grid-column: 1 / -1; }
@@ -40,27 +43,26 @@
    would arrive semi-bold and the matrix would read as one block of emphasis.
    The label is the thing being emphasised; the value is data. */
 .profile-info-grid { font-weight: 400; }
-.profile-info-grid strong { font-weight: 600; color: #1f2937; }
+.profile-info-grid strong { font-weight: 600; color: var(--text-color); }
 
 /* An ORCID is long. Values wrap inside their cell instead of widening it. */
 .profile-info-grid > div { min-width: 0; overflow-wrap: anywhere; }
 
-/* The trigger for this grid's edit mode. Lives here rather than on either
-   profile's stylesheet, because both profiles show the same control. */
+/* A small outlined action inside a profile (a link through to attendance, a
+   proposal). Lives here because every profile that shows InfoGrid uses it. */
 .profile-edit-small {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.3rem 0.7rem;
+  gap: 6px;
+  padding: var(--space-1) var(--space-3);
+  font: inherit;
   font-size: var(--text-xs);
-  background: #fff;
-  color: #991b1b;
-  border: 1px solid #991b1b;
+  font-weight: 500;
+  background: var(--surface);
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
   border-radius: var(--radius-sm);
   cursor: pointer;
 }
 
-.profile-edit-small:hover {
-  background: #991b1b;
-  color: #fff;
-}
+.profile-edit-small:hover { background: var(--primary-wash); }

@@ -11,18 +11,26 @@ import { useLoading } from '../../../../context/LoadingContext';
 import { useLocation } from 'react-router-dom';
 import RadioButtonGroup from '../../fields/RadioButtonGroup';
 import { toast } from 'react-toastify';
+import { insertAt, toastUndo } from '../../../../utils/undoToast';
 
+// `examiners` is the list Supervisor submits. A second copy kept here drifted
+// from it: this one dropped a row by identity, that one by email, so two blank
+// or equal emails left the table and the payload disagreeing.
 const ExaminerManager = ({
   type,
   formData,
-  examData,
+  examiners,
+  allExaminers,
   apiUrl,
   onAddExaminer,
   onRemoveExaminer,
 }) => {
-  const [examiners, setExaminers] = useState(examData || []);
   const [modalData, setModalData] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // The saved row being deleted, so its button cannot send a second DELETE.
+  const [removing, setRemoving] = useState(null);
+  // Marks where the examiner just added landed in the table.
+  const [lastAdded, setLastAdded] = useState(null);
 
   const canEdit = !formData.locks.supervisor && formData.role === 'faculty';
 
@@ -41,8 +49,8 @@ const ExaminerManager = ({
   };
 
   const handleAddExaminer = (examiner) => {
-    setExaminers([...examiners, examiner]);
     onAddExaminer(examiner);
+    setLastAdded(examiner);
     setIsModalOpen(false);
   };
 
@@ -51,14 +59,16 @@ const ExaminerManager = ({
   // the list is all there is to do.
   const handleRemove = async (row) => {
     if (row.id) {
+      if (!window.confirm(`Remove ${row.name || 'this examiner'} from the list? The saved examiner is deleted straight away.`)) return;
+      setRemoving(row);
       const res = await customFetch(
         `${baseURL}/forms/list-of-examiners/${formData.form_id}/examiners/${row.id}`,
         'DELETE'
       );
+      setRemoving(null);
       if (!res || !res.success) return;
       toast.success('Examiner removed');
     }
-    setExaminers((prev) => prev.filter((item) => item !== row));
     onRemoveExaminer(row);
   };
 
@@ -72,7 +82,7 @@ const ExaminerManager = ({
         minHeight='300px'
         maxHeight='500px'
       >
-        <AddExaminer data={modalData} onSubmit={handleAddExaminer} />
+        <AddExaminer data={modalData} onSubmit={handleAddExaminer} existing={allExaminers} />
       </CustomModal>
       {canEdit && (
         <>
@@ -86,23 +96,24 @@ const ExaminerManager = ({
                 showLabel={false}
               />,
               <CustomButton
-                text={`Add New ${type}`}
+                text={`Add new ${type.toLowerCase()} examiner`}
+                variant="secondary"
                 onClick={handleOpenModal}
               />,
             ]}
             ratio={[2, 1]}
             space={2}
-            label={`${type} Examiners`}
+            label={`${type} examiners`}
           />
         </>
       )}
       {formData.role !== 'dordc' && (
         <>
-          {' '}
           <GridContainer
             elements={[
               <TableComponent
                 data={examiners}
+                rowClassName={(row) => (row === lastAdded ? 'just-added' : undefined)}
                 titles={[
                   'Name',
                   'Email',
@@ -133,6 +144,7 @@ const ExaminerManager = ({
                                 className="examiner-remove"
                                 aria-label={`Remove ${row.name}`}
                                 onClick={() => handleRemove(row)}
+                                disabled={removing === row}
                               >
                                 <i className="fa fa-trash" aria-hidden="true"></i>
                               </button>
@@ -157,6 +169,9 @@ const Supervisor = ({ formData }) => {
     formData.international || []
   );
   const { setLoading } = useLoading();
+  // Stays on after a success until the reload, as submitForm does, so Submit
+  // cannot be pressed again in the gap.
+  const [submitting, setSubmitting] = useState(false);
   const location = useLocation();
   const handleAddNationalExaminer = (examiner) => {
     setNational([...national, examiner]);
@@ -166,10 +181,18 @@ const Supervisor = ({ formData }) => {
     setInternational([...international, examiner]);
   };
 
-  const removeFrom = (setList) => (examiner) =>
-    setList((prev) => prev.filter((item) => item.email !== examiner.email));
+  // A saved examiner is already gone from the server, so only an unsaved one
+  // can be put back.
+  const removeFrom = (list, setList) => (examiner) => {
+    const index = list.indexOf(examiner);
+    setList((prev) => prev.filter((item) => item !== examiner));
+    if (!examiner.id) {
+      toastUndo(`${examiner.name || 'Examiner'} removed.`, () => setList((now) => insertAt(now, index, examiner)));
+    }
+  };
 
   const submitExaminers = () => {
+    setSubmitting(true);
     setLoading(true);
     customFetch(baseURL + location.pathname, 'POST', {
       national: national,
@@ -178,9 +201,10 @@ const Supervisor = ({ formData }) => {
       if (data && data.success) {
         toast.success("Form submitted successfully");
         setTimeout(() => window.location.reload(), 1200);
-      } else {
-        toast.error((data && data.response && data.response.message) || "Failed to submit the form");
+        return;
       }
+      toast.error((data && data.response && data.response.message) || "Failed to submit the form");
+      setSubmitting(false);
       setLoading(false);
     });
   };
@@ -190,22 +214,24 @@ const Supervisor = ({ formData }) => {
       <ExaminerManager
         type='National'
         formData={formData}
-        examData={formData.national}
+        examiners={national}
+        allExaminers={[...national, ...international]}
         apiUrl={`${baseURL}/suggestions/examiner`}
         onAddExaminer={handleAddNationalExaminer}
-        onRemoveExaminer={removeFrom(setNational)}
+        onRemoveExaminer={removeFrom(national, setNational)}
       />
       <ExaminerManager
         type='International'
         formData={formData}
-        examData={formData.international}
+        examiners={international}
+        allExaminers={[...national, ...international]}
         apiUrl={`${baseURL}/suggestions/examiner`}
         onAddExaminer={handleAddInternationalExaminer}
-        onRemoveExaminer={removeFrom(setInternational)}
+        onRemoveExaminer={removeFrom(international, setInternational)}
       />
        {!formData.locks.supervisor && formData.role === 'faculty' && (
       <GridContainer
-        elements={[<CustomButton text='Submit' onClick={submitExaminers} />]}
+        elements={[<CustomButton text='Submit' onClick={submitExaminers} disabled={submitting} />]}
       />)}
     </div>
   );

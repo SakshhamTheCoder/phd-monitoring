@@ -32,7 +32,15 @@ class ProjectController extends Controller {
         }
 
         $projects = $query->orderByDesc('id')->get();
-        $projects->each(fn ($project) => $project->can_edit = $this->owns($user, $project));
+        // The stored role is what the creator picked, so the list says how the
+        // viewer stands on each project instead: PI, Co-PI, or neither.
+        $code = optional($user->faculty)->faculty_code;
+        $projects->each(function ($project) use ($user, $code) {
+            $project->can_edit = $this->owns($user, $project);
+            $coPiCodes = collect($project->co_pis ?: [])->pluck('faculty_code')->filter()->map(fn ($c) => (int) $c);
+            $project->viewer_role = $code === null ? null
+                : ($code == $project->pi_faculty_code ? 'PI' : ($coPiCodes->contains((int) $code) ? 'Co-PI' : null));
+        });
         return response()->json($projects);
     }
 
@@ -127,6 +135,11 @@ class ProjectController extends Controller {
             $this->queueFileDeletion($project->sanction_letter_link);
             $project->sanction_letter_link = $request->sanction_letter_link;
             $project->sanction_letter_name = $request->input('sanction_letter_name', 'Sanction Letter');
+        } elseif ($request->exists('sanction_letter_link') && preg_match('#^https?://#i', (string) $project->sanction_letter_link)) {
+            // The link box was emptied. Only an external link is cleared: an
+            // uploaded file is not shown in that box, so emptying it is not removing the file.
+            $project->sanction_letter_link = null;
+            $project->sanction_letter_name = null;
         }
         if ($request->hasFile('gantt_chart')) {
             $project->gantt_chart_path = $this->replaceUploadedFile($project->gantt_chart_path, $request->file('gantt_chart'), 'project_gantt', $project->id);
@@ -193,6 +206,8 @@ class ProjectController extends Controller {
         foreach (['amount','tiet_share','duration_years','duration_months'] as $f) {
             if ($request->exists($f)) $project->$f = (int) $request->input($f);
         }
+        // A blank TIET share means not known yet, which a 0 would misstate.
+        if ($request->exists('tiet_share') && $request->input('tiet_share') === null) $project->tiet_share = null;
         foreach (['co_pis','objectives','budget','equipment_details','sdgs'] as $f) {
             if ($request->exists($f)) {
                 $val = $request->input($f);

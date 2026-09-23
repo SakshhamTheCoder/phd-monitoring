@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Loader from '../../components/loader/loader';
 import { apiUrfResendVerification, apiUrfSignup } from '../../api/urf';
+import { NETWORK_ERROR_MESSAGE } from '../../api/base';
 import { useBranches } from '../../hooks/useBranches';
-import { CLOUDFLARE_SITE_KEY, rootURL } from '../../api/urls';
+import { rootURL } from '../../api/urls';
+import { mountTurnstile } from '../login/turnstile';
 
 const YEARS = [
   { value: 1, label: '1st Year' },
@@ -13,6 +15,16 @@ const YEARS = [
   { value: 3, label: '3rd Year' },
   { value: 4, label: '4th Year' },
 ];
+
+const field = 'tw-w-full tw-rounded tw-border tw-border-[color:var(--border-color)] tw-px-3 tw-py-2 tw-text-[color:var(--text-color)] focus:tw-ring-2 focus:tw-ring-brand tw-outline-none';
+
+const Field = ({ id, label, error, children }) => (
+  <div>
+    <label htmlFor={id} className="tw-block tw-text-sm tw-text-[color:var(--text-color)] tw-mb-1">{label}</label>
+    {children}
+    {error && <p className="tw-text-[color:var(--danger-text)] tw-text-xs tw-mt-1 tw-animate-[slide-in_200ms_ease-out]">{error}</p>}
+  </div>
+);
 
 const SignupPage = () => {
   const { register, handleSubmit, reset } = useForm();
@@ -23,6 +35,12 @@ const SignupPage = () => {
   const [sentTo, setSentTo] = useState(null);
   // Set once Google has vouched for an address.
   const [google, setGoogle] = useState(null);
+  const [resending, setResending] = useState(false);
+  const navigate = useNavigate();
+  // Removes the open Google popup's listener, if there is one.
+  const stopGoogle = useRef(() => {});
+
+  useEffect(() => () => stopGoogle.current(), []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -38,6 +56,7 @@ const SignupPage = () => {
   }, [google, reset]);
 
   const signUpWithGoogle = () => {
+    stopGoogle.current();
     const popup = window.open(
       `${rootURL}/api/google/redirect`,
       'Google Sign Up',
@@ -48,53 +67,42 @@ const SignupPage = () => {
       return;
     }
 
+    const stop = () => window.removeEventListener('message', listener);
+
     const listener = (event) => {
       if (event.origin !== window.location.origin) return;
 
       if (event.data.type === 'GOOGLE_SIGNUP') {
-        window.removeEventListener('message', listener);
+        stop();
         setGoogle(event.data);
       } else if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
         // The address already has an account, so this was a sign-in.
-        window.removeEventListener('message', listener);
+        stop();
         localStorage.setItem('token', event.data.token);
         localStorage.setItem('userRole', event.data.user.role.role);
         localStorage.setItem('available_roles', JSON.stringify(event.data.available_roles));
         localStorage.setItem('user', JSON.stringify(event.data.user));
         window.location.href = '/home';
       } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
-        window.removeEventListener('message', listener);
+        stop();
         toast.error(event.data.error || 'Google sign-in failed.');
       }
     };
     window.addEventListener('message', listener);
+    // Listeners used to pile up, one per click. The next click and leaving the
+    // page both remove this one. A closed popup does not: Google's pages can cut
+    // the opener link so `closed` reads true while sign-in is still under way.
+    stopGoogle.current = stop;
   };
 
   useEffect(() => {
     if (sentTo || google) return undefined;
-    let widgetId = null;
-    const renderWidget = () => {
-      if (!window.turnstile) {
-        setTimeout(renderWidget, 100);
-        return;
-      }
-      const container = document.getElementById('turnstile-container');
-      if (container && !container.hasChildNodes()) {
-        widgetId = window.turnstile.render('#turnstile-container', {
-          sitekey: CLOUDFLARE_SITE_KEY,
-          theme: 'light',
-          callback: setCaptchaToken,
-        });
-      }
-    };
-    const timer = setTimeout(renderWidget, 100);
-    return () => {
-      clearTimeout(timer);
-      if (widgetId !== null && window.turnstile) window.turnstile.remove(widgetId);
-    };
+    return mountTurnstile(setCaptchaToken);
   }, [sentTo, google]);
 
   const onSubmit = async (data) => {
+    // Enter in a field submits again while the first request is in flight.
+    if (loading) return;
     setLoading(true);
     setErrors({});
     const result = await apiUrfSignup(google
@@ -105,7 +113,8 @@ const SignupPage = () => {
     if (result.success) {
       if (result.response?.verified) {
         toast.success(result.response.message);
-        window.location.href = '/login';
+        // In-app, so the toast is still on screen when sign in opens.
+        navigate('/login');
         return;
       }
       setSentTo(data.email);
@@ -131,8 +140,14 @@ const SignupPage = () => {
   }, {});
 
   const resend = async () => {
+    setResending(true);
     const result = await apiUrfResendVerification(sentTo);
-    toast.info(result.response?.message || 'The link is on its way.');
+    setResending(false);
+    if (result.success) {
+      toast.info(result.response?.message || 'The link is on its way.');
+    } else {
+      toast.error(result.networkError ? NETWORK_ERROR_MESSAGE : result.response?.message || 'Could not send the link. Try again in a moment.');
+    }
   };
 
   return (
@@ -142,21 +157,21 @@ const SignupPage = () => {
         className="tw-bg-cover tw-bg-center tw-min-h-screen tw-flex tw-items-center tw-justify-center tw-py-8"
         style={{ backgroundImage: "url('/image-1@2x.png')" }}
       >
-        <div className="tw-bg-white tw-p-8 tw-rounded-lg tw-shadow-lg tw-w-full tw-max-w-2xl sm:tw-p-6">
+        <div className="tw-bg-[color:var(--surface)] tw-p-8 tw-rounded-lg tw-shadow-lg tw-w-full tw-max-w-2xl sm:tw-p-6">
           <img src="/images/tiet_logo.png" alt="TIET Logo" className="tw-mx-auto tw-mb-4 tw-w-20" />
 
           {sentTo ? (
             <div className="tw-text-center">
               <h1 className="tw-text-xl tw-font-semibold tw-mb-2">Confirm your email</h1>
-              <p className="tw-text-gray-700">
+              <p className="tw-text-[color:var(--text-color)]">
                 We sent a link to <strong>{sentTo}</strong>. Open it to finish creating your
                 account, then sign in and apply.
               </p>
               <div className="tw-mt-6 tw-flex tw-justify-center tw-items-center tw-gap-4">
-                <Link to="/login" className="tw-bg-brand tw-text-white tw-px-5 tw-py-2 tw-rounded-md tw-font-bold hover:tw-bg-brand-hover">
+                <Link to="/login" className="tw-bg-brand tw-text-white tw-px-5 tw-py-2 tw-rounded-md tw-font-semibold hover:tw-bg-brand-hover">
                   Go to sign in
                 </Link>
-                <button type="button" onClick={resend} className="tw-text-brand hover:tw-underline">
+                <button type="button" onClick={resend} disabled={resending} className="tw-text-brand hover:tw-underline">
                   Send the link again
                 </button>
               </div>
@@ -164,12 +179,12 @@ const SignupPage = () => {
           ) : (
             <>
               <h1 className="tw-text-xl tw-font-semibold tw-text-center">Create your URF account</h1>
-              <p className="tw-text-sm tw-text-gray-600 tw-text-center tw-mt-1 tw-mb-6">
+              <p className="tw-text-sm tw-text-[color:var(--text-muted)] tw-text-center tw-mt-1 tw-mb-6">
                 For undergraduates applying to the Undergraduate Research Fellowship.
               </p>
 
               {google ? (
-                <p className="tw-text-sm tw-text-center tw-mb-6 tw-text-gray-700">
+                <p className="tw-text-sm tw-text-center tw-mb-6 tw-text-[color:var(--text-color)]">
                   Signed in with Google as <strong>{google.email}</strong>. Fill in the rest and
                   your account is ready.
                 </p>
@@ -178,7 +193,7 @@ const SignupPage = () => {
                   <button
                     type="button"
                     onClick={signUpWithGoogle}
-                    className="tw-bg-white tw-border-2 tw-border-gray-300 tw-text-gray-700 tw-px-6 tw-py-3 tw-rounded-md tw-font-semibold hover:tw-bg-gray-50 hover:tw-border-gray-400 tw-duration-200 tw-w-full tw-flex tw-items-center tw-justify-center tw-gap-3"
+                    className="tw-bg-[color:var(--surface)] tw-border tw-border-[color:var(--border-color)] tw-text-[color:var(--text-color)] tw-px-6 tw-py-3 tw-rounded-md tw-font-semibold hover:tw-bg-[color:var(--canvas)] hover:tw-border-[color:var(--text-subtle)] tw-duration-200 tw-w-full tw-flex tw-items-center tw-justify-center tw-gap-3"
                   >
                     <svg className="tw-w-5 tw-h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -189,9 +204,9 @@ const SignupPage = () => {
                     Sign up with your institute Google account
                   </button>
                   <div className="tw-flex tw-items-center tw-justify-center tw-my-5">
-                    <span className="tw-border-t tw-border-gray-300 tw-flex-grow"></span>
-                    <span className="tw-px-4 tw-text-gray-600 tw-text-sm">or fill it in yourself</span>
-                    <span className="tw-border-t tw-border-gray-300 tw-flex-grow"></span>
+                    <span className="tw-border-t tw-border-[color:var(--border-color)] tw-flex-grow"></span>
+                    <span className="tw-px-4 tw-text-[color:var(--text-muted)] tw-text-sm">or fill it in yourself</span>
+                    <span className="tw-border-t tw-border-[color:var(--border-color)] tw-flex-grow"></span>
                   </div>
                 </>
               )}
@@ -263,7 +278,8 @@ const SignupPage = () => {
 
                 <button
                   type="submit"
-                  className="sm:tw-col-span-2 tw-bg-brand tw-text-white tw-py-2 tw-rounded-md tw-font-bold hover:tw-bg-brand-hover tw-duration-200"
+                  disabled={loading}
+                  className="sm:tw-col-span-2 tw-bg-brand tw-text-white tw-py-2 tw-rounded-md tw-font-semibold hover:tw-bg-brand-hover tw-duration-200"
                 >
                   Create account
                 </button>

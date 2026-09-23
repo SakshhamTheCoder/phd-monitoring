@@ -390,14 +390,13 @@ trait GeneralFormList
             // The broad area is no longer typed here. It is the scholar's
             // settled area once the IRB form sets one, and their allocation
             // preferences until then, so the profile reports rather than asks.
-            'broad_area' => $student->broad_area
-                ?: ($student->areaPreferences->pluck('broad_area')->filter()->join(', ') ?: null),
+            'broad_area' => $student->broadAreaLabel(),
             'can_edit_tentative' => $student->canEditTentative(),
             'is_supervisor_allocated' => $student->isSupervisorAllocated(),
             'gender' => $student->user->gender,
             'physically_handicapped' => (bool) $student->user->physically_handicapped,
             'is_jrf' => $student->is_jrf,
-            'is_net_gate_qualified' => $student->is_net_gate_qualified,
+            'net_gate' => $student->net_gate,
             'department_id' => $student->department_id,
             'overall_progress' => $student->overall_progress,
             'roll_no' => $student->roll_no,
@@ -423,12 +422,21 @@ trait GeneralFormList
             'current_status' => $student->current_status,
             'fathers_name' => $student->fathers_name,
             'address' => $student->address,
-            'date_of_registration' => $student->date_of_registration,
-            'date_of_irb' => $student->date_of_irb,
-            'date_of_synopsis' => $student->date_of_synopsis,
-            'date_of_thesis' => $student->date_of_thesis,
-            'date_of_thesis_awarded' => $student->date_of_thesis_awarded,
+            'date_of_registration' => $student->date_of_registration?->toDateString(),
+            'date_of_irb' => $student->date_of_irb?->toDateString(),
+            'date_of_synopsis' => $student->date_of_synopsis?->toDateString(),
+            'date_of_thesis' => $student->date_of_thesis?->toDateString(),
+            'date_of_thesis_awarded' => $student->date_of_thesis_awarded?->toDateString(),
             'thesis_window' => $student->thesisWindow(),
+            // The IRB committee's one member from outside the institute, who
+            // reviews the revised IRB. Null for a scholar carried over without one.
+            'irb_outside_expert' => ($expert = $student->outsideExpert()) ? [
+                'id' => $expert->id,
+                'name' => trim($expert->first_name . ' ' . $expert->last_name),
+                'email' => $expert->email,
+                'designation' => $expert->designation,
+                'institution' => $expert->institution,
+            ] : null,
             'doctoral' => $student->doctoralCommittee->map(function ($faculty) {
                 return [
                     'faculty_code' => $faculty->faculty_code,

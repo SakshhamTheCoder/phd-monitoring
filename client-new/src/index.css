@@ -23,17 +23,26 @@
     --primary-wash: rgba(178, 38, 38, 0.05);  /* hover background */
     --secondary-color: #deacac;
 
-    /* Surface and text */
-    --background-color: #EBEBEB;
+    /* Type. Figtree: plain, open letters that stay readable in dense tables. */
+    --font-sans: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+    /* Surface and text: cool slate neutrals, so the brand red is the only
+       warm colour on the page. */
+    --background-color: #F1F5F9;
+    /* The ground every signed-in page sits on. Panels are white on it. */
+    --canvas: #F8FAFC;
     --surface: #FFFFFF;
-    --text-color: #1a1a1a;
-    --text-muted: #666666;
-    /* #888 was 3.54:1 on white, below the 4.5:1 AA needs for body text, and
-       it is used on 0.72rem notes. #707070 is 4.95:1 on white and 4.74:1 on
-       the canvas. */
-    --text-subtle: #707070;
-    --border-color: #DDDDDD;
-    --border-subtle: #EEEEEE;
+    /* A value the reader cannot change (a roll number carried into a form). Kept
+       at full-contrast text on a quiet fill: it is something to check, not a
+       dead control to skip. */
+    --readonly-bg: #F1F5F9;
+    --text-color: #0F172A;
+    --text-muted: #475569;
+    /* The lightest text. #64748B is 4.76:1 on white and 4.55:1 on the canvas,
+       so it still passes AA on the small notes it is used for. */
+    --text-subtle: #64748B;
+    --border-color: #CBD5E1;
+    --border-subtle: #E2E8F0;
 
     /* Semantic. Never use these for branding. */
     --danger: #dc2626;
@@ -43,6 +52,10 @@
     --success-bg: #dcfce7;
     --warning: #a16207;
     --warning-bg: #fef9c3;
+    --warning-text: #854d0e;
+    --info: #1e40af;
+    --info-bg: #eff6ff;
+    --info-border: #bfdbfe;
 
     /* Type scale. Snapped to the sizes already in heaviest use, so a rule that
        moves onto a token barely shifts. There were 54 distinct sizes across two
@@ -59,9 +72,25 @@
     --text-4xl: 2.25rem;
     --text-5xl: 3rem;
 
+    /* Page title. One size on every page, lighter than it was (1.75rem at 700
+       sat heavier than anything else on screen, including the brand). */
+    --text-page: 1.5rem;
+
+    /* Spacing, on a 4px grid. Page and panel rhythm uses these; the old literal
+       values (10px, 15px, 0.6rem) are replaced as files are touched. */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+    --space-7: 48px;
+
     /* Elevation. Three steps and a focus ring, replacing 64 near-identical
        shadows. A shadow says how far off the page something sits; it is not
        decoration, so there is no reason for more than a few. */
+    /* Shadows are for things that float over the page: menus, dialogs, the
+       drawer, toasts. A panel on the page has a border and no shadow. */
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
     --shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
     --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
@@ -71,13 +100,16 @@
     --radius-sm: 6px;
     --radius: 8px;
     --radius-lg: 12px;
-    --radius-xl: 16px;
+    /* Surfaces stop at 12px. 16px cards sat next to 12px ones on the same
+       page, so the large step now equals it until every use is gone. */
+    --radius-xl: 12px;
     --radius-pill: 999px;
 
     /* The one breakpoint. Below this the sidebar becomes a drawer and multi
        column layouts stack. There were 13 different values before. */
     --break-mobile: 768px;
-    --field-padding: 0.6rem 0.8rem;
+    --field-padding: 8px 12px;
+    --field-height: 40px;
     --field-font-size: 0.9rem;
     --transition: 0.2s;
 }
@@ -94,6 +126,81 @@
     outline: 2px solid var(--primary-color);
     outline-offset: 2px;
     border-radius: var(--radius-sm);
+}
+
+/* ==========================================================================
+   Motion
+
+   Only to confirm an action, show where something went, or show a change:
+   150 to 250ms, ease-out, no bounce. Shared keyframes live here so a fade is
+   the same fade everywhere.
+   ========================================================================== */
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes slide-in { from { opacity: 0; transform: translateY(-4px); } }
+@keyframes pop-in { from { opacity: 0; transform: scale(0.85); } }
+
+/* Content that replaces a loading or empty state. */
+.reveal { animation: fade-in 200ms ease-out; }
+
+/* An item the user just added or changed, marked where it landed. The tint
+   fades out slower than a transition runs, long enough to be found. */
+@keyframes landed { from { background-color: color-mix(in srgb, var(--primary-color) 12%, transparent); } }
+.just-added { animation: landed 1s ease-out; }
+
+/* An Undo inside a toast (utils/undoToast.jsx). */
+.toast-undo { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.toast-undo button {
+    border: none;
+    background: none;
+    padding: var(--space-1) var(--space-2);
+    font: inherit;
+    font-weight: 600;
+    color: var(--primary-color);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+}
+.toast-undo button:hover { background: var(--primary-wash); }
+
+/* A native select's chevron turns while its list is open. Only browsers with
+   customizable selects can reach the chevron; the rest keep their own. The
+   list itself stays the browser's. :where keeps each page's own select rules
+   in charge of colour and size. */
+@supports (appearance: base-select) {
+    :where(select) {
+        appearance: base-select;
+        background-color: var(--surface);
+        color: inherit;
+    }
+    :where(select)::picker-icon { transition: rotate 200ms ease-out; }
+    :where(select):open::picker-icon { rotate: 180deg; }
+}
+
+/* Someone who asked for less motion gets the end state at once. This has to
+   beat every component's own animation and transition, hence !important. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        animation-delay: 0s !important;
+        transition-duration: 0.01ms !important;
+        transition-delay: 0s !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Read by a screen reader, not drawn. */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 /* Lets a keyboard user reach the page without tabbing the whole sidebar first.
@@ -169,9 +276,9 @@
 .page-navbar .nav-title {
     margin: 0;
     font-size: var(--text-xl);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-color);
-    letter-spacing: -0.3px;
+    letter-spacing: -0.01em;
 }
 
 @media (max-width: 768px) {
@@ -202,7 +309,6 @@
 .page-navbar .back-button:hover {
     background: var(--primary-wash);
     color: var(--hover-color);
-    transform: translateX(-3px);
     text-decoration: none;
 }
 

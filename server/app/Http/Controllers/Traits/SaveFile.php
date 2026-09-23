@@ -25,11 +25,12 @@ trait SaveFile
         // Define the folder path for the form type
         $folderPath = "uploads/{$formName}/";
 
-        // Store the file
-        $filePath = $file->storeAs($folderPath, $fileName, 'public');
-
-        // Return the relative URL to access the file (starting with /storage/)
-        return '/app/public/' . $filePath; // This ensures the path starts with /storage/
+        // The 'local' disk roots at storage/app, outside the public/storage
+        // symlink, so a file is only reachable through FileController, which
+        // checks who may read the record it belongs to. The stored value stays
+        // relative to storage/, so storage_path($value) still finds the file.
+        $filePath = $file->storeAs($folderPath, $fileName, 'local');
+        return '/app/' . $filePath;
     }
 
     /**
@@ -92,10 +93,14 @@ trait SaveFile
         if (preg_match('#^https?://#i', $storedPath)) {
             return; // external link, not a file we own
         }
-        $relative = preg_replace('#^/?app/public/#', '', $storedPath);
+        // Uploads from before the move keep their '/app/public/' prefix and
+        // live on the public disk until uploads:make-private moves them.
+        [$disk, $relative] = preg_match('#^/?app/public/#', $storedPath)
+            ? ['public', preg_replace('#^/?app/public/#', '', $storedPath)]
+            : ['local', preg_replace('#^/?app/#', '', $storedPath)];
         try {
-            if ($relative && Storage::disk('public')->exists($relative)) {
-                Storage::disk('public')->delete($relative);
+            if ($relative && Storage::disk($disk)->exists($relative)) {
+                Storage::disk($disk)->delete($relative);
             }
         } catch (\Throwable $e) {
             // Cleanup is best-effort; never fail the request over an orphan file.

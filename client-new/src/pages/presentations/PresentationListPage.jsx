@@ -1,19 +1,10 @@
-import React, { useEffect, useState } from "react";
-import Layout from "../../components/dashboard/layout";
+import React, { useState } from "react";
 import Tabs from "../../components/tabs/Tabs";
-import FormList from "../../components/forms/formList/FormList";
-import CustomModal from "../../components/forms/modal/CustomModal";
-import CustomButton from "../../components/forms/fields/CustomButton";
-import GridContainer from "../../components/forms/fields/GridContainer";
-import BulkSchedulePresentation from "../../components/forms/presentations/BulkSchedulePresentation";
-import SchedulePresentation from "../../components/forms/presentations/SchedulePresentation";
-import FormTable from "../../components/forms/formTable/FormTable";
 import FilterBar from "../../components/filterBar/FilterBar";
 import PagenationTable from "../../components/pagenationTable/PagenationTable";
 import SemesterStatsCard from "./SemsterStatsCard";
-import { set } from "react-hook-form";
-import { useParams } from "react-router-dom";
-import PageHeader from '../../components/pageHeader/PageHeader';
+import { useLocation, useParams } from "react-router-dom";
+import Page from '../../components/page/Page';
 import { currentRole } from '../../auth/access';
 
 // Admin reads every evaluation but reviews none, so nothing waits on it.
@@ -28,142 +19,79 @@ const NOT_SCHEDULED_TAB = 3;
 const SEMESTER_OFF_TAB = 4;
 const ALL_TAB = 6;
 
+const onlyWhere = (key, value, op) => ({
+  mandatory_filter: [{ key, ...(op ? { op } : {}), value }],
+});
+
+// What each tab asks the list for. Not Scheduled is its own endpoint, which
+// reads no filters. Module constants, so the table sees the same object
+// until the tab changes and fetches once.
+const NO_FILTERS = {};
+const TAB_FILTERS = {
+  0: onlyWhere("action", 1),
+  1: onlyWhere("upcoming", 1),
+  2: onlyWhere("missed", 0, "="),
+  5: onlyWhere("missed", 1),
+};
+
 const PresentationListPage = () => {
   const { semester_id } = useParams();
-  const [extraFilter, setExtraFilter] = useState(false);
-  const [location, setLocation] = useState(window.location.pathname);
-  const [num, setNum] = useState(0);
+  const { pathname } = useLocation();
   const role = currentRole() || "student";
   const [presentationTab, setPresentationTab] = useState(REVIEWS_NOTHING.includes(role) ? ALL_TAB : ACTION_TAB);
-  // const [filters, setFilters] = useState(role==="student"?{}:{
-  //   mandatory_filter: [
-  //     {
-  //       key: "action",
-  //       value: 1,
-  //     },
-  //   ],
-  // });
+  // The All tab opens with the filter bar showing; the stats card's toggle
+  // changes this same flag.
+  const [extraFilter, setExtraFilter] = useState(presentationTab === ALL_TAB);
+  // A search from the filter bar stands in for the tab's filters until the
+  // tab changes.
+  const [searchFilters, setSearchFilters] = useState(null);
 
-  const handleSearch = (query) => {
-    setFilters(query);
+  const selectTab = (tab) => {
+    setPresentationTab(tab);
+    setSearchFilters(null);
+    if (tab === ALL_TAB) setExtraFilter(true);
   };
 
-  const [enableApproval, setEnableApproval] = useState(false);
-  const getInitialFilters = () => {
-    if (role === "student" || REVIEWS_NOTHING.includes(role)) {
-      return {};
-    } else {
-      return {
-        mandatory_filter: [
-          {
-            key: "action",
-            value: 1,
-          },
-        ],
-      };
-    }
-  };
-  
-  const [filters, setFilters] = useState(getInitialFilters);
-  
-  useEffect(() => {
-    setNum(num + 1);
-    if(role==='student') return;
-    setLocation(window.location.pathname);
-    if (presentationTab === 0) {
-      setFilters({
-        mandatory_filter: [
-          {
-            key: "action",
-            value: 1,
-          },
-        ],
-      });
-      setEnableApproval(BULK_APPROVERS.includes(role));
-    } else if (presentationTab === 1) {
-      //new
-      setFilters({
-        mandatory_filter: [
-          {
-            key: "upcoming",
-            value: 1,
-          },
-        ],
-      });
-      setEnableApproval(false);
-    } else if (presentationTab === 2) {
-      //new route
-      setFilters({
-        mandatory_filter: [
-          {
-            key: "missed",
-            op: "=",
-            value: 0,
-          },
-        ],
-      });
-      setEnableApproval(false);
-    } else if (presentationTab === 3) {
-      //new route
-      setEnableApproval(false);
-      setLocation(window.location.pathname + "/not-scheduled");
-    } else if (presentationTab === 4) {
-      //semester off
-    } else if (presentationTab === 5) {
-      setFilters({
-        mandatory_filter: [
-          {
-            key: "missed",
-            value: 1,
-          },
-        ],
-      });
-      setEnableApproval(false);
-    } else if (presentationTab === 6) {
-      setFilters({});
-      setEnableApproval(false);
-      setExtraFilter(true);
-    }
-  }, [presentationTab]);
+  // Derived rather than set from an effect: the effect handed the table a
+  // second filters object right after mount, so it fetched the list twice.
+  const tabFilters = role === "student" ? NO_FILTERS : (TAB_FILTERS[presentationTab] ?? NO_FILTERS);
+  const filters = searchFilters ?? tabFilters;
+  const enableApproval = presentationTab === ACTION_TAB && BULK_APPROVERS.includes(role);
+  const endpoint = presentationTab === NOT_SCHEDULED_TAB ? `${pathname}/not-scheduled` : pathname;
 
   return (
-    <Layout
-      children={
-        <>
-          <PageHeader title="Progress Monitoring List" />
+    <Page title="Progress monitoring list">
 
-          <SemesterStatsCard semesterName={semester_id} setFilters={setExtraFilter} />
+      <SemesterStatsCard semesterName={semester_id} filtersEnabled={extraFilter} setFilters={setExtraFilter} />
 
-          {role !== "student" && (
-            <Tabs
-              value={presentationTab}
-              onChange={setPresentationTab}
-              items={[
-                'Action Required',
-                'Upcoming Progress Monitoring',
-                'Completed',
-                'Not Scheduled',
-                'Semester Off',
-                'Not Submitted',
-                'All Progress Monitoring',
-              ]
-                .map((label, i) => ({ value: i, label }))
-                .filter((tab) => tab.value !== SEMESTER_OFF_TAB)
-                .filter((tab) => !(tab.value === ACTION_TAB && REVIEWS_NOTHING.includes(role)))
-                .filter((tab) => !(tab.value === NOT_SCHEDULED_TAB && !READS_NOT_SCHEDULED.includes(role)))}
-            />
-          )}
-          {extraFilter && <FilterBar onSearch={handleSearch} />}
-          <PagenationTable
-            num={num}
-            endpoint={location}
-            filters={filters}
-            enableApproval={enableApproval}
-            enableSelect={enableApproval}
-          />
-        </>
-      }
-    />
+      {role !== "student" && (
+        <Tabs
+          value={presentationTab}
+          onChange={selectTab}
+          items={[
+            'Action required',
+            'Upcoming progress monitoring',
+            'Completed',
+            'Not scheduled',
+            'Semester off',
+            'Not submitted',
+            'All progress monitoring',
+          ]
+            .map((label, i) => ({ value: i, label }))
+            .filter((tab) => tab.value !== SEMESTER_OFF_TAB)
+            .filter((tab) => !(tab.value === ACTION_TAB && REVIEWS_NOTHING.includes(role)))
+            .filter((tab) => !(tab.value === NOT_SCHEDULED_TAB && !READS_NOT_SCHEDULED.includes(role)))}
+        />
+      )}
+      <PagenationTable
+        // Keyed by tab: a tab change drops the search, so the box must empty too.
+        search={extraFilter && <FilterBar key={presentationTab} onSearch={setSearchFilters} />}
+        endpoint={endpoint}
+        filters={filters}
+        enableApproval={enableApproval}
+        enableSelect={enableApproval}
+      />
+    </Page>
   );
 };
 

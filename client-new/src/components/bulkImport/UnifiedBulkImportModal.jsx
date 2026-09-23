@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import CustomModal from '../forms/modal/CustomModal';
 import CustomButton from '../forms/fields/CustomButton';
 import { toast } from 'react-toastify';
@@ -34,6 +34,7 @@ const UnifiedBulkImportModal = ({
 }) => {
   const [csvFile, setCsvFile] = useState(null);
   const [csvPreview, setCsvPreview] = useState(null);
+  const fileInputRef = useRef(null);
 
   const columns = sampleCsvContent ? parseCsv(sampleCsvContent)[0] || [] : [];
   const isRequired = (column) => required.some((name) => name.toLowerCase() === column.toLowerCase());
@@ -41,6 +42,8 @@ const UnifiedBulkImportModal = ({
   const resetState = () => {
     setCsvFile(null);
     setCsvPreview(null);
+    // Otherwise picking the same file again fires no change and loads nothing.
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleClose = () => {
@@ -107,7 +110,7 @@ const UnifiedBulkImportModal = ({
 
   return (
     <CustomModal isOpen={isOpen} onClose={handleClose} title={title} width="90vw">
-      <div className="modal-form">
+      <>
         <section className="csv-import-section">
           <h4 className="csv-import-heading">Columns</h4>
           <ul className="csv-import-columns">
@@ -136,6 +139,7 @@ const UnifiedBulkImportModal = ({
         <div className="csv-import-file">
           <CustomButton text="Download sample CSV" variant="secondary" onClick={downloadSampleCSV} />
           <input
+            ref={fileInputRef}
             type="file"
             accept=".csv"
             aria-label="Choose a CSV file to import"
@@ -196,14 +200,15 @@ const UnifiedBulkImportModal = ({
         {extraControls}
 
         <div className="modal-actions">
-          <CustomButton text="Cancel" variant="secondary" onClick={handleClose} />
+          <CustomButton text="Cancel" variant="quiet" onClick={handleClose} />
           <CustomButton
-            text={submitting ? 'Importing...' : 'Import'}
+            text="Import"
             onClick={handleConfirm}
-            disabled={submitting || !csvPreview}
+            busy={submitting}
+            disabled={!csvPreview}
           />
         </div>
-      </div>
+      </>
     </CustomModal>
   );
 };

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import Layout from '../../components/dashboard/layout';
-import PageHeader from '../../components/pageHeader/PageHeader';
+import Page from '../../components/page/Page';
 import { useLoading } from '../../context/LoadingContext';
 import { useLocation } from 'react-router-dom';
 import FilterBar from '../../components/filterBar/FilterBar';
@@ -15,6 +14,7 @@ import { column } from '../../components/bulkImport/columns';
 import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
 import { toast } from 'react-toastify';
+import { apiDepartmentList } from '../../api/lookups';
 
 const DepartmentPage = () => {
   const [filter, setFilter] = useState([]);
@@ -78,6 +78,7 @@ CSED,Hod One,hod.one@thapar.edu,hcsed@thapar.edu,Adordc One,adordc.one@thapar.ed
       return;
     }
 
+    apiDepartmentList.invalidate();
     const { update_count: updated = 0, errors = [] } = response.response.data || {};
     toast.success(`${updated} departments updated`);
     errors.forEach((message) => toast.warn(message));
@@ -93,87 +94,96 @@ CSED,Hod One,hod.one@thapar.edu,hcsed@thapar.edu,Adordc One,adordc.one@thapar.ed
     setRefreshKey(prev => prev + 1);
   };
 
+  // A change inside the manager keeps it open, showing what the server now
+  // holds for that department, and refreshes the table behind it. Closing it
+  // after every change meant reopening it for the next one.
+  const handleManagerUpdate = async () => {
+    setRefreshKey(prev => prev + 1);
+    apiDepartmentList.invalidate();
+    const res = await apiDepartmentList();
+    const fresh = res.success ? (res.response?.data || []).find((d) => d.id === editData?.id) : null;
+    if (fresh) setEditData((current) => (current?.id === fresh.id ? fresh : current));
+  };
+
   return (
-    <Layout
-      children={
-        <>
-          <PageHeader title="Departments" subtitle="Departments, their HoD and PhD coordinators." />
-          <FilterBar onSearch={handleFilterChange} />
-          <PagenationTable
-            key={refreshKey}
-            endpoint={location.pathname}
-            filters={filter}
-            enableApproval={false}
-            rowClickable={mayManage}
-            customOpenForm={openForm}
-            extraTopbarComponents={
-              mayManage ? (
-                <>
-                  <CustomButton text="Bulk Import" variant="secondary" onClick={() => setShowImport(true)} />
-                  <CustomButton text="Add Department +" onClick={() => openForm()} />
-                </>
-              ) : null
-            }
-            actions={mayManage ? [
-              {
-                icon: <i className="fa fa-users"></i>,
-                tooltip: 'Manage HOD & Coordinators',
-                onClick: (deptData) => openForm(deptData),
-              },
-            ] : []}
-          />
-          <CustomModal
-            isOpen={isOpen}
+    <Page
+      title="Departments"
+      description="Departments, their HoD and PhD coordinators."
+      actions={
+        mayManage ? (
+          <>
+            <CustomButton text="Import from CSV" variant="secondary" onClick={() => setShowImport(true)} />
+            <CustomButton text="Add department" onClick={() => openForm()} />
+          </>
+        ) : null
+      }
+    >
+      <PagenationTable
+        key={refreshKey}
+        endpoint={location.pathname}
+        filters={filter}
+        search={<FilterBar onSearch={handleFilterChange} />}
+        enableApproval={false}
+        rowClickable={mayManage}
+        customOpenForm={openForm}
+        actions={mayManage ? [
+          {
+            icon: <i className="fa fa-users"></i>,
+            tooltip: 'Manage HOD and coordinators',
+            onClick: (deptData) => openForm(deptData),
+          },
+        ] : []}
+      />
+      <CustomModal
+        isOpen={isOpen}
+        onClose={() => {
+          setIsOpen(false);
+          setEditData(null);
+        }}
+        width="90vw"
+      >
+        {editData ? (
+          <DepartmentManager
+            departmentId={editData.id}
+            departmentName={editData.name || editData.department_name}
+            hodEmail={editData.hod_email}
+            currentHod={editData.hod}
+            currentAdordc={editData.adordc}
+            currentCoordinators={editData.phd_coordinators || []}
             onClose={() => {
               setIsOpen(false);
               setEditData(null);
             }}
-            width="90vw"
-          >
-            {editData ? (
-              <DepartmentManager
-                departmentId={editData.id}
-                departmentName={editData.name || editData.department_name}
-                hodEmail={editData.hod_email}
-                currentHod={editData.hod}
-                currentAdordc={editData.adordc}
-                currentCoordinators={editData.phd_coordinators || []}
-                onClose={() => {
-                  setIsOpen(false);
-                  setEditData(null);
-                }}
-                onUpdate={handleUpdate}
-              />
-            ) : (
-              <AddDepartmentForm
-                onClose={() => {
-                  setIsOpen(false);
-                  setEditData(null);
-                }}
-                onCreated={handleUpdate}
-              />
-            )}
-          </CustomModal>
-
-          <UnifiedBulkImportModal
-            isOpen={showImport}
-            onClose={() => setShowImport(false)}
-            title="Bulk Import Departments"
-            required={['Department Code']}
-            rules={[
-              'Departments are never created or deleted. A renamed code renames the department in place.',
-              'Officers are matched by their personal email. An office mailbox is reported and skipped.',
-              'The HOD and ADORDC office addresses are kept on the department, and a blank cell leaves the stored one alone.',
-              'Both coordinator cells blank leaves the current coordinators alone.',
-            ]}
-            sampleFileName="department_officers_sample.csv"
-            sampleCsvContent={officerSampleCsv}
-            onImport={handleImport}
-            submitting={importing}
+            onUpdate={handleManagerUpdate}
           />
-        </>
-      }
-    />
+        ) : (
+          <AddDepartmentForm
+            onClose={() => {
+              setIsOpen(false);
+              setEditData(null);
+            }}
+            onCreated={handleUpdate}
+          />
+        )}
+      </CustomModal>
+
+      <UnifiedBulkImportModal
+        isOpen={showImport}
+        onClose={() => setShowImport(false)}
+        title="Import departments from CSV"
+        required={['Department Code']}
+        rules={[
+          'Departments are never created or deleted. A renamed code renames the department in place.',
+          'Officers are matched by their personal email. An office mailbox is reported and skipped.',
+          'The HOD and ADORDC office addresses are kept on the department, and a blank cell leaves the stored one alone.',
+          'Both coordinator cells blank leaves the current coordinators alone.',
+        ]}
+        sampleFileName="department_officers_sample.csv"
+        sampleCsvContent={officerSampleCsv}
+        onImport={handleImport}
+        submitting={importing}
+      />
+    </Page>
   );
 };
 

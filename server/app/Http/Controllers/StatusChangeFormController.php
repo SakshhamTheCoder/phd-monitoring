@@ -40,8 +40,12 @@ class StatusChangeFormController extends Controller
         ),
         'extra_fields' => array_merge(
             [
+                // What the form asked for. Read from the scholar's status today, an
+                // approved change showed backwards; that is only a fallback for
+                // forms made before the choice was stored.
                 "type_of_change" => function ($form) {
-                    return $form->student->current_status == "full-time" ? "full-time to part-time" : "part-time to full-time";
+                    return $form->type_of_change
+                        ?: ($form->student->current_status == "full-time" ? "full-time to part-time" : "part-time to full-time");
                 },
             ],
             $canReadReason ? ["reason"] : []
@@ -172,11 +176,7 @@ class StatusChangeFormController extends Controller
             'approval' => 'required|boolean',
         ]);
         $request->merge(['approval' => true]);
-        foreach ($request->form_ids as $form_id) {
-            $this->submit($request, $form_id);
-        }
-        return response()->json(['message' => 'Forms submitted successfully'], 200);
-
+        return $this->bulkResults($request->form_ids, fn ($form_id) => $this->submit($request, $form_id));
     }
 
     private function supervisorSubmit($user, $request, $form_id)
@@ -207,7 +207,11 @@ class StatusChangeFormController extends Controller
     private function dordcSubmit($user, $request, $form_id)
     {
         $model = StudentStatusChangeForms::class;
-        $student=StudentStatusChangeForms::find($form_id)->student;
+        $form = StudentStatusChangeForms::find($form_id);
+        if (!$form) {
+            return response()->json(['message' => 'No form found'], 404);
+        }
+        $student = $form->student;
         $prevStatusChanges = $student->statusChanges();
         if ($prevStatusChanges->count() > 1) {
             return $this->submitForm($user, $request, $form_id, $model, 'dordc', 'dra', 'director');

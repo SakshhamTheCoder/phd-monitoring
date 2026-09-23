@@ -1,171 +1,36 @@
-.po-container {
-  font-family: inherit;
+/* The KPI read-out: the number is the value, the note under it says what the
+   count covers. */
+.po-fact-value {
+  font-size: var(--text-xl);
+  font-weight: 600;
+}
+
+.facts .po-fact-note {
+  margin-top: 2px;
+  font-size: var(--text-xs);
   font-weight: 400;
-}
-
-/* Header */
-/* Header comes from styles/ui.css */
-
-/* Stats Grid */
-.po-stats-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1.5fr 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.po-stat-card {
-  background: #FFF;
-  border-radius: var(--radius-lg);
-  padding: 1.25rem;
-  box-shadow: var(--shadow-sm);
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.po-stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
-}
-
-.po-stat-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.po-stat-label {
-  font-size: var(--text-2xs);
-  font-weight: 600;
-  color: #777;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* One branded icon treatment for every KPI — the number stays the hero */
-.po-stat-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: var(--radius);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--text-sm);
-  background: #f7ebeb;
-  color: var(--primary-color);
-}
-
-.po-stat-icon.active,
-.po-stat-icon.completed,
-.po-stat-icon.funding,
-.po-stat-icon.consultancy,
-.po-stat-icon.international {
-  background: #f7ebeb;
-  color: var(--primary-color);
-}
-
-.po-stat-value {
-  font-size: var(--text-3xl);
-  font-weight: 700;
-  color: #111;
-  line-height: 1;
-}
-
-.po-stat-value.accent {
-  color: var(--success);
-}
-
-.po-stat-value.large {
-  font-size: var(--text-3xl);
-  color: var(--primary-color);
-}
-
-.po-stat-trend {
-  font-size: var(--text-2xs);
-  font-weight: 500;
-}
-
-.po-stat-trend.up {
-  color: var(--success);
-}
-
-.po-stat-meta {
-  font-size: var(--text-2xs);
-  color: #999;
-}
-
-.po-funding-split {
-  font-size: var(--text-2xs);
   color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
-
-
-
-/* Filter Bar */
-.po-filter-bar {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-bottom: 1.5rem;
+/* Sized as PagenationTable sizes its search; .table-search strips the
+   FilterBar's own box, since the panel is the box here. */
+.po-search {
+  flex: 1 1 360px;
+  min-width: 0;
+  max-width: 720px;
 }
 
-.po-filter-bar > .filter-bar {
-  flex: 1;
-  min-width: 320px;
-}
-
-.po-export-btn {
-  flex: none;
-  background: none;
-  border: none;
-  color: var(--primary-color);
-  font-weight: 600;
-  font-size: var(--text-sm);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  /* Was 21px tall next to 38px controls, and read as text rather than a button. */
-  padding: 0.55rem 0.75rem;
-  min-height: 38px;
-  border-radius: var(--radius);
-}
-
-.po-export-btn:hover {
-  color: var(--hover-color);
-}
-
-/* Table */
+.po-state { padding: var(--space-5); }
 
 .po-project-title {
-  font-weight: 400;
-  color: #222;
   font-size: var(--text-sm);
   max-width: 280px;
-}
-
-.po-project-id {
-  font-size: var(--text-2xs);
-  color: #aaa;
-  margin-top: 0.2rem;
-}
-
-.po-amount {
-  font-weight: 400;
-  color: #111;
 }
 
 .po-action-buttons {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: var(--space-2);
 }
 
 .po-icon-btn {
@@ -174,32 +39,33 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #FFF;
-  border: 1px solid #E5E5E5;
+  background: var(--surface);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
   color: var(--text-muted);
   font-size: var(--text-xs);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background-color 0.15s ease-out, color 0.15s ease-out, border-color 0.15s ease-out;
 }
 
-.po-icon-btn.edit:hover {
+.po-icon-btn:hover {
   background: var(--primary-wash);
   border-color: var(--primary-color);
   color: var(--primary-color);
 }
 
-/* Delete is a destructive action — red by default */
-.po-icon-btn.delete {
-  background: #fef2f2;
-  border-color: #fecaca;
-  color: var(--danger);
-}
+/* Delete is destructive, so it reads red before the pointer reaches it. */
+.po-icon-btn.delete { color: var(--danger-text); }
 
 .po-icon-btn.delete:hover {
-  background: var(--danger);
+  background: var(--danger-bg);
   border-color: var(--danger);
-  color: #FFF;
+  color: var(--danger-text);
+}
+
+.po-icon-btn:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
 }
 
 /* Delete Confirmation Modal */
@@ -207,16 +73,7 @@
   font-size: var(--text-sm);
   color: var(--text-muted);
   line-height: 1.5;
-  margin: 0 0 1.5rem;
-}
-
-.po-modal-btn.cancel:hover {
-  background: #f5f5f5;
-}
-
-.po-modal-btn.confirm:hover {
-  background: var(--danger-text);
-  border-color: var(--danger-text);
+  margin: 0 0 var(--space-5);
 }
 
 /* Shown instead of the edit and delete icons on a project the viewer can only
@@ -226,18 +83,11 @@
   color: var(--text-subtle);
 }
 
-/* Five KPI cards across is 70px each on a phone, which is narrower than the
-   numbers in them. Two across keeps them scannable without scrolling. */
 @media (max-width: 768px) {
-  .po-stats-grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-  }
+  /* Two counts a row, so the five do not run the length of a phone. */
+  .facts.po-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
-  .po-stat-card { padding: 1rem; }
-
-  .po-filter-bar > .filter-bar { min-width: 0; }
+  .po-state { padding-left: var(--space-4); padding-right: var(--space-4); }
 
   .po-project-title { max-width: none; }
 }

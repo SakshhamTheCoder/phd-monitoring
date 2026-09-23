@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import Layout from '../../components/dashboard/layout';
 import { useLoading } from '../../context/LoadingContext';
 import { useLocation } from 'react-router-dom';
 import FilterBar from '../../components/filterBar/FilterBar';
 import PagenationTable from '../../components/pagenationTable/PagenationTable';
 import CustomModal from '../../components/forms/modal/CustomModal';
-import PageHeader from '../../components/pageHeader/PageHeader';
+import Page from '../../components/page/Page';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import GridContainer from '../../components/forms/fields/GridContainer';
 import InputField from '../../components/forms/fields/InputField';
 import DropdownField from '../../components/forms/fields/DropdownField';
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
 import { customFetch } from '../../api/base';
+import { apiDepartmentList } from '../../api/lookups';
+import { currentRole } from '../../auth/access';
 import { baseURL } from '../../api/urls';
 import { toast } from 'react-toastify';
-import './AreaOfSpecialization.css';
 
 const AreaOfSpecialization = () => {
   const [filter, setFilter] = useState([]);
@@ -27,17 +27,49 @@ const AreaOfSpecialization = () => {
     department_id: '',
   });
   const [submitting, setSubmitting] = useState(false);
+  // Add or Update in flight: a second click created the area twice.
+  const [saving, setSaving] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const { setLoading } = useLoading();
   const location = useLocation();
 
+  // The server keeps HoD and coordinators to their own department, so for
+  // them the department field is fixed to it.
+  const role = currentRole();
+  const isDepartmentScoped = role === 'hod' || role === 'phd_coordinator';
+  const [myDepartmentId, setMyDepartmentId] = useState('');
+
   useEffect(() => {
-    fetchDepartments();
+    if (isDepartmentScoped) {
+      fetchMyDepartment();
+    } else {
+      fetchDepartments();
+    }
   }, []);
+
+  // GET /departments needs can_edit_department, so their department comes from
+  // the areas list, which resolves it to scope that same list.
+  const fetchMyDepartment = async () => {
+    try {
+      const response = await customFetch(
+        `${baseURL}/departments/area-of-specialization/list?rows=1&page=1`,
+        'GET',
+        {},
+        false
+      );
+      const scoped = response.response?.scoped_department;
+      if (scoped) {
+        setMyDepartmentId(scoped.id);
+        setDepartments([{ title: scoped.name, value: scoped.id }]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch your department:', error);
+    }
+  };
 
   const fetchDepartments = async () => {
     try {
-      const response = await customFetch(baseURL + '/departments?rows=1000', 'GET', {}, false);
+      const response = await apiDepartmentList();
       if (response.success || response.data) {
         const deptData = response.data || response.response?.data || [];
         setDepartments(
@@ -67,19 +99,20 @@ const AreaOfSpecialization = () => {
       setEditData(null);
       setFormData({
         name: '',
-        department_id: '',
-
+        department_id: isDepartmentScoped ? myDepartmentId : '',
       });
     }
     setIsOpen(true);
   };
 
   const handleSubmit = async () => {
+    if (saving) return;
     if (!formData.name || !formData.department_id) {
       toast.error('Name and Department are required');
       return;
     }
 
+    setSaving(true);
     setLoading(true);
     try {
       const endpoint = editData
@@ -95,11 +128,10 @@ const AreaOfSpecialization = () => {
         setIsOpen(false);
         setRefreshKey((prev) => prev + 1);
       } else {
-        toast.error(response.message || (editData ? 'Failed to update area.' : 'Failed to add area.'));
+        toast.error(response.response?.message || (editData ? 'Failed to update area.' : 'Failed to add area.'));
       }
-    } catch (error) {
-      toast.error('Failed to save area of specialization.');
     } finally {
+      setSaving(false);
       setLoading(false);
     }
   };
@@ -122,16 +154,32 @@ const AreaOfSpecialization = () => {
         toast.success('Area deleted.');
         setRefreshKey((prev) => prev + 1);
       } else {
-        toast.error(response.message || 'Failed to delete area.');
+        toast.error(response.response?.message || 'Failed to delete area.');
       }
-    } catch (error) {
-      toast.error('Failed to delete area of specialization.');
     } finally {
       setLoading(false);
     }
   };
 
+  // The departments a sheet covers, read the way the server reads it: the
+  // template names one per row, the institute's matrix one per column after
+  // the first.
+  const departmentsInSheet = ({ headers = [], data = [] }) => {
+    const codes = headers.some((header) => header.trim().toLowerCase() === 'name')
+      ? data.map((row) => row.department_code)
+      : headers.slice(1);
+    return [...new Set(codes.map((code) => String(code ?? '').trim()).filter(Boolean))];
+  };
+
   const handleCSVUpload = async (preview, reset) => {
+    // The server deletes every unused area of each department in the sheet
+    // that the sheet leaves out, so say which departments before it does.
+    const covered = departmentsInSheet(preview);
+    if (!window.confirm(
+      `Importing replaces the research areas of ${covered.join(', ') || 'the departments in this sheet'}. `
+      + 'Any area of theirs that is not in the sheet is deleted, unless a scholar or faculty member uses it. Continue?'
+    )) return;
+
     setSubmitting(true);
 
     const response = await customFetch(
@@ -175,100 +223,88 @@ Machine Learning,CSED
 Data Science,CSED`;
 
   return (
-    <Layout>
-      <div className="area-specialization-page">
-        <PageHeader
-          title="Areas of Specialization"
-          subtitle="The research areas each department offers."
-        />
+    <Page
+      title="Areas of specialization"
+      description="The research areas each department offers."
+      actions={
+        <>
+          <CustomButton
+            text="Import from CSV"
+            variant="secondary"
+            onClick={() => setIsUploadModalOpen(true)}
+          />
+          <CustomButton text="Add area" onClick={() => openForm()} />
+        </>
+      }
+    >
+      <PagenationTable
+        key={refreshKey}
+        endpoint="/departments/area-of-specialization/list"
+        enableApproval={false}
+        customOpenForm={openForm}
+        actions={[
+          {
+            icon: <i className="fa fa-pencil-square-o"></i>,
+            tooltip: 'Edit',
+            onClick: (data) => openForm(data),
+          },
+          {
+            icon: <i className="fa fa-trash"></i>,
+            tooltip: 'Delete',
+            onClick: (data) => handleDelete(data.id),
+          },
+        ]}
+      />
 
-        {/* <FilterBar onSearch={handleFilterChange} /> */}
-        
-        <PagenationTable
-          key={refreshKey}
-          endpoint="/departments/area-of-specialization/list"
-
-          enableApproval={false}
-          customOpenForm={openForm}
-          extraTopbarComponents={
-            <div className="top-actions">
-              <CustomButton
-                text="Bulk Import"
-                variant="secondary"
-                onClick={() => setIsUploadModalOpen(true)}
-              />
-              <CustomButton 
-                text="Add Area +" 
-                onClick={() => openForm()} 
-              />
-            </div>
-          }
-          actions={[
-            {
-              icon: <i className="fa fa-pencil-square-o"></i>,
-              tooltip: 'Edit',
-              onClick: (data) => openForm(data),
-            },
-            {
-              icon: <i className="fa fa-trash"></i>,
-              tooltip: 'Delete',
-              onClick: (data) => handleDelete(data.id),
-            },
+      {/* Add/Edit Modal */}
+      <CustomModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        closeOnOutsideClick={false}
+        title={editData ? 'Edit area of specialization' : 'Add area of specialization'}
+        minWidth="600px"
+        maxWidth="800px"
+      >
+        <GridContainer
+          elements={[
+            <InputField
+              label="Area Name"
+              initialValue={formData.name}
+              onChange={(value) => setFormData({ ...formData, name: value })}
+              hint="e.g., Machine Learning, Data Science"
+            />,
+            <DropdownField
+              label="Department"
+              initialValue={formData.department_id}
+              options={departments}
+              onChange={(value) => setFormData({ ...formData, department_id: value })}
+              isLocked={isDepartmentScoped}
+            />,
           ]}
         />
 
-        {/* Add/Edit Modal */}
-        <CustomModal
-          isOpen={isOpen}
-          onClose={() => setIsOpen(false)}
-          title={editData ? 'Edit Area of Specialization' : 'Add Area of Specialization'}
-          minWidth="600px"
-          maxWidth="800px"
-        >
-          <div className="form-container">
-            <GridContainer
-              elements={[
-                <InputField
-                  label="Area Name"
-                  initialValue={formData.name}
-                  onChange={(value) => setFormData({ ...formData, name: value })}
-                  hint="e.g., Machine Learning, Data Science"
-                />,
-                <DropdownField
-                  label="Department"
-                  initialValue={formData.department_id}
-                  options={departments}
-                  onChange={(value) => setFormData({ ...formData, department_id: value })}
-                />,
-              ]}
-            />
+        <div className="modal-actions">
+          <CustomButton text="Cancel" variant="quiet" onClick={() => setIsOpen(false)} />
+          <CustomButton text={editData ? 'Update' : 'Add'} onClick={handleSubmit} busy={saving} />
+        </div>
+      </CustomModal>
 
-            <GridContainer
-              elements={[
-                <CustomButton text="Cancel" onClick={() => setIsOpen(false)} />,
-                <CustomButton text={editData ? 'Update' : 'Add'} onClick={handleSubmit} />,
-              ]}
-            />
-          </div>
-        </CustomModal>
-
-        <UnifiedBulkImportModal
-          isOpen={isUploadModalOpen}
-          onClose={() => setIsUploadModalOpen(false)}
-          title="Bulk Import Research Areas"
-          required={['name', 'department_code']}
-          rules={[
-              "The institute's matrix also loads as it is: one column per department code, one area per cell.",
-              'An area already on the list is left alone, so the same file can be loaded twice.',
-              'An area the sheet drops is removed only when no scholar or faculty member points at it.',
-            ]}
-          sampleFileName="research_areas_sample.csv"
-          sampleCsvContent={areaSampleCsv}
-          onImport={handleCSVUpload}
-          submitting={submitting}
-        />
-      </div>
-    </Layout>
+      <UnifiedBulkImportModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        title="Import research areas from CSV"
+        required={['name', 'department_code']}
+        rules={[
+            "The institute's matrix also loads as it is: one column per department code, one area per cell.",
+            'An area already on the list is left alone, so the same file can be loaded twice.',
+            'An area the sheet drops is removed only when no scholar or faculty member points at it.',
+          ]}
+        sampleFileName="research_areas_sample.csv"
+        sampleCsvContent={areaSampleCsv}
+        onImport={handleCSVUpload}
+        submitting={submitting}
+      />
+    </Page>
   );
 };
 

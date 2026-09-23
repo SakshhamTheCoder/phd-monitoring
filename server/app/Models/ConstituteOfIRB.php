@@ -46,7 +46,7 @@ class ConstituteOfIRB extends Model
             // When the IRB was actually constituted, as opposed to when the
             // record of it was brought into the portal. The summary shown for a
             // carried over form reads the first and not the second.
-            'date_of_irb' => $this->student->date_of_irb,
+            'date_of_irb' => $this->student->date_of_irb?->toDateString(),
             // Prefill from the student's profile title until this form carries its
             // own (i.e. before the student first submits it).
             'phd_title'=> $this->phd_title ?: $this->student->phd_title,
@@ -106,7 +106,13 @@ class ConstituteOfIRB extends Model
                 'email' => $this->expertOutside->email,
                 'phone' => $this->expertOutside->phone
             ] : null,
-
+            'doctoral' => $this->student->doctoralCommittee->map(function ($faculty) {
+                return [
+                    'name' => $faculty->user->name(),
+                    'designation' => $faculty->designation,
+                    'email' => $faculty->user->email,
+                ];
+            }),
         ]);
     }
 

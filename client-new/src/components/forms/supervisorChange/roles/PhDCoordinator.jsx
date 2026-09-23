@@ -19,7 +19,7 @@ const PhDCoordinator = ({ formData }) => {
   const location = useLocation();
 
   useEffect(() => {
-    const supervisors = formData?.new_supervisors.map(
+    const supervisors = (formData?.new_supervisors || []).map(
       (Supervisor) => Supervisor.faculty_code
     );
     if (supervisors.length == 0) {
@@ -49,11 +49,12 @@ const PhDCoordinator = ({ formData }) => {
           {formData.role === "phd_coordinator" && !lock ? (
             <>
               <GridContainer
+                label="Allot supervisors"
                 elements={[
-                  <p>Allot Supervisors</p>,
-                  <></>,
                   <CustomButton
-                    text="Add Supervisor +"
+                    text="Add supervisor"
+                    variant="secondary"
+                    size="sm"
                     onClick={handleAddSupervisor}
                   />,
                 ]}
@@ -64,7 +65,7 @@ const PhDCoordinator = ({ formData }) => {
                   <InputSuggestions
                     apiUrl={apiUrl_suggestion}
                     label={`Supervisor ${index + 1}`}
-                    initialValue={formData.new_supervisors[index]?.name}
+                    initialValue={formData.new_supervisors?.[index]?.name}
                     onSelect={(value) => handleSupervisorSelect(value, index)}
                     lock={lock}
                   />
@@ -75,7 +76,12 @@ const PhDCoordinator = ({ formData }) => {
                   <CustomButton
                     text="Submit"
                     onClick={() => {
-                      submitForm(body, location, setLoading);
+                      // An added slot left empty has nothing to send, and "" was
+                      // refused as an unknown supervisor.
+                      submitForm({
+                        ...body,
+                        new_supervisors: body.new_supervisors.filter((code) => code !== null && code !== undefined && code !== ""),
+                      }, location, setLoading);
                     }}
                   />,
                 ]}
@@ -83,13 +89,9 @@ const PhDCoordinator = ({ formData }) => {
             </>
           ) : (
             <>
-                 <GridContainer
+              <GridContainer
+                label="Supervisors allocated by PhD Coordinator"
                 elements={[
-                  <p>Supervisors Allocated By PhDCoordinator</p>,
-                ]}
-                space={2}
-              />
-              <GridContainer elements={[
                 <TableComponent 
                   data={formData.new_supervisors}
                   keys={[ "name", "department"]}

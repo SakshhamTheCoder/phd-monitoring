@@ -17,6 +17,7 @@ use App\Models\UrfReport;
 use App\Models\UrfReportWindow;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -114,8 +115,9 @@ class UrfController extends Controller
                 ])->values(),
                 'status' => ucfirst($a->status),
                 // Where it has reached, which is not whether the project is on.
-                'stage' => $a->isComplete() ? 'Approved' : 'With ' . ucfirst($a->stage),
-                'applied_on' => $a->created_at?->format('d M Y'),
+                // A complete form waits on nobody, and was not always approved.
+                'stage' => $a->isComplete() ? null : 'With ' . ucfirst($a->stage),
+                'applied_on' => $this->submittedOn($a)?->format('d M Y'),
                 // Not a column of its own: the title opens it.
                 'proposal' => $a->proposal,
             ]),
@@ -165,13 +167,15 @@ class UrfController extends Controller
             'application_id' => $row->urf_application_id,
             'session' => $row->application->session,
             'project_title' => $row->application->project_title,
-            'submitted_on' => $row->created_at?->format('d M Y'),
+            'submitted_on' => $this->submittedOn($row, true)?->format('d M Y'),
         ];
 
         return response()->json([
             'data' => $page->getCollection()->map(fn ($row) => $common($row) + $student($row) + ($details ? [
                 'student' => $row->full_name,
-                'status' => ucfirst($row->application->status),
+                // Only a selected project has stipend details, so its status said
+                // nothing; where the form itself stands does.
+                'stage' => $row->isComplete() ? null : 'With ' . ucfirst($row->stage),
             ] : [
                 'submitted_by' => $row->user->name(),
                 'conference_presentation' => $row->conference_presentation,
@@ -181,10 +185,10 @@ class UrfController extends Controller
             'totalPages' => $page->lastPage(),
             'role' => $user->current_role->role,
             'fields' => $details
-                ? ['session', 'student', 'branch', 'project_title', 'status', 'submitted_on']
+                ? ['session', 'student', 'branch', 'project_title', 'stage', 'submitted_on']
                 : ['session', 'project_title', 'submitted_by', 'branch', 'conference_presentation', 'submitted_on', 'report'],
             'fieldsTitles' => $details
-                ? ['Session', 'Student', 'Branch and Year', 'Project Title', 'Project Status', 'Submitted On']
+                ? ['Session', 'Student', 'Branch and Year', 'Project Title', 'Waiting On', 'Submitted On']
                 : ['Session', 'Project Title', 'Submitted By', 'Branch and Year', 'Conference Presentation', 'Submitted On', 'Report'],
         ]);
     }
@@ -217,7 +221,19 @@ class UrfController extends Controller
         // A step is answered once the form has moved past it. Sending a form
         // back puts it on the student again and clears what the approvers said,
         // so the position alone is the truth here.
-        $answered = fn (string $one) => $reached > array_search($one, $steps, true);
+        //
+        // Not on a closed form, though: the office's decision or an import
+        // closes it wherever it stood. There the approvers heard from since the
+        // last filing are the ones who answered, and the rest were never reached.
+        $heard = null;
+        if ($instance->isComplete() && !empty($instance->history)) {
+            $history = collect($instance->history)->values();
+            $lastFiling = $history->keys()->filter(fn ($i) => ($history[$i]['decision'] ?? null) === 'submitted')->last() ?? -1;
+            $heard = $history->slice($lastFiling + 1)->pluck('step')->intersect(UrfApplication::APPROVERS)->all();
+        }
+        $answered = fn (string $one) => $heard !== null && in_array($one, UrfApplication::APPROVERS, true)
+            ? in_array($one, $heard, true)
+            : $reached > array_search($one, $steps, true);
 
         $said = fn (string $key) => collect(UrfApplication::APPROVERS)
             ->mapWithKeys(fn ($approver) => [$approver => $instance->{$approver . '_' . $key}])
@@ -234,14 +250,20 @@ class UrfController extends Controller
             'stage' => $instance->stage,
             'steps' => $steps,
             'current_step' => $reached === false ? 0 : $reached,
+            // How far the approvers got on a closed form, so the ladder shows
+            // the steps after it as not reached. Null leaves every step reached.
+            'maximum_step' => $heard === null ? null
+                : collect($heard)->map(fn ($one) => array_search($one, $steps, true))->push(0)->max(),
             // FormLadder shows every step to "admin" and the steps up to their
             // own to anyone else. The office holds no step on the chain, so it
             // reads the form the way an admin reads a PhD one.
             'role' => $office ? 'admin' : $step,
             'comments' => ['student' => null] + $said('comments'),
             // Booleans, as the PhD forms answer them: the column is an int
-            // here, and the radios read a 0 as an answer already given.
-            'approvals' => array_map('boolval', $said('approval')),
+            // here, and the radios read a 0 as an answer already given. A step
+            // that never answered has no answer to give.
+            'approvals' => collect($said('approval'))
+                ->map(fn ($approval, $one) => $answered($one) ? (bool) $approval : null)->all(),
             'locks' => collect($steps)->mapWithKeys(fn ($one) => [$one => $answered($one)])->all(),
             'history' => $this->historyOf($instance),
             'awaiting_me' => $instance->awaits($user),
@@ -291,6 +313,7 @@ class UrfController extends Controller
 
         $row = $instance->toArray();
         $row['submitted_by'] = $instance->user?->name();
+        $row['submitted_on'] = $this->submittedOn($instance, true)?->toIso8601String();
 
         if ($form === 'urf-additional-info') {
             $mine = $instance->user_id === Auth::id();
@@ -306,6 +329,20 @@ class UrfController extends Controller
         $row['publications'] = Publication::groupedFor('urf_application_id', $application->id, $instance->id, 'urf_report');
 
         return $row;
+    }
+
+    /**
+     * When the student filed the form, from its history: the row's own date is
+     * the import's for a project carried over, which nobody filed here. The
+     * first filing, or with $latest the last one after a send back. Null when
+     * it was never filed in the portal.
+     */
+    private function submittedOn($instance, bool $latest = false): ?\Illuminate\Support\Carbon
+    {
+        $filed = collect($instance->history ?? [])->where('decision', 'submitted');
+        $entry = $latest ? $filed->last() : $filed->first();
+
+        return isset($entry['at']) ? \Illuminate\Support\Carbon::parse($entry['at']) : null;
     }
 
     private function lastFour(?string $value): string
@@ -414,6 +451,8 @@ class UrfController extends Controller
         }
 
         $window->fill($data)->save();
+        // A round that opens today is announced now rather than at tomorrow's run.
+        Artisan::call('urf:announce-report-rounds');
 
         return response()->json($window, 201);
     }
@@ -444,6 +483,8 @@ class UrfController extends Controller
             // What they gave at sign-up. Absent for an account the office made,
             // and then the application form asks for it.
             'student' => $user->ugStudent()->with('branch:id,programme,code,name')->first(),
+            // The account as it stands now, not as it was at sign-in.
+            'account' => $user->only(['email', 'phone', 'gender']),
             'report_windows' => UrfReportWindow::orderByDesc('session')->get(),
             'applications' => UrfApplication::forMember($user)->with(self::DETAIL)->orderByDesc('session')->latest('id')->get()
                 ->map(fn (UrfApplication $application) => $this->payload($application, $user))
@@ -510,6 +551,25 @@ class UrfController extends Controller
             'mentor2_faculty_code' => ['nullable', 'different:mentor1_faculty_code', $internalFaculty],
             'proposal' => ($editing ? 'nullable' : 'required') . '|file|mimes:pdf|max:20480',
         ]);
+
+        // The applicant was checked above; the second student has to be free
+        // too, or one student ends up on two projects in the same session.
+        if (!empty($data['student2_email'])) {
+            $email = $data['student2_email'];
+            $partnerId = User::where('email', $email)->value('id');
+            $taken = UrfApplication::where('session', $session)
+                ->where('status', '!=', 'rejected')
+                ->when($editing, fn ($query) => $query->whereKeyNot($application->id))
+                ->where(fn ($query) => $query->where('student2_email', $email)
+                    ->when($partnerId, fn ($query) => $query->orWhere('user_id', $partnerId)))
+                ->exists();
+            if ($taken) {
+                return response()->json([
+                    'message' => "{$data['student2_name']} is already on a URF application for {$session}.",
+                    'errors' => ['student2_email' => ["This student is already on a URF application for {$session}."]],
+                ], 422);
+            }
+        }
 
         // Roll number and branch come from the account, not the form, so they
         // cannot drift between applications.
@@ -805,12 +865,14 @@ class UrfController extends Controller
                     : 'This report has not been scheduled yet.',
             ], 422);
         }
-        // One report per round. A report already with the chain is replaced only
-        // after a step sends it back: without this a second submit slipped past
-        // the stage-scoped lookup below and filed a duplicate instead.
+        // One report per project per round, filed by either student. A report
+        // already with the chain is replaced only after a step sends it back:
+        // without this a second submit slipped past the stage-scoped lookup
+        // below and filed a duplicate instead. Latest first, for projects that
+        // filed one per student before reports were per project.
         $existing = UrfReport::where('urf_application_id', $application->id)
-            ->where('user_id', $user->id)
             ->where('type', $data['type'])
+            ->latest('id')
             ->first();
         if ($existing && $existing->stage !== 'student') {
             return response()->json(['message' => 'This report has been submitted. You can change it only if a reviewer sends it back to you.'], 422);
@@ -821,22 +883,34 @@ class UrfController extends Controller
         $data['report'] = $this->saveUploadedFile($request->file('report'), 'urf_report', $user->id);
 
         $report = DB::transaction(function () use ($data, $application, $user, $linked) {
-            // A report sent back is replaced rather than filed twice.
+            // A report sent back is replaced rather than filed twice, and is
+            // recorded against whichever student filed it last.
             $report = UrfReport::where('urf_application_id', $application->id)
-                ->where('user_id', $user->id)
                 ->where('type', $data['type'])
                 ->where('stage', 'student')
-                ->first() ?? (new UrfReport())->forceFill(['urf_application_id' => $application->id, 'user_id' => $user->id]);
-            $report->fill($data);
+                ->latest('id')
+                ->first() ?? (new UrfReport())->forceFill(['urf_application_id' => $application->id]);
+            $report->forceFill(['user_id' => $user->id])->fill($data);
             $report->save();
 
             // As a PhD progress form links them: a copy of each chosen entry,
             // tagged with this report. The library entry stays for later ones.
+            // A resubmit sends the whole set: copies already on the report come
+            // back by their own id, new picks by their library id.
             foreach (['publications' => Publication::class, 'patents' => Patent::class] as $key => $model) {
-                $model::whereIn('id', $linked[$key])
+                $ids = array_map('intval', $linked[$key]);
+                $copies = $model::where('form_id', $report->id)->where('form_type', 'urf_report');
+                // Taken off on the page: its copy goes, the library entry stays.
+                $copies->clone()->whereNotIn('id', $ids)->delete();
+                $kept = $copies->clone()->get();
+                // Copies keep no source id, so an entry already on the report is
+                // recognised by title and kind, as the progress form does.
+                $model::whereIn('id', $ids)
                     ->where('user_id', $user->id)
                     ->whereNull('form_id')
                     ->get()
+                    ->reject(fn ($entry) => $kept->contains(fn ($copy) => $copy->title === $entry->title
+                        && $copy->publication_type === $entry->publication_type))
                     ->each(fn ($entry) => $entry->replicate()->forceFill([
                         'form_id' => $report->id,
                         'form_type' => 'urf_report',
@@ -889,13 +963,18 @@ class UrfController extends Controller
         if (!$user->may('can_manage_urf')) {
             $application->setRelation('fellows', $application->fellows->where('user_id', $user->id)->values());
         }
-
         // Publications belong to the reports they were linked to, not to the application.
         $data = $application->toArray();
+        // What a reviewer weighs a student's eligibility on: their other URF
+        // projects and what came of them. The students have their own record.
+        if (!$application->hasMember($user)) {
+            $data['other_projects'] = $this->otherProjects($application);
+        }
         foreach ($data['reports'] ?? [] as $i => $report) {
             $data['reports'][$i]['publications'] = Publication::groupedFor('urf_application_id', $application->id, $report['id'], 'urf_report');
         }
 
+        $data['applied_on'] = $this->submittedOn($application)?->toIso8601String();
         $data['awaiting_me'] = $application->awaits($user);
         $data['may_reject'] = $application->awaits($user) && $application->stepFor($user) === 'dordc';
         foreach ($application->reports as $i => $report) {
@@ -906,6 +985,53 @@ class UrfController extends Controller
         }
 
         return $data;
+    }
+
+    /**
+     * Each student's other URF projects: session, outcome, whether the final
+     * report is in, and the publications linked to its reports. The portal does
+     * not record Scopus indexing, so publications are counted by the kinds it
+     * does record, and the reviewer judges eligibility from those.
+     */
+    private function otherProjects(UrfApplication $application): array
+    {
+        $students = [
+            ['name' => $application->student1_name, 'email' => $application->student1_email, 'id' => $application->user_id],
+            ['name' => $application->student2_name, 'email' => $application->student2_email, 'id' => null],
+        ];
+
+        return collect($students)->filter(fn ($student) => $student['email'])->map(function ($student) use ($application) {
+            $id = $student['id'] ?? User::where('email', $student['email'])->value('id');
+            $projects = UrfApplication::whereKeyNot($application->id)
+                ->where(fn ($query) => $query->where('student2_email', $student['email'])
+                    ->when($id, fn ($query) => $query->orWhere('user_id', $id)))
+                ->with('reports')
+                ->orderByDesc('session')
+                ->get();
+
+            return [
+                'student' => $student['name'],
+                'projects' => $projects->map(function (UrfApplication $project) {
+                    $final = $project->reports->where('type', 'final')->sortByDesc('id')->first();
+                    // The same paper is copied onto each report it is linked to,
+                    // so it is counted once by title.
+                    $publications = Publication::where('urf_application_id', $project->id)
+                        ->where('form_type', 'urf_report')
+                        ->get(['title', 'publication_type', 'type'])
+                        ->unique(fn ($publication) => mb_strtolower(trim((string) $publication->title)))
+                        ->countBy(fn ($publication) => $publication->publication_type . ':' . $publication->type);
+
+                    return [
+                        'id' => $project->id,
+                        'session' => $project->session,
+                        'project_title' => $project->project_title,
+                        'status' => $project->status,
+                        'final_report' => $final ? ($final->isComplete() ? 'approved' : 'filed') : null,
+                        'publications' => $publications,
+                    ];
+                })->values(),
+            ];
+        })->values()->all();
     }
 
     /** The office reads every project, a mentor the ones they are on. */

@@ -12,6 +12,7 @@ import { baseURL } from "../../../../api/urls";
 import Recommendation from "../../layouts/Recommendation";
 import { toast } from "react-toastify";
 import TableComponent from "../../table/TableComponent";
+import { stepAnswered } from '../../../../utils/formSteps';
 
 const Dordc = ({ formData }) => {
   const [lock, setLock] = useState(formData.locks?.dordc);
@@ -25,7 +26,8 @@ const Dordc = ({ formData }) => {
   useEffect(() => {
     setLock(formData.locks?.dordc);
     setBody({
-      approval: formData.approvals.dordc,
+      // The column defaults to 0; unanswered must read as nothing chosen.
+      approval: stepAnswered(formData, 'dordc') ? formData.approvals.dordc : null,
       comments: formData.comments.dordc,
       cognate_expert: formData.cognate_expert?.faculty_code,
       outside_expert: formData.outside_expert?.id,
@@ -56,9 +58,10 @@ const Dordc = ({ formData }) => {
             isLocked={lock}
             handleRecommendationChange={onUpdateApproval}
           ></Recommendation>
-          {!!body.approval && (
-            <>
-           
+          {/* Hidden rather than unmounted: a remount showed "Select" while body
+              still held the earlier picks, so the "nominate both" check passed
+              on choices no longer on screen. */}
+          <div hidden={!body.approval}>
                 <GridContainer
                     elements={[
                         <DropdownField
@@ -80,9 +83,7 @@ const Dordc = ({ formData }) => {
                         })  } initialValue={formData.outside_expert?.name} isLocked={lock} onChange={(value)=>{body.outside_expert=value;}} />
                     ]}
                 />   
-
-            </>
-          )}
+          </div>
            {
             formData.role === "dordc" && !lock && (
                 <>
@@ -92,11 +93,13 @@ const Dordc = ({ formData }) => {
                       // button does not — so without these checks the form submits
                       // with both still undefined, records nothing, and silently
                       // never advances.
-                      if (!body.approval) {
+                      // `false` is a real answer (Not Recommend); only no answer is refused.
+                      if (body.approval === null || body.approval === undefined) {
                         toast.error("Record your recommendation before submitting.");
                         return;
                       }
-                      if (!body.cognate_expert || !body.outside_expert) {
+                      // Nominees are only asked for, and only checked by the server, on Recommend.
+                      if (body.approval && (!body.cognate_expert || !body.outside_expert)) {
                         toast.error("Nominate one cognate expert and one outside expert.");
                         return;
                       }

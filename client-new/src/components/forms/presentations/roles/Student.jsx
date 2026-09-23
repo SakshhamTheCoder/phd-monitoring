@@ -25,7 +25,7 @@ const Student = ({ formData, refetchData = null, }) => {
   const [showPublication, setShowPublication] = useState(false);
   const [temp, setTemp] = useState([]);
   const [files, setFiles] = useState([]);
-  // The scholar's unlinked publication library, shown in the "Add Publications"
+  // The scholar's unlinked publication library, shown in the "Add publications"
   // picker. Kept in state so a publication added from inside the picker appears
   // without reloading the page.
   const [studentPublications, setStudentPublications] = useState(
@@ -33,7 +33,13 @@ const Student = ({ formData, refetchData = null, }) => {
   );
 
   useEffect(() => {
+    // The fields below show these saved values, so a form sent back and
+    // submitted unchanged has to send them too.
     setBody({
+      teaching_work: formData.teaching_work,
+      no_paper_sci_journal: formData.no_paper_sci_journal,
+      no_paper_scopus_journal: formData.no_paper_scopus_journal,
+      no_paper_conference: formData.no_paper_conference,
       sci: formData.sci,
       non_sci: formData.non_sci,
       patents: formData.patents,
@@ -182,7 +188,7 @@ const Student = ({ formData, refetchData = null, }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Roll Number"
+                label="Roll number"
                 initialValue={formData.roll_no}
                 isLocked={true}
               />,
@@ -197,7 +203,7 @@ const Student = ({ formData, refetchData = null, }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Period of Report"
+                label="Period of report"
                 initialValue={formData.period_of_report}
                 isLocked={true}
               />,
@@ -207,7 +213,7 @@ const Student = ({ formData, refetchData = null, }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Title of Phd Thesis"
+                label="Title of PhD thesis"
                 initialValue={formData.phd_title}
                 isLocked={true}
               />,
@@ -218,17 +224,17 @@ const Student = ({ formData, refetchData = null, }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Extension Availed"
+                label="Extension availed"
                 initialValue={formData.extention_availed ? "Yes" : "No"}
                 isLocked={true}
               />,
               <DropdownField required={true}
-                label="Teaching Work Done"
+                label="Teaching work done"
                 options={[
                   { title: "UG", value: "UG" },
                   { title: "PG", value: "PG" },
                   { title: "UG & PG (Both)", value: "Both" },
-                  { title: "Other Assignments", value: "None" },
+                  { title: "Other assignments", value: "None" },
                 ]}
                 initialValue={formData.teaching_work}
                 isLocked={lock}
@@ -246,34 +252,39 @@ const Student = ({ formData, refetchData = null, }) => {
           <GridContainer
             elements={[
               <DropdownField required={true}
-                label="Publication During the Period Under Report"
+                label="Publication during the period under report"
                 options={[
                   { title: "Yes", value: true },
                   { title: "No", value: false },
                 ]}
                 isLocked={lock}
-                initialValue={body.publication_under_report ? "Yes" : "No"}
+                initialValue={!!body.publication_under_report}
                 onChange={(value) => {
+                  // A select hands back the string "false", which is truthy, so it
+                  // is turned back into the boolean the options are keyed on.
+                  const published = value === "true";
                   setBody((prev) => ({
                     ...prev,
-                    publication_under_report: value,
+                    publication_under_report: published,
                   }));
-                  setShowPublication(value);
+                  setShowPublication(published);
                 }}
               />,
             ]}
             space={2}
           />
 
-          {(showPublication === "true" ||
-            showPublication === true) && (
-              <>      
+          {/* Hidden rather than unmounted: the counts typed here live in body,
+              and a remount showed the saved counts while body sent the typed
+              ones. */}
+          <div hidden={!showPublication}>
                <GridContainer
                   elements={[
                     <InputField required={true}
-                      label="No. of Papers in SCI/SCIE/SSCI/ABDC/AHCI Journal"
+                      label="No. of papers in SCI/SCIE/SSCI/ABDC/AHCI journal"
                       initialValue={formData.no_paper_sci_journal}
-                      isLocked={lock}
+                      // Counted by the server from the linked publications; an edit here was never saved.
+                      isLocked={true}
                       onChange={(value) => {
                         setBody((prev) => ({
                           ...prev,
@@ -287,9 +298,9 @@ const Student = ({ formData, refetchData = null, }) => {
                 <GridContainer
                   elements={[
                     <InputField required={true}
-                      label="No. of Papers in Scopus Journal"
+                      label="No. of papers in Scopus journal"
                       initialValue={formData.no_paper_scopus_journal}
-                      isLocked={lock}
+                      isLocked={true}
                       onChange={(value) => {
                         setBody((prev) => ({
                           ...prev,
@@ -303,9 +314,9 @@ const Student = ({ formData, refetchData = null, }) => {
                 <GridContainer
                   elements={[
                     <InputField required={true}
-                      label="No. of Papers in Conferences Under Report"
+                      label="No. of papers in conferences under report"
                       initialValue={formData.no_paper_conference}
-                      isLocked={lock}
+                      isLocked={true}
                       onChange={(value) => {
                         setBody((prev) => ({
                           ...prev,
@@ -319,7 +330,7 @@ const Student = ({ formData, refetchData = null, }) => {
                 <GridContainer
                   elements={[
                     <InputField required={true}
-                      label="Total of Number of Papers"
+                      label="Total number of papers"
                       initialValue={formData.total_paper_sci_journal}
                       isLocked={true}
                       onChange={(value) => {
@@ -334,13 +345,12 @@ const Student = ({ formData, refetchData = null, }) => {
                 />
                 {formData?.role === "student" && !lock && (
                   <GridContainer
+                    label="Publications"
                     elements={[
-                      <>
-                        <h2 className="section-heading">Publications</h2>
-                      </>,
-                      <></>,
                       <CustomButton
-                        text="Link Publications"
+                        text="Link publications"
+                        variant="secondary"
+                        size="sm"
                         onClick={() => {
                           openModal();
                         }}
@@ -356,29 +366,28 @@ const Student = ({ formData, refetchData = null, }) => {
                       enableDelete={formData?.role === "student" && !lock}
                       canAdd={formData?.role === "student" && !lock}
                       onDelete={removePublication}
+                      confirmUnlink
                       refetchData={refetchPublications}
                     />,
                   ]}
                   space={3}
                 />
-              </>
-            )}
+          </div>
           <GridContainer
             elements={[
-              <FileUploadField required={true}
-                label={"Upload Presentation PDF"}
+              <FileUploadField required={!formData.presentation_pdf}
+                label={"Upload presentation PDF"}
                 onChange={(file) => {
                   setFiles([{ key: "presentation_pdf", file }]);
                 }}
                  isLocked={lock}
                 initialValue={formData.presentation_pdf}
-                required={true}
               />,
               // Only show the sample when one has actually been set for this semester.
               ...(formData.ppt_file
                 ? [
                     <FileUploadField
-                      label={"Download Sample PDF"}
+                      label={"Download sample PDF"}
                       isLocked={true}
                       initialValue={formData.ppt_file}
                     />,
@@ -389,7 +398,6 @@ const Student = ({ formData, refetchData = null, }) => {
           <CustomModal
             isOpen={open}
             onClose={closeModal}
-            title={"Add Publication"}
             minHeight="200px"
             maxHeight="600px"
             minWidth="650px"

@@ -4,8 +4,12 @@ import ExternalLayout from '../externalReview/ExternalLayout';
 import { badgeClass } from '../../data/badges';
 import { apiApplicationStatus, apiVerifyApplication } from '../../api/publicOpenings';
 import { formatDate } from '../../utils/timeParse';
+// Signed out, nothing else has loaded the button styles the error link borrows.
+import '../../components/forms/fields/Fields.css';
 import '../projects/Openings.css';
-import PageHeader from '../../components/pageHeader/PageHeader';
+import Page from '../../components/page/Page';
+import Panel from '../../components/panel/Panel';
+import StatusNotice from '../../components/common/StatusNotice';
 
 const ApplicationStatus = ({ verify = false }) => {
   const { token } = useParams();
@@ -33,50 +37,55 @@ const ApplicationStatus = ({ verify = false }) => {
 
   return (
     <ExternalLayout crumbs={[{ label: 'Openings', to: '/openings' }, { label: 'Your application' }]}>
-      <div className="op-container">
-        <PageHeader title="Your application" subtitle="Where your application stands right now." />
-
-        {loading && <p className="empty-state">Loading...</p>}
+      <Page title="Your application" description="Where your application stands right now.">
+        {loading && <Panel><StatusNotice tone="loading" title="Loading your application" /></Panel>}
         {error && (
-          <>
-            <p className="empty-state">{error}</p>
-            <p className="empty-state"><Link to="/openings">See all open positions</Link></p>
-          </>
+          <Panel>
+            <StatusNotice
+              tone="error"
+              action={<Link to="/openings" className="custom-button custom-button--quiet">See all open positions</Link>}
+            >
+              {error}
+            </StatusNotice>
+          </Panel>
         )}
 
         {application && (
-          <div className="card">
-            {justVerified && <p className="op-jd-text">Your email address is confirmed. Thank you.</p>}
+          <Panel
+            className="reveal"
+            title={application.position_title}
+            description={<><i className="fa fa-flask" aria-hidden="true"></i> {application.project_title}</>}
+          >
+            <div className="xr-stack">
+              {justVerified && <p className="op-jd-text">Your email address is confirmed. Thank you.</p>}
 
-            <h3 className="section-heading">{application.position_title}</h3>
-            <p className="op-jd-project"><i className="fa fa-flask"></i> {application.project_title}</p>
+              <dl className="facts">
+                <div>
+                  <dt>Status</dt>
+                  <dd><span className={badgeClass(application.status)}>{application.status}</span></dd>
+                </div>
+                <div><dt>Applied on</dt><dd>{formatDate(application.applied_date)}</dd></div>
+                <div><dt>Applicant</dt><dd>{application.name}</dd></div>
+                <div>
+                  <dt>Email</dt>
+                  <dd>{application.verified ? 'Confirmed' : 'Not confirmed'}</dd>
+                </div>
+              </dl>
 
-            <div className="op-jd-facts">
-              <div className="op-jd-fact">
-                <span>Status</span>
-                <strong><span className={badgeClass(application.status)}>{application.status}</span></strong>
-              </div>
-              <div className="op-jd-fact"><span>Applied on</span><strong>{formatDate(application.applied_date)}</strong></div>
-              <div className="op-jd-fact"><span>Applicant</span><strong>{application.name}</strong></div>
-              <div className="op-jd-fact">
-                <span>Email</span>
-                <strong>{application.verified ? 'Confirmed' : 'Not confirmed'}</strong>
-              </div>
-            </div>
+              {!application.verified && (
+                <p className="op-jd-text">
+                  Open the confirmation link we emailed you. Until then the principal
+                  investigator sees this application marked as unconfirmed.
+                </p>
+              )}
 
-            {!application.verified && (
-              <p className="op-jd-text">
-                Open the confirmation link we emailed you. Until then the principal
-                investigator sees this application marked as unconfirmed.
+              <p className="op-jd-text op-jd-muted">
+                Keep this page bookmarked. It is the only way back to your application.
               </p>
-            )}
-
-            <p className="op-jd-text op-jd-muted">
-              Keep this page bookmarked. It is the only way back to your application.
-            </p>
-          </div>
+            </div>
+          </Panel>
         )}
-      </div>
+      </Page>
     </ExternalLayout>
   );
 };

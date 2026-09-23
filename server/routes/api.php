@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\EmailNotificationController;
 use App\Http\Controllers\PositionApplicationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -66,6 +65,8 @@ Route::post('/login', function (Request $request) {
                 $user->save();
             }
         }
+        // The id lets the client tell its own rows from a teammate's.
+        $ret['id'] = $user->id;
         $ret['first_name'] = $user->first_name;
         $ret['last_name'] = $user->last_name;
         $ret['email'] = $user->email;
@@ -85,6 +86,12 @@ Route::post('/login', function (Request $request) {
         'error' => 'Invalid Credentials'
     ], 401);
 });
+
+// Clearing the client's storage alone leaves the token usable until it expires.
+Route::post('/logout', function (Request $request) {
+    $request->user()->currentAccessToken()->delete();
+    return response()->json(['message' => 'Signed out.']);
+})->middleware('auth:sanctum');
 
 Route::post('/forgot-password', function (Request $request) {
     $validator = Validator::make($request->all(), [
@@ -286,6 +293,7 @@ Route::post('/switch-role', function (Request $request) {
             $user->save();
             $user->refresh();
 
+            $ret['id'] = $user->id;
             $ret['first_name'] = $user->first_name;
             $ret['last_name'] = $user->last_name;
             $ret['email'] = $user->email;
@@ -307,6 +315,8 @@ Route::prefix('roles')->group(function () {
     require base_path('routes/base/roles.php');
 });
 Route::get('/home', [HomeController::class, 'getHomeData'])->middleware('auth:sanctum');
+// Stored uploads, for whoever may read the record they belong to.
+Route::get('/files', [\App\Http\Controllers\FileController::class, 'show'])->middleware('auth:sanctum');
 
 Route::prefix('notifications')->group(function () {
     require base_path('routes/base/notifications.php');
@@ -389,16 +399,24 @@ Route::middleware('feature:job_openings')->group(function () {
             ->middleware('throttle:5,60');
     });
     Route::prefix('public/applications')->group(function () {
-        Route::get('/{token}', [\App\Http\Controllers\PublicOpeningController::class, 'status']);
-        Route::post('/{token}/verify', [\App\Http\Controllers\PublicOpeningController::class, 'verify']);
+        // An applicant may refresh this a handful of times while waiting on a decision.
+        Route::get('/{token}', [\App\Http\Controllers\PublicOpeningController::class, 'status'])
+            ->middleware('throttle:30,60');
+        Route::post('/{token}/verify', [\App\Http\Controllers\PublicOpeningController::class, 'verify'])
+            ->middleware('throttle:10,60');
     });
 });
 
 // Secure external-expert review (public, token-authenticated, the token is the credential).
 Route::prefix('external-review')->group(function () {
-    Route::get('/{token}', [\App\Http\Controllers\ExternalReviewController::class, 'show']);
-    Route::get('/{token}/pdf', [\App\Http\Controllers\ExternalReviewController::class, 'pdf']);
-    Route::post('/{token}', [\App\Http\Controllers\ExternalReviewController::class, 'submit']);
+    // A reviewer reloads the page and re-fetches the PDF repeatedly while reading it.
+    Route::get('/{token}', [\App\Http\Controllers\ExternalReviewController::class, 'show'])
+        ->middleware('throttle:60,60');
+    Route::get('/{token}/pdf', [\App\Http\Controllers\ExternalReviewController::class, 'pdf'])
+        ->middleware('throttle:60,60');
+    // The decision is submitted once, so this stays as tight as the sibling /apply route.
+    Route::post('/{token}', [\App\Http\Controllers\ExternalReviewController::class, 'submit'])
+        ->middleware('throttle:5,60');
 });
 Route::post('irb-submissions/{id}/resend-external-review', [\App\Http\Controllers\ExternalReviewController::class, 'resend'])
     ->middleware('auth:sanctum');
@@ -450,7 +468,6 @@ Route::prefix('google')->group(function () {
     require base_path('routes/base/google_auth.php');
 });
 
-Route::get('/send-welcome', [EmailNotificationController::class, 'sendWelcomeEmail']);
 
 
 

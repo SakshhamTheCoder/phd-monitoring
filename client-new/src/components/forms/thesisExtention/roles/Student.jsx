@@ -23,7 +23,9 @@ import { useLoading } from "../../../../context/LoadingContext";
 // twelve months because the regulations do not let the scholar choose one, so
 // it is shown here as a fact rather than a field.
 const Student = ({ formData }) => {
-  const [body, setBody] = useState({});
+  // Seeded with what the fields show prefilled. A form sent back shows the
+  // earlier answers, and leaving one as shown sent nothing for it.
+  const [body, setBody] = useState(() => ({ reason: formData.reason }));
   const [files, setFiles] = useState([]);
   const [lock, setLock] = useState(formData?.locks?.student);
   const location = useLocation();
@@ -46,7 +48,7 @@ const Student = ({ formData }) => {
     <div>
       <GridContainer
         elements={[
-          <InputField label="Roll Number" initialValue={formData.roll_no} isLocked={true} />,
+          <InputField label="Roll number" initialValue={formData.roll_no} isLocked={true} />,
           <InputField label="Name" initialValue={formData.name} isLocked={true} />,
           <InputField label="Department" initialValue={formData.department} isLocked={true} />,
         ]}
@@ -54,7 +56,7 @@ const Student = ({ formData }) => {
 
       <GridContainer
         elements={[
-          <InputField label="Title of PhD Thesis" initialValue={formData.phd_title} isLocked={true} />,
+          <InputField label="Title of PhD thesis" initialValue={formData.phd_title} isLocked={true} />,
         ]}
         space={3}
       />
@@ -72,7 +74,7 @@ const Student = ({ formData }) => {
       <GridContainer
         elements={[
           <InputField
-            label="Status of Student at Time of Admission"
+            label="Status of student at time of admission"
             initialValue={formData.initial_status}
             isLocked={true}
           />,
@@ -83,7 +85,7 @@ const Student = ({ formData }) => {
           />,
           <DateField
             required={needsSynopsisDate}
-            label="Date of Synopsis Presentation"
+            label="Date of synopsis presentation"
             initialValue={formData.date_of_synopsis}
             isLocked={lock || !needsSynopsisDate}
             onChange={update("date_of_synopsis")}
@@ -94,12 +96,12 @@ const Student = ({ formData }) => {
       <GridContainer
         elements={[
           <InputField
-            label="Extension Availed Earlier"
+            label="Extension availed earlier"
             initialValue={isRepeatRequest ? "Yes" : "No"}
             isLocked={true}
           />,
           <InputField
-            label="Period of Extension Requested"
+            label="Period of extension requested"
             initialValue="12 months"
             hint="Fixed by regulation"
             isLocked={true}
@@ -112,12 +114,12 @@ const Student = ({ formData }) => {
         <GridContainer
           elements={[
             <InputField
-              label="Date of Previous Extension"
+              label="Date of previous extension"
               initialValue={formatDate(lastExtension?.created_at)}
               isLocked={true}
             />,
             <InputField
-              label="Period of Previous Extension"
+              label="Period of previous extension"
               initialValue={
                 lastExtension?.period_of_extention
                   ? lastExtension.period_of_extention + " months"
@@ -133,7 +135,7 @@ const Student = ({ formData }) => {
         elements={[
           <InputField
             required={true}
-            label="Reason for Extension"
+            label="Reason for extension"
             initialValue={formData.reason}
             isLocked={lock}
             hint="Why the thesis could not be submitted within the deadline"
@@ -147,8 +149,8 @@ const Student = ({ formData }) => {
         <GridContainer
           elements={[
             <FileUploadField
-              required={true}
-              label="Previous Extension Approval"
+              required={!formData.previous_extention_pdf}
+              label="Previous extension approval"
               maxSizeMB={20}
               isLocked={lock}
               initialValue={formData.previous_extention_pdf}

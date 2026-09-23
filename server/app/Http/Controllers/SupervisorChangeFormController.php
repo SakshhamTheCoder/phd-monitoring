@@ -42,10 +42,11 @@ class SupervisorChangeFormController extends Controller {
         ),
         'extra_fields' => array_merge(
             [
+                // The supervisors the form asks to change, not all of them.
                 "to_change" => function ($form) {
-                    return $form->student->supervisors->map(function ($supervisor) {
-                        return $supervisor->user->name();
-                    })->join(', ');
+                    return \App\Models\Faculty::whereIn('faculty_code', $form->to_change ?? [])
+                        ->with('user')->get()
+                        ->map(fn ($faculty) => $faculty->user->name())->join(', ');
                 },
             ],
             $canReadReason ? ["reason"] : []
@@ -179,11 +180,8 @@ class SupervisorChangeFormController extends Controller {
             'form_ids' => 'required|array',
             'approval' => 'required|boolean',
         ]);
-        foreach ($request->form_ids as $form_id) {
-            $this->submit($request, $form_id);
-        }
         $request->merge(['approval' => true]);
-        return response()->json(['message' => 'Forms submitted successfully'], 200);
+        return $this->bulkResults($request->form_ids, fn ($form_id) => $this->submit($request, $form_id));
     }
     
     private function studentSubmit($user, $request, $form_id)

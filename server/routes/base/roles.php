@@ -4,10 +4,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RolesController;
 
-// The capability matrix is the portal's whole authorization map. It was
-// readable without signing in; the only caller is the admin's clerk form.
+// Role names for pickers. The capability columns are the portal's whole
+// authorization map, so they are not sent; the client reads id and role only.
 Route::get('', function (Request $request) {
-    $roles = \App\Models\Role::all();
+    $roles = \App\Models\Role::all(['id', 'role']);
     return response()->json($roles, 200);
 })->middleware('auth:sanctum');
 

@@ -6,20 +6,19 @@
     box-sizing: border-box;
     display: grid;
     grid-template-columns: 2fr 1fr;
-    gap: 1.5rem;
-    padding: 20px;
+    gap: var(--space-5);
+    padding: var(--space-5);
 }
 
-.status-box-container-box{
-    max-height: 350px;
-    overflow-y: auto;
-}
-.first{
-    border-right: 1px solid rgba(0, 0, 0, 0.286);
+/* No scroll box of its own: the dialog scrolls, so there is one scrollbar. */
+.status-box-history {
+    border-right: 1px solid var(--border-color);
 }
 
-.status-box-container h2{
-    font-size: var(--text-lg);
+.status-box-container h2 {
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-md);
+    font-weight: 600;
 }
 
 /* One column below the breakpoint, so the divider between the two halves
@@ -27,13 +26,13 @@
 @media (max-width: 768px) {
     .status-box-container {
         grid-template-columns: 1fr;
-        gap: 1rem;
-        padding: 1rem;
+        gap: var(--space-4);
+        padding: var(--space-4);
     }
 
-    .first {
+    .status-box-history {
         border-right: none;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.286);
-        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: var(--space-4);
     }
 }

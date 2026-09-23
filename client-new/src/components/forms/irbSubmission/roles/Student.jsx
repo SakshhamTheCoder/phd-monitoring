@@ -49,7 +49,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Roll Number"
+                label="Roll number"
                 initialValue={formData.roll_no}
                 isLocked={true}
               />,
@@ -69,7 +69,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Date Of Admission"
+                label="Date of admission"
                 initialValue={formatDate(formData.date_of_registration)}
                 isLocked={true}
               />,
@@ -94,7 +94,7 @@ const Student = ({ formData }) => {
                 isLocked={true}
               />,
               <InputField
-                label="Mobile Number"
+                label="Mobile number"
                 initialValue={formData.phone}
                 isLocked={true}
               />,
@@ -104,7 +104,7 @@ const Student = ({ formData }) => {
             elements={[
               <InputField
                 initialValue={formData.phd_title}
-                label={"Previous Proposed Title of Phd Thesis"}
+                label={"Previous proposed title of PhD thesis"}
                 isLocked={true}
               />,
             ]}
@@ -115,7 +115,7 @@ const Student = ({ formData }) => {
             elements={[
               <InputField required={true}
                 initialValue={formData.revised_phd_title}
-                label={"Revised Title of Phd Thesis"}
+                label={"Revised title of PhD thesis"}
                 isLocked={lock}
                 onChange={(value) => {
                   body.revised_phd_title = value;
@@ -126,19 +126,12 @@ const Student = ({ formData }) => {
           />
          
           <GridContainer
-          label="Revised PhD Objectives"
-            elements={[
-              <p></p>,
-              <></>,
-              <>
-                {formData.role === "student" && !lock && (
-                  <CustomButton text={"+ Add"} onClick={addObjective} />
-                )}
-              </>,
-            ]}
+            label="Revised PhD objectives"
+            elements={formData.role === "student" && !lock ? [<CustomButton text="Add objective" variant="secondary" size="sm" onClick={addObjective} />] : []}
           />
 
           <GridContainer
+            each={3}
             elements={body.revised_phd_objectives?.map((objective, index) => {
               return (
                 <InputField required={true}
@@ -155,9 +148,9 @@ const Student = ({ formData }) => {
             space={1}
           />
           <GridContainer
-          label="Revised IRB PDF File"
+          label="Revised IRB PDF file"
             elements={[
-              <FileUploadField required={true}
+              <FileUploadField required={!formData.revised_irb_pdf}
                 showLabel={false}
                 initialValue={formData.revised_irb_pdf}
                 isLocked={lock}
@@ -171,9 +164,9 @@ const Student = ({ formData }) => {
            <GridContainer
                 elements={[
                   <DateField required={true}
-                    label={"Date of IRB Submission"}
+                    label={"Date of IRB submission"}
                     initialValue={formatDate(formData.date_of_irb)}
-                    hint={"Select Date..."}
+                    hint={"Select date..."}
                     isLocked={lock}
                     onChange={(value) => {
                       body.date_of_irb = value;
@@ -181,7 +174,7 @@ const Student = ({ formData }) => {
                   />,
                
                   <DateField
-                    label={"Date of IRB Revision"}
+                    label={"Date of IRB revision"}
                     initialValue={formatDate(formData.created_at)}  
                     isLocked={true}
                   />,
@@ -196,8 +189,12 @@ const Student = ({ formData }) => {
                   <CustomButton
                     text="Submit"
                     onClick={() => {
+                      // An added box left empty has nothing to send, and the server refused a blank entry.
                       submitForm(
-                        body,
+                        {
+                          ...body,
+                          revised_phd_objectives: (body.revised_phd_objectives || []).filter((text) => text?.trim()),
+                        },
                         location,
                         setLoading,
                         files.length > 0 ? files : null

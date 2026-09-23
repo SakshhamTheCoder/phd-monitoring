@@ -193,7 +193,7 @@ class PresentationController extends Controller
                 'op' => '=',
                 'value' => 1
             ];
-            $titles = ["Name", "Roll No", "Date", "Time", "Meet Link", "Supervisors"];
+            $titles = ["Name", "Roll No", "Date", "Time", "Venue", "Supervisors"];
             $fields = ["name", "roll_no", "date", "time", "venue", "supervisors"];
         }
         
@@ -736,6 +736,27 @@ class PresentationController extends Controller
             'errors' => $errors,
         ]);
     }
+
+    /**
+     * Which step a committee member is acting at. A HOD, DoRDC or supervisor
+     * who also sits on the committee answers as committee only once the form
+     * reaches that step; before, it sent them to the committee handler and
+     * they could never act at their own step.
+     */
+    private function actingStep($user, $form, string $role): string
+    {
+        $code = $user->faculty?->faculty_code;
+        if (!$form || !$form->student->checkDoctoralCommittee($code)) {
+            return $role;
+        }
+        if ($form->stage === 'doctoral') {
+            return 'doctoral';
+        }
+        // A committee member signed in as plain faculty, who does not supervise
+        // this scholar, has no step of their own and reads it as committee.
+        return $role === 'faculty' && !$form->student->checkSupervises($code) ? 'doctoral' : $role;
+    }
+
     public function loadForm(Request $request, $semester_id=null,$form_id = null)
     {
         $user = Auth::user();
@@ -744,11 +765,7 @@ class PresentationController extends Controller
         $form = Presentation::find($form_id);
         $role = $user->current_role;
         $cur = $role->role;
-        if ($form) {
-            if ($form->student->checkDoctoralCommittee($user->faculty?->faculty_code)) {
-                $cur = 'doctoral';
-            }
-        }
+        $cur = $this->actingStep($user, $form, $cur);
         switch ($cur) {
             case 'student':
                 return $this->handleStudentForm($user, $form_id, $model);
@@ -799,11 +816,7 @@ class PresentationController extends Controller
         }
 
         $cur = $role->role;
-        if ($form) {
-            if ($form->student->checkDoctoralCommittee($user->faculty?->faculty_code)) {
-                $cur = 'doctoral';
-            }
-        }
+        $cur = $this->actingStep($user, $form, $cur);
         switch ($cur) {
             case 'student':
                 return $this->studentSubmit($user, $request, $form_id);
@@ -832,13 +845,7 @@ class PresentationController extends Controller
             'form_ids' => 'required|array',
             'form_ids.*' => 'exists:presentations,id',
         ]);
-        
-  
-        foreach ($request->form_ids as $form_id) {
-            $this->submit($request,null, $form_id);
-        }
-        
-        return response()->json(['message' => 'Forms submitted successfully'], 200);
+        return $this->bulkResults($request->form_ids, fn ($form_id) => $this->submit($request, null, $form_id));
     }
 
     public function linkPublication(Request $request,$semester_id=null, $form_id)
@@ -955,7 +962,8 @@ class PresentationController extends Controller
             function ($formInstance) use ($request, $user) {
                 $request->validate([
                     'teaching_work' => 'required| in:UG,PG,Both,None',
-                    'presentation_pdf' => 'required|file|mimes:pdf|max:20480',
+                    // A resubmission after a send-back keeps the stored PDF unless a new one comes.
+                    'presentation_pdf' => ($formInstance->presentation_pdf ? 'nullable' : 'required').'|file|mimes:pdf|max:20480',
                 ]);
 
 
@@ -964,7 +972,9 @@ class PresentationController extends Controller
                 // $formInstance->no_paper_scopus_journal=$request->no_paper_scopus_journal;
                 // $formInstance->no_paper_conference=$request->no_paper_conference;
 
-                $formInstance->presentation_pdf = $this->replaceUploadedFile($formInstance->presentation_pdf, $request->file('presentation_pdf'), 'presentation_pdf', $user->student->roll_no);
+                if ($request->hasFile('presentation_pdf')) {
+                    $formInstance->presentation_pdf = $this->replaceUploadedFile($formInstance->presentation_pdf, $request->file('presentation_pdf'), 'presentation_pdf', $user->student->roll_no);
+                }
                 $formInstance->missed=0;
 
                 $formInstance->supervisor_lock = 0;

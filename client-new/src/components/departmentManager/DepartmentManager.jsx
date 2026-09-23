@@ -10,7 +10,17 @@ import GridContainer from "../forms/fields/GridContainer";
 import InputSuggestions from "../forms/fields/InputSuggestions";
 import { useLoading } from '../../context/LoadingContext';
 import TableComponent from '../forms/table/TableComponent';
-import './DepartmentManager.css';
+import Panel, { PanelSection } from '../panel/Panel';
+import StatusNotice from '../common/StatusNotice';
+
+// The same shape three times: a role, the action that changes it, and who
+// currently holds it. Kept outside DepartmentManager so the sections are not
+// remounted each render.
+const RoleSection = ({ title, action, isEmpty, emptyText, children }) => (
+  <PanelSection title={title} actions={action}>
+    {isEmpty ? <StatusNotice tone="empty" title={emptyText} /> : children}
+  </PanelSection>
+);
 
 const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod, currentAdordc, currentCoordinators = [], onClose, onUpdate }) => {
   const [showHodModal, setShowHodModal] = useState(false);
@@ -26,7 +36,6 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
     email: currentHod.user?.email || EMPTY_VALUE,
     phone: currentHod.user?.phone || EMPTY_VALUE,
     designation: currentHod.designation || EMPTY_VALUE,
-    department: currentHod.department?.name || EMPTY_VALUE,
     actions: { faculty_code: currentHod.faculty_code }
   }] : [];
 
@@ -36,7 +45,6 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
     email: currentAdordc.user?.email || EMPTY_VALUE,
     phone: currentAdordc.user?.phone || EMPTY_VALUE,
     designation: currentAdordc.designation || EMPTY_VALUE,
-    department: currentAdordc.department?.name || EMPTY_VALUE,
     actions: { faculty_code: currentAdordc.faculty_code }
   }] : [];
 
@@ -46,7 +54,6 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
     email: coord.faculty?.user?.email || EMPTY_VALUE,
     phone: coord.faculty?.user?.phone || EMPTY_VALUE,
     designation: coord.faculty?.designation || EMPTY_VALUE,
-    department: coord.faculty?.department?.name || EMPTY_VALUE,
     actions: { 
       faculty_code: coord.faculty?.faculty_code,
       coordinator_id: coord.id
@@ -74,9 +81,8 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
         setShowHodModal(false);
         setSelectedFaculty(null);
         if (onUpdate) onUpdate();
-      } else {
-        toast.error(response.message || 'Failed to assign HOD.');
       }
+      // A refusal was already toasted by customFetch, with the server's reason.
     } catch (error) {
       console.error('Error assigning HOD:', error);
       toast.error('Failed to assign HOD.');
@@ -107,8 +113,6 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
         setShowAdordcModal(false);
         setSelectedFaculty(null);
         if (onUpdate) onUpdate();
-      } else {
-        toast.error(response.message || 'Failed to assign ADORDC.');
       }
     } catch (error) {
       console.error('Error assigning ADORDC:', error);
@@ -139,8 +143,6 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
         setShowCoordinatorModal(false);
         setSelectedFaculty(null);
         if (onUpdate) onUpdate();
-      } else {
-        toast.error(response.message || 'Failed to add coordinator.');
       }
     } catch (error) {
       console.error('Error adding coordinator:', error);
@@ -164,8 +166,6 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
       if (response.success) {
         toast.success('PhD Coordinator removed.');
         if (onUpdate) onUpdate();
-      } else {
-        toast.error(response.message || 'Failed to remove coordinator.');
       }
     } catch (error) {
       console.error('Error removing coordinator:', error);
@@ -175,45 +175,31 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
     }
   };
 
-  // The same shape three times: a role, the action that changes it, and who
-  // currently holds it. It was three GridContainers used only for their label,
-  // which stacked a button straight onto a full-width table with no grouping.
-  const RoleSection = ({ title, action, isEmpty, emptyText, children }) => (
-    <section className="card dm-section">
-      <div className="dm-section-head">
-        <h3 className="section-heading">{title}</h3>
-        {action}
-      </div>
-      {isEmpty ? <p className="dm-none">{emptyText}</p> : children}
-    </section>
-  );
-
   const roleColumns = {
-    keys: ['name', 'email', 'phone', 'designation', 'department'],
-    titles: ['Name', 'Email', 'Phone', 'Designation', 'Department'],
+    keys: ['name', 'email', 'phone', 'designation'],
+    titles: ['Name', 'Email', 'Phone', 'Designation'],
     components: [facultyNameCell],
   };
 
   return (
-    <div className="department-manager">
-      <div className="page-header">
-        <div>
-          <h2 className="modal-title">Manage Department: {departmentName}</h2>
-          {hodEmail && (
-            <p className="page-subtitle">
-              Official HOD email: <strong>{hodEmail}</strong>. It belongs to the
-              department and stays the same when the HOD changes.
-            </p>
-          )}
-        </div>
-      </div>
+    <>
+      <h2 className="modal-title">Manage department: {departmentName}</h2>
+      {hodEmail && (
+        <p className="modal-note">
+          Official HOD email: <strong>{hodEmail}</strong>. It belongs to the
+          department and stays the same when the HOD changes.
+        </p>
+      )}
+
+      <Panel>
 
       <RoleSection
-        title="Head of Department (HOD)"
+        title="Head of department (HOD)"
         action={
           <CustomButton
             text={currentHod ? 'Change HOD' : 'Assign HOD'}
-            variant={currentHod ? 'secondary' : undefined}
+            variant="secondary"
+            size="sm"
             onClick={() => { setSelectedFaculty(null); setShowHodModal(true); }}
           />
         }
@@ -228,7 +214,8 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
         action={
           <CustomButton
             text={currentAdordc ? 'Change ADORDC' : 'Assign ADORDC'}
-            variant={currentAdordc ? 'secondary' : undefined}
+            variant="secondary"
+            size="sm"
             onClick={() => { setSelectedFaculty(null); setShowAdordcModal(true); }}
           />
         }
@@ -239,10 +226,12 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
       </RoleSection>
 
       <RoleSection
-        title="PhD Coordinators"
+        title="PhD coordinators"
         action={
           <CustomButton
-            text="Add PhD Coordinator"
+            text="Add PhD coordinator"
+            variant="secondary"
+            size="sm"
             onClick={() => { setSelectedFaculty(null); setShowCoordinatorModal(true); }}
           />
         }
@@ -260,7 +249,8 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
               component: ({ row }) => (
                 <CustomButton
                   text="Remove"
-                  variant="danger"
+                  variant="danger-outline"
+                  size="sm"
                   onClick={() => handleRemoveCoordinator(row.actions.coordinator_id, row.actions.faculty_code)}
                 />
               ),
@@ -268,6 +258,7 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
           ]}
         />
       </RoleSection>
+      </Panel>
 
       {/* HOD Assignment Modal */}
       <CustomModal
@@ -278,14 +269,14 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
         minHeight="auto"
       >
         <div className="modal-note">
-          <strong>Note:</strong> Assigning a new HOD will update the faculty's role to HOD (role_id: 3).
+          <strong>Note:</strong> Assigning a new HOD will make this faculty member the HOD.
           {currentHod && ' The current HOD\'s role will be reverted to Faculty.'}
         </div>
 
         <GridContainer
           elements={[
             <InputSuggestions
-              label="Select Faculty from Department*"
+              label="Select faculty from department*"
               apiUrl={`${baseURL}/suggestions/faculty?department_id=${departmentId}`}
               onSelect={(val) => setSelectedFaculty(val.id)}
               fields={['name', 'designation', 'email']}
@@ -297,13 +288,14 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
         <div className="modal-actions">
           <CustomButton
             text="Cancel"
-            variant="secondary"
+            variant="quiet"
             onClick={() => { setShowHodModal(false); setSelectedFaculty(null); }}
           />
           <CustomButton
-            text={loading ? 'Assigning…' : 'Assign as HOD'}
+            text="Assign as HOD"
             onClick={handleAssignHod}
-            disabled={loading || !selectedFaculty}
+            busy={loading}
+            disabled={!selectedFaculty}
           />
         </div>
       </CustomModal>
@@ -324,7 +316,7 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
         <GridContainer
           elements={[
             <InputSuggestions
-              label="Select Faculty from Department*"
+              label="Select faculty from department*"
               apiUrl={`${baseURL}/suggestions/faculty`}
               onSelect={(val) => setSelectedFaculty(val.id)}
               fields={['name', 'designation', 'email']}
@@ -336,13 +328,14 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
         <div className="modal-actions">
           <CustomButton
             text="Cancel"
-            variant="secondary"
+            variant="quiet"
             onClick={() => { setShowAdordcModal(false); setSelectedFaculty(null); }}
           />
           <CustomButton
-            text={loading ? 'Assigning…' : 'Assign as ADORDC'}
+            text="Assign as ADORDC"
             onClick={handleAssignAdordc}
-            disabled={loading || !selectedFaculty}
+            busy={loading}
+            disabled={!selectedFaculty}
           />
         </div>
       </CustomModal>
@@ -351,18 +344,18 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
       <CustomModal
         isOpen={showCoordinatorModal}
         onClose={() => { setShowCoordinatorModal(false); setSelectedFaculty(null); }}
-        title="Add PhD Coordinator"
+        title="Add PhD coordinator"
         maxWidth="600px"
         minHeight="auto"
       >
         <div className="modal-note">
-          <strong>Note:</strong> Adding a PhD Coordinator will update the faculty's role to PhD Coordinator (role_id: 2).
+          <strong>Note:</strong> Adding a PhD Coordinator will give this faculty member the PhD Coordinator role.
         </div>
 
         <GridContainer
           elements={[
             <InputSuggestions
-              label="Select Faculty from Department*"
+              label="Select faculty from department*"
               apiUrl={`${baseURL}/suggestions/faculty?department_id=${departmentId}`}
               onSelect={(val) => setSelectedFaculty(val.id)}
               fields={['name', 'designation', 'email']}
@@ -374,27 +367,22 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
         <div className="modal-actions">
           <CustomButton
             text="Cancel"
-            variant="secondary"
+            variant="quiet"
             onClick={() => { setShowCoordinatorModal(false); setSelectedFaculty(null); }}
           />
           <CustomButton
-            text={loading ? 'Adding…' : 'Add Coordinator'}
+            text="Add coordinator"
             onClick={handleAddCoordinator}
-            disabled={loading || !selectedFaculty}
+            busy={loading}
+            disabled={!selectedFaculty}
           />
         </div>
       </CustomModal>
 
-      <div style={{ marginTop: '2rem', textAlign: 'right' }}>
-        <CustomButton text="Close" onClick={onClose} />
+      <div className="modal-actions">
+        <CustomButton text="Close" variant="quiet" onClick={onClose} />
       </div>
-
-      <style jsx>{`
-        .department-manager {
-          padding: 1rem;
-        }
-      `}</style>
-    </div>
+    </>
   );
 };
 

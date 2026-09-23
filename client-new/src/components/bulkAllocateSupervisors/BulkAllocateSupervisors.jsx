@@ -4,9 +4,7 @@ import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
 import CustomButton from '../forms/fields/CustomButton';
 import { toast } from 'react-toastify';
-import GridContainer from '../forms/fields/GridContainer';
 import { parseCsv } from '../../utils/csv';
-import '../bulkImport/bulkPreview.css';
 
 // Number of supervisor columns offered in the sheet. Blank columns are dropped,
 // so a row may allocate anywhere from one to MAX_SUPERVISORS supervisors.
@@ -20,6 +18,7 @@ const HEADERS = [
 const BulkAllocateSupervisors = ({ onSuccess }) => {
   const { setLoading } = useLoading();
   const [rows, setRows] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
 
   const downloadSampleCSV = () => {
     const sampleRows = [
@@ -54,12 +53,15 @@ const BulkAllocateSupervisors = ({ onSuccess }) => {
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    // Cleared so picking the same file again, once corrected, loads it again.
+    e.target.value = '';
 
     file.text().then((text) => {
       const rawData = parseCsv(text);
 
       const parsed = [];
-      let invalidRows = 0;
+      // One toast for the whole sheet: one per bad row buried the screen.
+      const rowErrors = [];
 
       rawData.forEach((rowArr, index) => {
         if (index === 0) return; // Skip header row
@@ -73,8 +75,7 @@ const BulkAllocateSupervisors = ({ onSuccess }) => {
 
         const rollNo = (rowArr[0] || '').toString().trim();
         if (!rollNo) {
-          invalidRows++;
-          toast.error(`Row ${rowNumber}: Missing Roll Number`);
+          rowErrors.push(`Row ${rowNumber}: missing roll number`);
           return;
         }
 
@@ -84,22 +85,22 @@ const BulkAllocateSupervisors = ({ onSuccess }) => {
           .filter((cell) => cell !== '');
 
         if (supervisors.length === 0) {
-          invalidRows++;
-          toast.error(`Row ${rowNumber}: At least one supervisor is required`);
+          rowErrors.push(`Row ${rowNumber}: no supervisor given`);
           return;
         }
 
         if (new Set(supervisors).size !== supervisors.length) {
-          invalidRows++;
-          toast.error(`Row ${rowNumber}: Supervisors must be unique`);
+          rowErrors.push(`Row ${rowNumber}: the same supervisor is named twice`);
           return;
         }
 
         parsed.push({ row_number: rowNumber, roll_no: rollNo, supervisors });
       });
 
-      if (invalidRows > 0) {
-        toast.warn(`${invalidRows} row(s) ignored due to errors`);
+      if (rowErrors.length > 0) {
+        const shown = rowErrors.slice(0, 5).join('; ');
+        const more = rowErrors.length > 5 ? `; and ${rowErrors.length - 5} more` : '';
+        toast.error(`${rowErrors.length} row(s) ignored. ${shown}${more}. Correct the file and choose it again.`, { autoClose: 10000 });
       }
 
       if (parsed.length === 0) {
@@ -113,16 +114,19 @@ const BulkAllocateSupervisors = ({ onSuccess }) => {
   };
 
   const confirmBulkAllocate = () => {
+    if (submitting) return;
     if (rows.length === 0) {
       toast.warn('Please upload a CSV file before confirming.');
       return;
     }
 
+    setSubmitting(true);
     setLoading(true);
 
     customFetch(baseURL + '/forms/supervisor-allocation/bulk-allocate', 'POST', { batch_data: rows })
       .then((data) => {
-        const result = data?.data;
+        // customFetch wraps the body as { success, response }.
+        const result = data?.response?.data;
         if (data && data.success && result) {
           if (result.success_count > 0) {
             toast.success(`Allocated supervisors for ${result.success_count} student(s)`);
@@ -137,101 +141,82 @@ const BulkAllocateSupervisors = ({ onSuccess }) => {
             if (onSuccess) onSuccess();
           }
         } else {
-          toast.error(data?.message || 'Bulk allocation failed');
+          toast.error(data?.response?.message || 'Bulk allocation failed');
         }
-        setLoading(false);
       })
       .catch((error) => {
         toast.error('Error in bulk allocation: ' + error);
+      })
+      .finally(() => {
+        setSubmitting(false);
         setLoading(false);
       });
   };
 
   return (
-    <div className="bulk-preview">
-      <h3>Bulk Allocate Supervisors</h3>
-      <p className="bulk-preview-title">
+    <>
+      <h2 className="modal-title">Bulk allocate supervisors</h2>
+      <p className="modal-note">
         Upload a CSV to allocate supervisors for many students at once. Download the sample CSV to see the required format.
       </p>
-      <div
-        className="bulk-preview-info"
-      >
-        <strong>Roll Number:</strong> must belong to a student whose supervisor allocation form is awaiting you (the PhD Coordinator).<br />
-        <strong>Supervisors:</strong> give each supervisor's faculty code or email. Leave unused supervisor columns blank.<br />
-        <strong>After upload:</strong> each allocation is sent on to the HOD for approval, exactly as if you had filled the form in yourself.
-      </div>
 
-      <GridContainer
-        elements={[
-          <input
-            type='file'
-            accept='.csv'
-            onChange={handleFileUpload}
-            className="bulk-preview-file"
-          />,
-          <CustomButton
-            text='Download Sample CSV'
-            onClick={downloadSampleCSV}
-            className="bulk-preview-template"
-          />,
-        ]}
-        space={2}
-      />
+      <section className="csv-import-section">
+        <ul className="csv-import-rules">
+          <li><strong>Roll Number:</strong> must belong to a student whose supervisor allocation form is awaiting you (the PhD Coordinator).</li>
+          <li><strong>Supervisors:</strong> give each supervisor's faculty code or email. Leave unused supervisor columns blank.</li>
+          <li><strong>After upload:</strong> each allocation is sent on to the HOD for approval, exactly as if you had filled the form in yourself.</li>
+        </ul>
+      </section>
+
+      <div className="csv-import-file">
+        <CustomButton text="Download sample CSV" variant="secondary" onClick={downloadSampleCSV} />
+        <input
+          type="file"
+          accept=".csv"
+          aria-label="Choose a CSV file to upload"
+          onChange={handleFileUpload}
+          className="csv-import-input"
+        />
+      </div>
 
       {rows.length > 0 && (
         <>
-          <div className="bulk-preview-heading">
-            {rows.length} allocation(s) ready to submit
-          </div>
-
-          <div className="bulk-preview-scroll">
-            <table
-              className="bulk-preview-table"
-            >
-              <thead
-                className="bulk-preview-head"
-              >
-                <tr>
-                  {['Row', 'Roll Number', 'Supervisors'].map((key) => (
-                    <th
-                      key={key}
-                      className="bulk-preview-th bulk-preview-th--nowrap"
-                    >
-                      {key}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row, index) => (
-                  <tr
-                    key={row.row_number}
-                    className="bulk-preview-row"
-                  >
-                    {[row.row_number, row.roll_no, row.supervisors.join(', ')].map((value, idx) => (
-                      <td
-                        key={idx}
-                        className="bulk-preview-cell"
-                      >
-                        {value}
-                      </td>
+          <div className="csv-import-preview">
+            <div className="csv-import-preview-head">
+              {rows.length} allocation(s) ready to submit
+            </div>
+            <div className="csv-preview-wrap">
+              <table className="csv-preview">
+                <thead>
+                  <tr>
+                    {['Row', 'Roll number', 'Supervisors'].map((key) => (
+                      <th key={key}>{key}</th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {rows.map((row) => (
+                    <tr key={row.row_number}>
+                      <td className="csv-rownum">{row.row_number}</td>
+                      <td>{row.roll_no}</td>
+                      <td>{row.supervisors.join(', ')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          <div className="bulk-preview-actions">
+          <div className="modal-actions">
             <CustomButton
-              text='Confirm Bulk Allocation'
+              text="Confirm bulk allocation"
               onClick={confirmBulkAllocate}
-              className="bulk-preview-confirm"
+              busy={submitting}
             />
           </div>
         </>
       )}
-    </div>
+    </>
   );
 };
 

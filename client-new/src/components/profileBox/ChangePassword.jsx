@@ -11,7 +11,7 @@ import './ChangePassword.css';
  * ask for. The server says so through `password_set` at sign-in.
  */
 const ChangePassword = ({ onDone }) => {
-  const user = JSON.parse(localStorage.getItem('user')) || {};
+  const [user] = useState(() => JSON.parse(localStorage.getItem('user')) || {});
   const hasPassword = user.password_set !== false;
 
   const [body, setBody] = useState({ current_password: '', password: '', password_confirmation: '' });
@@ -41,9 +41,9 @@ const ChangePassword = ({ onDone }) => {
 
   return (
     <div>
-      <h3 style={{ marginTop: 0 }}>{hasPassword ? 'Change password' : 'Set a password'}</h3>
+      <h3 className="modal-title">{hasPassword ? 'Change password' : 'Set a password'}</h3>
       {!hasPassword && (
-        <p style={{ color: '#4b5563', fontSize: '0.9rem' }}>
+        <p className="modal-note">
           You signed up with Google, so this account has no password yet. Setting one lets you sign
           in with your email as well.
         </p>
@@ -77,11 +77,11 @@ const ChangePassword = ({ onDone }) => {
         />
       </div>
 
-      <div className="change-password-actions">
+      <div className="modal-actions">
         <CustomButton
-          text={saving ? 'Saving…' : (hasPassword ? 'Change password' : 'Set password')}
+          text={hasPassword ? 'Change password' : 'Set password'}
           onClick={save}
-          disabled={saving}
+          busy={saving}
         />
       </div>
     </div>

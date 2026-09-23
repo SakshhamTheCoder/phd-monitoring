@@ -63,7 +63,7 @@ class IrbSubForm extends Model
             // same people and the same 'doctoral' step; only the name they are
             // known by on this form differs, and getRoleName reads this to say so.
             'form_type' => 'irb-submission',
-            'date_of_irb' => $this->student->date_of_irb,
+            'date_of_irb' => $this->student->date_of_irb?->toDateString(),
             'revised_phd_title' => $this->revised_phd_title,
             'revised_irb_pdf' => $this->revised_irb_pdf,
             'revised_phd_objectives' => $this->student->objectives()?->where('type', 'revised')->get()->map(function ($objective) {
@@ -93,7 +93,7 @@ class IrbSubForm extends Model
                 'name' => $supervisor->user->name(),
                 'designation' => $supervisor->designation,
                 'department' => $supervisor->department->name,
-                'supervised_campus'=>$supervisor->supervised_campus+1,
+                'supervised_campus'=>$supervisor->supervised_campus,
                 'supervised_outside'=>$supervisor->supervised_outside,
             ];
         });

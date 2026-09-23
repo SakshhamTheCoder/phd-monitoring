@@ -1,293 +1,146 @@
-import React, { useEffect, useState } from "react";
-import InputSuggestions from "../../fields/InputSuggestions";
-import { baseURL } from "../../../../api/urls";
+import React, { useState } from "react";
+import { useLocation } from "react-router-dom";
 import GridContainer from "../../fields/GridContainer";
 import InputField from "../../fields/InputField";
-import { formatDate } from "../../../../utils/timeParse";
 import TableComponent from "../../table/TableComponent";
 import CustomButton from "../../fields/CustomButton";
-import DropdownField from "../../fields/DropdownField";
-import FileUploadField from "../../fields/FileUploadField";
-import { useLocation } from "react-router-dom";
+import { formatDate } from "../../../../utils/timeParse";
 import { submitForm } from "../../../../api/form";
 import { useLoading } from "../../../../context/LoadingContext";
-import ShowPublications from "../../../publications/ShowPublications";
-import CustomModal from "../../modal/CustomModal";
-import { customFetch } from "../../../../api/base";
-import { toast } from "react-toastify";
 
+// The scholar's answers, and what every approver reads above their own panel.
+// The current title and objectives stay on the profile until the DORDC
+// approves; this form only carries the proposed ones until then.
 const Student = ({ formData }) => {
-  const [body, setBody] = useState({});
-  const [lock, setLock] = useState(formData?.locks?.student);
-  const [isLoaded, setIsLoaded] = useState(true);
   const location = useLocation();
   const { setLoading } = useLoading();
-  const [showPublication, setShowPublication] = useState(false);
-  const [temp, setTemp] = useState([]);
-  const [files, setFiles] = useState([]);
-  const objectivesData = formData.objectives.map((obj) => ({ objective: obj }));
-  const robjectivesData = formData.revised_objectives.map((obj) => ({
-    objective: obj,
-  }));
+  const lock = formData?.locks?.student;
+  const editable = formData?.role === "student" && !lock;
 
-  useEffect(() => {
-    setBody({
-       objectives:
-        formData.revised_objectives.length > 0
-          ? formData.revised_objectives
-          : [""],
-      revisedOBJ: formData.revised_objectives.length && formData?.locks?.student> 0?true:false
-    });
-    setLock(formData?.locks?.student);
-    if (formData.publication_count > 0 || formData.patents.length > 0) {
-      setBody((prev) => ({
-        ...prev,
-        publication_under_report: true,
-      }));
-      setShowPublication(true);
-    }
-    setIsLoaded(true);
-  }, []);
+  const currentObjectives = formData?.objectives || [];
+  // A form sent back keeps what was proposed; a new one starts from the
+  // current title and objectives, since most revisions change a few words.
+  const [title, setTitle] = useState(formData?.revised_title || formData?.phd_title || "");
+  const [objectives, setObjectives] = useState(
+    formData?.revised_objectives?.length ? formData.revised_objectives
+      : currentObjectives.length ? currentObjectives : [""]
+  );
 
-  const [open, setOpen] = useState(false);
-  const openModal = () => {
-    setOpen(true);
-  };
-  const closeModal = () => {
-    setOpen(false);
-  };
-  const addObjective = () => {
-    setBody((prevBody) => ({
-      ...prevBody,
-      objectives: [...prevBody.objectives, ""],
-    }));
-  };
-
-
-  const updateValue = (selectedRows) => {
-    const tt = {};
-
-    Object.keys(selectedRows).forEach((type) => {
-      // Get all selected IDs for the type
-      const selectedIds = Object.keys(selectedRows[type]).filter(
-        (id) => selectedRows[type][id] === true
-      );
-
-      selectedIds.forEach((id) => {
-        if (!tt[type]) {
-          tt[type] = [];
-        }
-
-        // Find the publication object with a matching id
-        const publication = formData.student_publications[type].find(
-          (pub) => pub.id === parseInt(id, 10)
-        );
-
-        if (publication) {
-          tt[type].push(publication);
-        }
-      });
-    });
-
-    setTemp(tt);
-  };
-  useEffect(() => {
-  }, [body]);
+  const setObjective = (index, text) =>
+    setObjectives((list) => list.map((item, at) => (at === index ? text : item)));
 
   return (
     <div>
-      {isLoaded && formData && (
+      <GridContainer
+        elements={[
+          <InputField label="Roll number" initialValue={formData.roll_no} isLocked={true} />,
+          <InputField label="Name" initialValue={formData.name} isLocked={true} />,
+          <InputField label="Date of revised IRB" initialValue={formatDate(formData.date_of_irb)} isLocked={true} />,
+        ]}
+      />
+      <GridContainer
+        elements={[
+          <InputField label="Date of admission" initialValue={formatDate(formData.date_of_registration)} isLocked={true} />,
+          <InputField label="Department" initialValue={formData.department} isLocked={true} />,
+          <InputField label="Current status" initialValue={formData.current_status} isLocked={true} />,
+        ]}
+      />
+      <GridContainer
+        elements={[
+          <InputField label="Address of correspondence" initialValue={formData.address} isLocked={true} />,
+        ]}
+        space={2}
+      />
+
+      <GridContainer
+        elements={[
+          <InputField label="Current title of PhD thesis" initialValue={formData.phd_title} isLocked={true} />,
+        ]}
+        space={2}
+      />
+      <GridContainer
+        elements={[
+          <TableComponent
+            label="Current objectives"
+            data={currentObjectives.map((objective) => ({ objective }))}
+            keys={["objective"]}
+            titles={["Objective"]}
+          />,
+        ]}
+        space={3}
+      />
+
+      <GridContainer
+        elements={[
+          <InputField
+            required={true}
+            label="Revised title of PhD thesis"
+            initialValue={editable ? title : formData.revised_title}
+            isLocked={!editable}
+            onChange={setTitle}
+          />,
+        ]}
+        space={2}
+      />
+
+      {editable ? (
         <>
           <GridContainer
+            label="Revised objectives"
             elements={[
-              <InputField
-                label="Roll Number"
-                initialValue={formData.roll_no}
-                isLocked={true}
-              />,
-              <InputField
-                label="Name"
-                initialValue={formData.name}
-                isLocked={true}
-              />,
-              <InputField
-                label="Date of Revised IRB"
-                initialValue={formatDate(formData.date_of_irb)}
-                isLocked={true}
-              />,
-            ]}
-          />
-
-          <GridContainer
-            elements={[
-              <InputField
-                label="Date of Admission"
-                initialValue={formatDate(formData.date_of_registration)}
-                isLocked={true}
-              />,
-              <InputField
-                label="Department"
-                initialValue={formData.department}
-                isLocked={true}
-              />,
-              <InputField
-                label="Current Status"
-                initialValue={formData.current_status}
-                isLocked={true}
+              <CustomButton
+                text="Add objective"
+                variant="secondary"
+                size="sm"
+                onClick={() => setObjectives((list) => [...list, ""])}
               />,
             ]}
           />
           <GridContainer
-            elements={[
+            each={3}
+            elements={objectives.map((objective, index) => (
               <InputField
-                label="Address of Correspondance"
-                initialValue={formData.address}
-                isLocked={true}
-              />,
-            ]}
-            space={2}
+                required={true}
+                label={`Revised objective ${index + 1}`}
+                showLabel={false}
+                initialValue={objective}
+                isLocked={false}
+                onChange={(text) => setObjective(index, text)}
+              />
+            ))}
           />
-
-          <GridContainer
-            elements={[
-              <InputField
-                label="Title of Phd Thesis"
-                initialValue={formData.phd_title}
-                isLocked={true}
-              />,
-            ]}
-            space={2}
-          />
-          {formData.role === "student" && !lock && (
-            <GridContainer
-              elements={[
-                <CustomButton
-                  onClick={() => {
-                    setBody((prev) => ({
-                      ...prev,
-                      revised: prev.revised === true ? false : true,
-                    }));
-                  }}
-                  text={"Revise Title of PhD"}
-                />,
-              ]}
-            />
-          )}
-
-          {(body.revised || formData.revised_title) && (
-            <GridContainer
-              elements={[
-                <InputField required={true}
-                  label="Revised Title of Phd Thesis"
-                  initialValue={formData.revised_title}
-                  isLocked={lock}
-                  onChange={(value) => {
-                    setBody((prev) => ({
-                      ...prev,
-                      revised_title: value,
-                    }));
-                  }}
-                />,
-              ]}
-              space={2}
-            />
-          )}
-
-          <GridContainer
-            elements={[
-              <TableComponent
-                label={"Objectives of Research"}
-                data={objectivesData}
-                keys={["objective"]}
-                titles={["Objective"]}
-              />,
-            ]}
-            space={3}
-          />
-
-          {formData.role === "student" && !lock && (
-            <GridContainer
-              elements={[
-                <CustomButton
-                  onClick={() => {
-                    setBody((prev) => ({
-                      ...prev,
-                      revisedOBJ: prev.revisedOBJ === true ? false : true,
-                    }));
-                  }}
-                  text={"Revise Objectives"}
-                />,
-              ]}
-            />
-          )}
-
-          {body.revisedOBJ && (
-            <>
-              {!lock && formData.role === "student" ? (
-                <>
-                  <GridContainer
-                    elements={[
-                      <p>Revised Objectives</p>,
-                      <></>,
-                      <>
-                        {!lock && formData.role === "student" && (
-                          <CustomButton text={"+ Add"} onClick={addObjective} />
-                        )}
-                      </>,
-                    ]}
-                  />
-                  <GridContainer
-                    elements={body.objectives.map((objective, index) => {
-                      return (
-                        <InputField required={true}
-                          initialValue={objective}
-                          isLocked={lock || formData.form_type === "draft"}
-                          onChange={(value) => {
-                            body.objectives[index] = value;
-                          }}
-                          showLabel={false}
-                        />
-                      );
-                    })}
-                  />
-                </>
-              ) : (
-                <GridContainer
-                  elements={[
-                    <TableComponent
-                      label={"Approved Objectives"}
-                      data={robjectivesData}
-                      keys={["objective"]}
-                      titles={["Objective"]}
-                    />,
-                  ]}
-                  space={3}
-                />
-              )}
-            </>
-          )}
-                
-         
-        </>
-      )}
-      {formData?.role === "student" && !lock && (
-        <>
+          <p className="form-note">Clear a box to drop that objective.</p>
           <GridContainer
             elements={[
               <CustomButton
-                text="Submit"
-                onClick={() => {
+                text="Submit revision"
+                onClick={() =>
                   submitForm(
-                    body,
+                    {
+                      revised_title: title,
+                      // A box left empty is an objective dropped, not a blank one.
+                      revised_objectives: objectives.filter((text) => text?.trim()),
+                    },
                     location,
-                    setLoading,
-                    files.length > 0 ? files : null
-                  );
-                }}
+                    setLoading
+                  )
+                }
               />,
             ]}
           />
         </>
+      ) : (
+        <GridContainer
+          elements={[
+            <TableComponent
+              label="Revised objectives"
+              data={(formData.revised_objectives || []).map((objective) => ({ objective }))}
+              keys={["objective"]}
+              titles={["Objective"]}
+            />,
+          ]}
+          space={3}
+        />
       )}
     </div>
   );

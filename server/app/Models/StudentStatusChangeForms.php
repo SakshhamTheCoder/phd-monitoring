@@ -37,7 +37,10 @@ class StudentStatusChangeForms extends Model
             'reason' => $this->reason, // Include specific attributes
             'type_of_change' => $this->type_of_change,
             'initial_status'=>$this->student->initialStatus(),
-            'previous_changes'=>$this->student->statusChanges(),
+            // ->get(), not the relation, which serialises to {}. created_at is
+            // hidden on the model but the student form shows it as the date of
+            // the last change.
+            'previous_changes'=>$this->student->statusChanges()->orderBy('created_at')->get()->makeVisible('created_at'),
             'date_of_irb'=>$this->student->date_of_irb
         ]);
     }

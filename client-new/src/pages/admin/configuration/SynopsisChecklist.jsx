@@ -5,6 +5,7 @@ import TableComponent from '../../../components/forms/table/TableComponent';
 import GridContainer from '../../../components/forms/fields/GridContainer';
 import InputSuggestions from '../../../components/forms/fields/InputSuggestions';
 import { baseURL } from '../../../api/urls';
+import useDoneFlash from '../../../hooks/useDoneFlash';
 import './Configuration.css';
 import {
   apiChecklistCreate,
@@ -46,6 +47,16 @@ const SynopsisChecklist = () => {
   const [option, setOption] = useState(EMPTY_OPTION);
   const [editingOption, setEditingOption] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [ruleSaved, flashRuleSaved] = useDoneFlash();
+  const [optionSaved, flashOptionSaved] = useDoneFlash();
+
+  // A category half edited under one condition must not be saved into the
+  // next one opened, since the save sends the open condition as its rule.
+  const showRule = (ruleId) => {
+    setOpenRule(ruleId);
+    setEditingOption(null);
+    setOption(EMPTY_OPTION);
+  };
 
   const load = useCallback(async () => {
     const res = await apiChecklistList();
@@ -80,6 +91,7 @@ const SynopsisChecklist = () => {
     if (!res.success) return;
 
     toast.success(editingRule ? 'Condition updated' : 'Condition added');
+    flashRuleSaved();
     setRule(EMPTY_RULE);
     setEditingRule(null);
     load();
@@ -103,7 +115,7 @@ const SynopsisChecklist = () => {
     const res = await apiChecklistRuleDelete(row.id);
     if (res.success) {
       toast.success('Condition removed');
-      if (openRule === row.id) setOpenRule(null);
+      if (openRule === row.id) showRule(null);
       load();
     }
   };
@@ -127,6 +139,7 @@ const SynopsisChecklist = () => {
     if (!res.success) return;
 
     toast.success(editingOption ? 'Category updated' : 'Category added');
+    flashOptionSaved();
     setOption(EMPTY_OPTION);
     setEditingOption(null);
     load();
@@ -171,9 +184,9 @@ const SynopsisChecklist = () => {
   }));
 
   return (
-    <div className="config-block">
-      <div className="filter-bar">
-        <div className="filter-row config-filter-row">
+    <>
+      <div className="config-fields">
+        <div className="config-filter-row">
           <div className="input-field-container config-field-240">
             <label className="input-label" htmlFor="rule-name">Condition</label>
             <input
@@ -188,7 +201,6 @@ const SynopsisChecklist = () => {
             <InputSuggestions
               label="Add a department"
               apiUrl={`${baseURL}/suggestions/department`}
-              suggestionManadatory={false}
               onSelect={(picked) => {
                 if (!picked?.id) return;
                 setRule((prev) => (
@@ -253,14 +265,14 @@ const SynopsisChecklist = () => {
               {' '}Apply this condition
             </label>
           </div>
-          <CustomButton text={editingRule ? 'Save changes' : 'Add condition'} onClick={saveRule} disabled={busy} />
+          <CustomButton text={editingRule ? 'Save changes' : 'Add condition'} onClick={saveRule} done={ruleSaved} disabled={busy} />
           {editingRule && (
-            <CustomButton text="Cancel" onClick={() => { setEditingRule(null); setRule(EMPTY_RULE); }} />
+            <CustomButton text="Cancel" variant="quiet" onClick={() => { setEditingRule(null); setRule(EMPTY_RULE); }} />
           )}
         </div>
 
         {rule.departments.length > 0 && (
-          <div className="filter-row config-chip-row">
+          <div className="config-chip-row">
             {rule.departments.map((department) => (
               <button
                 key={department.id}
@@ -290,7 +302,7 @@ const SynopsisChecklist = () => {
               key: 'id',
               component: ({ row }) => (
                 <>
-                  <button type="button" className="icon-action" onClick={() => setOpenRule(row.id === openRule ? null : row.id)} title="Show the categories under this condition" aria-label="Show the categories under this condition">
+                  <button type="button" className="icon-action" onClick={() => showRule(row.id === openRule ? null : row.id)} title="Show the categories under this condition" aria-label="Show the categories under this condition">
                     <i className="fa fa-list" aria-hidden="true"></i>
                   </button>
                   <button type="button" className="icon-action" onClick={() => editRule(row)} title="Edit condition" aria-label="Edit condition">
@@ -309,8 +321,8 @@ const SynopsisChecklist = () => {
 
       {open && (
         <>
-          <div className="filter-bar config-block">
-            <div className="filter-row config-filter-row">
+          <div className="config-fields config-fields--spaced">
+            <div className="config-filter-row">
               <div className="input-field-container config-field-440">
                 <label className="input-label" htmlFor="option-label">Category under {open.name}</label>
                 <input
@@ -344,9 +356,9 @@ const SynopsisChecklist = () => {
                   {' '}Offer this category
                 </label>
               </div>
-              <CustomButton text={editingOption ? 'Save changes' : 'Add category'} onClick={saveOption} disabled={busy} />
+              <CustomButton text={editingOption ? 'Save changes' : 'Add category'} variant="secondary" onClick={saveOption} done={optionSaved} disabled={busy} />
               {editingOption && (
-                <CustomButton text="Cancel" onClick={() => { setEditingOption(null); setOption(EMPTY_OPTION); }} />
+                <CustomButton text="Cancel" variant="quiet" onClick={() => { setEditingOption(null); setOption(EMPTY_OPTION); }} />
               )}
             </div>
           </div>
@@ -397,7 +409,7 @@ const SynopsisChecklist = () => {
         be removed; retire it instead and the forms that chose it still read back the wording
         that was agreed.
       </p>
-    </div>
+    </>
   );
 };
 

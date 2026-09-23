@@ -59,12 +59,12 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label={"Date of Form Submission"}
+                label={"Date of form submission"}
                 initialValue={formatDate(formData.created_at)}
                 isLocked={true}
               />,
               <InputField
-                label={"Date of Admission"}
+                label={"Date of admission"}
                 initialValue={formatDate(formData.date_of_registration)}
                 isLocked={true}
               />,
@@ -74,7 +74,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label={"Roll Number"}
+                label={"Roll number"}
                 initialValue={formData.roll_no}
                 isLocked={true}
               />,
@@ -111,8 +111,8 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label={"Chairman, Board of Studies of the Concerned Department"}
-                initialValue={formData.chairman.name}
+                label={"Chairman, Board of Studies of the concerned department"}
+                initialValue={formData.chairman?.name}
                 isLocked={true}
               />,
             ]}
@@ -142,7 +142,7 @@ const Student = ({ formData }) => {
             elements={[
               <InputField required={true}
                 initialValue={formData.address}
-                label={"Address of Correspondence"}
+                label={"Address of correspondence"}
                 isLocked={lock}
                 onChange={(value) => {
                   body.address = value;
@@ -155,7 +155,7 @@ const Student = ({ formData }) => {
             elements={[
               <InputField required={true}
                 initialValue={formData.phd_title}
-                label={"Title of Phd Thesis"}
+                label={"Title of PhD thesis"}
                 isLocked={lock}
                 onChange={(value) => {
                   body.title = value;
@@ -169,7 +169,7 @@ const Student = ({ formData }) => {
             elements={[
               <InputSuggestions
                 required={true}
-                label={"Broad Area of Research"}
+                label={"Broad area of research"}
                 initialValue={formData.broad_area_of_research}
                 apiUrl={baseURL + "/suggestions/specialization"}
                 onSelect={(value) => {
@@ -184,19 +184,12 @@ const Student = ({ formData }) => {
           />
 
           <GridContainer
-            label={[<p>Objectives of Research</p>]}
-            elements={[
-              <></>,
-              <></>,
-              <>
-                {!lock && (
-                  <CustomButton text={"+ Add"} onClick={addObjective} />
-                )}
-              </>,
-            ]}
+            label="Objectives of research"
+            elements={!lock ? [<CustomButton text="Add objective" variant="secondary" size="sm" onClick={addObjective} />] : []}
           />
           {formData.role == "student" ? (
             <GridContainer
+              each={3}
               elements={body.objectives?.map((objective, index) => (
                 <InputField required={true}
                   initialValue={objective}
@@ -204,18 +197,17 @@ const Student = ({ formData }) => {
                   onChange={(value) => {
                     body.objectives[index] = value;
                   }}
-                  hint={`Enter Objective ${index + 1} Here`}
+                  hint={`Enter objective ${index + 1} here`}
                   showLabel={false}
                 />
               ))}
-              space={2}
             />
           ) : (
             <>
               <GridContainer
                 elements={[
                   <TableComponent
-                    data={formData.objectives.map((obj) => ({
+                    data={(formData.objectives || []).map((obj) => ({
                       objective: obj,
                     }))}
                     keys={["objective"]}
@@ -228,16 +220,8 @@ const Student = ({ formData }) => {
           )}
 
           <GridContainer
-            label={[<p>Subdomain</p>]}
-            elements={[
-              <></>,
-              <></>,
-              <>
-                {!lock && (
-                  <CustomButton text={"+ Add"} onClick={addSubdomain} />
-                )}
-              </>,
-            ]}
+            label="Subdomain"
+            elements={!lock ? [<CustomButton text="Add subdomain" variant="secondary" size="sm" onClick={addSubdomain} />] : []}
           />
           {formData.role == "student" ? (
             <GridContainer
@@ -254,7 +238,7 @@ const Student = ({ formData }) => {
                   hint={`Enter keyword ${index + 1}`}
                 />
               ))}
-              space={2}
+              each={1}
             />
           ) : (
             <GridContainer
@@ -272,9 +256,9 @@ const Student = ({ formData }) => {
           )}
 
           <GridContainer
-            label="Upload IRB PDF File"
+            label="Upload IRB PDF file"
             elements={[
-              <FileUploadField required={true}
+              <FileUploadField required={!formData.irb_pdf}
                 initialValue={formData.irb_pdf}
                 showLabel={false}
                 isLocked={lock || formData.form_type === "revised"}
@@ -292,8 +276,13 @@ const Student = ({ formData }) => {
                   <CustomButton
                     text="Submit"
                     onClick={() => {
+                      // An added box left empty has nothing to send, and the server refused a blank entry.
                       submitForm(
-                        body,
+                        {
+                          ...body,
+                          objectives: (body.objectives || []).filter((text) => text?.trim()),
+                          subdomains: (body.subdomains || []).filter((text) => text?.trim()),
+                        },
                         location,
                         setLoading,
                         files.length > 0 ? files : null

@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import './App.css';
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -7,10 +7,14 @@ import { LoadingProvider, useLoading } from './context/LoadingContext';
 import { FeaturesProvider, useFeatures } from './context/FeaturesContext';
 import { CapabilitiesProvider } from './context/CapabilitiesContext';
 import Loader from './components/loader/loader';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import { ACCESS, currentRole } from './auth/access';
 
 // Every page is split out of the entry chunk. A student signing in should not
 // download the admin surface to see their own forms.
+// The shell is not split out: loading it lazily put a full-screen loader
+// before the shell's own content loader on every first visit.
+import Layout from './components/dashboard/layout';
 const LandingPage = lazy(() => import('./pages/landing/LandingPage'));
 const LoginPage = lazy(() => import('./pages/login/Login'));
 const SignupPage = lazy(() => import('./pages/signup/SignupPage'));
@@ -76,6 +80,24 @@ const App = () => {
   );
 };
 
+// One shell for every signed-in page. Held by a parent route, it stays mounted
+// across navigation, so the sidebar, notifications and profile are not rebuilt
+// on each click, and a page still loading shows the loader inside it.
+// A page that fails to render leaves the shell standing; keyed by path, the
+// boundary starts clean when the user navigates away.
+const Shell = () => {
+  const { pathname } = useLocation();
+  return (
+    <Layout>
+      <ErrorBoundary key={pathname}>
+        <Suspense fallback={<Loader scope="content" />}>
+          <Outlet />
+        </Suspense>
+      </ErrorBoundary>
+    </Layout>
+  );
+};
+
 // Pages a visitor reaches without signing in.
 const PUBLIC_PATHS = /^\/($|team|privacy|support|login|signup|google\/callback|forgot-password|reset-password|external-review\/|openings|applications\/)/;
 
@@ -92,13 +114,14 @@ const AppContent = () => {
   // Signed out, a protected address has no route at all and fell through to
   // "Not found". Send the visitor to sign in and back to where they were going.
   const { pathname, search } = window.location;
-  if (!localStorage.getItem('token') && !PUBLIC_PATHS.test(pathname)) {
-    window.location.replace(`/login?onLogin=${encodeURIComponent(pathname + search)}`);
+  const signedIn = !!localStorage.getItem('token');
+  if (!signedIn && !PUBLIC_PATHS.test(pathname)) {
+    window.location.replace(`/login?next=${encodeURIComponent(pathname + search)}`);
     return null;
   }
   return (
     <>
-      {loading && <Loader />}
+      {loading && <Loader scope="app" />}
       <ToastContainer
         position="top-right"
         hideProgressBar={true}
@@ -109,6 +132,7 @@ const AppContent = () => {
         }}
       />
       <Router>
+        <ErrorBoundary>
         <Suspense fallback={<Loader />}>
           <Routes>
             {/* Landing Page */}
@@ -125,130 +149,140 @@ const AppContent = () => {
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/external-review/:token" element={<ExternalReview />} />
             {/* One address for openings. A signed-in student gets their own board,
-                which prefills from their profile; everyone else gets the public one. */}
+                which prefills from their profile; everyone else gets the public one.
+                The student board is declared inside the shell route below. */}
             {features.job_openings && (
               <>
-                <Route path="/openings" element={may('openings') ? <Openings /> : <PublicOpenings />} />
+                {!may('openings') && <Route path="/openings" element={<PublicOpenings />} />}
                 <Route path="/openings/:id" element={<PublicOpeningDetail />} />
                 <Route path="/applications/:token" element={<ApplicationStatus />} />
                 <Route path="/applications/:token/verify" element={<ApplicationStatus verify />} />
               </>
             )}
 
-            {/* Dashboard */}
-            <Route path="/home" element={<Dashboard />} />
-            {features.project_management && may('projects') && (
-              <>
-                <Route path="/projects" element={<ProjectsOverview />} />
-                <Route path="/projects/create" element={<CreateProject />} />
-                <Route path="/projects/:id" element={<ProjectDetails />} />
-                {/* Recruitment produces openings, so it follows the openings
-                    switch rather than the projects one. */}
-                {features.job_openings && (
-                  <Route path="/projects/:id/recruit" element={<ProjectRecruitment />} />
-                )}
-              </>
-            )}
-            {role === 'student' && (
-              <>
-                <Route path="/forms" element={<FormsPage />} />
-                <Route path="/courses" element={<StudentCourses />} />
-              </>
-            )}
-            {role === 'ug_student' && (
-              <>
-                {/* Static form paths outrank the shared /forms/:form_type route. */}
-                <Route path="/forms" element={<UrfFormsPage />} />
-                <Route path="/forms/urf-application" element={<UrfFormPage type="new" />} />
-                <Route path="/forms/urf/:id/application" element={<UrfFormPage type="application" />} />
-                <Route path="/forms/urf/:id/additional-info" element={<UrfFormPage type="additional" />} />
-                <Route path="/forms/urf/:id/half-yearly-report" element={<UrfFormPage type="half_yearly" />} />
-                <Route path="/forms/urf/:id/final-report" element={<UrfFormPage type="final" />} />
-              </>
-            )}
-            {may('publications') && <Route path="/publications" element={<Publications />} />}
-            <Route path="/notifications" element={<AllNotificationsPage />} />
-            <Route path="/faculty/:facultyCode/profile" element={<ResearchProfile />} />
-            {/* Matches the sidebar's Progress Monitoring entry, so clerk and external
-                (who have no sidebar link for it) can't land on the page either. */}
-            {may('presentations') && (
-              <>
-                <Route path="/presentation" element={<PresentationSemester />} />
-                <Route path="/presentation/semester" element={<Navigate to="/presentation" replace />} />
-                {/* The semester and form pages sit under the same gate, so a role
-                    kept off the landing page cannot reach them by deep link. */}
-                <Route path="/presentation/semester/:semester_id" element={<PresentationListPage />} />
-                <Route path="/presentation/semester/:semester_id/:id" element={<Presentation />} />
-              </>
-            )}
+            <Route element={<Shell />}>
+              {features.job_openings && may('openings') && <Route path="/openings" element={<Openings />} />}
 
-            <Route path="/forms/:form_type" element={<FormListPage />} />
-            <Route path="/forms/:form_type/:id" element={<MainFormPage />} />
-            {may('scholars') && (
-              <>
-                <Route path="/forms" element={<FacultyFormsPage />} />
-                <Route path="/students" element={<StudentsPage />} />
-                <Route path="/students/:roll_no" element={<StudentProfile />} />
-                <Route path="/students/:roll_no/forms" element={<FormsPage />} />
-                {/* Progress Monitoring for one scholar, from their profile. The
-                    pages read the path back as their API endpoint, and the
-                    scholar-scoped endpoints already exist under
-                    /students/{id}/forms/presentation. */}
-                <Route path="/students/:roll_no/forms/presentation" element={<StudentProgressMonitoring />} />
-                <Route path="/students/:roll_no/forms/presentation/semester/:semester_id" element={<PresentationListPage />} />
-                <Route path="/students/:roll_no/forms/presentation/semester/:semester_id/:id" element={<Presentation />} />
-                <Route path="/students/:roll_no/forms/:form_type" element={<FormListPage />} />
-                <Route path="/students/:roll_no/forms/:form_type/:id" element={<MainFormPage />} />
-              </>
-            )}
-            {may('courseManagement') && <Route path="/courses" element={<AdminCourseManagement />} />}
-            {/* Matches can_edit_department, which DepartmentController::list requires. */}
-            {may('departments') && <Route path="/departments" element={<DepartmentPage />} />}
-            {/* can_manage_supervisor_changes is granted to dordc and admin on the server. */}
-            {may('supervisorApprovals') && (
-              <Route path="/supervisor-doctoral-approvals" element={<SupervisorDoctoralApproval />} />
-            )}
-            {may('facultyDirectory') && <Route path="/faculty" element={<FacultyPage />} />}
-            {/* The server decides what each of them reads, so the routes only
-                have to be reachable. */}
-            {may('urf') && (
-              <>
-                <Route path="/urf" element={<UrfList />} />
-                {/* Each form's own submissions. These sit beside /urf rather
-                    than with the admin routes: the office roles that manage URF
-                    are not all the admin role, and a form card opening for them
-                    fell through to /urf/:id and drew the project page instead.
-                    The server refuses anyone without can_manage_urf. */}
-                <Route path="/urf/urf-application" element={<UrfFormList />} />
-                <Route path="/urf/urf-additional-info" element={<UrfFormList />} />
-                <Route path="/urf/urf-half-yearly-report" element={<UrfFormList />} />
-                <Route path="/urf/urf-final-report" element={<UrfFormList />} />
-                {/* One submission of one form, with its own chain, as a PhD
-                    form page has. The API path is the page path. */}
-                <Route path="/urf/urf-application/:id" element={<UrfFormRecord />} />
-                <Route path="/urf/urf-additional-info/:id" element={<UrfFormRecord />} />
-                <Route path="/urf/urf-half-yearly-report/:id" element={<UrfFormRecord />} />
-                <Route path="/urf/urf-final-report/:id" element={<UrfFormRecord />} />
-                <Route path="/urf/:id" element={<UrfDetails />} />
-              </>
-            )}
-            {may('attendance') && <Route path="/attendance" element={<AttendanceRoute />} />}
-            {may('admin') && (
-              <>
-                <Route path="/forms/manage" element={<AdminFormManagement />} />
-                <Route path="/areasOfSpecialization" element={<AreaOfSpecialization />} />
-                <Route path="/courses/manage" element={<AdminCourseManagement />} />
-                <Route path="/outside-experts" element={<OutsideExperts />} />
-                <Route path="/logs" element={<Logs />} />
-                <Route path="/users" element={<UsersPage />} />
-                <Route path="/clerk-management" element={<ClerkManagement />} />
-                <Route path="/clerks" element={<ClerkManagement />} />
-                <Route path="/configuration" element={<Configuration />} />
-              </>
-            )}
-            <Route path="*" element={<NotFound />} />
+              {/* Dashboard */}
+              <Route path="/home" element={<Dashboard />} />
+              {features.project_management && may('projects') && (
+                <>
+                  <Route path="/projects" element={<ProjectsOverview />} />
+                  <Route path="/projects/create" element={<CreateProject />} />
+                  <Route path="/projects/:id" element={<ProjectDetails />} />
+                  {/* Recruitment produces openings, so it follows the openings
+                      switch rather than the projects one. */}
+                  {features.job_openings && (
+                    <Route path="/projects/:id/recruit" element={<ProjectRecruitment />} />
+                  )}
+                </>
+              )}
+              {role === 'student' && (
+                <>
+                  <Route path="/forms" element={<FormsPage />} />
+                  <Route path="/courses" element={<StudentCourses />} />
+                </>
+              )}
+              {role === 'ug_student' && (
+                <>
+                  {/* Static form paths outrank the shared /forms/:form_type route. */}
+                  <Route path="/forms" element={<UrfFormsPage />} />
+                  <Route path="/forms/urf-application" element={<UrfFormPage type="new" />} />
+                  <Route path="/forms/urf/:id/application" element={<UrfFormPage type="application" />} />
+                  <Route path="/forms/urf/:id/additional-info" element={<UrfFormPage type="additional" />} />
+                  <Route path="/forms/urf/:id/half-yearly-report" element={<UrfFormPage type="half_yearly" />} />
+                  <Route path="/forms/urf/:id/final-report" element={<UrfFormPage type="final" />} />
+                </>
+              )}
+              {may('publications') && <Route path="/publications" element={<Publications />} />}
+              <Route path="/notifications" element={<AllNotificationsPage />} />
+              <Route path="/faculty/:facultyCode/profile" element={<ResearchProfile />} />
+              {/* Matches the sidebar's Progress Monitoring entry, so clerk and external
+                  (who have no sidebar link for it) can't land on the page either. */}
+              {may('presentations') && (
+                <>
+                  <Route path="/presentation" element={<PresentationSemester />} />
+                  <Route path="/presentation/semester" element={<Navigate to="/presentation" replace />} />
+                  {/* The semester and form pages sit under the same gate, so a role
+                      kept off the landing page cannot reach them by deep link. */}
+                  <Route path="/presentation/semester/:semester_id" element={<PresentationListPage />} />
+                  <Route path="/presentation/semester/:semester_id/:id" element={<Presentation />} />
+                </>
+              )}
+
+              <Route path="/forms/:form_type" element={<FormListPage />} />
+              <Route path="/forms/:form_type/:id" element={<MainFormPage />} />
+              {may('scholars') && (
+                <>
+                  <Route path="/forms" element={<FacultyFormsPage />} />
+                  <Route path="/students" element={<StudentsPage />} />
+                  <Route path="/students/:roll_no" element={<StudentProfile />} />
+                  <Route path="/students/:roll_no/forms" element={<FormsPage />} />
+                  {/* Progress Monitoring for one scholar, from their profile. The
+                      pages read the path back as their API endpoint, and the
+                      scholar-scoped endpoints already exist under
+                      /students/{id}/forms/presentation. */}
+                  <Route path="/students/:roll_no/forms/presentation" element={<StudentProgressMonitoring />} />
+                  <Route path="/students/:roll_no/forms/presentation/semester/:semester_id" element={<PresentationListPage />} />
+                  <Route path="/students/:roll_no/forms/presentation/semester/:semester_id/:id" element={<Presentation />} />
+                  <Route path="/students/:roll_no/forms/:form_type" element={<FormListPage />} />
+                  <Route path="/students/:roll_no/forms/:form_type/:id" element={<MainFormPage />} />
+                </>
+              )}
+              {may('courseManagement') && <Route path="/courses" element={<AdminCourseManagement />} />}
+              {/* Matches can_edit_department, which DepartmentController::list requires. */}
+              {may('departments') && <Route path="/departments" element={<DepartmentPage />} />}
+              {/* can_manage_supervisor_changes is granted to dordc and admin on the server. */}
+              {may('supervisorApprovals') && (
+                <Route path="/supervisor-doctoral-approvals" element={<SupervisorDoctoralApproval />} />
+              )}
+              {may('facultyDirectory') && <Route path="/faculty" element={<FacultyPage />} />}
+              {/* The server decides what each of them reads, so the routes only
+                  have to be reachable. */}
+              {may('urf') && (
+                <>
+                  <Route path="/urf" element={<UrfList />} />
+                  {/* Each form's own submissions. These sit beside /urf rather
+                      than with the admin routes: the office roles that manage URF
+                      are not all the admin role, and a form card opening for them
+                      fell through to /urf/:id and drew the project page instead.
+                      The server refuses anyone without can_manage_urf. */}
+                  <Route path="/urf/urf-application" element={<UrfFormList />} />
+                  <Route path="/urf/urf-additional-info" element={<UrfFormList />} />
+                  <Route path="/urf/urf-half-yearly-report" element={<UrfFormList />} />
+                  <Route path="/urf/urf-final-report" element={<UrfFormList />} />
+                  {/* One submission of one form, with its own chain, as a PhD
+                      form page has. The API path is the page path. */}
+                  <Route path="/urf/urf-application/:id" element={<UrfFormRecord />} />
+                  <Route path="/urf/urf-additional-info/:id" element={<UrfFormRecord />} />
+                  <Route path="/urf/urf-half-yearly-report/:id" element={<UrfFormRecord />} />
+                  <Route path="/urf/urf-final-report/:id" element={<UrfFormRecord />} />
+                  <Route path="/urf/:id" element={<UrfDetails />} />
+                </>
+              )}
+              {may('attendance') && <Route path="/attendance" element={<AttendanceRoute />} />}
+              {may('areasOfSpecialization') && <Route path="/areasOfSpecialization" element={<AreaOfSpecialization />} />}
+              {may('admin') && (
+                <>
+                  <Route path="/forms/manage" element={<AdminFormManagement />} />
+                  <Route path="/courses/manage" element={<AdminCourseManagement />} />
+                  <Route path="/outside-experts" element={<OutsideExperts />} />
+                  <Route path="/logs" element={<Logs />} />
+                  <Route path="/users" element={<UsersPage />} />
+                  <Route path="/clerk-management" element={<ClerkManagement />} />
+                  <Route path="/clerks" element={<ClerkManagement />} />
+                  <Route path="/configuration" element={<Configuration />} />
+                </>
+              )}
+              {/* Signed in, a miss (often a page this role has no route for)
+                  keeps the sidebar, so the way back is still on screen. */}
+              {signedIn && <Route path="*" element={<NotFound />} />}
+            </Route>
+
+            {!signedIn && <Route path="*" element={<NotFound />} />}
           </Routes>
         </Suspense>
+        </ErrorBoundary>
       </Router>
     </>
   );

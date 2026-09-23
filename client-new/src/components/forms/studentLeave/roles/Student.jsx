@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import CustomButton from '../../fields/CustomButton';
 import FileUploadField from '../../fields/FileUploadField';
 import RadioButtonGroup from '../../fields/RadioButtonGroup';
-import { apiLeaveBalance, apiLeaveLoad, apiLeaveSubmit } from '../../../../api/leave';
+import { apiLeaveBalance, apiLeaveLoad, apiLeaveSubmit, apiLeaveDelete } from '../../../../api/leave';
 import { overageOf, formatDays, localDateString } from '../../../../utils/leaveBalance';
 import { currentRole } from '../../../../auth/access';
 
@@ -41,7 +41,9 @@ const daysBetween = (from, to) => {
  * from the attendance page, so it talks to the leave endpoints directly via
  * apiLeaveSubmit — see client-new/src/api/leave.js.
  */
-const Student = ({ formData }) => {
+// `onReload` hears the application as reloaded after a submit, so the page
+// around this can show its new status.
+const Student = ({ formData, onReload, onDraftDeleted }) => {
   const [instance, setInstance] = useState(formData);
   const [leaveType, setLeaveType] = useState(formData?.leave_type || 'casual');
   const [fromDate, setFromDate] = useState(localDateString(formData?.from_date));
@@ -94,7 +96,7 @@ const Student = ({ formData }) => {
   const handleSubmit = async () => {
     if (!fromDate || !toDate) { toast.error('Select the from and to dates'); return; }
     if (!reason.trim()) { toast.error('A reason is required'); return; }
-    if (leaveType === 'academic' && !file) { toast.error('Attach a supporting PDF for an academic leave'); return; }
+    if (leaveType === 'academic' && !file && !instance?.supporting_document) { toast.error('Attach a supporting PDF for an academic leave'); return; }
 
     const body = new FormData();
     body.append('leave_type', leaveType);
@@ -110,14 +112,24 @@ const Student = ({ formData }) => {
     if (res.success) {
       toast.success(res.response?.completed ? 'Form completed successfully' : 'Leave application submitted');
       const reloaded = await apiLeaveLoad(instance.form_id);
-      if (reloaded.success) setInstance(reloaded.response);
+      if (reloaded.success) {
+        setInstance(reloaded.response);
+        onReload?.(reloaded.response);
+      }
     }
+  };
+
+
+  const handleDeleteDraft = async () => {
+    if (!window.confirm('Delete this draft application?')) return;
+    const res = await apiLeaveDelete(instance.form_id);
+    if (res.success) onDraftDeleted?.();
   };
 
   return (
     <div>
       <div className="input-field-container">
-        <label className="input-label">Leave Type</label>
+        <label className="input-label">Leave type</label>
         {lock ? (
           <input
             className="input-field"
@@ -135,8 +147,8 @@ const Student = ({ formData }) => {
         )}
       </div>
 
-      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-        <div className="input-field-container" style={{ flex: 1, minWidth: '180px' }}>
+      <div className="student-leave-dates">
+        <div className="input-field-container">
           <label className="input-label" htmlFor="student-from">From</label>
           <DatePicker id="student-from"
             selected={parseDate(fromDate)}
@@ -151,7 +163,7 @@ const Student = ({ formData }) => {
             dropdownMode="select"
           />
         </div>
-        <div className="input-field-container" style={{ flex: 1, minWidth: '180px' }}>
+        <div className="input-field-container">
           <label className="input-label" htmlFor="student-to">To</label>
           <DatePicker id="student-to"
             selected={parseDate(toDate)}
@@ -171,7 +183,7 @@ const Student = ({ formData }) => {
       {/* day_part is only valid when from_date === to_date — a multi-day
           application must stay 'full' or the backend returns a 422. */}
       <div className="input-field-container">
-        <label className="input-label" htmlFor="student-part-of-day">Part of Day</label>
+        <label className="input-label" htmlFor="student-part-of-day">Part of day</label>
         <select
           id="student-part-of-day"
           className="input-field"
@@ -205,8 +217,8 @@ const Student = ({ formData }) => {
           carry one at all, so the field only exists for academic. */}
       {leaveType === 'academic' && (
         <FileUploadField
-          label="Supporting Document"
-          required
+          label="Supporting document"
+          required={!instance?.supporting_document}
           initialValue={instance?.supporting_document}
           isLocked={lock}
           onChange={setFile}
@@ -218,18 +230,22 @@ const Student = ({ formData }) => {
       {!lock && overage > 0 && (
         <div className="input-field-container">
           <span className="badge badge--danger">
-            {formatDays(overage)} day(s) over your {leaveType} quota — this can still be submitted.
+            {formatDays(overage)} day(s) over your {leaveType} quota. This can still be submitted.
           </span>
         </div>
       )}
 
       {instance?.role === 'student' && !lock && (
-        <div className="input-field-container" style={{ marginTop: '0.5rem' }}>
+        <div className="input-field-container leave-actions">
           <CustomButton
-            text={submitting ? 'Submitting…' : 'Submit'}
+            text="Submit"
             onClick={handleSubmit}
-            disabled={submitting}
+            busy={submitting}
           />
+          {/* The server deletes only drafts, so it is offered only on one. */}
+          {instance?.status === 'draft' && (
+            <CustomButton text="Delete draft" variant="danger-outline" onClick={handleDeleteDraft} />
+          )}
         </div>
       )}
     </div>

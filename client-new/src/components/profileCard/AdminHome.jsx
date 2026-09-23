@@ -1,11 +1,12 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import "./AdminHome.css";
 import { getRoleName } from "../../utils/roleName";
 import { buttonConfig } from "../navbar/CustomNavBar";
 import { useFeatures } from "../../context/FeaturesContext";
-import GridContainer from "../forms/fields/GridContainer";
-import CustomButton from "../forms/fields/CustomButton";
+import { useCapabilities } from "../../context/CapabilitiesContext";
+import Page from "../page/Page";
+import Panel from "../panel/Panel";
 import { currentRole } from '../../auth/access';
 
 // Path -> sidebar entry, so a tile's role and feature-flag gating come from
@@ -32,15 +33,15 @@ const LINKS = [
   { path: "/projects", label: "Projects" },
   { path: "/urf", label: "URF" },
   { path: "/publications", label: "Publications" },
-  { path: "/attendance", label: "Mark Attendance" },
-  { path: "/supervisor-doctoral-approvals", label: "Supervisor Approvals" },
+  { path: "/attendance", label: "Mark attendance" },
+  { path: "/supervisor-doctoral-approvals", label: "Supervisor approvals" },
   { path: "/clerks", label: "Clerks" },
   { path: "/configuration", label: "Configuration" },
-  { path: "/users", label: "Manage Users" },
-  { path: "/areasOfSpecialization", label: "Areas of Specialization" },
-  { path: "/outside-experts", label: "Outside Experts" },
-  { path: "/logs", label: "Activity Logs" },
-  { path: "/forms/manage", label: "Manage Forms", roles: ["admin"] },
+  { path: "/users", label: "Manage users" },
+  { path: "/areasOfSpecialization", label: "Areas of specialization" },
+  { path: "/outside-experts", label: "Outside experts" },
+  { path: "/logs", label: "Activity logs" },
+  { path: "/forms/manage", label: "Manage forms", roles: ["admin"], icon: "fa fa-pencil-square-o" },
 ];
 
 const storedName = () => {
@@ -53,31 +54,42 @@ const storedName = () => {
 };
 
 const AdminHome = ({ data }) => {
-  const navigate = useNavigate();
   const features = useFeatures();
+  const can = useCapabilities();
   const d = data || {}; // data can be null (default params only cover undefined)
   const role = d.role || currentRole() || "admin";
   const name = d.name || storedName() || "there";
   const tiles = LINKS.filter((l) => {
     const roles = l.roles || NAV_BY_PATH[l.path]?.roles || [];
     const feature = NAV_BY_PATH[l.path]?.feature;
-    return roles.includes(role) && (!feature || features[feature]);
+    // Same capability rule as the sidebar: a tile the server would refuse
+    // (URF for faculty who mentor nothing) is not offered.
+    const capability = NAV_BY_PATH[l.path]?.capability;
+    const holds = !capability || (Array.isArray(capability) ? capability.some(can) : can(capability));
+    return roles.includes(role) && (!feature || features[feature]) && holds;
   });
 
   return (
-    <div className="adminhome-container">
-      <h2>Welcome back, {name}</h2>
-      <p className="adminhome-sub">
-        Signed in as {getRoleName(role)}. Jump straight to what you manage.
-      </p>
-
-      <GridContainer
-        label="Quick Access"
-        elements={tiles.map((t) => (
-          <CustomButton text={t.label} variant="block" onClick={() => navigate(t.path)} />
-        ))}
-      />
-    </div>
+    <Page
+      title={`Welcome back, ${name}`}
+      description={`Signed in as ${getRoleName(role)}. Jump straight to what you manage.`}
+    >
+      <Panel title="Quick access">
+        <ul className="adminhome-tiles">
+          {tiles.map((t) => (
+            <li key={t.path}>
+              <Link to={t.path} className="adminhome-tile">
+                <span className="adminhome-tile-icon" aria-hidden="true">
+                  <i className={t.icon || NAV_BY_PATH[t.path]?.icon || "fa fa-arrow-right"} />
+                </span>
+                <span className="adminhome-tile-label">{t.label}</span>
+                <i className="fa fa-angle-right adminhome-tile-go" aria-hidden="true" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </Panel>
+    </Page>
   );
 };
 

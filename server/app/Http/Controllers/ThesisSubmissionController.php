@@ -41,7 +41,9 @@ class ThesisSubmissionController extends Controller
             })->join(', ');
             },
             "date_of_synopsis" => function ($form) {
-                return \Carbon\Carbon::parse($form->student->date_of_synopsis)->format('Y-m-d');
+                // The form records its own synopsis date, which the scholar's record
+                // often lacks. Carbon::parse(null) is today, so it is not used.
+                return $form->date_of_synopsis ?: $form->student->date_of_synopsis?->format('Y-m-d');
         
             },
         ],
@@ -267,18 +269,27 @@ class ThesisSubmissionController extends Controller
             'student',
             'faculty',
             function ($formInstance) use ($request, $user) {
+                // A resubmission after a send-back keeps the stored files unless new ones come.
                 $request->validate([
                     'date_of_synopsis' => 'required|date',
                     'reciept_no' => 'required|string',
                     'date_of_fee_submission' => 'required|date',
-                    'thesis_pdf' => 'required|file|mimes:pdf|max:20480',
-                    'fee_receipt' => 'required|file|mimes:pdf,jpg,jpeg,png|max:20480',
+                    'thesis_pdf' => ($formInstance->thesis_pdf ? 'nullable' : 'required').'|file|mimes:pdf|max:20480',
+                    'fee_receipt' => ($formInstance->fee_receipt ? 'nullable' : 'required').'|file|mimes:pdf,jpg,jpeg,png|max:20480',
                 ]);
                 $formInstance->date_of_synopsis = $request->date_of_synopsis;
+                if ($formInstance->student->date_of_synopsis == null) {
+                    $formInstance->student->date_of_synopsis = $request->date_of_synopsis;
+                    $formInstance->student->save();
+                }
                 $formInstance->reciept_no = $request->reciept_no;
                 $formInstance->date_of_fee_submission = $request->date_of_fee_submission;
-                $formInstance->thesis_pdf = $this->replaceUploadedFile($formInstance->thesis_pdf, $request->file('thesis_pdf'), 'thesis', $user->student->roll_no);
-                $formInstance->fee_receipt = $this->replaceUploadedFile($formInstance->fee_receipt, $request->file('fee_receipt'), 'fee_receipt', $user->student->roll_no);
+                if ($request->hasFile('thesis_pdf')) {
+                    $formInstance->thesis_pdf = $this->replaceUploadedFile($formInstance->thesis_pdf, $request->file('thesis_pdf'), 'thesis', $user->student->roll_no);
+                }
+                if ($request->hasFile('fee_receipt')) {
+                    $formInstance->fee_receipt = $this->replaceUploadedFile($formInstance->fee_receipt, $request->file('fee_receipt'), 'fee_receipt', $user->student->roll_no);
+                }
                
         }
         );
@@ -297,9 +308,7 @@ class ThesisSubmissionController extends Controller
             'approval' => 'required|boolean',
         ]);
         $request->merge(['approval' => true]);
-        foreach ($request->form_ids as $form_id) {
-            $this->submit($request, $form_id);
-        }
+        return $this->bulkResults($request->form_ids, fn ($form_id) => $this->submit($request, $form_id));
     }
     private function supervisorSubmit($user, $request, $form_id)
     {
@@ -373,6 +382,10 @@ class ThesisSubmissionController extends Controller
                 if ($request->approval) {
                     $formInstance->completion='complete';
                     $formInstance->status = 'approved';
+                    if ($formInstance->student->date_of_thesis == null) {
+                        $formInstance->student->date_of_thesis = now()->toDateString();
+                        $formInstance->student->save();
+                    }
                     $formInstance->addHistoryEntry("Thesis approved by DORDC", $user->name());
                 }
             }

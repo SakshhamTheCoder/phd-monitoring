@@ -1,14 +1,7 @@
 // API layer for the Projects module. Wraps customFetch and maps between the
 // backend's snake_case shape and the camelCase shape the React pages expect.
-import { baseURL, rootURL } from './urls';
+import { baseURL } from './urls';
 import { customFetch } from './base';
-
-// Turn a stored `/app/public/...` path into a servable URL; pass links through.
-export const fileUrl = (p) => {
-  if (!p) return '';
-  if (/^https?:\/\//i.test(p)) return p;
-  return rootURL + String(p).replace('app/public', 'storage');
-};
 
 // ---- mappers: backend -> frontend ----
 export const mapMilestone = (m) => ({
@@ -16,7 +9,8 @@ export const mapMilestone = (m) => ({
 });
 export const mapDocument = (d) => ({
   id: d.id, name: d.name, type: d.type, date: d.doc_date,
-  url: d.file_path ? fileUrl(d.file_path) : d.link, file_path: d.file_path, link: d.link,
+  // A stored file or an external link; open it with openStoredFile.
+  url: d.file_path || d.link, file_path: d.file_path, link: d.link,
 });
 export const mapPosition = (p) => ({
   id: p.id, type: p.type, title: p.title, openings: p.openings, stipend: p.stipend,
@@ -36,7 +30,7 @@ export const mapApplication = (a) => ({
   applicantType: a.applicant_type || 'internal',
   verified: a.email_verified_at !== null && a.email_verified_at !== undefined,
   resume: a.resume_path ? a.resume_path.split('/').pop() : '',
-  resumeUrl: a.resume_path ? fileUrl(a.resume_path) : '',
+  resumePath: a.resume_path || '',
   position: a.position ? a.position.type : a.position_type,
   positionTitle: a.position ? a.position.title : a.position_title,
   projectId: a.project_id,
@@ -48,15 +42,16 @@ export const mapProject = (p) => (p ? {
   title: p.title, category: p.category, role: p.role, status: p.status,
   amount: p.amount, description: p.description,
   canEdit: p.can_edit !== false,
+  // Only the list sends it: how the viewer stands on the project.
+  viewerRole: p.viewer_role,
   fundingAgency: p.funding_agency, tietShare: p.tiet_share,
   startDate: p.start_date, endDate: p.end_date,
   durationYears: p.duration_years, durationMonths: p.duration_months,
   focusArea: p.focus_area, grantType: p.grant_type,
   coPIs: p.co_pis || [], objectives: p.objectives || [], budget: p.budget || {},
-  equipmentDetails: p.equipment_details || [],
   sdgs: p.sdgs || [],
   ganttChartName: p.gantt_chart_name || '',
-  ganttChartUrl: p.gantt_chart_path ? fileUrl(p.gantt_chart_path) : '',
+  ganttChartPath: p.gantt_chart_path || '',
   sanctionLetterLink: p.sanction_letter_link, sanctionLetterName: p.sanction_letter_name,
   pi: p.pi ? {
     code: p.pi.faculty_code,
@@ -73,6 +68,7 @@ export const mapProject = (p) => (p ? {
 export const toProjectBody = (form) => ({
   title: form.title,
   category: form.category,
+  status: form.status || 'Pending',
   role: form.role || '',
   focus_area: form.focusArea || '',
   grant_type: form.grantType || '',
@@ -83,7 +79,7 @@ export const toProjectBody = (form) => ({
   duration_years: parseInt(form.durationYears) || 0,
   duration_months: parseInt(form.durationMonths) || 0,
   amount: parseInt(form.sanctionAmount) || 0,
-  tiet_share: parseInt(form.tietShare) || 0,
+  tiet_share: form.tietShare === '' || form.tietShare == null ? null : parseInt(form.tietShare) || 0,
   co_pis: form.coPIs || [],
   sdgs: form.sdgs || [],
   objectives: (form.objectives || []).map((o) => (typeof o === 'string' ? o : (o && o.title) || '')).filter((s) => s.trim()),
@@ -96,10 +92,11 @@ export const apiCurrentFaculty = async () => {
 };
 
 // ---- projects CRUD ----
+// null on failure, so a list that could not load is not read as an empty one.
 export const apiListProjects = async (filters) => {
   const qs = filters ? `?filters=${encodeURIComponent(JSON.stringify(filters))}` : '';
   const { success, response } = await customFetch(`${baseURL}/projects${qs}`, 'GET', {}, false);
-  return success ? (response || []).map(mapProject) : [];
+  return success ? (response || []).map(mapProject) : null;
 };
 export const apiProjectStats = async () => {
   const { success, response } = await customFetch(`${baseURL}/projects/stats`, 'GET', {}, false);
@@ -108,37 +105,66 @@ export const apiProjectStats = async () => {
 
 // Option lists come from the backend so the wizard cannot drift from the
 // validation. Cached for the life of the page — these change with a deploy,
-// not with a click.
-let metaCache = null;
-export const apiProjectMeta = async () => {
-  if (metaCache) return metaCache;
-  const { success, response } = await customFetch(`${baseURL}/projects/meta`, 'GET', {}, false);
-  metaCache = success
-    ? response
-    : { sdgs: [], manpowerCategories: [], budgetHeads: [], duration: { years: [0, 1, 2, 3, 4, 5], maxMonths: 11 } };
-  return metaCache;
+// not with a click. A failure is not kept, or the wizard would stay without
+// SDGs and budget heads until a reload.
+let metaRequest = null;
+export const apiProjectMeta = () => {
+  if (!metaRequest) {
+    metaRequest = customFetch(`${baseURL}/projects/meta`, 'GET', {}, false).then(({ success, response }) => {
+      if (success) return response;
+      metaRequest = null;
+      return { sdgs: [], manpowerCategories: [], budgetHeads: [], duration: { years: [0, 1, 2, 3, 4, 5], maxMonths: 11 } };
+    });
+  }
+  return metaRequest;
 };
+// `failed` means the request got no answer, so the project may still exist and
+// a retry can help; no project without it means the server refused or has none.
 export const apiGetProject = async (id) => {
-  const { success, response } = await customFetch(`${baseURL}/projects/${id}`, 'GET', {}, false);
-  return success ? mapProject(response) : null;
+  const { success, response, status } = await customFetch(`${baseURL}/projects/${id}`, 'GET', {}, false);
+  // A 404 or 403 means there is no project to show; anything else is worth a retry.
+  return { project: success ? mapProject(response) : null, failed: !success && status !== 404 && status !== 403 };
 };
+// Milestones live in their own table, so the project body cannot carry them.
+// Brings the stored rows (`before`) in line with the wizard's (`after`): rows
+// without an id are added, changed rows updated, and stored rows that were
+// removed or emptied deleted. Sequential, because the server has no ordering
+// column and parallel inserts could land out of order. Returns how many failed.
+const syncMilestones = async (projectId, before, after) => {
+  const url = `${baseURL}/projects/${projectId}/milestones`;
+  const body = (m) => ({ name: m.name, deliverable: m.deliverable, due_date: m.dueDate || null, status: m.status });
+  const named = (m) => m && m.name && m.name.trim();
+  const kept = new Set(after.filter((m) => m.id && named(m)).map((m) => m.id));
+  const stored = new Map(before.map((m) => [m.id, m]));
+  let failed = 0;
+  for (const m of before) {
+    if (!kept.has(m.id) && !(await customFetch(`${url}/${m.id}`, 'DELETE', {}, false)).success) failed += 1;
+  }
+  for (const m of after.filter(named)) {
+    const old = m.id && stored.get(m.id);
+    if (old && JSON.stringify(body(old)) === JSON.stringify(body(m))) continue;
+    const saved = await customFetch(old ? `${url}/${m.id}` : url, 'POST', body(m), false);
+    if (!saved.success) failed += 1;
+  }
+  return failed;
+};
+
 export const apiCreateProject = async (form) => {
   const res = await customFetch(`${baseURL}/projects`, 'POST', toProjectBody(form), false);
   if (!res.success) return { success: false };
   const project = res.response;
-  // milestones live in their own table — create them after the project exists
-  for (const m of (form.milestones || [])) {
-    if (m && m.name && m.name.trim()) {
-      await customFetch(`${baseURL}/projects/${project.id}/milestones`, 'POST', {
-        name: m.name, deliverable: m.deliverable, due_date: m.dueDate || null, status: m.status,
-      }, false);
-    }
-  }
-  return { success: true, project: mapProject(project) };
+  const failedMilestones = await syncMilestones(project.id, [], form.milestones || []);
+  // The project exists either way, so this is still a success; the caller
+  // reports the milestones that did not save.
+  return { success: true, project: mapProject(project), failedMilestones };
 };
-export const apiUpdateProjectFromForm = async (id, form) => {
+// `storedMilestones` are the rows the wizard opened with, so the edit can tell
+// which of them were changed or removed.
+export const apiUpdateProjectFromForm = async (id, form, storedMilestones = []) => {
   const res = await customFetch(`${baseURL}/projects/${id}`, 'POST', toProjectBody(form), true);
-  return res.success ? { success: true, project: mapProject(res.response.project || res.response) } : { success: false };
+  if (!res.success) return { success: false };
+  const failedMilestones = await syncMilestones(id, storedMilestones, form.milestones || []);
+  return { success: true, project: mapProject(res.response.project || res.response), failedMilestones };
 };
 export const apiUpdateProject = async (id, body, isFormData = false) => {
   return customFetch(`${baseURL}/projects/${id}`, 'POST', body, true, isFormData);

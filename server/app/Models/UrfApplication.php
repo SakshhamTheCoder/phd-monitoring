@@ -105,6 +105,14 @@ class UrfApplication extends Model
         return strcasecmp((string) $this->student2_email, $user->email) === 0 ? 2 : 1;
     }
 
+    /** The accounts of the project's students; the second may not have one yet. */
+    public function memberUsers()
+    {
+        return User::where('id', $this->user_id)
+            ->when($this->student2_email, fn ($query, $email) => $query->orWhere('email', $email))
+            ->get();
+    }
+
     public function hasMember(User $user): bool
     {
         return $this->user_id === $user->id

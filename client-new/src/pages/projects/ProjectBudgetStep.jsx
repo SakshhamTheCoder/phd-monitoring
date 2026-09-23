@@ -9,6 +9,26 @@ import {
   setOtherAmount, renameOtherRow, dropOtherRow, addOtherRow,
   KEY_MANPOWER, HEAD_MANPOWER, HEAD_EQUIPMENT, HEAD_OTHER,
 } from '../../data/projectsData';
+import { PanelSection } from '../../components/panel/Panel';
+import { toastUndo, insertAt } from '../../utils/undoToast';
+
+// Puts back the lines a row drop took out (`before` to `after`), each at its old
+// place in its year, into the budget as it is now, so edits made since survive.
+export const restoreDropped = (now, before, after) => {
+  let out = now;
+  Object.keys(before).forEach((listKey) => {
+    if (before[listKey] === after[listKey]) return;
+    const years = { ...(out[listKey] || {}) };
+    Object.keys(before[listKey] || {}).forEach((y) => {
+      const kept = new Set((after[listKey] || {})[y] || []);
+      (before[listKey][y] || []).forEach((line, i) => {
+        if (!kept.has(line)) years[y] = insertAt(years[y] || [], i, line);
+      });
+    });
+    out = { ...out, [listKey]: years };
+  });
+  return out;
+};
 
 /**
  * The budget table on the wizard's funding step.
@@ -50,8 +70,14 @@ const ProjectBudgetStep = ({ budget, years: budgetYears, meta, onChange }) => {
     onChange(renameEquipRow(budget, key, label));
   const addEquip = () =>
     onChange(addEquipRow(budget, budgetYears));
+  // onChange takes an updater too, because Undo can come after later edits.
+  const dropWithUndo = (message, after) => {
+    const before = budget;
+    onChange(after);
+    toastUndo(message, () => onChange((now) => restoreDropped(now, before, after)));
+  };
   const dropEquip = (key) =>
-    onChange(dropEquipRow(budget, key));
+    dropWithUndo('Item removed.', dropEquipRow(budget, key));
   const editTypedHead = (y, head, value) =>
     onChange(setTypedHead(budget, y, head, value));
   const editOther = (y, key, parentKey, value) =>
@@ -59,7 +85,7 @@ const ProjectBudgetStep = ({ budget, years: budgetYears, meta, onChange }) => {
   const renameOther = (key, label) =>
     onChange(renameOtherRow(budget, key, label));
   const dropOther = (key) =>
-    onChange(dropOtherRow(budget, key));
+    dropWithUndo('Expense removed.', dropOtherRow(budget, key));
   const addOther = (parentKey) =>
     onChange(addOtherRow(budget, budgetYears, parentKey));
 
@@ -138,7 +164,7 @@ const ProjectBudgetStep = ({ budget, years: budgetYears, meta, onChange }) => {
       <tr className="cp-budget-head-row">
         <td className="cp-budget-head-name">{HEAD_EQUIPMENT}
           <button type="button" className="inline-add-btn inline-add-btn--sm" onClick={addEquip}>
-            <i className="fa fa-plus"></i> Add Item
+            <i className="fa fa-plus" aria-hidden="true"></i> Add item
           </button>
         </td>
         {renderTypedHeadCells(HEAD_EQUIPMENT)}
@@ -151,9 +177,9 @@ const ProjectBudgetStep = ({ budget, years: budgetYears, meta, onChange }) => {
               <input type="text" className="cp-budget-input" value={row.label}
                 placeholder="e.g. GPU Workstation"
                 onChange={e => renameEquip(row.key, e.target.value)} />
-              <button type="button" className="cp-remove-btn" title="Remove item"
+              <button type="button" className="cp-remove-btn" title="Remove item" aria-label="Remove item"
                 onClick={() => dropEquip(row.key)}>
-                <i className="fa fa-trash"></i>
+                <i className="fa fa-trash" aria-hidden="true"></i>
               </button>
             </span>
           </td>
@@ -180,7 +206,7 @@ const ProjectBudgetStep = ({ budget, years: budgetYears, meta, onChange }) => {
       <tr className="cp-budget-head-row">
         <td className="cp-budget-head-name">{HEAD_OTHER}
           <button type="button" className="inline-add-btn inline-add-btn--sm" onClick={() => addOther('')}>
-            <i className="fa fa-plus"></i> Add Expense
+            <i className="fa fa-plus" aria-hidden="true"></i> Add expense
           </button>
         </td>
         {budgetYears.map(y => (
@@ -198,13 +224,13 @@ const ProjectBudgetStep = ({ budget, years: budgetYears, meta, onChange }) => {
                   <input type="text" className="cp-budget-input" value={row.label}
                     placeholder="e.g. Fabrication"
                     onChange={e => renameOther(row.key, e.target.value)} />
-                  <button type="button" className="inline-add-btn inline-add-btn--sm" title="Add sub-item"
+                  <button type="button" className="inline-add-btn inline-add-btn--sm" title="Add sub-item" aria-label="Add sub-item"
                     onClick={() => addOther(row.key)}>
-                    <i className="fa fa-plus"></i>
+                    <i className="fa fa-plus" aria-hidden="true"></i>
                   </button>
-                  <button type="button" className="cp-remove-btn" title="Remove expense"
+                  <button type="button" className="cp-remove-btn" title="Remove expense" aria-label="Remove expense"
                     onClick={() => dropOther(row.key)}>
-                    <i className="fa fa-trash"></i>
+                    <i className="fa fa-trash" aria-hidden="true"></i>
                   </button>
                 </span>
               </td>
@@ -230,9 +256,9 @@ const ProjectBudgetStep = ({ budget, years: budgetYears, meta, onChange }) => {
                     <input type="text" className="cp-budget-input" value={sub.label}
                       placeholder="e.g. Casting"
                       onChange={e => renameOther(sub.key, e.target.value)} />
-                    <button type="button" className="cp-remove-btn" title="Remove sub-item"
+                    <button type="button" className="cp-remove-btn" title="Remove sub-item" aria-label="Remove sub-item"
                       onClick={() => dropOther(sub.key)}>
-                      <i className="fa fa-trash"></i>
+                      <i className="fa fa-trash" aria-hidden="true"></i>
                     </button>
                   </span>
                 </td>
@@ -269,13 +295,12 @@ const ProjectBudgetStep = ({ budget, years: budgetYears, meta, onChange }) => {
   );
 
   return (
-          <div className="cp-section-card">
-            <h3 className="cp-section-title">Budget Breakdown</h3>
-            <div className="cp-budget-table-wrap">
-              <table className="cp-budget-table">
+          <PanelSection title="Budget breakdown">
+            <div className="cp-table-wrap">
+              <table className="data-table cp-budget-table">
                 <thead>
                   <tr>
-                    <th>Budget Head</th>
+                    <th>Budget head</th>
                     {budgetYears.map((y, i) => <th key={y}>Year {i + 1} (₹)</th>)}
                     <th>Total</th>
                   </tr>
@@ -334,14 +359,14 @@ const ProjectBudgetStep = ({ budget, years: budgetYears, meta, onChange }) => {
                     );
                   })}
                   <tr className="cp-budget-grand-row">
-                    <td><strong>Grand Total</strong></td>
+                    <td><strong>Grand total</strong></td>
                     {budgetYears.map(y => <td key={y} className="cp-budget-total">₹{yTotal(y).toLocaleString('en-IN')}</td>)}
                     <td className="cp-budget-grand">₹{gTotal.toLocaleString('en-IN')}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
-          </div>
+          </PanelSection>
   );
 };
 

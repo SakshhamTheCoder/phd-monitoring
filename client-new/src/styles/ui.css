@@ -12,60 +12,99 @@
    Loaded globally from index.js, after the tokens.
    ========================================================================== */
 
-/* --- Page header ---------------------------------------------------------
-   Title, optional subtitle, optional right-aligned actions. The topbar
-   already carries a large "Dashboard" heading, so the page title sits below
-   it in scale rather than competing with it. */
+/* --- Page -----------------------------------------------------------------
+   components/page/Page.jsx. The header band and the content under it, with
+   the one gap between them and between every panel. The shell's .content owns
+   the gutter; a page adds no padding or margin of its own. */
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    min-width: 0;
+}
+
+/* Title, one-line description, actions on the right, optional tabs under. */
 .page-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.page-header-main {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
-    margin-bottom: 1.5rem;
+    gap: var(--space-5);
 }
 
+/* A basis of its own, so a row of actions wrapping beside it shrinks mostly
+   itself and a short title is not broken onto two lines. */
+.page-header-text { flex: 1 1 20rem; min-width: 0; }
+
 .page-title {
-    font-size: var(--text-3xl);
-    font-weight: 700;
+    font-size: var(--text-page);
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
     color: var(--text-color);
-    margin: 0 0 0.25rem;
+    margin: 0;
 }
 
 .page-subtitle {
     font-size: var(--text-sm);
     color: var(--text-muted);
-    margin: 0;
-    max-width: 70ch;
+    margin: var(--space-1) 0 0;
+    max-width: 75ch;
+}
+
+/* Context about the record open on the page: badges, form id, stage. */
+.page-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
 }
 
 .page-actions {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    flex-shrink: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    /* Wraps rather than widening the page once a profile carries five
+       actions; min-width lets it shrink below its one-line width. */
+    min-width: 0;
 }
+
+/* The tab bar sits under the title, not as a separate band. */
+.page-header .tabs { margin-bottom: 0; }
 
 /* --- Tabs ----------------------------------------------------------------
    Underline style, brand indicator. Scrolls rather than wraps or clips:
    Progress Monitoring has seven, and the last used to run off the edge. */
 .tabs {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--space-1);
     border-bottom: 1px solid var(--border-subtle);
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--space-5);
     overflow-x: auto;
     scrollbar-width: thin;
 }
 
+/* Inside a page's column the gap already separates it. */
+.page > .tabs { margin-bottom: 0; }
+
 .tab {
     background: none;
     border: none;
-    padding: 0.75rem 1.25rem;
+    padding: var(--space-3) var(--space-4);
     font-size: var(--text-sm);
     font-weight: 500;
     font-family: inherit;
-    color: var(--text-subtle);
+    color: var(--text-muted);
     cursor: pointer;
     position: relative;
     white-space: nowrap;
@@ -78,40 +117,268 @@
     font-weight: 600;
 }
 
-.tab.active::after {
-    content: '';
+/* One underline for the bar, placed under the chosen tab by Tabs.jsx. It is
+   1px wide and scaled to the tab, so the slide is a transform, not a resize. */
+.tabs { position: relative; }
+
+.tabs-underline {
     position: absolute;
     left: 0;
-    right: 0;
-    bottom: -1px;
+    bottom: 0;
+    width: 1px;
     height: 2px;
     background: var(--primary-color);
+    transform-origin: left;
+    pointer-events: none;
 }
+
+.tabs-underline--moves { transition: transform 200ms ease-out; }
 
 .tab:focus-visible {
     outline: 2px solid var(--primary-color);
     outline-offset: -2px;
 }
 
-/* --- Empty state ---------------------------------------------------------
-   A solid subtle panel. A dashed border reads as a drop target, which is
-   the wrong signal for "there is nothing here yet". */
-.empty-state {
-    background: #FAFAFA;
+/* --- Panel -----------------------------------------------------------------
+   components/panel/Panel.jsx. The one surface for content: white, a border,
+   no shadow. Panels sit side by side or stacked, never inside each other. */
+.panel {
+    background: var(--surface);
     border: 1px solid var(--border-subtle);
-    border-radius: var(--radius);
-    padding: 3rem 1.5rem;
-    text-align: center;
-    color: var(--text-subtle);
-    font-size: var(--text-sm);
+    border-radius: var(--radius-lg);
+    min-width: 0;
 }
 
-/* --- Card ---------------------------------------------------------------- */
+/* Fixed minimum height, so heads with and without actions line up. */
+.panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-4);
+    min-height: 64px;
+    padding: var(--space-3) var(--space-5);
+    border-bottom: 1px solid var(--border-subtle);
+    box-sizing: border-box;
+}
+
+.panel-head-text { min-width: 0; }
+
+.panel-title {
+    font-size: var(--text-md);
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0;
+}
+
+.panel-description {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    margin: 2px 0 0;
+    max-width: 75ch;
+}
+
+.panel-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.panel-body { padding: var(--space-5); }
+
+/* Flush: a table runs edge to edge; its cells carry the padding. */
+.panel--flush > .panel-body { padding: 0; }
+
+.panel-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-5);
+    border-top: 1px solid var(--border-subtle);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+}
+
+/* A titled region inside a panel, divided from the next by a rule. The
+   sections carry the padding, so a body made of sections has none. */
+.panel-section { padding: var(--space-5); }
+.panel-body:has(> .panel-section) { padding: 0; }
+.panel-section + .panel-section { border-top: 1px solid var(--border-subtle); }
+
+.panel-section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin-bottom: var(--space-4);
+}
+
+.panel-section-title {
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0;
+}
+
+.panel-section-description {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    margin: 2px 0 0;
+}
+
+/* Two columns of panels: main content and a narrower aside. */
+.panel-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: var(--space-5);
+    align-items: start;
+}
+
+.panel-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    min-width: 0;
+}
+
+/* --- Facts ---------------------------------------------------------------
+   Label over value, for the read-out of a record (dates, amounts, counts). */
+.facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: var(--space-4) var(--space-5);
+    margin: 0;
+}
+
+.facts dt {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    margin-bottom: var(--space-1);
+}
+
+.facts dd {
+    margin: 0;
+    font-weight: 500;
+    color: var(--text-color);
+    overflow-wrap: anywhere;
+}
+
+/* Label left, value right, one pair per line, for an aside. */
+.kv { margin: 0; }
+.kv > div {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--border-subtle);
+}
+.kv > div:first-child { padding-top: 0; }
+.kv > div:last-child { border-bottom: none; padding-bottom: 0; }
+.kv dt { color: var(--text-muted); }
+.kv dd { margin: 0; font-weight: 500; text-align: right; overflow-wrap: anywhere; }
+
+/* --- Form actions --------------------------------------------------------
+   The primary button first, secondary actions pushed to the right. */
+.form-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.form-actions-secondary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-left: auto;
+}
+
+.panel > .form-actions {
+    padding: var(--space-4) var(--space-5);
+    border-top: 1px solid var(--border-subtle);
+}
+
+/* --- Status notice -------------------------------------------------------
+   components/common/StatusNotice.jsx. One look for empty, loading, error and
+   info. .empty-state is the older class for the empty tone. */
+.status-notice,
+.empty-state {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    background: var(--canvas);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    text-align: left;
+}
+
+/* A message arriving (a failure, a note) slides in a few pixels so it is
+   noticed; empty and loading states are the page at rest and stay still. */
+.status-notice--error,
+.status-notice--info,
+.status-notice--warning { animation: slide-in 200ms ease-out; }
+
+.status-notice-icon { margin-top: 3px; flex-shrink: 0; }
+.status-notice-body { min-width: 0; }
+.status-notice-title { display: block; font-weight: 600; color: var(--text-color); margin: 0 0 2px; }
+.status-notice-text { margin: 0; }
+.status-notice-action { margin-top: var(--space-3); }
+
+.status-notice--empty,
+.empty-state {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--space-7) var(--space-5);
+}
+
+.status-notice--empty .status-notice-icon { margin: 0; font-size: var(--text-xl); color: var(--text-subtle); }
+
+.status-notice--error { background: var(--danger-bg); border-color: #fecaca; }
+.status-notice--error .status-notice-icon { color: var(--danger-text); }
+.status-notice--info { background: var(--info-bg); border-color: var(--info-border); }
+.status-notice--info .status-notice-icon { color: var(--info); }
+.status-notice--warning { background: var(--warning-bg); border-color: #fde68a; }
+.status-notice--warning .status-notice-icon { color: var(--warning-text); }
+
+/* LoadError stands in for a whole list, so it keeps the centred look. */
+.load-error {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--space-7) var(--space-5);
+}
+
+.load-error p {
+    margin: 0 0 var(--space-3);
+    color: var(--text-color);
+}
+
+/* Loading: grey bars where the content will be, not a spinner. */
+.status-notice--loading { display: block; }
+.skeleton-line {
+    height: 12px;
+    border-radius: var(--radius-sm);
+    background: var(--border-subtle);
+}
+.skeleton-line + .skeleton-line { margin-top: 10px; }
+.skeleton-line:nth-child(1) { width: 40%; }
+.skeleton-line:nth-child(3) { width: 75%; }
+
+/* --- Card ----------------------------------------------------------------
+   The older name for a panel with padding, kept so existing markup matches. */
 .card {
     background: var(--surface);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-lg);
-    padding: 1.5rem;
+    padding: var(--space-5);
 }
 
 /* --- Section heading, for a titled block inside a page ------------------- */
@@ -119,7 +386,7 @@
     font-size: var(--text-md);
     font-weight: 600;
     color: var(--text-color);
-    margin: 0 0 0.75rem;
+    margin: 0 0 var(--space-3);
 }
 
 /* --- Modal / dialog title ------------------------------------------------
@@ -137,9 +404,9 @@
 .modal-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 0.6rem;
-    margin-top: 1.25rem;
-    padding-top: 1rem;
+    gap: var(--space-2);
+    margin-top: var(--space-5);
+    padding-top: var(--space-4);
     border-top: 1px solid var(--border-subtle);
 }
 
@@ -153,12 +420,10 @@
 }
 
 .csv-import-heading {
-    font-size: var(--text-xs);
+    font-size: var(--text-sm);
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--text-muted);
-    margin: 0 0 0.5rem;
+    color: var(--text-color);
+    margin: 0 0 var(--space-2);
 }
 
 .csv-import-columns {
@@ -175,7 +440,7 @@
     padding: 0.2rem 0.5rem;
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
-    background: #FAFAFA;
+    background: var(--canvas);
     color: var(--text-muted);
 }
 
@@ -184,7 +449,7 @@
     color: var(--text-color);
     font-weight: 600;
     border-color: var(--text-muted);
-    background: #FFF;
+    background: var(--surface);
 }
 
 .csv-import-columns li.is-required::after {
@@ -236,7 +501,7 @@
 
 .csv-import-preview-head {
     padding: 0.75rem;
-    background: #F9FAFB;
+    background: var(--canvas);
     border-bottom: 1px solid var(--border-color);
     font-weight: 600;
     font-size: var(--text-sm);
@@ -295,12 +560,12 @@
 }
 
 .csv-preview th {
-    background: #F3F4F6;
+    background: var(--canvas);
     white-space: nowrap;
     font-weight: 600;
 }
 
-.csv-preview tbody tr:nth-child(even) { background: #FAFAFA; }
+.csv-preview tbody tr:nth-child(even) { background: var(--canvas); }
 
 .csv-rownum {
     padding: 0.5rem;
@@ -320,7 +585,7 @@
 /* An explanatory note inside a dialog, above the fields. */
 .modal-note {
     background: var(--primary-wash);
-    border: 1px solid #F0DADA;
+    border: 1px solid color-mix(in srgb, var(--primary-color) 15%, transparent);
     border-radius: var(--radius);
     padding: 0.85rem 1rem;
     margin-bottom: 1rem;
@@ -348,20 +613,19 @@
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    padding: 0.25rem 0.65rem;
-    border-radius: 999px;
-    font-size: var(--text-2xs);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    padding: 2px var(--space-2);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    line-height: 1.5;
     white-space: nowrap;
 }
 
 .badge--neutral { background: #F3F4F6; color: #374151; }
 .badge--success { background: var(--success-bg); color: var(--success); }
-.badge--warning { background: #FEF3C7; color: #92400E; }
+.badge--warning { background: var(--warning-bg); color: var(--warning-text); }
 .badge--danger  { background: var(--danger-bg);  color: var(--danger-text); }
-.badge--info    { background: #E0E7FF; color: #3730A3; }
+.badge--info    { background: var(--info-bg); color: var(--info); }
 .badge--blue    { background: #DBEAFE; color: #1E40AF; }
 .badge--purple  { background: #FCE7F3; color: #9D174D; }
 .badge--accent  { background: var(--primary-wash); color: var(--primary-color); }
@@ -371,9 +635,8 @@
 .viewing-scholar {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-    padding: 0.6rem 0.9rem;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
     border: 1px solid var(--border-color);
     border-left: 3px solid var(--primary-color);
     border-radius: var(--radius);
@@ -390,11 +653,17 @@
    .form-table was defined identically in two separate stylesheets, both
    global, and only agreed by luck. */
 .data-table-wrap {
+    /* Positioned, so a visually hidden header inside is clipped by the scroll
+       box instead of widening the page. */
+    position: relative;
     overflow-x: auto;
     border: 1px solid var(--border-subtle);
-    border-radius: var(--radius);
+    border-radius: var(--radius-lg);
     background: var(--surface);
 }
+
+/* Inside a flush panel the panel draws the edge. */
+.panel .data-table-wrap { border: none; border-radius: 0; }
 
 .data-table,
 .form-table,
@@ -407,25 +676,32 @@
 .data-table th,
 .form-table th,
 .custom-table thead th {
-    background: #F5F5F5;
-    padding: 0.75rem 1rem;
+    background: var(--canvas);
+    padding: var(--space-3) var(--space-4);
     text-align: left;
-    font-size: var(--text-2xs);
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    font-size: var(--text-xs);
+    font-weight: 500;
     color: var(--text-muted);
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-subtle);
     white-space: nowrap;
 }
+
+/* Column titles come from the server in whatever case it stores them
+   ("semester name"); the first letter makes them read as sentence case. */
+.data-table th::first-letter,
+.form-table th::first-letter,
+.custom-table thead th::first-letter { text-transform: uppercase; }
 
 .data-table td,
 .form-table td,
 .custom-table tbody td {
-    padding: 0.75rem 1rem;
+    padding: var(--space-3) var(--space-4);
     border-bottom: 1px solid var(--border-subtle);
     color: var(--text-color);
     text-align: left;
+    /* Middle, not top: the row's height is usually set by the 32px action
+       button, and top-aligned text left an empty band under every row. */
+    vertical-align: middle;
 }
 
 .data-table tbody tr:last-child td,
@@ -434,7 +710,7 @@
 
 .data-table tbody tr:hover,
 .form-table tr:hover,
-.custom-table tr:hover { background: #FAFAFA; }
+.custom-table tr:hover { background: var(--canvas); }
 
 .data-table a,
 .form-table a,
@@ -519,25 +795,23 @@
   font-size: var(--text-xs);
   font-weight: 500;
   cursor: pointer;
-  background: #fff;
-  color: #28a745;
-  border: 1px solid #28a745;
+  background: var(--surface);
+  color: var(--success);
+  border: 1px solid var(--success);
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .row-action-btn:hover {
-  background: #28a745;
-  color: #fff;
+  background: var(--success-bg);
 }
 
 .row-action-btn.danger {
-  color: #dc3545;
-  border-color: #dc3545;
+  color: var(--danger-text);
+  border-color: var(--danger);
 }
 
 .row-action-btn.danger:hover {
-  background: #dc3545;
-  color: #fff;
+  background: var(--danger-bg);
 }
 
 /* Row actions — compact kebab trigger + dropdown menu (prevents cramped icons / misclicks) */
@@ -546,12 +820,12 @@
   display: inline-block;
 }
 .row-actions-trigger {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border: none;
   border-radius: var(--radius);
   background: transparent;
-  color: #555;
+  color: var(--text-muted);
   font-size: var(--text-md);
   cursor: pointer;
   display: grid;
@@ -559,24 +833,30 @@
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 .row-actions-trigger:hover {
-  background: #f2e6e6;
+  background: var(--primary-wash);
   color: var(--primary-color);
 }
+/* Fixed, and placed by useRowMenu, so the table card's sideways scroll does
+   not clip it. */
 .row-actions-menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
+  position: fixed;
   z-index: 50;
   min-width: 200px;
   padding: 6px;
-  background: #fff;
-  border: 1px solid #e6e6e6;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
   gap: 1px;
+  /* Grows from its trigger's corner (transform-origin comes from useRowMenu)
+     and fades back into it on close. */
+  animation: menu-in 150ms ease-out;
 }
+.row-actions-menu.is-closing { animation: menu-out 100ms ease-out forwards; pointer-events: none; }
+@keyframes menu-in { from { opacity: 0; transform: scale(0.95); } }
+@keyframes menu-out { to { opacity: 0; transform: scale(0.95); } }
 .row-actions-item {
   display: flex;
   align-items: center;
@@ -591,12 +871,12 @@
   font-family: inherit;
   font-size: var(--text-sm);
   font-weight: 500;
-  color: #333;
+  color: var(--text-color);
   white-space: nowrap;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 .row-actions-item:hover {
-  background: #f6ebeb;
+  background: var(--primary-wash);
   color: var(--primary-color);
 }
 .row-actions-item .ra-icon {
@@ -607,27 +887,21 @@
 }
 /* Destructive actions: red, and separated from the rest */
 .row-actions-item.danger {
-  color: #c0392b;
+  color: var(--danger-text);
   border-top: 1px solid var(--border-subtle);
   margin-top: 3px;
   padding-top: 11px;
 }
 .row-actions-item.danger:hover {
-  background: #fbe9e7;
-  color: #a5281b;
+  background: var(--danger-bg);
 }
 
-.no-data-row {
-  background-color: #f9f9f9;
-  text-align: center;
-}
+.no-data-row { text-align: center; }
 
 .no-data-cell {
-  padding: 20px;
-  font-style: italic;
-  font-weight: 500;
+  padding: var(--space-7) var(--space-5) !important;
   color: var(--text-muted);
-  text-align: center;
+  text-align: center !important;
 }
 
 /* --- List page table chrome ----------------------------------------------
@@ -645,46 +919,70 @@
    .form-list-container too (Attendance, ClerkManagement), which is why this
    cannot live in either component's stylesheet. */
 .form-list-container {
-    padding: 20px;
-    border-radius: var(--radius);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
     background-color: var(--surface);
-    box-shadow: var(--shadow-sm);
+    /* A table with more columns than the content column is wide scrolls inside
+       its own card, rather than widening the page. Eight columns overflow at
+       1024 with the sidebar open, not only on a phone. */
+    overflow-x: auto;
 }
 
-.form-table { margin-bottom: 20px; }
+.selected-row { background-color: var(--primary-wash); }
 
-.selected-row { background-color: #d7ecff; }
-
+/* The pager row under a table, drawn as the panel's foot. */
 .table-bottom {
     display: flex;
     width: 100%;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-5);
+    border-top: 1px solid var(--border-subtle);
+    box-sizing: border-box;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
 }
 
 .rows-per-page {
     display: flex;
     align-items: center;
+    gap: var(--space-2);
+}
+
+.rows-per-page select {
+    font: inherit;
+    color: var(--text-color);
+    padding: 4px var(--space-2);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
 }
 
 .pagination {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: var(--space-2);
+    white-space: nowrap;
 }
 
 .pagination button {
-    padding: 5px 10px;
-    margin: 0 5px;
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
+    height: 32px;
+    padding: 0 var(--space-3);
+    background-color: var(--surface);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
+    font: inherit;
+    font-weight: 500;
     cursor: pointer;
 }
 
+.pagination button:hover:not(:disabled) { border-color: var(--primary-color); color: var(--primary-color); }
+
 .pagination button:disabled {
-    background-color: #cccccc;
+    opacity: 0.5;
     cursor: not-allowed;
 }
 
@@ -694,7 +992,7 @@
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: var(--space-2);
 }
 
 /* --- Form page body ------------------------------------------------------
@@ -703,15 +1001,27 @@
    away reached across to import; any page that did not import it drew its
    fields hard against the edge. */
 .form-container {
-    padding: 10px 30px;
-    margin-top: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    min-width: 0;
+}
+
+/* A form that has no ladder step to wrap still gets the panel's padding. */
+.form-container > :not(.panel-section):not(.form-step) { margin: var(--space-5); }
+
+/* A ladder step the form has not come to yet. */
+.form-step-pending {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
 }
 
 /* A line of context above a form: which round it is on, what the round is for.
    Reads as prose, not as an alert; nothing here is wrong. */
 .form-note {
-    margin: 16px 30px 0;
-    padding: 12px 16px;
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     background: var(--surface);
@@ -726,13 +1036,12 @@
 .page-back-link {
     background: none;
     border: none;
-    color: #555;
-    font-size: var(--text-xs);
-    font-weight: 600;
+    padding: 0;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: var(--text-sm);
+    font-weight: 500;
     cursor: pointer;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 1rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -746,9 +1055,9 @@
    opening a project directly drew an unstyled button until the form's chunk
    happened to load. */
 .inline-add-btn {
-    background: var(--primary-color);
-    color: #FFF;
-    border: none;
+    background: var(--surface);
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
     padding: 0.5rem 1rem;
     border-radius: var(--radius);
     font-size: var(--text-xs);
@@ -759,7 +1068,7 @@
     gap: 0.4rem;
 }
 
-.inline-add-btn:hover { background: var(--hover-color); }
+.inline-add-btn:hover { background: var(--primary-wash); }
 
 /* Sitting at the end of a table row, where a full size button would not fit. */
 .inline-add-btn--sm {
@@ -784,14 +1093,24 @@
 @media (max-width: 768px) {
     /* Title and actions stop competing for one row: the actions go under the
        title and stretch, which is also where a thumb is. */
-    .page-header {
+    .page { gap: var(--space-4); }
+
+    .page-header-main {
         flex-direction: column;
         align-items: stretch;
-        gap: 0.75rem;
-        margin-bottom: 1.25rem;
+        gap: var(--space-3);
     }
 
-    .page-title { font-size: var(--text-2xl); }
+    .page-actions { justify-content: flex-start; }
+
+    .panel-columns { grid-template-columns: 1fr; }
+
+    .panel-head,
+    .panel-foot,
+    .table-bottom { padding-left: var(--space-4); padding-right: var(--space-4); }
+
+    .panel-body,
+    .panel-section { padding: var(--space-4); }
 
     /* Buttons wrap as whole buttons. Without this the labels wrap inside
        them, and "Add User +" reads as two lines of a torn label. */
@@ -807,26 +1126,11 @@
 
     .modal-actions .custom-button { width: 100%; }
 
-    .card { padding: 1rem; }
+    .card { padding: var(--space-4); }
 
-    .empty-state { padding: 2rem 1rem; }
+    .empty-state,
+    .status-notice--empty { padding: var(--space-6) var(--space-4); }
 
-    /* A table with more columns than the screen is wide scrolls inside its own
-       card, rather than widening the page and dragging every other element
-       sideways with it. .data-table-wrap already scrolls; .form-list-container
-       is the same card without the wrapper. */
-    .form-list-container {
-        padding: 12px;
-        overflow-x: auto;
-    }
-
-    .table-bottom {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
-    }
-
-    .table-bottom--paged .rows-per-page { margin-top: 0; }
 
     /* Row actions open a menu wider than the phone unless it is allowed to
        sit left of its trigger. */
@@ -835,3 +1139,143 @@
         max-width: calc(100vw - 2rem);
     }
 }
+
+/* --- Date picker ----------------------------------------------------------
+   Moved from the attendance stylesheet: every date field uses it, and it only
+   applied once the attendance page had been visited. */
+/* Brand theme for react-datepicker, from --primary-color. Every rule is
+   prefixed with a second class so it outranks the library's single-class
+   rules without !important. */
+.react-datepicker {
+  border-color: var(--border-color);
+  font-family: inherit;
+}
+.react-datepicker .react-datepicker__header {
+  background-color: var(--primary-color);
+  border-bottom-color: var(--hover-color);
+}
+.react-datepicker .react-datepicker__current-month,
+.react-datepicker .react-datepicker-time__header,
+.react-datepicker .react-datepicker-year-header,
+.react-datepicker .react-datepicker__day-name {
+  color: var(--surface);
+}
+.react-datepicker .react-datepicker__day-name { font-weight: 600; }
+.react-datepicker .react-datepicker__day--today {
+  font-weight: 600;
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  background: var(--primary-wash);
+  border-radius: 50%;
+}
+.react-datepicker .react-datepicker__day--selected,
+.react-datepicker .react-datepicker__day--keyboard-selected,
+.react-datepicker .react-datepicker__day--chosen,
+.react-datepicker .react-datepicker__month-text--selected,
+.react-datepicker .react-datepicker__quarter-text--selected,
+.react-datepicker .react-datepicker__year-text--selected {
+  background-color: var(--primary-color);
+  color: var(--surface);
+  border-color: var(--primary-color);
+}
+.react-datepicker .react-datepicker__day--selected:hover,
+.react-datepicker .react-datepicker__day--keyboard-selected:hover {
+  background-color: var(--hover-color);
+}
+.react-datepicker .react-datepicker__day:hover {
+  background-color: var(--primary-wash);
+}
+.react-datepicker .react-datepicker__navigation-icon::before {
+  border-color: var(--surface);
+}
+
+/* The calendar floats above a dialog's overlay rather than being cropped by it. */
+body .react-datepicker-popper,
+body .react-datepicker__portal {
+  z-index: 1100;
+}
+
+/* A DatePicker's input fills its field like any other .input-field. */
+.react-datepicker-wrapper {
+  display: block;
+  width: 100%;
+}
+.react-datepicker__input-container input.input-field {
+  width: 100%;
+}
+
+/* A TableComponent inside a panel: the panel spaces it. */
+.panel .table-container { margin: 0; }
+
+/* --- Table content ---------------------------------------------------------
+   utils/tableCell.js tags plain values. Short ones hold a line, prose gets room
+   to wrap at a readable width, and figures line up by digit. */
+.data-table,
+.form-table,
+.custom-table { font-variant-numeric: tabular-nums; line-height: 1.45; }
+
+.cell-nowrap { white-space: nowrap; }
+
+/* min-width is ignored on a table cell, and a width gives way when the table
+   is squeezed. An empty block of the floor's width sets the cell's smallest
+   possible width instead. */
+.cell-text::before {
+    content: '';
+    display: block;
+    width: 10rem;
+}
+
+.cell-empty { color: var(--text-subtle); }
+
+/* The serial number is a row marker, not data. */
+.form-table tbody td:first-child:not(:has(input)),
+.custom-table tbody td:first-child {
+    width: 1%;
+    color: var(--text-subtle);
+}
+
+/* The heading a TableComponent carries above its rows. */
+.table-label {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--text-color);
+    text-align: left;
+}
+
+/* Record read-outs line their figures up too. */
+.facts dd,
+.kv dd,
+.badge { font-variant-numeric: tabular-nums; }
+
+/* --- Dialog content ----------------------------------------------------------
+   The footer stays in view while a long dialog scrolls, so Save is never
+   below the fold. It sticks to the dialog's bottom edge, over the padding; the
+   clipped shadow paints the side and bottom padding white so rows scrolling
+   under it do not show beside the buttons. A footer nested inside a padded
+   wrapper still sticks, with no negative margins to overshoot. */
+.modal-content .modal-actions {
+    position: sticky;
+    bottom: calc(-1 * var(--space-5));
+    z-index: 2;
+    margin-bottom: calc(-1 * var(--space-5));
+    padding-bottom: var(--space-5);
+    background: var(--surface);
+    box-shadow: 0 0 0 var(--space-5) var(--surface);
+    clip-path: inset(0 calc(-1 * var(--space-5)) calc(-1 * var(--space-5)));
+}
+
+/* A dialog is often narrower than a page. Field rows follow the dialog's own
+   width, not the window's: three columns in a 520px dialog left each field
+   about 140px. */
+.modal-body { container-type: inline-size; }
+
+@container (max-width: 640px) {
+    .grid-container { grid-template-columns: 1fr; }
+    .span-1,
+    .span-2,
+    .span-3 { grid-column: span 1; }
+}
+
+/* Room between the title's rule and the first field. */
+.modal-title + .modal-body { padding-top: var(--space-4); }

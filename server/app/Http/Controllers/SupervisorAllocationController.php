@@ -57,18 +57,20 @@ class SupervisorAllocationController extends Controller
             'fields' => [
                 "name",
                 "roll_no",
-                "progress",
+                "area_preferences",
                 "email"
             ],
             'extra_fields' => [
-                "progress" => function ($form) {
-                    return $form->student->overall_progress;
+                // What the scholar asked to work in, which is what allocation
+                // decides on. Progress was here and is 0 until presentations start.
+                "area_preferences" => function ($form) {
+                    return $form->student->areaPreferences->pluck('broad_area')->filter()->join(', ') ?: null;
                 },
                 "email" => function ($form) {
                     return $form->student->user->email;
                 },
             ],
-            'titles' => ["Name", "Roll No", "Progress", "Email",],
+            'titles' => ["Name", "Roll No", "Area Preferences", "Email",],
         ]);
     }
 
@@ -149,10 +151,7 @@ class SupervisorAllocationController extends Controller
             return $this->refuse();
         }
         $request->merge(['approval' => true]);
-        foreach ($request->form_ids as $form_id) {
-            $this->submit($request, $form_id);
-        }
-        return response()->json(['message' => 'Form submitted successfully'], 200);
+        return $this->bulkResults($request->form_ids, fn ($form_id) => $this->submit($request, $form_id));
     }
 
     /**
@@ -168,7 +167,10 @@ class SupervisorAllocationController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
 
-        if ($role->role != 'phd_coordinator' && $role->role != 'admin') {
+        // Every row runs through coordinatorSubmit, which checks the acting
+        // faculty against the scholar's department coordinator, so only a
+        // phd_coordinator can pass it; admin used to be let in and fail every row.
+        if ($role->role != 'phd_coordinator') {
             return $this->refuse();
         }
 

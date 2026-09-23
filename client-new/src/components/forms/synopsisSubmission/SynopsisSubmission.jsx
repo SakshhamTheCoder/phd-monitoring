@@ -8,7 +8,7 @@ import FormLadder from "../formLadder/FormLadder";
 const SynopsisSubmission = ({ formData }) => {
   return (
     <>
-      <FormTitleBar formName={"Synopsis Submission"} formData={formData} />
+      <FormTitleBar formName={"Synopsis submission"} formData={formData} />
       {formData?.round >= 2 && (
         <p className="form-note">
           The written synopsis has been approved. This round confirms the viva,

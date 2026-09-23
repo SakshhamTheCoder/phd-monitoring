@@ -28,8 +28,8 @@ class SynopsisChecklistRule extends Model
 
     protected $casts = [
         'department_ids' => 'array',
-        'admitted_from' => 'date',
-        'admitted_to' => 'date',
+        'admitted_from' => 'date:Y-m-d',
+        'admitted_to' => 'date:Y-m-d',
         'exclusive' => 'boolean',
         'sort_order' => 'integer',
         'active' => 'boolean',

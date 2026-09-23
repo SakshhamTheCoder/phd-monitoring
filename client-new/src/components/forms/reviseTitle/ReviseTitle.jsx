@@ -3,16 +3,12 @@ import Student from "./roles/Student";
 import FormTitleBar from "../formTitleBar/FormTitleBar";
 import FormLadder from "../formLadder/FormLadder";
 
-// revise-title is routed to routes/base/synopsis_submission.php, so it is served
-// by SynopsisSubmissionController and carries that controller's chain, which
-// begins at 'student'. The student panel therefore belongs inside the ladder;
-// rendering it outside left the 'student' step with no panel of its own and it
-// fell through to a plain Recommendation, which asked the scholar to recommend
-// their own application.
+// Served by ReviseTitleController. Every step after the scholar's is a plain
+// recommendation, so only the student panel is mapped.
 const ReviseTitle = ({ formData }) => {
   return (
     <>
-      <FormTitleBar formName="Revise Title or Objectives" formData={formData} />
+      <FormTitleBar formName="Revise title or objectives" formData={formData} />
       <div className="form-container">
         <FormLadder
           formData={formData}

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Department;
 use App\Models\UgBranch;
 use App\Models\Faculty;
+use App\Models\Notifications;
 use App\Models\Role;
 use App\Models\UrfApplication;
 use App\Models\UrfReportWindow;
@@ -113,6 +114,14 @@ class UrfFlowTest extends TestCase
         $this->actingAs($applicant, 'sanctum')->postJson("/api/urf/{$id}/reports", $report)->assertStatus(422);
         $this->actingAs($admin, 'sanctum')->postJson("/api/urf/{$id}/status", ['status' => 'ongoing'])->assertStatus(422);
         $this->actingAs($admin, 'sanctum')->postJson("/api/urf/{$id}/status", ['status' => 'selected'])->assertOk();
+
+        // Both students hear of each open round once, however often it runs.
+        $roundNotices = fn () => Notifications::whereIn('user_id', [$applicant->id, $partner->id])
+            ->where('link', 'like', '/forms?urf_round=%')->count();
+        $this->artisan('urf:announce-report-rounds')->assertSuccessful();
+        $this->assertSame(4, $roundNotices());
+        $this->artisan('urf:announce-report-rounds')->assertSuccessful();
+        $this->assertSame(4, $roundNotices());
         $this->actingAs($partner, 'sanctum')->postJson("/api/urf/{$id}/fellow", [
             'full_name' => 'Ravi Kumar', 'dob' => '2004-05-06', 'gender' => 'Male', 'father_name' => 'Mohan Kumar',
             'pan' => 'abcde1234f', 'aadhaar' => '1234 5678 9012', 'bank_name' => 'SBI', 'account_no' => '123456789012', 'ifsc' => 'sbin0001234',
@@ -154,6 +163,14 @@ class UrfFlowTest extends TestCase
             ->assertJsonPath('data.0.branch', 'URF Test Branch, 3rd Year · URF Test Branch, 2nd Year');
         $this->actingAs($applicant, 'sanctum')->getJson('/api/urf/mine')->assertOk()->assertJsonCount(0, 'applications.0.fellows');
         $this->actingAs($partner, 'sanctum')->getJson('/api/urf/mine')->assertOk()->assertJsonCount(1, 'applications.0.fellows');
+        // A report is the project's: the partner reads the two the applicant
+        // filed, and cannot file a second half-yearly beside the one in review.
+        $this->actingAs($applicant, 'sanctum')->getJson('/api/urf/mine')->assertJsonCount(2, 'applications.0.reports')
+            ->assertJsonMissingPath('applications.0.other_projects');
+        $this->actingAs($partner, 'sanctum')->getJson('/api/urf/mine')->assertJsonCount(2, 'applications.0.reports');
+        $this->postJson("/api/urf/{$id}/reports", ['type' => 'half_yearly', 'report' => UploadedFile::fake()->create('r2.pdf', 10, 'application/pdf')])
+            ->assertStatus(422);
+        $this->assertSame(1, DB::table('urf_reports')->where('urf_application_id', $id)->where('type', 'half_yearly')->count());
 
         // The admin's forms grid lists each form's submissions against their project.
         $onThisProject = '?filters=' . urlencode(json_encode(['conditions' => [['key' => 'project_title', 'op' => '=', 'value' => $form['project_title']]]]));
@@ -174,6 +191,11 @@ class UrfFlowTest extends TestCase
         UrfApplication::whereKey($id)->update(['session' => now()->year - 1]);
         $secondTitle = 'Second year ' . Str::random(4);
         $this->postJson('/api/urf', ['project_title' => $secondTitle] + $form + ['proposal' => $proposal()])->assertCreated();
+
+        // The partner is now on this session's project, so nobody else can name them.
+        $this->actingAs($outsider, 'sanctum')->postJson('/api/urf', ['student1_email' => $outsider->email] + $form + ['proposal' => $proposal()])
+            ->assertStatus(422)->assertJsonValidationErrors('student2_email');
+        $this->actingAs($applicant, 'sanctum');
         $this->actingAs($partner, 'sanctum')->getJson('/api/urf/mine')->assertOk()
             ->assertJsonCount(2, 'applications')
             ->assertJsonPath('applications.0.project_title', $secondTitle)
@@ -225,7 +247,19 @@ class UrfFlowTest extends TestCase
             ->assertOk()
             ->assertJsonPath('id', $id)
             // Bank details are the student's own, whoever else is reading.
-            ->assertJsonCount(0, 'fellows');
+            ->assertJsonCount(0, 'fellows')
+            // The mentor reviews every member's reports.
+            ->assertJsonCount(2, 'reports');
+
+        // Reviewing the older project, the mentor sees what each student's other
+        // one came to: its final report and the paper linked to it.
+        $this->getJson("/api/urf/{$secondId}")->assertOk()
+            ->assertJsonPath('other_projects.0.student', 'Asha Rao')
+            ->assertJsonPath('other_projects.0.projects.0.id', $id)
+            ->assertJsonPath('other_projects.0.projects.0.final_report', 'filed')
+            ->assertJsonPath('other_projects.0.projects.0.publications', ['conference:international' => 1])
+            ->assertJsonPath('other_projects.1.student', 'Ravi Kumar')
+            ->assertJsonPath('other_projects.1.projects.0.id', $id);
 
         // Another faculty member mentors nothing, so there is nothing to read.
         $stranger = Faculty::create([

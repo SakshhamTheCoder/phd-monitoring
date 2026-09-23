@@ -24,8 +24,13 @@ const Student = ({ formData }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [recs, setRecs] = useState([]);
   const [recLoading, setRecLoading] = useState(false);
+  // The slot a recommendation just filled, marked so the eye finds it.
+  const [landedSlot, setLandedSlot] = useState(null);
   const fetchTimer = useRef(null);
   const recCache = useRef(null);
+  // Numbers each request. Only the latest may set the list, so a slow answer
+  // for earlier areas cannot replace a newer one or refill a cleared list.
+  const recRequest = useRef(0);
   const location = useLocation();
   const { setLoading } = useLoading();
 
@@ -33,15 +38,20 @@ const Student = ({ formData }) => {
     if (fetchTimer.current) clearTimeout(fetchTimer.current);
     const clean = (areas || []).filter((a) => a !== null && a !== undefined && a !== '' && a !== 0).map(String);
     const sig = clean.join('|');
-    if (clean.length === 0) { setRecs([]); recCache.current = ''; return; }
-    if (sig === recCache.current) return;
-    recCache.current = sig;
+    const requestId = ++recRequest.current;
+    if (clean.length === 0) { setRecs([]); setRecLoading(false); recCache.current = ''; return; }
+    // Already showing these areas' list; any request still out is now stale.
+    if (sig === recCache.current) { setRecLoading(false); return; }
     fetchTimer.current = setTimeout(async () => {
       setRecLoading(true);
-      try {
-        const res = await customFetch(baseURL + "/faculty/recommend", "POST", { areas: clean, department_id: formData.department_id || undefined, limit: 8 }, true);
-        if (res.success) setRecs(res.response.data || []);
-      } catch {} finally { setRecLoading(false); }
+      const res = await customFetch(baseURL + "/faculty/recommend", "POST", { areas: clean, department_id: formData.department_id || undefined, limit: 8 }, true);
+      if (requestId !== recRequest.current) return;
+      // Remembered only once answered, so a failed request is tried again.
+      if (res.success) {
+        recCache.current = sig;
+        setRecs(res.response.data || []);
+      }
+      setRecLoading(false);
     }, 500);
   };
   useEffect(() => {
@@ -69,14 +79,21 @@ const Student = ({ formData }) => {
 
   const handlePrefrenceSelect = (value, index) => {
     const fc = value.faculty_code || (typeof value === 'object' && value.id ? value.id : value);
-    if (alreadySelected(fc, index)) { toast.warn('This faculty already selected in another slot'); return; }
+    // false tells InputSuggestions to put the slot's saved choice back.
+    if (alreadySelected(fc, index)) { toast.warn('This faculty already selected in another slot'); return false; }
     body.prefrences[index] = {
       name: value.name || value,
       email: value.email || '',
       department: value.department || '',
       faculty_code: fc,
     };
+    // Re-render so the other slots stop suggesting this faculty.
+    setBody({ ...body });
   };
+
+  const chosenElsewhere = (index) => body.prefrences
+    .filter((p, i) => i !== index && p?.faculty_code)
+    .map((p) => p.faculty_code);
 
   const handleBroadAreaSelect = (value, index) => {
     body.broad_area_of_research[index] = value?.name ?? value ?? '';
@@ -94,6 +111,7 @@ const Student = ({ formData }) => {
       faculty_code: row.faculty_code,
     };
     setBody({ ...body });
+    setLandedSlot(target);
     toast.info(`Preference ${target + 1} set to ${row.name}`);
   };
 
@@ -104,7 +122,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Roll Number"
+                label="Roll number"
                 initialValue={formData.roll_no}
                 isLocked={true}
               />,
@@ -119,7 +137,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Date Of Admission"
+                label="Date of admission"
                 initialValue={formatDate(formData.date_of_registration)}
                 isLocked={true}
               />,
@@ -134,7 +152,7 @@ const Student = ({ formData }) => {
                 isLocked={true}
               />,
               <InputField
-                label="Mobile Number"
+                label="Mobile number"
                 initialValue={formData.phone}
                 isLocked={true}
               />,
@@ -144,7 +162,7 @@ const Student = ({ formData }) => {
         
 
           <GridContainer
-           label={[<p>Select 3 Broad Areas of Research</p>]}
+           label="Select 3 broad areas of research"
             elements={[
               <InputSuggestions
                 initialValue={formData.broad_area_of_research?.[0]}
@@ -188,23 +206,23 @@ const Student = ({ formData }) => {
       {isLoaded && (formData.role === "student" && formData.stage === "student" && !lock) ? (
         <>
           <GridContainer
-            label={[<span>Recommended supervisors (Top 8) {recLoading && <span style={{ color: 'var(--text-muted)' }}>loading…</span>}</span>]}
+            label={<>Recommended supervisors (top 8) {recLoading && <span className="supervisor-allocation-note">loading…</span>}</>}
             elements={[
               <TableComponent
                 data={recs}
                 keys={["name","department","expertise","supervision","select"]}
-                titles={["Name","Department","Area of Expertise","Availability","Action"]}
+                titles={["Name","Department","Area of expertise","Availability","Action"]}
                 components={[
                   {
                     key: "expertise",
-                    component: ({ row }) => <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{(row.expertise || []).slice(0,3).join(', ')}</span>
+                    component: ({ row }) => <span className="supervisor-allocation-note">{(row.expertise || []).slice(0,3).join(', ')}</span>
                   },
                   {
                     key: "supervision",
                     component: ({ row }) => row.supervision?.is_full ? (
                       <span className="badge badge--warning">Full</span>
                     ) : (
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{row.supervision ? `${row.supervision.remaining} of ${row.supervision.limit} free` : ''}</span>
+                      <span className="supervisor-allocation-note">{row.supervision ? `${row.supervision.remaining} of ${row.supervision.limit} free` : ''}</span>
                     )
                   },
                   {
@@ -213,44 +231,51 @@ const Student = ({ formData }) => {
                       <CustomButton
                         text="Select"
                         variant="secondary"
+                        size="sm"
                         onClick={() => applyRec(row)}
                       />
                     )
                   }
                 ]}
               />,
-              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Based on your broad areas. Free choice — pick anyone or use recommended.</span>,
-              recs.length === 0 && !recLoading ? <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{(body.broad_area_of_research || []).filter(Boolean).length ? 'No strong matches yet — try adding clearer areas or pick manually.' : 'Select your 3 broad areas above to see recommendations.'}</p> : null,
+              <span className="supervisor-allocation-note">Based on your broad areas. Free choice: pick anyone or use recommended.</span>,
+              recs.length === 0 && !recLoading ? <span className="supervisor-allocation-note">{(body.broad_area_of_research || []).filter(Boolean).length ? 'No strong matches yet. Try adding clearer areas or pick manually.' : 'Select your 3 broad areas above to see recommendations.'}</span> : null,
             ].filter(Boolean)}
             space={3}
           />
 
           <GridContainer
-            label={[<p>Select 6 Tentative Name of Supervisor (in order)</p>]}
+            label="Select 6 tentative names of supervisors (in order)"
             elements={[
               <InputSuggestions
                 initialValue={body.prefrences[0] ? [body.prefrences[0].name, body.prefrences[0].department].filter(Boolean).join(' - ') : ''}
                 apiUrl={apiUrl_suggestion}
                 onSelect={(value) => handlePrefrenceSelect(value, 0)}
+                excludeIds={chosenElsewhere(0)}
                 lock={lock}
                 fields={["name","department"]}
                 label={"Preference 1"}
+                inputClassName={landedSlot === 0 ? "just-added" : undefined}
               />,
               <InputSuggestions
                 initialValue={body.prefrences[1] ? [body.prefrences[1].name, body.prefrences[1].department].filter(Boolean).join(' - ') : ''}
                 apiUrl={apiUrl_suggestion}
                 onSelect={(value) => handlePrefrenceSelect(value, 1)}
+                excludeIds={chosenElsewhere(1)}
                 lock={lock}
                 fields={["name","department"]}
                 label={"Preference 2"}
+                inputClassName={landedSlot === 1 ? "just-added" : undefined}
               />,
               <InputSuggestions
                 initialValue={body.prefrences[2] ? [body.prefrences[2].name, body.prefrences[2].department].filter(Boolean).join(' - ') : ''}
                 apiUrl={apiUrl_suggestion}
                 onSelect={(value) => handlePrefrenceSelect(value, 2)}
+                excludeIds={chosenElsewhere(2)}
                 lock={lock}
                 fields={["name","department"]}
                 label={"Preference 3"}
+                inputClassName={landedSlot === 2 ? "just-added" : undefined}
               />,
             ]}
           />
@@ -261,25 +286,31 @@ const Student = ({ formData }) => {
                 initialValue={body.prefrences[3] ? [body.prefrences[3].name, body.prefrences[3].department].filter(Boolean).join(' - ') : ''}
                 apiUrl={apiUrl_suggestion}
                 onSelect={(value) => handlePrefrenceSelect(value, 3)}
+                excludeIds={chosenElsewhere(3)}
                 lock={lock}
                 fields={["name","department"]}
                 label={"Preference 4"}
+                inputClassName={landedSlot === 3 ? "just-added" : undefined}
               />,
               <InputSuggestions
                 initialValue={body.prefrences[4] ? [body.prefrences[4].name, body.prefrences[4].department].filter(Boolean).join(' - ') : ''}
                 apiUrl={apiUrl_suggestion}
                 onSelect={(value) => handlePrefrenceSelect(value, 4)}
+                excludeIds={chosenElsewhere(4)}
                 lock={lock}
                 fields={["name","department"]}
                 label={"Preference 5"}
+                inputClassName={landedSlot === 4 ? "just-added" : undefined}
               />,
               <InputSuggestions
                 initialValue={body.prefrences[5] ? [body.prefrences[5].name, body.prefrences[5].department].filter(Boolean).join(' - ') : ''}
                 apiUrl={apiUrl_suggestion}
                 onSelect={(value) => handlePrefrenceSelect(value, 5)}
+                excludeIds={chosenElsewhere(5)}
                 lock={lock}
                 fields={["name","department"]}
                 label={"Preference 6"}
+                inputClassName={landedSlot === 5 ? "just-added" : undefined}
               />,
             ]}
           />
@@ -305,12 +336,12 @@ const Student = ({ formData }) => {
         <>
       
           <GridContainer
-          label={[<p>Student Preferences</p>]}
+          label="Student preferences"
             elements={[
               <TableComponent
                 data={formData.prefrences}
                 keys={["name","email", "department"]}
-                titles={["Supervisor Name","Email", "Department"]}
+                titles={["Supervisor name","Email", "Department"]}
               />,
             ]}
             space={3}

@@ -130,7 +130,7 @@ trait ModelCommonFormFields
             'email' => $this->student->user->email,
             'phone' => $this->student->user->phone,
             'department' => $this->student->department->name,
-            'date_of_registration' => $this->student->date_of_registration,
+            'date_of_registration' => $this->student->date_of_registration?->toDateString(),
             'phd_title' => $this->student->phd_title,
             'gender' => $this->student->user->gender,
             'cgpa' => $this->student->cgpa,

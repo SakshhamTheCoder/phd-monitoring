@@ -1,65 +1,24 @@
-/* The preview table the bulk allocation and bulk scheduling dialogs both draw
-   before anything is sent. Both had written the whole table inline, down to the
-   row striping, and the scheduling one did its hover with two JavaScript
-   handlers writing to element.style.
-
-   Values are the ones both were using. Where they differed, the difference is a
-   modifier rather than a second copy.
-*/
-
-.bulk-preview { padding: 20px; }
-
-.bulk-preview-title { margin-bottom: 10px; }
-
-.bulk-preview-info {
-  background-color: #f0f7ff;
-  border: 1px solid #2196F3;
-  border-radius: 6px;
-  padding: 12px;
-  margin-bottom: 20px;
-  font-size: 14px;
-}
-
-.bulk-preview-file {
-  margin-top: 10px;
-  padding: 8px;
-  border: 2px solid #ddd;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-/* Compound, so it beats .custom-button whichever stylesheet loads last. */
-.custom-button.bulk-preview-template {
-  background-color: #FF9800;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-weight: 500;
-}
-
-.custom-button.bulk-preview-confirm {
-  background-color: #4CAF50;
-  color: white;
-  padding: 12px 24px;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 16px;
-}
+/* The preview table the bulk scheduling dialog draws before anything is sent.
+   Ruled like the shared .csv-preview in styles/ui.css: you are checking cells,
+   not scanning records. Bulk allocation now uses the shared classes. */
 
 .bulk-preview-heading {
-  margin-top: 20px;
-  font-weight: bold;
+  margin-top: var(--space-5);
+  font-size: var(--text-sm);
+  font-weight: 600;
 }
 
-.bulk-preview-heading--tight { margin-top: 10px; }
+.bulk-preview-heading--tight { margin-top: var(--space-2); }
 
-.bulk-preview-file-plain { margin-top: 10px; }
+.bulk-preview-file-plain { margin-top: var(--space-2); }
 
 .bulk-preview-scroll {
   overflow-x: auto;
-  margin-top: 16px;
+  margin-top: var(--space-4);
   max-height: 400px;
   overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
 }
 
 /* The scheduling preview shows every row rather than a window of them. */
@@ -71,45 +30,37 @@
 .bulk-preview-table {
   width: 100%;
   border-collapse: collapse;
-  font-family: Arial, sans-serif;
-  font-size: 14px;
-  background-color: #fff;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  font-size: var(--text-sm);
+  background-color: var(--surface);
 }
 
 .bulk-preview-head {
-  background-color: #f5f5f5;
+  background-color: var(--canvas);
   position: sticky;
   top: 0;
   z-index: 1;
 }
 
 .bulk-preview-th {
-  border: 1px solid #ccc;
-  padding: 10px;
+  border-bottom: 1px solid var(--border-color);
+  padding: var(--space-2) var(--space-3);
   font-weight: 600;
   text-align: left;
-  color: #333;
+  color: var(--text-color);
+  white-space: nowrap;
 }
 
-.bulk-preview-th--nowrap { white-space: nowrap; }
+.bulk-preview-row + .bulk-preview-row { border-top: 1px solid var(--border-subtle); }
 
-.bulk-preview-row { border-bottom: 1px solid #eee; }
-
-/* Striping was an index ternary in the map; the first row is white. */
-.bulk-preview-row:nth-child(odd) { background-color: #fff; }
-.bulk-preview-row:nth-child(even) { background-color: #f9f9f9; }
-
-.bulk-preview-row--hover { transition: background-color 0.3s; }
-.bulk-preview-row--hover:hover { background-color: #eaeaea; }
+.bulk-preview-row--hover:hover { background-color: var(--canvas); }
 
 .bulk-preview-cell {
-  padding: 10px;
-  border: 1px solid #ddd;
-  color: #444;
+  padding: var(--space-2) var(--space-3);
+  color: var(--text-color);
 }
 
 .bulk-preview-actions {
-  margin-top: 16px;
-  text-align: right;
+  margin-top: var(--space-4);
+  display: flex;
+  justify-content: flex-end;
 }

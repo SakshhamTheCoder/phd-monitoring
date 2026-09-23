@@ -26,7 +26,7 @@ const Student = ({ formData }) => {
   const [showPublication, setShowPublication] = useState(false);
   const [temp, setTemp] = useState([]);
   const [files, setFiles] = useState([]);
-  // The scholar's unlinked publication library, shown in the "Add Publications"
+  // The scholar's unlinked publication library, shown in the "Add publications"
   // picker. Kept in state so a publication added from inside the picker appears
   // without reloading the page.
   const [studentPublications, setStudentPublications] = useState(
@@ -187,7 +187,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Roll Number"
+                label="Roll number"
                 initialValue={formData.roll_no}
                 isLocked={true}
               />,
@@ -197,7 +197,7 @@ const Student = ({ formData }) => {
                 isLocked={true}
               />,
               <InputField
-                label="Date of Revised IRB"
+                label="Date of revised IRB"
                 initialValue={formatDate(formData.date_of_irb)}
                 isLocked={true}
               />,
@@ -207,7 +207,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Date of Admission"
+                label="Date of admission"
                 initialValue={formatDate(formData.date_of_registration)}
                 isLocked={true}
               />,
@@ -226,7 +226,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Address of Correspondance"
+                label="Address of correspondence"
                 initialValue={formData.address}
                 isLocked={true}
               />,
@@ -237,7 +237,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Title of Phd Thesis"
+                label="Title of PhD thesis"
                 initialValue={formData.phd_title}
                 isLocked={true}
               />,
@@ -247,7 +247,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Status of Student at Time of Admission"
+                label="Status of student at time of admission"
                 initialValue={formData.initial_status}
                 isLocked={true}
               />,
@@ -258,7 +258,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Current Status"
+                label="Current status"
                 initialValue={
                   formData.current_status === "part-time"
                     ? "Part Time"
@@ -269,13 +269,13 @@ const Student = ({ formData }) => {
               <>
                 {formData.previous_extension_date !== "NA" ? (
                   <InputField
-                    label="Date of Change of Status"
+                    label="Date of change of status"
                     initialValue={formatDate(formData.previous_extension_date)}
                     isLocked={true}
                   />
                 ) : (
                   <InputField
-                    label="Date of Change of Status"
+                    label="Date of change of status"
                     initialValue={formData.previous_extension_date}
                     isLocked={true}
                   />
@@ -286,7 +286,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <DateField required={true}
-                label="Date of Synopsis Presentation"
+                label="Date of synopsis presentation"
                 initialValue={formData.date_of_synopsis}
                 isLocked={lock}
                 onChange={(value) => {
@@ -298,7 +298,7 @@ const Student = ({ formData }) => {
               />,
 
               <InputField required={true}
-                label="Receipt Number"
+                label="Receipt number"
                 initialValue={formData.reciept_no}
                 isLocked={lock}
                 onChange={(value) => {
@@ -309,7 +309,7 @@ const Student = ({ formData }) => {
                 }}
               />,
               <DateField required={true}
-                label="Date of Fee Submission"
+                label="Date of fee submission"
                 initialValue={formData.date_of_fee_submission}
                 isLocked={lock}
                 onChange={(value) => {
@@ -324,13 +324,12 @@ const Student = ({ formData }) => {
           <>
             {formData?.role === "student" && !lock && (
               <GridContainer
+                label="Publications"
                 elements={[
-                  <>
-                    <h2 className="section-heading">Publications</h2>
-                  </>,
-                  <></>,
                   <CustomButton
-                    text="Add Publications"
+                    text="Add publications"
+                    variant="secondary"
+                    size="sm"
                     onClick={() => {
                       openModal();
                     }}
@@ -346,6 +345,7 @@ const Student = ({ formData }) => {
                   enableDelete={formData?.role === "student" && !lock}
                   canAdd={formData?.role === "student" && !lock}
                   onDelete={removePublication}
+                  confirmUnlink
                   refetchData={refetchPublications}
                 />,
               ]}
@@ -355,8 +355,8 @@ const Student = ({ formData }) => {
 
           <GridContainer
             elements={[
-              <FileUploadField required={true}
-                label={"Upload Thesis PDF"}
+              <FileUploadField required={!formData.thesis_pdf}
+                label={"Upload thesis PDF"}
                 onChange={(file) => {
                   setFiles((prev) => {
                     const updated = prev.filter((f) => f.key !== "thesis_pdf");
@@ -366,8 +366,8 @@ const Student = ({ formData }) => {
                 isLocked={lock}
                 initialValue={formData.thesis_pdf}
               />,
-              <FileUploadField required={true}
-                label={"Upload Fee Receipt"}
+              <FileUploadField required={!formData.fee_receipt}
+                label={"Upload fee receipt"}
                 onChange={(file) => {
                   setFiles((prev) => {
                     const updated = prev.filter((f) => f.key !== "fee_receipt");
@@ -382,7 +382,6 @@ const Student = ({ formData }) => {
           <CustomModal
             isOpen={open}
             onClose={closeModal}
-            title={"Add Publication"}
             minHeight="200px"
             maxHeight="600px"
             minWidth="650px"

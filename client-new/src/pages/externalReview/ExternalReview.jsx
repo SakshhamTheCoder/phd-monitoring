@@ -6,11 +6,30 @@ import GridContainer from "../../components/forms/fields/GridContainer";
 import InputField from "../../components/forms/fields/InputField";
 import RecommendationField from "../../components/forms/fields/RecommendationField";
 import CustomButton from "../../components/forms/fields/CustomButton";
-import "../../components/forms/formTitleBar/FormTitleBar.css";
+import Page from "../../components/page/Page";
+import Panel from "../../components/panel/Panel";
+import StatusNotice from "../../components/common/StatusNotice";
+import FormActions from "../../components/common/FormActions";
 import "./ExternalReview.css";
 
+const CRUMBS = [{ label: "Outside expert review" }];
+
+// The page header a form page has, with the submission's reference where
+// FormTitleBar puts the form id. There is no stage or status history to show
+// an outside expert.
+const ReviewPage = ({ formId, children }) => (
+  <ExternalLayout crumbs={CRUMBS}>
+    <Page
+      title="IRB submission review"
+      meta={formId && <span className="badge badge--neutral">Ref #{formId}</span>}
+    >
+      {children}
+    </Page>
+  </ExternalLayout>
+);
+
 // Public, token-authenticated page. Uses plain fetch (NOT the authed customFetch) so a 401
-// elsewhere can never redirect the expert to login — there is no account. Rendered inside the
+// elsewhere can never redirect the expert to login, since there is no account. Rendered inside the
 // portal shell (ExternalLayout) with the real form components so it matches an in-portal form.
 const ExternalReview = () => {
   const { token } = useParams();
@@ -67,31 +86,19 @@ const ExternalReview = () => {
     }
   };
 
-  const TitleBar = () => (
-    <div className="form-title-bar">
-      <h1 className="form-title-bar-t">IRB Submission Review</h1>
-      {data?.form_id && (
-        <div className="form-title-bar-right">
-          <span className="form-title-bar-right-item">Ref #{data.form_id}</span>
-        </div>
-      )}
-    </div>
-  );
-
   if (loading) {
     return (
-      <ExternalLayout crumbs={[{ label: "Outside Expert Review" }]}>
-        <div className="form-container"><p>Loading…</p></div>
-      </ExternalLayout>
+      <ReviewPage>
+        <Panel><StatusNotice tone="loading" title="Loading the review" /></Panel>
+      </ReviewPage>
     );
   }
 
   if (error) {
     return (
-      <ExternalLayout crumbs={[{ label: "Outside Expert Review" }]}>
-        <TitleBar />
-        <div className="form-container"><div className="xr-note xr-note-error">{error}</div></div>
-      </ExternalLayout>
+      <ReviewPage formId={data?.form_id}>
+        <Panel><StatusNotice tone="error">{error}</StatusNotice></Panel>
+      </ReviewPage>
     );
   }
 
@@ -99,57 +106,69 @@ const ExternalReview = () => {
     const dec = done ? decision : data?.decision;
     const cmt = done ? comment.trim() : data?.comment;
     return (
-      <ExternalLayout crumbs={[{ label: "Outside Expert Review" }]}>
-        <TitleBar />
-        <div className="form-container">
-          <div className="xr-note xr-note-success">
-            {done
-              ? "Your review has been recorded. Thank you."
-              : "You have already responded to this review."}
+      <ReviewPage formId={data?.form_id}>
+        <Panel className="reveal">
+          <div className="xr-stack">
+            <p className="xr-note-success" role="status">
+              <i className="fa fa-check-circle" aria-hidden="true" />
+              {done
+                ? "Your review has been recorded. Thank you."
+                : "You have already responded to this review."}
+            </p>
+            {(dec || cmt) && (
+              <dl className="facts">
+                {dec && (
+                  <div>
+                    <dt>Your recommendation</dt>
+                    <dd>{dec === "recommend" ? "Recommend" : "Not Recommend"}</dd>
+                  </div>
+                )}
+                {cmt && (
+                  <div>
+                    <dt>Remarks</dt>
+                    <dd>{cmt}</dd>
+                  </div>
+                )}
+              </dl>
+            )}
+            <p className="xr-muted">You can safely close this page.</p>
           </div>
-          {dec && (
-            <p><strong>Your recommendation:</strong> {dec === "recommend" ? "Recommend" : "Not Recommend"}</p>
-          )}
-          {cmt && <p><strong>Remarks:</strong> {cmt}</p>}
-          <p className="xr-muted">You can safely close this page.</p>
-        </div>
-      </ExternalLayout>
+        </Panel>
+      </ReviewPage>
     );
   }
 
   if (data?.state === "closed") {
     return (
-      <ExternalLayout crumbs={[{ label: "Outside Expert Review" }]}>
-        <TitleBar />
-        <div className="form-container">
-          <div className="xr-note">This submission is no longer awaiting your review. No action is needed.</div>
-        </div>
-      </ExternalLayout>
+      <ReviewPage formId={data?.form_id}>
+        <Panel className="reveal">
+          <StatusNotice tone="info">This submission is no longer awaiting your review. No action is needed.</StatusNotice>
+        </Panel>
+      </ReviewPage>
     );
   }
 
   // pending
   return (
-    <ExternalLayout crumbs={[{ label: "Outside Expert Review" }]}>
-      <TitleBar />
-      <div className="form-container">
+    <ReviewPage formId={data?.form_id}>
+      <div className="form-container reveal">
         <GridContainer
           elements={[
-            <InputField label="Student" initialValue={data?.student_name || "—"} isLocked={true} />,
-            <InputField label="Department" initialValue={data?.department || "—"} isLocked={true} />,
+            <InputField label="Student" initialValue={data?.student_name || "-"} isLocked={true} />,
+            <InputField label="Department" initialValue={data?.department || "-"} isLocked={true} />,
           ]}
         />
         <GridContainer
           space={2}
           elements={[
-            <InputField label="Title of PhD Thesis" initialValue={data?.title || "—"} isLocked={true} />,
+            <InputField label="Title of PhD thesis" initialValue={data?.title || "-"} isLocked={true} />,
           ]}
         />
 
         {data?.pdf_url && (
           <GridContainer
             space={3}
-            label="Submission Document"
+            label="Submission document"
             elements={[
               <div className="xr-pdf">
                 <iframe title="IRB Submission PDF" src={data.pdf_url} className="xr-pdf-frame" />
@@ -164,7 +183,6 @@ const ExternalReview = () => {
         <RecommendationField
           role="Outside Expert"
           allowRejection={false}
-          initialValue={{}}
           lock={false}
           onRecommendationChange={(d) =>
             setDecision(d.approval ? "recommend" : "not_recommend")
@@ -185,20 +203,17 @@ const ExternalReview = () => {
           ]}
         />
 
-        {submitError && <div className="xr-note xr-note-error">{submitError}</div>}
+        {submitError && <StatusNotice tone="error">{submitError}</StatusNotice>}
 
-        <GridContainer
-          space={2}
-          elements={[
-            <CustomButton
-              text={submitting ? "Submitting…" : "Submit Recommendation"}
-              onClick={submit}
-              disabled={submitting}
-            />,
-          ]}
-        />
+        <FormActions>
+          <CustomButton
+            text="Submit recommendation"
+            onClick={submit}
+            busy={submitting}
+          />
+        </FormActions>
       </div>
-    </ExternalLayout>
+    </ReviewPage>
   );
 };
 

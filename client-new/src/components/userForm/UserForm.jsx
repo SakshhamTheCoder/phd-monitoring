@@ -1,13 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
+import { apiRoleList } from '../../api/lookups';
 import { toast } from 'react-toastify';
 import CustomButton from '../forms/fields/CustomButton';
 import InputField from '../forms/fields/InputField';
 import DropdownField from '../forms/fields/DropdownField';
 import GridContainer from '../forms/fields/GridContainer';
 import ToggleSwitch from '../forms/fields/ToggleSwitch';
+import LoadError from '../common/LoadError';
+import StatusNotice from '../common/StatusNotice';
 import useBranches from '../../hooks/useBranches';
+import useDoneFlash from '../../hooks/useDoneFlash';
 import './UserForm.css';
 
 const UserForm = ({ edit, userData, onClose }) => {
@@ -31,7 +35,9 @@ const UserForm = ({ edit, userData, onClose }) => {
   const [showPasswordSection, setShowPasswordSection] = useState(false);
   const [customPassword, setCustomPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [emailSent, flashEmailSent] = useDoneFlash();
   const [rolesLoaded, setRolesLoaded] = useState(false);
+  const [rolesFailed, setRolesFailed] = useState(false);
   // The URF details behind a ug_student account, which only that role has.
   const branches = useBranches();
 
@@ -39,8 +45,11 @@ const UserForm = ({ edit, userData, onClose }) => {
     fetchRoles();
   }, []);
 
+  // Filled without waiting on the role list: the role selects mount once it
+  // arrives and read these values then, and a failed /roles no longer holds
+  // every other field back.
   useEffect(() => {
-    if (edit && userData && rolesLoaded) {
+    if (edit && userData) {
       setFormData({
         id: userData.id,
         full_name: userData.full_name || [userData.first_name, userData.last_name].filter(Boolean).join(' ') || '',
@@ -61,11 +70,17 @@ const UserForm = ({ edit, userData, onClose }) => {
     }
   // A new user starts from the blank state above. Resetting here as well ran
   // again when the role list arrived and wiped whatever had been typed.
-  }, [edit, userData, rolesLoaded]);
+  }, [edit, userData]);
 
   const fetchRoles = async () => {
+    setRolesFailed(false);
     try {
-      const response = await customFetch(baseURL + '/roles', 'GET');
+      const response = await apiRoleList();
+      // customFetch has already said why.
+      if (!response.success) {
+        setRolesFailed(true);
+        return;
+      }
       const roleData = response.response.map(r => ({
         value: r.id,
         title: r.role.charAt(0).toUpperCase() + r.role.slice(1),
@@ -75,6 +90,7 @@ const UserForm = ({ edit, userData, onClose }) => {
       setAllRoleOptions(roleData.map(r => r.role_name));
       setRolesLoaded(true);
     } catch (error) {
+      setRolesFailed(true);
       toast.error('Failed to fetch roles');
     }
   };
@@ -165,6 +181,7 @@ const UserForm = ({ edit, userData, onClose }) => {
       );
       if (!result.success) return;
       toast.success('Password reset email sent.');
+      flashEmailSent();
     } catch (error) {
       toast.error('Failed to send reset email');
     } finally {
@@ -172,8 +189,12 @@ const UserForm = ({ edit, userData, onClose }) => {
     }
   };
 
+  // Ids arrive as numbers from /roles and as strings from the select, so a
+  // strict comparison never matched once a role had been picked.
+  const roleById = (id) => roles.find(r => String(r.value) === String(id));
+
   const handleRoleChange = (roleId) => {
-    const selectedRole = roles.find(r => r.value === roleId);
+    const selectedRole = roleById(roleId);
     setFormData(prev => ({
       ...prev,
       role_id: roleId,
@@ -202,20 +223,19 @@ const UserForm = ({ edit, userData, onClose }) => {
   const statusOptions = [
     { value: 'active', title: 'Active' },
     { value: 'inactive', title: 'Inactive' },
-    { value: 'suspended', title: 'Suspended' },
   ];
 
 
 
   return (
     <div className="user-form">
-      <h2>{edit ? 'Edit User' : 'Create New User'}</h2>
+      <h2 className="modal-title">{edit ? 'Edit user' : 'Create new user'}</h2>
       
       <form onSubmit={handleSubmit}>
         <GridContainer
           elements={[
             <InputField
-              label="Full Name *"
+              label="Full name *"
               initialValue={formData.full_name}
               isLocked={false}
               onChange={(value) => setFormData((prev) => ({ ...prev, full_name: value }))}
@@ -258,7 +278,7 @@ const UserForm = ({ edit, userData, onClose }) => {
             <DropdownField
               label="Status"
               options={statusOptions}
-              initialValue={statusOptions.find(s => s.value === formData.status)?.title || 'Active'}
+              initialValue={formData.status || 'active'}
               onChange={(value) => setFormData((prev) => ({ ...prev, status: value }))}
               key={`status_${formData.id || 'new'}`}
             />,
@@ -276,15 +296,17 @@ const UserForm = ({ edit, userData, onClose }) => {
             // The label goes through the field so it is tied to the select; a
             // bare <label> beside it named nothing for a screen reader.
             <DropdownField
-              label="Main Role"
+              label="Main role"
               required
               options={roles}
-              initialValue={formData.role_id ? roles.find(r => r.value === formData.role_id)?.title : ''}
+              initialValue={formData.role_id || ''}
               onChange={handleRoleChange}
               key={`role_${formData.id || 'new'}`}
             />
+          ) : rolesFailed ? (
+            <LoadError message="Could not load the roles. Check your connection and try again." onRetry={fetchRoles} />
           ) : (
-            <p>Loading roles...</p>
+            <StatusNotice tone="loading" title="Loading roles" />
           )}
         </div>
 
@@ -293,42 +315,40 @@ const UserForm = ({ edit, userData, onClose }) => {
             <div>
               {rolesLoaded && roles.length > 0 ? (
                 <DropdownField
-                  label="Current Role"
+                  label="Current role"
                   options={roles}
-                  initialValue={formData.current_role_id ? roles.find(r => r.value === formData.current_role_id)?.title : ''}
+                  initialValue={formData.current_role_id || ''}
                   onChange={(value) => setFormData((prev) => ({ ...prev, current_role_id: value }))}
                   key={`current_role_${formData.id || 'new'}`}
                 />
               ) : (
-                <p>Loading...</p>
+                !rolesFailed && <StatusNotice tone="loading" title="Loading roles" />
               )}
             </div>,
             <div>
               {rolesLoaded && roles.length > 0 ? (
                 <DropdownField
-                  label="Default Role"
+                  label="Default role"
                   options={roles}
-                  initialValue={formData.default_role_id ? roles.find(r => r.value === formData.default_role_id)?.title : ''}
+                  initialValue={formData.default_role_id || ''}
                   onChange={(value) => setFormData((prev) => ({ ...prev, default_role_id: value }))}
                   key={`default_role_${formData.id || 'new'}`}
                 />
               ) : (
-                <p>Loading...</p>
+                !rolesFailed && <StatusNotice tone="loading" title="Loading roles" />
               )}
             </div>
           ]}
           space={2}
         />
 
-        {roles.find(r => r.value === formData.role_id)?.role_name === 'ug_student' && (
+        {roleById(formData.role_id)?.role_name === 'ug_student' && (
           <>
-            <label className="user-form-section-label">
-              URF Details
-            </label>
+            <h3 className="user-form-section-label">URF details</h3>
             <GridContainer
               elements={[
                 <InputField
-                  label="Roll Number"
+                  label="Roll number"
                   initialValue={formData.roll_no || ''}
                   onChange={(value) => setFormData((prev) => ({ ...prev, roll_no: value }))}
                 />,
@@ -340,7 +360,7 @@ const UserForm = ({ edit, userData, onClose }) => {
                   key={`branch_${formData.id || 'new'}`}
                 />,
                 <DropdownField
-                  label="Year of Study (blank counts from the roll number)"
+                  label="Year of study (blank counts from the roll number)"
                   options={[1, 2, 3, 4].map((year) => ({ title: `${year} Year`, value: year }))}
                   initialValue={formData.year || ''}
                   onChange={(value) => setFormData((prev) => ({ ...prev, year: value }))}
@@ -353,17 +373,17 @@ const UserForm = ({ edit, userData, onClose }) => {
         )}
 
         <div className="user-form-row">
-          <label className="user-form-block-label">
-            Available Roles (Select multiple)
-          </label>
-          <p className="user-form-note-warn">
+          <p className="user-form-block-label" id="user-form-available-roles">
+            Available roles (select multiple)
+          </p>
+          <StatusNotice tone="warning">
             Ticking a role here grants it, but does not create the record it depends on.
             <strong>Hod</strong>, <strong>Phd_coordinator</strong> and <strong>Adordc</strong> are
             assigned from the Departments page, <strong>Clerk</strong> from Clerk Management.
             <strong>Faculty</strong>-type roles need a faculty record and <strong>Student</strong>
             needs a student record. Until those exist the user cannot switch into the role.
-          </p>
-          <div className="user-form-role-grid">
+          </StatusNotice>
+          <div className="user-form-role-grid" role="group" aria-labelledby="user-form-available-roles">
             {allRoleOptions.map(roleName => (
               <label
                 key={roleName}
@@ -386,7 +406,7 @@ const UserForm = ({ edit, userData, onClose }) => {
         {!edit && (
           <div className="user-form-row">
             <InputField
-              label="Custom Password (Optional, min 8 characters)"
+              label="Custom password (optional, min 8 characters)"
               type="password"
               initialValue={customPassword}
               isLocked={false}
@@ -399,47 +419,39 @@ const UserForm = ({ edit, userData, onClose }) => {
           </div>
         )}
 
-        <div className="user-form-actions">
-          <button
-            type="button"
-            onClick={onClose}
-            className="user-form-btn-cancel"
-          >
-            Cancel
-          </button>
+        <div className="modal-actions">
+          <CustomButton text="Cancel" variant="quiet" onClick={onClose} />
           <CustomButton
             type="submit"
-            text={loading ? 'Saving...' : (edit ? 'Update User' : 'Create User')}
-            disabled={loading}
+            text={edit ? 'Update user' : 'Create user'}
+            busy={loading}
           />
         </div>
       </form>
 
       {edit && (
         <div className="user-form-password">
-          <h3>Password Management</h3>
+          <h3 className="user-form-section-label">Password management</h3>
           
           {!showPasswordSection ? (
             <div className="user-form-button-row">
-              <button
+              <CustomButton
+                text="Set custom password"
+                variant="secondary"
                 onClick={() => setShowPasswordSection(true)}
-                className="user-form-btn-amber"
-              >
-                Set Custom Password
-              </button>
-              <button
-                type="button"
+              />
+              <CustomButton
+                text="Send password reset email"
+                variant="secondary"
                 onClick={handleSendResetEmail}
                 disabled={loading}
-                className="user-form-btn-primary"
-              >
-                Send Password Reset Email
-              </button>
+                done={emailSent}
+              />
             </div>
           ) : (
             <div>
               <InputField
-                label="New Password (min 8 characters)"
+                label="New password (min 8 characters)"
                 type="password"
                 initialValue={customPassword}
                 isLocked={false}
@@ -447,22 +459,21 @@ const UserForm = ({ edit, userData, onClose }) => {
                 key={`reset_password_${formData.id}`}
               />
               <div className="user-form-button-row user-form-button-row--spaced">
-                <button
+                <CustomButton
+                  text="Cancel"
+                  variant="quiet"
                   onClick={() => {
                     setShowPasswordSection(false);
                     setCustomPassword('');
                   }}
-                  className="user-form-btn-cancel"
-                >
-                  Cancel
-                </button>
-                <button
+                />
+                <CustomButton
+                  text="Reset password"
+                  variant="secondary"
                   onClick={handleResetPassword}
-                  disabled={loading || !customPassword || customPassword.length < 8}
-                  className="user-form-btn-amber"
-                >
-                  {loading ? 'Resetting...' : 'Reset Password'}
-                </button>
+                  busy={loading}
+                  disabled={!customPassword || customPassword.length < 8}
+                />
               </div>
             </div>
           )}

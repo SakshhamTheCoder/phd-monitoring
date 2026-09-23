@@ -16,7 +16,7 @@ const CHAINS = {
   'irbSubmission/IRBSubmission.jsx': ['student', 'faculty', 'external', 'doctoral', 'phd_coordinator', 'hod', 'dra', 'dordc'],
   'listOfExaminers/ListOfExaminers.jsx': ['faculty', 'dordc', 'director'],
   'presentations/PresentationForm.jsx': ['student', 'faculty', 'doctoral', 'hod', 'dordc'],
-  // Served by SynopsisSubmissionController, so it carries the same chain.
+  // Its own controller, on the synopsis's first-round chain.
   'reviseTitle/ReviseTitle.jsx': ['student', 'faculty', 'doctoral', 'phd_coordinator', 'hod', 'dordc'],
   'semesterOff/SemesterOff.jsx': ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc', 'director'],
   'statusChange/StatusChange.jsx': ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc', 'director'],

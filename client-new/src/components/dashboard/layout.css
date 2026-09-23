@@ -26,7 +26,7 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background-color: #FAFAFA;
+    background-color: var(--canvas);
 }
 
 /* Sticky rather than fixed. Fixed needed .content to guess its height with a
@@ -45,8 +45,10 @@
    breadcrumb and the page title line up. */
 .content {
     flex: 1;
-    padding: 1.5rem 2rem 3rem;
+    padding: var(--space-5) var(--space-6) var(--space-7);
     width: 100%;
+    /* The content loader covers this box. */
+    position: relative;
     box-sizing: border-box;
 }
 
@@ -74,14 +76,19 @@
 }
 
 @media (max-width: 768px) {
+    /* Off-screen alone left the closed drawer's links in the tab order.
+       Hidden once the slide-out has finished, visible at once on open. */
     .sidebar {
         transform: translateX(-100%);
-        transition: transform var(--transition) ease-out;
+        visibility: hidden;
+        transition: transform var(--transition) ease-out, visibility 0s linear var(--transition);
         box-shadow: var(--shadow-lg);
     }
 
     .layout--nav-open .sidebar {
         transform: translateX(0);
+        visibility: visible;
+        transition-delay: 0s;
     }
 
     .main-content {
@@ -101,7 +108,7 @@
     }
 
     .content {
-        padding: 1rem 1rem 2rem;
+        padding: var(--space-4) var(--space-4) var(--space-6);
     }
 }
 

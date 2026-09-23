@@ -1,22 +1,21 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import Layout from '../../components/dashboard/layout';
-import PageHeader from '../../components/pageHeader/PageHeader';
+import Page from '../../components/page/Page';
+import Panel from '../../components/panel/Panel';
 import Tabs from '../../components/tabs/Tabs';
 import FilterBar from '../../components/filterBar/FilterBar';
 import PagenationTable from '../../components/pagenationTable/PagenationTable';
 import FormGrid from '../../components/forms/formGrid/FormGrid';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import DropdownField from '../../components/forms/fields/DropdownField';
-import { fileUrlFrom } from '../../components/common/FileLink';
+import { openStoredFile } from '../../api/fileAccess';
 import FacultyLink from '../../components/facultyLink/FacultyLink';
 import { EMPTY_VALUE } from '../../utils/timeParse';
 import { URF_STATUSES, capitalize } from '../../components/urf/UrfRecord';
 import { apiSettings, apiSaveSettings } from '../../api/settings';
 import useCapabilities, { useCapabilitiesKnown } from '../../context/CapabilitiesContext';
 import TableComponent from '../../components/forms/table/TableComponent';
-import GridContainer from '../../components/forms/fields/GridContainer';
 import { apiUrfQueue } from '../../api/urf';
 import UrfReportSchedule from '../../components/urf/UrfReportSchedule';
 import CustomModal from '../../components/forms/modal/CustomModal';
@@ -24,7 +23,7 @@ import { apiUrfSessions, apiUrfStatus, apiUrfImportAwarded } from '../../api/urf
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
 import './UrfList.css';
 
-/** Admin → URF: every application, by stage, with the filters the students page has. */
+/** Admin, URF: every application, by stage, with the filters the students page has. */
 // The URF forms, as cards like the PhD forms page. Each opens its own list.
 const FORM_NAMES = {
   'urf-application': 'Application',
@@ -110,7 +109,11 @@ const UrfList = () => {
     errors.forEach((message) => toast.warn(message, { autoClose: 10000 }));
     reset();
     setImportOpen(false);
-    window.location.reload();
+    // An import can open a new session, so the session list is read again and
+    // the page lands on the newest one. The table waits for it, then mounts once.
+    setSessions(null);
+    loadSessions();
+    setRefreshKey((key) => key + 1);
   };
   const capabilitiesKnown = useCapabilitiesKnown();
 
@@ -121,21 +124,23 @@ const UrfList = () => {
 
   // One session at a time, so the table never mixes two years. The newest is
   // the one to land on.
+  const loadSessions = () => apiUrfSessions()
+    .then((res) => (res.success && Array.isArray(res.response) ? res.response : []))
+    // An empty list still settles the page: the table shows what it has
+    // rather than waiting for a year that is never coming.
+    .catch(() => [])
+    .then((years) => {
+      setSessions(years);
+      setSession(years.length ? String(years[0]) : '');
+    });
+
   useEffect(() => {
     if (!capabilitiesKnown) return;
     if (!readsUrf) {
       setSessions([]);
       return;
     }
-    apiUrfSessions()
-      .then((res) => (res.success && Array.isArray(res.response) ? res.response : []))
-      // An empty list still settles the page: the table shows what it has
-      // rather than waiting for a year that is never coming.
-      .catch(() => [])
-      .then((years) => {
-        setSessions(years);
-        setSession(years.length ? String(years[0]) : '');
-      });
+    loadSessions();
   }, [capabilitiesKnown, readsUrf]);
 
   const toggleApplications = async () => {
@@ -196,7 +201,7 @@ const UrfList = () => {
       toast.info('No proposal was uploaded for this project.');
       return;
     }
-    window.open(fileUrlFrom(row.proposal), '_blank', 'noopener,noreferrer');
+    openStoredFile(row.proposal);
   };
 
   // The stage and the session are the page's own scope; the search box is the
@@ -236,33 +241,34 @@ const UrfList = () => {
   // reads the projects they are on; deciding them is the office's.
   const decidable = tab === 'applied' && can('can_manage_urf');
 
+  // Waits for the capabilities: before they land can() says no to everything,
+  // and the office fetched a queue it holds no step on.
   useEffect(() => {
-    if (can('can_manage_urf')) return;
+    if (!capabilitiesKnown || managesUrf) return;
     apiUrfQueue().then((res) => res.success && setQueue(res.response.data || []));
-  }, [refreshKey]);
+  }, [refreshKey, capabilitiesKnown, managesUrf]);
 
   return (
-    <Layout>
-      <PageHeader
-        title="URF"
-        subtitle={can('can_manage_urf')
-          ? `Undergraduate Research Fellowship. Applications are ${open ? 'open' : 'closed'}.`
-          : 'The Undergraduate Research Fellowship projects you mentor.'}
-        actions={can('can_manage_urf') && (
-          <>
-            <CustomButton text="Import Awarded" onClick={() => setImportOpen(true)} />
-            {open !== null && (
-              <CustomButton text={open ? 'Close Applications' : 'Open Applications'} onClick={toggleApplications} />
-            )}
-          </>
-        )}
-      />
+    <Page
+      title="URF"
+      description={can('can_manage_urf')
+        ? `Undergraduate Research Fellowship.${open === null ? '' : ` Applications are ${open ? 'open' : 'closed'}.`}`
+        : 'The Undergraduate Research Fellowship projects you mentor.'}
+      actions={can('can_manage_urf') && (
+        <>
+          <CustomButton text="Import awarded" variant="secondary" onClick={() => setImportOpen(true)} />
+          {open !== null && (
+            <CustomButton text={open ? 'Close applications' : 'Open applications'} onClick={toggleApplications} />
+          )}
+        </>
+      )}
+    >
       {readsUrf && <FormGrid forms={formCards} />}
 
       <UnifiedBulkImportModal
         isOpen={importOpen}
         onClose={() => setImportOpen(false)}
-        title="Import Awarded Projects"
+        title="Import awarded projects"
         required={['project_title', 'student1_name', 'student1_roll_no', 'student1_email', 'mentor1_email']}
         rules={[
           'For projects awarded before the portal. They are created already selected.',
@@ -280,62 +286,60 @@ const UrfList = () => {
       />
 
       {can('can_manage_urf') && (
-        <>
-          <div className="grid-label">Report Rounds</div>
-          <UrfReportSchedule
-            session={Number(session) || new Date().getFullYear()}
-            sessions={sessions || []}
-          />
-        </>
+        <UrfReportSchedule
+          session={Number(session) || new Date().getFullYear()}
+          sessions={sessions || []}
+        />
       )}
       {queue.length > 0 && (
-        <GridContainer
-          label={`Waiting on you (${queue.length})`}
-          elements={[
-            <TableComponent
-              data={queue}
-              keys={['session', 'project_title', 'students', 'form', 'waiting_since']}
-              titles={['Session', 'Project Title', 'Students', 'Form', 'Waiting Since']}
-              components={[{
-                key: 'project_title',
-                component: ({ row, data }) => (
-                  <button type="button" className="urf-link-cell" onClick={() => navigate(`/urf/${row.form}/${row.id}`)}>
-                    {data}
-                  </button>
-                ),
-              }, {
-                key: 'form',
-                component: ({ data }) => FORM_NAMES[data] || data,
-              }]}
-            />,
-          ]}
-          space={3}
-        />
+        <Panel flush title={`Waiting on you (${queue.length})`}>
+          <TableComponent
+            data={queue}
+            keys={['session', 'project_title', 'students', 'form', 'waiting_since']}
+            titles={['Session', 'Project title', 'Students', 'Form', 'Waiting since']}
+            components={[{
+              key: 'project_title',
+              component: ({ row, data }) => (
+                <button type="button" className="cell-link" onClick={() => navigate(`/urf/${row.form}/${row.id}`)}>
+                  {data}
+                </button>
+              ),
+            }, {
+              key: 'form',
+              component: ({ data }) => FORM_NAMES[data] || data,
+            }]}
+          />
+        </Panel>
       )}
 
-      <div className="grid-label">{can('can_manage_urf') ? 'All Projects' : 'Projects You Mentor'}</div>
-      <div className="urf-stage-bar">
-        <Tabs
-          items={URF_STATUSES.map((s) => ({ value: s, label: capitalize(s) }))}
-          value={tab}
-          onChange={setTab}
+      {/* The stage tabs and the session scope the table under them, so the
+          three sit together under one heading. */}
+      <section className="urf-projects">
+        <h2 className="section-heading">{can('can_manage_urf') ? 'All projects' : 'Projects you mentor'}</h2>
+        <div className="urf-stage-bar">
+          <Tabs
+            items={URF_STATUSES.map((s) => ({ value: s, label: capitalize(s) }))}
+            value={tab}
+            onChange={setTab}
+          />
+          {sessions?.length > 0 && (
+            <div className="urf-session-picker">
+              <DropdownField
+                options={sessions.map((year) => ({ value: String(year), title: `URF ${year}` }))}
+                initialValue={session}
+                onChange={setSession}
+              />
+            </div>
+          )}
+        </div>
+        {/* Not the table's search slot: the table is keyed on the tab, and the
+            box would be remounted empty on every tab while the search it had
+            sent stayed applied. */}
+        <FilterBar
+          placeholder="Search projects by title, student, roll no or mentor…"
+          exclude={['session']}
+          onSearch={setFilter}
         />
-        {sessions?.length > 0 && (
-          <div className="urf-session-picker">
-            <DropdownField
-              options={sessions.map((year) => ({ value: String(year), title: `URF ${year}` }))}
-              initialValue={session}
-              onChange={setSession}
-            />
-          </div>
-        )}
-      </div>
-      <FilterBar
-        placeholder="Search projects by title, student, roll no or mentor…"
-        exclude={['session']}
-        onSearch={setFilter}
-      />
-      <div className="urf-list">
         {ready && (
           <PagenationTable
             // The tab is part of the key, so leaving it drops what was ticked
@@ -355,7 +359,7 @@ const UrfList = () => {
             customOpenForm={(row) => navigate(`/urf/${row.id}`)}
           />
         )}
-      </div>
+      </section>
 
       <CustomModal
         isOpen={!!pending}
@@ -378,11 +382,11 @@ const UrfList = () => {
           </p>
         )}
         <div className="modal-actions">
-          <CustomButton text="Cancel" variant="secondary" onClick={() => setPending(null)} />
-          <CustomButton text={saving ? 'Saving…' : pending?.label} onClick={decide} disabled={saving} />
+          <CustomButton text="Cancel" variant="quiet" onClick={() => setPending(null)} />
+          <CustomButton text={pending?.label} onClick={decide} busy={saving} />
         </div>
       </CustomModal>
-    </Layout>
+    </Page>
   );
 };
 

@@ -1,10 +1,12 @@
 import React from "react";
 import "./FormGrid.css";
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import Panel from "../../panel/Panel";
+import StatusNotice from "../../common/StatusNotice";
 
 // Required lifecycle milestones (left column) vs situational / as-needed forms
 // (right column). The order within each column is fixed, so the layout stays
-// stable even when only a subset of forms is enabled for a student — a disabled
+// stable even when only a subset of forms is enabled for a student: a disabled
 // form never lets another slide into its place across the mandatory/optional divide.
 const MANDATORY_ORDER = [
     "supervisor-allocation",
@@ -29,18 +31,18 @@ const OPTIONAL_ORDER = [
     "urf-final-report",
 ];
 
-// A form may carry its own `path`; `title={null}` leaves out the heading, for a
-// page that shows several grids under headings of its own.
-const FormGrid = ({ forms, title = "Available Forms", loading = false }) => {
+// A form may carry its own `path`. With a `title` the grid is a panel of its
+// own; `title={null}` draws the tiles alone, for a page that shows several
+// grids inside panels of its own.
+const FormGrid = ({ forms, title = "Available forms", loading = false }) => {
     const location = useLocation();
 
-    const handleClick = (form) => {
+    const targetOf = (form) => {
         let path = location.pathname;
         if (path.endsWith('/')) {
             path = path.slice(0, -1);
         }
-        const newUrl = `${path}/${form.form_type}`;
-        window.location.href = form.path || newUrl;
+        return form.path || `${path}/${form.form_type}`;
     };
 
     const pick = (order) =>
@@ -57,45 +59,56 @@ const FormGrid = ({ forms, title = "Available Forms", loading = false }) => {
         ...forms.filter((f) => !known.has(f.form_type)),
     ];
 
-    const renderCard = (form) => (
-        <div
-            key={form.form_type}
-            onClick={() => handleClick(form)}
-            className="form-card"
-            title={form.action_required ? "Action required" : undefined}
-        >
-            <span
-                className={`form-status-dot ${form.action_required ? "active" : ""}`}
-                aria-hidden="true"
-            ></span>
-            <h3 className="form-card-title">{form.form_name}</h3>
-            <i className="fa fa-chevron-right form-card-arrow" aria-hidden="true"></i>
+    // A real link, so the card is reachable by keyboard and opens in a new tab
+    // like any other. An app path is routed in place, since a full page load
+    // would restart the app; anything else, such as an absolute URL, still gets
+    // a real navigation.
+    const renderCard = (form) => {
+        const target = targetOf(form);
+        const inApp = target.startsWith('/') && !target.startsWith('//');
+        const content = (
+            <>
+                <span
+                    className={`form-status-dot ${form.action_required ? "active" : ""}`}
+                    aria-hidden="true"
+                ></span>
+                <h3 className="form-card-title">
+                    {form.form_name}
+                    {form.action_required && <span className="sr-only"> (action required)</span>}
+                </h3>
+                <i className="fa fa-chevron-right form-card-arrow" aria-hidden="true"></i>
+            </>
+        );
+        const cardProps = {
+            className: "form-card",
+            title: form.action_required ? "Action required" : undefined,
+        };
+        return inApp
+            ? <Link key={form.form_type} {...cardProps} to={target}>{content}</Link>
+            : <a key={form.form_type} {...cardProps} href={target}>{content}</a>;
+    };
+
+    const grid = forms.length > 0 ? (
+        <div className="form-grid-container reveal">
+            <div className="form-grid-column">{mandatory.map(renderCard)}</div>
+            <div className="form-grid-column">{optional.map(renderCard)}</div>
+        </div>
+    ) : loading ? (
+        <StatusNotice tone="loading" title="Loading forms" />
+    ) : (
+        <StatusNotice tone="empty" title="No forms yet" />
+    );
+
+    if (!title) return grid;
+
+    const legend = forms.length > 0 && (
+        <div className="form-legend">
+            <span className="legend-item"><span className="legend-dot green"></span>Action required</span>
+            <span className="legend-item"><span className="legend-dot"></span>No action needed</span>
         </div>
     );
 
-    return (
-        <>
-            {title && (
-            <div className="forms-list-header">
-                <h1 className="page-title">{title}</h1>
-                {forms.length > 0 && (
-                    <div className="form-legend">
-                        <span className="legend-item"><span className="legend-dot green"></span>Action required</span>
-                        <span className="legend-item"><span className="legend-dot"></span>No action needed</span>
-                    </div>
-                )}
-            </div>
-            )}
-            {forms.length > 0 ? (
-                <div className="form-grid-container">
-                    <div className="form-grid-column">{mandatory.map(renderCard)}</div>
-                    <div className="form-grid-column">{optional.map(renderCard)}</div>
-                </div>
-            ) : (
-                <p>{loading ? 'Loading forms…' : 'No forms yet.'}</p>
-            )}
-        </>
-    );
+    return <Panel title={title} actions={legend}>{grid}</Panel>;
 };
 
 export default FormGrid;

@@ -3,7 +3,10 @@ import { toast } from 'react-toastify';
 import CustomButton from '../../../components/forms/fields/CustomButton';
 import { validateLeaveSettings } from '../../../utils/leaveBalance';
 import { apiSettings, apiSaveSettings } from '../../../api/settings';
+import useDoneFlash from '../../../hooks/useDoneFlash';
 import './Configuration.css';
+
+const FIELD_KEYS = ['academic_quota', 'casual_quota', 'year_start_month'];
 
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -19,17 +22,22 @@ const LeaveQuotas = () => {
   const [form, setForm] = useState({ academic_quota: '', casual_quota: '', year_start_month: '' });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  // What the server holds, for Reset and for telling whether anything changed.
+  const [stored, setStored] = useState(null);
+  const [saved, flashSaved] = useDoneFlash();
 
   const load = useCallback(async () => {
     setLoading(true);
     const res = await apiSettings('leave');
     setLoading(false);
     if (res.success) {
-      setForm({
+      const values = {
         academic_quota: res.response.academic_quota,
         casual_quota: res.response.casual_quota,
         year_start_month: res.response.year_start_month,
-      });
+      };
+      setForm(values);
+      setStored(values);
     }
   }, []);
 
@@ -48,18 +56,24 @@ const LeaveQuotas = () => {
     setSaving(false);
     if (res.success) {
       toast.success('Leave quota settings saved');
-      setForm({
+      const fromServer = {
         academic_quota: res.response.academic_quota,
         casual_quota: res.response.casual_quota,
         year_start_month: res.response.year_start_month,
-      });
+      };
+      setForm(fromServer);
+      setStored(fromServer);
+      flashSaved();
     }
   };
 
+  const changed = stored !== null
+    && FIELD_KEYS.some((key) => String(form[key] ?? '') !== String(stored[key] ?? ''));
+
   return (
-    <div className="config-block">
-      <div className="filter-bar">
-        <div className="filter-row config-filter-row">
+    <>
+      <div className="config-fields">
+        <div className="config-filter-row">
           <div className="input-field-container config-field-160">
             <label className="input-label" htmlFor="leave-quotas-academic-quota">Academic quota</label>
             <input
@@ -100,11 +114,12 @@ const LeaveQuotas = () => {
             </select>
           </div>
           <div className="config-push">
-            <CustomButton text={saving ? 'Saving…' : 'Save'} onClick={handleSave} disabled={loading || saving} />
+            <CustomButton text="Save" onClick={handleSave} busy={saving} done={saved} disabled={loading} />
+            <CustomButton text="Reset" variant="quiet" onClick={() => setForm(stored)} disabled={!changed || saving} />
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

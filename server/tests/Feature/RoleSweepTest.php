@@ -36,7 +36,6 @@ class RoleSweepTest extends TestCase
     private const SKIPPED = [
         'api/google/redirect',
         'api/google/callback',
-        'api/send-welcome',
         'api/reset-password/{token}',
         'api/urf/verify-email/{id}',
     ];
@@ -47,7 +46,7 @@ class RoleSweepTest extends TestCase
         'irb-submission' => 'irb_sub_forms',
         'irb-extension' => 'research_extentions_form',
         'synopsis-submission' => 'synopsis_submissions',
-        'revise-title' => 'synopsis_submissions',
+        'revise-title' => 'revise_title_forms',
         'thesis-submission' => 'thesis_submissions',
         'thesis-extension' => 'thesis_extentions_form',
         'supervisor-change' => 'supervisor_change_forms',

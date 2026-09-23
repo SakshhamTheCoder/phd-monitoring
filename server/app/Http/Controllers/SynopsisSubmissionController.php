@@ -132,7 +132,22 @@ class SynopsisSubmissionController extends Controller
         }
 
         $form = SynopsisSubmission::find($form_id);
-        return $form && $form->student->checkDoctoralCommittee($user->faculty?->faculty_code) ? 'doctoral' : $role;
+
+        $code = $user->faculty?->faculty_code;
+
+        if (!$form || !$form->student->checkDoctoralCommittee($code)) {
+
+            return $role;
+
+        }
+
+        // A supervisor who also sits on the committee answers as supervisor until
+
+        // the form reaches the committee; otherwise the supervisor step could
+
+        // never be answered by them.
+
+        return $form->student->checkSupervises($code) && $form->stage !== 'doctoral' ? $role : 'doctoral';
     }
 
     /**
@@ -262,9 +277,7 @@ class SynopsisSubmissionController extends Controller
             'approval' => 'required|boolean',
         ]);
         $request->merge(['approval' => true]);
-        foreach ($request->form_ids as $form_id) {
-            $this->submit($request, $form_id);
-        }
+        return $this->bulkResults($request->form_ids, fn ($form_id) => $this->submit($request, $form_id));
     }
 
     public function linkPublication(Request $request, $form_id)
@@ -373,13 +386,19 @@ class SynopsisSubmissionController extends Controller
             $form_id,
             'student',
             function ($formInstance) use ($request, $user) {
+                // A resubmission after a send-back keeps the stored PDF unless a new one comes.
                 $request->validate([
-                   'revised_title' => 'string',
-                   'synopsis_pdf' => 'required|file|mimes:pdf|max:20480',
+                   'revised_title' => 'nullable|string',
+                   'synopsis_pdf' => ($formInstance->synopsis_pdf ? 'nullable' : 'required').'|file|mimes:pdf|max:20480',
                 ]);
-                $formInstance->revised_title = $request->revised_title;
-                $link=$this->replaceUploadedFile($formInstance->synopsis_pdf, $request->file('synopsis_pdf'), 'synopsis', $user->student->roll_no);
-                $formInstance->synopsis_pdf = $link;
+                // The student form does not offer a revised title; writing an
+                // absent one would blank the scholar's PhD title on completion.
+                if ($request->filled('revised_title')) {
+                    $formInstance->revised_title = $request->revised_title;
+                }
+                if ($request->hasFile('synopsis_pdf')) {
+                    $formInstance->synopsis_pdf = $this->replaceUploadedFile($formInstance->synopsis_pdf, $request->file('synopsis_pdf'), 'synopsis', $user->student->roll_no);
+                }
             }
         );
     }
@@ -539,8 +558,13 @@ class SynopsisSubmissionController extends Controller
         $formInstance->status = 'approved';
 
         $student = $formInstance->student;
-        $student->phd_title = $formInstance->revised_title;
+        if (!empty($formInstance->revised_title)) {
+            $student->phd_title = $formInstance->revised_title;
+        }
         $student->overall_progress = $formInstance->total_progress;
+        if (!$student->date_of_synopsis) {
+            $student->date_of_synopsis = now()->toDateString();
+        }
         $student->save();
 
         $formInstance->addHistoryEntry('Synopsis approved by DORDC after the viva', $user->name());

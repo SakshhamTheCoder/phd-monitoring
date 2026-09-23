@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
-import Layout from '../../components/dashboard/layout';
-import PageHeader from '../../components/pageHeader/PageHeader';
+import Page from '../../components/page/Page';
 import { useLoading } from '../../context/LoadingContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { isNetworkError, NETWORK_ERROR_MESSAGE } from '../../api/base';
+import { customFetch, NETWORK_ERROR_MESSAGE } from '../../api/base';
 import FilterBar from '../../components/filterBar/FilterBar';
 import PagenationTable from '../../components/pagenationTable/PagenationTable';
 import CustomModal from '../../components/forms/modal/CustomModal';
-import FacultyForm from '../../components/facultyForm/FacultyForm'; // assume it's placed here
+import FacultyForm from '../../components/facultyForm/FacultyForm';
 import { baseURL } from '../../api/urls';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import useCapabilities from '../../context/CapabilitiesContext';
@@ -127,75 +126,40 @@ const FacultyPage = () => {
         let batchSuccess = false;
 
         while (retryCount <= maxRetries && !batchSuccess) {
-          try {
-            const response = await fetch(`${baseURL}/faculty/bulk-import`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-              },
-              body: JSON.stringify({ batch_data: batchData, import_batch: importBatch }),
-            });
+          // Quiet, so a failed batch is reported once below rather than once
+          // per attempt. A 401 still sends customFetch to the sign-in page,
+          // after it clears the session, and there is no point going on.
+          const res = await customFetch(`${baseURL}/faculty/bulk-import`, 'POST', { batch_data: batchData, import_batch: importBatch }, false);
+          if (!res.success && !localStorage.getItem('token')) return;
 
-            if (response.status === 302 || response.redirected) {
-              toast.error('Session expired. Please login again.');
-              setLoading(false);
-              setSubmitting(false);
-              return;
-            }
-
-            let data;
-            try {
-              data = await response.json();
-            } catch (jsonError) {
-              throw new Error('Invalid server response');
-            }
-
-            if (!response.ok) {
-              if (retryCount < maxRetries) {
-                retryCount++;
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                continue;
-              }
-              toast.error(`Batch ${batchIndex + 1} failed: ${data.message || 'Server error'}`);
-              totalErrors += batch.length;
-              break;
-            }
-
-            if (data.success) {
-              totalSuccess += data.data.success_count || 0;
-              totalUpdated += data.data.update_count || 0;
-              totalErrors += data.data.error_count || 0;
-              allErrors = allErrors.concat(data.data.errors || []);
-              batchSuccess = true;
-            } else {
-              if (retryCount < maxRetries) {
-                retryCount++;
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                continue;
-              }
-              toast.error(`Batch ${batchIndex + 1} failed: ${data.message}`);
-              totalErrors += batch.length;
-            }
-          } catch (fetchError) {
-            if (retryCount < maxRetries) {
-              retryCount++;
-              await new Promise(resolve => setTimeout(resolve, 1000));
-              continue;
-            }
-            toast.error(isNetworkError(fetchError)
+          const data = res.response || {};
+          if (res.success && data.success) {
+            totalSuccess += data.data?.success_count || 0;
+            totalUpdated += data.data?.update_count || 0;
+            totalErrors += data.data?.error_count || 0;
+            allErrors = allErrors.concat(data.data?.errors || []);
+            batchSuccess = true;
+          } else if (retryCount < maxRetries) {
+            retryCount++;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          } else {
+            toast.error(res.networkError
               ? NETWORK_ERROR_MESSAGE
-              : `Batch ${batchIndex + 1} network error: ${fetchError.message}`);
+              : `Batch ${batchIndex + 1} failed: ${data.message || 'Server error'}`);
             totalErrors += batch.length;
+            break;
           }
         }
       }
 
-      toast.success(`Import completed: ${totalSuccess} created, ${totalUpdated} updated, ${totalErrors} errors`);
-      
+      const summary = `${totalSuccess} created, ${totalUpdated} updated, ${totalErrors} errors`;
+      if (totalSuccess + totalUpdated > 0) toast.success(`Import completed: ${summary}`);
+      else toast.error(`Nothing was imported: ${summary}`);
+
+      // Also carries notes on rows that did import, such as a kept employee code.
       if (allErrors.length > 0) {
-        toast.warning(`${totalErrors} rows failed. Check console for details.`);
+        const more = allErrors.length > 3 ? `; and ${allErrors.length - 3} more` : '';
+        toast.warning(`Check these rows: ${allErrors.slice(0, 3).join('; ')}${more}`, { autoClose: 10000 });
       }
 
       setShowBulkImportModal(false);
@@ -214,83 +178,80 @@ const FacultyPage = () => {
   };
 
   return (
-    <Layout
-      children={
-        <>
-          <PageHeader title="Faculty" subtitle="Directory of internal faculty." />
-          <FilterBar onSearch={handleFilterChange} />
-          <PagenationTable
-            key={refreshKey}
-            endpoint={location.pathname}
-            filters={filter}
-            enableApproval={false}
-            // A row leads to the profile, never to the edit form. Editing lives
-            // in the actions menu, where the role check is.
-            rowClickable={true}
-            customOpenForm={(facultyData) =>
-              navigate(`/faculty/${facultyData.faculty_code}/profile`)
-            }
-            extraTopbarComponents={
-              // A viewer with only directory access is browsing, not managing.
-              can('can_manage_faculties') ? (
-                <div className="top-actions">
-                  <CustomButton
-                    text="Bulk Import"
-                    variant="secondary"
-                    onClick={() => setShowBulkImportModal(true)}
-                  />
-                  <CustomButton text="Add Faculty +" onClick={() => openForm()} />
-                </div>
-              ) : null
-            }
-            
-            actions={[
-              ...(can('can_manage_faculties') ? [{
-                icon: <i className="fa fa-pencil-square-o"></i>,
-                tooltip: 'Edit',
-                onClick: (facultyData) => openForm(facultyData),
-              }] : []),
-              {
-                icon: <i className="fa fa-user-circle"></i>,
-                tooltip: 'View profile',
-                onClick: (facultyData) => navigate(`/faculty/${facultyData.faculty_code}/profile`),
-              },
-            ]}
-          />
-          <CustomModal
-            isOpen={isOpen}
-            onClose={() => setIsOpen(false)}
-            width="800px"
-          >
-            <FacultyForm
-              edit={!!editData}
-              facultyData={editData}
-              onClose={() => setIsOpen(false)}
-              onSuccess={() => setRefreshKey((prev) => prev + 1)}
+    <Page
+      title="Faculty"
+      description="Directory of internal faculty."
+      actions={
+        // A viewer with only directory access is browsing, not managing.
+        can('can_manage_faculties') ? (
+          <>
+            <CustomButton
+              text="Import from CSV"
+              variant="secondary"
+              onClick={() => setShowBulkImportModal(true)}
             />
-          </CustomModal>
-
-          {/* Bulk Import Modal */}
-          <UnifiedBulkImportModal
-            isOpen={showBulkImportModal}
-            onClose={() => setShowBulkImportModal(false)}
-            title="Bulk Import Faculty"
-            required={['Emp id', 'Full Name', 'Email', 'Designation', 'Department Code']}
-            rules={[
-              'Matched by email. An existing faculty member is updated from the cells the row fills in.',
-              "Broad Area of Expertise must already be on that department's research area list.",
-              'Students Supervising in TIET is compared against the portal\'s own count, not stored.',
-              'New faculty are added as internal faculty.',
-            ]}
-            sampleFileName="faculty_bulk_import_sample.csv"
-            sampleCsvContent={facultySampleCsv}
-            onImport={handleBulkImport}
-            submitting={submitting}
-            uploadProgress={uploadProgress}
-          />
-        </>
+            <CustomButton text="Add faculty" onClick={() => openForm()} />
+          </>
+        ) : null
       }
-    />
+    >
+      <PagenationTable
+        key={refreshKey}
+        endpoint={location.pathname}
+        filters={filter}
+        search={<FilterBar onSearch={handleFilterChange} />}
+        enableApproval={false}
+        // A row leads to the profile, never to the edit form. Editing lives
+        // in the actions menu, where the role check is.
+        rowClickable={true}
+        customOpenForm={(facultyData) =>
+          navigate(`/faculty/${facultyData.faculty_code}/profile`)
+        }
+        actions={[
+          ...(can('can_manage_faculties') ? [{
+            icon: <i className="fa fa-pencil-square-o"></i>,
+            tooltip: 'Edit',
+            onClick: (facultyData) => openForm(facultyData),
+          }] : []),
+          {
+            icon: <i className="fa fa-user-circle"></i>,
+            tooltip: 'View profile',
+            onClick: (facultyData) => navigate(`/faculty/${facultyData.faculty_code}/profile`),
+          },
+        ]}
+      />
+      <CustomModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        closeOnOutsideClick={false}
+        width="800px"
+      >
+        <FacultyForm
+          edit={!!editData}
+          facultyData={editData}
+          onClose={() => setIsOpen(false)}
+          onSuccess={() => setRefreshKey((prev) => prev + 1)}
+        />
+      </CustomModal>
+
+      <UnifiedBulkImportModal
+        isOpen={showBulkImportModal}
+        onClose={() => setShowBulkImportModal(false)}
+        title="Import faculty from CSV"
+        required={['Emp id', 'Full Name', 'Email', 'Designation', 'Department Code']}
+        rules={[
+          'Matched by email. An existing faculty member is updated from the cells the row fills in.',
+          "Broad Area of Expertise must already be on that department's research area list.",
+          'Students Supervising in TIET is compared against the portal\'s own count, not stored.',
+          'New faculty are added as internal faculty.',
+        ]}
+        sampleFileName="faculty_bulk_import_sample.csv"
+        sampleCsvContent={facultySampleCsv}
+        onImport={handleBulkImport}
+        submitting={submitting}
+        uploadProgress={uploadProgress}
+      />
+    </Page>
   );
 };
 

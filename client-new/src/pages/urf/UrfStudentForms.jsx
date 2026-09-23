@@ -1,11 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import Layout from '../../components/dashboard/layout';
-import PageHeader from '../../components/pageHeader/PageHeader';
+import Page from '../../components/page/Page';
+import Panel from '../../components/panel/Panel';
+import StatusNotice from '../../components/common/StatusNotice';
 import FormGrid from '../../components/forms/formGrid/FormGrid';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import { StatusText, REPORT_TYPES } from '../../components/urf/UrfRecord';
 import UrfFormShell from '../../components/urf/UrfFormShell';
+import LoadError from '../../components/common/LoadError';
 import { ApplyForm, FellowForm, ReportForm, signedInUser } from '../../components/urf/UrfForms';
 import { apiUrfMine } from '../../api/urf';
 import { formatDate } from '../../utils/timeParse';
@@ -17,15 +19,43 @@ import '../../components/urf/UrfForms.css';
 const useUrf = () => {
   const [state, setState] = useState(null);
   const [version, setVersion] = useState(0);
+  const [failed, setFailed] = useState(false);
   const load = useCallback(async () => {
+    setFailed(false);
     const res = await apiUrfMine();
     if (res.success) {
       setState(res.response);
       setVersion((v) => v + 1);
+    } else {
+      setFailed(true);
     }
   }, []);
   useEffect(() => { load(); }, [load]);
-  return { state, version, load };
+  return { state, version, load, failed };
+};
+
+// Stands in for the page until the first load answers.
+const Pending = ({ failed, onRetry }) => (failed
+  ? <LoadError message="Could not load your URF projects. Check your connection and try again." onRetry={onRetry} />
+  : <StatusNotice tone="loading" title="Loading your URF projects" />);
+
+// Why there is no form to fill in, where a form would otherwise be.
+const Notice = ({ children }) => (
+  <Panel>
+    <StatusNotice tone="info">{children}</StatusNotice>
+  </Panel>
+);
+
+// Fellowship details are kept per student, and the server sends only the
+// student's own, so this is a second guard. Reports are the project's, filed
+// once by either student, and are not filtered. Sign-in carries the user id; a
+// session from before it did falls back to the project's two slots, where
+// user_id is the first student and student2_email the second.
+const own = (application, rows) => {
+  const me = signedInUser();
+  if (me.id != null) return (rows || []).filter((row) => String(row.user_id) === String(me.id));
+  const second = application.student2_email?.toLowerCase() === me.email?.toLowerCase();
+  return (rows || []).filter((row) => (String(row.user_id) === String(application.user_id)) !== second);
 };
 
 const REPORT_FORMS = { half_yearly: 'urf-half-yearly-report', final: 'urf-final-report' };
@@ -47,7 +77,7 @@ const formsFor = (application, windows) => {
   const base = `/forms/urf/${application.id}`;
   const report = (type, path) => {
     const round = windowFor(windows, application, type);
-    const filed = application.reports?.some((r) => r.type === type);
+    const filed = (application.reports || []).some((r) => r.type === type);
     if (!round?.is_open && !filed) return [];
 
     return [{
@@ -61,7 +91,7 @@ const formsFor = (application, windows) => {
   return [
     { form_type: 'urf-application', form_name: 'URF Application Form', path: `${base}/application` },
     ...(application.status === 'selected' ? [
-      { form_type: 'urf-additional-info', form_name: 'Additional Information Form', path: `${base}/additional-info`, action_required: !application.fellows?.length },
+      { form_type: 'urf-additional-info', form_name: 'Additional Information Form', path: `${base}/additional-info`, action_required: !own(application, application.fellows).length },
       ...report('half_yearly', 'half-yearly-report'),
       ...report('final', 'final-report'),
     ] : []),
@@ -73,7 +103,7 @@ const RoundNotice = ({ application, windows }) => {
 
   const upcoming = ['half_yearly', 'final']
     .map((type) => ({ type, round: windowFor(windows, application, type) }))
-    .filter(({ type, round }) => round && !round.is_open && !application.reports?.some((r) => r.type === type));
+    .filter(({ type, round }) => round && !round.is_open && !(application.reports || []).some((r) => r.type === type));
 
   if (!upcoming.length) return null;
 
@@ -99,31 +129,36 @@ const RoundNotice = ({ application, windows }) => {
  */
 export const UrfFormsPage = () => {
   const navigate = useNavigate();
-  const { state } = useUrf();
+  const { state, load, failed } = useUrf();
 
   return (
-    <Layout>
-      <PageHeader
-        title="Available Forms"
-        subtitle="Undergraduate Research Fellowship"
-        actions={state && canApply(state) && (
-          <CustomButton text={`Apply for URF ${state.session}`} onClick={() => navigate('/forms/urf-application')} />
-        )}
-      />
+    <Page
+      title="Available forms"
+      description="Undergraduate Research Fellowship"
+      actions={state && canApply(state) && (
+        <CustomButton text={`Apply for URF ${state.session}`} onClick={() => navigate('/forms/urf-application')} />
+      )}
+    >
+      {!state && <Pending failed={failed} onRetry={load} />}
       {state && state.applications.length === 0 && (
-        <p>{state.applications_open ? `You have not applied for URF ${state.session} yet.` : 'URF applications are closed right now.'}</p>
+        <Panel className="reveal">
+          <StatusNotice tone="empty">
+            {state.applications_open ? `You have not applied for URF ${state.session} yet.` : 'URF applications are closed right now.'}
+          </StatusNotice>
+        </Panel>
       )}
       {state?.applications.map((application) => (
-        <div key={application.id}>
-          <div className="urf-subhead">
-            <h3>URF {application.session} · {application.project_title}</h3>
-            <StatusText status={application.status} />
-          </div>
+        <Panel
+          key={application.id}
+          className="reveal"
+          title={`URF ${application.session} · ${application.project_title}`}
+          actions={<StatusText status={application.status} />}
+        >
           <RoundNotice application={application} windows={state.report_windows} />
           <FormGrid forms={formsFor(application, state.report_windows)} title={null} />
-        </div>
+        </Panel>
       ))}
-    </Layout>
+    </Page>
   );
 };
 
@@ -137,16 +172,18 @@ const TITLES = {
 export const UrfFormPage = ({ type }) => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { state, version, load } = useUrf();
+  const { state, version, load, failed } = useUrf();
   const application = state?.applications.find((a) => String(a.id) === String(id));
 
   let body = null;
-  if (state && type === 'new') {
+  if (!state) {
+    body = <Pending failed={failed} onRetry={load} />;
+  } else if (type === 'new') {
     body = canApply(state)
       ? <ApplyForm student={state.student} onSaved={() => navigate('/forms')} />
-      : <p>{state.applications_open ? `You have already applied for URF ${state.session}.` : 'URF applications are closed right now.'}</p>;
-  } else if (state && !application) {
-    body = <p>This URF project was not found.</p>;
+      : <Notice>{state.applications_open ? `You have already applied for URF ${state.session}.` : 'URF applications are closed right now.'}</Notice>;
+  } else if (!application) {
+    body = <Notice>This URF project was not found.</Notice>;
   } else if (application && type === 'application') {
     const me = signedInUser();
     // Not gated on the window being open: an application only sits on the
@@ -164,11 +201,11 @@ export const UrfFormPage = ({ type }) => {
       : <UrfFormShell path={`/urf/urf-application/${application.id}`} />;
   } else if (application && type === 'additional') {
     // Prefilled from the student's most recent other project.
-    const previous = state.applications.find((a) => a.id !== application.id && a.fellows?.length)?.fellows[0];
-    const fellow = application.fellows?.[0];
+    const previous = state.applications.map((a) => a.id !== application.id && own(a, a.fellows)[0]).find(Boolean);
+    const fellow = own(application, application.fellows)[0];
 
     if (application.status !== 'selected') {
-      body = <p>This form opens once your project is selected.</p>;
+      body = <Notice>This form opens once your project is selected.</Notice>;
     } else if (locked(fellow)) {
       body = <UrfFormShell path={`/urf/urf-additional-info/${fellow.id}`} />;
     } else {
@@ -176,34 +213,33 @@ export const UrfFormPage = ({ type }) => {
     }
   } else if (application && REPORT_TYPES[type]) {
     const round = windowFor(state.report_windows, application, type);
-    // One report per round, so the one the student filed is the one they read.
-    const filed = application.reports?.find((report) => report.type === type);
+    // One report per project per round, so whichever student filed it, both read it.
+    const filed = (application.reports || []).find((report) => report.type === type);
 
     if (application.status !== 'selected') {
-      body = <p>Reports open once your project is selected.</p>;
+      body = <Notice>Reports open once your project is selected.</Notice>;
     } else if (locked(filed)) {
       body = <UrfFormShell path={`/urf/${REPORT_FORMS[type]}/${filed.id}`} />;
     } else if (round?.is_open) {
-      body = <ReportForm application={application} type={type} onSaved={load} />;
+      body = <ReportForm application={application} type={type} filed={filed} onSaved={load} />;
     } else {
       // Say which round it is rather than offer a form the server would refuse.
       body = (
-        <p>
+        <Notice>
           {!round && 'This report has not been scheduled yet.'}
           {round && new Date(round.opens_on) > new Date() && `This report can be filed from ${formatDate(round.opens_on)} to ${formatDate(round.closes_on)}.`}
           {round && new Date(round.opens_on) <= new Date() && `This report closed on ${formatDate(round.closes_on)}.`}
-        </p>
+        </Notice>
       );
     }
   }
 
   return (
-    <Layout>
-      <PageHeader
-        title={type === 'new' ? `Apply for URF ${state?.session ?? ''}` : TITLES[type]}
-        subtitle={application ? `URF ${application.session} · ${application.project_title}` : undefined}
-      />
+    <Page
+      title={type === 'new' ? `Apply for URF ${state?.session ?? ''}` : TITLES[type]}
+      description={application ? `URF ${application.session} · ${application.project_title}` : undefined}
+    >
       <React.Fragment key={version}>{body}</React.Fragment>
-    </Layout>
+    </Page>
   );
 };

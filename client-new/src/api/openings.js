@@ -3,9 +3,10 @@ import { baseURL } from './urls';
 import { customFetch } from './base';
 import { mapPosition, mapApplication } from './projects';
 
+// The two lists answer null on failure, so a page can tell "none" from "could not ask".
 export const apiOpenings = async () => {
   const { success, response } = await customFetch(`${baseURL}/openings`, 'GET', {}, false);
-  return success ? (response || []).map(mapPosition) : [];
+  return success ? (response || []).map(mapPosition) : null;
 };
 
 export const apiApply = (positionId, formData) =>
@@ -13,7 +14,7 @@ export const apiApply = (positionId, formData) =>
 
 export const apiMyApplications = async () => {
   const { success, response } = await customFetch(`${baseURL}/my-applications`, 'GET', {}, false);
-  return success ? (response || []).map(mapApplication) : [];
+  return success ? (response || []).map(mapApplication) : null;
 };
 
 export const apiApplicantProfile = async () => {

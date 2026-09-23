@@ -1,27 +1,48 @@
-/* The six configuration pages draw the same shape: a filter row of fields, the
-   action pushed to the right, a note underneath. Each had written it inline, so
-   no stylesheet could reach any of it.
+/* The six configuration sections draw the same shape inside their panel: a row
+   of fields, the action pushed to the right, a note underneath.
 
    The field classes are named for their width because that is all they are.
    The widths are the ones the pages already used; they are not a scale, and a
    new page should reuse one of these rather than add a tenth.
 */
 
-.config-block { margin-top: 1rem; }
-
-.config-filter-row { align-items: flex-end; }
-
-.config-chip-row {
-  gap: 0.5rem;
-  flex-wrap: wrap;
+/* The field row, and the chips under it when a condition names departments. */
+.config-fields {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
 }
 
-.config-push { margin-left: auto; }
+/* A second field block further down the same section. */
+.config-fields--spaced { margin-top: var(--space-5); }
+
+/* Its own rule, not FilterBar's .filter-row: that stylesheet only loads with
+   a FilterBar, so on a fresh load of this page the fields stacked. */
+.config-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.config-filter-row .input-field-container { margin: 0; flex: 1 1 0; }
+
+.config-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* A department picked into the rule pops in where it landed. */
+.config-chip-row button { animation: pop-in 150ms ease-out; }
+
+.config-push { margin-left: auto; display: flex; gap: var(--space-2); }
 
 .config-note {
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
-  margin-top: 0.75rem;
+  margin: var(--space-4) 0 0;
+  max-width: 75ch;
 }
 
 .config-field-110 { min-width: 110px; }
@@ -47,7 +68,8 @@
   .config-field-220,
   .config-field-240,
   .config-field-280,
-  .config-field-440 {
+  .config-field-440,
+  .config-filter-row .input-field-container {
     min-width: 0;
     flex: 1 1 100%;
   }

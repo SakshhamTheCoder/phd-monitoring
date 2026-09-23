@@ -10,33 +10,40 @@ import { APIaddPublication, APIupdatePublication } from "../../api/publication";
 // onSave lets a caller send the record somewhere other than the student
 // publication endpoints; the field forms below stay the same either way.
 const AddPublication = ({ close, editData = null, onSave = null }) => {
-  const [body, setBody] = useState(editData || {});
+  // The faculty profile stores a patent as the singular 'patent'; the form
+  // below is keyed on 'patents', and apiUpdateFacultyPublication maps it back.
+  const [body, setBody] = useState(
+    editData?.publication_type === "patent" ? { ...editData, publication_type: "patents" } : editData || {}
+  );
+  const [saving, setSaving] = useState(false);
 
+  // Only offered while adding. A new type starts a new body: merging kept the
+  // last type's fields, and they were posted with this one.
   const handleSelect = (value) => {
-    value = JSON.parse(value);
-    setBody((prev) => ({
-      ...prev,
-      ...value,
-    }));
+    setBody(JSON.parse(value));
   };
 
-  const callback = async (newData) => {
-    if (onSave) {
-      await onSave(body);
-      return;
-    }
-    if (editData && editData.id) {
+  // Submit stays disabled until the save answers, so a second click cannot
+  // post the same publication twice.
+  const callback = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      if (onSave) {
+        await onSave(body);
+      } else if (editData && editData.id) {
         if (body.publication_type === "patents") {
-            await APIupdatePublication(editData.id, body, close, "/patents");
+          await APIupdatePublication(editData.id, body, close, "/patents");
         } else {
-            await APIupdatePublication(editData.id, body, close);
+          await APIupdatePublication(editData.id, body, close);
         }
-    } else {
-        if (body.publication_type === "patents") {
-            await APIaddPublication(body, close, "/patents");
-        } else {
-            await APIaddPublication(body, close);
-        }
+      } else if (body.publication_type === "patents") {
+        await APIaddPublication(body, close, "/patents");
+      } else {
+        await APIaddPublication(body, close);
+      }
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -50,7 +57,7 @@ const AddPublication = ({ close, editData = null, onSave = null }) => {
   return (
     <>
         {body.label && (<h1 className="modal-title">{body.label}</h1>)}
-        {!body.label && (<h1 className="modal-title">{"Choose a Publication Type"}</h1>)}
+        {!body.label && (<h1 className="modal-title">{"Choose a publication type"}</h1>)}
         {!editData && (
           <GridContainer
             elements={[
@@ -102,18 +109,21 @@ const AddPublication = ({ close, editData = null, onSave = null }) => {
           />
         )}
 
-        <div className="add-publication-box">
+        {/* Keyed on the type so its form remounts empty, matching the body. */}
+        {/* The faculty profile (onSave) keeps no status, mode, funding or first
+            page, so those inputs are hidden there rather than silently dropped. */}
+        <div className="add-publication-box" key={body.label}>
           {body.label || editData ? (
             <>
               {body.publication_type === "journal" && (
-                <SCIJournal callback={callback} updateValue={updateValue} data={body} />
+                <SCIJournal callback={callback} disabled={saving} updateValue={updateValue} data={body} facultyRecord={!!onSave} />
               )}
-              {body.publication_type === "book" && <Book callback={callback} updateValue={updateValue} data={body} />}
+              {body.publication_type === "book" && <Book callback={callback} disabled={saving} updateValue={updateValue} data={body} facultyRecord={!!onSave} />}
               {body.publication_type === "conference" && (
-                <Conference callback={callback} updateValue={updateValue} data={body} />
+                <Conference callback={callback} disabled={saving} updateValue={updateValue} data={body} facultyRecord={!!onSave} />
               )}
               {body.publication_type === "patents" && (
-                <Patents callback={callback} updateValue={updateValue} data={body} />
+                <Patents callback={callback} disabled={saving} updateValue={updateValue} data={body} facultyRecord={!!onSave} />
               )}
             </>
           ) : null}

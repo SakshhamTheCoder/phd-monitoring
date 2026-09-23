@@ -7,12 +7,15 @@ import DateField from '../forms/fields/DateField';
 import FileUploadField from '../forms/fields/FileUploadField';
 import InputSuggestions from '../forms/fields/InputSuggestions';
 import CustomButton from '../forms/fields/CustomButton';
+import FormActions from '../common/FormActions';
+import { PanelSection } from '../panel/Panel';
 import CustomModal from '../forms/modal/CustomModal';
 import ShowPublications from '../publications/ShowPublications';
 import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
 import { apiUrfApply, apiUrfFellow, apiUrfReport } from '../../api/urf';
 import useBranches from '../../hooks/useBranches';
+import { insertAt, toastUndo } from '../../utils/undoToast';
 import { Section, facultyName, yearLabel, REPORT_TYPES } from './UrfRecord';
 import './UrfForms.css';
 
@@ -42,7 +45,13 @@ const Submit = ({ text, onClick }) => {
     await onClick();
     setSaving(false);
   };
-  return <GridContainer elements={[<CustomButton text={saving ? 'Saving…' : text} onClick={run} disabled={saving} />]} />;
+  return (
+    <PanelSection>
+      <FormActions>
+        <CustomButton text={text} onClick={run} busy={saving} />
+      </FormActions>
+    </PanelSection>
+  );
 };
 
 /**
@@ -67,9 +76,12 @@ const StudentFields = ({ n, body, set, branches, account = {} }) => {
   );
 };
 
-/** One faculty mentor on one row: the search, what it fills in, and remove. */
-const MentorRow = ({ initial, onPick, onRemove, required }) => {
-  const [picked, setPicked] = useState(null);
+/**
+ * One faculty mentor on one row: the search, what it fills in, and remove.
+ * `restored` is a pick being put back by Undo after the row was removed.
+ */
+const MentorRow = ({ initial, restored, onPick, onRemove, required }) => {
+  const [picked, setPicked] = useState(restored || null);
   const shown = picked || (initial && {
     name: facultyName(initial),
     email: initial.user?.email,
@@ -83,7 +95,7 @@ const MentorRow = ({ initial, onPick, onRemove, required }) => {
         body={{ type: 'internal' }}
         label="Faculty Name"
         initialValue={shown?.name}
-        onSelect={(faculty) => { setPicked(faculty); onPick(faculty.id); }}
+        onSelect={(faculty) => { setPicked(faculty); onPick(faculty.id, faculty); }}
         required={required}
       />
       <InputField label="Email" initialValue={shown?.email || ''} isLocked />
@@ -108,7 +120,8 @@ const APPLICATION_FIELDS = ['project_title', 'mentor1_faculty_code', 'mentor2_fa
  * application still waiting for a result.
  */
 export const ApplyForm = ({ initial, student, onSaved }) => {
-  const me = signedInUser();
+  // Read once per mount: parsing localStorage on each keystroke gains nothing.
+  const [me] = useState(signedInUser);
   // `student` is what they gave at sign-up. An account an admin created has
   // none, and then roll number and branch are asked for here as before.
   const account = {
@@ -133,15 +146,31 @@ export const ApplyForm = ({ initial, student, onSaved }) => {
     });
   const [teammate, setTeammate] = useState(!!initial?.student2_name);
   const [secondMentor, setSecondMentor] = useState(!!initial?.mentor2_faculty_code);
+  // Kept so Undo can show the removed mentor again, not just restore the code.
+  const [mentor2Picked, setMentor2Picked] = useState(null);
 
-  // Removing clears the fields, so the server drops them on save.
+  // Removing clears the fields, so the server drops them on save. Nothing is
+  // saved until Submit, so Undo puts back what was typed.
   const removeTeammate = () => {
+    const typed = STUDENT_FIELDS.map((f) => [f, body[`student2_${f}`]]);
     STUDENT_FIELDS.forEach((f) => set(`student2_${f}`)(''));
     setTeammate(false);
+    toastUndo('Team member removed.', () => {
+      typed.forEach(([f, value]) => set(`student2_${f}`)(value));
+      setTeammate(true);
+    });
   };
   const removeMentor = () => {
+    const code = body.mentor2_faculty_code;
+    const picked = mentor2Picked;
     set('mentor2_faculty_code')('');
+    setMentor2Picked(null);
     setSecondMentor(false);
+    toastUndo('Faculty mentor removed.', () => {
+      set('mentor2_faculty_code')(code);
+      setMentor2Picked(picked);
+      setSecondMentor(true);
+    });
   };
 
   const submit = async () => {
@@ -153,50 +182,54 @@ export const ApplyForm = ({ initial, student, onSaved }) => {
   };
 
   return (
-    <Section title={initial ? 'Edit Application' : 'Application'}>
-      <GridContainer elements={[
-        <InputField label="Project Title" initialValue={body.project_title} onChange={set('project_title')} required />,
-      ]} space={3} />
+    <Section title={initial ? 'Edit application' : 'Application'}>
+      <PanelSection>
+        <GridContainer elements={[
+          <InputField label="Project Title" initialValue={body.project_title} onChange={set('project_title')} required />,
+        ]} space={3} />
+      </PanelSection>
 
-      <div className="urf-subhead"><h3>Your Details</h3></div>
-      <StudentFields n={1} body={body} set={set} branches={branches} account={account} />
+      <PanelSection title="Your details">
+        <StudentFields n={1} body={body} set={set} branches={branches} account={account} />
+      </PanelSection>
 
-      <div className="urf-subhead">
-        <h3>Team Member</h3>
-        {teammate ? (
-          <button type="button" className="urf-remove-btn" onClick={removeTeammate}>
-            <i className="fa fa-trash" aria-hidden="true"></i> Remove Team Member
-          </button>
-        ) : (
-          <button type="button" className="urf-add-btn" onClick={() => setTeammate(true)}>
-            <i className="fa fa-plus" aria-hidden="true"></i> Add Team Member
-          </button>
+      <PanelSection
+        title="Team member"
+        actions={teammate
+          ? <CustomButton text="Remove team member" variant="quiet" size="sm" onClick={removeTeammate} />
+          : <CustomButton text="Add team member" variant="secondary" size="sm" onClick={() => setTeammate(true)} />}
+      >
+        {teammate && <StudentFields n={2} body={body} set={set} branches={branches} />}
+      </PanelSection>
+
+      <PanelSection
+        title="Faculty mentors"
+        actions={!secondMentor && (
+          <CustomButton text="Add faculty mentor" variant="secondary" size="sm" onClick={() => setSecondMentor(true)} />
         )}
-      </div>
-      {teammate && <StudentFields n={2} body={body} set={set} branches={branches} />}
-
-      <div className="urf-subhead">
-        <h3>Faculty Mentors</h3>
-        {!secondMentor && (
-          <button type="button" className="urf-add-btn" onClick={() => setSecondMentor(true)}>
-            <i className="fa fa-plus" aria-hidden="true"></i> Add Faculty Mentor
-          </button>
+      >
+        <MentorRow initial={initial?.mentor1} onPick={set('mentor1_faculty_code')} required />
+        {secondMentor && (
+          <MentorRow
+            initial={initial?.mentor2}
+            restored={mentor2Picked}
+            onPick={(id, faculty) => { set('mentor2_faculty_code')(id); setMentor2Picked(faculty); }}
+            onRemove={removeMentor}
+          />
         )}
-      </div>
-      <MentorRow initial={initial?.mentor1} onPick={set('mentor1_faculty_code')} required />
-      {secondMentor && (
-        <MentorRow initial={initial?.mentor2} onPick={set('mentor2_faculty_code')} onRemove={removeMentor} />
-      )}
+      </PanelSection>
 
-      <GridContainer elements={[
-        <FileUploadField
-          label={initial ? 'Replace Project Proposal (PDF)' : 'Project Proposal (PDF)'}
-          onChange={set('proposal')}
-          maxSizeMB={20}
-          required={!initial}
-        />,
-      ]} />
-      <Submit text={initial ? 'Update Application' : 'Submit Application'} onClick={submit} />
+      <PanelSection>
+        <GridContainer elements={[
+          <FileUploadField
+            label={initial ? 'Replace Project Proposal (PDF)' : 'Project Proposal (PDF)'}
+            onChange={set('proposal')}
+            maxSizeMB={20}
+            required={!initial}
+          />,
+        ]} />
+      </PanelSection>
+      <Submit text={initial ? 'Update application' : 'Submit application'} onClick={submit} />
     </Section>
   );
 };
@@ -217,19 +250,21 @@ export const FellowForm = ({ applicationId, initial, prefill, onSaved }) => {
   };
 
   return (
-    <Section title="Fellowship Details">
-      <GridContainer elements={[
-        <InputField label="Full Name (as per PAN Card)" initialValue={body.full_name} onChange={set('full_name')} required />,
-        <DateField label="Date of Birth" initialValue={body.dob} onChange={set('dob')} required />,
-        <DropdownField label="Gender" options={GENDERS} initialValue={body.gender} onChange={set('gender')} required />,
-        <InputField label="Father's Name" initialValue={body.father_name} onChange={set('father_name')} required />,
-        <InputField label="PAN Card Number" initialValue={body.pan} onChange={set('pan')} required />,
-        <InputField label="Aadhaar Card Number" initialValue={body.aadhaar} onChange={set('aadhaar')} required />,
-        <InputField label="Bank Name" initialValue={body.bank_name} onChange={set('bank_name')} required />,
-        <InputField label="Bank Account Number" initialValue={body.account_no} onChange={set('account_no')} required />,
-        <InputField label="IFSC Code" initialValue={body.ifsc} onChange={set('ifsc')} required />,
-      ]} />
-      <Submit text={initial ? 'Update Details' : 'Submit Details'} onClick={submit} />
+    <Section title="Fellowship details">
+      <PanelSection>
+        <GridContainer elements={[
+          <InputField label="Full Name (as per PAN Card)" initialValue={body.full_name} onChange={set('full_name')} required />,
+          <DateField label="Date of Birth" initialValue={body.dob} onChange={set('dob')} required />,
+          <DropdownField label="Gender" options={GENDERS} initialValue={body.gender} onChange={set('gender')} required />,
+          <InputField label="Father's Name" initialValue={body.father_name} onChange={set('father_name')} required />,
+          <InputField label="PAN Card Number" initialValue={body.pan} onChange={set('pan')} required />,
+          <InputField label="Aadhaar Card Number" initialValue={body.aadhaar} onChange={set('aadhaar')} required />,
+          <InputField label="Bank Name" initialValue={body.bank_name} onChange={set('bank_name')} required />,
+          <InputField label="Bank Account Number" initialValue={body.account_no} onChange={set('account_no')} required />,
+          <InputField label="IFSC Code" initialValue={body.ifsc} onChange={set('ifsc')} required />,
+        ]} />
+      </PanelSection>
+      <Submit text={initial ? 'Update details' : 'Submit details'} onClick={submit} />
     </Section>
   );
 };
@@ -240,13 +275,15 @@ export const FellowForm = ({ applicationId, initial, prefill, onSaved }) => {
  * application; publications are linked from the student's own library the way
  * a PhD progress form links them.
  */
-export const ReportForm = ({ application, type, onSaved }) => {
-  const me = signedInUser();
-  const [body, set] = useBody({ type });
+export const ReportForm = ({ application, type, filed, onSaved }) => {
+  // Read once per mount: parsing localStorage on each keystroke gains nothing.
+  const [me] = useState(signedInUser);
+  // A report sent back opens with what was filed, so correcting it is not retyping it.
+  const [body, set] = useBody({ type, conference_presentation: filed?.conference_presentation });
   const [library, setLibrary] = useState(null);
   const [picking, setPicking] = useState(false);
   const [selection, setSelection] = useState({});
-  const [linked, setLinked] = useState({});
+  const [linked, setLinked] = useState(filed?.publications || {});
 
   const slot = application.student2_email?.toLowerCase() === me.email?.toLowerCase() ? 2 : 1;
   const mentors = [application.mentor1, application.mentor2].filter(Boolean);
@@ -271,11 +308,24 @@ export const ReportForm = ({ application, type, onSaved }) => {
     setPicking(false);
   };
 
-  // Taking a publication off this report leaves it in the library for later reports.
-  const unlink = (id, group) => setLinked((prev) => ({
-    ...prev,
-    [group]: (prev[group] || []).filter((row) => row.id !== id),
-  }));
+  // Taking a publication off this report leaves it in the library for later
+  // reports. Nothing is saved until Submit, so Undo puts it back in its place.
+  const unlink = (id, group) => {
+    const rows = linked[group] || [];
+    const index = rows.findIndex((row) => row.id === id);
+    if (index === -1) return;
+    const removed = rows[index];
+    setLinked((prev) => ({
+      ...prev,
+      [group]: (prev[group] || []).filter((row) => row.id !== id),
+    }));
+    toastUndo('Publication taken off this report.', () => setLinked((prev) => {
+      const now = prev[group] || [];
+      // Picked again from the library in the meantime: already back.
+      if (now.some((row) => row.id === id)) return prev;
+      return { ...prev, [group]: insertAt(now, index, removed) };
+    }));
+  };
 
   const idsIn = (wanted) => Object.entries(linked)
     .filter(([group]) => wanted(group))
@@ -294,33 +344,36 @@ export const ReportForm = ({ application, type, onSaved }) => {
   };
 
   return (
-    <Section title="Report Details">
+    <Section title="Report details">
       {/* Filled in from the application and locked: the student cannot change them here. */}
-      <GridContainer elements={[
-        <InputField label="Title of Project" initialValue={application.project_title || ''} isLocked />,
-      ]} space={3} />
-      <GridContainer elements={[
-        <InputField label="Name" initialValue={application[`student${slot}_name`] || ''} isLocked />,
-        <InputField label="Roll No." initialValue={application[`student${slot}_roll_no`] || ''} isLocked />,
-        <InputField label="Branch" initialValue={application[`student${slot}_branch`]?.name || ''} isLocked />,
-        <InputField label="Email" initialValue={application[`student${slot}_email`] || ''} isLocked />,
-        <InputField label="Contact No." initialValue={application[`student${slot}_phone`] || ''} isLocked />,
-        <InputField label="Faculty Mentor Name" initialValue={mentors.map(facultyName).join(', ')} isLocked />,
-        <InputField label="Faculty Mentor Department" initialValue={mentors.map((m) => m.department?.name).filter(Boolean).join(', ')} isLocked />,
-      ]} />
+      <PanelSection>
+        <GridContainer elements={[
+          <InputField label="Title of Project" initialValue={application.project_title || ''} isLocked />,
+        ]} space={3} />
+        <GridContainer elements={[
+          <InputField label="Name" initialValue={application[`student${slot}_name`] || ''} isLocked />,
+          <InputField label="Roll No." initialValue={application[`student${slot}_roll_no`] || ''} isLocked />,
+          <InputField label="Branch" initialValue={application[`student${slot}_branch`]?.name || ''} isLocked />,
+          <InputField label="Email" initialValue={application[`student${slot}_email`] || ''} isLocked />,
+          <InputField label="Contact No." initialValue={application[`student${slot}_phone`] || ''} isLocked />,
+          <InputField label="Faculty Mentor Name" initialValue={mentors.map(facultyName).join(', ')} isLocked />,
+          <InputField label="Faculty Mentor Department" initialValue={mentors.map((m) => m.department?.name).filter(Boolean).join(', ')} isLocked />,
+        ]} />
+      </PanelSection>
 
-      <div className="urf-subhead">
-        <h3>Publication Details</h3>
-        <button type="button" className="urf-add-btn" onClick={() => setPicking(true)}>
-          <i className="fa fa-plus" aria-hidden="true"></i> Add Publications
-        </button>
-      </div>
-      <ShowPublications formData={linked} enableEdit={false} enableDelete onDelete={unlink} />
+      <PanelSection
+        title="Publication details"
+        actions={<CustomButton text="Add publications" variant="secondary" size="sm" onClick={() => setPicking(true)} />}
+      >
+        <ShowPublications formData={linked} enableEdit={false} enableDelete onDelete={unlink} />
+      </PanelSection>
 
-      <GridContainer elements={[
-        <InputField label="Conference Presentation (if any)" initialValue={body.conference_presentation} onChange={set('conference_presentation')} />,
-        <FileUploadField label="Upload the Report (PDF)" onChange={set('report')} maxSizeMB={20} required />,
-      ]} />
+      <PanelSection>
+        <GridContainer elements={[
+          <InputField label="Conference Presentation (if any)" initialValue={body.conference_presentation} onChange={set('conference_presentation')} />,
+          <FileUploadField label="Upload the Report (PDF)" onChange={set('report')} maxSizeMB={20} required />,
+        ]} />
+      </PanelSection>
       <Submit text={`Submit ${REPORT_TYPES[type]}`} onClick={submit} />
 
       {/* The project's library, as the PhD progress form shows it: add a new
@@ -328,7 +381,6 @@ export const ReportForm = ({ application, type, onSaved }) => {
       <CustomModal
         isOpen={picking}
         onClose={() => setPicking(false)}
-        title="Add Publications"
         minHeight="200px"
         maxHeight="600px"
         minWidth="650px"

@@ -195,7 +195,9 @@ class StudentLeaveFormController extends Controller
             ], 422);
         }
 
-        if ($request->input('leave_type') === 'academic' && !$request->hasFile('supporting_document')) {
+        // A resubmission after a send-back keeps the document already on record.
+        if ($request->input('leave_type') === 'academic' && !$request->hasFile('supporting_document')
+            && !StudentLeaveForm::find($form_id)?->supporting_document) {
             return response()->json([
                 'message' => 'An academic leave needs a supporting document.',
             ], 422);

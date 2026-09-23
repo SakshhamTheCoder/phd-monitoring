@@ -10,6 +10,20 @@ import { baseURL } from "../../api/urls";
 import DateField from "../forms/fields/DateField";
 import DropdownField from "../forms/fields/DropdownField";
 import ToggleSwitch from "../forms/fields/ToggleSwitch";
+import { toDateValue } from "../../utils/timeParse";
+
+// The profile sends these dates as UTC timestamps, 18:30 the day before for a
+// server on IST. Kept raw, an untouched field was saved back as that earlier
+// day, so every edit moved it one day. Read it in local time instead.
+const dateOnly = (value) => {
+  if (!value) return "";
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? "" : toDateValue(parsed);
+};
+
+// Yes, No, or "" for not stated. A null is a scholar nobody has asked, and
+// turning it into No would claim an answer nobody gave.
+const jrfValue = (value) => (value === null || value === undefined || value === "" ? "" : value ? "1" : "0");
 
 const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => {
   const [submitting, setSubmitting] = useState(false);
@@ -31,8 +45,8 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
     current_status: "",
     gender: "",
     physically_handicapped: false,
-    is_jrf: false,
-    is_net_gate_qualified: false,
+    is_jrf: "",
+    net_gate: "",
     overall_progress: 0,
     cgpa: "",
   });
@@ -45,11 +59,11 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
         email: studentData.email || "",
         roll_no: studentData.roll_no || "",
         department_id: studentData.department_id || "",
-        date_of_registration: studentData.date_of_registration || "",
-        date_of_irb: studentData.date_of_irb || "",
-        date_of_synopsis: studentData.date_of_synopsis || "",
-        date_of_thesis: studentData.date_of_thesis || "",
-        date_of_thesis_awarded: studentData.date_of_thesis_awarded || "",
+        date_of_registration: dateOnly(studentData.date_of_registration),
+        date_of_irb: dateOnly(studentData.date_of_irb),
+        date_of_synopsis: dateOnly(studentData.date_of_synopsis),
+        date_of_thesis: dateOnly(studentData.date_of_thesis),
+        date_of_thesis_awarded: dateOnly(studentData.date_of_thesis_awarded),
         phd_title: studentData.phd_title || "",
         fathers_name: studentData.fathers_name || "",
         address: studentData.address || "",
@@ -58,8 +72,8 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
         // instead of a broken option, forcing the admin to pick a valid one.
         gender: ["Male", "Female"].includes(studentData.gender) ? studentData.gender : "",
         physically_handicapped: !!studentData.physically_handicapped,
-        is_jrf: !!studentData.is_jrf,
-        is_net_gate_qualified: !!studentData.is_net_gate_qualified,
+        is_jrf: jrfValue(studentData.is_jrf),
+        net_gate: studentData.net_gate || "",
         overall_progress: studentData.overall_progress || 0,
         cgpa: studentData.cgpa || "",
       });
@@ -99,7 +113,10 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
 
     setSubmitting(true);
     try {
-      const res = await customFetch(endpoint, "POST", formData);
+      const res = await customFetch(endpoint, "POST", {
+        ...formData,
+        is_jrf: formData.is_jrf === "" ? null : formData.is_jrf === "1",
+      });
       if (res.success) {
         if (!edit) {
           // The server mails the new account a link to set its own password.
@@ -117,15 +134,7 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
 
   return (
     <>
-      <GridContainer
-        space={3}
-        elements={[
-          <div className="form-title">
-            {" "}
-            {!edit ? <>Create </> : <>Edit </>}Student Form
-          </div>,
-        ]}
-      />
+      <h2 className="modal-title">{edit ? "Edit student" : "Create student"}</h2>
       <GridContainer
         elements={[
           <InputField
@@ -220,15 +229,26 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
             isOn={formData.physically_handicapped}
             onToggle={() => handleChange("physically_handicapped", !formData.physically_handicapped)}
           />,
-          <ToggleSwitch
+          <DropdownField
             label="JRF"
-            isOn={formData.is_jrf}
-            onToggle={() => handleChange("is_jrf", !formData.is_jrf)}
+            initialValue={formData.is_jrf}
+            options={[
+              { value: "1", title: "Yes" },
+              { value: "0", title: "No" },
+            ]}
+            onChange={(value) => handleChange("is_jrf", value)}
           />,
-          <ToggleSwitch
-            label="NET/GATE qualified"
-            isOn={formData.is_net_gate_qualified}
-            onToggle={() => handleChange("is_net_gate_qualified", !formData.is_net_gate_qualified)}
+          // Which exam, not yes or no. An imported value the list does not
+          // name (DBT-BET, GPAT) still shows and is kept.
+          <DropdownField
+            label="NET/GATE"
+            initialValue={formData.net_gate}
+            options={[
+              { value: "NET", title: "NET" },
+              { value: "GATE", title: "GATE" },
+              { value: "NA", title: "NA" },
+            ]}
+            onChange={(value) => handleChange("net_gate", value)}
           />,
         ]}
       />
@@ -280,23 +300,14 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
         ]}
       />
 
-      <GridContainer
-        elements={[
-          <CustomButton
-            text={
-              submitting
-                ? edit
-                  ? "Updating..."
-                  : "Adding..."
-                : edit
-                ? "Update Student"
-                : "Add Student"
-            }
-            onClick={handleSubmit}
-            disabled={submitting}
-          />,
-        ]}
-      />
+      <div className="modal-actions">
+        {onClose && <CustomButton text="Cancel" variant="quiet" onClick={onClose} />}
+        <CustomButton
+          text={edit ? "Update student" : "Add student"}
+          onClick={handleSubmit}
+          busy={submitting}
+        />
+      </div>
     </>
   );
 };

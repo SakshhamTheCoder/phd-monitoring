@@ -54,7 +54,8 @@ class IrbSubController extends Controller
             })->join(', ');
             },
             "date_of_irb" => function ($form) {
-                return \Carbon\Carbon::parse($form->student->date_of_irb)->format('Y-m-d');
+                // Carbon::parse(null) is today, so a missing date showed as today.
+                return $form->student->date_of_irb?->format('Y-m-d');
             },
         ],
         'titles' => [ "Name", "Roll No","Date of IRB","Supervisors"],
@@ -93,7 +94,22 @@ class IrbSubController extends Controller
         }
 
         $form = IrbSubForm::find($form_id);
-        return $form && $form->student->checkDoctoralCommittee($user->faculty?->faculty_code) ? 'doctoral' : $role;
+
+        $code = $user->faculty?->faculty_code;
+
+        if (!$form || !$form->student->checkDoctoralCommittee($code)) {
+
+            return $role;
+
+        }
+
+        // A supervisor who also sits on the committee answers as supervisor until
+
+        // the form reaches the committee; otherwise the supervisor step could
+
+        // never be answered by them.
+
+        return $form->student->checkSupervises($code) && $form->stage !== 'doctoral' ? $role : 'doctoral';
     }
 
     public function loadForm(Request $request, $form_id=null)
@@ -166,19 +182,12 @@ class IrbSubController extends Controller
             'form_ids' => 'required|array',
         ]);
         $request->merge(['approval' => true]);
-        foreach ($form_ids as $id) {
-            $form = IrbSubForm::find($id);
-            if (!$form) {
-                return response()->json(['message' => 'Form not found'], 404);
-            }
-            match ($role->role) {
-                'phd_coordinator' => $this->coordinatorSubmit($user, $request, $id),
-                'hod' => $this->hodSubmit($user, $request, $id),
-                'dra' => $this->draSubmit($user, $request, $id),
-                'dordc' => $this->dordcSubmit($user, $request, $id),
-            };
-        }
-        return response()->json(['message' => 'Forms submitted successfully'], 200);
+        return $this->bulkResults($form_ids, fn ($id) => match ($role->role) {
+            'phd_coordinator' => $this->coordinatorSubmit($user, $request, $id),
+            'hod' => $this->hodSubmit($user, $request, $id),
+            'dra' => $this->draSubmit($user, $request, $id),
+            'dordc' => $this->dordcSubmit($user, $request, $id),
+        });
     }
 
     private function studentSubmit($user, $request, $form_id)
@@ -186,7 +195,7 @@ class IrbSubController extends Controller
         $request->validate([
             'revised_phd_objectives' => 'required|array',
             'revised_phd_title' => 'required|string',
-            'irb_pdf' => 'required|file|mimes:pdf|max:20480',
+            'irb_pdf' => 'nullable|file|mimes:pdf|max:20480',
             'date_of_irb' => 'required|string',
         ]);
 
@@ -194,8 +203,13 @@ class IrbSubController extends Controller
 
         return $this->submitForm($user, $request, $form_id, $model,'student', 'student','faculty',
         function ($formInstance) use ($request, $user) {
-        
-            $link=$this->replaceUploadedFile($formInstance->revised_irb_pdf, $request->file('irb_pdf'), 'irb_sub_rev', $user->student->roll_no);
+            // A resubmission after a send-back keeps the stored PDF unless a new one comes.
+            if (!$formInstance->revised_irb_pdf) {
+                $request->validate(['irb_pdf' => 'required|file|mimes:pdf|max:20480']);
+            }
+            $link = $request->hasFile('irb_pdf')
+                ? $this->replaceUploadedFile($formInstance->revised_irb_pdf, $request->file('irb_pdf'), 'irb_sub_rev', $user->student->roll_no)
+                : $formInstance->revised_irb_pdf;
           
                 $formInstance->revised_phd_title = $request->revised_phd_title;
                 $formInstance->revised_irb_pdf = $link;
@@ -232,9 +246,16 @@ class IrbSubController extends Controller
     {
         $model = IrbSubForm::class;
         $form=IrbSubForm::find($form_id);
-        return $this->submitForm($user, $request, $form_id, $model, 'faculty', 'student', 'external',
-        function ($formInstance) use ($request, $user) {
+        // A scholar carried over without an outside expert has nobody to send
+        // the external review to, and the form sat at that step for good. It
+        // goes on to the doctoral committee instead, and says so in its history.
+        $hasExpert = (bool) $form?->student?->outsideExpert();
+        return $this->submitForm($user, $request, $form_id, $model, 'faculty', 'student', $hasExpert ? 'external' : 'doctoral',
+        function ($formInstance) use ($request, $user, $hasExpert) {
             $this->handleSupervisorSubmitForm($user, $request, $formInstance);
+            if (!$hasExpert) {
+                $formInstance->addHistoryEntry('External review skipped: no outside expert is on record for this scholar.', 'System');
+            }
         });
     }   
 
@@ -341,7 +362,8 @@ class IrbSubController extends Controller
         
         }
         else{
-            $formInstance->supervisorApprovals()->where('supervisor_id', $faculty_code)->update([
+            // A committee member's rejection belongs on the committee's approvals.
+            $formInstance->doctoralApprovals()->where('doctoral_id', $faculty_code)->update([
               'status' => 'rejected',
             ]);
         }

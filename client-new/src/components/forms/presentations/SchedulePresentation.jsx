@@ -19,14 +19,13 @@ const SchedulePresentation = ({ close, semester }) => {
   const [reportPeriods, setReportPeriods] = useState([]);
 
     useEffect(() => {
-        const url = baseURL + "/students";
+        // Without all=true the list is paginated and stops at the first 15 names.
+        const url = baseURL + "/students?all=true";
+        // customFetch toasts a failed load itself. The form still opens so the
+        // dialog is not left blank.
         customFetch(url, "GET")
           .then((data) => {
-            if (data && data.success) {
-                for (let i = 0; i < data.response.length; i++) {
-                    data.response[i].value = data.response[i].roll_no;
-                    data.response[i].title = data.response[i].name;
-                }
+            if (data.success) {
                 let stu=data.response.data.map((student) => {
                     return {
                         value: student.roll_no,
@@ -34,13 +33,9 @@ const SchedulePresentation = ({ close, semester }) => {
                     };
                 });
               setStudents(stu);
-              setIsLoaded(true);
-              setLoading(false);
             }
+            setIsLoaded(true);
             setLoading(false);
-          })
-          .catch((error) => {
-            // setLoading(false);
           });
           const periods = generateReportPeriods(2,1,true);
           const pp=[];
@@ -105,7 +100,7 @@ const SchedulePresentation = ({ close, semester }) => {
           <GridContainer
             elements={[
               <InputField
-                label={"Period of Report"}
+                label={"Period of report"}
                 isLocked={true}
                 initialValue={semester}
                 required={true}
@@ -135,7 +130,7 @@ const SchedulePresentation = ({ close, semester }) => {
           <GridContainer
             elements={[
               <InputField
-              label={"Venue (Leave Blank to Auto Schedule Meet)"}
+              label={"Venue (leave blank to auto schedule a Meet)"}
               onChange={(value) =>
                 setBody((prev) => ({ ...prev, venue: value }))
               }
@@ -146,7 +141,7 @@ const SchedulePresentation = ({ close, semester }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Additional Guest Emails (comma separated)"
+                label="Additional guest emails (comma separated)"
                 onChange={(value) =>
                   setBody((prev) => ({ ...prev, guest_emails_raw: value }))
                 }
@@ -154,9 +149,9 @@ const SchedulePresentation = ({ close, semester }) => {
             ]}
             space={3}
           />
-          <GridContainer
-            elements={[<></>, <></>, <CustomButton text="Schedule" onClick={schedule} />]}
-          />
+          <div className="modal-actions">
+            <CustomButton text="Schedule" onClick={schedule} />
+          </div>
         </>
       )}
     </>

@@ -113,4 +113,27 @@ class ScholarCommittee
             );
         }
     }
+
+    /**
+     * The scholar's outside expert, replacing any they had.
+     *
+     * Only this member is touched. The IRB committee is otherwise the doctoral
+     * committee, and the outside expert is the one person on it who is not, so
+     * a scholar carried over with a committee but no expert can be given one
+     * without redoing the rest. One expert per scholar, because
+     * Student::outsideExpert() reads the first and the review goes to them.
+     */
+    public static function setOutsideExpert(Student $student, OutsideExpert $outsideExpert): void
+    {
+        IRBCommittee::where('student_id', $student->roll_no)
+            ->where('type', 'outside')
+            ->where('member_type', OutsideExpert::class)
+            ->where('member_id', '!=', $outsideExpert->id)
+            ->delete();
+
+        IRBCommittee::firstOrCreate(
+            ['student_id' => $student->roll_no, 'member_type' => OutsideExpert::class, 'member_id' => $outsideExpert->id],
+            ['type' => 'outside']
+        );
+    }
 }

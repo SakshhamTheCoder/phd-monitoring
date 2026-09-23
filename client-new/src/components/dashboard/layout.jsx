@@ -1,17 +1,32 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import './layout.css';
 import TopBar from '../topbar/TopBar';
 import NavBar from '../navbar/CustomNavBar';
+import Loader from '../loader/loader';
+import { useLoading } from '../../context/LoadingContext';
 
 const Layout = ({ children }) => {
     // The sidebar is a fixed column on a desktop and a drawer below the mobile
     // breakpoint, where 225px of a 375px screen is most of the page.
     const [navOpen, setNavOpen] = useState(false);
     const { pathname } = useLocation();
+    const toggleRef = useRef(null);
+    const { loading } = useLoading();
 
     // Following a link should leave the drawer closed behind you.
     useEffect(() => setNavOpen(false), [pathname]);
+
+    useEffect(() => {
+        if (!navOpen) return undefined;
+        const closeOnEscape = (event) => {
+            if (event.key !== 'Escape') return;
+            setNavOpen(false);
+            toggleRef.current?.focus();
+        };
+        document.addEventListener('keydown', closeOnEscape);
+        return () => document.removeEventListener('keydown', closeOnEscape);
+    }, [navOpen]);
 
     return (
         <div className={`layout ${navOpen ? 'layout--nav-open' : ''}`}>
@@ -30,6 +45,7 @@ const Layout = ({ children }) => {
                 <header className="topbar">
                     <button
                         type="button"
+                        ref={toggleRef}
                         className="nav-toggle"
                         aria-label={navOpen ? 'Close navigation' : 'Open navigation'}
                         aria-expanded={navOpen}
@@ -41,6 +57,8 @@ const Layout = ({ children }) => {
                     <TopBar />
                 </header>
                 <main className="content" id="main" tabIndex={-1}>
+                    {/* Requests in flight cover the page, not the whole screen. */}
+                    {loading && <Loader scope="content" />}
                     {children}
                 </main>
             </div>

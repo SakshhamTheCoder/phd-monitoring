@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
+import { apiDepartmentList } from '../../api/lookups';
 import InputField from '../../components/forms/fields/InputField';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import GridContainer from '../../components/forms/fields/GridContainer';
@@ -27,6 +28,8 @@ const AddDepartmentForm = ({ onClose, onCreated }) => {
     setSubmitting(false);
 
     if (result.success) {
+      // Pickers elsewhere share one cached list; the next one must see this department.
+      apiDepartmentList.invalidate();
       toast.success(result.response?.message || 'Department added successfully');
       if (onCreated) onCreated();
     } else {
@@ -35,8 +38,8 @@ const AddDepartmentForm = ({ onClose, onCreated }) => {
   };
 
   return (
-    <div style={{ padding: '1rem' }}>
-      <h2>Add Department</h2>
+    <>
+      <h2 className="modal-title">Add department</h2>
 
       <GridContainer
         elements={[
@@ -58,27 +61,20 @@ const AddDepartmentForm = ({ onClose, onCreated }) => {
         space={2}
       />
 
-      <div
-        style={{
-          display: 'flex',
-          gap: '1rem',
-          justifyContent: 'flex-end',
-          marginTop: '1.5rem',
-        }}
-      >
+      <div className="modal-actions">
         <CustomButton
           text="Cancel"
-          variant="secondary"
+          variant="quiet"
           onClick={onClose}
           disabled={submitting}
         />
         <CustomButton
-          text={submitting ? 'Adding...' : 'Add Department'}
+          text="Add department"
           onClick={handleSubmit}
-          disabled={submitting}
+          busy={submitting}
         />
       </div>
-    </div>
+    </>
   );
 };
 

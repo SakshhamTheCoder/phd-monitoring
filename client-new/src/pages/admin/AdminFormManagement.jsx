@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { customFetch } from "../../api/base";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { customFetch, NETWORK_ERROR_MESSAGE } from "../../api/base";
 import { baseURL } from "../../api/urls";
 import { EMPTY_VALUE } from "../../utils/timeParse";
 import { useLoading } from "../../context/LoadingContext";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import Layout from "../../components/dashboard/layout";
 import CustomButton from "../../components/forms/fields/CustomButton";
 import GridContainer from "../../components/forms/fields/GridContainer";
 import InputField from "../../components/forms/fields/InputField";
@@ -13,7 +12,9 @@ import DropdownField from "../../components/forms/fields/DropdownField";
 import CustomModal from "../../components/forms/modal/CustomModal";
 import AdminFormInstancesModal from "./AdminFormInstancesModal";
 import "./AdminFormManagement.css";
-import PageHeader from '../../components/pageHeader/PageHeader';
+import Page from "../../components/page/Page";
+import Panel from "../../components/panel/Panel";
+import StatusNotice from "../../components/common/StatusNotice";
 
 const AdminFormManagement = () => {
   const [students, setStudents] = useState([]);
@@ -30,6 +31,12 @@ const AdminFormManagement = () => {
   const [selectedFormForInstances, setSelectedFormForInstances] = useState(null);
   const { setLoading } = useLoading();
   const [searchParams] = useSearchParams();
+  // Which student's forms the page is waiting for. Picking a second student
+  // before the first answer lands must not show the first student's forms
+  // under the second one's name.
+  const latestFormsRequest = useRef(0);
+  // A double click on Enable created two instances.
+  const creatingForm = useRef(false);
 
   const stageOptions = [
     { label: "Student", value: "student" },
@@ -44,18 +51,6 @@ const AdminFormManagement = () => {
     { label: "Complete", value: "complete" },
   ];
 
-  const lockRoles = [
-    "student",
-    "faculty",
-    "hod",
-    "phd_coordinator",
-    "dordc",
-    "dra",
-    "director",
-    "doctoral",
-    "external",
-  ];
-
   const roleLabels = {
     student: "Student",
     faculty: "Supervisor",
@@ -68,6 +63,15 @@ const AdminFormManagement = () => {
     doctoral: "Doctoral",
     external: "External"
   };
+
+  // Toast is off on these calls because customFetch renders a 400 body as
+  // "message: ...", so the server's reason is shown from here instead.
+  const toastFailure = (response, fallback) =>
+    toast.error(
+      response.networkError
+        ? NETWORK_ERROR_MESSAGE
+        : response.response?.message || fallback
+    );
 
   useEffect(() => {
     fetchStudents();
@@ -97,15 +101,18 @@ const AdminFormManagement = () => {
       );
       if (response.success) {
         setStudents(response.response.data || []);
+      } else {
+        toastFailure(response, "Failed to fetch students.");
       }
-    } catch (error) {
-      toast.error("Failed to fetch students.");
     } finally {
       setLoading(false);
     }
   };
 
+  // Returns the fresh forms (null on failure) so a caller that also needs
+  // them for an open modal does not fetch the same list a second time.
   const fetchStudentForms = async (studentId) => {
+    const request = (latestFormsRequest.current += 1);
     setLoading(true);
     try {
       const response = await customFetch(
@@ -114,12 +121,15 @@ const AdminFormManagement = () => {
         {},
         false
       );
+      if (request !== latestFormsRequest.current) return null;
       if (response.success) {
-        setStudentForms(response.response.forms || []);
+        const forms = response.response.forms || [];
+        setStudentForms(forms);
         setSelectedStudent(response.response.student);
+        return forms;
       }
-    } catch (error) {
-      toast.error("Failed to fetch student forms.");
+      toastFailure(response, "Failed to fetch student forms.");
+      return null;
     } finally {
       setLoading(false);
     }
@@ -129,6 +139,7 @@ const AdminFormManagement = () => {
     if (studentId) {
       fetchStudentForms(studentId);
     } else {
+      latestFormsRequest.current += 1;
       setSelectedStudent(null);
       setStudentForms([]);
     }
@@ -148,7 +159,10 @@ const AdminFormManagement = () => {
     setIsInstancesModalOpen(true);
   };
 
-  const handleUpdateStage = async (formType, formId, newStage, currentStep) => {
+  // Sends the form to one step in a single request: the stage, its place in
+  // the steps, the furthest step reached, and that step's lock opened so the
+  // person there can act. It used to be three requests fired side by side.
+  const handleMoveTo = async (formType, instance, step, index) => {
     setLoading(true);
     try {
       const response = await customFetch(
@@ -157,68 +171,29 @@ const AdminFormManagement = () => {
         {
           student_id: selectedStudent.roll_no,
           form_type: formType,
-          form_id: formId,
-          stage: newStage,
-          current_step: currentStep,
+          form_id: instance.id,
+          stage: step,
+          current_step: index,
+          maximum_step: Math.max(instance.maximum_step || 0, index),
+          locks: { [step]: false },
         },
         false
       );
       if (response.success) {
-        // Unlock the lock for the stage we're moving to
-        const lockField = newStage === 'faculty' ? 'faculty' : newStage;
-        if (lockRoles.includes(lockField)) {
-          const unlocked = await customFetch(
-            baseURL + "/admin/forms/update-control",
-            "POST",
-            {
-              student_id: selectedStudent.roll_no,
-              form_type: formType,
-              form_id: formId,
-              locks: { [lockField]: false },
-            },
-            false
-          );
-          // The stage moved but whoever holds it cannot act until it unlocks.
-          if (!unlocked.success) {
-            toast.warn("Stage updated, but it could not be unlocked for the new step. Unlock it from the controls.");
-          }
-        }
-
-        toast.success("Stage updated.");
-        await fetchStudentForms(selectedStudent.roll_no);
-        
-        // Update the selected form for instances modal if it's open
-        if (selectedFormForInstances && selectedFormForInstances.form_type === formType) {
-          const updatedForms = await getUpdatedForms();
+        toast.success(`Form moved to ${stageOptions.find((option) => option.value === step)?.label || step}.`);
+        const updatedForms = await fetchStudentForms(selectedStudent.roll_no);
+        if (updatedForms && selectedFormForInstances && selectedFormForInstances.form_type === formType) {
           const updatedForm = updatedForms.find(f => f.form_type === formType);
-          if (updatedForm) {
-            setSelectedFormForInstances(updatedForm);
-          }
+          if (updatedForm) setSelectedFormForInstances(updatedForm);
         }
+      } else {
+        toastFailure(response, "Could not move the form.");
       }
-    } catch (error) {
-      toast.error("Failed to update stage.");
     } finally {
       setLoading(false);
     }
   };
 
-  const getUpdatedForms = async () => {
-    try {
-      const response = await customFetch(
-        baseURL + `/admin/forms/student/${selectedStudent.roll_no}`,
-        "GET",
-        {},
-        false
-      );
-      if (response.success) {
-        return response.response.forms || [];
-      }
-    } catch (error) {
-      console.error("Failed to fetch updated forms");
-    }
-    return studentForms;
-  };
 
   const handleToggleAvailability = async (formType, role, currentValue) => {
     setLoading(true);
@@ -236,19 +211,18 @@ const AdminFormManagement = () => {
       );
       if (response.success) {
         toast.success(`${roleLabels[role]} availability ${!currentValue ? "enabled" : "disabled"}.`);
-        const updatedForms = await getUpdatedForms();
-        setStudentForms(updatedForms);
-        
+        const updatedForms = await fetchStudentForms(selectedStudent.roll_no);
+
         // Update the selected form for management modal if it's open
-        if (selectedFormForManagement && selectedFormForManagement.form_type === formType) {
+        if (updatedForms && selectedFormForManagement &&selectedFormForManagement.form_type === formType) {
           const updatedForm = updatedForms.find(f => f.form_type === formType);
           if (updatedForm) {
             setSelectedFormForManagement(updatedForm);
           }
         }
+      } else {
+        toastFailure(response, "Failed to toggle availability.");
       }
-    } catch (error) {
-      toast.error("Failed to toggle availability.");
     } finally {
       setLoading(false);
     }
@@ -275,9 +249,9 @@ const AdminFormManagement = () => {
         await fetchStudentForms(selectedStudent.roll_no);
         setIsManageFormModalOpen(false);
         setSelectedFormForManagement(null);
+      } else {
+        toastFailure(response, "Failed to disable form.");
       }
-    } catch (error) {
-      toast.error(error.message || "Failed to disable form.");
     } finally {
       setLoading(false);
     }
@@ -299,26 +273,29 @@ const AdminFormManagement = () => {
         false
       );
       if (response.success) {
-        toast.success(`Lock ${!currentValue ? "enabled" : "disabled"}.`);
-        await fetchStudentForms(selectedStudent.roll_no);
-        
+        toast.success(!currentValue ? "Answers locked." : "Opened for editing.");
+        const updatedForms = await fetchStudentForms(selectedStudent.roll_no);
+
         // Update the selected form for instances modal if it's open
-        if (selectedFormForInstances && selectedFormForInstances.form_type === formType) {
-          const updatedForms = await getUpdatedForms();
+        if (updatedForms && selectedFormForInstances && selectedFormForInstances.form_type === formType) {
           const updatedForm = updatedForms.find(f => f.form_type === formType);
           if (updatedForm) {
             setSelectedFormForInstances(updatedForm);
           }
         }
+      } else {
+        toastFailure(response, "Failed to toggle lock.");
       }
-    } catch (error) {
-      toast.error("Failed to toggle lock.");
     } finally {
       setLoading(false);
     }
   };
 
+  // Both creators return whether the call succeeded, so the Enable dialog
+  // stays open, with its choice, when it failed.
   const handleEnableForm = async (formType) => {
+    if (creatingForm.current) return false;
+    creatingForm.current = true;
     setLoading(true);
     try {
       const response = await customFetch(
@@ -336,15 +313,19 @@ const AdminFormManagement = () => {
       if (response.success) {
         toast.success("Form enabled.");
         await fetchStudentForms(selectedStudent.roll_no);
+        return true;
       }
-    } catch (error) {
-      toast.error(error.message || "Failed to enable form.");
+      toastFailure(response, "Failed to enable form.");
+      return false;
     } finally {
+      creatingForm.current = false;
       setLoading(false);
     }
   };
 
   const handleCreateFormInstance = async (formType) => {
+    if (creatingForm.current) return false;
+    creatingForm.current = true;
     setLoading(true);
     try {
       const response = await customFetch(
@@ -361,20 +342,21 @@ const AdminFormManagement = () => {
       );
       if (response.success) {
         toast.success("Form instance created.");
-        await fetchStudentForms(selectedStudent.roll_no);
-        
+        const updatedForms = await fetchStudentForms(selectedStudent.roll_no);
+
         // Update the selected form for instances modal if it's open
-        if (selectedFormForInstances && selectedFormForInstances.form_type === formType) {
-          const updatedForms = await getUpdatedForms();
+        if (updatedForms && selectedFormForInstances && selectedFormForInstances.form_type === formType) {
           const updatedForm = updatedForms.find(f => f.form_type === formType);
           if (updatedForm) {
             setSelectedFormForInstances(updatedForm);
           }
         }
+        return true;
       }
-    } catch (error) {
-      toast.error(error.message || "Failed to create form instance.");
+      toastFailure(response, "Failed to create form instance.");
+      return false;
     } finally {
+      creatingForm.current = false;
       setLoading(false);
     }
   };
@@ -386,13 +368,17 @@ const AdminFormManagement = () => {
     }
 
     const selectedForm = studentForms.find(f => f.form_type === createFormType);
-    
-    if (!selectedForm?.exists_in_forms_table) {
-      await handleEnableForm(createFormType);
-    } else {
-      await handleCreateFormInstance(createFormType);
-    }
-    
+
+    const created = selectedForm?.exists_in_forms_table
+      ? await handleCreateFormInstance(createFormType)
+      : await handleEnableForm(createFormType);
+
+    if (created) closeCreateModal();
+  };
+
+  // The dropdown starts at Select every time the dialog opens, so the type
+  // picked last time must go with it or Enable would act on a hidden choice.
+  const closeCreateModal = () => {
     setIsCreateModalOpen(false);
     setCreateFormType("");
   };
@@ -416,216 +402,191 @@ const AdminFormManagement = () => {
       );
       if (response.success) {
         toast.success("Form deleted.");
-        await fetchStudentForms(selectedStudent.roll_no);
-        
+        const updatedForms = await fetchStudentForms(selectedStudent.roll_no);
+
         // Update the selected form for instances modal if it's open
-        if (selectedFormForInstances && selectedFormForInstances.form_type === formType) {
-          const updatedForms = await getUpdatedForms();
+        if (updatedForms && selectedFormForInstances && selectedFormForInstances.form_type === formType) {
           const updatedForm = updatedForms.find(f => f.form_type === formType);
           if (updatedForm) {
             setSelectedFormForInstances(updatedForm);
           }
         }
+      } else {
+        toastFailure(response, "Failed to delete form.");
       }
-    } catch (error) {
-      toast.error("Failed to delete form.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUpdateSteps = async (formType, formId, currentStep, maxStep) => {
-    setLoading(true);
-    try {
-      const response = await customFetch(
-        baseURL + "/admin/forms/update-control",
-        "POST",
-        {
-          student_id: selectedStudent.roll_no,
-          form_type: formType,
-          form_id: formId,
-          current_step: currentStep,
-          maximum_step: maxStep,
-        },
-        false
-      );
-      if (response.success) {
-        toast.success("Steps updated.");
-        await fetchStudentForms(selectedStudent.roll_no);
-        
-        // Update the selected form for instances modal if it's open
-        if (selectedFormForInstances && selectedFormForInstances.form_type === formType) {
-          const updatedForms = await getUpdatedForms();
-          const updatedForm = updatedForms.find(f => f.form_type === formType);
-          if (updatedForm) {
-            setSelectedFormForInstances(updatedForm);
-          }
-        }
-      }
-    } catch (error) {
-      toast.error("Failed to update steps.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filteredStudents = students.filter(
-    (student) =>
-      student.roll_no?.toString().includes(searchTerm) ||
-      student.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // The full student list is large, so the options are rebuilt only when
+  // the list or the search changes, not on every render.
+  const studentOptions = useMemo(() => {
+    const needle = searchTerm.toLowerCase();
+    return students
+      .filter(
+        (student) =>
+          student.roll_no?.toString().includes(searchTerm) ||
+          student.name?.toLowerCase().includes(needle)
+      )
+      .map((s) => ({
+        title: `${s.roll_no} - ${s.name}`,
+        value: s.roll_no,
+      }));
+  }, [students, searchTerm]);
 
   return (
-    <Layout>
-    <div className="admin-form-management">
-      <PageHeader
-        title="Admin Form Management"
-        subtitle="Manage form stages, locks, and availability per student"
-      />
-
-      <div className="student-selector-section">
+    <Page
+      title="Admin form management"
+      description="Manage form stages, locks, and availability per student"
+    >
+      <Panel>
         <GridContainer
           elements={[
             <InputField
-              label="Search Student"
+              label="Search student"
               hint="Search by roll number or name..."
+              initialValue={searchTerm}
               onChange={(value) => setSearchTerm(value)}
             />,
+            // Named so a ?roll_no= link shows whose forms these are.
             <DropdownField
-              label="Select Student"
-              options={filteredStudents.map((s) => ({
-                title: `${s.roll_no} - ${s.name}`,
-                value: s.roll_no,
-              }))}
+              label="Select student"
+              options={studentOptions}
+              initialValue={selectedStudent?.roll_no}
               onChange={(value) => handleStudentSelect(value)}
             />,
           ]}
         />
-      </div>
+      </Panel>
 
       {selectedStudent && (
         <>
-          <div className="student-info-card">
-            <h2>{selectedStudent.name}</h2>
-            <p>
-              <strong>Roll No:</strong> {selectedStudent.roll_no}
-            </p>
-            <p>
-              <strong>Department:</strong> {selectedStudent.department}
-            </p>
-          </div>
+          <Panel title={selectedStudent.name}>
+            <dl className="facts">
+              <div>
+                <dt>Roll no</dt>
+                <dd>{selectedStudent.roll_no}</dd>
+              </div>
+              <div>
+                <dt>Department</dt>
+                <dd>{selectedStudent.department}</dd>
+              </div>
+            </dl>
+          </Panel>
 
-          <div className="forms-list-header">
-            <h3>Available Forms ({studentForms.length})</h3>
-            <CustomButton
-              text="+ Enable New Form"
-              onClick={() => setIsCreateModalOpen(true)}
-            />
-          </div>
-
-          {studentForms.length === 0 ? (
-            <div className="empty-state">
-              <p>No forms available for this student yet.</p>
-            </div>
-          ) : (
-            <div className="forms-grid">
-              {studentForms.map((form) => (
-                <div 
-                  key={form.form_type} 
-                  className={`form-grid-card ${!form.exists_in_forms_table ? 'form-disabled' : ''}`}
-                >
-                  <div className="form-grid-header">
-                    <h4>{form.form_name}</h4>
-                    <span className="form-type-badge">{form.form_type}</span>
-                  </div>
-
-                  <div className="form-grid-body">
-                    {form.exists_in_forms_table ? (
-                      <>
-                        <div className="form-stats">
-                          <div className="stat-item">
-                            <span className="stat-label">Stage</span>
-                            <span className="stat-value stage-badge-mini">
-                              {form.general_form.stage}
-                            </span>
-                          </div>
-                          <div className="stat-item">
-                            <span className="stat-label">Instances</span>
-                            <span className="stat-value count-badge-mini">
-                              {form.general_form.count} / {form.general_form.max_count}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="form-grid-actions">
-                          <CustomButton
-                            text="Manage Form"
-                            onClick={() => openManageFormModal(form)}
-                          />
-                          <CustomButton
-                            text="View Instances"
-                            onClick={() => openInstancesModal(form)}
-                          />
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="form-disabled-notice">
-                          <span className="disabled-badge">Not Enabled</span>
-                          <p>Enable this form to allow students to submit</p>
-                        </div>
-                        <CustomButton
-                          text="Enable Form"
-                          onClick={() => handleEnableForm(form.form_type)}
-                        />
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <Panel
+            flush
+            title={`Available forms (${studentForms.length})`}
+            actions={
+              <CustomButton
+                text="Enable new form"
+                onClick={() => setIsCreateModalOpen(true)}
+              />
+            }
+          >
+            {studentForms.length === 0 ? (
+              <div className="afm-state">
+                <StatusNotice tone="empty">No forms available for this student yet.</StatusNotice>
+              </div>
+            ) : (
+              <div className="data-table-wrap">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Form</th>
+                      <th>Type</th>
+                      <th>Stage</th>
+                      <th>Instances</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {studentForms.map((form) => (
+                      <tr key={form.form_type}>
+                        <td className="afm-form-name">{form.form_name}</td>
+                        <td><span className="badge badge--neutral">{form.form_type}</span></td>
+                        {form.exists_in_forms_table ? (
+                          <>
+                            <td><span className="badge badge--info">{form.general_form.stage}</span></td>
+                            <td>{form.general_form.count} / {form.general_form.max_count}</td>
+                            <td>
+                              <div className="afm-row-actions">
+                                <CustomButton
+                                  text="Manage form"
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => openManageFormModal(form)}
+                                />
+                                <CustomButton
+                                  text="View instances"
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => openInstancesModal(form)}
+                                />
+                              </div>
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            <td colSpan={2}>
+                              <span className="badge badge--neutral">Not enabled</span>
+                              <p className="afm-muted">Enable this form to allow students to submit</p>
+                            </td>
+                            <td>
+                              <div className="afm-row-actions">
+                                <CustomButton
+                                  text="Enable form"
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => handleEnableForm(form.form_type)}
+                                />
+                              </div>
+                            </td>
+                          </>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Panel>
         </>
       )}
 
       {/* Create/Enable Form Modal */}
       <CustomModal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        title="Enable New Form Type"
+        onClose={closeCreateModal}
+        title="Enable new form type"
         minHeight="300px"
         maxHeight="500px"
         minWidth="500px"
         maxWidth="600px"
       >
-        <div className="create-form-modal">
-          <GridContainer
-            elements={[
-              <DropdownField
-                label="Select Form Type"
-                options={studentForms.map((f) => ({
-                    title: f.form_name,
-                    value: f.form_type,
-                  }))}
-                onChange={(value) => setCreateFormType(value)}
-              />,
-            ]}
-            space={2}
-          />
+        <GridContainer
+          elements={[
+            <DropdownField
+              label="Select form type"
+              options={studentForms.map((f) => ({
+                  title: f.form_name,
+                  value: f.form_type,
+                }))}
+              onChange={(value) => setCreateFormType(value)}
+            />,
+          ]}
+          space={2}
+        />
 
-          <p className="info-note">
-            This will enable the selected form type for {selectedStudent?.name}, 
-            allowing them to create submissions.
-          </p>
+        <p className="modal-note afm-create-note">
+          This will enable the selected form type for {selectedStudent?.name},
+          allowing them to create submissions.
+        </p>
 
-          <GridContainer
-            elements={[
-              <CustomButton
-                text="Cancel"
-                onClick={() => setIsCreateModalOpen(false)}
-              />,
-              <CustomButton text="Enable" onClick={handleCreateForm} />,
-            ]}
-          />
+        <div className="modal-actions">
+          <CustomButton text="Cancel" variant="quiet" onClick={closeCreateModal} />
+          <CustomButton text="Enable" onClick={handleCreateForm} />
         </div>
       </CustomModal>
 
@@ -636,38 +597,38 @@ const AdminFormManagement = () => {
           setIsManageFormModalOpen(false);
           setSelectedFormForManagement(null);
         }}
-        title={`Manage ${selectedFormForManagement?.form_name || 'Form'}`}
+        title={`Manage ${selectedFormForManagement?.form_name || 'form'}`}
         minHeight="400px"
         maxHeight="700px"
         minWidth="600px"
         maxWidth="800px"
       >
         {selectedFormForManagement && (
-          <div className="manage-form-modal">
-            <div className="form-overview-section">
-              <h3>Form Overview</h3>
-              <div className="overview-grid">
-                <div className="overview-item">
-                  <label htmlFor="admin-form-management-form-type">Form Type</label>
-                  <span className="form-type-badge">{selectedFormForManagement.form_type}</span>
+          <>
+            <section className="afm-section">
+              <h3 className="afm-section-title">Form overview</h3>
+              <dl className="facts">
+                <div>
+                  <dt>Form type</dt>
+                  <dd><span className="badge badge--neutral">{selectedFormForManagement.form_type}</span></dd>
                 </div>
-                <div className="overview-item">
-                  <label htmlFor="admin-form-management-current-stage">Current Stage</label>
-                  <span className="stage-badge">{selectedFormForManagement.general_form.stage}</span>
+                <div>
+                  <dt>Current stage</dt>
+                  <dd><span className="badge badge--info">{selectedFormForManagement.general_form.stage}</span></dd>
                 </div>
-                <div className="overview-item">
-                  <label>Instance Count</label>
-                  <span className="count-badge">
+                <div>
+                  <dt>Instance count</dt>
+                  <dd>
                     {selectedFormForManagement.general_form.count} / {selectedFormForManagement.general_form.max_count}
-                  </span>
+                  </dd>
                 </div>
-              </div>
-            </div>
+              </dl>
+            </section>
 
-            <div className="form-availability-section">
-              <h3>Role Availability</h3>
-              <p className="section-description">Toggle role access for this form type</p>
-              <div className="availability-grid-editable">
+            <section className="afm-section">
+              <h3 className="afm-section-title">Role availability</h3>
+              <p className="afm-section-description">Toggle role access for this form type</p>
+              <div className="afm-toggle-grid">
                 {[
                   { key: 'student_available', role: 'student', label: 'Student' },
                   { key: 'supervisor_available', role: 'supervisor', label: 'Supervisor' },
@@ -678,10 +639,11 @@ const AdminFormManagement = () => {
                   { key: 'director_available', role: 'director', label: 'Vice Chancellor' },
                   { key: 'doctoral_available', role: 'doctoral', label: 'Doctoral' },
                 ].map((role) => (
-                  <div key={role.key} className="availability-item-editable">
-                    <span className="availability-label">{role.label}</span>
+                  <div key={role.key} className="afm-toggle-item">
+                    <span className="afm-toggle-label">{role.label}</span>
                     <button
-                      className={`availability-toggle ${selectedFormForManagement.general_form[role.key] ? 'available' : 'unavailable'}`}
+                      type="button"
+                      className={`row-action-btn${selectedFormForManagement.general_form[role.key] ? '' : ' danger'}`}
                       onClick={() =>
                         handleToggleAvailability(
                           selectedFormForManagement.form_type,
@@ -695,29 +657,32 @@ const AdminFormManagement = () => {
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
 
             <div className="modal-actions">
               <CustomButton
-                text="View Instances"
+                text="View instances"
+                variant="secondary"
                 onClick={() => {
                   setIsManageFormModalOpen(false);
                   openInstancesModal(selectedFormForManagement);
                 }}
               />
               <CustomButton
-                text="Disable Form"
+                text="Disable form"
+                variant="danger"
                 onClick={() => handleDisableForm(selectedFormForManagement.form_type)}
               />
               <CustomButton
                 text="Close"
+                variant="quiet"
                 onClick={() => {
                   setIsManageFormModalOpen(false);
                   setSelectedFormForManagement(null);
                 }}
               />
             </div>
-          </div>
+          </>
         )}
       </CustomModal>
 
@@ -725,7 +690,6 @@ const AdminFormManagement = () => {
       <AdminFormInstancesModal
         isOpen={isInstancesModalOpen}
         form={selectedFormForInstances}
-        lockRoles={lockRoles}
         stageOptions={stageOptions}
         onClose={() => {
           setIsInstancesModalOpen(false);
@@ -734,11 +698,9 @@ const AdminFormManagement = () => {
         onCreateInstance={handleCreateFormInstance}
         onDeleteForm={handleDeleteForm}
         onToggleLock={handleToggleLock}
-        onUpdateStage={handleUpdateStage}
-        onUpdateSteps={handleUpdateSteps}
+        onMoveTo={handleMoveTo}
       />
-    </div>
-    </Layout>
+    </Page>
   );
 };
 

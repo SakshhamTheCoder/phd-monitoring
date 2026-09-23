@@ -94,7 +94,12 @@ class FacultyProfileController extends Controller
         ]);
 
         foreach ($this->identifierFields as $field) {
-            if ($request->exists($field)) $faculty->$field = $request->input($field) ?: null;
+            // Only an empty value is blank: `?: null` also wiped a real 0
+            // citations or h-index.
+            if ($request->exists($field)) {
+                $value = $request->input($field);
+                $faculty->$field = ($value === '' || $value === null) ? null : $value;
+            }
         }
         if ($request->has('expertise')) {
             $faculty->expertise = Faculty::normalizeExpertise($request->input('expertise'));
@@ -254,7 +259,7 @@ class FacultyProfileController extends Controller
             'type' => 'nullable|in:national,international,sci,non-sci',
             'year' => 'nullable|integer|min:1900|max:2100',
             'impact_factor' => 'nullable|numeric',
-            'issn' => 'nullable|integer',
+            'issn' => 'nullable|string|max:20',
         ];
     }
 

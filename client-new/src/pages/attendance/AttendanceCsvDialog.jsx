@@ -6,6 +6,7 @@ import { baseURL } from '../../api/urls';
 import { isNetworkError, NETWORK_ERROR_MESSAGE } from '../../api/base';
 import { parseCsv } from '../../utils/csv';
 import { buildSaveMessage } from '../../utils/attendanceMark';
+import useDoneFlash from '../../hooks/useDoneFlash';
 
 /**
  * Uploading a day's attendance as a file.
@@ -18,6 +19,7 @@ const AttendanceCsvDialog = ({ isOpen, onClose, onImported, editWindow }) => {
   const [csvFile, setCsvFile] = useState(null);
   const [csvPreview, setCsvPreview] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [templateSaved, flashTemplateSaved] = useDoneFlash();
 
   const reset = () => {
     setCsvFile(null);
@@ -31,10 +33,20 @@ const AttendanceCsvDialog = ({ isOpen, onClose, onImported, editWindow }) => {
 
   const downloadTemplate = async () => {
     const token = localStorage.getItem('token');
-    const res = await fetch(baseURL + '/clerks/attendance/template', { headers: { Authorization: `Bearer ${token}` } });
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'attendance_template.csv'; a.click(); URL.revokeObjectURL(url);
+    try {
+      const res = await fetch(baseURL + '/clerks/attendance/template', { headers: { Authorization: `Bearer ${token}` } });
+      // An error answer is JSON, and saving it would hand the clerk a
+      // "template" that is really an error message.
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.message || 'Template download failed.');
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'attendance_template.csv'; a.click(); URL.revokeObjectURL(url);
+      flashTemplateSaved();
+    } catch (e) { toast.error(isNetworkError(e) ? NETWORK_ERROR_MESSAGE : 'Template download failed: ' + e.message); }
   };
 
   const handleFileChange = async (e) => {
@@ -71,8 +83,15 @@ const AttendanceCsvDialog = ({ isOpen, onClose, onImported, editWindow }) => {
         // to write because the scholar has an approved leave for that date —
         // same silent-drop risk the Mark tab's save toast guards against, so
         // it gets the same treatment here.
-        toast.success(buildSaveMessage(data.message || 'CSV imported', data.data?.skipped_on_leave));
-        if (data.data?.errors?.length) toast.warning(`${data.data.error_count} rows had errors — check console`);
+        const saveMessage = buildSaveMessage(data.message || 'CSV imported', data.data?.skipped_on_leave);
+        // A file whose every row was refused still answers 200.
+        if ((data.data?.created ?? 0) + (data.data?.updated ?? 0) > 0) toast.success(saveMessage);
+        else toast.error(saveMessage);
+        const errors = data.data?.errors || [];
+        if (errors.length) {
+          const more = errors.length > 3 ? `; and ${errors.length - 3} more` : '';
+          toast.warning(`Check these rows: ${errors.slice(0, 3).join('; ')}${more}`, { autoClose: 10000 });
+        }
         close();
         onImported();
       } else toast.error(data.message || 'Import failed.');
@@ -80,26 +99,36 @@ const AttendanceCsvDialog = ({ isOpen, onClose, onImported, editWindow }) => {
   };
 
   return (
-    <CustomModal isOpen={isOpen} onClose={close} title="Upload Attendance CSV" width="90vw">
-      <div className="modal-form">
-        <div className="info-box attendance-csv-info">
-          <p className="attendance-csv-line"><strong>CSV Format:</strong></p>
-          <p className="attendance-csv-line attendance-csv-code">roll_no,date,status</p>
-          <p className="attendance-csv-line attendance-csv-required"><strong>Required:</strong> roll_no, date (YYYY-MM-DD ≤ today, ≥ registration), status (present/absent)</p>
-          <p className="attendance-csv-line attendance-csv-warn">Only roll numbers in your tagged departments are accepted. Clerks can edit only within {editWindow} days.</p>
+    <CustomModal isOpen={isOpen} onClose={close} title="Upload attendance CSV" width="90vw">
+      <section className="csv-import-section">
+        <h4 className="csv-import-heading">CSV format</h4>
+        <ul className="csv-import-columns" aria-label="Columns, in order: roll_no, date, status">
+          <li className="is-required">roll_no</li>
+          <li className="is-required">date</li>
+          <li className="is-required">status</li>
+        </ul>
+        <p className="csv-import-note">Required: roll_no, date (YYYY-MM-DD ≤ today, ≥ registration), status (present/absent)</p>
+      </section>
+      <section className="csv-import-section">
+        <h4 className="csv-import-heading">Who can be imported</h4>
+        <ul className="csv-import-rules">
+          <li>Only roll numbers in your tagged departments are accepted.</li>
+          <li>Clerks can edit only within {editWindow} days.</li>
+        </ul>
+      </section>
+      <div className="csv-import-file">
+        <CustomButton text="Download template" variant="secondary" onClick={downloadTemplate} done={templateSaved} />
+        <input type="file" accept=".csv" onChange={handleFileChange} className="csv-import-input" aria-label="CSV file" />
+      </div>
+      {csvPreview && (
+        <div className="csv-import-preview">
+          <div className="csv-import-preview-head">Preview: {csvPreview.total} row(s) found, showing 5</div>
+          <div className="csv-preview-wrap"><table className="csv-preview"><thead><tr><th>Row</th>{csvPreview.headers.map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>{csvPreview.data.map(r => <tr key={r._row}><td className="csv-rownum">{r._row}</td>{csvPreview.headers.map(h => <td key={h}>{r[h] || <span className="csv-import-empty">empty</span>}</td>)}</tr>)}</tbody></table></div>
         </div>
-        <div className="attendance-csv-template"><CustomButton text="Download Template" onClick={downloadTemplate} className="attendance-csv-template-btn" /></div>
-        <input type="file" accept=".csv" onChange={handleFileChange} className="attendance-csv-file" />
-        {csvPreview && (
-          <div className="attendance-csv-preview">
-            <div className="attendance-csv-preview-head">Preview: {csvPreview.total} row(s) found, showing 5</div>
-            <div className="csv-preview-wrap"><table className="csv-preview"><thead><tr><th>Row</th>{csvPreview.headers.map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>{csvPreview.data.map(r => <tr key={r._row}><td className="csv-rownum">{r._row}</td>{csvPreview.headers.map(h => <td key={h}>{r[h] || <span className="attendance-note-muted">empty</span>}</td>)}</tr>)}</tbody></table></div>
-          </div>
-        )}
-        <div className="attendance-csv-actions">
-          <button type="button" className="attendance-csv-cancel" onClick={close}>Cancel</button>
-          <button type="button" className="attendance-csv-upload" onClick={handleCsvUpload} disabled={uploading || !csvFile}>{uploading ? 'Uploading…' : 'Upload'}</button>
-        </div>
+      )}
+      <div className="modal-actions">
+        <CustomButton text="Cancel" variant="quiet" onClick={close} />
+        <CustomButton text="Upload" onClick={handleCsvUpload} busy={uploading} disabled={!csvFile} />
       </div>
     </CustomModal>
   );

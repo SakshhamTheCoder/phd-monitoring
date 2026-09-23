@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Layout from "../../components/dashboard/layout";
-import PageHeader from "../../components/pageHeader/PageHeader";
+import Page from "../../components/page/Page";
 import FormList from "../../components/forms/formList/FormList";
 import { useLocation } from "react-router-dom";
 import CreateNewBar from "../../components/forms/formList/CreateNewBar";
@@ -20,56 +19,60 @@ import { currentRole } from '../../auth/access';
 // ordinary form either way and still opens at the scholar's step, because the
 // preferences and the reason are theirs to give.
 const RAISED_FOR_A_SCHOLAR = {
-  'list-of-examiners': { role: 'faculty', label: 'Create New Form +' },
-  'supervisor-change': { role: 'phd_coordinator', label: 'Raise Supervisor Change +' },
+  'list-of-examiners': { role: 'faculty', label: 'Create new form' },
+  'supervisor-change': { role: 'phd_coordinator', label: 'Raise supervisor change' },
 };
 
 const FormListPage = () => {
   const location = useLocation();
   const scholar = useScholarInPath();
-  // The form type is the last path segment: /forms/synopsis-submission
+  // The form type is the last path segment: /forms/synopsis-submission reads
+  // "Synopsis submission", with the acronyms kept whole.
   const formTypeLabel = (location.pathname.split('/').filter(Boolean).pop() || 'Forms')
     .replace(/[-_]/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+    .replace(/^\w/, (c) => c.toUpperCase())
+    .replace(/\b(irb|urf|phd)\b/gi, (word) => (word.toLowerCase() === 'phd' ? 'PhD' : word.toUpperCase()));
   const [role, setRole] = useState();
   const [showBar, setShowBar] = useState(false);
+  // Read from the path on every render: this page is reused across form
+  // types, so state copied from an earlier path would carry over.
+  const scholarFormMatch = location.pathname.match(/^\/students\/(\d+)\/forms\/([\w-]+)$/);
   // The entry from RAISED_FOR_A_SCHOLAR this page offers, or null.
-  const [raisable, setRaisable] = useState(null);
-  const [modalButtonShow, setModalButtonShow] = useState(false);
+  const raisable = (scholarFormMatch && RAISED_FOR_A_SCHOLAR[scholarFormMatch[2]]) || null;
+  const modalButtonShow = location.pathname === "/forms/list-of-examiners";
+  // Typed into the list of examiners modal.
   const [rollNumber, setRollNumber] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // Reopening starts from an empty roll number, not the confirm step for the
+  // last scholar typed.
+  const closeExaminersModal = () => {
+    setIsModalOpen(false);
+    setShowBar(false);
+    setRollNumber(null);
+  };
   const [isBulkAllocateOpen, setIsBulkAllocateOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [filters, setFilters] = useState({}); // Initialize filters state
 
   // Only the PhD Coordinator allocates supervisors, and only from the
   // department-wide allocation list (not a single student's form list).
+  // Admin can view this form but the write path rejects them on every row.
   const showBulkAllocate =
-    (role === "phd_coordinator" || role === "admin") &&
+    role === "phd_coordinator" &&
     location.pathname === "/forms/supervisor-allocation";
 
   useEffect(() => {
     // Set the user role from localStorage
     setRole(currentRole());
-    const match = location.pathname.match(/^\/students\/(\d+)\/forms\/([\w-]+)$/);
-    const matchPath2 = location.pathname.match(/^\/forms\/list-of-examiners$/);
-    if (match && RAISED_FOR_A_SCHOLAR[match[2]]) {
-      setRaisable(RAISED_FOR_A_SCHOLAR[match[2]]);
-      setRollNumber(match[1]);
-    } else if (matchPath2) {
-      setModalButtonShow(true);
-    } else {
-      setRaisable(null);
-    }
   }, [location]);
   // One place for the page's primary action, so it sits in the header next to
   // the title instead of floating in a band of its own.
   const headerAction =
     role === "student" ? <CreateNewBar />
     : raisable && role === raisable.role
-      ? <CreateNewBar rollNumber={rollNumber} label={raisable.label} />
+      ? <CreateNewBar rollNumber={scholarFormMatch[1]} label={raisable.label} />
     : role === "faculty" && modalButtonShow ? (
-      <CustomButton onClick={() => setIsModalOpen(true)} text="Create New Form +" />
+      <CustomButton onClick={() => setIsModalOpen(true)} text="Create new form" />
     ) : null;
 
   const handleSearch = (query) => {
@@ -79,83 +82,78 @@ const FormListPage = () => {
   };
 
   return (
-    <Layout
-      children={
-        <>
-          <PageHeader
-            title={formTypeLabel}
-            subtitle={scholar ? `Viewing ${scholar.label}` : undefined}
-            actions={headerAction}
-          />
-          {role !== "student" ? (
-            <>
-              <FilterBar onSearch={handleSearch} />
-              <PagenationTable
-                key={refreshKey}
-                endpoint={location.pathname}
-                filters={filters}
-                enableApproval={role !== "faculty" && role !== "admin"}
-                enableSelect={role !== "faculty" && role !== "admin"}
-                extraTopbarComponents={
-                  showBulkAllocate ? (
-                    <CustomButton
-                      text="Bulk Allocate"
-                      variant="secondary"
-                      onClick={() => setIsBulkAllocateOpen(true)}
-                    />
-                  ) : null
-                }
+    <Page
+      title={formTypeLabel}
+      description={scholar ? `Viewing ${scholar.label}` : undefined}
+      actions={headerAction}
+    >
+      {role !== "student" ? (
+        <PagenationTable
+          key={refreshKey}
+          search={<FilterBar onSearch={handleSearch} />}
+          endpoint={location.pathname}
+          filters={filters}
+          // Student leave has no bulk submit on the server, so no "Approve selected".
+          enableApproval={role !== "faculty" && role !== "admin" && !location.pathname.endsWith("/student-leave")}
+          enableSelect={role !== "faculty" && role !== "admin"}
+          extraTopbarComponents={
+            showBulkAllocate ? (
+              <CustomButton
+                text="Bulk allocate"
+                variant="secondary"
+                onClick={() => setIsBulkAllocateOpen(true)}
               />
-            </>
-          ) : (
-            <FormList />
-          )}
-          <CustomModal
-            isOpen={isBulkAllocateOpen}
-            onClose={() => setIsBulkAllocateOpen(false)}
-            width="90vw"
-          >
-            <BulkAllocateSupervisors
-              onSuccess={() => {
-                setIsBulkAllocateOpen(false);
-                setRefreshKey((prev) => prev + 1);
-              }}
-            />
-          </CustomModal>
-          <CustomModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            minWidth="500px"
-            maxWidth="600px"
-            minHeight="200px"
-            maxHeight="400px"
-            children={[
-                <>
-                {!showBar ? (
-                <GridContainer 
-                label="Enter Student Roll Number to initiate List of Examiners"
-                elements={[
-                    <InputField 
-                        hint={"Enter Roll Number"}
-                        label={"Roll Number"}
-                        onChange={(value)=>{setRollNumber(value)}}
-                    />,
-                    <CustomButton
-                        label=" "
-                        text="Submit"
-                        onClick={()=>{
-                           setShowBar(true);
-                        }}
-                    />
-                ]}
-                
-                />):(<CreateNewBar rollNumber={rollNumber} label={"Confirm Form for "+rollNumber} />)}
-                </>,
+            ) : null
+          }
+        />
+      ) : (
+        <FormList />
+      )}
+      <CustomModal
+        isOpen={isBulkAllocateOpen}
+        onClose={() => setIsBulkAllocateOpen(false)}
+        width="90vw"
+      >
+        <BulkAllocateSupervisors
+          onSuccess={() => {
+            setIsBulkAllocateOpen(false);
+            setRefreshKey((prev) => prev + 1);
+          }}
+        />
+      </CustomModal>
+      <CustomModal
+        isOpen={isModalOpen}
+        onClose={closeExaminersModal}
+        minWidth="500px"
+        maxWidth="600px"
+        minHeight="200px"
+        maxHeight="400px"
+        children={[
+            <>
+            {!showBar ? (
+            <GridContainer 
+            label="Enter the student roll number to initiate a list of examiners"
+            elements={[
+                <InputField 
+                    hint={"Enter roll number"}
+                    label={"Roll number"}
+                    onChange={(value)=>{setRollNumber(value.trim())}}
+                />,
+                <CustomButton
+                    label=" "
+                    text="Submit"
+                    disabled={!rollNumber}
+                    onClick={()=>{
+                       setShowBar(true);
+                    }}
+                />
             ]}
-          />
-        </>
-      }
-    />
+                
+            />):(<CreateNewBar rollNumber={rollNumber} label={"Confirm form for "+rollNumber} />)}
+            </>,
+        ]}
+      />
+    </Page>
   );
 };
 

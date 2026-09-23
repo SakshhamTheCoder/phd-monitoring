@@ -12,6 +12,7 @@ import { baseURL } from "../../../../api/urls";
 import Recommendation from "../../layouts/Recommendation";
 import { toast } from "react-toastify";
 import TableComponent from "../../table/TableComponent";
+import { stepAnswered } from '../../../../utils/formSteps';
 
 const Hod = ({ formData }) => {
   const [lock, setLock] = useState(formData.locks?.hod);
@@ -31,7 +32,7 @@ const Hod = ({ formData }) => {
     if (!cognates || cognates.length === 0 || cognates[0] === null) {
       cognates = [-1];
     }
-    let outside_experts = formData.outside_experts.map((item) => {
+    let outside_experts = formData.outside_experts?.map((item) => {
       return item.id;
     });
     if (
@@ -42,8 +43,10 @@ const Hod = ({ formData }) => {
       outside_experts = [-1, -1, -1];
     }
     setBody({
-      approval: formData.approvals.hod,
-      comments: formData.comments.hod,
+      // The approval column defaults to 0, which would submit as "Not Recommend"
+      // if Submit is pressed before choosing. Unanswered means nothing chosen.
+      approval: stepAnswered(formData, 'hod') ? formData.approvals?.hod : null,
+      comments: formData.comments?.hod,
       chairman_experts: cognates,
       outside_experts: outside_experts,
     });
@@ -76,13 +79,15 @@ const Hod = ({ formData }) => {
             moreFields={true}
             handleRecommendationChange={onUpdateApproval}
           ></Recommendation>
-          {!!body.approval && (
-            <>
-            <p style={{ fontWeight: "bold", textAlign: "left" }}>List of 3 outside experts proposed by the HOD</p>
+          {/* Hidden rather than unmounted: the experts picked here live in
+              body, and a remount showed the fields blank while body still sent
+              those picks. */}
+          <div hidden={!body.approval}>
 
-          {greater && lock && formData.outside_experts.length === 3 ? (
+          {greater && lock && formData.outside_experts?.length === 3 ? (
             <>
               <GridContainer
+                label="List of 3 outside experts proposed by the HOD"
                 elements={[
                   <TableComponent
                     data={formData.outside_experts}
@@ -101,11 +106,12 @@ const Hod = ({ formData }) => {
           ) : (
             <>
               <GridContainer
+                label="List of 3 outside experts proposed by the HOD"
                 elements={[
                   <InputSuggestion
                     apiUrl={apiURL2}
                     showLabel={false}
-                    initialValue={formData.outside_experts[0]?.name}
+                    initialValue={formData.outside_experts?.[0]?.name}
                     onSelect={(value) => {
                       body.outside_experts[0] = value.id;
                     }}
@@ -114,7 +120,7 @@ const Hod = ({ formData }) => {
                   <InputSuggestion
                     apiUrl={apiURL2}
                     showLabel={false}
-                    initialValue={formData.outside_experts[1]?.name}
+                    initialValue={formData.outside_experts?.[1]?.name}
                     onSelect={(value) => {
                       body.outside_experts[1] = value.id;
                     }}
@@ -123,7 +129,7 @@ const Hod = ({ formData }) => {
                   <InputSuggestion
                     apiUrl={apiURL2}
                     showLabel={false}
-                    initialValue={formData.outside_experts[2]?.name}
+                    initialValue={formData.outside_experts?.[2]?.name}
                     onSelect={(value) => {
                       body.outside_experts[2] = value.id;
                     }}
@@ -137,14 +143,8 @@ const Hod = ({ formData }) => {
 
             {lock && formData.chairman_experts ?(<>
                 <GridContainer
+                label="Expert(s) recommended by chairman board of the studies of concerned department in cognate area of department:"
                 elements={[
-                  <p>
-                    Expert(s) recommended by chairman board of the studies of
-                    concerned department in cognate area of department:{" "}
-                  </p>,  
-                ]} space={3}
-              />
-                <GridContainer elements={[
                 <TableComponent
                     data={formData.chairman_experts}
                     keys={["name", "department", "designation"]}
@@ -153,21 +153,17 @@ const Hod = ({ formData }) => {
                 ]} space={3}/>
             </>):(<> 
                 <GridContainer
-                label="Expert(s) recommended by chairman board of the studies of concerned department in cognate area of department: "
+                label="Expert(s) recommended by chairman board of the studies of concerned department in cognate area of department:"
                 elements={[
-                  
-                   <></>,
-                  <></>,
-                  <>{!lock && ( <CustomButton text="Add Expert +" onClick={handleAddExpert}></CustomButton>)}</>
-                 
+                  <>{!lock && ( <CustomButton text="Add expert" variant="secondary" size="sm" onClick={handleAddExpert}></CustomButton>)}</>
                 ]}
               />
                 <GridContainer
-                    elements={body.chairman_experts.map((expert, index) => (
+                    elements={(body.chairman_experts || []).map((expert, index) => (
                     <InputSuggestion
                         apiUrl={apiURL}
                         label={`Expert ${index + 1}`}
-                        initialValue={formData.chairman_experts[index]?.name}
+                        initialValue={formData.chairman_experts?.[index]?.name}
                         onSelect={(value) => {
                         body.chairman_experts[index] = value.id;
                         }}
@@ -176,15 +172,23 @@ const Hod = ({ formData }) => {
                     />
                     ))}
                 /></>)}
-            
-                
-            </>
-          )}
+          </div>
            {
             formData.role === "hod" && !lock && (
                 <>
                   <GridContainer elements={[
-                    <CustomButton text="Submit" onClick={() => {submitForm(body,location,setLoading)}}/>
+                    <CustomButton text="Submit" onClick={() => {
+                      if (body.approval === null || body.approval === undefined) {
+                        toast.error("Choose Recommend or Not Recommend first.");
+                        return;
+                      }
+                      // An expert box added and left empty holds "" or the -1
+                      // placeholder, which the server refused as an invalid code.
+                      submitForm({
+                        ...body,
+                        chairman_experts: body.chairman_experts.filter((code) => code !== "" && code !== -1 && code != null),
+                      },location,setLoading);
+                    }}/>
                   ]}/>
                 </>
             )

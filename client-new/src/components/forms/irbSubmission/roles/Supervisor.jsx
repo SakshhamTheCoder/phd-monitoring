@@ -12,6 +12,8 @@ import { baseURL } from "../../../../api/urls";
 import TableComponent from "../../table/TableComponent";
 import CounterField from "../../fields/CounterField";
 import Recommendation from "../../layouts/Recommendation";
+import { toast } from "react-toastify";
+import { stepAnswered } from '../../../../utils/formSteps';
 
 
 const Supervisor = ({ formData }) => {
@@ -26,7 +28,9 @@ const Supervisor = ({ formData }) => {
   useEffect(() => {
     setLock(formData.locks?.supervisor);
     setBody({
-      approval: formData.approvals.supervisor,
+      // The approval column defaults to 0, which would submit as "Not Recommend"
+      // if Submit is pressed before choosing. Unanswered means nothing chosen.
+      approval: stepAnswered(formData, 'supervisor') ? formData.approvals?.supervisor : null,
       supervised_outside: formData.current_supervisor?.supervised_outside,
     });
     setIsLoaded(true);
@@ -44,8 +48,8 @@ const Supervisor = ({ formData }) => {
         <>
           {!!lock && (
             <>
-              <p>Supervisors</p>
               <GridContainer
+                label="Supervisors"
                 elements={[
                   <TableComponent
                     data={formData.supervisors}
@@ -60,8 +64,8 @@ const Supervisor = ({ formData }) => {
                       "Name",
                       "Department",
                       "Designation",
-                      "Supervised Campus",
-                      "Supervised Outside",
+                      "Supervised campus",
+                      "Supervised outside",
                     ]}
                   />,
                 ]}
@@ -73,8 +77,9 @@ const Supervisor = ({ formData }) => {
             formData={formData}
             role="supervisor"
             allowRejection={false}
-           
-            moreFields={formData.form_type === "revised"  ? false : (true && !lock)}
+            // The role draws its own Submit, which also sends supervised_outside,
+            // so Recommendation must never add a second one, revised form or not.
+            moreFields={true}
             handleRecommendationChange={handleApprovalChange}
           />
          
@@ -84,7 +89,7 @@ const Supervisor = ({ formData }) => {
                     elements={[
                       <InputField required={true}
                         label="Name"
-                        initialValue={formData.current_supervisor.name}
+                        initialValue={formData.current_supervisor?.name}
                         onChange={(value) => {
                           setBody({ ...body, name: value });
                         }}
@@ -92,7 +97,7 @@ const Supervisor = ({ formData }) => {
                       />,
                       <InputField required={true}
                         label="Department"
-                        initialValue={formData.current_supervisor.department}
+                        initialValue={formData.current_supervisor?.department}
                         onChange={(value) => {
                           setBody({ ...body, department: value });
                         }}
@@ -100,7 +105,7 @@ const Supervisor = ({ formData }) => {
                       />,
                       <InputField required={true}
                         label="Designation"
-                        initialValue={formData.current_supervisor.designation}
+                        initialValue={formData.current_supervisor?.designation}
                         onChange={(value) => {
                           setBody({ ...body, designation: value });
                         }}
@@ -108,23 +113,20 @@ const Supervisor = ({ formData }) => {
                       />,
                     ]}
                   />
-                  <>
-                    Total Number of Students under Guidance (including this
-                    applicant)
-                  </>
                   <GridContainer
+                    label="Total number of students under guidance (including this applicant)"
                     elements={[
                       <CounterField
-                        label="Inside TIET Students"
+                        label="Inside TIET students"
                         initialValue={
-                          formData.current_supervisor.supervised_campus
+                          formData.current_supervisor?.supervised_campus
                         }
                         isLocked={true}
                       />,
                       <CounterField required={true}
-                        label="Outside TIET Students"
+                        label="Outside TIET students"
                         initialValue={
-                          formData.current_supervisor.supervised_outside
+                          formData.current_supervisor?.supervised_outside
                         }
                         isLocked={lock}
                         onChange={(value) => {
@@ -144,6 +146,10 @@ const Supervisor = ({ formData }) => {
                   <CustomButton
                     text="Submit"
                     onClick={() => {
+                      if (body.approval === null || body.approval === undefined) {
+                        toast.error("Choose Recommend or Not Recommend first.");
+                        return;
+                      }
                       submitForm(body, location, setLoading);
                     }}
                   />,

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import './PublicPageBar.css';
 
 /**
  * The bar on the pages a signed-out visitor can reach: team, support, privacy.
@@ -13,6 +14,10 @@ import { Link, useNavigate } from 'react-router-dom';
  */
 const PublicPageBar = ({ title, containerClassName = '' }) => {
     const navigate = useNavigate();
+    const location = useLocation();
+    // Opened directly (a shared link, a new tab), there is no page of ours to
+    // go back to, and navigate(-1) would leave the site.
+    const goBack = () => (location.key === 'default' ? navigate('/') : navigate(-1));
 
     return (
         <nav className="page-navbar">
@@ -24,7 +29,7 @@ const PublicPageBar = ({ title, containerClassName = '' }) => {
                     {title && <h1 className="nav-title">{title}</h1>}
                 </div>
                 <div className="nav-right">
-                    <button type="button" onClick={() => navigate(-1)} className="back-button">
+                    <button type="button" onClick={goBack} className="back-button">
                         ← Back
                     </button>
                     <Link to="/" className="nav-home-link">Home</Link>

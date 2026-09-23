@@ -682,6 +682,11 @@ class ClerkController extends Controller
         };
         $records = $records->reject(fn ($r) => $isExcused($r->date))->values();
 
+        // Looked up by id rather than eager-loaded: a markedBy relation would
+        // serialise over the marked_by column the client also reads.
+        $markers = \App\Models\User::whereIn('id', $records->pluck('marked_by')->filter()->unique())->get()->keyBy('id');
+        $records->each(fn ($r) => $r->setAttribute('marked_by_name', optional($markers->get($r->marked_by))->name()));
+
         // The hover on the profile wants this month specifically, which is a
         // different number from the all-time figure beside it. Re-query rather
         // than reuse $records, since any from/to filter above must not narrow
@@ -859,7 +864,8 @@ class ClerkController extends Controller
         }
 
         $request->validate([
-            'department_ids' => 'required|array',
+            // present, not required: an empty list is "untick all" and must clear them.
+            'department_ids' => 'present|array',
             'department_ids.*' => 'integer|exists:departments,id',
         ]);
 

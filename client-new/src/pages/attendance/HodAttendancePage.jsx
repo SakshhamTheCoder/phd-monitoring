@@ -1,6 +1,5 @@
 import React from 'react';
-import Layout from '../../components/dashboard/layout';
-import Tabs from '../../components/tabs/Tabs';
+import Page from '../../components/page/Page';
 import LeaveRequests from './LeaveRequests';
 
 /**
@@ -11,17 +10,9 @@ import LeaveRequests from './LeaveRequests';
  * department, so there is nothing to filter and no department column here.
  */
 const HodAttendancePage = () => (
-  <Layout>
-    <h1 className="page-title">Attendance</h1>
-
-    <Tabs
-      value="leaves"
-      onChange={() => {}}
-      items={[{ value: 'leaves', label: 'Leave Requests' }]}
-    />
-
+  <Page title="Attendance">
     <LeaveRequests />
-  </Layout>
+  </Page>
 );
 
 export default HodAttendancePage;

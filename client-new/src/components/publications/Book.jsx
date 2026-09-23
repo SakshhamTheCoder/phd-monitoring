@@ -5,7 +5,7 @@ import DropdownField from "../forms/fields/DropdownField";
 import FileUploadField from "../forms/fields/FileUploadField";
 import CustomButton from "../forms/fields/CustomButton";
 
-const Book = ({ callback, updateValue, data = {} }) => {
+const Book = ({ callback, disabled, updateValue, data = {}, facultyRecord = false }) => {
   const [body, setBody] = useState(data);
   const year = new Date().getFullYear();
   const yearRange = Array.from({ length: 7 }, (_, i) => year - 3 + i);
@@ -61,7 +61,7 @@ const Book = ({ callback, updateValue, data = {} }) => {
               setBodyValue("year", value);
             }}
           />,
-          <DropdownField
+          !facultyRecord && <DropdownField
             label={"Status of Book:"}
             initialValue={data.status}
             options={[
@@ -72,7 +72,7 @@ const Book = ({ callback, updateValue, data = {} }) => {
               setBodyValue("status", value);
             }}
           />,
-        ]}
+        ].filter(Boolean)}
         space={2}
       />
 
@@ -146,23 +146,26 @@ const Book = ({ callback, updateValue, data = {} }) => {
         ]}
       />
 
-      <GridContainer
-        elements={[
-          <FileUploadField
-            label={"Upload First Page"}
-            initialValue={data.first_page}
-            onChange={(value) => {
-              setBodyValue("first_page", value);
-            }}
-            maxSizeMB={15}
-          />,
-        ]}
-      />
+      {!facultyRecord && (
+        <GridContainer
+          elements={[
+            <FileUploadField
+              label={"Upload First Page"}
+              initialValue={data.first_page}
+              onChange={(value) => {
+                setBodyValue("first_page", value);
+              }}
+              maxSizeMB={15}
+            />,
+          ]}
+        />
+      )}
 
       <GridContainer
         elements={[
           <CustomButton
             text="Submit"
+            disabled={disabled}
             onClick={() => {
               callback(body);
             }}

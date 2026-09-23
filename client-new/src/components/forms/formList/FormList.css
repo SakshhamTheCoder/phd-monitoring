@@ -1,84 +1,50 @@
 /* Renamed from .form-list-container, which is the white table card in
-   styles/ui.css. This is the opposite thing: a transparent column of cards,
-   with no padding of its own. Both were global and both were called the same,
-   so which one a page got depended on which route chunk loaded last. */
+   styles/ui.css. This is the list of form tiles inside the page's panel. */
 .form-card-stack {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
     flex-direction: column;
-    gap: 20px;
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
 }
 
+/* A bordered link tile, as in the forms grid. */
 .form-card-list {
-    width: 100%;
-    background-color: #ffffff;
-    padding: 20px 22px;
-    border-radius: var(--radius-lg);
-    border: 1px solid #ececec;
     position: relative;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
-    text-align: center;
-    align-items: center;
-    color: #3a3a3a;
-    box-shadow: var(--shadow-sm);
-    cursor: pointer;
-    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+    padding: var(--space-4) var(--space-6) var(--space-4) var(--space-4);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    background-color: var(--surface);
+    transition: border-color 0.15s ease-out, background-color 0.15s ease-out;
 }
 
 .form-card-list:hover {
-    border-color: #f0d3d3;
-    box-shadow: 0 6px 18px -6px var(--primary-tint);
-    transform: translateY(-1px);
+    border-color: var(--primary-color);
+    background-color: var(--primary-wash);
 }
 
-/* Status indicator in the corner (kept subtle, no longer overlapping the fields) */
-.action-label-list {
-    background-color: rgb(236, 144, 15);
-    height: 9px;
-    width: 9px;
-    border-radius: 50%;
+/* Stretched over the card; the focus ring from index.css then outlines the
+   whole card. */
+.form-card-list-link {
     position: absolute;
-    top: 12px;
-    right: 14px;
-    box-shadow: var(--shadow-focus);
-    animation: breathe 1.6s infinite;
+    inset: 0;
+    border-radius: inherit;
 }
 
-.form-title {
-    font-size: var(--text-md);
-    font-weight: 600;
-    margin: 0;
-}
-.form-card-list p{
-    font-weight: 400;
+/* The approved form's own link sits above the card link so it stays clickable. */
+.form-card-list a:not(.form-card-list-link) {
+    position: relative;
+    z-index: 1;
 }
 
-@keyframes breathe {
-    0% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.4);
-    }
-    100% {
-        transform: scale(1);
-    }
-}
-
-
-
-/* Four columns of form metadata on a phone gives each about 70px, which is
-   narrower than the dates in them. Two columns, and the card's own title
-   spans both. */
-@media (max-width: 768px) {
-    .form-card-list {
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-        padding: 16px;
-        text-align: left;
-    }
+/* Status indicator in the corner, clear of the fields. */
+.action-label-list {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--space-3);
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background-color: var(--warning);
 }

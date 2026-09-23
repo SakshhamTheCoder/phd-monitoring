@@ -1,6 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import CustomModal from '../../components/forms/modal/CustomModal';
+import CustomButton from '../../components/forms/fields/CustomButton';
+import Panel from '../../components/panel/Panel';
+import StatusNotice from '../../components/common/StatusNotice';
 import StudentLeave from '../../components/forms/studentLeave/StudentLeave';
 import LeaveBalancePanel from './LeaveBalancePanel';
 import { baseURL } from '../../api/urls';
@@ -78,6 +81,7 @@ const LeaveRequests = ({ departmentId = '', showDepartment = false }) => {
           // with no dates and nothing to review. It has no business in a
           // review queue. Mirrors StudentAttendancePage's own leaveRows filter.
           setRows((res.response?.data || []).filter((r) => r.from_date));
+          setError(null);
         } else {
           setError('Could not load leave applications. Please try again later.');
         }
@@ -87,10 +91,17 @@ const LeaveRequests = ({ departmentId = '', showDepartment = false }) => {
 
   useEffect(() => { loadList(); }, [loadList]);
 
+  // Only the most recently clicked application may open: a slower answer for
+  // an earlier row must not replace it.
+  const latestOpenRef = useRef(0);
+
   const openApplication = useCallback((id) => {
+    const requestId = ++latestOpenRef.current;
+    const isLatest = () => latestOpenRef.current === requestId;
     setLoadingForm(true);
     setBalance(null);
     apiLeaveLoad(id).then((res) => {
+      if (!isLatest()) return;
       if (res.success) {
         setOpenForm(res.response);
         // GET /forms/student-leave/balance answers "what is MY balance" for
@@ -100,10 +111,10 @@ const LeaveRequests = ({ departmentId = '', showDepartment = false }) => {
         // an admin for any (see ClerkController::studentAttendance).
         if (res.response?.roll_no) {
           customFetch(`${baseURL}/clerks/attendance/student/${res.response.roll_no}`, 'GET', {}, true)
-            .then((r) => { if (r.success) setBalance(r.response.balance); });
+            .then((r) => { if (r.success && isLatest()) setBalance(r.response.balance); });
         }
       }
-    }).finally(() => setLoadingForm(false));
+    }).finally(() => { if (isLatest()) setLoadingForm(false); });
   }, []);
 
   // Deep link from a notification: open the named application directly
@@ -116,6 +127,10 @@ const LeaveRequests = ({ departmentId = '', showDepartment = false }) => {
   // Whatever happened inside the modal (approved, rejected, or just closed),
   // the list may now be stale.
   const handleCloseForm = () => {
+    // Closing while an application is still loading must not let it pop the
+    // modal open again when it lands.
+    latestOpenRef.current += 1;
+    setLoadingForm(false);
     setOpenForm(null);
     setBalance(null);
     loadList();
@@ -151,81 +166,85 @@ const LeaveRequests = ({ departmentId = '', showDepartment = false }) => {
 
   return (
     <>
-      <div className="filter-bar" style={{ marginTop: '1rem' }}>
-        <div className="filter-row" style={{ alignItems: 'center' }}>
-          <span>{visibleRows.length} application(s)</span>
-          <span className="badge badge--warning">{pendingCount} pending</span>
-          {scholar && (
-            <>
-              <span>for {scholar}</span>
-              <button type="button" className="profile-edit-small" onClick={() => setScholar('')}>
-                Show all
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-
-      <div className="form-list-container">
-        <table className="form-table">
-          <thead>
-            <tr>
-              <th>Scholar</th>
-              <th>Roll No</th>
-              {showDepartment && <th>Department</th>}
-              <th>Type</th>
-              <th>From</th>
-              <th>To</th>
-              <th>Part</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={columnCount} className="no-data-cell">Loading…</td></tr>
-            ) : error ? (
-              <tr><td colSpan={columnCount} className="no-data-cell">{error}</td></tr>
-            ) : visibleRows.length === 0 ? (
-              <tr><td colSpan={columnCount} className="no-data-cell">No leave applications yet.</td></tr>
-            ) : visibleRows.map((r) => (
-              <tr
-                key={r.id}
-                onClick={() => openApplication(r.id)}
-                className={r.id === opened.leave ? 'leave-row--highlight' : undefined}
-                style={{ cursor: 'pointer' }}
-              >
-                <td>{r.name}</td>
-                <td>{r.roll_no}</td>
-                {showDepartment && <td>{r.department}</td>}
-                <td style={{ textTransform: 'capitalize' }}>{r.leave_type}</td>
-                {/* r.from_date/to_date are Laravel date-cast timestamps, not plain
-                    YYYY-MM-DD strings. localDateString undoes the UTC-midnight
-                    shift APP_TIMEZONE=Asia/Kolkata introduces. */}
-                <td>{localDateString(r.from_date)}</td>
-                <td>{localDateString(r.to_date)}</td>
-                <td>{DAY_PART_LABEL[r.day_part] || r.day_part}</td>
-                <td><span className={badgeClass(r.status)}>{r.status}</span></td>
+      <Panel
+        flush
+        title="Leave applications"
+        description={
+          <span className="attendance-counts">
+            <span>{visibleRows.length} application(s)</span>
+            <span className="badge badge--warning">{pendingCount} pending</span>
+            {scholar && <span>for {scholar}</span>}
+          </span>
+        }
+        actions={scholar && <CustomButton text="Show all" variant="quiet" size="sm" onClick={() => setScholar('')} />}
+      >
+        <div className="data-table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Scholar</th>
+                <th>Roll no</th>
+                {showDepartment && <th>Department</th>}
+                <th>Type</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Part</th>
+                <th>Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={columnCount} className="no-data-cell">Loading…</td></tr>
+              ) : error ? (
+                <tr><td colSpan={columnCount} className="no-data-cell">{error}</td></tr>
+              ) : visibleRows.length === 0 ? (
+                <tr><td colSpan={columnCount} className="no-data-cell">No leave applications yet.</td></tr>
+              ) : visibleRows.map((r) => (
+                <tr
+                  key={r.id}
+                  onClick={() => openApplication(r.id)}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+                      e.preventDefault();
+                      openApplication(r.id);
+                    }
+                  }}
+                  className={`row-link${r.id === opened.leave ? ' leave-row--highlight' : ''}`}
+                >
+                  <td>{r.name}</td>
+                  <td>{r.roll_no}</td>
+                  {showDepartment && <td>{r.department}</td>}
+                  <td className="attendance-capitalize">{r.leave_type}</td>
+                  {/* r.from_date/to_date are Laravel date-cast timestamps, not plain
+                      YYYY-MM-DD strings. localDateString undoes the UTC-midnight
+                      shift APP_TIMEZONE=Asia/Kolkata introduces. */}
+                  <td>{localDateString(r.from_date)}</td>
+                  <td>{localDateString(r.to_date)}</td>
+                  <td>{DAY_PART_LABEL[r.day_part] || r.day_part}</td>
+                  <td><span className={badgeClass(r.status)}>{r.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
 
-      <CustomModal isOpen={!!openForm} onClose={handleCloseForm} width="90vw" minHeight="300px" maxHeight="85vh">
+      {/* Opens on the click, not when the application arrives, so the click
+          answers at once. */}
+      <CustomModal isOpen={!!openForm || loadingForm} onClose={handleCloseForm} width="90vw" minHeight="300px" maxHeight="85vh">
+        {loadingForm && <StatusNotice tone="loading" title="Loading the application" />}
         {openForm && (
-          <>
-            {loadingForm && <p>Loading…</p>}
+          <div className="attendance-review">
             {balance && <LeaveBalancePanel balance={balance} />}
             {overage > 0 && (
-              <div className="filter-bar">
-                <span className="badge badge--danger">
-                  This application is {formatDays(overage)} day(s) over {openForm.name}&rsquo;s {openForm.leave_type} quota,
-                  but it can still be approved.
-                </span>
-              </div>
+              <StatusNotice tone="warning">
+                This application is {formatDays(overage)} day(s) over {openForm.name}&rsquo;s {openForm.leave_type} quota,
+                but it can still be approved.
+              </StatusNotice>
             )}
             <StudentLeave formData={openForm} submitPath={`/forms/student-leave/${openForm.form_id}`} />
-          </>
+          </div>
         )}
       </CustomModal>
     </>

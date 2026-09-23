@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import DropdownField from '../forms/fields/DropdownField';
 import InputSuggestions from '../forms/fields/InputSuggestions';
 import { baseURL } from '../../api/urls';
@@ -34,6 +34,7 @@ const FilterBar = ({ placeholder = 'Search…', mandatory = [], exclude = [], pa
   const [filters, setFilters] = useState(null);
   const [text, setText] = useState('');
   const [open, setOpen] = useState(false);
+  const panelId = useId();
   // key_name -> { label, op, values: [] }. A field holds every value chosen for
   // it, not just the last one.
   const [chosen, setChosen] = useState({});
@@ -143,6 +144,10 @@ const FilterBar = ({ placeholder = 'Search…', mandatory = [], exclude = [], pa
     if (filter.options) {
       return (
         <DropdownField
+          // The select keeps its own value. Remounting whenever this field's
+          // chips change puts it back on "Select", so a removed value shows
+          // as removed and can be picked again.
+          key={JSON.stringify(chosen[filter.key_name]?.values ?? [])}
           label={filter.label}
           options={filter.options.map((o) => (typeof o === 'string' ? { title: o, value: o } : o))}
           initialValue=""
@@ -197,11 +202,16 @@ const FilterBar = ({ placeholder = 'Search…', mandatory = [], exclude = [], pa
           value={text}
           placeholder={placeholder}
           aria-label={placeholder}
-          onChange={(e) => setText(e.target.value)}
+          onChange={(e) => {
+            setText(e.target.value);
+            // An emptied box (backspace, or the box's own clear button) has no
+            // Enter to wait for; the table must drop the old query now.
+            if (e.target.value === '') emit('', chosen);
+          }}
           onKeyDown={(e) => e.key === 'Enter' && runSearch()}
         />
         <button type="button" className="filter-bar-go" onClick={runSearch}>Search</button>
-        <button type="button" className="filter-bar-toggle" onClick={() => setOpen(!open)}>
+        <button type="button" className="filter-bar-toggle" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls={panelId}>
           <i className="fa fa-sliders" aria-hidden="true"></i> Filters{chips.length ? ` (${chips.length})` : ''}
         </button>
         {(text || chips.length > 0) && (
@@ -210,7 +220,7 @@ const FilterBar = ({ placeholder = 'Search…', mandatory = [], exclude = [], pa
       </div>
 
       {open && (
-        <div className="filter-bar-fields">
+        <div className="filter-bar-fields" id={panelId}>
           {filters
             .filter((filter) => !exclude.includes(filter.key_name))
             .map((filter) => <div key={filter.key_name} className="filter-bar-field">{control(filter)}</div>)}

@@ -32,10 +32,20 @@ const EXTRA_LABELS = {
   '/supervisor-doctoral-approvals': 'Supervisor Approvals',
 };
 
+// A hand-typed URL can carry a malformed escape (/students/%E0), and a throw
+// here would take the whole page down with it.
+const decodeSegment = (segment) => {
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return segment;
+  }
+};
+
 const labelFor = (labels, path, segment) =>
   labels[path]
   || EXTRA_LABELS[path]
-  || decodeURIComponent(segment).replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  || decodeSegment(segment).replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
 const RouteBar = () => {
   const { pathname } = useLocation();

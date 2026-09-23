@@ -4,7 +4,7 @@ import InputField from '../forms/fields/InputField';
 import ShowPublications from '../publications/ShowPublications';
 import FileLink from '../common/FileLink';
 import { formatDate, EMPTY_VALUE } from '../../utils/timeParse';
-import { TeamTables, REPORT_TYPES, facultyName } from './UrfRecord';
+import { TeamTables, OtherProjects, REPORT_TYPES, facultyName } from './UrfRecord';
 import './UrfForms.css';
 
 /**
@@ -32,8 +32,9 @@ const Application = ({ formData }) => {
         space={3}
       />
       <TeamTables record={application} />
+      <OtherProjects record={application} />
       <GridContainer
-        label="Project Proposal"
+        label="Project proposal"
         elements={[application.proposal
           ? <FileLink value={application.proposal} label="View Proposal" />
           : <p>{EMPTY_VALUE}</p>]}
@@ -42,7 +43,7 @@ const Application = ({ formData }) => {
       {/* The mentors are in the table above; this is who the chain starts with. */}
       <Locked fields={[
         ['Session', application.session ? `URF ${application.session}` : ''],
-        ['Applied On', formatDate(application.created_at)],
+        ['Applied On', formatDate(application.applied_on)],
         ['Faculty Mentors', mentors.map(facultyName).join(', ')],
       ]} />
     </>
@@ -84,7 +85,7 @@ const Report = ({ formData }) => {
         ['Faculty Mentor Name', mentors.map(facultyName).join(', ')],
         ['Faculty Mentor Department', mentors.map((mentor) => mentor.department?.name).filter(Boolean).join(', ')],
         ['Conference Presentation', filled.conference_presentation],
-        ['Submitted On', formatDate(filled.created_at)],
+        ['Submitted On', formatDate(filled.submitted_on)],
       ]} />
       <GridContainer
         label={REPORT_TYPES[filled.type] || 'Report'}

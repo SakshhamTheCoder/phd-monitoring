@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
-import { customFetch } from '../../api/base';
-import { baseURL, CLOUDFLARE_SITE_KEY } from '../../api/urls';
+import { customFetch, NETWORK_ERROR_MESSAGE } from '../../api/base';
+import { baseURL } from '../../api/urls';
 import { toast } from 'react-toastify';
+import { mountTurnstile } from '../login/turnstile';
 
 
 const ForgotPasswordPage = () => {
@@ -11,60 +12,28 @@ const ForgotPasswordPage = () => {
     const [loading, setLoading] = useState(false);
     const [captchaToken, setCaptchaToken] = useState(null);
 
-    useEffect(() => {
-        let widgetId = null;
-
-        // Wait for Turnstile to be available and render widget
-        const renderWidget = () => {
-            if (window.turnstile) {
-                const container = document.getElementById('turnstile-container');
-                if (container && !container.hasChildNodes()) {
-                    try {
-                        widgetId = window.turnstile.render('#turnstile-container', {
-                            sitekey: CLOUDFLARE_SITE_KEY,
-                            theme: 'light',
-                            callback: (token) => {
-                                setCaptchaToken(token);
-                            },
-                        });
-                    } catch (error) {
-                        console.error('Turnstile render error:', error);
-                    }
-                }
-            } else {
-                // Retry if turnstile is not loaded yet
-                setTimeout(renderWidget, 100);
-            }
-        };
-
-        const timer = setTimeout(renderWidget, 100);
-
-        // Cleanup function to remove widget when component unmounts
-        return () => {
-            clearTimeout(timer);
-            if (widgetId !== null && window.turnstile) {
-                try {
-                    window.turnstile.remove(widgetId);
-                } catch (error) {
-                    console.error('Turnstile cleanup error:', error);
-                }
-            }
-        };
-    }, []);
+    useEffect(() => mountTurnstile(setCaptchaToken), []);
 
     const onSubmit = async (data) => {
         setLoading(true);
+        // Toast off: this endpoint answers 422 with `errors` or `error` and no
+        // `message`, which customFetch would show as an empty toast.
         const response = await customFetch(baseURL+"/forgot-password", "POST", {
             ...data,
             captcha_token: captchaToken
-        });
+        }, false);
         setLoading(false);
 
-        if (response && response.success) {
-            toast.success(response.message || 'Password reset link sent successfully!');
-            setMessage(response.message);
-        } else if (response && response.error) {
-            toast.error(response.error || 'Failed to send reset link');
+        const body = response.response;
+        if (response.success) {
+            const sent = body?.message || 'Password reset link sent successfully!';
+            toast.success(sent);
+            setMessage(sent);
+        } else if (response.networkError) {
+            toast.error(NETWORK_ERROR_MESSAGE);
+        } else {
+            const fieldError = body?.errors && Object.values(body.errors).flat()[0];
+            toast.error(body?.message || body?.error || fieldError || 'Failed to send reset link');
         }
 
         // Reset captcha
@@ -83,15 +52,15 @@ const ForgotPasswordPage = () => {
         className="tw-bg-cover tw-bg-center tw-min-h-screen tw-flex tw-items-center tw-justify-center tw-p-4"
         style={{ backgroundImage: "url('/image-1@2x.png')" }}
       >
-            <form onSubmit={handleSubmit(onSubmit)} className="tw-bg-white tw-p-8 tw-rounded tw-shadow-md tw-w-full tw-max-w-sm">
+            <form onSubmit={handleSubmit(onSubmit)} className="tw-bg-[color:var(--surface)] tw-p-8 tw-rounded tw-shadow-md tw-w-full tw-max-w-sm">
                 <img
                     src="/images/tiet_logo.png"
                     alt="TIETLogo"
                     className="tw-mx-auto tw-mb-4 tw-w-24 sm:tw-w-20"
                 />
-                <h2 className="tw-text-xl tw-font-semibold tw-mb-4 tw-text-center">Forgot Password</h2>
+                <h2 className="tw-text-xl tw-font-semibold tw-mb-4 tw-text-center">Forgot password</h2>
                 <div className="tw-mb-4">
-                    <label className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-2" htmlFor="forgot-password-page-email">
+                    <label className="tw-block tw-text-sm tw-font-medium tw-text-[color:var(--text-color)] tw-mb-2" htmlFor="forgot-password-page-email">
                         Email
                     </label>
                     <input
@@ -100,7 +69,7 @@ const ForgotPasswordPage = () => {
                         type="email"
                         placeholder="Enter your email"
                         required
-                        className="tw-w-full tw-px-4 tw-py-2 tw-border tw-rounded"
+                        className="tw-w-full tw-px-4 tw-py-2 tw-border tw-border-[color:var(--border-color)] tw-rounded"
                     />
                 </div>
                 
@@ -113,11 +82,11 @@ const ForgotPasswordPage = () => {
                     className="tw-w-full tw-bg-brand tw-text-white tw-py-2 tw-rounded hover:tw-bg-brand-hover"
                     disabled={loading}
                 >
-                    {loading ? 'Sending...' : 'Send Reset Link'}
+                    {loading ? 'Sending...' : 'Send reset link'}
                 </button>
                 {message && (
-                    <div className="tw-mt-4 tw-p-3 tw-bg-green-50 tw-border tw-border-green-200 tw-rounded">
-                        <p className="tw-text-sm tw-text-green-800 tw-text-center">{message}</p>
+                    <div className="tw-mt-4 tw-p-3 tw-bg-[color:var(--success-bg)] tw-border tw-border-[color:var(--success-bg)] tw-rounded tw-animate-[slide-in_200ms_ease-out]">
+                        <p className="tw-text-sm tw-text-[color:var(--success)] tw-text-center">{message}</p>
                     </div>
                 )}
             </form>

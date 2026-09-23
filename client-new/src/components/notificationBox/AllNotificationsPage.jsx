@@ -1,32 +1,31 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { APIlistAllNotifications, APImarkNotificationAsRead } from "../../api/notifications";
+import { APIlistAllNotifications, APImarkNotificationAsRead, APImarkAllNotificationsAsRead } from "../../api/notifications";
 import "./AllNotificationsPage.css";
-import Layout from "../dashboard/layout";
 import { timeAgo } from "../../utils/timeParse";
 import { toast } from "react-toastify";
 import { getRoleName } from "../../utils/roleName";
 import { currentRole } from '../../auth/access';
+import LoadError from "../common/LoadError";
+import StatusNotice from "../common/StatusNotice";
+import Page from "../page/Page";
+import Panel from "../panel/Panel";
+import CustomButton from "../forms/fields/CustomButton";
 
 const AllNotificationsPage = () => {
   const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Saying "No notifications yet" after a failed load would be untrue, so a
+  // failure says so in place of the list and offers another try.
+  const [status, setStatus] = useState("loading"); // "loading" | "ready" | "failed"
 
-  const fetchNotifications = useCallback(() => {
-    APIlistAllNotifications((data) => {
-      setNotifications(data);
-      setLoading(false);
-    });
+  const fetchNotifications = useCallback(async () => {
+    const { success, response } = await APIlistAllNotifications();
+    // After a role switch the old role's list must not linger in the unread count.
+    setNotifications(success ? response : []);
+    setStatus(success ? "ready" : "failed");
   }, []);
 
-  // Fetch on mount and whenever the active role changes (no page reload needed).
   useEffect(() => {
     fetchNotifications();
-    const onRoleChange = () => {
-      setLoading(true);
-      fetchNotifications();
-    };
-    window.addEventListener("rolechange", onRoleChange);
-    return () => window.removeEventListener("rolechange", onRoleChange);
   }, [fetchNotifications]);
 
   const openNotification = (notification) => {
@@ -47,45 +46,61 @@ const AllNotificationsPage = () => {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  return (
-    <Layout>
-      <div className="all-notifications-page">
-        <div className="notification-page-head">
-          <h1 className="page-title">Notifications</h1>
-          {unreadCount > 0 && (
-            <span className="notification-unread-pill">{unreadCount} unread</span>
-          )}
-        </div>
+  // The same action the bell's dropdown has, for someone reading the full list.
+  const markAllAsRead = async () => {
+    const result = await APImarkAllNotificationsAsRead();
+    if (result?.success) {
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      toast.success("All notifications marked as read.");
+    }
+  };
 
-        {loading ? (
-          <p className="notification-muted">Loading…</p>
-        ) : notifications.length === 0 ? (
-          <div className="empty-state">
-            No notifications yet. Anything that needs your attention in this role
-            will show up here.
-          </div>
-        ) : (
-          <div className="notification-list">
+  return (
+    <Page
+      title="Notifications"
+      meta={unreadCount > 0 && <span className="badge badge--accent">{unreadCount} unread</span>}
+      actions={unreadCount > 0 && <CustomButton text="Mark all as read" variant="secondary" onClick={markAllAsRead} />}
+    >
+      {status === "loading" ? (
+        <Panel><StatusNotice tone="loading" title="Loading notifications" /></Panel>
+      ) : status === "failed" ? (
+        <LoadError
+          message="Could not load your notifications. Check your connection and try again."
+          onRetry={() => {
+            setStatus("loading");
+            fetchNotifications();
+          }}
+        />
+      ) : notifications.length === 0 ? (
+        <StatusNotice tone="empty" title="No notifications yet">
+          Anything that needs your attention in this role will show up here.
+        </StatusNotice>
+      ) : (
+        <Panel flush>
+          <ul className="notification-list reveal">
             {notifications.map((notification) => (
-              <div
-                className={`notification-card ${notification.is_read ? "is-read" : "is-unread"}`}
-                key={notification.id}
-                onClick={() => openNotification(notification)}
-              >
-                <div className="notification-card-main">
-                  <div className="notification-card-titlerow">
-                    {!notification.is_read && <span className="notification-dot" />}
-                    <span className="notification-title">{notification.title}</span>
-                  </div>
-                  <div className="notification-body">{notification.body}</div>
-                </div>
-                <span className="notif-date">{timeAgo(notification.created_at)}</span>
-              </div>
+              <li key={notification.id}>
+                <button
+                  type="button"
+                  className={`notification-row ${notification.is_read ? "is-read" : "is-unread"}`}
+                  onClick={() => openNotification(notification)}
+                >
+                  <span className="notification-row-main">
+                    <span className="notification-row-titleline">
+                      {!notification.is_read && <span className="notification-dot" aria-hidden="true" />}
+                      {!notification.is_read && <span className="sr-only">Unread: </span>}
+                      <span className="notification-title">{notification.title}</span>
+                    </span>
+                    <span className="notification-body">{notification.body}</span>
+                  </span>
+                  <span className="notif-date">{timeAgo(notification.created_at)}</span>
+                </button>
+              </li>
             ))}
-          </div>
-        )}
-      </div>
-    </Layout>
+          </ul>
+        </Panel>
+      )}
+    </Page>
   );
 };
 

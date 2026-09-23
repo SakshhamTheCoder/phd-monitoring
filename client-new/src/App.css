@@ -8,7 +8,7 @@
 /* Optional: General body styling */
 body {
   margin: 0;
-  font-family: 'Poppins', sans-serif;
+  font-family: var(--font-sans);
   /* Regular. The body used to be 600, which left nothing above it: a heading at
      600 and its own body text at 600 read as one weight, so the hierarchy the
      stylesheets describe never showed. Rules that mean semi-bold still say so. */

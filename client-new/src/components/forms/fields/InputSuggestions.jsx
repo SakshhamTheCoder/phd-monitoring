@@ -2,7 +2,12 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import { customFetch } from '../../../api/base';
 import "./Fields.css";
 
-const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = false, showLabel = true, body, suggestionManadatory = true, fields=["name"], required = false}) => {
+// Shared by every instance, so the preference boxes on one form ask once for
+// the same text. Successes only. Cleared whole past a few hundred entries.
+const suggestionCache = new Map();
+const SUGGESTION_CACHE_LIMIT = 300;
+
+const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = false, showLabel = true, body, suggestionManadatory = true, fields=["name"], required = false, excludeIds = [], inputClassName}) => {
     const [inputValue, setInputValue] = useState(initialValue || '');
     const [suggestions, setSuggestions] = useState([]);
     const [isLocked, setIsLocked] = useState(lock || false);
@@ -11,7 +16,7 @@ const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = 
     const [userSelected, setUserSelected] = useState(false);
     const [loading, setLoading] = useState(false);
     // The list used to render purely on `inputValue`, so once a field had text its
-    // dropdown stayed mounted for good — sitting over the field below and
+    // dropdown stayed mounted for good, sitting over the field below and
     // swallowing that field's clicks. It must not outlive focus.
     const [isFocused, setIsFocused] = useState(false);
     // The suggestion the arrow keys are on, -1 for none. Hover moves it too, so
@@ -21,15 +26,22 @@ const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = 
     const fieldId = useId();
     const containerRef = useRef(null);
     const listRef = useRef(null);
-    const abortControllerRef = useRef(null);
-    const cacheRef = useRef({});  // Caching previous results
+    // The text the latest request was for. customFetch cannot be cancelled, so
+    // a slow answer for "ab" could land after the one for "abc" and replace it.
+    const currentQueryRef = useRef('');
     const debounceTimeout = useRef(null);
+    // The label of what the caller last accepted. In mandatory mode typed text
+    // never reaches the caller, so leaving the box with other text in it showed
+    // one choice and saved another. Callers read the picked row without a null
+    // check, so the box is put back on blur rather than told "nothing picked".
+    const committedLabelRef = useRef(initialValue || '');
 
     const handleInputChange = (event) => {
         const value = event.target.value;
         setInputValue(value);
         setShowHint(true);
         setUserSelected(false);
+        currentQueryRef.current = value;
 
         if (value) {
             if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
@@ -38,43 +50,38 @@ const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = 
                 fetchSuggestions(value);
             }, 300);
         } else {
+            // Nothing is pending for an empty box, so a request still in its
+            // debounce is dropped and a slower one cannot leave "Loading" on.
+            if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+            setLoading(false);
             setSuggestions([]);
         }
     };
 
     const fetchSuggestions = async (value) => {
-        if (cacheRef.current[value]) {
-            setSuggestions(cacheRef.current[value]);
+        const cacheKey = apiUrl + JSON.stringify(body) + value;
+        if (suggestionCache.has(cacheKey)) {
+            setLoading(false);
+            setSuggestions(suggestionCache.get(cacheKey));
             return;
         }
-    
-        if (abortControllerRef.current) {
-            abortControllerRef.current.abort();
-        }
-    
-        abortControllerRef.current = new AbortController();
-        const { signal } = abortControllerRef.current;
-    
+
         const finalBody = body ? { ...body, text: value } : { text: value };
-        try {
-            setLoading(true);
-            const data = await customFetch(apiUrl, 'POST', finalBody, false);
-            setLoading(false);
-    
-            if (data && data.success) {
-                const fetchedSuggestions = data.response || [];
-                cacheRef.current[value] = fetchedSuggestions;
-                setSuggestions(fetchedSuggestions);
-            } else {
-                setSuggestions([]);
-            }
-        } catch (error) {
-            if (error.name !== 'AbortError') {
-                console.error('Fetch error:', error);
-            }
-            setLoading(false);
+        setLoading(true);
+        const data = await customFetch(apiUrl, 'POST', finalBody, false);
+        const fetchedSuggestions = data.success ? data.response || [] : [];
+        if (data.success) {
+            if (suggestionCache.size >= SUGGESTION_CACHE_LIMIT) suggestionCache.clear();
+            suggestionCache.set(cacheKey, fetchedSuggestions);
         }
+        if (value !== currentQueryRef.current) return;
+        setLoading(false);
+        setSuggestions(fetchedSuggestions);
     };
+
+    // Rows the caller would refuse, such as faculty already picked in another
+    // slot, are not offered at all.
+    const visibleSuggestions = suggestions.filter((suggestion) => !excludeIds.some((id) => String(id) === String(suggestion.id)));
     
 useEffect(() => { setActiveIndex(-1); }, [suggestions]);
 
@@ -87,6 +94,7 @@ useEffect(() => {
     if(initialValue){
         setInputValue(initialValue);
         setShowHint(false);
+        committedLabelRef.current = initialValue;
     }
 },[initialValue] )
     const handleSuggestionClick = (suggestion) => {
@@ -94,13 +102,19 @@ useEffect(() => {
         setUserSelected(true);
         setInputValue(renderSuggestionText(suggestion));
         setSuggestions([]);
-        if (onSelect) {
-            onSelect(suggestion); 
+        // A caller that refuses the pick returns false; put back the value it kept
+        // so the field does not show a choice that will not be saved.
+        if (onSelect && onSelect(suggestion) === false) {
+            setInputValue(initialValue || '');
+        } else {
+            committedLabelRef.current = renderSuggestionText(suggestion);
         }
     };
 
+    const listOpen = isFocused && inputValue && (loading || visibleSuggestions.length > 0 || showHint);
+
     const handleKeyDown = (event) => {
-        const count = suggestions.length;
+        const count = visibleSuggestions.length;
         if (event.key === 'ArrowDown' && count) {
             event.preventDefault();
             setActiveIndex((i) => (i + 1) % count);
@@ -110,9 +124,18 @@ useEffect(() => {
         } else if (event.key === 'Enter' && activeIndex >= 0 && activeIndex < count) {
             // Only swallow Enter when it picks a row, so it still submits otherwise.
             event.preventDefault();
-            handleSuggestionClick(suggestions[activeIndex]);
-        } else if (event.key === 'Escape') {
+            handleSuggestionClick(visibleSuggestions[activeIndex]);
+        } else if (event.key === 'Escape' && listOpen) {
+            // This Escape closed the list, so the dialog around the field must
+            // not take it as well and close with everything typed. With the list
+            // shut, Escape reaches the dialog as usual.
+            event.stopPropagation();
+            // A request still out would reopen the list when it lands.
+            if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+            currentQueryRef.current = null;
+            setLoading(false);
             setSuggestions([]);
+            setShowHint(false);
         }
     };
 
@@ -129,6 +152,9 @@ useEffect(() => {
                 setShowHint(false);
                 setUserSelected(true);
                 onSelect({ name: inputValue, id: inputValue });
+            } else if (suggestionManadatory && inputValue !== committedLabelRef.current) {
+                setInputValue(committedLabelRef.current);
+                setShowHint(false);
             }
         }
     };
@@ -154,12 +180,12 @@ useEffect(() => {
                     onFocus={() => setIsFocused(true)}
                     onKeyDown={handleKeyDown}
                     placeholder={isLocked && !inputValue ? 'Not provided' : hintText}
-                    className="input-field"
+                    className={inputClassName ? `input-field ${inputClassName}` : "input-field"}
                     disabled={isLocked}
                 />
             </div>
 
-            {isFocused && inputValue && (loading || suggestions.length > 0 || showHint) && (
+            {listOpen && (
                 <ul
                     className="suggestions-list"
                     ref={listRef}
@@ -171,7 +197,7 @@ useEffect(() => {
                     {loading && (
                         <li className="suggestion-item loading">Loading...</li>
                     )}
-                    {!loading && suggestions.length > 0 && suggestions.map((suggestion, index) => (
+                    {!loading && visibleSuggestions.length > 0 && visibleSuggestions.map((suggestion, index) => (
                         <li
                             key={suggestion.id}
                             aria-selected={index === activeIndex}
@@ -185,7 +211,7 @@ useEffect(() => {
                               {renderSuggestionText(suggestion)}
                         </li>
                     ))}
-                    {!loading && suggestions.length === 0 && showHint && (
+                    {!loading && visibleSuggestions.length === 0 && showHint && (
                         <li className="suggestion-item no-suggestions-message">No suggestions available</li>
                     )}
                 </ul>

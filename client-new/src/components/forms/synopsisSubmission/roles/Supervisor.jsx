@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useLoading } from "../../../../context/LoadingContext";
 import GridContainer from "../../fields/GridContainer";
+import StatusNotice from "../../../common/StatusNotice";
 import InputField from "../../fields/InputField";
 import RadioButtonGroup from "../../fields/RadioButtonGroup";
 import TableComponent from "../../table/TableComponent";
@@ -9,6 +10,7 @@ import Recommendation from "../../layouts/Recommendation";
 import CustomButton from "../../fields/CustomButton";
 import { submitForm } from "../../../../api/form";
 import { toast } from "react-toastify";
+import { stepAnswered } from '../../../../utils/formSteps';
 
 const Supervisor = ({ formData }) => {
   // Progress is scored once, on the written round. After the viva the
@@ -26,7 +28,9 @@ const Supervisor = ({ formData }) => {
   useEffect(() => {
     setLock(formData.locks?.supervisor);
     setBody({
-      approval: formData.approvals.supervisor,
+      // The approval column defaults to 0, which would submit as "Not Recommend"
+      // if Submit is pressed before choosing. Unanswered means nothing chosen.
+      approval: stepAnswered(formData, 'supervisor') ? formData.approvals.supervisor : null,
       attendance: formData.attendance,
       contact_hours: formData.contact_hours,
       current_progress: formData.current_progress,
@@ -100,7 +104,7 @@ const Supervisor = ({ formData }) => {
               <GridContainer
                 elements={[
                   <InputField
-                    label={"Previous Quantum Progress Percentage"}
+                    label={"Previous quantum progress percentage"}
                     initialValue={formData.previous_progress}
                     isLocked={true}
                   />,
@@ -110,7 +114,7 @@ const Supervisor = ({ formData }) => {
               <GridContainer
                 elements={[
                   <InputField required={scoring}
-                    label={"Increase in Quantum Progress Percentage"}
+                    label={"Increase in quantum progress percentage"}
                     initialValue={body.current_progress}
                     isLocked={lock || !scoring}
                     onChange={(updated) => {
@@ -124,14 +128,19 @@ const Supervisor = ({ formData }) => {
                 space={2}
               />
               {scoring && parseFloat(body.current_progress || 0) > 20 && (
-                <div style={{ color: "red", marginTop: 0 }}>
-                  Supervisor has marked progress of student more than 20%
-                </div>
+                <GridContainer
+                  elements={[
+                    <StatusNotice tone="warning">
+                      Supervisor has marked progress of student more than 20%
+                    </StatusNotice>,
+                  ]}
+                  space={2}
+                />
               )}
               <GridContainer
                 elements={[
                   <InputField
-                    label={"Total Quantum Progress Percentage"}
+                    label={"Total quantum progress percentage"}
                     // The stored total is 0 until the supervisor submits, so while
                     // entering, show what the server will store: previous plus increase.
                     initialValue={lock || !scoring
@@ -149,7 +158,7 @@ const Supervisor = ({ formData }) => {
               asked for nothing, and the server agrees. */}
           {scoring && !!body.approval && (formData.checklist_options?.length || 0) > 0 && (
             <GridContainer
-              label={<p>Publication category met</p>}
+              label="Publication category met"
               elements={[
                 lock ? (
                   <InputField
@@ -179,6 +188,10 @@ const Supervisor = ({ formData }) => {
                   <CustomButton
                     text="Submit"
                     onClick={() => {
+                      if (body.approval === null || body.approval === undefined) {
+                        toast.error("Choose Recommend or Not Recommend first.");
+                        return;
+                      }
                       if (
                         scoring &&
                         !!body.approval &&

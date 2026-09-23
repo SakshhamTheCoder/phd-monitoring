@@ -1,5 +1,6 @@
 import React from 'react';
 import './NewUserKindPicker.css';
+import CustomButton from '../forms/fields/CustomButton';
 
 /**
  * Asks what kind of user is being created before any record is written.
@@ -35,7 +36,7 @@ const KINDS = [
   {
     key: 'other',
     icon: 'fa-shield',
-    title: 'Office / Admin',
+    title: 'Office or admin',
     description:
       'A login with no student or faculty record, for Admin, Director, DRA, DORDC or a UG Student on the URF. These roles need no linked record.',
   },
@@ -68,14 +69,8 @@ const NewUserKindPicker = ({ onSelect, onCancel }) => (
       ))}
     </div>
 
-    <div className="kind-picker-footer">
-      <button
-        type="button"
-        onClick={onCancel}
-        className="kind-picker-cancel"
-      >
-        Cancel
-      </button>
+    <div className="modal-actions">
+      <CustomButton text="Cancel" variant="quiet" onClick={onCancel} />
     </div>
   </div>
 );

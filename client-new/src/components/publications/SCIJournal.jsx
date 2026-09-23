@@ -5,7 +5,7 @@ import DropdownField from '../forms/fields/DropdownField';
 import FileUploadField from '../forms/fields/FileUploadField';
 import CustomButton from '../forms/fields/CustomButton';
 
-const SCIJournal = ({callback,updateValue,data={}}) => {
+const SCIJournal = ({callback,disabled,updateValue,data={},facultyRecord=false}) => {
     const [body, setBody] = useState({});
     const year = new Date().getFullYear();
     const yearRange = Array.from({ length: 7 }, (_, i) => year - 3 + i);    
@@ -40,8 +40,8 @@ const SCIJournal = ({callback,updateValue,data={}}) => {
             <GridContainer elements={[
                 <InputField label={"Volume"} hint={"Volume"} initialValue={data.volume} onChange={(value)=>{setBodyValue("volume",value)}} />,
                 <InputField label={"Page Number"} hint={"Page Number"} initialValue={data.page_no} onChange={(value)=>{setBodyValue("page_no",value)}} />,
-                <DropdownField label={"Status of Paper:"} options={[{title:"Accepted",value:"accepted"},{title:"Published",value:"published"}]} initialValue={data.status}  onChange={(value)=>{setBodyValue("status",value)}} />,
-            ]} />
+                !facultyRecord && <DropdownField label={"Status of Paper:"} options={[{title:"Accepted",value:"accepted"},{title:"Published",value:"published"}]} initialValue={data.status}  onChange={(value)=>{setBodyValue("status",value)}} />,
+            ].filter(Boolean)} />
 
             <GridContainer elements={[
                 <InputField label={"Impact Factor"} hint={"Impact Factor"} initialValue={data.impact_factor} onChange={(value)=>{setBodyValue("impact_factor",value)}} />,
@@ -51,13 +51,13 @@ const SCIJournal = ({callback,updateValue,data={}}) => {
                 <InputField label={"DOI Link"} hint={"DOI Link"} initialValue={data.doi_link} onChange={(value)=>{setBodyValue("doi_link",value)}} />,
             ]}/>
 
-            <GridContainer elements={[
+            {!facultyRecord && <GridContainer elements={[
                 <FileUploadField label={"Upload First Page"} initialValue={data.first_page} onChange={(value)=>{setBodyValue("first_page",value)}} maxSizeMB={15} />,
-            ]}/>
+            ]}/>}
 
             
             <GridContainer elements={[
-               <CustomButton text="Submit" onClick={() => callback(body)}/>
+               <CustomButton text="Submit" disabled={disabled} onClick={() => callback(body)}/>
             ]}/>
         </>
     );

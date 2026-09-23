@@ -5,6 +5,7 @@ import TableComponent from "../../table/TableComponent";
 import RadioButtonGroup from "../../fields/RadioButtonGroup";
 import { useLoading } from "../../../../context/LoadingContext";
 import CustomButton from "../../fields/CustomButton";
+import StatusNotice from "../../../common/StatusNotice";
 import { submitForm } from "../../../../api/form";
 import { useLocation } from "react-router-dom";
 
@@ -23,19 +24,19 @@ const Dordc = ({ formData }) => {
       setLoading(true);
 
       setSelected([
-        ...formData.national
+        ...(formData.national || [])
           .filter((item) => item.recommendation === "approved")
           .map((item) => item.id),
-        ...formData.international
+        ...(formData.international || [])
           .filter((item) => item.recommendation === "approved")
           .map((item) => item.id),
       ]);
 
       setRejected([
-        ...formData.national
+        ...(formData.national || [])
           .filter((item) => item.recommendation === "rejected")
           .map((item) => item.id),
-        ...formData.international
+        ...(formData.international || [])
           .filter((item) => item.recommendation === "rejected")
           .map((item) => item.id),
       ]);
@@ -76,17 +77,20 @@ const Dordc = ({ formData }) => {
   // announced success even when the server had refused the submission.
   const handleSubmit = () => submitForm(body, location, setLoading);
 
+  const nationalRows = formData?.national || [];
+  const internationalRows = formData?.international || [];
+
   const examiners = [
-    ...formData.national.map((item) => ({ ...item, type: "National" })),
-    ...formData.international.map((item) => ({ ...item, type: "International" })),
+    ...nationalRows.map((item) => ({ ...item, type: "National" })),
+    ...internationalRows.map((item) => ({ ...item, type: "International" })),
   ];
 
-  const national = formData.national.map((item) => ({
+  const national = nationalRows.map((item) => ({
     ...item,
     type: "National",
   }));
 
-  const international= formData.international.map((item) => ({
+  const international= internationalRows.map((item) => ({
     ...item,
     type: "International",
   }));
@@ -95,7 +99,7 @@ const Dordc = ({ formData }) => {
     <>
       {isLoaded ? (
         <>
-        {formData.role === "dordc" && formData.stage=== "dordc"  && (<>
+        {formData.role === "dordc" && formData.stage=== "dordc"  && (<div className="reveal">
           <GridContainer
             elements={[
               <TableComponent
@@ -106,7 +110,6 @@ const Dordc = ({ formData }) => {
                   "Department",
                   "Designation",
                   "Institution",
-                  "Type",
                   "Status",
                 ]}
                 keys={[
@@ -115,7 +118,6 @@ const Dordc = ({ formData }) => {
                   "department",
                   "designation",
                   "institution",
-                  "type",
                   "buttons",
                 ]}
                 components={[
@@ -139,7 +141,7 @@ const Dordc = ({ formData }) => {
                 ]}
               />,
             ]}
-            label="National Examiners"
+            label="National examiners"
             space={3}
           />
 
@@ -153,7 +155,6 @@ const Dordc = ({ formData }) => {
                   "Department",
                   "Designation",
                   "Institution",
-                  "Type",
                   "Status",
                 ]}
                 keys={[
@@ -162,7 +163,6 @@ const Dordc = ({ formData }) => {
                   "department",
                   "designation",
                   "institution",
-                  "type",
                   "buttons",
                 ]}
                 components={[
@@ -186,11 +186,11 @@ const Dordc = ({ formData }) => {
                 ]}
               />,
             ]}
-            label="International Examiners"
+            label="International examiners"
             space={3}
           />
           
-          </>
+          </div>
   )}
 {
             formData.role === "dordc" && formData.stage=== "dordc"  && (
@@ -203,9 +203,7 @@ const Dordc = ({ formData }) => {
           }
         </>
       ) : (
-        <div style={{ textAlign: "center", marginTop: "20px" }}>
-          <p>Loading...</p>
-        </div>
+        <StatusNotice tone="loading" title="Loading the examiners" />
       )}
     </>
   );

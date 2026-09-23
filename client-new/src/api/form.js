@@ -38,6 +38,9 @@ export const submitForm = async (body, location, setLoading, files = null) => {
     }
 
 
+    // After a success the overlay stays up until the reload, so Submit cannot
+    // be pressed a second time in the gap.
+    let reloading = false;
     try {
         const data = await customFetch(url, "POST", formData, true, files !== null);
         if (data && data.success) {
@@ -48,6 +51,7 @@ export const submitForm = async (body, location, setLoading, files = null) => {
             toast.success(completed ? "Form completed successfully" : (data.response?.message || "Form submitted successfully"));
             // Delay the reload so the toast is visible before the page refreshes.
             setTimeout(() => window.location.reload(), 1200);
+            reloading = true;
         } else {
             // show validation errors if available
             if (data && data.response && data.response.errors) {
@@ -64,6 +68,6 @@ export const submitForm = async (body, location, setLoading, files = null) => {
             ? NETWORK_ERROR_MESSAGE
             : "Failed to submit the form: " + (error.message || error));
     } finally {
-        setLoading(false);
+        if (!reloading) setLoading(false);
     }
 };

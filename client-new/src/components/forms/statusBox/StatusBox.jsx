@@ -6,9 +6,9 @@ import "./StatusBox.css";
 const StatusBox = ({formData}) => {
   return (
     <>
-      <h1 className="modal-title">Form Status</h1>
+      <h1 className="modal-title">Form status</h1>
       <div className="status-box-container">
-        <div className="status-box-container-box first">
+        <div className="status-box-container-box status-box-history">
           <h2>History</h2>
           <HistoryTimeline formData={formData} />
         </div>

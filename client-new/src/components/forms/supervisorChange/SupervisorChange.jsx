@@ -10,7 +10,7 @@ const SupervisorChange = ({formData}) => {
 
   return (
     <>
-      <FormTitleBar formName="Supervisor Change" formData={formData} />
+      <FormTitleBar formName="Supervisor change" formData={formData} />
       <div className="form-container">
         <FormLadder
           formData={formData}

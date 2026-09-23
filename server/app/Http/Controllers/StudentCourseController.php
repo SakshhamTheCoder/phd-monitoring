@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\StudentCourse;
 use App\Models\Student;
 use App\Models\Course;
+use App\Models\Department;
+use App\Models\PhdCoordinator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -72,10 +74,63 @@ class StudentCourseController extends Controller
      */
     private function denyUnlessMayManageStudents()
     {
-        if (!Auth::user()->may('can_manage_students')) {
+        // A head or coordinator tags their own department's scholars without
+        // holding can_manage_students; departmentScope() keeps them there.
+        if (!Auth::user()->may('can_manage_students') && !$this->scopesCourses()) {
             return response()->json([
                 'message' => 'You do not have permission to manage student courses'
             ], 403);
+        }
+
+        return null;
+    }
+
+    private function scopesCourses(): bool
+    {
+        return in_array(Auth::user()->current_role->role, ['hod', 'phd_coordinator'], true);
+    }
+
+    /**
+     * The departments whose scholars this account may tag, grade or remove.
+     * Null for the institute-wide roles; an ADoRDC is held to their own
+     * departments the way StudentController holds them for scholars.
+     */
+    private function departmentScope(): ?array
+    {
+        $user = Auth::user();
+        $role = $user->current_role->role;
+        if (!in_array($role, ['hod', 'phd_coordinator', 'adordc'], true)) {
+            return null;
+        }
+        // where('hod_id', null) would match a department with no head.
+        $facultyCode = $user->faculty?->faculty_code;
+        if (!$facultyCode) {
+            return [];
+        }
+
+        $ids = match ($role) {
+            'hod' => Department::where('hod_id', $facultyCode)->pluck('id'),
+            'phd_coordinator' => PhdCoordinator::where('faculty_id', $facultyCode)->pluck('department_id'),
+            'adordc' => $user->faculty->adordcDepartments->pluck('id'),
+        };
+
+        return $ids->map(fn ($id) => (int) $id)->all();
+    }
+
+    /**
+     * Why this enrolment is outside the account's departments, or null when it
+     * is not. A head or coordinator is also held to their department's courses.
+     */
+    private function outsideScope(?array $scope, ?Student $student, ?Course $course): ?string
+    {
+        if ($scope === null) {
+            return null;
+        }
+        if (!in_array((int) $student?->department_id, $scope, true)) {
+            return 'This scholar is not in a department you manage.';
+        }
+        if ($this->scopesCourses() && !in_array((int) $course?->department_id, $scope, true)) {
+            return "This course is not one of your department's courses.";
         }
 
         return null;
@@ -96,7 +151,16 @@ class StudentCourseController extends Controller
                 'status' => 'nullable|in:enrolled,completed',
                 'grade' => 'nullable|string',
             ]);
-           
+
+            $scope = $this->departmentScope();
+            if ($scope !== null && ($refusal = $this->outsideScope(
+                $scope,
+                Student::find($request->student_id),
+                Course::find($request->course_id)
+            ))) {
+                return $this->refuse($refusal);
+            }
+
             // Check if already enrolled
             $existing = StudentCourse::where('student_id', $request->student_id)
                 ->where('course_id', $request->course_id)
@@ -159,6 +223,10 @@ class StudentCourseController extends Controller
                 ], 404);
             }
 
+            if ($refusal = $this->outsideScope($this->departmentScope(), $studentCourse->student, $studentCourse->course)) {
+                return $this->refuse($refusal);
+            }
+
             $studentCourse->grade = $request->grade;
             $studentCourse->status = $request->status;
             $studentCourse->save();
@@ -191,7 +259,11 @@ class StudentCourseController extends Controller
 
             // Whoever may open the scholar's profile reads the courses on it. Only
             // course managers could, so a HOD or supervisor saw an empty list.
-            if (!$student->isReadableBy(Auth::user()) && ($denied = $this->denyUnlessMayManageStudents())) return $denied;
+            // Not denyUnlessMayManageStudents(): that lets any head or
+            // coordinator through, and this read is not department-scoped.
+            if (!$student->isReadableBy(Auth::user()) && !Auth::user()->may('can_manage_students')) {
+                return $this->refuse('You do not have permission to manage student courses');
+            }
 
             $courses = StudentCourse::with('course.department')
                 ->where('student_id', $studentId)
@@ -240,6 +312,10 @@ class StudentCourseController extends Controller
                 ], 404);
             }
 
+            if ($refusal = $this->outsideScope($this->departmentScope(), $studentCourse->student, $studentCourse->course)) {
+                return $this->refuse($refusal);
+            }
+
             $studentCourse->delete();
 
             return response()->json([
@@ -279,6 +355,7 @@ class StudentCourseController extends Controller
                 'rows.*' => 'array',
             ]);
 
+            $scope = $this->departmentScope();
             $successCount = 0;
             $errorCount = 0;
             $errors = [];
@@ -299,6 +376,12 @@ class StudentCourseController extends Controller
                         continue;
                     }
 
+                    if ($scope !== null && !in_array((int) $student->department_id, $scope, true)) {
+                        $errors[] = "Row {$rowNumber}: scholar '{$rollNumber}' is not in a department you manage";
+                        $errorCount++;
+                        continue;
+                    }
+
                     if ($courseCode === '' || $semester === '') {
                         $errors[] = "Row {$rowNumber}: the subject code and the academic year are both required";
                         $errorCount++;
@@ -315,13 +398,21 @@ class StudentCourseController extends Controller
                         }
 
                         // No department: one code is taught to scholars of
-                        // several departments, and the column is nullable.
+                        // several departments, and the column is nullable. A
+                        // head or coordinator only manages their department's
+                        // courses, so theirs is filed under the scholar's.
                         $course = Course::create([
                             'course_code' => $courseCode,
                             'course_name' => $courseName,
                             'credits' => (float) ($this->cell($data, 'Credits', 'credits') ?: 0),
+                            'department_id' => $this->scopesCourses() ? $student->department_id : null,
                         ]);
                     } else {
+                        if ($this->outsideScope($scope, $student, $course)) {
+                            $errors[] = "Row {$rowNumber}: '{$courseCode}' is not one of your department's courses";
+                            $errorCount++;
+                            continue;
+                        }
                         $credits = $this->cell($data, 'Credits', 'credits');
                         if ($credits !== '' && (float) $credits !== (float) $course->credits) {
                             $errors[] = "Row {$rowNumber}: '{$courseCode}' is worth {$course->credits} credits in the portal, "

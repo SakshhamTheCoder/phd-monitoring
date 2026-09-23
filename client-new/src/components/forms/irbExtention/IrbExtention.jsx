@@ -9,7 +9,7 @@ import FormLadder from "../formLadder/FormLadder";
 const IrbExtention=({formData}) => {
     return (
       <>
-        <FormTitleBar formName={"Extension for Submission of Research Proposal"} formData={formData} />
+        <FormTitleBar formName={"Extension for submission of research proposal"} formData={formData} />
         <div className="form-container">
           <FormLadder
             formData={formData}

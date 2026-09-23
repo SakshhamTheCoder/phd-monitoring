@@ -1,0 +1,82 @@
+/* A signed-out page that is a plain document (support, privacy): the bar,
+   then the shared Page and Panels on the canvas, at a width that keeps lines
+   readable. The bar's own styles are .page-navbar in index.css. */
+.public-page {
+  min-height: 100vh;
+  background: var(--canvas);
+}
+
+.public-page-main {
+  max-width: 896px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-5) var(--space-7);
+  box-sizing: border-box;
+}
+
+/* Running text in a document panel: bulleted lists and paragraph rhythm,
+   which Tailwind's reset takes away. */
+.public-doc p,
+.public-doc ul {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.public-doc p + p,
+.public-doc p + ul,
+.public-doc ul + p {
+  margin-top: var(--space-3);
+}
+
+.public-doc ul {
+  list-style: disc;
+  padding-left: var(--space-5);
+}
+
+.public-doc p + .facts,
+.public-doc .facts + p {
+  margin-top: var(--space-4);
+}
+
+.public-doc li + li {
+  margin-top: var(--space-2);
+}
+
+.public-doc a {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.public-doc a:hover {
+  text-decoration: underline;
+}
+
+/* Questions and answers: the question in the weight of a label, its answer
+   under it as running text. */
+.public-faq {
+  margin: 0;
+}
+
+.public-faq dt {
+  font-weight: 600;
+  margin-bottom: var(--space-1);
+}
+
+.public-faq dd {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.public-faq dd + dt {
+  margin-top: var(--space-5);
+}
+
+.public-doc-note {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 768px) {
+  .public-page-main {
+    padding: var(--space-5) var(--space-4) var(--space-6);
+  }
+}

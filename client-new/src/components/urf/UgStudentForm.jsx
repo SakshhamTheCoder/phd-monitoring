@@ -68,15 +68,14 @@ const UgStudentForm = ({ student, onClose, onSaved }) => {
         ]}
       />
 
-      <GridContainer
-        elements={[
-          <CustomButton
-            text={saving ? 'Saving…' : (student ? 'Save changes' : 'Add student')}
-            onClick={save}
-            disabled={saving}
-          />,
-        ]}
-      />
+      <div className="modal-actions">
+        <CustomButton text="Cancel" variant="quiet" onClick={onClose} />
+        <CustomButton
+          text={student ? 'Save changes' : 'Add student'}
+          onClick={save}
+          busy={saving}
+        />
+      </div>
     </div>
   );
 };

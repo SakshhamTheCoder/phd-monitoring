@@ -88,7 +88,7 @@ const GoogleCallback = () => {
   return (
     <div className="tw-h-screen tw-flex tw-items-center tw-justify-center">
       <Loader />
-      <p className="tw-text-center tw-text-gray-600 tw-mt-4">Completing sign in...</p>
+      <p className="tw-text-center tw-text-[color:var(--text-muted)] tw-mt-4">Completing sign in...</p>
     </div>
   );
 };

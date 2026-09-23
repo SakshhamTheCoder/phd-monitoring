@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Layout from '../../components/dashboard/layout';
 import {
   formatCurrency,
   getMilestoneProgress,
@@ -9,26 +8,32 @@ import {
 } from '../../data/projectsData';
 import { formatDate, EMPTY_VALUE } from '../../utils/timeParse';
 import { badgeClass } from '../../data/badges';
-import { apiGetProject, apiUpdateProject, apiAddMilestone, apiUpdateMilestone, apiAddDocument, apiUpdateDocument, apiDeleteDocument, fileUrl, mapMilestone, mapDocument, apiProjectMeta, apiUploadGanttChart } from '../../api/projects';
+import { apiGetProject, apiUpdateProject, apiAddMilestone, apiUpdateMilestone, apiAddDocument, apiUpdateDocument, apiDeleteDocument, mapMilestone, mapDocument, apiProjectMeta, apiUploadGanttChart } from '../../api/projects';
 import InputSuggestions from '../../components/forms/fields/InputSuggestions';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import Tabs from '../../components/tabs/Tabs';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import FacultyLink from '../../components/facultyLink/FacultyLink';
 import { baseURL } from '../../api/urls';
+import { storedFileUrl, storedFileClick } from '../../api/fileAccess';
 import { toast } from 'react-toastify';
 import ProjectBudgetCard from './ProjectBudgetCard';
+import LoadError from '../../components/common/LoadError';
+import StatusNotice from '../../components/common/StatusNotice';
+import Page from '../../components/page/Page';
+import Panel, { PanelSection } from '../../components/panel/Panel';
 import './ProjectDetails.css';
 import { useFeatures } from '../../context/FeaturesContext';
+import useDoneFlash from '../../hooks/useDoneFlash';
 
 // Build the sanction-letter display object from a loaded project.
 const sanctionFromProject = (p) => {
   if (!p || !p.sanctionLetterLink || p.sanctionLetterLink === '#') return null;
   const isLink = /^https?:\/\//i.test(p.sanctionLetterLink);
-  return { name: p.sanctionLetterName || 'Sanction Letter', url: fileUrl(p.sanctionLetterLink), isLink };
+  return { name: p.sanctionLetterName || 'Sanction Letter', url: p.sanctionLetterLink, isLink };
 };
 
-const TABS = ['Overview', 'Funding & Budget', 'Milestones', 'Project Team', 'Documents'];
+const TABS = ['Overview', 'Funding and budget', 'Milestones', 'Project team', 'Documents'];
 
 const ProjectDetails = () => {
   const { id } = useParams();
@@ -37,6 +42,16 @@ const ProjectDetails = () => {
   const [activeTab, setActiveTab] = useState('Overview');
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  // One flag for the add and upload saves below: a second click while the
+  // first was on its way posted a second milestone or document.
+  const [saving, setSaving] = useState(false);
+  const whileSaving = async (task) => {
+    if (saving) return;
+    setSaving(true);
+    try { await task(); } finally { setSaving(false); }
+  };
   const [milestones, setMilestones] = useState([]);
   const [editingIdx, setEditingIdx] = useState(null);
   const [editForm, setEditForm] = useState({ name: '', deliverable: '', dueDate: '', status: 'Not Started' });
@@ -68,13 +83,15 @@ const ProjectDetails = () => {
   };
   const addMilestone = async () => {
     if (!validateMilestone(newMs)) return;
-    const res = await apiAddMilestone(project.id, newMs);
-    if (res.success) {
-      setMilestones(prev => [...prev, mapMilestone(res.response)]);
-      setNewMs({ name: '', deliverable: '', dueDate: '', status: 'Not Started' });
-      setShowAddForm(false);
-      toast.success('Milestone added.');
-    }
+    await whileSaving(async () => {
+      const res = await apiAddMilestone(project.id, newMs);
+      if (res.success) {
+        setMilestones(prev => [...prev, mapMilestone(res.response)]);
+        setNewMs({ name: '', deliverable: '', dueDate: '', status: 'Not Started' });
+        setShowAddForm(false);
+        toast.success('Milestone added.');
+      }
+    });
   };
 
   // Budget breakdown inline editing (heads + sub-items, kept reconciled).
@@ -103,6 +120,7 @@ const ProjectDetails = () => {
     if (res.success) { setCoPIs(updated); setNewCopi(emptyCopi); setShowCopiForm(false); toast.success('Co-PI added.'); }
   };
   const removeCopi = async (i) => {
+    if (!window.confirm('Are you sure you want to remove this Co-PI?')) return;
     const updated = coPIs.filter((_, idx) => idx !== i);
     const res = await apiUpdateProject(project.id, { co_pis: updated });
     if (res.success) { setCoPIs(updated); toast.success('Co-PI removed.'); }
@@ -148,18 +166,21 @@ const ProjectDetails = () => {
     const fd = new FormData();
     fd.append('name', docForm.name.trim());
     if (docForm.file) fd.append('file', docForm.file);
-    const res = editingDocIdx !== null
-      ? await apiUpdateDocument(project.id, documents[editingDocIdx].id, fd)
-      : await apiAddDocument(project.id, fd);
-    if (res.success) {
-      const doc = mapDocument((res.response && res.response.document) || res.response);
-      setDocuments(prev => (editingDocIdx !== null ? prev.map((d, i) => (i === editingDocIdx ? doc : d)) : [...prev, doc]));
-      setShowDocModal(false);
-      toast.success(editingDocIdx !== null ? 'Document updated.' : 'Document uploaded.');
-    }
+    await whileSaving(async () => {
+      const res = editingDocIdx !== null
+        ? await apiUpdateDocument(project.id, documents[editingDocIdx].id, fd)
+        : await apiAddDocument(project.id, fd);
+      if (res.success) {
+        const doc = mapDocument((res.response && res.response.document) || res.response);
+        setDocuments(prev => (editingDocIdx !== null ? prev.map((d, i) => (i === editingDocIdx ? doc : d)) : [...prev, doc]));
+        setShowDocModal(false);
+        toast.success(editingDocIdx !== null ? 'Document updated.' : 'Document uploaded.');
+      }
+    });
   };
   const removeDoc = async (i) => {
     const d = documents[i];
+    if (!window.confirm(`Delete "${d.name || 'this document'}"? This cannot be undone.`)) return;
     const res = await apiDeleteDocument(project.id, d.id);
     if (res.success) { setDocuments(prev => prev.filter((_, idx) => idx !== i)); toast.success('Document deleted.'); }
   };
@@ -189,45 +210,90 @@ const ProjectDetails = () => {
       if (!sanctionFileSel || !sanctionFileSel.file) { toast.error('Please select a file.'); return; }
       const fd = new FormData();
       fd.append('sanction_letter', sanctionFileSel.file);
-      const res = await apiUpdateProject(project.id, fd, true);
-      if (res.success) {
-        const p = await apiGetProject(id);
-        if (p) setSanctionDoc(sanctionFromProject(p));
-        setShowSanctionModal(false);
-        toast.success('Sanction letter updated.');
-      }
+      await whileSaving(async () => {
+        const res = await apiUpdateProject(project.id, fd, true);
+        if (res.success) {
+          const { project: p } = await apiGetProject(id);
+          if (p) setSanctionDoc(sanctionFromProject(p));
+          setShowSanctionModal(false);
+          toast.success('Sanction letter updated.');
+        }
+      });
     } else {
       if (!sanctionLinkInput.trim()) { toast.error('Please enter a link.'); return; }
-      const res = await apiUpdateProject(project.id, { sanction_letter_link: sanctionLinkInput.trim(), sanction_letter_name: 'Sanction Letter' });
-      if (res.success) {
-        setSanctionDoc({ name: 'Sanction Letter', url: sanctionLinkInput.trim(), isLink: true });
-        setShowSanctionModal(false);
-        toast.success('Sanction letter updated.');
-      }
+      await whileSaving(async () => {
+        const res = await apiUpdateProject(project.id, { sanction_letter_link: sanctionLinkInput.trim(), sanction_letter_name: 'Sanction Letter' });
+        if (res.success) {
+          setSanctionDoc({ name: 'Sanction Letter', url: sanctionLinkInput.trim(), isLink: true });
+          setShowSanctionModal(false);
+          toast.success('Sanction letter updated.');
+        }
+      });
     }
   };
 
-  // Load the project on mount and sync all sub-states from it.
-  const loadProject = async () => {
-    const p = await apiGetProject(id);
-    if (p) {
-      setProject(p);
-      setMilestones(p.milestones || []);
-      setBudgetData(p.budget || {});
-      setCoPIs(p.coPIs || []);
-      setDocuments(p.documents || []);
-      setSanctionDoc(sanctionFromProject(p));
-    }
-    setLoading(false);
+  const ganttInputRef = useRef(null);
+  const [ganttUploaded, flashGanttUploaded] = useDoneFlash();
+  const uploadGantt = async (e) => {
+    const file = e.target.files[0];
+    // Cleared so picking the same file again still fires a change.
+    e.target.value = '';
+    if (!file) return;
+    const res = await apiUploadGanttChart(project.id, file);
+    if (res.success) { toast.success('Gantt chart uploaded.'); flashGanttUploaded(); refreshProject(); }
   };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { loadProject(); }, [id]);
+
+  // Sync all sub-states from a loaded project.
+  const applyProject = (p) => {
+    setProject(p);
+    setMilestones(p.milestones || []);
+    setBudgetData(p.budget || {});
+    setCoPIs(p.coPIs || []);
+    setDocuments(p.documents || []);
+    setSanctionDoc(sanctionFromProject(p));
+  };
+  const refreshProject = async () => {
+    const { project: p } = await apiGetProject(id);
+    if (p) applyProject(p);
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    // Another project starts clean: the last one's data and half-made edits
+    // would otherwise show, and save, under this id.
+    setLoading(true);
+    setLoadFailed(false);
+    setProject(null);
+    setEditingIdx(null);
+    setShowAddForm(false);
+    setEditingCopiIdx(null);
+    setShowCopiForm(false);
+    setShowDocModal(false);
+    setShowSanctionModal(false);
+    apiGetProject(id).then(({ project: p, failed }) => {
+      if (cancelled) return;
+      if (p) applyProject(p);
+      setLoadFailed(failed);
+      setLoading(false);
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, loadAttempt]);
 
   if (loading) {
-    return <Layout><div className="pd-empty">Loading project…</div></Layout>;
+    return <StatusNotice tone="loading" title="Loading project" />;
+  }
+  if (loadFailed) {
+    return <LoadError message="Could not load this project. Check your connection and try again." onRetry={() => setLoadAttempt((n) => n + 1)} />;
   }
   if (!project) {
-    return <Layout><div className="pd-empty">Project not found. <button onClick={() => navigate('/projects')}>Go Back</button></div></Layout>;
+    return (
+      <StatusNotice
+        tone="empty"
+        title="Project not found."
+        action={<CustomButton text="Go back" variant="quiet" onClick={() => navigate('/projects')} />}
+      />
+    );
   }
 
   // A HOD or coordinator reads every project in their department but writes
@@ -237,229 +303,184 @@ const ProjectDetails = () => {
   const openPositions = (project.positions || []).filter((p) => p.status === 'Open');
 
   const progress = getMilestoneProgress(milestones);
-  const msIcons = { Completed: '✔', 'In Progress': '🟡', 'Not Started': '🔴', Delayed: '🔴' };
+  const completedMilestones = milestones.filter(m => m.status === 'Completed').length;
+  // The badge beside each milestone names the status; the icon only helps the
+  // eye run down the timeline.
+  const msIcons = { Completed: 'fa-check', 'In Progress': 'fa-hourglass-half', 'Not Started': 'fa-circle-o', Delayed: 'fa-exclamation' };
+
+  const required = <span className="req" aria-hidden="true">*</span>;
 
   const renderTab = () => {
     switch (activeTab) {
       case 'Overview': return (
-        <div className="pd-tab-content">
-          <div className="pd-overview-grid">
-            <div className="pd-overview-main">
-              <div className="pd-card">
-                <h3 className="pd-card-title"><i className="fa fa-bullseye"></i> Project Objectives</h3>
-                {(project.objectives || []).length === 0 ? (
-                  <p className="pd-description">No objectives recorded.</p>
-                ) : (
-                  <ol className="pd-obj-list">
-                    {project.objectives.map((obj, i) => (
-                      <li key={i}>{typeof obj === 'string' ? obj : [obj.title, obj.description].filter(Boolean).join(': ')}</li>
-                    ))}
-                  </ol>
-                )}
-              </div>
-              <div className="pd-card">
-                <h3 className="pd-card-title"><i className="fa fa-align-left"></i> Detailed Description</h3>
-                <p className="pd-description">{project.description}</p>
-              </div>
-            </div>
-            <div className="pd-overview-side">
-              <div className="pd-card pd-meta-card">
-                <h4 className="pd-meta-title">PROJECT METADATA</h4>
-                <div className="pd-meta-row"><span>Primary Category</span><strong>{project.category}</strong></div>
-                <div className="pd-meta-row"><span>Focus Area</span><strong>{project.focusArea}</strong></div>
-                <div className="pd-meta-row"><span>Grant Type</span><strong>{project.grantType}</strong></div>
-                <div className="pd-meta-row"><span>Project Status</span><span className={badgeClass(project.status)}>{project.status}</span></div>
-              </div>
-              <div className="pd-card pd-meta-card">
-                <h4 className="pd-meta-title">SUSTAINABLE DEVELOPMENT GOALS</h4>
-                {(project.sdgs || []).length === 0 ? (
-                  <p className="pd-meta-empty">None selected</p>
-                ) : (
-                  <div className="pd-sdg-badges">
-                    {project.sdgs.map(id => {
-                      const g = (meta.sdgs || []).find(s => s.id === id);
-                      return g ? <span key={id} className="badge badge--accent" title={`SDG ${g.id}`}>{g.id}. {g.label}</span> : null;
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
+        <div className="panel-columns" role="tabpanel">
+          <div className="panel-stack">
+            <Panel title="Project objectives">
+              {(project.objectives || []).length === 0 ? (
+                <StatusNotice tone="empty" title="No objectives recorded." />
+              ) : (
+                <ol className="pd-obj-list">
+                  {project.objectives.map((obj, i) => (
+                    <li key={i}>{typeof obj === 'string' ? obj : [obj.title, obj.description].filter(Boolean).join(': ')}</li>
+                  ))}
+                </ol>
+              )}
+            </Panel>
+            <Panel title="Detailed description">
+              <p className="pd-description">{project.description || 'No description added.'}</p>
+            </Panel>
           </div>
-        </div>
-      );
-
-      case 'Funding & Budget': return (
-        <div className="pd-tab-content">
-          <div className="pd-card">
-            <h3 className="pd-card-title"><i className="fa fa-inr"></i> Funding Summary</h3>
-            <div className="pd-funding-summary">
-              <div className="pd-fund-item"><span>Funding Agency</span><strong>{project.fundingAgency}</strong></div>
-              <div className="pd-fund-item"><span>Total Sanctioned</span><strong>{formatCurrency(project.amount)}</strong></div>
-              <div className="pd-fund-item"><span>TIET Share</span><strong>{formatCurrency(project.tietShare)}</strong></div>
-              <div className="pd-fund-item">
-                <span>Sanction Letter</span>
-                <div className="pd-sanction-view">
-                  {sanctionDoc ? (
-                    <a href={sanctionDoc.url} target="_blank" rel="noopener noreferrer"><i className={`fa ${sanctionDoc.isLink ? 'fa-link' : 'fa-file-pdf-o'}`}></i> {sanctionDoc.name}</a>
-                  ) : (
-                    <span className="pd-sanction-none">Not uploaded</span>
-                  )}
-                  {canEdit && (
-                    <button
-                      className="pd-sanction-edit-btn"
-                      onClick={openSanctionModal}
-                      title={sanctionDoc ? 'Edit sanction letter' : 'Add sanction letter'}
-                    >
-                      <i className={`fa ${sanctionDoc ? 'fa-pencil' : 'fa-plus'}`}></i>
-                    </button>
-                  )}
+          <div className="panel-stack">
+            <Panel title="Project metadata">
+              <dl className="kv">
+                <div><dt>Primary category</dt><dd>{project.category}</dd></div>
+                <div><dt>Focus area</dt><dd>{project.focusArea || EMPTY_VALUE}</dd></div>
+                <div><dt>Grant type</dt><dd>{project.grantType || EMPTY_VALUE}</dd></div>
+                <div><dt>Project status</dt><dd><span className={badgeClass(project.status)}>{project.status}</span></dd></div>
+              </dl>
+            </Panel>
+            <Panel title="Sustainable development goals">
+              {(project.sdgs || []).length === 0 ? (
+                <p className="pd-muted">None selected</p>
+              ) : (
+                <div className="pd-sdg-badges">
+                  {project.sdgs.map(id => {
+                    const g = (meta.sdgs || []).find(s => s.id === id);
+                    return g ? <span key={id} className="badge badge--accent" title={`SDG ${g.id}`}>{g.id}. {g.label}</span> : null;
+                  })}
                 </div>
-              </div>
-            </div>
+              )}
+            </Panel>
           </div>
-          <ProjectBudgetCard projectId={project.id} budget={budgetData} meta={meta} canEdit={canEdit} onSaved={setBudgetData} />
         </div>
       );
 
       case 'Milestones': return (
-        <div className="pd-tab-content">
-          <div className="pd-card">
-            <div className="pd-budget-header">
-              <h3 className="pd-card-title" style={{ marginBottom: 0 }}><i className="fa fa-bar-chart"></i> Gantt Chart</h3>
-              {canEdit && (
-                <label className="pd-add-ms-btn" style={{ cursor: 'pointer' }}>
-                  <i className="fa fa-upload"></i> {project.ganttChartName ? 'Replace' : 'Upload Gantt Chart'}
-                  <input type="file" accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls,.doc,.docx" style={{ display: 'none' }}
-                    onChange={async (e) => {
-                      const file = e.target.files[0];
-                      if (!file) return;
-                      const res = await apiUploadGanttChart(project.id, file);
-                      if (res.success) { toast.success('Gantt chart uploaded.'); loadProject(); }
-                    }} />
-                </label>
-              )}
-            </div>
-            {project.ganttChartUrl ? (
-              <a className="pd-doc-link" href={project.ganttChartUrl} target="_blank" rel="noreferrer">
-                <i className="fa fa-file-o"></i> {project.ganttChartName || 'Gantt chart'}
+        <div className="pd-tab-panel" role="tabpanel">
+          <Panel
+            title="Gantt chart"
+            actions={canEdit && (
+              <>
+                <CustomButton
+                  text={project.ganttChartName ? 'Replace Gantt chart' : 'Upload Gantt chart'}
+                  variant="secondary"
+                  size="sm"
+                  done={ganttUploaded}
+                  onClick={() => ganttInputRef.current && ganttInputRef.current.click()}
+                />
+                <input type="file" ref={ganttInputRef} accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls,.doc,.docx" style={{ display: 'none' }} onChange={uploadGantt} />
+              </>
+            )}
+          >
+            {project.ganttChartPath ? (
+              <a className="pd-doc-link" href={storedFileUrl(project.ganttChartPath)} target="_blank" rel="noreferrer" onClick={storedFileClick(project.ganttChartPath)}>
+                <i className="fa fa-file-o" aria-hidden="true"></i> {project.ganttChartName || 'Gantt chart'}
               </a>
             ) : (
-              <p className="pd-meta-empty">No Gantt chart uploaded yet.</p>
+              <p className="pd-muted">No Gantt chart uploaded yet.</p>
             )}
-          </div>
-          <div className="pd-card">
-            <div className="pd-ms-header">
-              <h3 className="pd-card-title"><i className="fa fa-flag"></i> Project Milestones</h3>
-              <div className="pd-ms-header-right">
-                <div className="pd-ms-progress">
-                  <span className="pd-ms-pct">{progress}%</span>
-                  <div className="pd-ms-bar"><div className="pd-ms-fill" style={{ width: `${progress}%` }}></div></div>
-                </div>
-                {canEdit && (
-                  <button className="pd-add-ms-btn" onClick={() => setShowAddForm(!showAddForm)}>
-                    <i className="fa fa-plus"></i> Add Milestone
-                  </button>
-                )}
+          </Panel>
+          <Panel
+            title="Project milestones"
+            actions={<>
+              <div className="pd-ms-progress">
+                <span className="pd-ms-pct">{progress}%</span>
+                <div className="pd-progress-track" aria-hidden="true"><div className="pd-progress-fill" style={{ width: `${progress}%` }}></div></div>
               </div>
-            </div>
-
-            {/* Add Milestone Form */}
+              {canEdit && (
+                <CustomButton text="Add milestone" variant="secondary" size="sm" onClick={() => setShowAddForm(!showAddForm)} />
+              )}
+            </>}
+          >
             {showAddForm && (
-              <div className="pd-ms-add-form">
-                <h4 className="pd-ms-form-title">New Milestone</h4>
+              <PanelSection title="New milestone">
                 <div className="pd-ms-form-grid">
-                  <div className="pd-ms-field"><label htmlFor="project-details-milestone-name">Milestone Name *</label><input type="text" value={newMs.name} onChange={e => setNewMs({...newMs, name: e.target.value})} placeholder="e.g. Prototype Delivery" /></div>
-                  <div className="pd-ms-field"><label htmlFor="project-details-deliverable">Deliverable *</label><input type="text" value={newMs.deliverable} onChange={e => setNewMs({...newMs, deliverable: e.target.value})} placeholder="e.g. Working demo" /></div>
-                  <div className="pd-ms-field"><label htmlFor="project-details-due-date">Due Date *</label><input id="project-details-due-date" type="date" value={newMs.dueDate} onChange={e => setNewMs({...newMs, dueDate: e.target.value})} /></div>
+                  <div className="pd-ms-field"><label htmlFor="project-details-milestone-name">Milestone name {required}</label><input id="project-details-milestone-name" type="text" aria-required="true" value={newMs.name} onChange={e => setNewMs({...newMs, name: e.target.value})} placeholder="e.g. Prototype Delivery" /></div>
+                  <div className="pd-ms-field"><label htmlFor="project-details-deliverable">Deliverable {required}</label><input id="project-details-deliverable" type="text" aria-required="true" value={newMs.deliverable} onChange={e => setNewMs({...newMs, deliverable: e.target.value})} placeholder="e.g. Working demo" /></div>
+                  <div className="pd-ms-field"><label htmlFor="project-details-due-date">Due date {required}</label><input id="project-details-due-date" type="date" aria-required="true" value={newMs.dueDate} onChange={e => setNewMs({...newMs, dueDate: e.target.value})} /></div>
                   <div className="pd-ms-field"><label htmlFor="project-details-status">Status</label>
-                    <select id="project-details-status" id="project-details-deliverable" id="project-details-milestone-name" value={newMs.status} onChange={e => setNewMs({...newMs, status: e.target.value})}>
+                    <select id="project-details-status" value={newMs.status} onChange={e => setNewMs({...newMs, status: e.target.value})}>
                       {milestoneStatusOptions.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
                 </div>
-                <div className="pd-ms-form-actions">
-                  <button className="pd-ms-cancel" onClick={() => setShowAddForm(false)}>Cancel</button>
-                  <button className="pd-ms-save" onClick={addMilestone}><i className="fa fa-plus"></i> Add</button>
+                <div className="pd-form-actions">
+                  <CustomButton text="Add" variant="secondary" size="sm" onClick={addMilestone} disabled={saving} />
+                  <CustomButton text="Cancel" variant="quiet" size="sm" onClick={() => setShowAddForm(false)} />
                 </div>
-              </div>
+              </PanelSection>
             )}
 
-            <div className="pd-timeline">
-              {milestones.map((m, i) => (
-                <div key={i} className={`pd-tl-item ${m.status.toLowerCase().replace(' ', '-')}`}>
-                  <div className="pd-tl-icon">{msIcons[m.status]}</div>
-                  <div className="pd-tl-content">
-                    {editingIdx === i ? (
-                      /* Inline Edit Mode */
-                      <div className="pd-ms-edit-form">
-                        <div className="pd-ms-form-grid">
-                          <div className="pd-ms-field"><label htmlFor="project-details-name">Name *</label><input type="text" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} /></div>
-                          <div className="pd-ms-field"><label htmlFor="project-details-deliverable-2">Deliverable *</label><input type="text" value={editForm.deliverable} onChange={e => setEditForm({...editForm, deliverable: e.target.value})} /></div>
-                          <div className="pd-ms-field"><label htmlFor="project-details-due-date-2">Due Date *</label><input id="project-details-due-date-2" type="date" value={editForm.dueDate} onChange={e => setEditForm({...editForm, dueDate: e.target.value})} /></div>
-                          <div className="pd-ms-field"><label htmlFor="project-details-status-2">Status</label>
-                            <select id="project-details-status-2" id="project-details-deliverable-2" id="project-details-name" value={editForm.status} onChange={e => setEditForm({...editForm, status: e.target.value})}>
-                              {milestoneStatusOptions.map(s => <option key={s} value={s}>{s}</option>)}
-                            </select>
+            <div className={showAddForm ? 'panel-section' : undefined}>
+              <div className="pd-timeline">
+                {milestones.map((m, i) => (
+                  <div key={i} className={`pd-tl-item ${m.status.toLowerCase().replace(' ', '-')}`}>
+                    <div className="pd-tl-icon" aria-hidden="true"><i className={`fa ${msIcons[m.status] || 'fa-circle-o'}`}></i></div>
+                    <div className="pd-tl-content">
+                      {editingIdx === i ? (
+                        <div>
+                          <div className="pd-ms-form-grid">
+                            <div className="pd-ms-field"><label htmlFor="project-details-name">Name {required}</label><input id="project-details-name" type="text" aria-required="true" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} /></div>
+                            <div className="pd-ms-field"><label htmlFor="project-details-deliverable-2">Deliverable {required}</label><input id="project-details-deliverable-2" type="text" aria-required="true" value={editForm.deliverable} onChange={e => setEditForm({...editForm, deliverable: e.target.value})} /></div>
+                            <div className="pd-ms-field"><label htmlFor="project-details-due-date-2">Due date {required}</label><input id="project-details-due-date-2" type="date" aria-required="true" value={editForm.dueDate} onChange={e => setEditForm({...editForm, dueDate: e.target.value})} /></div>
+                            <div className="pd-ms-field"><label htmlFor="project-details-status-2">Status</label>
+                              <select id="project-details-status-2" value={editForm.status} onChange={e => setEditForm({...editForm, status: e.target.value})}>
+                                {milestoneStatusOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                              </select>
+                            </div>
+                          </div>
+                          <div className="pd-form-actions">
+                            <CustomButton text="Save" variant="secondary" size="sm" onClick={saveEdit} />
+                            <CustomButton text="Cancel" variant="quiet" size="sm" onClick={cancelEdit} />
                           </div>
                         </div>
-                        <div className="pd-ms-form-actions">
-                          <button className="pd-ms-cancel" onClick={cancelEdit}>Cancel</button>
-                          <button className="pd-ms-save" onClick={saveEdit}><i className="fa fa-check"></i> Save</button>
-                        </div>
-                      </div>
-                    ) : (
-                      /* Display Mode */
-                      <>
-                        <div className="pd-tl-top">
-                          <h4>{m.name}</h4>
-                          <div className="pd-tl-actions">
-                            <span className={badgeClass(m.status)}>{m.status}</span>
-                            {canEdit && <button className="pd-tl-edit-btn" onClick={() => startEdit(i)} title="Edit milestone"><i className="fa fa-pencil"></i></button>}
+                      ) : (
+                        <>
+                          <div className="pd-tl-top">
+                            <h3 className="pd-tl-name">{m.name}</h3>
+                            <div className="pd-tl-actions">
+                              <span className={badgeClass(m.status)}>{m.status}</span>
+                              {canEdit && <button type="button" className="pd-icon-btn" onClick={() => startEdit(i)} title="Edit milestone" aria-label="Edit milestone"><i className="fa fa-pencil" aria-hidden="true"></i></button>}
+                            </div>
                           </div>
-                        </div>
-                        <p className="pd-tl-deliverable">{m.deliverable}</p>
-                        <span className="pd-tl-date"><i className="fa fa-calendar"></i> Due: {formatDate(m.dueDate)}</span>
-                      </>
-                    )}
+                          <p className="pd-tl-deliverable">{m.deliverable}</p>
+                          <span className="pd-tl-date"><i className="fa fa-calendar" aria-hidden="true"></i> Due: {formatDate(m.dueDate)}</span>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          </Panel>
         </div>
       );
 
-      case 'Project Team': return (
-        <div className="pd-tab-content">
-          <div className="pd-card">
-            <h3 className="pd-card-title"><i className="fa fa-user"></i> Principal Investigator</h3>
+      case 'Project team': return (
+        <div className="pd-tab-panel" role="tabpanel">
+          <Panel title="Principal investigator">
             {project.pi ? (
-              <div className="pd-team-card">
-                <div className="pd-team-avatar">{project.pi.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</div>
+              <div className="pd-team-row">
+                <div className="pd-team-avatar" aria-hidden="true">{project.pi.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</div>
                 <div className="pd-team-info">
-                  <h4><FacultyLink code={project.pi.code} name={project.pi.name} /></h4>
+                  <p className="pd-team-name"><FacultyLink code={project.pi.code} name={project.pi.name} /></p>
                   <p className="pd-team-dept">{project.pi.department}</p>
                   <p className="pd-team-meta">{project.pi.designation}</p>
                 </div>
-                <span className="pd-team-role pi">PI</span>
+                <span className="badge badge--accent pd-team-role">PI</span>
               </div>
             ) : (
-              <p className="empty-state">No principal investigator on record for this project.</p>
+              <StatusNotice tone="empty" title="No principal investigator on record for this project." />
             )}
-          </div>
-          <div className="pd-card">
-            <div className="pd-ms-header">
-              <h3 className="pd-card-title"><i className="fa fa-users"></i> Co-PIs</h3>
-              {canEdit && (
-                <button className="pd-add-ms-btn" onClick={() => setShowCopiForm(!showCopiForm)}>
-                  <i className="fa fa-plus"></i> Add Co-PI
-                </button>
-              )}
-            </div>
-
+          </Panel>
+          <Panel
+            title="Co-PIs"
+            actions={canEdit && (
+              <CustomButton text="Add Co-PI" variant="secondary" size="sm" onClick={() => setShowCopiForm(!showCopiForm)} />
+            )}
+          >
             {showCopiForm && (
-              <div className="pd-ms-add-form">
-                <h4 className="pd-ms-form-title">New Co-PI</h4>
+              <PanelSection title="New Co-PI">
                 <div className="pd-ms-form-grid">
                   <div className="pd-ms-field"><label htmlFor="project-details-type">Type</label>
                     <select id="project-details-type" value={newCopi.type} onChange={e => setNewCopi({ ...emptyCopi, type: e.target.value })}>
@@ -471,130 +492,131 @@ const ProjectDetails = () => {
                     <div className="pd-ms-field">
                       <InputSuggestions
                         apiUrl={`${baseURL}/suggestions/faculty`}
-                        label="Faculty *"
+                        label="Faculty"
+                        required
                         hint="Type faculty name, code or email..."
                         fields={['name', 'department']}
                         onSelect={pickInternal(setNewCopi)}
                       />
                     </div>
                   ) : (
-                    <div className="pd-ms-field"><label htmlFor="project-details-full-name">Full Name *</label><input type="text" value={newCopi.name} onChange={e => setNewCopi({ ...newCopi, name: e.target.value })} placeholder="e.g. Dr. Robert Chen" /></div>
+                    <div className="pd-ms-field"><label htmlFor="project-details-full-name">Full name {required}</label><input id="project-details-full-name" type="text" aria-required="true" value={newCopi.name} onChange={e => setNewCopi({ ...newCopi, name: e.target.value })} placeholder="e.g. Dr. Robert Chen" /></div>
                   )}
-                  <div className="pd-ms-field"><label>{newCopi.type === 'internal' ? 'Department' : 'Institute'}</label>
-                    <input id="project-details-full-name"
+                  <div className="pd-ms-field input-field-container"><label htmlFor="project-details-institute">{newCopi.type === 'internal' ? 'Department' : 'Institute'}</label>
+                    <input id="project-details-institute"
                       type="text"
                       readOnly={newCopi.type === 'internal'}
+                      className={newCopi.type === 'internal' ? 'field-readonly' : undefined}
                       value={newCopi.type === 'internal' ? newCopi.department : newCopi.institute}
                       onChange={e => setNewCopi(newCopi.type === 'internal' ? { ...newCopi, department: e.target.value } : { ...newCopi, institute: e.target.value })}
                       placeholder={newCopi.type === 'internal' ? 'Filled from the selected faculty' : 'e.g. MIT CSAIL'}
                     />
                   </div>
-                  <div className="pd-ms-field"><label htmlFor="project-details-designation">Designation</label><input type="text" readOnly={newCopi.type === 'internal'} value={newCopi.designation} onChange={e => setNewCopi({ ...newCopi, designation: e.target.value })} placeholder="e.g. Professor" /></div>
+                  <div className="pd-ms-field input-field-container"><label htmlFor="project-details-designation">Designation</label><input id="project-details-designation" type="text" readOnly={newCopi.type === 'internal'} className={newCopi.type === 'internal' ? 'field-readonly' : undefined} value={newCopi.designation} onChange={e => setNewCopi({ ...newCopi, designation: e.target.value })} placeholder="e.g. Professor" /></div>
                 </div>
-                <div className="pd-ms-form-actions">
-                  <button className="pd-ms-cancel" onClick={() => { setShowCopiForm(false); setNewCopi(emptyCopi); }}>Cancel</button>
-                  <button className="pd-ms-save" onClick={addCopi}><i className="fa fa-plus"></i> Add Co-PI</button>
+                <div className="pd-form-actions">
+                  <CustomButton text="Add Co-PI" variant="secondary" size="sm" onClick={addCopi} />
+                  <CustomButton text="Cancel" variant="quiet" size="sm" onClick={() => { setShowCopiForm(false); setNewCopi(emptyCopi); }} />
                 </div>
-              </div>
+              </PanelSection>
             )}
 
-            {coPIs.length > 0 ? coPIs.map((c, i) => (
-              editingCopiIdx === i ? (
-                <div key={i} className="pd-ms-add-form">
-                  <h4 className="pd-ms-form-title">Edit Co-PI</h4>
-                  <div className="pd-ms-form-grid">
-                    <div className="pd-ms-field"><label htmlFor="project-details-type-2">Type</label>
-                      <select id="project-details-type-2" id="project-details-designation" value={copiEditForm.type} onChange={e => setCopiEditForm({ ...emptyCopi, type: e.target.value })}>
-                        <option value="internal">Internal</option>
-                        <option value="external">External</option>
-                      </select>
-                    </div>
-                    {copiEditForm.type === 'internal' ? (
-                      <div className="pd-ms-field">
-                        <InputSuggestions
-                          apiUrl={`${baseURL}/suggestions/faculty`}
-                          label="Faculty *"
-                          hint="Type faculty name, code or email..."
-                          initialValue={copiEditForm.name}
-                          fields={['name', 'department']}
-                          onSelect={pickInternal(setCopiEditForm)}
+            <div className={showCopiForm ? 'panel-section' : undefined}>
+              {coPIs.length > 0 ? coPIs.map((c, i) => (
+                editingCopiIdx === i ? (
+                  <div key={i} className="pd-team-edit">
+                    <h3 className="panel-section-title pd-team-edit-title">Edit Co-PI</h3>
+                    <div className="pd-ms-form-grid">
+                      <div className="pd-ms-field"><label htmlFor="project-details-type-2">Type</label>
+                        <select id="project-details-type-2" value={copiEditForm.type} onChange={e => setCopiEditForm({ ...emptyCopi, type: e.target.value })}>
+                          <option value="internal">Internal</option>
+                          <option value="external">External</option>
+                        </select>
+                      </div>
+                      {copiEditForm.type === 'internal' ? (
+                        <div className="pd-ms-field">
+                          <InputSuggestions
+                            apiUrl={`${baseURL}/suggestions/faculty`}
+                            label="Faculty"
+                            required
+                            hint="Type faculty name, code or email..."
+                            initialValue={copiEditForm.name}
+                            fields={['name', 'department']}
+                            onSelect={pickInternal(setCopiEditForm)}
+                          />
+                        </div>
+                      ) : (
+                        <div className="pd-ms-field"><label htmlFor="project-details-full-name-2">Full name {required}</label><input id="project-details-full-name-2" type="text" aria-required="true" value={copiEditForm.name} onChange={e => setCopiEditForm({ ...copiEditForm, name: e.target.value })} /></div>
+                      )}
+                      <div className="pd-ms-field input-field-container"><label htmlFor="project-details-institute-2">{copiEditForm.type === 'internal' ? 'Department' : 'Institute'}</label>
+                        <input id="project-details-institute-2"
+                          type="text"
+                          readOnly={copiEditForm.type === 'internal'}
+                          className={copiEditForm.type === 'internal' ? 'field-readonly' : undefined}
+                          value={copiEditForm.type === 'internal' ? (copiEditForm.department || '') : (copiEditForm.institute || '')}
+                          onChange={e => setCopiEditForm(copiEditForm.type === 'internal' ? { ...copiEditForm, department: e.target.value } : { ...copiEditForm, institute: e.target.value })}
                         />
                       </div>
-                    ) : (
-                      <div className="pd-ms-field"><label htmlFor="project-details-full-name-2">Full Name *</label><input type="text" value={copiEditForm.name} onChange={e => setCopiEditForm({ ...copiEditForm, name: e.target.value })} /></div>
-                    )}
-                    <div className="pd-ms-field"><label>{copiEditForm.type === 'internal' ? 'Department' : 'Institute'}</label>
-                      <input id="project-details-full-name-2"
-                        type="text"
-                        readOnly={copiEditForm.type === 'internal'}
-                        value={copiEditForm.type === 'internal' ? (copiEditForm.department || '') : (copiEditForm.institute || '')}
-                        onChange={e => setCopiEditForm(copiEditForm.type === 'internal' ? { ...copiEditForm, department: e.target.value } : { ...copiEditForm, institute: e.target.value })}
-                      />
+                      <div className="pd-ms-field input-field-container"><label htmlFor="project-details-designation-2">Designation</label><input id="project-details-designation-2" type="text" readOnly={copiEditForm.type === 'internal'} className={copiEditForm.type === 'internal' ? 'field-readonly' : undefined} value={copiEditForm.designation || ''} onChange={e => setCopiEditForm({ ...copiEditForm, designation: e.target.value })} /></div>
                     </div>
-                    <div className="pd-ms-field"><label htmlFor="project-details-designation-2">Designation</label><input type="text" readOnly={copiEditForm.type === 'internal'} value={copiEditForm.designation || ''} onChange={e => setCopiEditForm({ ...copiEditForm, designation: e.target.value })} /></div>
+                    <div className="pd-form-actions">
+                      <CustomButton text="Save" variant="secondary" size="sm" onClick={saveCopiEdit} />
+                      <CustomButton text="Cancel" variant="quiet" size="sm" onClick={cancelCopiEdit} />
+                    </div>
                   </div>
-                  <div className="pd-ms-form-actions">
-                    <button className="pd-ms-cancel" onClick={cancelCopiEdit}>Cancel</button>
-                    <button className="pd-ms-save" onClick={saveCopiEdit}><i className="fa fa-check"></i> Save</button>
+                ) : (
+                  <div key={i} className="pd-team-row">
+                    <div className="pd-team-avatar co" aria-hidden="true">{c.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</div>
+                    <div className="pd-team-info">
+                      <p className="pd-team-name"><FacultyLink code={c.faculty_code} name={c.name} /></p>
+                      <p className="pd-team-dept">{c.type === 'internal' ? c.department : c.institute}</p>
+                      <p className="pd-team-meta">{c.designation}</p>
+                    </div>
+                    <span className={`badge ${c.type === 'internal' ? 'badge--info' : 'badge--purple'} pd-team-role`}>{c.type === 'internal' ? 'Internal' : 'External'}</span>
+                    {canEdit && (
+                      <>
+                        <button type="button" className="pd-icon-btn" onClick={() => startCopiEdit(i)} title="Edit Co-PI" aria-label="Edit Co-PI"><i className="fa fa-pencil" aria-hidden="true"></i></button>
+                        <button type="button" className="pd-icon-btn danger" onClick={() => removeCopi(i)} title="Remove Co-PI" aria-label="Remove Co-PI"><i className="fa fa-trash" aria-hidden="true"></i></button>
+                      </>
+                    )}
                   </div>
-                </div>
-              ) : (
-                <div key={i} className="pd-team-card">
-                  <div className="pd-team-avatar co">{c.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</div>
-                  <div className="pd-team-info">
-                    <h4><FacultyLink code={c.faculty_code} name={c.name} /></h4>
-                    <p className="pd-team-dept">{c.type === 'internal' ? c.department : c.institute}</p>
-                    <p className="pd-team-meta">{c.designation}</p>
-                  </div>
-                  <span className={`pd-team-role ${c.type}`}>{c.type === 'internal' ? 'Internal' : 'External'}</span>
-                  {canEdit && (
-                    <>
-                      <button className="pd-copi-edit" onClick={() => startCopiEdit(i)} title="Edit Co-PI"><i className="fa fa-pencil"></i></button>
-                      <button className="pd-copi-remove" onClick={() => removeCopi(i)} title="Remove Co-PI"><i className="fa fa-trash"></i></button>
-                    </>
-                  )}
-                </div>
-              )
-            )) : (
-              <p className="empty-state">No Co-PIs added yet.</p>
-            )}
-          </div>
+                )
+              )) : (
+                <StatusNotice tone="empty" title="No Co-PIs added yet." />
+              )}
+            </div>
+          </Panel>
         </div>
       );
 
       case 'Documents': return (
-        <div className="pd-tab-content">
-          <div className="pd-card">
-            <div className="pd-ms-header">
-              <h3 className="pd-card-title"><i className="fa fa-folder-open"></i> Project Documents</h3>
-              {canEdit && (
-                <button className="pd-add-ms-btn" onClick={openAddDoc}>
-                  <i className="fa fa-plus"></i> Add Document
-                </button>
-              )}
-            </div>
+        <div className="pd-tab-panel" role="tabpanel">
+          <Panel
+            title="Project documents"
+            actions={canEdit && <CustomButton text="Add document" variant="secondary" size="sm" onClick={openAddDoc} />}
+          >
             {documents.length > 0 ? (
-              <div className="pd-doc-list">
+              <ul className="pd-doc-list">
                 {documents.map((d, i) => (
-                  <div key={i} className="pd-doc-item">
-                    <i className="fa fa-file-pdf-o pd-doc-icon"></i>
+                  <li key={i} className="pd-doc-item">
+                    <i className="fa fa-file-pdf-o pd-doc-icon" aria-hidden="true"></i>
                     <div className="pd-doc-info"><strong>{d.name}</strong><span>{d.type} &middot; {formatDate(d.date)}</span></div>
                     <div className="pd-doc-actions">
-                      {d.url && <a className="pd-doc-dl" href={d.url} target="_blank" rel="noopener noreferrer" title="View document"><i className="fa fa-eye"></i></a>}
+                      {d.url && <a className="pd-icon-btn" href={storedFileUrl(d.url)} target="_blank" rel="noopener noreferrer" onClick={storedFileClick(d.url)} title="View document" aria-label="View document"><i className="fa fa-eye" aria-hidden="true"></i></a>}
                       {canEdit && (
                         <>
-                          <button className="pd-doc-edit" onClick={() => openEditDoc(i)} title="Edit document"><i className="fa fa-pencil"></i></button>
-                          <button className="pd-doc-remove" onClick={() => removeDoc(i)} title="Delete document"><i className="fa fa-trash"></i></button>
+                          <button type="button" className="pd-icon-btn" onClick={() => openEditDoc(i)} title="Edit document" aria-label="Edit document"><i className="fa fa-pencil" aria-hidden="true"></i></button>
+                          <button type="button" className="pd-icon-btn danger" onClick={() => removeDoc(i)} title="Delete document" aria-label="Delete document"><i className="fa fa-trash" aria-hidden="true"></i></button>
                         </>
                       )}
                     </div>
-                  </div>
+                  </li>
                 ))}
-              </div>
+              </ul>
             ) : (
-              <p className="empty-state">No documents uploaded yet.</p>
+              <StatusNotice tone="empty" title="No documents uploaded yet." />
             )}
-          </div>
+          </Panel>
         </div>
       );
 
@@ -603,157 +625,171 @@ const ProjectDetails = () => {
   };
 
   return (
-    <Layout>
-      <div className="pd-container">
-        <button className="page-back-link" onClick={() => navigate('/projects')}>
-          <i className="fa fa-arrow-left"></i> BACK TO PROJECTS
-        </button>
-        {/* Header */}
-        <div className="pd-header">
-          <div className="pd-header-main">
-            <div className="pd-header-top">
-              <span className={badgeClass(project.category)}>
-                <i className="fa fa-flask"></i> {project.category}
-              </span>
+    <>
+      <button type="button" className="page-back-link pd-back" onClick={() => navigate('/projects')}>
+        <i className="fa fa-arrow-left" aria-hidden="true"></i> Back to projects
+      </button>
+      <Page
+        className="reveal"
+        title={project.title}
+        meta={<>
+          <span className={badgeClass(project.category)}>{project.category}</span>
+          <span className={badgeClass(project.status)}>{project.status}</span>
+        </>}
+        actions={canEdit && <>
+          <CustomButton text="Edit project" variant="secondary" onClick={() => navigate('/projects/create', { state: { editProject: project } })} />
+          {features.job_openings && (
+            <CustomButton text={openPositions.length ? 'Manage recruitment' : 'Post an opening'} onClick={() => navigate(`/projects/${id}/recruit`)} />
+          )}
+        </>}
+        tabs={<Tabs items={TABS} value={activeTab} onChange={setActiveTab} label="Project sections" />}
+      >
+        <Panel>
+          <dl className="facts">
+            <div><dt>Funding agency</dt><dd>{project.fundingAgency || EMPTY_VALUE}</dd></div>
+            <div><dt>Sanctioned amount</dt><dd>₹ {Number(project.amount || 0).toLocaleString('en-IN')}</dd></div>
+            <div>
+              <dt>Duration</dt>
+              <dd>
+                {formatDuration(project.durationYears, project.durationMonths)}
+                {project.startDate ? ` · ${formatDate(project.startDate)} to ${formatDate(project.endDate)}` : ''}
+              </dd>
             </div>
-            <h1 className="page-title">{project.title}</h1>
-            <div className="pd-header-meta">
-              <div className="pd-hm-item"><span>FUNDING AGENCY</span><strong>{project.fundingAgency || EMPTY_VALUE}</strong></div>
-              <div className="pd-hm-item"><span>SANCTIONED AMOUNT</span><strong>₹ {Number(project.amount || 0).toLocaleString('en-IN')}</strong></div>
-              <div className="pd-hm-item">
-                <span>DURATION</span>
-                <strong>
-                  {formatDuration(project.durationYears, project.durationMonths)}
-                  {project.startDate ? ` · ${formatDate(project.startDate)} — ${formatDate(project.endDate)}` : ''}
-                </strong>
-              </div>
+            <div>
+              <dt>Current progress</dt>
+              <dd>{progress}%</dd>
+              <dd className="pd-progress-track" aria-hidden="true"><div className="pd-progress-fill" style={{ width: `${progress}%` }}></div></dd>
+              {milestones.length > 0 && (
+                <dd className="pd-progress-note">{completedMilestones} of {milestones.length} milestones completed</dd>
+              )}
             </div>
-            {canEdit && features.job_openings && (
-              <div className="pd-header-actions">
-                <button type="button" className="pd-hire-btn" onClick={() => navigate(`/projects/${id}/recruit`)}>
-                  <i className="fa fa-user-plus"></i>
-                  {openPositions.length ? 'Manage recruitment' : 'Post an opening'}
-                </button>
-              </div>
-            )}
-          </div>
-          <div className="pd-header-side">
-            <span className={badgeClass(project.status)}>{project.status}</span>
-            {canEdit && (
-              <button className="pd-header-edit-btn" onClick={() => navigate('/projects/create', { state: { editProject: project } })}>
-                <i className="fa fa-pencil"></i> Edit Project
-              </button>
-            )}
-            <div className="pd-header-progress">
-              <span className="pd-progress-label">CURRENT PROGRESS</span>
-              <span className="pd-progress-value">{progress}%</span>
-              <div className="pd-progress-bar"><div className="pd-progress-fill" style={{ width: `${progress}%` }}></div></div>
-              <p className="pd-progress-note">
-                {progress < 100
-                  ? `On track for Milestone ${milestones.filter(m => m.status === 'Completed').length + 1} completion.`
-                  : 'All milestones completed!'}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <Tabs items={TABS} value={activeTab} onChange={setActiveTab} className="pd-tabs" />
+          </dl>
+        </Panel>
 
         {renderTab()}
+        {/* Hidden rather than unmounted with the other tabs, so an unsaved budget
+            edit survives a look at another tab. Keyed so another project does
+            not inherit an open draft. */}
+        <div className="pd-tab-panel" role="tabpanel" hidden={activeTab !== 'Funding and budget'}>
+          <Panel title="Funding summary">
+            <dl className="facts">
+              <div><dt>Total sanctioned</dt><dd>{formatCurrency(project.amount)}</dd></div>
+              <div><dt>TIET share</dt><dd>{project.tietShare == null ? EMPTY_VALUE : formatCurrency(project.tietShare)}</dd></div>
+              <div>
+                <dt>Sanction letter</dt>
+                <dd className="pd-sanction-view">
+                  {sanctionDoc ? (
+                    <a href={storedFileUrl(sanctionDoc.url)} target="_blank" rel="noopener noreferrer" onClick={storedFileClick(sanctionDoc.url)}><i className={`fa ${sanctionDoc.isLink ? 'fa-link' : 'fa-file-pdf-o'}`} aria-hidden="true"></i> {sanctionDoc.name}</a>
+                  ) : (
+                    <span className="pd-muted">Not uploaded</span>
+                  )}
+                  {canEdit && (
+                    <button
+                      type="button"
+                      className="pd-icon-btn"
+                      onClick={openSanctionModal}
+                      title={sanctionDoc ? 'Edit sanction letter' : 'Add sanction letter'}
+                      aria-label={sanctionDoc ? 'Edit sanction letter' : 'Add sanction letter'}
+                    >
+                      <i className={`fa ${sanctionDoc ? 'fa-pencil' : 'fa-plus'}`} aria-hidden="true"></i>
+                    </button>
+                  )}
+                </dd>
+              </div>
+            </dl>
+          </Panel>
+          <ProjectBudgetCard key={project.id} projectId={project.id} budget={budgetData} meta={meta} canEdit={canEdit} onSaved={setBudgetData} />
+        </div>
 
         {/* Add / Edit Document Modal */}
-        {showDocModal && (
-          <CustomModal
-            isOpen={showDocModal}
-            onClose={() => setShowDocModal(false)}
-            title={editingDocIdx !== null ? 'Edit Document' : 'Add Document'}
-            maxWidth="520px"
-            minHeight="auto"
-          >
-            <>
-              <div className="pd-modal-field">
-                <label htmlFor="project-details-document-name">Document Name <span className="req">*</span></label>
-                <input id="project-details-document-name" id="project-details-designation-2"
-                  type="text"
-                  value={docForm.name}
-                  onChange={e => setDocForm({ ...docForm, name: e.target.value })}
-                  placeholder="e.g. Year 1 Progress Report"
-                />
-              </div>
-              <div className="pd-modal-field">
-                <label htmlFor="project-details-document-file">{editingDocIdx !== null ? 'Replace Document' : 'Upload Document'} {editingDocIdx !== null && <span className="pd-modal-hint">(optional — leave empty to keep the current file)</span>}</label>
-                {editingDocIdx !== null && docForm.currentLabel && !docForm.fileName && (
-                  <span className="pd-upload-selected" style={{ color: 'var(--text-muted)' }}><i className="fa fa-paperclip"></i> {docForm.currentLabel}</span>
-                )}
-                <button type="button" className="pd-upload-label" onClick={() => docFileRef.current && docFileRef.current.click()}>
-                  <i className="fa fa-upload"></i> {editingDocIdx !== null ? 'Replace file' : 'Select file from system'}
-                </button>
-                <input
-                  type="file"
-                  ref={docFileRef}
-                  style={{ display: 'none' }}
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
-                  onChange={handleDocFileSelect}
-                />
-                {docForm.fileName && <span className="pd-upload-selected"><i className="fa fa-check-circle"></i> {docForm.fileName}</span>}
-              </div>
-              <div className="modal-actions">
-                <CustomButton text="Cancel" variant="secondary" onClick={() => setShowDocModal(false)} />
-                <CustomButton text={editingDocIdx !== null ? 'Save Changes' : 'Add Document'} onClick={saveDoc} />
-              </div>
-            </>
-          </CustomModal>
-        )}
+        <CustomModal
+          isOpen={showDocModal}
+          onClose={() => setShowDocModal(false)}
+          title={editingDocIdx !== null ? 'Edit document' : 'Add document'}
+          maxWidth="520px"
+          minHeight="auto"
+        >
+          <>
+            <div className="pd-modal-field">
+              <label htmlFor="project-details-document-name">Document name {required}</label>
+              <input id="project-details-document-name"
+                type="text"
+                aria-required="true"
+                value={docForm.name}
+                onChange={e => setDocForm({ ...docForm, name: e.target.value })}
+                placeholder="e.g. Year 1 Progress Report"
+              />
+            </div>
+            <div className="pd-modal-field">
+              <label htmlFor="project-details-document-file">{editingDocIdx !== null ? 'Replace document' : 'Upload document'} {editingDocIdx !== null && <span className="pd-modal-hint">(optional: leave empty to keep the current file)</span>}</label>
+              {editingDocIdx !== null && docForm.currentLabel && !docForm.fileName && (
+                <span className="pd-upload-current"><i className="fa fa-paperclip" aria-hidden="true"></i> {docForm.currentLabel}</span>
+              )}
+              <button type="button" className="pd-upload-label" onClick={() => docFileRef.current && docFileRef.current.click()}>
+                <i className="fa fa-upload" aria-hidden="true"></i> {editingDocIdx !== null ? 'Replace file' : 'Select file from system'}
+              </button>
+              <input
+                id="project-details-document-file"
+                type="file"
+                ref={docFileRef}
+                style={{ display: 'none' }}
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                onChange={handleDocFileSelect}
+              />
+              {docForm.fileName && <span className="pd-upload-selected"><i className="fa fa-paperclip" aria-hidden="true"></i> {docForm.fileName}</span>}
+            </div>
+            <div className="modal-actions">
+              <CustomButton text="Cancel" variant="quiet" onClick={() => setShowDocModal(false)} />
+              <CustomButton text={editingDocIdx !== null ? 'Save changes' : 'Add document'} onClick={saveDoc} busy={saving} />
+            </div>
+          </>
+        </CustomModal>
 
         {/* Sanction Letter Modal (file or link) */}
-        {showSanctionModal && (
-          <CustomModal
-            isOpen={showSanctionModal}
-            onClose={() => setShowSanctionModal(false)}
-            title="Sanction Letter"
-            maxWidth="520px"
-            minHeight="auto"
-          >
-            <>
-              <div className="pd-sanction-tabs">
-                <button type="button" className={`pd-sanction-tab ${sanctionMode === 'file' ? 'active' : ''}`} onClick={() => setSanctionMode('file')}>
-                  <i className="fa fa-upload"></i> Choose File
+        <CustomModal
+          isOpen={showSanctionModal}
+          onClose={() => setShowSanctionModal(false)}
+          title="Sanction letter"
+          maxWidth="520px"
+          minHeight="auto"
+        >
+          <>
+            <Tabs
+              items={[{ value: 'file', label: 'Choose file' }, { value: 'link', label: 'Paste link' }]}
+              value={sanctionMode}
+              onChange={setSanctionMode}
+              label="Sanction letter source"
+            />
+            {sanctionMode === 'file' ? (
+              <div className="pd-modal-field">
+                <label htmlFor="project-details-choose-file">Choose file</label>
+                <button type="button" className="pd-upload-label" onClick={() => sanctionInputRef.current && sanctionInputRef.current.click()}>
+                  <i className="fa fa-upload" aria-hidden="true"></i> {sanctionFileSel ? 'Change file' : 'Select file from system'}
                 </button>
-                <button type="button" className={`pd-sanction-tab ${sanctionMode === 'link' ? 'active' : ''}`} onClick={() => setSanctionMode('link')}>
-                  <i className="fa fa-link"></i> Paste Link
-                </button>
+                <input
+                  id="project-details-choose-file"
+                  type="file"
+                  ref={sanctionInputRef}
+                  style={{ display: 'none' }}
+                  accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                  onChange={handleSanctionFile}
+                />
+                {sanctionFileSel && <span className="pd-upload-selected"><i className="fa fa-paperclip" aria-hidden="true"></i> {sanctionFileSel.name}</span>}
               </div>
-              {sanctionMode === 'file' ? (
-                <div className="pd-modal-field">
-                  <label htmlFor="project-details-choose-file">Choose File</label>
-                  <button type="button" className="pd-upload-label" onClick={() => sanctionInputRef.current && sanctionInputRef.current.click()}>
-                    <i className="fa fa-upload"></i> {sanctionFileSel ? 'Change file' : 'Select file from system'}
-                  </button>
-                  <input
-                    type="file"
-                    ref={sanctionInputRef}
-                    style={{ display: 'none' }}
-                    accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-                    onChange={handleSanctionFile}
-                  />
-                  {sanctionFileSel && <span className="pd-upload-selected"><i className="fa fa-check-circle"></i> {sanctionFileSel.name}</span>}
-                </div>
-              ) : (
-                <div className="pd-modal-field">
-                  <label htmlFor="project-details-document-link">Document Link</label>
-                  <input id="project-details-document-link" id="project-details-choose-file" id="project-details-document-file" type="url" value={sanctionLinkInput} onChange={e => setSanctionLinkInput(e.target.value)} placeholder="https://… link to sanction letter" />
-                </div>
-              )}
-              <div className="modal-actions">
-                <CustomButton text="Cancel" variant="secondary" onClick={() => setShowSanctionModal(false)} />
-                <CustomButton text="Save" onClick={saveSanctionModal} />
+            ) : (
+              <div className="pd-modal-field">
+                <label htmlFor="project-details-document-link">Document link</label>
+                <input id="project-details-document-link" type="url" value={sanctionLinkInput} onChange={e => setSanctionLinkInput(e.target.value)} placeholder="https://… link to sanction letter" />
               </div>
-            </>
-          </CustomModal>
-        )}
-      </div>
-    </Layout>
+            )}
+            <div className="modal-actions">
+              <CustomButton text="Cancel" variant="quiet" onClick={() => setShowSanctionModal(false)} />
+              <CustomButton text="Save" onClick={saveSanctionModal} busy={saving} />
+            </div>
+          </>
+        </CustomModal>
+      </Page>
+    </>
   );
 };
 

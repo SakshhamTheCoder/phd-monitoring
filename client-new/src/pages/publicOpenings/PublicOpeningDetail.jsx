@@ -5,7 +5,10 @@ import CustomButton from '../../components/forms/fields/CustomButton';
 import { apiPublicOpening, apiPublicApply } from '../../api/publicOpenings';
 import { formatDate } from '../../utils/timeParse';
 import '../projects/Openings.css';
-import PageHeader from '../../components/pageHeader/PageHeader';
+import Page from '../../components/page/Page';
+import Panel, { PanelSection } from '../../components/panel/Panel';
+import StatusNotice from '../../components/common/StatusNotice';
+import FormActions from '../../components/common/FormActions';
 
 const emptyForm = {
   name: '', email: '', phone: '', degree: '', institute: '', cgpa: '',
@@ -97,7 +100,9 @@ const PublicOpeningDetail = () => {
   if (loading) {
     return (
       <ExternalLayout crumbs={crumbs()}>
-        <p className="empty-state">Loading...</p>
+        <Page>
+          <Panel><StatusNotice tone="loading" title="Loading the opening" /></Panel>
+        </Page>
       </ExternalLayout>
     );
   }
@@ -105,8 +110,16 @@ const PublicOpeningDetail = () => {
   if (error) {
     return (
       <ExternalLayout crumbs={crumbs()}>
-        <p className="empty-state">{error}</p>
-        <p className="empty-state"><Link to="/openings">See all open positions</Link></p>
+        <Page>
+          <Panel>
+            <StatusNotice
+              tone="error"
+              action={<Link to="/openings" className="custom-button custom-button--quiet">See all open positions</Link>}
+            >
+              {error}
+            </StatusNotice>
+          </Panel>
+        </Page>
       </ExternalLayout>
     );
   }
@@ -114,20 +127,20 @@ const PublicOpeningDetail = () => {
   if (submitted) {
     return (
       <ExternalLayout crumbs={crumbs(opening.title)}>
-        <div className="op-container">
-          <PageHeader title="Application received" subtitle="One more step to confirm it." />
-          <div className="card">
-            <h3 className="section-heading">Check your email</h3>
-            <p className="op-jd-text">
-              We sent a confirmation link to <strong>{form.email.trim()}</strong>. Open it so
-              the principal investigator knows the application is genuine.
-            </p>
-            <p className="op-jd-text" style={{ marginTop: '1rem' }}>
-              You can track this application here:{' '}
-              <Link to={`/applications/${submitted}`}>/applications/{submitted.slice(0, 12)}...</Link>
-            </p>
-          </div>
-        </div>
+        <Page title="Application received" description="One more step to confirm it.">
+          <Panel title="Check your email">
+            <div className="xr-stack">
+              <p className="op-jd-text">
+                We sent a confirmation link to <strong>{form.email.trim()}</strong>. Open it so
+                the principal investigator knows the application is genuine.
+              </p>
+              <p className="op-jd-text">
+                You can track this application here:{' '}
+                <Link to={`/applications/${submitted}`}>/applications/{submitted.slice(0, 12)}...</Link>
+              </p>
+            </div>
+          </Panel>
+        </Page>
       </ExternalLayout>
     );
   }
@@ -136,111 +149,111 @@ const PublicOpeningDetail = () => {
 
   return (
     <ExternalLayout crumbs={crumbs(opening.title)}>
-      <div className="op-container">
-        <div className="page-header">
-          <div>
-            <span className="op-type">{opening.type}</span>
-            <h1 className="page-title">{opening.title}</h1>
-            <p className="page-subtitle"><i className="fa fa-flask"></i> {opening.project_title}</p>
-          </div>
-        </div>
-
-        <div className="card">
-
-          <div className="op-jd-facts">
-            {opening.stipend && <div className="op-jd-fact"><span>Stipend</span><strong>{opening.stipend}</strong></div>}
-            {opening.openings != null && <div className="op-jd-fact"><span>Openings</span><strong>{opening.openings}</strong></div>}
-            {opening.min_cgpa && <div className="op-jd-fact"><span>Min CGPA</span><strong>{opening.min_cgpa}</strong></div>}
-            {opening.deadline && <div className="op-jd-fact"><span>Apply by</span><strong>{formatDate(opening.deadline)}</strong></div>}
-            {opening.pi_name && <div className="op-jd-fact"><span>Principal investigator</span><strong>{opening.pi_name}</strong></div>}
-            {opening.pi_department && <div className="op-jd-fact"><span>Department</span><strong>{opening.pi_department}</strong></div>}
-          </div>
+      <Page
+        className="reveal"
+        title={opening.title}
+        description={<><i className="fa fa-flask" aria-hidden="true"></i> {opening.project_title}</>}
+        meta={opening.type && <span className="badge badge--accent">{opening.type}</span>}
+      >
+        <Panel>
+          <PanelSection>
+            <dl className="facts">
+              {opening.stipend && <div><dt>Stipend</dt><dd>{opening.stipend}</dd></div>}
+              {opening.openings != null && <div><dt>Openings</dt><dd>{opening.openings}</dd></div>}
+              {opening.min_cgpa && <div><dt>Min CGPA</dt><dd>{opening.min_cgpa}</dd></div>}
+              {opening.deadline && <div><dt>Apply by</dt><dd>{formatDate(opening.deadline)}</dd></div>}
+              {opening.pi_name && <div><dt>Principal investigator</dt><dd>{opening.pi_name}</dd></div>}
+              {opening.pi_department && <div><dt>Department</dt><dd>{opening.pi_department}</dd></div>}
+            </dl>
+          </PanelSection>
 
           {opening.eligibility && (
-            <>
-              <div className="op-modal-section">Eligibility</div>
+            <PanelSection title="Eligibility">
               <p className="op-jd-text">{opening.eligibility}</p>
-            </>
+            </PanelSection>
           )}
 
           {skillList(opening.skills).length > 0 && (
-            <>
-              <div className="op-modal-section">Skills</div>
+            <PanelSection title="Skills">
               <div className="op-skills">
                 {skillList(opening.skills).map((s, i) => <span key={i} className="op-skill">{s}</span>)}
               </div>
-            </>
+            </PanelSection>
           )}
 
           {opening.description && (
-            <>
-              <div className="op-modal-section">About the role</div>
+            <PanelSection title="About the role">
               <p className="op-jd-text">{opening.description}</p>
-            </>
+            </PanelSection>
           )}
 
-          <div className="op-modal-section">The project</div>
-          <p className="op-jd-text">
-            <strong>{project.title}</strong>
-            {project.category ? ` (${project.category})` : ''}
-            {project.funding_agency ? `, funded by ${project.funding_agency}` : ''}
-          </p>
-          {project.focus_area && <p className="op-jd-text">Focus area: {project.focus_area}</p>}
-          {project.description && <p className="op-jd-text">{project.description}</p>}
+          <PanelSection title="The project">
+            <div className="xr-stack">
+              <p className="op-jd-text">
+                <strong>{project.title}</strong>
+                {project.category ? ` (${project.category})` : ''}
+                {project.funding_agency ? `, funded by ${project.funding_agency}` : ''}
+              </p>
+              {project.focus_area && <p className="op-jd-text">Focus area: {project.focus_area}</p>}
+              {project.description && <p className="op-jd-text">{project.description}</p>}
 
-          {opening.advertisement_url && (
-            <p className="op-jd-text" style={{ marginTop: '1rem' }}>
-              <a href={opening.advertisement_url} target="_blank" rel="noopener noreferrer">
-                <i className="fa fa-file-pdf-o"></i> Read the full advertisement
-              </a>
-            </p>
-          )}
-        </div>
+              {opening.advertisement_url && (
+                <p className="op-jd-text">
+                  <a href={opening.advertisement_url} target="_blank" rel="noopener noreferrer">
+                    <i className="fa fa-file-pdf-o" aria-hidden="true"></i> Read the full advertisement
+                  </a>
+                </p>
+              )}
+            </div>
+          </PanelSection>
+        </Panel>
 
-        <div className="card">
-          <h3 className="section-heading">Apply for this position</h3>
+        <Panel title="Apply for this position">
+          <PanelSection title="Contact details">
+            <div className="op-form-grid">
+              <div className="op-field"><label htmlFor="public-opening-detail-full-name">Full name *</label><input id="public-opening-detail-full-name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Your full name" /></div>
+              <div className="op-field"><label htmlFor="public-opening-detail-email">Email *</label><input id="public-opening-detail-email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" /></div>
+              <div className="op-field"><label htmlFor="public-opening-detail-phone">Phone *</label><input id="public-opening-detail-phone" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+91-" /></div>
+            </div>
+          </PanelSection>
 
-          <div className="op-modal-section">Contact details</div>
-          <div className="op-form-grid">
-            <div className="op-field"><label htmlFor="public-opening-detail-full-name">Full Name *</label><input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Your full name" /></div>
-            <div className="op-field"><label htmlFor="public-opening-detail-email">Email *</label><input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" /></div>
-            <div className="op-field"><label htmlFor="public-opening-detail-phone">Phone *</label><input id="public-opening-detail-phone" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+91-" /></div>
-          </div>
+          <PanelSection title="Academic details">
+            <div className="op-form-grid">
+              <div className="op-field"><label htmlFor="public-opening-detail-degree">Degree *</label><input id="public-opening-detail-degree" value={form.degree} onChange={e => setForm({ ...form, degree: e.target.value })} placeholder="e.g. M.Tech CSE" /></div>
+              <div className="op-field"><label htmlFor="public-opening-detail-institute">Institute *</label><input id="public-opening-detail-institute" value={form.institute} onChange={e => setForm({ ...form, institute: e.target.value })} placeholder="Where you studied" /></div>
+              <div className="op-field"><label htmlFor="public-opening-detail-cgpa">CGPA *</label><input id="public-opening-detail-cgpa" value={form.cgpa} onChange={e => setForm({ ...form, cgpa: e.target.value })} placeholder="e.g. 8.5" /></div>
+            </div>
+          </PanelSection>
 
-          <div className="op-modal-section">Academic details</div>
-          <div className="op-form-grid">
-            <div className="op-field"><label htmlFor="public-opening-detail-degree">Degree *</label><input id="public-opening-detail-degree" value={form.degree} onChange={e => setForm({ ...form, degree: e.target.value })} placeholder="e.g. M.Tech CSE" /></div>
-            <div className="op-field"><label htmlFor="public-opening-detail-institute">Institute *</label><input id="public-opening-detail-institute" value={form.institute} onChange={e => setForm({ ...form, institute: e.target.value })} placeholder="Where you studied" /></div>
-            <div className="op-field"><label htmlFor="public-opening-detail-cgpa">CGPA *</label><input id="public-opening-detail-cgpa" value={form.cgpa} onChange={e => setForm({ ...form, cgpa: e.target.value })} placeholder="e.g. 8.5" /></div>
-          </div>
+          <PanelSection title="Profile">
+            <div className="op-field full"><label htmlFor="public-opening-detail-skills-comma-separated">Skills (comma separated)</label><input id="public-opening-detail-skills-comma-separated" value={form.skills} onChange={e => setForm({ ...form, skills: e.target.value })} placeholder="e.g. Python, ML, IoT" /></div>
+            <div className="op-field full"><label htmlFor="public-opening-detail-research-interest">Research interest</label><input id="public-opening-detail-research-interest" value={form.research} onChange={e => setForm({ ...form, research: e.target.value })} placeholder="e.g. Edge AI" /></div>
+            <div className="op-field full">
+              <label>Resume *</label>
+              <button type="button" className="op-upload" onClick={() => resumeRef.current && resumeRef.current.click()}>
+                <i className="fa fa-upload" aria-hidden="true"></i> {form.resume || 'Select resume from system'}
+              </button>
+              <input type="file" ref={resumeRef} style={{ display: 'none' }} accept=".pdf,.doc,.docx" onChange={handleResume} />
+            </div>
+            <div className="op-field full"><label htmlFor="public-opening-detail-cover-note">Cover note</label><textarea id="public-opening-detail-cover-note" rows="3" value={form.coverNote} onChange={e => setForm({ ...form, coverNote: e.target.value })} placeholder="A short statement of purpose (optional)" /></div>
 
-          <div className="op-modal-section">Profile</div>
-          <div className="op-field full"><label htmlFor="public-opening-detail-skills-comma-separated">Skills (comma separated)</label><input id="public-opening-detail-skills-comma-separated" value={form.skills} onChange={e => setForm({ ...form, skills: e.target.value })} placeholder="e.g. Python, ML, IoT" /></div>
-          <div className="op-field full"><label htmlFor="public-opening-detail-research-interest">Research Interest</label><input id="public-opening-detail-research-interest" value={form.research} onChange={e => setForm({ ...form, research: e.target.value })} placeholder="e.g. Edge AI" /></div>
-          <div className="op-field full">
-            <label>Resume *</label>
-            <button type="button" className="op-upload" onClick={() => resumeRef.current && resumeRef.current.click()}>
-              <i className="fa fa-upload"></i> {form.resume || 'Select resume from system'}
-            </button>
-            <input type="file" ref={resumeRef} style={{ display: 'none' }} accept=".pdf,.doc,.docx" onChange={handleResume} />
-          </div>
-          <div className="op-field full"><label htmlFor="public-opening-detail-cover-note">Cover Note</label><textarea id="public-opening-detail-cover-note" rows="3" value={form.coverNote} onChange={e => setForm({ ...form, coverNote: e.target.value })} placeholder="A short statement of purpose (optional)" /></div>
+            <div className="op-hp" aria-hidden="true">
+              <label htmlFor="public-opening-detail-website">Website</label>
+              <input id="public-opening-detail-website" tabIndex="-1" autoComplete="off" value={form.website} onChange={e => setForm({ ...form, website: e.target.value })} />
+            </div>
 
-          <div className="op-hp" aria-hidden="true">
-            <label htmlFor="public-opening-detail-website">Website</label>
-            <input id="public-opening-detail-email" id="public-opening-detail-full-name" id="public-opening-detail-website" tabIndex="-1" autoComplete="off" value={form.website} onChange={e => setForm({ ...form, website: e.target.value })} />
-          </div>
+            {formError && <p className="op-form-error">{formError}</p>}
 
-          {formError && <p className="op-form-error">{formError}</p>}
-
-          <div className="modal-actions">
-            <CustomButton
-              text={submitting ? 'Submitting...' : 'Submit application'}
-              onClick={submitting ? undefined : submit}
-            />
-          </div>
-        </div>
-      </div>
+            <FormActions>
+              <CustomButton
+                text="Submit application"
+                onClick={submit}
+                busy={submitting}
+              />
+            </FormActions>
+          </PanelSection>
+        </Panel>
+      </Page>
     </ExternalLayout>
   );
 };

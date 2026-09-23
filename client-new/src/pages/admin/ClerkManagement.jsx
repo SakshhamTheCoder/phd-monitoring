@@ -1,31 +1,32 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import Layout from '../../components/dashboard/layout';
-import PageHeader from '../../components/pageHeader/PageHeader';
+import Page from '../../components/page/Page';
+import Panel from '../../components/panel/Panel';
+import StatusNotice from '../../components/common/StatusNotice';
 import FilterBar from '../../components/filterBar/FilterBar';
 import { toast } from 'react-toastify';
 import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
+import { apiDepartmentList } from '../../api/lookups';
 import { EMPTY_VALUE } from '../../utils/timeParse';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import ClerkForm from '../../components/clerkForm/ClerkForm';
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
+import { useRowMenu } from '../../hooks/useRowMenu';
+import LoadError from '../../components/common/LoadError';
+import './ClerkManagement.css';
 
 /**
- * Admin → Clerk Management
- *
- * Mirrors StudentsPage / FacultyPage / UsersPage:
- *  - Layout + PageHeader (+ actions)
- *  - FilterBar → client-side filter (clerks endpoint is small and not paginated)
- *  - form-list-container / form-table + row-actions kebab + badges + empty-state
- *  - CustomModal (80vw create, 560px manage) + modal-note + modal-actions + CustomButton
- *  - Department picker reuses the available_roles grid pattern from UserForm
+ * Admin, clerk management. The clerks endpoint is small and not paginated, so
+ * the list is drawn here and the FilterBar filters it on the client.
  */
 const ClerkManagement = () => {
   const [clerks, setClerks] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [filter, setFilter] = useState({ conditions: [] });
   const [loading, setLoading] = useState(true);
+  // A failed load is not "no clerks yet".
+  const [loadFailed, setLoadFailed] = useState(false);
   const [editing, setEditing] = useState(null);
   const [selectedDeptIds, setSelectedDeptIds] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -33,7 +34,7 @@ const ClerkManagement = () => {
   const [isBulkUpdateOpen, setIsBulkUpdateOpen] = useState(false);
   const [bulkSubmitting, setBulkSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(null);
-  const [openMenu, setOpenMenu] = useState(null);
+  const { openMenu, shownMenu, menuClosing, menuStyle, toggleMenu, closeMenu } = useRowMenu();
 
   const clerkSampleCsv = `email,phone,department_codes,full_name
 clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
@@ -42,23 +43,16 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
     setLoading(true);
     const res = await customFetch(baseURL + '/clerks', 'GET', {}, true);
     setLoading(false);
+    setLoadFailed(!res.success);
     if (res.success) setClerks(res.response.data || []);
   };
 
   useEffect(() => {
     loadClerks();
-    customFetch(baseURL + '/departments?rows=200', 'GET', {}, false).then((res) => {
+    apiDepartmentList().then((res) => {
       if (res.success) setDepartments(res.response.data || []);
     });
   }, []);
-
-  // Close row-actions dropdown on outside click — same as PagenationTable:9
-  useEffect(() => {
-    if (openMenu === null) return;
-    const close = () => setOpenMenu(null);
-    document.addEventListener('click', close);
-    return () => document.removeEventListener('click', close);
-  }, [openMenu]);
 
   const openEditor = (clerk) => {
     setEditing(clerk);
@@ -147,9 +141,12 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
         }
       }
 
-      toast.success(`Import completed: ${totalSuccess} created, ${totalUpdated} updated, ${totalErrors} errors.`);
+      const summary = `${totalSuccess} created, ${totalUpdated} updated, ${totalErrors} errors.`;
+      if (totalSuccess + totalUpdated > 0) toast.success(`Import completed: ${summary}`);
+      else toast.error(`Nothing was imported: ${summary}`);
       if (allErrors.length > 0) {
-        toast.warning(`${totalErrors} rows failed. Check console for details.`);
+        const more = allErrors.length > 3 ? `; and ${allErrors.length - 3} more` : '';
+        toast.warning(`Check these rows: ${allErrors.slice(0, 3).join('; ')}${more}`, { autoClose: 10000 });
       }
 
       setIsBulkUpdateOpen(false);
@@ -212,90 +209,104 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
   };
 
   return (
-    <Layout>
-      <PageHeader
-        title="Clerk Management"
-        subtitle="Create clerk logins and tag them with the departments whose PhD attendance they mark."
-        actions={<div style={{display:'flex',gap:'10px'}}><CustomButton text="Bulk Import" variant="secondary" onClick={() => setIsBulkUpdateOpen(true)} /><CustomButton text="Add Clerk +" onClick={() => setIsCreateOpen(true)} /></div>}
-      />
-
-      {/* The page answers to two addresses; the filters live at one of them. */}
-      <FilterBar path="/clerks" onSearch={handleFilterChange} />
-
-      {loading ? (
-        <div className="empty-state">Loading…</div>
-      ) : filteredClerks.length === 0 ? (
-        <div className="empty-state">
-          {clerks.length === 0
-            ? 'No clerk accounts yet. Add a user with the “clerk” role from Manage Users first.'
-            : 'No clerks match the current filters.'}
+    <Page
+      title="Clerk management"
+      description="Create clerk logins and tag them with the departments whose PhD attendance they mark."
+      actions={<>
+        <CustomButton text="Import from CSV" variant="secondary" onClick={() => setIsBulkUpdateOpen(true)} />
+        <CustomButton text="Add clerk" onClick={() => setIsCreateOpen(true)} />
+      </>}
+    >
+      <Panel flush>
+        {/* Drawn as the head PagenationTable gives its search, so this hand
+            drawn list reads the same as the server paged ones. */}
+        <div className="panel-head">
+          <div className="table-search clerk-search">
+            {/* The page answers to two addresses; the filters live at one of them. */}
+            <FilterBar path="/clerks" onSearch={handleFilterChange} />
+          </div>
         </div>
-      ) : (
-        <div className="form-list-container">
-          <table className="form-table">
-            <thead>
-              <tr>
-                <th>S.No</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Departments</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredClerks.map((clerk, idx) => (
-                <tr key={clerk.id} className="form-row">
-                  <td>{idx + 1}</td>
-                  <td>{clerk.name}</td>
-                  <td>{clerk.email}</td>
-                  <td>
-                    {clerk.departments.length === 0 ? (
-                      <span style={{ color: 'var(--text-subtle)', fontStyle: 'italic' }}>{EMPTY_VALUE}</span>
-                    ) : (
-                      clerk.departments.map((d) => d.name).join(', ')
-                    )}
-                  </td>
-                  <td>
-                    <div className="row-actions">
-                      <button
-                        className="row-actions-trigger"
-                        title="Actions"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setOpenMenu(openMenu === idx ? null : idx);
-                        }}
-                      >
-                        <i className="fa fa-ellipsis-v"></i>
-                      </button>
-                      {openMenu === idx && (
-                        <div className="row-actions-menu" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            className="row-actions-item"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenMenu(null);
-                              openEditor(clerk);
-                            }}
-                          >
-                            <span className="ra-icon">
-                              <i className="fa fa-users"></i>
-                            </span>
-                            <span>Manage Departments</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </td>
+
+        {loading ? (
+          <div className="clerk-state"><StatusNotice tone="loading" title="Loading clerks" /></div>
+        ) : loadFailed ? (
+          <div className="clerk-state">
+            <LoadError message="Could not load the clerks. Check your connection and try again." onRetry={loadClerks} />
+          </div>
+        ) : filteredClerks.length === 0 ? (
+          <div className="clerk-state">
+            <StatusNotice tone="empty">
+              {clerks.length === 0
+                ? 'No clerk accounts yet. Use Add clerk to create the first one.'
+                : 'No clerks match the current filters.'}
+            </StatusNotice>
+          </div>
+        ) : (
+          <div className="data-table-wrap reveal">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>S.No</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Departments</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {filteredClerks.map((clerk, idx) => (
+                  <tr key={clerk.id} className="form-row">
+                    <td>{idx + 1}</td>
+                    <td>{clerk.name}</td>
+                    <td>{clerk.email}</td>
+                    <td>
+                      {clerk.departments.length === 0 ? (
+                        <span className="clerk-none">{EMPTY_VALUE}</span>
+                      ) : (
+                        clerk.departments.map((d) => d.name).join(', ')
+                      )}
+                    </td>
+                    <td>
+                      <div className="row-actions">
+                        <button
+                          className="row-actions-trigger"
+                          title="Actions"
+                          aria-expanded={openMenu === idx}
+                          onClick={(e) => toggleMenu(idx, e)}
+                        >
+                          <i className="fa fa-ellipsis-v"></i>
+                        </button>
+                        {shownMenu === idx && (
+                          <div className={`row-actions-menu${menuClosing ? ' is-closing' : ''}`} style={menuStyle} onClick={(e) => e.stopPropagation()}>
+                            <button
+                              className="row-actions-item"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                closeMenu();
+                                openEditor(clerk);
+                              }}
+                            >
+                              <span className="ra-icon">
+                                <i className="fa fa-users"></i>
+                              </span>
+                              <span>Manage departments</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Panel>
 
       <CustomModal
         isOpen={isCreateOpen}
         onClose={() => closeCreate(false)}
+        closeOnOutsideClick={false}
         width="80vw"
       >
         <ClerkForm
@@ -307,53 +318,27 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
       <CustomModal
         isOpen={!!editing}
         onClose={() => setEditing(null)}
+        closeOnOutsideClick={false}
         title={`Departments for ${editing?.name || ''}`}
         width="560px"
       >
-        <p className="modal-note" style={{ marginTop: 0 }}>
+        <p className="modal-note">
           Select every department this clerk marks attendance for. Saved departments are the only ones whose scholars appear on the clerk&apos;s attendance roster.
         </p>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-            gap: '0.5rem',
-            padding: '1rem',
-            border: '1px solid var(--border-color)',
-            borderRadius: 'var(--radius)',
-            background: '#f9fafb',
-            maxHeight: '50vh',
-            overflowY: 'auto',
-          }}
-        >
+        <div className="clerk-dept-grid">
           {departments.length === 0 ? (
-            <span style={{ color: 'var(--text-subtle)', fontStyle: 'italic' }}>No departments yet.</span>
+            <span className="clerk-none">No departments yet.</span>
           ) : (
             departments.map((d) => {
               const selected = selectedDeptIds.includes(d.id);
               return (
-                <label
-                  key={d.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    cursor: 'pointer',
-                    padding: '0.5rem',
-                    borderRadius: '0.25rem',
-                    background: selected ? '#DBEAFE' : 'white',
-                    border: '1px solid',
-                    borderColor: selected ? 'var(--primary-color)' : 'var(--border-color)',
-                    transition: 'all 0.2s',
-                  }}
-                >
+                <label key={d.id} className={`clerk-dept${selected ? ' is-chosen' : ''}`}>
                   <input
                     type="checkbox"
                     checked={selected}
                     onChange={() => toggleDepartment(d.id)}
-                    style={{ cursor: 'pointer' }}
                   />
-                  <span style={{ fontSize: '0.875rem' }}>
+                  <span>
                     {d.name} {d.code ? `(${d.code})` : ''}
                   </span>
                 </label>
@@ -362,15 +347,15 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
           )}
         </div>
         <div className="modal-actions">
-          <CustomButton text="Cancel" variant="secondary" onClick={() => setEditing(null)} />
-          <CustomButton text={saving ? 'Saving…' : 'Save'} onClick={handleSave} disabled={saving} />
+          <CustomButton text="Cancel" variant="quiet" onClick={() => setEditing(null)} />
+          <CustomButton text="Save" onClick={handleSave} busy={saving} />
         </div>
       </CustomModal>
 
       <UnifiedBulkImportModal
         isOpen={isBulkUpdateOpen}
         onClose={() => setIsBulkUpdateOpen(false)}
-        title="Bulk Import Clerks"
+        title="Import clerks from CSV"
         required={['email']}
         rules={[
               'Matched by email. A clerk is created when the email is not found.',
@@ -383,7 +368,7 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
         submitting={bulkSubmitting}
         uploadProgress={uploadProgress}
       />
-    </Layout>
+    </Page>
   );
 };
 

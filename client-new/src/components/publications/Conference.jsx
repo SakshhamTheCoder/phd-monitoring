@@ -8,7 +8,7 @@ import InputSuggestions from '../forms/fields/InputSuggestions';
 import { baseURL } from '../../api/urls';
 import { currentRole } from '../../auth/access';
 
-const Conference = ({callback,updateValue,data={}}) => {
+const Conference = ({callback,disabled,updateValue,data={},facultyRecord=false}) => {
     const [body, setBody] = useState(data);
     const year = new Date().getFullYear();
     const yearRange = Array.from({ length: 7 }, (_, i) => year - 3 + i); 
@@ -56,11 +56,11 @@ const Conference = ({callback,updateValue,data={}}) => {
 
             <GridContainer elements={[
                 <DropdownField label={"Type of Conference"} initialValue={data.type} options={[{title:"National",value:"national"},{title:"International",value:"international"}]} onChange={(value)=>{setBodyValue("type",value)}} />,
-                <DropdownField label={"Status of Paper:"} initialValue={data.status} options={[{title:"Accepted",value:"accepted"},{title:"Published",value:"published"}]} onChange={(value)=>{setBodyValue("status",value)}} />,
-            ]} />
+                !facultyRecord && <DropdownField label={"Status of Paper:"} initialValue={data.status} options={[{title:"Accepted",value:"accepted"},{title:"Published",value:"published"}]} onChange={(value)=>{setBodyValue("status",value)}} />,
+            ].filter(Boolean)} />
 
 
-            {isUrf && (
+            {isUrf && !facultyRecord && (
                 <GridContainer elements={[
                     <DropdownField label={"Mode of Conference"} initialValue={data.mode} options={[{title:"Offline",value:"offline"},{title:"Online",value:"online"}]} onChange={(value)=>{setBodyValue("mode",value)}} />,
                     <InputField label={"Funding Received"} hint={"Funding source, if any"} initialValue={data.funding} onChange={(value)=>{setBodyValue("funding",value)}} />,
@@ -71,13 +71,13 @@ const Conference = ({callback,updateValue,data={}}) => {
                 <InputField label={"DOI Link"} hint={"DOI Link"} initialValue={data.doi_link} onChange={(value)=>{setBodyValue("doi_link",value)}} />,
             ]}/>
 
-            <GridContainer elements={[
+            {!facultyRecord && <GridContainer elements={[
                 <FileUploadField label={"Upload First Page"} initialValue={data.first_page} onChange={(value)=>{setBodyValue("first_page",value)}} maxSizeMB={15} />,
-            ]}/>
+            ]}/>}
 
             
             <GridContainer elements={[
-               <CustomButton text="Submit" onClick={()=>{callback(body)}}/>
+               <CustomButton text="Submit" disabled={disabled} onClick={()=>{callback(body)}}/>
             ]}/>
         </>
     );

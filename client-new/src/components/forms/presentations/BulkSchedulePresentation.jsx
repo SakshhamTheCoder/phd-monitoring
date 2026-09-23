@@ -11,12 +11,14 @@ import { generateReportPeriods } from "../../../utils/semester";
 import InputField from '../fields/InputField';
 import { parseCsv } from '../../../utils/csv';
 import '../../bulkImport/bulkPreview.css';
+import useDoneFlash from '../../../hooks/useDoneFlash';
 
 const BulkSchedulePresentation = ({semester_name}) => {
   const { setLoading } = useLoading();
   const [csvData, setCsvData] = useState([]);
   const [reportPeriods, setReportPeriods] = useState([]);
   const [body, setBody] = useState({});
+  const [downloaded, flashDownloaded] = useDoneFlash();
 
   useEffect(() => {
     const periods = generateReportPeriods(1, 1, true);
@@ -38,6 +40,9 @@ const BulkSchedulePresentation = ({semester_name}) => {
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    // Cleared once read, so picking the same file again after correcting it
+    // still fires a change.
+    e.target.value = '';
 
     file.text().then((text) => {
       const headers = [
@@ -62,6 +67,10 @@ const BulkSchedulePresentation = ({semester_name}) => {
         )
           return;
 
+        // The sample file starts with this header row. Posted as a scholar, it
+        // failed validation and took the whole batch down with it.
+        if (String(rowArr[0]).trim() === headers[0]) return;
+
         if (rowArr.length !== expectedColumns) {
           invalidRows++;
           console.warn(`Invalid column count in row ${index + 1}`, rowArr);
@@ -79,7 +88,12 @@ const BulkSchedulePresentation = ({semester_name}) => {
           rowObj['Date'] = formatDate(date);
         } else {
           const parsed = new Date(rawDate);
-          rowObj['Date'] = formatDate(parsed, 'Invalid Date');
+          if (Number.isNaN(parsed.getTime())) {
+            invalidRows++;
+            console.warn(`Invalid date in row ${index + 1}`, rowArr);
+            return;
+          }
+          rowObj['Date'] = formatDate(parsed);
         }
 
         const raw = rowObj['Additional Guest Email'] || '';
@@ -135,6 +149,8 @@ const BulkSchedulePresentation = ({semester_name}) => {
       .then((data) => {
         if (data && data.success) {
           toast.success('Bulk Presentations Scheduled');
+          // Drop the scheduled batch so Confirm goes away and cannot post it again.
+          setCsvData([]);
         }
         setLoading(false);
       })
@@ -201,6 +217,7 @@ const BulkSchedulePresentation = ({semester_name}) => {
         URL.revokeObjectURL(url);
         
         toast.success('Sample CSV downloaded successfully');
+        flashDownloaded();
       } else {
         toast.error('Failed to fetch student data');
       }
@@ -224,7 +241,9 @@ const BulkSchedulePresentation = ({semester_name}) => {
           />,
           <CustomButton
             text='Sample CSV'
+            variant='secondary'
             onClick={downloadSampleCSV}
+            done={downloaded}
           />,
         ]}
         space={2}
@@ -234,7 +253,7 @@ const BulkSchedulePresentation = ({semester_name}) => {
         elements={[
 
           <InputField 
-            label={"Period of Report"}
+            label={"Period of report"}
             isLocked={true}
             initialValue={semester_name }
           />
@@ -245,7 +264,7 @@ const BulkSchedulePresentation = ({semester_name}) => {
       {csvData.length > 0 && (
         <>
           <div className="bulk-preview-heading bulk-preview-heading--tight">
-            Selected Period: {body.period_of_report}
+            Selected period: {body.period_of_report}
           </div>
           <div className="bulk-preview-scroll bulk-preview-scroll--full">
             <table
@@ -287,7 +306,7 @@ const BulkSchedulePresentation = ({semester_name}) => {
 
           <div className="bulk-preview-actions">
             <CustomButton
-              text='Confirm Bulk Schedule'
+              text='Confirm bulk schedule'
               onClick={confirmBulkSchedule}
             />
           </div>
