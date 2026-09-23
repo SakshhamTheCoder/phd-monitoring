@@ -33,7 +33,13 @@ const Student = ({ formData, refetchData = null, }) => {
   );
 
   useEffect(() => {
+    // The fields below show these saved values, so a form sent back and
+    // submitted unchanged has to send them too.
     setBody({
+      teaching_work: formData.teaching_work,
+      no_paper_sci_journal: formData.no_paper_sci_journal,
+      no_paper_scopus_journal: formData.no_paper_scopus_journal,
+      no_paper_conference: formData.no_paper_conference,
       sci: formData.sci,
       non_sci: formData.non_sci,
       patents: formData.patents,

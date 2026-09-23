@@ -19,6 +19,15 @@ const FileUploadField = ({
     initialValue ? 'View Uploaded File' : `Upload ${fileTypeLabel} (Max ${maxSizeMB}MB)`
   );
 
+  // The parent keeps the last file it accepted, and a refused pick empties the
+  // input, so without this the field looked empty while that file still went
+  // with the form.
+  const [attached, setAttached] = useState(null);
+  const refuse = (e, message) => {
+    toast.error(attached ? `${message} ${attached} is still attached.` : message);
+    e.target.value = '';
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
 
@@ -30,17 +39,16 @@ const FileUploadField = ({
       // A refused file is cleared from the input, which otherwise kept showing
       // its name as though it had been attached.
       if (!acceptedExtensions.includes(fileExtension)) {
-        toast.error(`Only ${fileTypeLabel} files are allowed.`);
-        e.target.value = '';
+        refuse(e, `Only ${fileTypeLabel} files are allowed.`);
         return;
       }
       
       if (file.size > maxSizeMB * 1024 * 1024) {
-        toast.error(`File size should be less than ${maxSizeMB} MB.`);
-        e.target.value = '';
+        refuse(e, `File size should be less than ${maxSizeMB} MB.`);
         return;
       }
       setFileName(file.name);
+      setAttached(file.name);
       onChange(file); // Pass the file to the parent component
     }
   };

@@ -241,13 +241,14 @@ const SupervisorDoctoralApproval = () => {
             </div>
           )}
           
+          {/* InputField takes initialValue, not value, and draws one line; the
+              props given here were ignored. */}
           <InputField
             label="Reason for Rejection"
-            type="textarea"
-            value={rejectReason}
+            initialValue={rejectReason}
             onChange={setRejectReason}
             placeholder="Please provide a reason for rejecting this change request..."
-            rows={4}
+            required
           />
 
           <GridContainer
