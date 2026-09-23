@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import DropdownField from '../forms/fields/DropdownField';
 import InputSuggestions from '../forms/fields/InputSuggestions';
 import { baseURL } from '../../api/urls';
@@ -34,6 +34,7 @@ const FilterBar = ({ placeholder = 'Search…', mandatory = [], exclude = [], pa
   const [filters, setFilters] = useState(null);
   const [text, setText] = useState('');
   const [open, setOpen] = useState(false);
+  const panelId = useId();
   // key_name -> { label, op, values: [] }. A field holds every value chosen for
   // it, not just the last one.
   const [chosen, setChosen] = useState({});
@@ -210,7 +211,7 @@ const FilterBar = ({ placeholder = 'Search…', mandatory = [], exclude = [], pa
           onKeyDown={(e) => e.key === 'Enter' && runSearch()}
         />
         <button type="button" className="filter-bar-go" onClick={runSearch}>Search</button>
-        <button type="button" className="filter-bar-toggle" onClick={() => setOpen(!open)}>
+        <button type="button" className="filter-bar-toggle" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls={panelId}>
           <i className="fa fa-sliders" aria-hidden="true"></i> Filters{chips.length ? ` (${chips.length})` : ''}
         </button>
         {(text || chips.length > 0) && (
@@ -219,7 +220,7 @@ const FilterBar = ({ placeholder = 'Search…', mandatory = [], exclude = [], pa
       </div>
 
       {open && (
-        <div className="filter-bar-fields">
+        <div className="filter-bar-fields" id={panelId}>
           {filters
             .filter((filter) => !exclude.includes(filter.key_name))
             .map((filter) => <div key={filter.key_name} className="filter-bar-field">{control(filter)}</div>)}

@@ -11,12 +11,14 @@ import { generateReportPeriods } from "../../../utils/semester";
 import InputField from '../fields/InputField';
 import { parseCsv } from '../../../utils/csv';
 import '../../bulkImport/bulkPreview.css';
+import useDoneFlash from '../../../hooks/useDoneFlash';
 
 const BulkSchedulePresentation = ({semester_name}) => {
   const { setLoading } = useLoading();
   const [csvData, setCsvData] = useState([]);
   const [reportPeriods, setReportPeriods] = useState([]);
   const [body, setBody] = useState({});
+  const [downloaded, flashDownloaded] = useDoneFlash();
 
   useEffect(() => {
     const periods = generateReportPeriods(1, 1, true);
@@ -215,6 +217,7 @@ const BulkSchedulePresentation = ({semester_name}) => {
         URL.revokeObjectURL(url);
         
         toast.success('Sample CSV downloaded successfully');
+        flashDownloaded();
       } else {
         toast.error('Failed to fetch student data');
       }
@@ -240,6 +243,7 @@ const BulkSchedulePresentation = ({semester_name}) => {
             text='Sample CSV'
             variant='secondary'
             onClick={downloadSampleCSV}
+            done={downloaded}
           />,
         ]}
         space={2}

@@ -231,9 +231,9 @@ const Student = ({ formData, onReload }) => {
       {instance?.role === 'student' && !lock && (
         <div className="input-field-container">
           <CustomButton
-            text={submitting ? 'Submitting…' : 'Submit'}
+            text="Submit"
             onClick={handleSubmit}
-            disabled={submitting}
+            busy={submitting}
           />
         </div>
       )}

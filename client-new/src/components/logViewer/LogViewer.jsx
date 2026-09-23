@@ -185,21 +185,27 @@ const LogViewer = () => {
       )}
       {atStart && logs.length > 0 && <div className="log-boundary">Start of log file</div>}
 
-      {logs.map((entry) => {
-        if (entry.raw !== undefined) {
-          return <div key={entry.offset} className="log-line">{entry.raw}</div>;
-        }
-        return (
-          <div key={entry.offset} className="log-entry">
-            <div className="log-meta">
-              <span className="log-time">{entry.timestamp}</span>
-              <span className={`log-level log-${entry.level.toLowerCase()}`}>{entry.level}</span>
-            </div>
-            <div className="log-message">{entry.message}</div>
-            {entry.json && <pre className="log-json">{entry.json}</pre>}
-          </div>
-        );
-      })}
+      {/* Mounts once, when the first read lands, so only that first batch fades
+          in; entries the poll adds later just appear. */}
+      {logs.length > 0 && (
+        <div className="log-entries reveal">
+          {logs.map((entry) => {
+            if (entry.raw !== undefined) {
+              return <div key={entry.offset} className="log-line">{entry.raw}</div>;
+            }
+            return (
+              <div key={entry.offset} className="log-entry">
+                <div className="log-meta">
+                  <span className="log-time">{entry.timestamp}</span>
+                  <span className={`log-level log-${entry.level.toLowerCase()}`}>{entry.level}</span>
+                </div>
+                <div className="log-message">{entry.message}</div>
+                {entry.json && <pre className="log-json">{entry.json}</pre>}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

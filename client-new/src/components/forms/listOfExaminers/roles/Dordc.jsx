@@ -99,7 +99,7 @@ const Dordc = ({ formData }) => {
     <>
       {isLoaded ? (
         <>
-        {formData.role === "dordc" && formData.stage=== "dordc"  && (<>
+        {formData.role === "dordc" && formData.stage=== "dordc"  && (<div className="reveal">
           <GridContainer
             elements={[
               <TableComponent
@@ -194,7 +194,7 @@ const Dordc = ({ formData }) => {
             space={3}
           />
           
-          </>
+          </div>
   )}
 {
             formData.role === "dordc" && formData.stage=== "dordc"  && (

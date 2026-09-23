@@ -337,9 +337,9 @@ const SupervisorDoctoralManager = ({ studentId, supervisors = [], doctoralCommit
             onClick={() => { setShowAddModal(false); resetForm(); }}
           />
           <CustomButton
-            text={loading ? 'Submitting...' : 'Submit request'}
+            text="Submit request"
             onClick={handleProposeChange}
-            disabled={loading}
+            busy={loading}
           />
         </div>
       </CustomModal>

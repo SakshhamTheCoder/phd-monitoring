@@ -295,9 +295,10 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
             onClick={() => { setShowHodModal(false); setSelectedFaculty(null); }}
           />
           <CustomButton
-            text={loading ? 'Assigning…' : 'Assign as HOD'}
+            text="Assign as HOD"
             onClick={handleAssignHod}
-            disabled={loading || !selectedFaculty}
+            busy={loading}
+            disabled={!selectedFaculty}
           />
         </div>
       </CustomModal>
@@ -334,9 +335,10 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
             onClick={() => { setShowAdordcModal(false); setSelectedFaculty(null); }}
           />
           <CustomButton
-            text={loading ? 'Assigning…' : 'Assign as ADORDC'}
+            text="Assign as ADORDC"
             onClick={handleAssignAdordc}
-            disabled={loading || !selectedFaculty}
+            busy={loading}
+            disabled={!selectedFaculty}
           />
         </div>
       </CustomModal>
@@ -372,9 +374,10 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
             onClick={() => { setShowCoordinatorModal(false); setSelectedFaculty(null); }}
           />
           <CustomButton
-            text={loading ? 'Adding…' : 'Add coordinator'}
+            text="Add coordinator"
             onClick={handleAddCoordinator}
-            disabled={loading || !selectedFaculty}
+            busy={loading}
+            disabled={!selectedFaculty}
           />
         </div>
       </CustomModal>

@@ -79,9 +79,9 @@ const ChangePassword = ({ onDone }) => {
 
       <div className="modal-actions">
         <CustomButton
-          text={saving ? 'Saving…' : (hasPassword ? 'Change password' : 'Set password')}
+          text={hasPassword ? 'Change password' : 'Set password'}
           onClick={save}
-          disabled={saving}
+          busy={saving}
         />
       </div>
     </div>

@@ -209,9 +209,9 @@ const BulkAllocateSupervisors = ({ onSuccess }) => {
 
           <div className="modal-actions">
             <CustomButton
-              text={submitting ? 'Allocating...' : 'Confirm bulk allocation'}
+              text="Confirm bulk allocation"
               onClick={confirmBulkAllocate}
-              disabled={submitting}
+              busy={submitting}
             />
           </div>
         </>

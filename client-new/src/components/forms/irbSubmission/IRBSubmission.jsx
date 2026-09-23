@@ -8,12 +8,14 @@ import StatusNotice from "../../common/StatusNotice";
 import CustomButton from "../fields/CustomButton";
 import { customFetch } from "../../../api/base";
 import { baseURL } from "../../../api/urls";
+import useDoneFlash from "../../../hooks/useDoneFlash";
 
 // Roles allowed to resend the external review request (mirror of the backend gate).
 const RESEND_ROLES = ["dordc", "phd_coordinator", "admin"];
 
 const IRBSubmission = ({ formData }) => {
   const [resending, setResending] = useState(false);
+  const [resent, flashResent] = useDoneFlash();
 
   const canResend =
     formData?.stage === "external" && RESEND_ROLES.includes(formData?.role);
@@ -31,6 +33,7 @@ const IRBSubmission = ({ formData }) => {
       );
       if (res?.success) {
         toast.success(res.response?.message || "Review request resent to the expert.");
+        flashResent();
       } else {
         toast.error(res?.response?.message || "Could not resend the review request.");
       }
@@ -47,11 +50,12 @@ const IRBSubmission = ({ formData }) => {
           tone="info"
           action={(
             <CustomButton
-              text={resending ? "Resending…" : "Resend review request"}
+              text="Resend review request"
               variant="secondary"
               size="sm"
               onClick={resend}
-              disabled={resending}
+              busy={resending}
+              done={resent}
             />
           )}
         >

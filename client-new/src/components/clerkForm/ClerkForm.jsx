@@ -158,9 +158,9 @@ const ClerkForm = ({ onSuccess, onClose }) => {
       </p>
       <div className="modal-actions">
         <CustomButton
-          text={submitting ? "Adding..." : "Add clerk"}
+          text="Add clerk"
           onClick={handleSubmit}
-          disabled={submitting}
+          busy={submitting}
         />
       </div>
     </>

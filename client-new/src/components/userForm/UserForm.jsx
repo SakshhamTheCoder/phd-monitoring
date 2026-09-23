@@ -11,6 +11,7 @@ import ToggleSwitch from '../forms/fields/ToggleSwitch';
 import LoadError from '../common/LoadError';
 import StatusNotice from '../common/StatusNotice';
 import useBranches from '../../hooks/useBranches';
+import useDoneFlash from '../../hooks/useDoneFlash';
 import './UserForm.css';
 
 const UserForm = ({ edit, userData, onClose }) => {
@@ -34,6 +35,7 @@ const UserForm = ({ edit, userData, onClose }) => {
   const [showPasswordSection, setShowPasswordSection] = useState(false);
   const [customPassword, setCustomPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [emailSent, flashEmailSent] = useDoneFlash();
   const [rolesLoaded, setRolesLoaded] = useState(false);
   const [rolesFailed, setRolesFailed] = useState(false);
   // The URF details behind a ug_student account, which only that role has.
@@ -179,6 +181,7 @@ const UserForm = ({ edit, userData, onClose }) => {
       );
       if (!result.success) return;
       toast.success('Password reset email sent.');
+      flashEmailSent();
     } catch (error) {
       toast.error('Failed to send reset email');
     } finally {
@@ -421,8 +424,8 @@ const UserForm = ({ edit, userData, onClose }) => {
           <CustomButton text="Cancel" variant="quiet" onClick={onClose} />
           <CustomButton
             type="submit"
-            text={loading ? 'Saving...' : (edit ? 'Update user' : 'Create user')}
-            disabled={loading}
+            text={edit ? 'Update user' : 'Create user'}
+            busy={loading}
           />
         </div>
       </form>
@@ -443,6 +446,7 @@ const UserForm = ({ edit, userData, onClose }) => {
                 variant="secondary"
                 onClick={handleSendResetEmail}
                 disabled={loading}
+                done={emailSent}
               />
             </div>
           ) : (
@@ -465,10 +469,11 @@ const UserForm = ({ edit, userData, onClose }) => {
                   }}
                 />
                 <CustomButton
-                  text={loading ? 'Resetting...' : 'Reset password'}
+                  text="Reset password"
                   variant="secondary"
                   onClick={handleResetPassword}
-                  disabled={loading || !customPassword || customPassword.length < 8}
+                  busy={loading}
+                  disabled={!customPassword || customPassword.length < 8}
                 />
               </div>
             </div>

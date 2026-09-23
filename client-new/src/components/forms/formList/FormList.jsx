@@ -65,7 +65,7 @@ const FormList = () => {
   return (
     <Panel>
       {forms?.length > 0 ? (
-        <ul className="form-card-stack">
+        <ul className="form-card-stack reveal">
           {forms.map((form) => (
             <li key={form.id} className="form-card-list">
               {/* Covers the whole card, so the card opens by click or keyboard.

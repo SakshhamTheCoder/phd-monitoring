@@ -202,9 +202,10 @@ const UnifiedBulkImportModal = ({
         <div className="modal-actions">
           <CustomButton text="Cancel" variant="quiet" onClick={handleClose} />
           <CustomButton
-            text={submitting ? 'Importing...' : 'Import'}
+            text="Import"
             onClick={handleConfirm}
-            disabled={submitting || !csvPreview}
+            busy={submitting}
+            disabled={!csvPreview}
           />
         </div>
       </>

@@ -66,7 +66,7 @@ const AllNotificationsPage = () => {
         </StatusNotice>
       ) : (
         <Panel flush>
-          <ul className="notification-list">
+          <ul className="notification-list reveal">
             {notifications.map((notification) => (
               <li key={notification.id}>
                 <button

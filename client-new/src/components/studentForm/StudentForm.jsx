@@ -275,17 +275,9 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
       <div className="modal-actions">
         {onClose && <CustomButton text="Cancel" variant="quiet" onClick={onClose} />}
         <CustomButton
-          text={
-            submitting
-              ? edit
-                ? "Updating..."
-                : "Adding..."
-              : edit
-              ? "Update student"
-              : "Add student"
-          }
+          text={edit ? "Update student" : "Add student"}
           onClick={handleSubmit}
-          disabled={submitting}
+          busy={submitting}
         />
       </div>
     </>
