@@ -294,7 +294,15 @@ const AttendancePage = () => {
     <Page
       title="Attendance"
       description={!departmentsLoaded ? 'Loading departments…' : departments.length > 0 ? `${departments.map((d) => d.name).join(', ')}` : (isAdmin ? 'No departments exist yet.' : 'Your departments will appear here once an admin tags you.')}
-      actions={<CustomButton text="Upload CSV" variant="secondary" onClick={() => setShowCsvModal(true)} />}
+      actions={(
+        <CustomButton
+          text="Upload CSV"
+          variant="secondary"
+          // The import reloads the roster, which would drop unsaved marks
+          // after the fact; ask while backing out still costs nothing.
+          onClick={() => confirmDiscardMarks() && setShowCsvModal(true)}
+        />
+      )}
       tabs={
         <Tabs
           value={activeTab}
