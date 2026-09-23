@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { customFetch, NETWORK_ERROR_MESSAGE } from '../../api/base';
-import { baseURL, CLOUDFLARE_SITE_KEY } from '../../api/urls';
+import { baseURL } from '../../api/urls';
 import { toast } from 'react-toastify';
+import { mountTurnstile } from '../login/turnstile';
 
 
 const ForgotPasswordPage = () => {
@@ -11,46 +12,7 @@ const ForgotPasswordPage = () => {
     const [loading, setLoading] = useState(false);
     const [captchaToken, setCaptchaToken] = useState(null);
 
-    useEffect(() => {
-        let widgetId = null;
-
-        // Wait for Turnstile to be available and render widget
-        const renderWidget = () => {
-            if (window.turnstile) {
-                const container = document.getElementById('turnstile-container');
-                if (container && !container.hasChildNodes()) {
-                    try {
-                        widgetId = window.turnstile.render('#turnstile-container', {
-                            sitekey: CLOUDFLARE_SITE_KEY,
-                            theme: 'light',
-                            callback: (token) => {
-                                setCaptchaToken(token);
-                            },
-                        });
-                    } catch (error) {
-                        console.error('Turnstile render error:', error);
-                    }
-                }
-            } else {
-                // Retry if turnstile is not loaded yet
-                setTimeout(renderWidget, 100);
-            }
-        };
-
-        const timer = setTimeout(renderWidget, 100);
-
-        // Cleanup function to remove widget when component unmounts
-        return () => {
-            clearTimeout(timer);
-            if (widgetId !== null && window.turnstile) {
-                try {
-                    window.turnstile.remove(widgetId);
-                } catch (error) {
-                    console.error('Turnstile cleanup error:', error);
-                }
-            }
-        };
-    }, []);
+    useEffect(() => mountTurnstile(setCaptchaToken), []);
 
     const onSubmit = async (data) => {
         setLoading(true);

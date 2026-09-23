@@ -3,9 +3,10 @@ import { useForm } from "react-hook-form";
 import { Link } from "react-router-dom";
 import { loginAPI } from "../../api/login";
 import { apiUrfResendVerification } from "../../api/urf";
-import { CLOUDFLARE_SITE_KEY, rootURL } from "../../api/urls";
+import { rootURL } from "../../api/urls";
 import Loader from "../../components/loader/loader";
 import { toast } from "react-toastify";
+import { mountTurnstile } from "./turnstile";
 
 // Where to go once signed in: the page that sent the visitor here, or home.
 // Only a path on this site. Anything else ("https://...", "//host") was followed
@@ -46,46 +47,8 @@ const LoginPage = () => {
 
   // Separate effect for Turnstile - only render when email form is shown
   useEffect(() => {
-    if (!showEmailForm) return;
-
-    let widgetId = null;
-
-    // Wait for Turnstile to be available and render widget
-    const renderWidget = () => {
-      if (window.turnstile) {
-        const container = document.getElementById('turnstile-container');
-        if (container && !container.hasChildNodes()) {
-          try {
-            widgetId = window.turnstile.render('#turnstile-container', {
-              sitekey: CLOUDFLARE_SITE_KEY,
-              theme: 'light',
-              callback: (token) => {
-                setCaptchaToken(token);
-              },
-            });
-          } catch (error) {
-            console.error('Turnstile render error:', error);
-          }
-        }
-      } else {
-        // Retry if turnstile is not loaded yet
-        setTimeout(renderWidget, 100);
-      }
-    };
-
-    const timer = setTimeout(renderWidget, 100);
-
-    // Cleanup function
-    return () => {
-      clearTimeout(timer);
-      if (widgetId !== null && window.turnstile) {
-        try {
-          window.turnstile.remove(widgetId);
-        } catch (error) {
-          console.error('Turnstile cleanup error:', error);
-        }
-      }
-    };
+    if (!showEmailForm) return undefined;
+    return mountTurnstile(setCaptchaToken);
   }, [showEmailForm]);
 
   // Handle Google Sign-In with popup (more reliable than FedCM)

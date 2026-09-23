@@ -5,7 +5,8 @@ import { toast } from 'react-toastify';
 import Loader from '../../components/loader/loader';
 import { apiUrfResendVerification, apiUrfSignup } from '../../api/urf';
 import { useBranches } from '../../hooks/useBranches';
-import { CLOUDFLARE_SITE_KEY, rootURL } from '../../api/urls';
+import { rootURL } from '../../api/urls';
+import { mountTurnstile } from '../login/turnstile';
 
 const YEARS = [
   { value: 1, label: '1st Year' },
@@ -72,26 +73,7 @@ const SignupPage = () => {
 
   useEffect(() => {
     if (sentTo || google) return undefined;
-    let widgetId = null;
-    const renderWidget = () => {
-      if (!window.turnstile) {
-        setTimeout(renderWidget, 100);
-        return;
-      }
-      const container = document.getElementById('turnstile-container');
-      if (container && !container.hasChildNodes()) {
-        widgetId = window.turnstile.render('#turnstile-container', {
-          sitekey: CLOUDFLARE_SITE_KEY,
-          theme: 'light',
-          callback: setCaptchaToken,
-        });
-      }
-    };
-    const timer = setTimeout(renderWidget, 100);
-    return () => {
-      clearTimeout(timer);
-      if (widgetId !== null && window.turnstile) window.turnstile.remove(widgetId);
-    };
+    return mountTurnstile(setCaptchaToken);
   }, [sentTo, google]);
 
   const onSubmit = async (data) => {
