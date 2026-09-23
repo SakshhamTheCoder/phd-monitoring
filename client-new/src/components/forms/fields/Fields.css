@@ -352,7 +352,8 @@
 }
 
 .recommendation-field strong {
-    margin-right: 10px;
+    font-weight: 600;
+    margin-right: var(--space-3);
 }
 
 .options {

@@ -2,7 +2,7 @@ import React, { useEffect, useId, useState } from 'react';
 import "./Fields.css";
 
 const InputField = ({ label, initialValue, isLocked, onChange,hint=null,showLabel=true, required = false, type = "text", placeholder = null }) => {
-    const [hintText, setHintText] = useState(placeholder || hint || 'Enter Value...');
+    const [hintText, setHintText] = useState(placeholder || hint || '');
     const [value, updateValue] = useState(initialValue);
     const fieldId = useId();
     useEffect(() => {

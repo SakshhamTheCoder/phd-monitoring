@@ -349,7 +349,7 @@
 .skeleton-line {
     height: 12px;
     border-radius: var(--radius-sm);
-    background: #ECECEC;
+    background: var(--border-subtle);
 }
 .skeleton-line + .skeleton-line { margin-top: 10px; }
 .skeleton-line:nth-child(1) { width: 40%; }
@@ -568,7 +568,7 @@
 /* An explanatory note inside a dialog, above the fields. */
 .modal-note {
     background: var(--primary-wash);
-    border: 1px solid #F0DADA;
+    border: 1px solid color-mix(in srgb, var(--primary-color) 15%, transparent);
     border-radius: var(--radius);
     padding: 0.85rem 1rem;
     margin-bottom: 1rem;
