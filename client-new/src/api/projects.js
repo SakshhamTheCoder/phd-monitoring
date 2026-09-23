@@ -127,14 +127,18 @@ export const apiCreateProject = async (form) => {
   if (!res.success) return { success: false };
   const project = res.response;
   // milestones live in their own table — create them after the project exists
+  let failedMilestones = 0;
   for (const m of (form.milestones || [])) {
     if (m && m.name && m.name.trim()) {
-      await customFetch(`${baseURL}/projects/${project.id}/milestones`, 'POST', {
+      const saved = await customFetch(`${baseURL}/projects/${project.id}/milestones`, 'POST', {
         name: m.name, deliverable: m.deliverable, due_date: m.dueDate || null, status: m.status,
       }, false);
+      if (!saved.success) failedMilestones += 1;
     }
   }
-  return { success: true, project: mapProject(project) };
+  // The project exists either way, so this is still a success; the caller
+  // reports the milestones that did not save.
+  return { success: true, project: mapProject(project), failedMilestones };
 };
 export const apiUpdateProjectFromForm = async (id, form) => {
   const res = await customFetch(`${baseURL}/projects/${id}`, 'POST', toProjectBody(form), true);

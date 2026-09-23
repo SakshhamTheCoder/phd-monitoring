@@ -95,10 +95,8 @@ const AreaOfSpecialization = () => {
         setIsOpen(false);
         setRefreshKey((prev) => prev + 1);
       } else {
-        toast.error(response.message || (editData ? 'Failed to update area.' : 'Failed to add area.'));
+        toast.error(response.response?.message || (editData ? 'Failed to update area.' : 'Failed to add area.'));
       }
-    } catch (error) {
-      toast.error('Failed to save area of specialization.');
     } finally {
       setLoading(false);
     }
@@ -122,10 +120,8 @@ const AreaOfSpecialization = () => {
         toast.success('Area deleted.');
         setRefreshKey((prev) => prev + 1);
       } else {
-        toast.error(response.message || 'Failed to delete area.');
+        toast.error(response.response?.message || 'Failed to delete area.');
       }
-    } catch (error) {
-      toast.error('Failed to delete area of specialization.');
     } finally {
       setLoading(false);
     }

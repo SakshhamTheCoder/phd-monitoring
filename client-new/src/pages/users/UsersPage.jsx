@@ -88,15 +88,13 @@ Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,d
   const openForm = async (data) => {
     if (data) {
       setLoading(true);
-      try {
-        const res = await customFetch(baseURL + `/users/${data.id}`, 'GET');
-        setEditData(res.response
-        );
-        setIsOpen(true);
-      } catch (error) {
-        toast.error('Failed to load user data');
-      }
+      // customFetch has already toasted the reason when this fails.
+      const res = await customFetch(baseURL + `/users/${data.id}`, 'GET');
       setLoading(false);
+      if (res.success) {
+        setEditData(res.response);
+        setIsOpen(true);
+      }
     } else {
       // Creating: start at the kind picker rather than the bare user form, so
       // the student/faculty record gets created alongside the login.
@@ -264,10 +262,13 @@ Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,d
         }
       }
 
-      toast.success(`Import completed: ${totalSuccess} created, ${totalUpdated} updated, ${totalErrors} errors`);
-      
+      const summary = `${totalSuccess} created, ${totalUpdated} updated, ${totalErrors} errors`;
+      if (totalSuccess + totalUpdated > 0) toast.success(`Import completed: ${summary}`);
+      else toast.error(`Nothing was imported: ${summary}`);
+
       if (allErrors.length > 0) {
-        toast.warning(`${totalErrors} rows failed. Check console for details.`);
+        const more = allErrors.length > 3 ? `; and ${allErrors.length - 3} more` : '';
+        toast.warning(`Check these rows: ${allErrors.slice(0, 3).join('; ')}${more}`, { autoClose: 10000 });
       }
 
       setShowBulkImportModal(false);

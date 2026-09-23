@@ -20,14 +20,17 @@ const ProjectsOverview = () => {
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
-  const loadData = async (q) => {
-    const [list, s] = await Promise.all([apiListProjects(q), apiProjectStats()]);
-    setProjects(list);
-    setStats(s);
-    setLoading(false);
-  };
-
-  useEffect(() => { loadData(query); }, [query]);
+  useEffect(() => {
+    // A slower answer to an older search must not overwrite the current one.
+    let cancelled = false;
+    Promise.all([apiListProjects(query), apiProjectStats()]).then(([list, s]) => {
+      if (cancelled) return;
+      setProjects(list);
+      setStats(s);
+      setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [query]);
 
   const handleEdit = (e, project) => {
     e.stopPropagation();

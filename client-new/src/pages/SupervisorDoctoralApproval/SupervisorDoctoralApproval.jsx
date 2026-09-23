@@ -64,7 +64,7 @@ const SupervisorDoctoralApproval = () => {
         toast.success('Change approved successfully');
         fetchPendingChanges(); // Refresh the list
       } else {
-        toast.error(response?.message || 'Failed to approve change');
+        toast.error(response?.response?.message || 'Failed to approve change');
       }
     } catch (error) {
       console.error('Error approving change:', error);
@@ -94,7 +94,7 @@ const SupervisorDoctoralApproval = () => {
         setSelectedChange(null);
         fetchPendingChanges(); // Refresh the list
       } else {
-        toast.error(response?.message || 'Failed to reject change');
+        toast.error(response?.response?.message || 'Failed to reject change');
       }
     } catch (error) {
       console.error('Error rejecting change:', error);

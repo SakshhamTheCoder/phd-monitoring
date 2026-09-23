@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { customFetch } from "../../api/base";
+import { customFetch, NETWORK_ERROR_MESSAGE } from "../../api/base";
 import { baseURL } from "../../api/urls";
 import { EMPTY_VALUE } from "../../utils/timeParse";
 import { useLoading } from "../../context/LoadingContext";
@@ -69,6 +69,15 @@ const AdminFormManagement = () => {
     external: "External"
   };
 
+  // Toast is off on these calls because customFetch renders a 400 body as
+  // "message: ...", so the server's reason is shown from here instead.
+  const toastFailure = (response, fallback) =>
+    toast.error(
+      response.networkError
+        ? NETWORK_ERROR_MESSAGE
+        : response.response?.message || fallback
+    );
+
   useEffect(() => {
     fetchStudents();
   }, []);
@@ -97,9 +106,9 @@ const AdminFormManagement = () => {
       );
       if (response.success) {
         setStudents(response.response.data || []);
+      } else {
+        toastFailure(response, "Failed to fetch students.");
       }
-    } catch (error) {
-      toast.error("Failed to fetch students.");
     } finally {
       setLoading(false);
     }
@@ -117,9 +126,9 @@ const AdminFormManagement = () => {
       if (response.success) {
         setStudentForms(response.response.forms || []);
         setSelectedStudent(response.response.student);
+      } else {
+        toastFailure(response, "Failed to fetch student forms.");
       }
-    } catch (error) {
-      toast.error("Failed to fetch student forms.");
     } finally {
       setLoading(false);
     }
@@ -195,27 +204,23 @@ const AdminFormManagement = () => {
             setSelectedFormForInstances(updatedForm);
           }
         }
+      } else {
+        toastFailure(response, "Failed to update stage.");
       }
-    } catch (error) {
-      toast.error("Failed to update stage.");
     } finally {
       setLoading(false);
     }
   };
 
   const getUpdatedForms = async () => {
-    try {
-      const response = await customFetch(
-        baseURL + `/admin/forms/student/${selectedStudent.roll_no}`,
-        "GET",
-        {},
-        false
-      );
-      if (response.success) {
-        return response.response.forms || [];
-      }
-    } catch (error) {
-      console.error("Failed to fetch updated forms");
+    const response = await customFetch(
+      baseURL + `/admin/forms/student/${selectedStudent.roll_no}`,
+      "GET",
+      {},
+      false
+    );
+    if (response.success) {
+      return response.response.forms || [];
     }
     return studentForms;
   };
@@ -246,9 +251,9 @@ const AdminFormManagement = () => {
             setSelectedFormForManagement(updatedForm);
           }
         }
+      } else {
+        toastFailure(response, "Failed to toggle availability.");
       }
-    } catch (error) {
-      toast.error("Failed to toggle availability.");
     } finally {
       setLoading(false);
     }
@@ -275,9 +280,9 @@ const AdminFormManagement = () => {
         await fetchStudentForms(selectedStudent.roll_no);
         setIsManageFormModalOpen(false);
         setSelectedFormForManagement(null);
+      } else {
+        toastFailure(response, "Failed to disable form.");
       }
-    } catch (error) {
-      toast.error(error.message || "Failed to disable form.");
     } finally {
       setLoading(false);
     }
@@ -310,9 +315,9 @@ const AdminFormManagement = () => {
             setSelectedFormForInstances(updatedForm);
           }
         }
+      } else {
+        toastFailure(response, "Failed to toggle lock.");
       }
-    } catch (error) {
-      toast.error("Failed to toggle lock.");
     } finally {
       setLoading(false);
     }
@@ -336,9 +341,9 @@ const AdminFormManagement = () => {
       if (response.success) {
         toast.success("Form enabled.");
         await fetchStudentForms(selectedStudent.roll_no);
+      } else {
+        toastFailure(response, "Failed to enable form.");
       }
-    } catch (error) {
-      toast.error(error.message || "Failed to enable form.");
     } finally {
       setLoading(false);
     }
@@ -371,9 +376,9 @@ const AdminFormManagement = () => {
             setSelectedFormForInstances(updatedForm);
           }
         }
+      } else {
+        toastFailure(response, "Failed to create form instance.");
       }
-    } catch (error) {
-      toast.error(error.message || "Failed to create form instance.");
     } finally {
       setLoading(false);
     }
@@ -426,9 +431,9 @@ const AdminFormManagement = () => {
             setSelectedFormForInstances(updatedForm);
           }
         }
+      } else {
+        toastFailure(response, "Failed to delete form.");
       }
-    } catch (error) {
-      toast.error("Failed to delete form.");
     } finally {
       setLoading(false);
     }
@@ -461,9 +466,9 @@ const AdminFormManagement = () => {
             setSelectedFormForInstances(updatedForm);
           }
         }
+      } else {
+        toastFailure(response, "Failed to update steps.");
       }
-    } catch (error) {
-      toast.error("Failed to update steps.");
     } finally {
       setLoading(false);
     }

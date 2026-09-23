@@ -47,6 +47,14 @@ const SynopsisChecklist = () => {
   const [editingOption, setEditingOption] = useState(null);
   const [busy, setBusy] = useState(false);
 
+  // A category half edited under one condition must not be saved into the
+  // next one opened, since the save sends the open condition as its rule.
+  const showRule = (ruleId) => {
+    setOpenRule(ruleId);
+    setEditingOption(null);
+    setOption(EMPTY_OPTION);
+  };
+
   const load = useCallback(async () => {
     const res = await apiChecklistList();
     if (res.success) setRules(res.response);
@@ -103,7 +111,7 @@ const SynopsisChecklist = () => {
     const res = await apiChecklistRuleDelete(row.id);
     if (res.success) {
       toast.success('Condition removed');
-      if (openRule === row.id) setOpenRule(null);
+      if (openRule === row.id) showRule(null);
       load();
     }
   };
@@ -290,7 +298,7 @@ const SynopsisChecklist = () => {
               key: 'id',
               component: ({ row }) => (
                 <>
-                  <button type="button" className="icon-action" onClick={() => setOpenRule(row.id === openRule ? null : row.id)} title="Show the categories under this condition" aria-label="Show the categories under this condition">
+                  <button type="button" className="icon-action" onClick={() => showRule(row.id === openRule ? null : row.id)} title="Show the categories under this condition" aria-label="Show the categories under this condition">
                     <i className="fa fa-list" aria-hidden="true"></i>
                   </button>
                   <button type="button" className="icon-action" onClick={() => editRule(row)} title="Edit condition" aria-label="Edit condition">

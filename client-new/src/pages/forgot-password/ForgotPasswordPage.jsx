@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
-import { customFetch } from '../../api/base';
+import { customFetch, NETWORK_ERROR_MESSAGE } from '../../api/base';
 import { baseURL, CLOUDFLARE_SITE_KEY } from '../../api/urls';
 import { toast } from 'react-toastify';
 
@@ -54,17 +54,24 @@ const ForgotPasswordPage = () => {
 
     const onSubmit = async (data) => {
         setLoading(true);
+        // Toast off: this endpoint answers 422 with `errors` or `error` and no
+        // `message`, which customFetch would show as an empty toast.
         const response = await customFetch(baseURL+"/forgot-password", "POST", {
             ...data,
             captcha_token: captchaToken
-        });
+        }, false);
         setLoading(false);
 
-        if (response && response.success) {
-            toast.success(response.message || 'Password reset link sent successfully!');
-            setMessage(response.message);
-        } else if (response && response.error) {
-            toast.error(response.error || 'Failed to send reset link');
+        const body = response.response;
+        if (response.success) {
+            const sent = body?.message || 'Password reset link sent successfully!';
+            toast.success(sent);
+            setMessage(sent);
+        } else if (response.networkError) {
+            toast.error(NETWORK_ERROR_MESSAGE);
+        } else {
+            const fieldError = body?.errors && Object.values(body.errors).flat()[0];
+            toast.error(body?.message || body?.error || fieldError || 'Failed to send reset link');
         }
 
         // Reset captcha

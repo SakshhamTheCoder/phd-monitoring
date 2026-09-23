@@ -64,7 +64,11 @@ const emptyProfileForm = {
 const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => {
     // No code in the URL and none passed in means "my own profile".
     const { facultyCode: routeCode } = useParams();
-    const [facultyCode, setFacultyCode] = useState(routeCode || codeProp || null);
+    const facultyCode = routeCode || codeProp || null;
+    // The profile on screen now. Moving to another faculty reuses this
+    // component, so answers and the sync loop for the previous one check this
+    // before writing; null once unmounted.
+    const shownCodeRef = useRef(facultyCode);
     const [data, setData] = useState(null);
     const [activeTab, setActiveTab] = useState(null);
     const [filterYears, setFilterYears] = useState([]);
@@ -90,12 +94,13 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
     const load = useCallback(async () => {
         if (!facultyCode) return;
         const res = await apiResearchProfile(facultyCode);
-        if (res) setData(res);
+        if (res && shownCodeRef.current === facultyCode) setData(res);
     }, [facultyCode]);
 
     useEffect(() => {
-        setFacultyCode(routeCode || codeProp || null);
-    }, [routeCode, codeProp]);
+        shownCodeRef.current = facultyCode;
+        return () => { shownCodeRef.current = null; };
+    }, [facultyCode]);
 
     useEffect(() => { load(); }, [load]);
 
@@ -260,6 +265,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
     ];
 
     const runSync = async () => {
+        const isShown = () => shownCodeRef.current === facultyCode;
         setSyncing(true);
         try {
             const res = await apiSyncPublications(facultyCode);
@@ -276,24 +282,26 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
             let done = false;
             while (!done && Date.now() - started < 5 * 60 * 1000) {
                 await new Promise(r => setTimeout(r, 5000));
+                if (!isShown()) return;
                 const cur = await apiResearchProfile(facultyCode);
+                if (!isShown()) return;
                 if (!cur) continue;
                 setData(cur);
                 const p = cur.profile || {};
                 if ((p.last_sync || null) !== prevSync || (p.total_publications ?? 0) !== prevTotal) {
-                    toast.success('Sync finished — profile updated.');
+                    toast.success('Sync finished. Profile updated.');
                     done = true;
                 }
             }
             if (!done) {
                 await load();
-                toast.info('Sync is taking longer than expected — refresh in a bit.');
+                toast.info('Sync is taking longer than expected. Refresh in a bit.');
             }
         } catch (e) {
             toast.error(isNetworkError(e) ? NETWORK_ERROR_MESSAGE : 'Sync failed: ' + (e.message || 'unknown'));
         } finally {
             setSyncing(false);
-            load();
+            if (isShown()) load();
         }
     };
 

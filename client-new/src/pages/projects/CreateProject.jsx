@@ -162,16 +162,24 @@ const CreateProject = () => {
     const res = isEditMode
       ? await apiUpdateProjectFromForm(editProject.id, form)
       : await apiCreateProject(form);
+    const failedParts = [];
     if (res.success) {
       const projectId = isEditMode ? editProject.id : res.project.id;
-      await saveSanctionLetter(projectId);
-      if (form.ganttFile && (res.project?.id || projectId)) {
-        await apiUploadGanttChart(res.project?.id || projectId, form.ganttFile);
-      }
+      const ganttProjectId = res.project?.id || projectId;
+      const [sanction, gantt] = await Promise.all([
+        saveSanctionLetter(projectId),
+        form.ganttFile && ganttProjectId ? apiUploadGanttChart(ganttProjectId, form.ganttFile) : null,
+      ]);
+      if (res.failedMilestones) failedParts.push(res.failedMilestones === 1 ? '1 milestone' : `${res.failedMilestones} milestones`);
+      if (sanction && !sanction.success) failedParts.push('the sanction letter');
+      if (gantt && !gantt.success) failedParts.push('the Gantt chart');
     }
     setSubmitting(false);
     if (res.success) {
-      toast.success(isEditMode ? 'Project updated.' : 'Project created.');
+      const saved = isEditMode ? 'Project updated' : 'Project created';
+      // The project itself saved, so carry on to the list and say what did not.
+      if (failedParts.length) toast.warning(`${saved}, but ${failedParts.join(' and ')} could not be saved. Add them from the project page.`);
+      else toast.success(`${saved}.`);
       navigate('/projects');
     }
   };

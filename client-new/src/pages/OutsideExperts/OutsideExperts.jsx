@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
-import { customFetch } from '../../api/base';
+import { customFetch, NETWORK_ERROR_MESSAGE } from '../../api/base';
 import { baseURL } from '../../api/urls';
 import Layout from '../../components/dashboard/layout';
 import { useLoading } from '../../context/LoadingContext';
@@ -10,6 +10,7 @@ import PageHeader from '../../components/pageHeader/PageHeader';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import InputField from '../../components/forms/fields/InputField';
 import GridContainer from '../../components/forms/fields/GridContainer';
+import './OutsideExperts.css';
 
 const OutsideExperts = () => {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -36,6 +37,14 @@ const OutsideExperts = () => {
   const [editingExpert, setEditingExpert] = useState(null);
   const [csvFile, setCsvFile] = useState(null);
 
+  // A refused save answers 422 with a bare "Validation failed"; the field
+  // errors beside it are what say which field to fix.
+  const failureMessage = (result, fallback) => {
+    if (result.networkError) return NETWORK_ERROR_MESSAGE;
+    const { errors, message } = result.response || {};
+    return errors ? Object.values(errors).flat().join(' ') : message || fallback;
+  };
+
   const handleAddExpert = async () => {
     try {
       setSubmitting(true);
@@ -47,6 +56,8 @@ const OutsideExperts = () => {
         setShowAddModal(false);
         resetForm();
         setRefreshKey(prev => prev + 1);
+      } else {
+        toast.error(failureMessage(response, 'Failed to add outside expert'));
       }
     } catch (error) {
       console.error('Error adding outside expert:', error);
@@ -68,6 +79,8 @@ const OutsideExperts = () => {
         setShowEditModal(false);
         resetForm();
         setRefreshKey(prev => prev + 1);
+      } else {
+        toast.error(failureMessage(response, 'Failed to update outside expert'));
       }
     } catch (error) {
       console.error('Error updating outside expert:', error);
@@ -90,6 +103,8 @@ const OutsideExperts = () => {
       if (response.success) {
         toast.success('Outside expert deleted successfully');
         setRefreshKey(prev => prev + 1);
+      } else {
+        toast.error(failureMessage(response, 'Failed to delete outside expert'));
       }
     } catch (error) {
       console.error('Error deleting outside expert:', error);
@@ -123,9 +138,12 @@ const OutsideExperts = () => {
       const data = await response.json();
 
       if (data.success) {
-        toast.success(data.message);
-        if (data.data.errors.length > 0) {
-          toast.info(`Check console for ${data.data.error_count} errors`);
+        const { success_count = 0, update_count = 0, errors = [] } = data.data || {};
+        if (success_count + update_count > 0) toast.success(data.message);
+        else toast.error(data.message);
+        if (errors.length > 0) {
+          const more = errors.length > 3 ? `; and ${errors.length - 3} more` : '';
+          toast.warning(`Check these rows: ${errors.slice(0, 3).join('; ')}${more}`, { autoClose: 10000 });
         }
         setShowBulkImportModal(false);
         setCsvFile(null);
@@ -488,57 +506,6 @@ const OutsideExperts = () => {
         </div>
       </CustomModal>
 
-      <style jsx>{`
-        .outside-experts-management {
-        }
-
-        .page-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 2rem;
-        }
-
-        .modal-form {
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-        }
-
-        .modal-actions {
-          display: flex;
-          justify-content: flex-end;
-          gap: 1rem;
-          margin-top: 1rem;
-        }
-
-        .info-box {
-          background: #f0f9ff;
-          border: 1px solid #bae6fd;
-          border-radius: 0.5rem;
-          padding: 1rem;
-          margin-bottom: 1rem;
-        }
-
-        .info-box p {
-          margin: 0.25rem 0;
-          font-size: 0.875rem;
-        }
-
-        .info-box .note {
-          color: #6b7280;
-          font-size: 0.8rem;
-          margin-top: 0.5rem;
-        }
-
-        .file-input {
-          padding: 0.5rem;
-          border: 1px solid #d1d5db;
-          border-radius: 0.5rem;
-          font-size: 1rem;
-          cursor: pointer;
-        }
-      `}</style>
     </div>
     </Layout>
   );
