@@ -42,7 +42,9 @@ const Hod = ({ formData }) => {
       outside_experts = [-1, -1, -1];
     }
     setBody({
-      approval: formData.approvals.hod,
+      // The approval column defaults to 0, which would submit as "Not Recommend"
+      // if Submit is pressed before choosing. Unanswered means nothing chosen.
+      approval: formData.locks?.hod ? formData.approvals.hod : null,
       comments: formData.comments.hod,
       chairman_experts: cognates,
       outside_experts: outside_experts,
@@ -184,7 +186,13 @@ const Hod = ({ formData }) => {
             formData.role === "hod" && !lock && (
                 <>
                   <GridContainer elements={[
-                    <CustomButton text="Submit" onClick={() => {submitForm(body,location,setLoading)}}/>
+                    <CustomButton text="Submit" onClick={() => {
+                      if (body.approval === null || body.approval === undefined) {
+                        toast.error("Choose Recommend or Not Recommend first.");
+                        return;
+                      }
+                      submitForm(body,location,setLoading);
+                    }}/>
                   ]}/>
                 </>
             )

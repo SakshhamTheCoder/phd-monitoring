@@ -26,7 +26,9 @@ const Supervisor = ({ formData }) => {
   useEffect(() => {
     setLock(formData.locks?.supervisor);
     setBody({
-      approval: formData.approvals.supervisor,
+      // The approval column defaults to 0, which would submit as "Not Recommend"
+      // if Submit is pressed before choosing. Unanswered means nothing chosen.
+      approval: formData.locks?.supervisor ? formData.approvals.supervisor : null,
       attendance: formData.attendance,
       contact_hours: formData.contact_hours,
       current_progress: formData.current_progress,
@@ -179,6 +181,10 @@ const Supervisor = ({ formData }) => {
                   <CustomButton
                     text="Submit"
                     onClick={() => {
+                      if (body.approval === null || body.approval === undefined) {
+                        toast.error("Choose Recommend or Not Recommend first.");
+                        return;
+                      }
                       if (
                         scoring &&
                         !!body.approval &&

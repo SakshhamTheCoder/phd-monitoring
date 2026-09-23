@@ -22,7 +22,11 @@ const Supervisor = ({ formData }) => {
     setLock(formData.locks?.supervisor);
     if (formData.role === "faculty") {
       setBody({
-        approval: formData.current_review?.progress === "satisfactory",
+        // An unreviewed presentation has no progress yet. Reading that as
+        // "unsatisfactory" let a bare Submit record it.
+        approval: formData.current_review?.progress
+          ? formData.current_review.progress === "satisfactory"
+          : null,
         comments: formData.current_review?.comments || "",
         attendance: formData.attendance,
         contact_hours: formData.contact_hours,
@@ -230,6 +234,10 @@ const Supervisor = ({ formData }) => {
                   <CustomButton
                     text="Submit"
                     onClick={() => {
+                      if (body.approval === null || body.approval === undefined) {
+                        toast.error("Choose Recommend or Not Recommend first.");
+                        return;
+                      }
                       submitForm(body, location, setLoading);
                     }}
                   />,
