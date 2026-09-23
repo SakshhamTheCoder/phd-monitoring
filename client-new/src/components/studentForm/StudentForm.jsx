@@ -117,15 +117,7 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
 
   return (
     <>
-      <GridContainer
-        space={3}
-        elements={[
-          <div className="form-title">
-            {" "}
-            {!edit ? <>Create </> : <>Edit </>}Student Form
-          </div>,
-        ]}
-      />
+      <h2 className="modal-title">{edit ? "Edit student" : "Create student"}</h2>
       <GridContainer
         elements={[
           <InputField
@@ -280,23 +272,22 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
         ]}
       />
 
-      <GridContainer
-        elements={[
-          <CustomButton
-            text={
-              submitting
-                ? edit
-                  ? "Updating..."
-                  : "Adding..."
-                : edit
-                ? "Update Student"
-                : "Add Student"
-            }
-            onClick={handleSubmit}
-            disabled={submitting}
-          />,
-        ]}
-      />
+      <div className="modal-actions">
+        {onClose && <CustomButton text="Cancel" variant="quiet" onClick={onClose} />}
+        <CustomButton
+          text={
+            submitting
+              ? edit
+                ? "Updating..."
+                : "Adding..."
+              : edit
+              ? "Update student"
+              : "Add student"
+          }
+          onClick={handleSubmit}
+          disabled={submitting}
+        />
+      </div>
     </>
   );
 };

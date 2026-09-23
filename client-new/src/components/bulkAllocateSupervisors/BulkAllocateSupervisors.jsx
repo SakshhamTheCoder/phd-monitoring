@@ -4,9 +4,7 @@ import { baseURL } from '../../api/urls';
 import { customFetch } from '../../api/base';
 import CustomButton from '../forms/fields/CustomButton';
 import { toast } from 'react-toastify';
-import GridContainer from '../forms/fields/GridContainer';
 import { parseCsv } from '../../utils/csv';
-import '../bulkImport/bulkPreview.css';
 
 // Number of supervisor columns offered in the sheet. Blank columns are dropped,
 // so a row may allocate anywhere from one to MAX_SUPERVISORS supervisors.
@@ -156,91 +154,69 @@ const BulkAllocateSupervisors = ({ onSuccess }) => {
   };
 
   return (
-    <div className="bulk-preview">
-      <h3>Bulk Allocate Supervisors</h3>
-      <p className="bulk-preview-title">
+    <>
+      <h2 className="modal-title">Bulk allocate supervisors</h2>
+      <p className="modal-note">
         Upload a CSV to allocate supervisors for many students at once. Download the sample CSV to see the required format.
       </p>
-      <div
-        className="bulk-preview-info"
-      >
-        <strong>Roll Number:</strong> must belong to a student whose supervisor allocation form is awaiting you (the PhD Coordinator).<br />
-        <strong>Supervisors:</strong> give each supervisor's faculty code or email. Leave unused supervisor columns blank.<br />
-        <strong>After upload:</strong> each allocation is sent on to the HOD for approval, exactly as if you had filled the form in yourself.
-      </div>
 
-      <GridContainer
-        elements={[
-          <input
-            type='file'
-            accept='.csv'
-            onChange={handleFileUpload}
-            className="bulk-preview-file"
-          />,
-          <CustomButton
-            text='Download Sample CSV'
-            onClick={downloadSampleCSV}
-            className="bulk-preview-template"
-          />,
-        ]}
-        space={2}
-      />
+      <section className="csv-import-section">
+        <ul className="csv-import-rules">
+          <li><strong>Roll Number:</strong> must belong to a student whose supervisor allocation form is awaiting you (the PhD Coordinator).</li>
+          <li><strong>Supervisors:</strong> give each supervisor's faculty code or email. Leave unused supervisor columns blank.</li>
+          <li><strong>After upload:</strong> each allocation is sent on to the HOD for approval, exactly as if you had filled the form in yourself.</li>
+        </ul>
+      </section>
+
+      <div className="csv-import-file">
+        <CustomButton text="Download sample CSV" variant="secondary" onClick={downloadSampleCSV} />
+        <input
+          type="file"
+          accept=".csv"
+          aria-label="Choose a CSV file to upload"
+          onChange={handleFileUpload}
+          className="csv-import-input"
+        />
+      </div>
 
       {rows.length > 0 && (
         <>
-          <div className="bulk-preview-heading">
-            {rows.length} allocation(s) ready to submit
-          </div>
-
-          <div className="bulk-preview-scroll">
-            <table
-              className="bulk-preview-table"
-            >
-              <thead
-                className="bulk-preview-head"
-              >
-                <tr>
-                  {['Row', 'Roll Number', 'Supervisors'].map((key) => (
-                    <th
-                      key={key}
-                      className="bulk-preview-th bulk-preview-th--nowrap"
-                    >
-                      {key}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row, index) => (
-                  <tr
-                    key={row.row_number}
-                    className="bulk-preview-row"
-                  >
-                    {[row.row_number, row.roll_no, row.supervisors.join(', ')].map((value, idx) => (
-                      <td
-                        key={idx}
-                        className="bulk-preview-cell"
-                      >
-                        {value}
-                      </td>
+          <div className="csv-import-preview">
+            <div className="csv-import-preview-head">
+              {rows.length} allocation(s) ready to submit
+            </div>
+            <div className="csv-preview-wrap">
+              <table className="csv-preview">
+                <thead>
+                  <tr>
+                    {['Row', 'Roll number', 'Supervisors'].map((key) => (
+                      <th key={key}>{key}</th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {rows.map((row) => (
+                    <tr key={row.row_number}>
+                      <td className="csv-rownum">{row.row_number}</td>
+                      <td>{row.roll_no}</td>
+                      <td>{row.supervisors.join(', ')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          <div className="bulk-preview-actions">
+          <div className="modal-actions">
             <CustomButton
-              text={submitting ? 'Allocating...' : 'Confirm Bulk Allocation'}
+              text={submitting ? 'Allocating...' : 'Confirm bulk allocation'}
               onClick={confirmBulkAllocate}
               disabled={submitting}
-              className="bulk-preview-confirm"
             />
           </div>
         </>
       )}
-    </div>
+    </>
   );
 };
 

@@ -5,10 +5,11 @@ import { baseURL } from '../../api/urls';
 
 import CustomButton from '../../components/forms/fields/CustomButton';
 import CustomModal from '../../components/forms/modal/CustomModal';
-import GridContainer from '../../components/forms/fields/GridContainer';
 import InputField from '../../components/forms/fields/InputField';
 import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
-import PageHeader from '../../components/pageHeader/PageHeader';
+import Page from '../../components/page/Page';
+import Panel from '../../components/panel/Panel';
+import StatusNotice from '../../components/common/StatusNotice';
 import LoadError from '../../components/common/LoadError';
 
 const SupervisorDoctoralApproval = () => {
@@ -145,81 +146,81 @@ const SupervisorDoctoralApproval = () => {
     requested_by: change.requested_by || 'Unknown',
     requested_at: formatDate(change.requested_at),
     actions: (
-      <GridContainer
-        space={1}
-        elements={[
-          <CustomButton
-            text="Approve"
-            onClick={() => handleApprove(change.id)}
-            disabled={busyId === change.id}
-          />,
-          <CustomButton
-            text="Reject"
-            variant="danger"
-            onClick={() => openRejectModal(change)}
-            disabled={busyId === change.id}
-          />
-        ]}
-      />
+      <div className="row-actions-inline">
+        <button
+          type="button"
+          className="row-action-btn"
+          onClick={() => handleApprove(change.id)}
+          disabled={busyId === change.id}
+        >
+          Approve
+        </button>
+        <button
+          type="button"
+          className="row-action-btn danger"
+          onClick={() => openRejectModal(change)}
+          disabled={busyId === change.id}
+        >
+          Reject
+        </button>
+      </div>
     )
   }));
 
   return (
-    <div>
-      <PageHeader
-        title="Supervisor &amp; Doctoral Committee Change Approvals"
-        subtitle="Review and approve/reject pending change requests from HOD and PhD Coordinators"
-      />
-
-      <CustomButton
-        text="Refresh"
-        onClick={fetchPendingChanges}
-        style={{ marginBottom: '1rem' }}
-      />
-
-      {loading ? (
-        <p>Loading pending changes...</p>
-      ) : loadFailed ? (
-        <LoadError
-          message="Could not load the pending changes. Check your connection and try again."
-          onRetry={fetchPendingChanges}
-        />
-      ) : pendingChanges.length === 0 ? (
-        <div className="empty-state">No pending changes to review</div>
-      ) : (
-        <div className="data-table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>S.No</th>
-                <th>Student</th>
-                <th>Roll No</th>
-                <th>Department</th>
-                <th>Change Description</th>
-                <th>Reason</th>
-                <th>Requested By</th>
-                <th>Requested Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tableData.map((row, index) => (
-                <tr key={index}>
-                  <td>{index + 1}</td>
-                  <td>{row.student}</td>
-                  <td>{row.roll_no}</td>
-                  <td>{row.department}</td>
-                  <td>{row.change}</td>
-                  <td>{row.reason}</td>
-                  <td>{row.requested_by}</td>
-                  <td>{row.requested_at}</td>
-                  <td>{row.actions}</td>
+    <Page
+      title="Supervisor and doctoral committee change approvals"
+      description="Review and approve/reject pending change requests from HOD and PhD coordinators."
+    >
+      <Panel
+        title="Pending changes"
+        flush={!loading && !loadFailed && pendingChanges.length > 0}
+        actions={<CustomButton text="Refresh" variant="quiet" size="sm" onClick={fetchPendingChanges} />}
+      >
+        {loading ? (
+          <StatusNotice tone="loading" title="Loading pending changes" />
+        ) : loadFailed ? (
+          <LoadError
+            message="Could not load the pending changes. Check your connection and try again."
+            onRetry={fetchPendingChanges}
+          />
+        ) : pendingChanges.length === 0 ? (
+          <StatusNotice tone="empty" title="No pending changes to review" />
+        ) : (
+          <div className="data-table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>S.No</th>
+                  <th>Student</th>
+                  <th>Roll no</th>
+                  <th>Department</th>
+                  <th>Change description</th>
+                  <th>Reason</th>
+                  <th>Requested by</th>
+                  <th>Requested date</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {tableData.map((row, index) => (
+                  <tr key={index}>
+                    <td>{index + 1}</td>
+                    <td>{row.student}</td>
+                    <td>{row.roll_no}</td>
+                    <td>{row.department}</td>
+                    <td>{row.change}</td>
+                    <td>{row.reason}</td>
+                    <td>{row.requested_by}</td>
+                    <td>{row.requested_at}</td>
+                    <td>{row.actions}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Panel>
 
       {/* Reject Modal */}
       <CustomModal
@@ -230,50 +231,47 @@ const SupervisorDoctoralApproval = () => {
           setSelectedChange(null);
         }}
       >
-        <div>
-          <h3 className="modal-title">Reject Change Request</h3>
+        <>
+          <h3 className="modal-title">Reject change request</h3>
           
           {selectedChange && (
             <div className="modal-note">
               <p><strong>Student:</strong> {selectedChange.student_name}</p>
               <p><strong>Change:</strong> {getChangeDescription(selectedChange)}</p>
-              <p><strong>Requested By:</strong> {selectedChange.requested_by}</p>
+              <p><strong>Requested by:</strong> {selectedChange.requested_by}</p>
             </div>
           )}
           
           {/* InputField takes initialValue, not value, and draws one line; the
               props given here were ignored. */}
           <InputField
-            label="Reason for Rejection"
+            label="Reason for rejection"
             initialValue={rejectReason}
             onChange={setRejectReason}
             placeholder="Please provide a reason for rejecting this change request..."
             required
           />
 
-          <GridContainer
-            space={2}
-            elements={[
-              <CustomButton
-                text="Cancel"
-                onClick={() => {
-                  setShowRejectModal(false);
-                  setRejectReason('');
-                  setSelectedChange(null);
-                }}
-              />,
-              <CustomButton
-                text="Reject Change"
-                variant="danger"
-                onClick={handleReject}
-                disabled={busyId !== null}
-              />
-            ]}
-            style={{ marginTop: '1.5rem' }}
-          />
-        </div>
+          <div className="modal-actions">
+            <CustomButton
+              text="Cancel"
+              variant="quiet"
+              onClick={() => {
+                setShowRejectModal(false);
+                setRejectReason('');
+                setSelectedChange(null);
+              }}
+            />
+            <CustomButton
+              text="Reject change"
+              variant="danger"
+              onClick={handleReject}
+              disabled={busyId !== null}
+            />
+          </div>
+        </>
       </CustomModal>
-    </div>
+    </Page>
   );
 };
 

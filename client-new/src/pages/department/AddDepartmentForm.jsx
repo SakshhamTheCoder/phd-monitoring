@@ -38,8 +38,8 @@ const AddDepartmentForm = ({ onClose, onCreated }) => {
   };
 
   return (
-    <div style={{ padding: '1rem' }}>
-      <h2>Add Department</h2>
+    <>
+      <h2 className="modal-title">Add department</h2>
 
       <GridContainer
         elements={[
@@ -61,27 +61,20 @@ const AddDepartmentForm = ({ onClose, onCreated }) => {
         space={2}
       />
 
-      <div
-        style={{
-          display: 'flex',
-          gap: '1rem',
-          justifyContent: 'flex-end',
-          marginTop: '1.5rem',
-        }}
-      >
+      <div className="modal-actions">
         <CustomButton
           text="Cancel"
-          variant="secondary"
+          variant="quiet"
           onClick={onClose}
           disabled={submitting}
         />
         <CustomButton
-          text={submitting ? 'Adding...' : 'Add Department'}
+          text={submitting ? 'Adding...' : 'Add department'}
           onClick={handleSubmit}
           disabled={submitting}
         />
       </div>
-    </div>
+    </>
   );
 };
 

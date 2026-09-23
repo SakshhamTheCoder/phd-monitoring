@@ -11,9 +11,9 @@ import DropdownField from '../../components/forms/fields/DropdownField';
 import InputSuggestions from '../../components/forms/fields/InputSuggestions';
 import InputField from '../../components/forms/fields/InputField';
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
-import PageHeader from '../../components/pageHeader/PageHeader';
+import Page from '../../components/page/Page';
 import { currentRole } from '../../auth/access';
-import './AdminCourseManagement.css';
+
 const AdminCourseManagement = () => {
   // Heads and coordinators manage their own department's courses; the server
   // fills the department in for them, so only admin picks one.
@@ -271,37 +271,38 @@ const AdminCourseManagement = () => {
   };
 
   return (
-    <div className="admin-course-management">
-      <PageHeader title="Course Management" />
-
+    <Page
+      title="Course management"
+      description="Add courses, tag scholars to them and import coursework."
+      actions={
+        <>
+          <CustomButton
+            text="Tag student"
+            variant="secondary"
+            onClick={() => {
+              // Courses added since the page loaded must be taggable too.
+              fetchAllCourses();
+              setShowTagModal(true);
+            }}
+          />
+          <CustomButton
+            text="Import from CSV"
+            variant="secondary"
+            onClick={() => setShowBulkImportModal(true)}
+          />
+          <CustomButton
+            text="Add course"
+            onClick={() => setShowAddModal(true)}
+          />
+        </>
+      }
+    >
       <PagenationTable
         key={refreshKey}
         endpoint="/courses/list"
         // A course has no page of its own; editing is in the row menu.
         rowClickable={false}
         enableApproval={false}
-        extraTopbarComponents={
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <CustomButton
-              text="Tag Student"
-              variant="secondary"
-              onClick={() => {
-                // Courses added since the page loaded must be taggable too.
-                fetchAllCourses();
-                setShowTagModal(true);
-              }}
-            />
-            <CustomButton
-              text="Bulk Import"
-              variant="secondary"
-              onClick={() => setShowBulkImportModal(true)}
-            />
-            <CustomButton
-              text="Add Course +"
-              onClick={() => setShowAddModal(true)}
-            />
-          </div>
-        }
         actions={[
           {
             icon: <i className="fa fa-pencil-square-o"></i>,
@@ -323,10 +324,10 @@ const AdminCourseManagement = () => {
         setShowAddModal(false);
         resetForm();
       }}
-      title="Add New Course"
+      title="Add new course"
       closeOnOutsideClick={false}
     >
-      <div className="modal-form">
+      <div className="field-stack">
         <InputField
           label="Course Code"
           initialValue={formData.course_code}
@@ -363,22 +364,19 @@ const AdminCourseManagement = () => {
         )}
           
         <div className="modal-actions">
-          <button
+          <CustomButton
+            text="Cancel"
+            variant="quiet"
             onClick={() => {
               setShowAddModal(false);
               resetForm();
             }}
-            className="custom-button custom-button--secondary"
-          >
-            Cancel
-          </button>
-          <button
+          />
+          <CustomButton
+            text={submitting ? 'Adding…' : 'Add course'}
             onClick={handleAddCourse}
-            className="custom-button"
             disabled={submitting}
-          >
-            {submitting ? 'Adding…' : 'Add Course'}
-          </button>
+          />
         </div>
       </div>
     </CustomModal>
@@ -390,10 +388,10 @@ const AdminCourseManagement = () => {
         setShowEditModal(false);
         resetForm();
       }}
-      title="Edit Course"
+      title="Edit course"
       closeOnOutsideClick={false}
     >
-      <div className="modal-form">
+      <div className="field-stack">
         <InputField
           label="Course Code"
           initialValue={formData.course_code}
@@ -427,22 +425,19 @@ const AdminCourseManagement = () => {
         )}
 
         <div className="modal-actions">
-          <button
+          <CustomButton
+            text="Cancel"
+            variant="quiet"
             onClick={() => {
               setShowEditModal(false);
               resetForm();
             }}
-            className="custom-button custom-button--secondary"
-          >
-            Cancel
-          </button>
-          <button
+          />
+          <CustomButton
+            text={submitting ? 'Updating…' : 'Update course'}
             onClick={handleEditCourse}
-            className="custom-button"
             disabled={submitting}
-          >
-            {submitting ? 'Updating…' : 'Update Course'}
-          </button>
+          />
         </div>
       </div>
     </CustomModal>
@@ -454,10 +449,10 @@ const AdminCourseManagement = () => {
         setShowTagModal(false);
         resetTagData();
       }}
-      title="Tag Student with Course"
+      title="Tag student with course"
       closeOnOutsideClick={false}
     >
-      <div className="modal-form">
+      <div className="field-stack">
         <InputSuggestions
           label="Student"
           apiUrl={`${baseURL}/suggestions/student`}
@@ -508,22 +503,19 @@ const AdminCourseManagement = () => {
         )}
           
         <div className="modal-actions">
-          <button
+          <CustomButton
+            text="Cancel"
+            variant="quiet"
             onClick={() => {
               setShowTagModal(false);
               resetTagData();
             }}
-            className="custom-button custom-button--secondary"
-          >
-            Cancel
-          </button>
-          <button
+          />
+          <CustomButton
+            text={submitting ? 'Tagging…' : 'Tag student'}
             onClick={handleTagStudent}
-            className="custom-button"
             disabled={submitting}
-          >
-            {submitting ? 'Tagging…' : 'Tag Student'}
-          </button>
+          />
         </div>
       </div>
     </CustomModal>
@@ -531,7 +523,7 @@ const AdminCourseManagement = () => {
     <UnifiedBulkImportModal
       isOpen={showBulkImportModal}
       onClose={() => setShowBulkImportModal(false)}
-      title="Bulk Import Coursework"
+      title="Import coursework from CSV"
       required={['Registration Number', 'Academic Year', 'Subject Code']}
       rules={[
             'A subject code the portal does not have yet is created from the row.',
@@ -544,7 +536,7 @@ const AdminCourseManagement = () => {
       onImport={handleBulkImport}
       submitting={submitting}
     />
-  </div>
+    </Page>
   );
 };
 

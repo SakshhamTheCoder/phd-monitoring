@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import PageHeader from '../../components/pageHeader/PageHeader';
+import Page from '../../components/page/Page';
 import { useLoading } from '../../context/LoadingContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -7,7 +7,7 @@ import { customFetch, NETWORK_ERROR_MESSAGE } from '../../api/base';
 import FilterBar from '../../components/filterBar/FilterBar';
 import PagenationTable from '../../components/pagenationTable/PagenationTable';
 import CustomModal from '../../components/forms/modal/CustomModal';
-import FacultyForm from '../../components/facultyForm/FacultyForm'; // assume it's placed here
+import FacultyForm from '../../components/facultyForm/FacultyForm';
 import { baseURL } from '../../api/urls';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import useCapabilities from '../../context/CapabilitiesContext';
@@ -178,13 +178,28 @@ const FacultyPage = () => {
   };
 
   return (
-    <>
-      <PageHeader title="Faculty" subtitle="Directory of internal faculty." />
-      <FilterBar onSearch={handleFilterChange} />
+    <Page
+      title="Faculty"
+      description="Directory of internal faculty."
+      actions={
+        // A viewer with only directory access is browsing, not managing.
+        can('can_manage_faculties') ? (
+          <>
+            <CustomButton
+              text="Import from CSV"
+              variant="secondary"
+              onClick={() => setShowBulkImportModal(true)}
+            />
+            <CustomButton text="Add faculty" onClick={() => openForm()} />
+          </>
+        ) : null
+      }
+    >
       <PagenationTable
         key={refreshKey}
         endpoint={location.pathname}
         filters={filter}
+        search={<FilterBar onSearch={handleFilterChange} />}
         enableApproval={false}
         // A row leads to the profile, never to the edit form. Editing lives
         // in the actions menu, where the role check is.
@@ -192,20 +207,6 @@ const FacultyPage = () => {
         customOpenForm={(facultyData) =>
           navigate(`/faculty/${facultyData.faculty_code}/profile`)
         }
-        extraTopbarComponents={
-          // A viewer with only directory access is browsing, not managing.
-          can('can_manage_faculties') ? (
-            <div className="top-actions">
-              <CustomButton
-                text="Bulk Import"
-                variant="secondary"
-                onClick={() => setShowBulkImportModal(true)}
-              />
-              <CustomButton text="Add Faculty +" onClick={() => openForm()} />
-            </div>
-          ) : null
-        }
-            
         actions={[
           ...(can('can_manage_faculties') ? [{
             icon: <i className="fa fa-pencil-square-o"></i>,
@@ -233,11 +234,10 @@ const FacultyPage = () => {
         />
       </CustomModal>
 
-      {/* Bulk Import Modal */}
       <UnifiedBulkImportModal
         isOpen={showBulkImportModal}
         onClose={() => setShowBulkImportModal(false)}
-        title="Bulk Import Faculty"
+        title="Import faculty from CSV"
         required={['Emp id', 'Full Name', 'Email', 'Designation', 'Department Code']}
         rules={[
           'Matched by email. An existing faculty member is updated from the cells the row fills in.',
@@ -251,7 +251,7 @@ const FacultyPage = () => {
         submitting={submitting}
         uploadProgress={uploadProgress}
       />
-    </>
+    </Page>
   );
 };
 

@@ -110,7 +110,7 @@ const UnifiedBulkImportModal = ({
 
   return (
     <CustomModal isOpen={isOpen} onClose={handleClose} title={title} width="90vw">
-      <div className="modal-form">
+      <>
         <section className="csv-import-section">
           <h4 className="csv-import-heading">Columns</h4>
           <ul className="csv-import-columns">
@@ -200,14 +200,14 @@ const UnifiedBulkImportModal = ({
         {extraControls}
 
         <div className="modal-actions">
-          <CustomButton text="Cancel" variant="secondary" onClick={handleClose} />
+          <CustomButton text="Cancel" variant="quiet" onClick={handleClose} />
           <CustomButton
             text={submitting ? 'Importing...' : 'Import'}
             onClick={handleConfirm}
             disabled={submitting || !csvPreview}
           />
         </div>
-      </div>
+      </>
     </CustomModal>
   );
 };

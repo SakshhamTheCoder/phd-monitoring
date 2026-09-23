@@ -5,11 +5,13 @@ import { baseURL } from '../../api/urls';
 import { useLoading } from '../../context/LoadingContext';
 import PagenationTable from '../../components/pagenationTable/PagenationTable';
 import CustomModal from '../../components/forms/modal/CustomModal';
-import PageHeader from '../../components/pageHeader/PageHeader';
+import Page from '../../components/page/Page';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import InputField from '../../components/forms/fields/InputField';
 import GridContainer from '../../components/forms/fields/GridContainer';
-import './OutsideExperts.css';
+
+// The header row the import expects, in order.
+const EXPERT_CSV_COLUMNS = ['full_name', 'email', 'phone', 'designation', 'department', 'institution', 'area_of_expertise', 'website'];
 
 const OutsideExperts = () => {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -197,30 +199,29 @@ const OutsideExperts = () => {
   };
 
   return (
-    <div className="outside-experts-management">
-      <PageHeader
-        title="Outside Experts"
-        subtitle="External examiners and experts available to committees."
-      />
+    <Page
+      title="Outside experts"
+      description="External examiners and experts available to committees."
+      actions={
+        <>
+          <CustomButton
+            text="Import from CSV"
+            variant="secondary"
+            onClick={() => setShowBulkImportModal(true)}
+          />
+          <CustomButton
+            text="Add outside expert"
+            onClick={() => setShowAddModal(true)}
+          />
+        </>
+      }
+    >
       <PagenationTable
         key={refreshKey}
         endpoint="/outside-experts/list"
         // No detail page for an expert; editing is in the row menu.
         rowClickable={false}
         enableApproval={false}
-        extraTopbarComponents={
-          <div className="top-actions">
-            <CustomButton
-              text="Bulk Import"
-              variant="secondary"
-              onClick={() => setShowBulkImportModal(true)}
-            />
-            <CustomButton
-              text="Add Outside Expert +"
-              onClick={() => setShowAddModal(true)}
-            />
-          </div>
-        }
         actions={[
           {
             icon: <i className="fa fa-pencil-square-o"></i>,
@@ -242,10 +243,10 @@ const OutsideExperts = () => {
         setShowAddModal(false);
         resetForm();
       }}
-      title="Add New Outside Expert"
+      title="Add new outside expert"
       closeOnOutsideClick={false}
     >
-      <div className="modal-form">
+      <>
         <GridContainer
           elements={[
             <InputField
@@ -334,24 +335,21 @@ const OutsideExperts = () => {
         />
           
         <div className="modal-actions">
-          <button
+          <CustomButton
+            text="Cancel"
+            variant="quiet"
             onClick={() => {
               setShowAddModal(false);
               resetForm();
             }}
-            className="custom-button custom-button--secondary"
-          >
-            Cancel
-          </button>
-          <button
+          />
+          <CustomButton
+            text={submitting ? 'Adding...' : 'Add expert'}
             onClick={handleAddExpert}
-            className="custom-button"
             disabled={submitting}
-          >
-            {submitting ? 'Adding...' : 'Add Expert'}
-          </button>
+          />
         </div>
-      </div>
+      </>
     </CustomModal>
 
     {/* Bulk Import Modal */}
@@ -361,41 +359,43 @@ const OutsideExperts = () => {
         setShowBulkImportModal(false);
         setCsvFile(null);
       }}
-      title="Bulk Import Outside Experts"
+      title="Import outside experts from CSV"
     >
-      <div className="modal-form">
-        <div className="info-box">
-          <p><strong>CSV Format:</strong></p>
-          <p>full_name,email,phone,designation,department,institution,area_of_expertise,website</p>
-          <p className="note">Note: Phone, area_of_expertise, and website are optional. If an expert with the same email exists, their record will be updated.</p>
+      <>
+        <section className="csv-import-section">
+          <h4 className="csv-import-heading">CSV format</h4>
+          <ul className="csv-import-columns">
+            {EXPERT_CSV_COLUMNS.map((column) => <li key={column}>{column}</li>)}
+          </ul>
+          <p className="csv-import-note">Note: Phone, area_of_expertise, and website are optional. If an expert with the same email exists, their record will be updated.</p>
+        </section>
+
+        <div className="csv-import-file">
+          <input
+            type="file"
+            accept=".csv"
+            aria-label="Choose a CSV file to import"
+            onChange={(e) => setCsvFile(e.target.files[0])}
+            className="csv-import-input"
+          />
         </div>
           
-        <input
-          type="file"
-          accept=".csv"
-          onChange={(e) => setCsvFile(e.target.files[0])}
-          className="file-input"
-        />
-          
         <div className="modal-actions">
-          <button
+          <CustomButton
+            text="Cancel"
+            variant="quiet"
             onClick={() => {
               setShowBulkImportModal(false);
               setCsvFile(null);
             }}
-            className="custom-button custom-button--secondary"
-          >
-            Cancel
-          </button>
-          <button
+          />
+          <CustomButton
+            text={submitting ? 'Importing...' : 'Import'}
             onClick={handleBulkImport}
-            className="custom-button"
             disabled={submitting || !csvFile}
-          >
-            {submitting ? 'Importing...' : 'Import'}
-          </button>
+          />
         </div>
-      </div>
+      </>
     </CustomModal>
 
     {/* Edit Expert Modal */}
@@ -405,10 +405,10 @@ const OutsideExperts = () => {
         setShowEditModal(false);
         resetForm();
       }}
-      title="Edit Outside Expert"
+      title="Edit outside expert"
       closeOnOutsideClick={false}
     >
-      <div className="modal-form">
+      <>
         <GridContainer
           elements={[
             <InputField
@@ -486,27 +486,23 @@ const OutsideExperts = () => {
         />
           
         <div className="modal-actions">
-          <button
+          <CustomButton
+            text="Cancel"
+            variant="quiet"
             onClick={() => {
               setShowEditModal(false);
               resetForm();
             }}
-            className="custom-button custom-button--secondary"
-          >
-            Cancel
-          </button>
-          <button
+          />
+          <CustomButton
+            text={submitting ? 'Updating...' : 'Update expert'}
             onClick={handleEditExpert}
-            className="custom-button"
             disabled={submitting}
-          >
-            {submitting ? 'Updating...' : 'Update Expert'}
-          </button>
+          />
         </div>
-      </div>
+      </>
     </CustomModal>
-
-  </div>
+    </Page>
   );
 };
 

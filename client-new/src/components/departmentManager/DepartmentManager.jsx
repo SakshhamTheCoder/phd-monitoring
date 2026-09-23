@@ -10,20 +10,16 @@ import GridContainer from "../forms/fields/GridContainer";
 import InputSuggestions from "../forms/fields/InputSuggestions";
 import { useLoading } from '../../context/LoadingContext';
 import TableComponent from '../forms/table/TableComponent';
-import './DepartmentManager.css';
+import Panel, { PanelSection } from '../panel/Panel';
+import StatusNotice from '../common/StatusNotice';
 
 // The same shape three times: a role, the action that changes it, and who
-// currently holds it. It was three GridContainers used only for their label,
-// which stacked a button straight onto a full-width table with no grouping.
-// Kept outside DepartmentManager so the sections are not remounted each render.
+// currently holds it. Kept outside DepartmentManager so the sections are not
+// remounted each render.
 const RoleSection = ({ title, action, isEmpty, emptyText, children }) => (
-  <section className="card dm-section">
-    <div className="dm-section-head">
-      <h3 className="section-heading">{title}</h3>
-      {action}
-    </div>
-    {isEmpty ? <p className="dm-none">{emptyText}</p> : children}
-  </section>
+  <PanelSection title={title} actions={action}>
+    {isEmpty ? <StatusNotice tone="empty" title={emptyText} /> : children}
+  </PanelSection>
 );
 
 const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod, currentAdordc, currentCoordinators = [], onClose, onUpdate }) => {
@@ -189,25 +185,24 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
   };
 
   return (
-    <div className="department-manager">
-      <div className="page-header">
-        <div>
-          <h2 className="modal-title">Manage Department: {departmentName}</h2>
-          {hodEmail && (
-            <p className="page-subtitle">
-              Official HOD email: <strong>{hodEmail}</strong>. It belongs to the
-              department and stays the same when the HOD changes.
-            </p>
-          )}
-        </div>
-      </div>
+    <>
+      <h2 className="modal-title">Manage department: {departmentName}</h2>
+      {hodEmail && (
+        <p className="modal-note">
+          Official HOD email: <strong>{hodEmail}</strong>. It belongs to the
+          department and stays the same when the HOD changes.
+        </p>
+      )}
+
+      <Panel>
 
       <RoleSection
-        title="Head of Department (HOD)"
+        title="Head of department (HOD)"
         action={
           <CustomButton
             text={currentHod ? 'Change HOD' : 'Assign HOD'}
-            variant={currentHod ? 'secondary' : undefined}
+            variant="secondary"
+            size="sm"
             onClick={() => { setSelectedFaculty(null); setShowHodModal(true); }}
           />
         }
@@ -222,7 +217,8 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
         action={
           <CustomButton
             text={currentAdordc ? 'Change ADORDC' : 'Assign ADORDC'}
-            variant={currentAdordc ? 'secondary' : undefined}
+            variant="secondary"
+            size="sm"
             onClick={() => { setSelectedFaculty(null); setShowAdordcModal(true); }}
           />
         }
@@ -233,10 +229,12 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
       </RoleSection>
 
       <RoleSection
-        title="PhD Coordinators"
+        title="PhD coordinators"
         action={
           <CustomButton
-            text="Add PhD Coordinator"
+            text="Add PhD coordinator"
+            variant="secondary"
+            size="sm"
             onClick={() => { setSelectedFaculty(null); setShowCoordinatorModal(true); }}
           />
         }
@@ -255,6 +253,7 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
                 <CustomButton
                   text="Remove"
                   variant="danger"
+                  size="sm"
                   onClick={() => handleRemoveCoordinator(row.actions.coordinator_id, row.actions.faculty_code)}
                 />
               ),
@@ -262,6 +261,7 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
           ]}
         />
       </RoleSection>
+      </Panel>
 
       {/* HOD Assignment Modal */}
       <CustomModal
@@ -279,7 +279,7 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
         <GridContainer
           elements={[
             <InputSuggestions
-              label="Select Faculty from Department*"
+              label="Select faculty from department*"
               apiUrl={`${baseURL}/suggestions/faculty?department_id=${departmentId}`}
               onSelect={(val) => setSelectedFaculty(val.id)}
               fields={['name', 'designation', 'email']}
@@ -291,7 +291,7 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
         <div className="modal-actions">
           <CustomButton
             text="Cancel"
-            variant="secondary"
+            variant="quiet"
             onClick={() => { setShowHodModal(false); setSelectedFaculty(null); }}
           />
           <CustomButton
@@ -318,7 +318,7 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
         <GridContainer
           elements={[
             <InputSuggestions
-              label="Select Faculty from Department*"
+              label="Select faculty from department*"
               apiUrl={`${baseURL}/suggestions/faculty`}
               onSelect={(val) => setSelectedFaculty(val.id)}
               fields={['name', 'designation', 'email']}
@@ -330,7 +330,7 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
         <div className="modal-actions">
           <CustomButton
             text="Cancel"
-            variant="secondary"
+            variant="quiet"
             onClick={() => { setShowAdordcModal(false); setSelectedFaculty(null); }}
           />
           <CustomButton
@@ -345,7 +345,7 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
       <CustomModal
         isOpen={showCoordinatorModal}
         onClose={() => { setShowCoordinatorModal(false); setSelectedFaculty(null); }}
-        title="Add PhD Coordinator"
+        title="Add PhD coordinator"
         maxWidth="600px"
         minHeight="auto"
       >
@@ -356,7 +356,7 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
         <GridContainer
           elements={[
             <InputSuggestions
-              label="Select Faculty from Department*"
+              label="Select faculty from department*"
               apiUrl={`${baseURL}/suggestions/faculty?department_id=${departmentId}`}
               onSelect={(val) => setSelectedFaculty(val.id)}
               fields={['name', 'designation', 'email']}
@@ -368,22 +368,21 @@ const DepartmentManager = ({ departmentId, departmentName, hodEmail, currentHod,
         <div className="modal-actions">
           <CustomButton
             text="Cancel"
-            variant="secondary"
+            variant="quiet"
             onClick={() => { setShowCoordinatorModal(false); setSelectedFaculty(null); }}
           />
           <CustomButton
-            text={loading ? 'Adding…' : 'Add Coordinator'}
+            text={loading ? 'Adding…' : 'Add coordinator'}
             onClick={handleAddCoordinator}
             disabled={loading || !selectedFaculty}
           />
         </div>
       </CustomModal>
 
-      <div style={{ marginTop: '2rem', textAlign: 'right' }}>
-        <CustomButton text="Close" onClick={onClose} />
+      <div className="modal-actions">
+        <CustomButton text="Close" variant="quiet" onClick={onClose} />
       </div>
-
-    </div>
+    </>
   );
 };
 

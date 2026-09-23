@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import PageHeader from '../../components/pageHeader/PageHeader';
+import Page from '../../components/page/Page';
 import { useLoading } from '../../context/LoadingContext';
 import { useLocation } from 'react-router-dom';
 import FilterBar from '../../components/filterBar/FilterBar';
@@ -106,28 +106,30 @@ CSED,Hod One,hod.one@thapar.edu,hcsed@thapar.edu,Adordc One,adordc.one@thapar.ed
   };
 
   return (
-    <>
-      <PageHeader title="Departments" subtitle="Departments, their HoD and PhD coordinators." />
-      <FilterBar onSearch={handleFilterChange} />
+    <Page
+      title="Departments"
+      description="Departments, their HoD and PhD coordinators."
+      actions={
+        mayManage ? (
+          <>
+            <CustomButton text="Import from CSV" variant="secondary" onClick={() => setShowImport(true)} />
+            <CustomButton text="Add department" onClick={() => openForm()} />
+          </>
+        ) : null
+      }
+    >
       <PagenationTable
         key={refreshKey}
         endpoint={location.pathname}
         filters={filter}
+        search={<FilterBar onSearch={handleFilterChange} />}
         enableApproval={false}
         rowClickable={mayManage}
         customOpenForm={openForm}
-        extraTopbarComponents={
-          mayManage ? (
-            <>
-              <CustomButton text="Bulk Import" variant="secondary" onClick={() => setShowImport(true)} />
-              <CustomButton text="Add Department +" onClick={() => openForm()} />
-            </>
-          ) : null
-        }
         actions={mayManage ? [
           {
             icon: <i className="fa fa-users"></i>,
-            tooltip: 'Manage HOD & Coordinators',
+            tooltip: 'Manage HOD and coordinators',
             onClick: (deptData) => openForm(deptData),
           },
         ] : []}
@@ -168,7 +170,7 @@ CSED,Hod One,hod.one@thapar.edu,hcsed@thapar.edu,Adordc One,adordc.one@thapar.ed
       <UnifiedBulkImportModal
         isOpen={showImport}
         onClose={() => setShowImport(false)}
-        title="Bulk Import Departments"
+        title="Import departments from CSV"
         required={['Department Code']}
         rules={[
           'Departments are never created or deleted. A renamed code renames the department in place.',
@@ -181,7 +183,7 @@ CSED,Hod One,hod.one@thapar.edu,hcsed@thapar.edu,Adordc One,adordc.one@thapar.ed
         onImport={handleImport}
         submitting={importing}
       />
-    </>
+    </Page>
   );
 };
 
