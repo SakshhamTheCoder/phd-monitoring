@@ -7,9 +7,12 @@ import { getRoleName } from "../../utils/roleName";
 import { timeAgo } from "../../utils/timeParse";
 import { currentRole } from '../../auth/access';
 import LoadError from "../common/LoadError";
+import usePresence from '../../hooks/usePresence';
 
 const NotificationBox = () => {
   const [isOpen, setIsOpen] = useState(false);
+  // Held open for the closing fade.
+  const menu = usePresence(isOpen, 100);
   const notificationRef = useRef(null);
   const toggleRef = useRef(null);
   const [notifications, setNotifications] = useState([]);
@@ -104,8 +107,8 @@ const NotificationBox = () => {
           <span className="notification_badge" aria-hidden="true">{unreadCount > 9 ? "9+" : unreadCount}</span>
         )}
       </button>
-      {isOpen && (
-        <div className="notification_box">
+      {menu.mounted && (
+        <div className={`notification_box${menu.closing ? ' is-closing' : ''}`}>
           <div className="notification_header">
             <span>Notifications</span>
             {unreadCount > 0 && (

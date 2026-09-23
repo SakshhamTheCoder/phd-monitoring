@@ -182,3 +182,7 @@
     outline-offset: 2px;
     border-radius: var(--radius-sm);
 }
+
+/* Grows from the top bar and fades back into it; keyframes in styles/ui.css. */
+.notification_box { animation: menu-in 150ms ease-out; transform-origin: top right; }
+.notification_box.is-closing { animation: menu-out 100ms ease-out forwards; pointer-events: none; }

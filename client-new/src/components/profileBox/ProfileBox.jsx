@@ -7,11 +7,14 @@ import ChangePassword from "./ChangePassword";
 import { getRoleName } from "../../utils/roleName";
 import { logoutAPI } from "../../api/login";
 import { currentRole } from '../../auth/access';
+import usePresence from '../../hooks/usePresence';
 
 const readUser = () => JSON.parse(localStorage.getItem("user")) || {};
 
 const ProfileBox = () => {
   const [isOpen, setIsOpen] = useState(false);
+  // Held open for the closing fade.
+  const menu = usePresence(isOpen, 100);
   const profileRef = useRef(null);
   const toggleRef = useRef(null);
 
@@ -92,8 +95,8 @@ const ProfileBox = () => {
         </div>
       </button>
 
-      {isOpen && (
-        <div className="profile_box">
+      {menu.mounted && (
+        <div className={`profile_box${menu.closing ? " is-closing" : ""}`}>
           <div className="profile_header">
             <h3>User menu</h3>
           </div>
