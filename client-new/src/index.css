@@ -213,9 +213,9 @@
 .page-navbar .nav-title {
     margin: 0;
     font-size: var(--text-xl);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-color);
-    letter-spacing: -0.3px;
+    letter-spacing: -0.01em;
 }
 
 @media (max-width: 768px) {
@@ -246,7 +246,6 @@
 .page-navbar .back-button:hover {
     background: var(--primary-wash);
     color: var(--hover-color);
-    transform: translateX(-3px);
     text-decoration: none;
 }
 
