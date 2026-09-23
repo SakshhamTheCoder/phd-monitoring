@@ -51,18 +51,6 @@ const AdminFormManagement = () => {
     { label: "Complete", value: "complete" },
   ];
 
-  const lockRoles = [
-    "student",
-    "faculty",
-    "hod",
-    "phd_coordinator",
-    "dordc",
-    "dra",
-    "director",
-    "doctoral",
-    "external",
-  ];
-
   const roleLabels = {
     student: "Student",
     faculty: "Supervisor",
@@ -171,7 +159,10 @@ const AdminFormManagement = () => {
     setIsInstancesModalOpen(true);
   };
 
-  const handleUpdateStage = async (formType, formId, newStage, currentStep) => {
+  // Sends the form to one step in a single request: the stage, its place in
+  // the steps, the furthest step reached, and that step's lock opened so the
+  // person there can act. It used to be three requests fired side by side.
+  const handleMoveTo = async (formType, instance, step, index) => {
     setLoading(true);
     try {
       const response = await customFetch(
@@ -180,50 +171,29 @@ const AdminFormManagement = () => {
         {
           student_id: selectedStudent.roll_no,
           form_type: formType,
-          form_id: formId,
-          stage: newStage,
-          current_step: currentStep,
+          form_id: instance.id,
+          stage: step,
+          current_step: index,
+          maximum_step: Math.max(instance.maximum_step || 0, index),
+          locks: { [step]: false },
         },
         false
       );
       if (response.success) {
-        // Unlock the lock for the stage we're moving to
-        const lockField = newStage === 'faculty' ? 'faculty' : newStage;
-        if (lockRoles.includes(lockField)) {
-          const unlocked = await customFetch(
-            baseURL + "/admin/forms/update-control",
-            "POST",
-            {
-              student_id: selectedStudent.roll_no,
-              form_type: formType,
-              form_id: formId,
-              locks: { [lockField]: false },
-            },
-            false
-          );
-          // The stage moved but whoever holds it cannot act until it unlocks.
-          if (!unlocked.success) {
-            toast.warn("Stage updated, but it could not be unlocked for the new step. Unlock it from the controls.");
-          }
-        }
-
-        toast.success("Stage updated.");
+        toast.success(`Form moved to ${stageOptions.find((option) => option.value === step)?.label || step}.`);
         const updatedForms = await fetchStudentForms(selectedStudent.roll_no);
-
-        // Update the selected form for instances modal if it's open
         if (updatedForms && selectedFormForInstances && selectedFormForInstances.form_type === formType) {
           const updatedForm = updatedForms.find(f => f.form_type === formType);
-          if (updatedForm) {
-            setSelectedFormForInstances(updatedForm);
-          }
+          if (updatedForm) setSelectedFormForInstances(updatedForm);
         }
       } else {
-        toastFailure(response, "Failed to update stage.");
+        toastFailure(response, "Could not move the form.");
       }
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleToggleAvailability = async (formType, role, currentValue) => {
     setLoading(true);
@@ -303,7 +273,7 @@ const AdminFormManagement = () => {
         false
       );
       if (response.success) {
-        toast.success(`Lock ${!currentValue ? "enabled" : "disabled"}.`);
+        toast.success(!currentValue ? "Answers locked." : "Opened for editing.");
         const updatedForms = await fetchStudentForms(selectedStudent.roll_no);
 
         // Update the selected form for instances modal if it's open
@@ -443,40 +413,6 @@ const AdminFormManagement = () => {
         }
       } else {
         toastFailure(response, "Failed to delete form.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdateSteps = async (formType, formId, currentStep, maxStep) => {
-    setLoading(true);
-    try {
-      const response = await customFetch(
-        baseURL + "/admin/forms/update-control",
-        "POST",
-        {
-          student_id: selectedStudent.roll_no,
-          form_type: formType,
-          form_id: formId,
-          current_step: currentStep,
-          maximum_step: maxStep,
-        },
-        false
-      );
-      if (response.success) {
-        toast.success("Steps updated.");
-        const updatedForms = await fetchStudentForms(selectedStudent.roll_no);
-
-        // Update the selected form for instances modal if it's open
-        if (updatedForms && selectedFormForInstances && selectedFormForInstances.form_type === formType) {
-          const updatedForm = updatedForms.find(f => f.form_type === formType);
-          if (updatedForm) {
-            setSelectedFormForInstances(updatedForm);
-          }
-        }
-      } else {
-        toastFailure(response, "Failed to update steps.");
       }
     } finally {
       setLoading(false);
@@ -754,7 +690,6 @@ const AdminFormManagement = () => {
       <AdminFormInstancesModal
         isOpen={isInstancesModalOpen}
         form={selectedFormForInstances}
-        lockRoles={lockRoles}
         stageOptions={stageOptions}
         onClose={() => {
           setIsInstancesModalOpen(false);
@@ -763,8 +698,7 @@ const AdminFormManagement = () => {
         onCreateInstance={handleCreateFormInstance}
         onDeleteForm={handleDeleteForm}
         onToggleLock={handleToggleLock}
-        onUpdateStage={handleUpdateStage}
-        onUpdateSteps={handleUpdateSteps}
+        onMoveTo={handleMoveTo}
       />
     </Page>
   );

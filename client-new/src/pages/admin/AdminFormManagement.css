@@ -113,59 +113,71 @@
   gap: var(--space-2);
 }
 
-.afm-instance-body { padding: var(--space-5); }
+.afm-instance-id { font-weight: 600; white-space: nowrap; }
 
-.afm-controls {
+/* One instance's steps, in the form's order. Grid columns keep the state,
+   lock and move controls in line from one step to the next. */
+.afm-chain {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-2) var(--space-5);
+}
+
+.afm-chain-step {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--space-4);
+  grid-template-columns: 28px minmax(0, 1fr) auto auto 96px;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border-subtle);
 }
+.afm-chain-step:last-child { border-bottom: none; }
 
-.afm-control {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.afm-control--wide { grid-column: 1 / -1; }
-
-.afm-control-label {
+.afm-chain-marker {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: var(--text-xs);
-  font-weight: 500;
-  color: var(--text-muted);
-}
-
-.afm-steps {
-  display: block;
-  padding: var(--space-3) var(--space-4);
-  background: var(--canvas);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  line-height: 1.8;
-}
-
-.afm-step-current,
-.afm-step-reached {
-  padding: 2px 6px;
-  border-radius: var(--radius-sm);
   font-weight: 600;
+  border: 2px solid var(--border-color);
+  color: var(--text-muted);
+  box-sizing: border-box;
 }
+.afm-chain-step--done .afm-chain-marker { border-color: var(--success); background: var(--success); color: var(--surface); }
+.afm-chain-step--current .afm-chain-marker { border-color: var(--primary-color); color: var(--primary-color); box-shadow: var(--shadow-focus); }
 
-.afm-step-current {
-  color: var(--primary-color);
-  background: var(--primary-wash);
-  border: 1px solid var(--primary-color);
+.afm-chain-name { font-weight: 500; }
+.afm-chain-step--ahead .afm-chain-name { color: var(--text-muted); }
+
+.afm-chain-state { font-size: var(--text-xs); color: var(--text-muted); }
+.afm-chain-step--current .afm-chain-state { color: var(--primary-color); font-weight: 600; }
+
+.afm-lock {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-xs);
+  cursor: pointer;
 }
+.afm-lock:hover { border-color: var(--text-subtle); color: var(--text-color); }
+.afm-lock.is-locked { color: var(--text-color); background: var(--readonly-bg); }
 
-.afm-step-reached {
-  color: var(--success);
-  background: var(--success-bg);
-}
+.afm-chain-here { font-size: var(--text-xs); color: var(--text-subtle); text-align: center; }
 
-.afm-locks {
-  margin-top: var(--space-5);
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--border-subtle);
+@media (max-width: 768px) {
+  .afm-chain { padding: var(--space-2) var(--space-4); }
+  .afm-chain-step { grid-template-columns: 28px minmax(0, 1fr) auto; }
+  .afm-chain-state { grid-column: 2; grid-row: 2; }
+  .afm-lock { grid-column: 3; grid-row: 1; }
+  .afm-chain-step > .custom-button,
+  .afm-chain-here { grid-column: 3; grid-row: 2; }
 }

@@ -383,6 +383,14 @@ class AdminFormController extends Controller
                     $formInstance->stage='supervisor';
                 else
                 $formInstance->stage = $request->stage;
+
+                // Moving a finished form back to a step reopens it: submitting
+                // a complete form is refused, so whoever it was sent to could
+                // not have acted on it.
+                if ($request->stage !== 'complete' && $formInstance->completion === 'complete') {
+                    $formInstance->completion = 'incomplete';
+                    $formInstance->status = 'pending';
+                }
             }
 
             // Update steps
