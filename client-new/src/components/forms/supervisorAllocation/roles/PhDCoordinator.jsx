@@ -78,7 +78,12 @@ const PhDCoordinator = ({ formData }) => {
                   <CustomButton
                     text="Submit"
                     onClick={() => {
-                      submitForm(body, location, setLoading);
+                      // An added slot left empty has nothing to send, and "" was
+                      // refused as an unknown supervisor.
+                      submitForm({
+                        ...body,
+                        supervisors: body.supervisors.filter((code) => code !== null && code !== undefined && code !== ""),
+                      }, location, setLoading);
                     }}
                   />,
                 ]}

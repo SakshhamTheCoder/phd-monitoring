@@ -41,6 +41,13 @@ const FormListPage = () => {
   // Typed into the list of examiners modal.
   const [rollNumber, setRollNumber] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // Reopening starts from an empty roll number, not the confirm step for the
+  // last scholar typed.
+  const closeExaminersModal = () => {
+    setIsModalOpen(false);
+    setShowBar(false);
+    setRollNumber(null);
+  };
   const [isBulkAllocateOpen, setIsBulkAllocateOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [filters, setFilters] = useState({}); // Initialize filters state
@@ -115,7 +122,7 @@ const FormListPage = () => {
       </CustomModal>
       <CustomModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={closeExaminersModal}
         minWidth="500px"
         maxWidth="600px"
         minHeight="200px"
@@ -129,11 +136,12 @@ const FormListPage = () => {
                 <InputField 
                     hint={"Enter Roll Number"}
                     label={"Roll Number"}
-                    onChange={(value)=>{setRollNumber(value)}}
+                    onChange={(value)=>{setRollNumber(value.trim())}}
                 />,
                 <CustomButton
                     label=" "
                     text="Submit"
+                    disabled={!rollNumber}
                     onClick={()=>{
                        setShowBar(true);
                     }}

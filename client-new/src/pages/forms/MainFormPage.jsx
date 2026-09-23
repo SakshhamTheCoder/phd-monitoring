@@ -18,6 +18,7 @@ import ReviseTitle from "../../components/forms/reviseTitle/ReviseTitle";
 import ThesisExtention from "../../components/forms/thesisExtention/ThesisExtention";
 import useScholarInPath from "../../hooks/useScholarInPath";
 import Loader from "../../components/loader/loader";
+import LoadError from "../../components/common/LoadError";
 
 // Lazy because it brings react-datepicker and its stylesheet, which no other
 // form on this page needs.
@@ -27,6 +28,9 @@ const MainFormPage = () => {
   const [formData, setFormData] = useState({});
   const { setLoading } = useLoading();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
+  // Bumped by "Try again" to run the load once more.
+  const [attempt, setAttempt] = useState(0);
   const location = useLocation();
   const scholar = useScholarInPath();
   const { form_type } = useParams();
@@ -37,12 +41,15 @@ const MainFormPage = () => {
   useEffect(() => {
     let cancelled = false;
     setIsLoaded(false);
+    setLoadFailed(false);
     setLoading(true);
     customFetch(baseURL + location.pathname, "GET").then((data) => {
       if (cancelled) return;
       if (data.success) {
         setFormData(data.response);
         setIsLoaded(true);
+      } else {
+        setLoadFailed(true);
       }
       setLoading(false);
     });
@@ -50,7 +57,7 @@ const MainFormPage = () => {
       cancelled = true;
       setLoading(false);
     };
-  }, [location.pathname]);
+  }, [location.pathname, attempt]);
 
   return (
     <>
@@ -58,6 +65,12 @@ const MainFormPage = () => {
         <p className="viewing-scholar">
           You are viewing <strong>{scholar.label}</strong>'s form.
         </p>
+      )}
+      {loadFailed && (
+        <LoadError
+          message="Could not load this form. Check your connection and try again."
+          onRetry={() => setAttempt((n) => n + 1)}
+        />
       )}
       {isLoaded && formData && (
         <>

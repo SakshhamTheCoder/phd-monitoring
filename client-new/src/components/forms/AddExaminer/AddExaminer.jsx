@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import CustomButton from "../fields/CustomButton";
 import GridContainer from "../fields/GridContainer";
 import InputField from "../fields/InputField";
 
-const AddExaminer = ({ data, onSubmit }) => {
+// `existing` is every examiner already on the form, national and international,
+// so the same person cannot be proposed twice.
+const AddExaminer = ({ data, onSubmit, existing = [] }) => {
     const [formData, setFormData] = useState({
         name: data?.name || "",
         email: data?.email || "",
@@ -19,6 +22,20 @@ const AddExaminer = ({ data, onSubmit }) => {
             ...prev,
             [field]: value,
         }));
+    };
+
+    const handleSubmit = () => {
+        const name = formData.name.trim();
+        const email = formData.email.trim();
+        if (!name || !email) {
+            toast.error("Enter the examiner's name and email.");
+            return;
+        }
+        if (existing.some((examiner) => (examiner.email || "").trim().toLowerCase() === email.toLowerCase())) {
+            toast.error(`${email} is already on the list of examiners.`);
+            return;
+        }
+        onSubmit({ ...formData, name, email });
     };
 
     return (
@@ -77,7 +94,7 @@ const AddExaminer = ({ data, onSubmit }) => {
                     <></>,
                     <CustomButton
                         text={"Add Examiner"}
-                        onClick={() => onSubmit(formData)}
+                        onClick={handleSubmit}
                     />,
                 ]}
             />

@@ -346,6 +346,7 @@ const Student = ({ formData }) => {
                   enableDelete={formData?.role === "student" && !lock}
                   canAdd={formData?.role === "student" && !lock}
                   onDelete={removePublication}
+                  confirmUnlink
                   refetchData={refetchPublications}
                 />,
               ]}

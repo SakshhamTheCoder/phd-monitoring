@@ -19,7 +19,12 @@ import DateField from "../../fields/DateField";
 import { generateReportPeriods } from "../../../../utils/semester";
 
 const Student = ({ formData }) => {
-  const [body, setBody] = useState({});
+  // Seeded with what the fields show prefilled. A form sent back shows the
+  // earlier answers, and leaving one as shown sent nothing for it.
+  const [body, setBody] = useState(() => ({
+    semester_off_required: formData.semester_off_required,
+    reason: formData.reason,
+  }));
   const [lock, setLock] = useState(formData?.locks?.student);
   const [isLoaded, setIsLoaded] = useState(true);
   const location = useLocation();

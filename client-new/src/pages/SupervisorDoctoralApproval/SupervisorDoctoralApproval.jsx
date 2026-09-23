@@ -9,6 +9,7 @@ import GridContainer from '../../components/forms/fields/GridContainer';
 import InputField from '../../components/forms/fields/InputField';
 import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
 import PageHeader from '../../components/pageHeader/PageHeader';
+import LoadError from '../../components/common/LoadError';
 
 const SupervisorDoctoralApproval = () => {
   const [pendingChanges, setPendingChanges] = useState([]);
@@ -16,6 +17,10 @@ const SupervisorDoctoralApproval = () => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedChange, setSelectedChange] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
+  const [loadFailed, setLoadFailed] = useState(false);
+  // The change being approved or rejected. Its buttons stay off until the
+  // server answers, so a second press cannot send the decision twice.
+  const [busyId, setBusyId] = useState(null);
 
   const fetchPendingChanges = async () => {
     setLoading(true);
@@ -28,14 +33,13 @@ const SupervisorDoctoralApproval = () => {
         false
       );
 
+      setLoadFailed(!response?.success);
       if (response?.success) {
         setPendingChanges(response.response?.data || []);
-      } else {
-        toast.error('Failed to fetch pending changes');
       }
     } catch (error) {
       console.error('Error fetching pending changes:', error);
-      toast.error('Error loading pending changes');
+      setLoadFailed(true);
     } finally {
       setLoading(false);
     }
@@ -50,6 +54,7 @@ const SupervisorDoctoralApproval = () => {
       return;
     }
 
+    setBusyId(changeId);
     try {
       const response = await customFetch(
         `${baseURL}/supervisor-doctoral-changes/approve/${changeId}`,
@@ -68,6 +73,8 @@ const SupervisorDoctoralApproval = () => {
     } catch (error) {
       console.error('Error approving change:', error);
       toast.error('Error approving change');
+    } finally {
+      setBusyId(null);
     }
   };
 
@@ -77,6 +84,7 @@ const SupervisorDoctoralApproval = () => {
       return;
     }
 
+    setBusyId(selectedChange.id);
     try {
       const response = await customFetch(
         `${baseURL}/supervisor-doctoral-changes/reject/${selectedChange.id}`,
@@ -98,6 +106,8 @@ const SupervisorDoctoralApproval = () => {
     } catch (error) {
       console.error('Error rejecting change:', error);
       toast.error('Error rejecting change');
+    } finally {
+      setBusyId(null);
     }
   };
 
@@ -141,11 +151,13 @@ const SupervisorDoctoralApproval = () => {
           <CustomButton
             text="Approve"
             onClick={() => handleApprove(change.id)}
+            disabled={busyId === change.id}
           />,
           <CustomButton
             text="Reject"
             variant="danger"
             onClick={() => openRejectModal(change)}
+            disabled={busyId === change.id}
           />
         ]}
       />
@@ -167,6 +179,11 @@ const SupervisorDoctoralApproval = () => {
 
       {loading ? (
         <p>Loading pending changes...</p>
+      ) : loadFailed ? (
+        <LoadError
+          message="Could not load the pending changes. Check your connection and try again."
+          onRetry={fetchPendingChanges}
+        />
       ) : pendingChanges.length === 0 ? (
         <div className="empty-state">No pending changes to review</div>
       ) : (
@@ -248,6 +265,7 @@ const SupervisorDoctoralApproval = () => {
                 text="Reject Change"
                 variant="danger"
                 onClick={handleReject}
+                disabled={busyId !== null}
               />
             ]}
             style={{ marginTop: '1.5rem' }}

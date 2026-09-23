@@ -38,6 +38,9 @@ const BulkSchedulePresentation = ({semester_name}) => {
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    // Cleared once read, so picking the same file again after correcting it
+    // still fires a change.
+    e.target.value = '';
 
     file.text().then((text) => {
       const headers = [

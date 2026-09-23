@@ -25,8 +25,21 @@
     align-items: center;
     color: #3a3a3a;
     box-shadow: var(--shadow-sm);
-    cursor: pointer;
     transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+/* Stretched over the card; the focus ring from index.css then outlines the
+   whole card. */
+.form-card-list-link {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+}
+
+/* The approved form's own link sits above the card link so it stays clickable. */
+.form-card-list a:not(.form-card-list-link) {
+    position: relative;
+    z-index: 1;
 }
 
 .form-card-list:hover {

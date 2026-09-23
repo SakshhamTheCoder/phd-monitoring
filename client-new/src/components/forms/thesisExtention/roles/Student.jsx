@@ -23,7 +23,9 @@ import { useLoading } from "../../../../context/LoadingContext";
 // twelve months because the regulations do not let the scholar choose one, so
 // it is shown here as a fact rather than a field.
 const Student = ({ formData }) => {
-  const [body, setBody] = useState({});
+  // Seeded with what the fields show prefilled. A form sent back shows the
+  // earlier answers, and leaving one as shown sent nothing for it.
+  const [body, setBody] = useState(() => ({ reason: formData.reason }));
   const [files, setFiles] = useState([]);
   const [lock, setLock] = useState(formData?.locks?.student);
   const location = useLocation();

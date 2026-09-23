@@ -57,9 +57,10 @@ const Dordc = ({ formData }) => {
             isLocked={lock}
             handleRecommendationChange={onUpdateApproval}
           ></Recommendation>
-          {!!body.approval && (
-            <>
-           
+          {/* Hidden rather than unmounted: a remount showed "Select" while body
+              still held the earlier picks, so the "nominate both" check passed
+              on choices no longer on screen. */}
+          <div hidden={!body.approval}>
                 <GridContainer
                     elements={[
                         <DropdownField
@@ -81,9 +82,7 @@ const Dordc = ({ formData }) => {
                         })  } initialValue={formData.outside_expert?.name} isLocked={lock} onChange={(value)=>{body.outside_expert=value;}} />
                     ]}
                 />   
-
-            </>
-          )}
+          </div>
            {
             formData.role === "dordc" && !lock && (
                 <>

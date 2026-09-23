@@ -78,8 +78,10 @@ const Hod = ({ formData }) => {
             moreFields={true}
             handleRecommendationChange={onUpdateApproval}
           ></Recommendation>
-          {!!body.approval && (
-            <>
+          {/* Hidden rather than unmounted: the experts picked here live in
+              body, and a remount showed the fields blank while body still sent
+              those picks. */}
+          <div hidden={!body.approval}>
             <p style={{ fontWeight: "bold", textAlign: "left" }}>List of 3 outside experts proposed by the HOD</p>
 
           {greater && lock && formData.outside_experts?.length === 3 ? (
@@ -165,7 +167,7 @@ const Hod = ({ formData }) => {
                 ]}
               />
                 <GridContainer
-                    elements={body.chairman_experts.map((expert, index) => (
+                    elements={(body.chairman_experts || []).map((expert, index) => (
                     <InputSuggestion
                         apiUrl={apiURL}
                         label={`Expert ${index + 1}`}
@@ -178,10 +180,7 @@ const Hod = ({ formData }) => {
                     />
                     ))}
                 /></>)}
-            
-                
-            </>
-          )}
+          </div>
            {
             formData.role === "hod" && !lock && (
                 <>
@@ -191,7 +190,12 @@ const Hod = ({ formData }) => {
                         toast.error("Choose Recommend or Not Recommend first.");
                         return;
                       }
-                      submitForm(body,location,setLoading);
+                      // An expert box added and left empty holds "" or the -1
+                      // placeholder, which the server refused as an invalid code.
+                      submitForm({
+                        ...body,
+                        chairman_experts: body.chairman_experts.filter((code) => code !== "" && code !== -1 && code != null),
+                      },location,setLoading);
                     }}/>
                   ]}/>
                 </>

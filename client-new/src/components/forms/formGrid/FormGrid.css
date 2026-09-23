@@ -66,6 +66,7 @@
     color: #3a3a3a;
     box-shadow: var(--shadow-sm);
     cursor: pointer;
+    text-decoration: none;
     transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 

@@ -27,13 +27,17 @@ const FileUploadField = ({
       const acceptedExtensions = acceptedTypes.split(',').map(ext => ext.trim());
       const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
       
+      // A refused file is cleared from the input, which otherwise kept showing
+      // its name as though it had been attached.
       if (!acceptedExtensions.includes(fileExtension)) {
         toast.error(`Only ${fileTypeLabel} files are allowed.`);
+        e.target.value = '';
         return;
       }
       
       if (file.size > maxSizeMB * 1024 * 1024) {
         toast.error(`File size should be less than ${maxSizeMB} MB.`);
+        e.target.value = '';
         return;
       }
       setFileName(file.name);

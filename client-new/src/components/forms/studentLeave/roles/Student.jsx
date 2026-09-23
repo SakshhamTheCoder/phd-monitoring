@@ -41,7 +41,9 @@ const daysBetween = (from, to) => {
  * from the attendance page, so it talks to the leave endpoints directly via
  * apiLeaveSubmit — see client-new/src/api/leave.js.
  */
-const Student = ({ formData }) => {
+// `onReload` hears the application as reloaded after a submit, so the page
+// around this can show its new status.
+const Student = ({ formData, onReload }) => {
   const [instance, setInstance] = useState(formData);
   const [leaveType, setLeaveType] = useState(formData?.leave_type || 'casual');
   const [fromDate, setFromDate] = useState(localDateString(formData?.from_date));
@@ -110,7 +112,10 @@ const Student = ({ formData }) => {
     if (res.success) {
       toast.success(res.response?.completed ? 'Form completed successfully' : 'Leave application submitted');
       const reloaded = await apiLeaveLoad(instance.form_id);
-      if (reloaded.success) setInstance(reloaded.response);
+      if (reloaded.success) {
+        setInstance(reloaded.response);
+        onReload?.(reloaded.response);
+      }
     }
   };
 

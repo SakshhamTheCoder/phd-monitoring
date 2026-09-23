@@ -53,6 +53,11 @@ const SupervisorDoctoralManager = ({ studentId, supervisors = [], doctoralCommit
       return;
     }
 
+    if (operationType !== 'remove' && !facultyType) {
+      toast.error('Please select a faculty type');
+      return;
+    }
+
     if (operationType === 'add') {
       if (facultyType === 'internal' && !selectedNewFaculty) {
         toast.error('Please select a faculty member');
@@ -271,7 +276,13 @@ const SupervisorDoctoralManager = ({ studentId, supervisors = [], doctoralCommit
                         { value: 'internal', title: 'Internal' },
                         { value: 'external', title: 'External' },
                       ]}
-                      onChange={(val) => setFacultyType(val)}
+                      // A pick from the other type would otherwise still be
+                      // held, and switching back proposed it unseen.
+                      onChange={(val) => {
+                        setFacultyType(val);
+                        setSelectedNewFaculty(null);
+                        setSelectedOutsideExpert(null);
+                      }}
                     />,
                   ]}
                 />
@@ -287,7 +298,7 @@ const SupervisorDoctoralManager = ({ studentId, supervisors = [], doctoralCommit
                       />,
                     ]}
                   />
-                ) : (
+                ) : facultyType === 'external' && (
                   <GridContainer
                     elements={[
                       <InputSuggestions

@@ -292,8 +292,13 @@ const Student = ({ formData }) => {
                   <CustomButton
                     text="Submit"
                     onClick={() => {
+                      // An added box left empty has nothing to send, and the server refused a blank entry.
                       submitForm(
-                        body,
+                        {
+                          ...body,
+                          objectives: (body.objectives || []).filter((text) => text?.trim()),
+                          subdomains: (body.subdomains || []).filter((text) => text?.trim()),
+                        },
                         location,
                         setLoading,
                         files.length > 0 ? files : null

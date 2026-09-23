@@ -196,8 +196,12 @@ const Student = ({ formData }) => {
                   <CustomButton
                     text="Submit"
                     onClick={() => {
+                      // An added box left empty has nothing to send, and the server refused a blank entry.
                       submitForm(
-                        body,
+                        {
+                          ...body,
+                          revised_phd_objectives: (body.revised_phd_objectives || []).filter((text) => text?.trim()),
+                        },
                         location,
                         setLoading,
                         files.length > 0 ? files : null

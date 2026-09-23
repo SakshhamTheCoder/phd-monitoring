@@ -268,8 +268,10 @@ const Student = ({ formData, refetchData = null, }) => {
             space={2}
           />
 
-          {showPublication && (
-              <>      
+          {/* Hidden rather than unmounted: the counts typed here live in body,
+              and a remount showed the saved counts while body sent the typed
+              ones. */}
+          <div hidden={!showPublication}>
                <GridContainer
                   elements={[
                     <InputField required={true}
@@ -358,13 +360,13 @@ const Student = ({ formData, refetchData = null, }) => {
                       enableDelete={formData?.role === "student" && !lock}
                       canAdd={formData?.role === "student" && !lock}
                       onDelete={removePublication}
+                      confirmUnlink
                       refetchData={refetchPublications}
                     />,
                   ]}
                   space={3}
                 />
-              </>
-            )}
+          </div>
           <GridContainer
             elements={[
               <FileUploadField required={true}

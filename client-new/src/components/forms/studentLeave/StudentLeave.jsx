@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import FormTitleBar from '../formTitleBar/FormTitleBar';
 import Recommendation from '../layouts/Recommendation';
 import Student from './roles/Student';
@@ -16,22 +16,27 @@ const StudentLeave = ({ formData, submitPath }) => {
   // the HOD's decision: live for the HOD, and locked by Recommendation for an
   // admin reading along, since the viewer is not the role being asked.
   const isStudent = currentRole() === 'student';
+  // The application as last loaded. After the scholar submits, the form below
+  // reloads it, and the status shown here has to follow rather than keep the
+  // one the page opened with.
+  const [current, setCurrent] = useState(formData);
+  useEffect(() => setCurrent(formData), [formData]);
 
   return (
     <div className="student-leave">
-      <FormTitleBar formName="Leave Application" formData={formData} />
+      <FormTitleBar formName="Leave Application" formData={current} />
       <div className="form-container">
-        <Student formData={formData} />
+        <Student formData={formData} onReload={setCurrent} />
 
         {isStudent ? (
           <div className="leave-outcome">
             <div className="leave-outcome__row">
               <span>Status</span>
-              <span className={badgeClass(formData.status)}>{formData.status}</span>
+              <span className={badgeClass(current.status)}>{current.status}</span>
             </div>
             <div className="leave-outcome__row">
               <span>HOD remarks</span>
-              <span>{formData.comments?.hod || '—'}</span>
+              <span>{current.comments?.hod || '—'}</span>
             </div>
           </div>
         ) : (

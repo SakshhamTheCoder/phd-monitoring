@@ -26,6 +26,9 @@ const Student = ({ formData }) => {
   const [recLoading, setRecLoading] = useState(false);
   const fetchTimer = useRef(null);
   const recCache = useRef(null);
+  // Numbers each request. Only the latest may set the list, so a slow answer
+  // for earlier areas cannot replace a newer one or refill a cleared list.
+  const recRequest = useRef(0);
   const location = useLocation();
   const { setLoading } = useLoading();
 
@@ -33,15 +36,20 @@ const Student = ({ formData }) => {
     if (fetchTimer.current) clearTimeout(fetchTimer.current);
     const clean = (areas || []).filter((a) => a !== null && a !== undefined && a !== '' && a !== 0).map(String);
     const sig = clean.join('|');
-    if (clean.length === 0) { setRecs([]); recCache.current = ''; return; }
-    if (sig === recCache.current) return;
-    recCache.current = sig;
+    const requestId = ++recRequest.current;
+    if (clean.length === 0) { setRecs([]); setRecLoading(false); recCache.current = ''; return; }
+    // Already showing these areas' list; any request still out is now stale.
+    if (sig === recCache.current) { setRecLoading(false); return; }
     fetchTimer.current = setTimeout(async () => {
       setRecLoading(true);
-      try {
-        const res = await customFetch(baseURL + "/faculty/recommend", "POST", { areas: clean, department_id: formData.department_id || undefined, limit: 8 }, true);
-        if (res.success) setRecs(res.response.data || []);
-      } catch {} finally { setRecLoading(false); }
+      const res = await customFetch(baseURL + "/faculty/recommend", "POST", { areas: clean, department_id: formData.department_id || undefined, limit: 8 }, true);
+      if (requestId !== recRequest.current) return;
+      // Remembered only once answered, so a failed request is tried again.
+      if (res.success) {
+        recCache.current = sig;
+        setRecs(res.response.data || []);
+      }
+      setRecLoading(false);
     }, 500);
   };
   useEffect(() => {
@@ -226,8 +234,8 @@ const Student = ({ formData }) => {
                   }
                 ]}
               />,
-              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Based on your broad areas. Free choice — pick anyone or use recommended.</span>,
-              recs.length === 0 && !recLoading ? <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{(body.broad_area_of_research || []).filter(Boolean).length ? 'No strong matches yet — try adding clearer areas or pick manually.' : 'Select your 3 broad areas above to see recommendations.'}</p> : null,
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Based on your broad areas. Free choice: pick anyone or use recommended.</span>,
+              recs.length === 0 && !recLoading ? <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{(body.broad_area_of_research || []).filter(Boolean).length ? 'No strong matches yet. Try adding clearer areas or pick manually.' : 'Select your 3 broad areas above to see recommendations.'}</p> : null,
             ].filter(Boolean)}
             space={3}
           />

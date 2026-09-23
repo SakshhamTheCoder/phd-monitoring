@@ -16,7 +16,7 @@ const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = 
     const [userSelected, setUserSelected] = useState(false);
     const [loading, setLoading] = useState(false);
     // The list used to render purely on `inputValue`, so once a field had text its
-    // dropdown stayed mounted for good — sitting over the field below and
+    // dropdown stayed mounted for good, sitting over the field below and
     // swallowing that field's clicks. It must not outlive focus.
     const [isFocused, setIsFocused] = useState(false);
     // The suggestion the arrow keys are on, -1 for none. Hover moves it too, so
@@ -30,6 +30,11 @@ const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = 
     // a slow answer for "ab" could land after the one for "abc" and replace it.
     const currentQueryRef = useRef('');
     const debounceTimeout = useRef(null);
+    // The label of what the caller last accepted. In mandatory mode typed text
+    // never reaches the caller, so leaving the box with other text in it showed
+    // one choice and saved another. Callers read the picked row without a null
+    // check, so the box is put back on blur rather than told "nothing picked".
+    const committedLabelRef = useRef(initialValue || '');
 
     const handleInputChange = (event) => {
         const value = event.target.value;
@@ -45,6 +50,10 @@ const InputSuggestions = ({ apiUrl, hint, initialValue, onSelect, label, lock = 
                 fetchSuggestions(value);
             }, 300);
         } else {
+            // Nothing is pending for an empty box, so a request still in its
+            // debounce is dropped and a slower one cannot leave "Loading" on.
+            if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+            setLoading(false);
             setSuggestions([]);
         }
     };
@@ -85,6 +94,7 @@ useEffect(() => {
     if(initialValue){
         setInputValue(initialValue);
         setShowHint(false);
+        committedLabelRef.current = initialValue;
     }
 },[initialValue] )
     const handleSuggestionClick = (suggestion) => {
@@ -96,8 +106,12 @@ useEffect(() => {
         // so the field does not show a choice that will not be saved.
         if (onSelect && onSelect(suggestion) === false) {
             setInputValue(initialValue || '');
+        } else {
+            committedLabelRef.current = renderSuggestionText(suggestion);
         }
     };
+
+    const listOpen = isFocused && inputValue && (loading || visibleSuggestions.length > 0 || showHint);
 
     const handleKeyDown = (event) => {
         const count = visibleSuggestions.length;
@@ -111,8 +125,17 @@ useEffect(() => {
             // Only swallow Enter when it picks a row, so it still submits otherwise.
             event.preventDefault();
             handleSuggestionClick(visibleSuggestions[activeIndex]);
-        } else if (event.key === 'Escape') {
+        } else if (event.key === 'Escape' && listOpen) {
+            // This Escape closed the list, so the dialog around the field must
+            // not take it as well and close with everything typed. With the list
+            // shut, Escape reaches the dialog as usual.
+            event.stopPropagation();
+            // A request still out would reopen the list when it lands.
+            if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+            currentQueryRef.current = null;
+            setLoading(false);
             setSuggestions([]);
+            setShowHint(false);
         }
     };
 
@@ -129,6 +152,9 @@ useEffect(() => {
                 setShowHint(false);
                 setUserSelected(true);
                 onSelect({ name: inputValue, id: inputValue });
+            } else if (suggestionManadatory && inputValue !== committedLabelRef.current) {
+                setInputValue(committedLabelRef.current);
+                setShowHint(false);
             }
         }
     };
@@ -159,7 +185,7 @@ useEffect(() => {
                 />
             </div>
 
-            {isFocused && inputValue && (loading || visibleSuggestions.length > 0 || showHint) && (
+            {listOpen && (
                 <ul
                     className="suggestions-list"
                     ref={listRef}

@@ -302,6 +302,10 @@
 .recommendation-field {
     display: flex;
     align-items: center;
+    /* The options drop below the role name on a phone rather than run off
+       the page. */
+    flex-wrap: wrap;
+    row-gap: 8px;
     margin-bottom: 10px;
 }
 

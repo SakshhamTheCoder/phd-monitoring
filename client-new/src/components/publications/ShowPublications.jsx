@@ -58,6 +58,9 @@ const ShowPublications = ({
     onSubmit,
     onSelect,
     onDelete,
+    // Set by the forms, where Delete unlinks straight away with no dialog of
+    // the caller's own. The publications page asks in its own dialog.
+    confirmUnlink = false,
     onEdit,
     refetchData = null,
     // Whose names are bold among the authors. Defaults to the signed-in account;
@@ -148,7 +151,10 @@ const ShowPublications = ({
                </button>
            )}
            {enableDelete && (
-               <button type="button" className="icon-action" aria-label="Delete" title="Delete" onClick={() => onDelete && onDelete(publicationId, publicationType)}>
+               <button type="button" className="icon-action" aria-label="Delete" title="Delete" onClick={() => {
+                   if (confirmUnlink && !window.confirm('Remove this publication from the form? It stays in your publications list.')) return;
+                   if (onDelete) onDelete(publicationId, publicationType);
+               }}>
                    <i className="fa fa-trash-o" aria-hidden="true"></i>
                </button>
            )}
