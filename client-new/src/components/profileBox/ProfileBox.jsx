@@ -112,8 +112,8 @@ const ProfileBox = () => {
             <button type="button" className="profile_item" onClick={() => setPasswordOpen(true)}>
               <h4>{user.password_set === false ? "Set password" : "Change password"}</h4>
             </button>
-            <button type="button" className="profile_item" onClick={() => {
-              logoutAPI();
+            <button type="button" className="profile_item" onClick={async () => {
+              await logoutAPI();
               window.location.href = "/login";
             }}>
               <h4>Logout</h4>

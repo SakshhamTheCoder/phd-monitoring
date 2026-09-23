@@ -1,5 +1,5 @@
 import { customFetch } from "./base"
-import { ENDPOINTS } from "./urls"
+import { ENDPOINTS, baseURL } from "./urls"
 
 export const loginAPI = async (email, password, captchaToken) => {
     const result = await customFetch(ENDPOINTS.LOGIN,"POST",{
@@ -26,6 +26,17 @@ export const loginAPI = async (email, password, captchaToken) => {
 }
 
 export const logoutAPI = async () => {
+    // Revokes the token on the server so a copy of it stops working. Signing out
+    // here goes ahead whatever the answer: offline or already expired, the user
+    // still asked to leave.
+    if (localStorage.getItem("token")) {
+        // A server that takes the connection and never answers must not hold
+        // the user on the page; three seconds, then sign out locally anyway.
+        await Promise.race([
+            customFetch(`${baseURL}/logout`, "POST", {}, false),
+            new Promise((resolve) => setTimeout(resolve, 3000)),
+        ]);
+    }
     localStorage.removeItem("token");
     localStorage.removeItem("userRole");
     localStorage.removeItem("available_roles");

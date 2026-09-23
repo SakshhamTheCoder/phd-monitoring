@@ -12,8 +12,6 @@ Route::post('/recommend', [FacultyController::class, 'recommend'])->middleware('
 Route::post('/add', [FacultyController::class, 'add'])->middleware('auth:sanctum');
 Route::put('/update/{id}', [FacultyController::class, 'update'])->middleware('auth:sanctum');
 Route::post('/bulk-import', [FacultyController::class, 'upload'])->middleware('auth:sanctum');
-Route::get('/upload-faculty', [FacultyController::class, 'showUploadForm'])->name('faculty.upload.form');
-Route::post('/upload-faculty', [FacultyController::class, 'upload'])->name('faculty.upload');
 Route::get('/filters', [FacultyController::class, 'listFilters']);
 
 // The faculty profile and its publications.

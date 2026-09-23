@@ -36,7 +36,6 @@ class RoleSweepTest extends TestCase
     private const SKIPPED = [
         'api/google/redirect',
         'api/google/callback',
-        'api/send-welcome',
         'api/reset-password/{token}',
         'api/urf/verify-email/{id}',
     ];

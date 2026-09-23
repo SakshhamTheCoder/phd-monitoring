@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\EmailNotificationController;
 use App\Http\Controllers\PositionApplicationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -87,6 +86,12 @@ Route::post('/login', function (Request $request) {
         'error' => 'Invalid Credentials'
     ], 401);
 });
+
+// Clearing the client's storage alone leaves the token usable until it expires.
+Route::post('/logout', function (Request $request) {
+    $request->user()->currentAccessToken()->delete();
+    return response()->json(['message' => 'Signed out.']);
+})->middleware('auth:sanctum');
 
 Route::post('/forgot-password', function (Request $request) {
     $validator = Validator::make($request->all(), [
@@ -453,7 +458,6 @@ Route::prefix('google')->group(function () {
     require base_path('routes/base/google_auth.php');
 });
 
-Route::get('/send-welcome', [EmailNotificationController::class, 'sendWelcomeEmail']);
 
 
 
