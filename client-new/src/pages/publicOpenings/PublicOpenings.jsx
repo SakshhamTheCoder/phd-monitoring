@@ -5,6 +5,7 @@ import { apiPublicOpenings } from '../../api/publicOpenings';
 import { formatDate } from '../../utils/timeParse';
 import '../projects/Openings.css';
 import PageHeader from '../../components/pageHeader/PageHeader';
+import LoadError from '../../components/common/LoadError';
 
 const skillList = (skills) =>
   (Array.isArray(skills) ? skills : String(skills || '').split(','))
@@ -16,19 +17,20 @@ const PublicOpenings = () => {
   const [openings, setOpenings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let active = true;
-    // fetch rejects when the network is down. Treat that as a failed answer so
-    // the page shows its error instead of loading forever.
-    apiPublicOpenings().catch(() => ({ ok: false, body: {} })).then(({ ok, body }) => {
+    setLoading(true);
+    setError(null);
+    apiPublicOpenings().then(({ ok, body }) => {
       if (!active) return;
       if (ok) setOpenings(body || []);
       else setError(body.message || 'Could not load the openings. Please try again.');
       setLoading(false);
     });
     return () => { active = false; };
-  }, []);
+  }, [attempt]);
 
   return (
     <ExternalLayout crumbs={[{ label: 'Openings' }]}>
@@ -39,7 +41,7 @@ const PublicOpenings = () => {
         />
 
         {loading && <p className="empty-state">Loading openings...</p>}
-        {error && <p className="empty-state">{error}</p>}
+        {error && <LoadError message={error} onRetry={() => setAttempt((n) => n + 1)} />}
 
         {!loading && !error && openings.length === 0 && (
           <p className="empty-state">

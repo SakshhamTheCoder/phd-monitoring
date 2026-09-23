@@ -37,9 +37,7 @@ const PublicOpeningDetail = () => {
 
   useEffect(() => {
     let active = true;
-    // fetch rejects when the network is down. Treat that as a failed answer so
-    // the page shows its error instead of loading forever.
-    apiPublicOpening(id).catch(() => ({ ok: false, body: {} })).then(({ ok, body }) => {
+    apiPublicOpening(id).then(({ ok, body }) => {
       if (!active) return;
       if (ok) setOpening(body);
       else setError(body.message || 'This opening is no longer available.');
@@ -83,7 +81,7 @@ const PublicOpeningDetail = () => {
     fd.append('website', form.website);
     fd.append('resume', form.resumeFile);
 
-    const { ok, body } = await apiPublicApply(id, fd).catch(() => ({ ok: false, body: {} }));
+    const { ok, body } = await apiPublicApply(id, fd);
     setSubmitting(false);
     if (ok) {
       setSubmitted(body.token);
