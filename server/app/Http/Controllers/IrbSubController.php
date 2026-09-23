@@ -182,19 +182,12 @@ class IrbSubController extends Controller
             'form_ids' => 'required|array',
         ]);
         $request->merge(['approval' => true]);
-        foreach ($form_ids as $id) {
-            $form = IrbSubForm::find($id);
-            if (!$form) {
-                return response()->json(['message' => 'Form not found'], 404);
-            }
-            match ($role->role) {
-                'phd_coordinator' => $this->coordinatorSubmit($user, $request, $id),
-                'hod' => $this->hodSubmit($user, $request, $id),
-                'dra' => $this->draSubmit($user, $request, $id),
-                'dordc' => $this->dordcSubmit($user, $request, $id),
-            };
-        }
-        return response()->json(['message' => 'Forms submitted successfully'], 200);
+        return $this->bulkResults($form_ids, fn ($id) => match ($role->role) {
+            'phd_coordinator' => $this->coordinatorSubmit($user, $request, $id),
+            'hod' => $this->hodSubmit($user, $request, $id),
+            'dra' => $this->draSubmit($user, $request, $id),
+            'dordc' => $this->dordcSubmit($user, $request, $id),
+        });
     }
 
     private function studentSubmit($user, $request, $form_id)

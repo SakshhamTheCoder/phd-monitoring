@@ -832,13 +832,7 @@ class PresentationController extends Controller
             'form_ids' => 'required|array',
             'form_ids.*' => 'exists:presentations,id',
         ]);
-        
-  
-        foreach ($request->form_ids as $form_id) {
-            $this->submit($request,null, $form_id);
-        }
-        
-        return response()->json(['message' => 'Forms submitted successfully'], 200);
+        return $this->bulkResults($request->form_ids, fn ($form_id) => $this->submit($request, null, $form_id));
     }
 
     public function linkPublication(Request $request,$semester_id=null, $form_id)

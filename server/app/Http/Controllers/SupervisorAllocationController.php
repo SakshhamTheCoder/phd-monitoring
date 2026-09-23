@@ -151,10 +151,7 @@ class SupervisorAllocationController extends Controller
             return $this->refuse();
         }
         $request->merge(['approval' => true]);
-        foreach ($request->form_ids as $form_id) {
-            $this->submit($request, $form_id);
-        }
-        return response()->json(['message' => 'Form submitted successfully'], 200);
+        return $this->bulkResults($request->form_ids, fn ($form_id) => $this->submit($request, $form_id));
     }
 
     /**

@@ -180,11 +180,8 @@ class SupervisorChangeFormController extends Controller {
             'form_ids' => 'required|array',
             'approval' => 'required|boolean',
         ]);
-        foreach ($request->form_ids as $form_id) {
-            $this->submit($request, $form_id);
-        }
         $request->merge(['approval' => true]);
-        return response()->json(['message' => 'Forms submitted successfully'], 200);
+        return $this->bulkResults($request->form_ids, fn ($form_id) => $this->submit($request, $form_id));
     }
     
     private function studentSubmit($user, $request, $form_id)

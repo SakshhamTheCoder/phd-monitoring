@@ -164,10 +164,7 @@ class ResearchExtentionController extends Controller
             'form_ids.*' => 'exists:research_extentions_form,id',
         ]);
         $request->merge(['approval' => true]);
-        foreach ($request->form_ids as $form_id) {
-            $this->submit($request, $form_id);
-        }
-        return response()->json(['message' => 'Forms submitted successfully'], 200);
+        return $this->bulkResults($request->form_ids, fn ($form_id) => $this->submit($request, $form_id));
     }
 
     private function studentSubmit($user,$request,$form_id){

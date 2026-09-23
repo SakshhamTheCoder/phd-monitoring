@@ -158,14 +158,7 @@ class ConstituteOfIRBController extends Controller
             'form_ids.*' => 'integer|exists:constitute_of_irb,id',
         ]);
         $request->merge(['approval' => true]);
-        foreach ($request->form_ids as $formId) {
-            $form = ConstituteOfIRB::find($formId);
-            if (!$form) {
-                return response()->json(['message' => 'Form not found'], 404);
-            }
-            $this->draSubmit($user, $request, $formId);
-        }
-        return response()->json(['message' => 'Forms submitted successfully'], 200);
+        return $this->bulkResults($request->form_ids, fn ($formId) => $this->draSubmit($user, $request, $formId));
     }
 
     private function studentSubmit($user, Request $request, $form_id)

@@ -162,13 +162,16 @@ const PagenationTable = ({
       }
 
       const data = await customFetch(`${baseURL}${endpoint}/bulk`, "POST", { form_ids: selectedIds, approval: true });
-      if (data.success) {
-        toast.success("Selected forms approved successfully.");
-        setSelectedForms(new Set());
-        fetchData(currentPage, rowsPerPage, filters);
-      } else {
-        toast.error("Failed to approve selected forms.");
-      }
+      // customFetch has already toasted a failure, carrying the server's summary.
+      if (data.success) toast.success(data.response?.message || "Selected forms approved successfully.");
+
+      // Part of a batch can go through, so untick those rows and reload either way.
+      const results = data.response?.results;
+      const approvedIds = Array.isArray(results)
+        ? new Set(results.filter((row) => row.ok).map((row) => String(row.form_id)))
+        : new Set(data.success ? selectedIds.map(String) : []);
+      setSelectedForms((prev) => new Set([...prev].filter((id) => !approvedIds.has(String(id)))));
+      fetchData(currentPage, rowsPerPage, filters);
     } catch (error) {
       console.error(error);
       toast.error("An error occurred while approving forms.");

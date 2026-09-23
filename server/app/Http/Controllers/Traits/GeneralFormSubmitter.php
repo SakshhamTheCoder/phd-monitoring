@@ -508,4 +508,51 @@ trait GeneralFormSubmitter
         $form->stage = $next;
         $form->save();
     }
+
+    /**
+     * Run one submit per selected form and report each outcome, so a refused
+     * or missing form fails its own row instead of the whole batch, and the
+     * approver learns which rows went through.
+     */
+    private function bulkResults(array $formIds, callable $submitOne)
+    {
+        $results = [];
+        foreach ($formIds as $formId) {
+            try {
+                $response = $submitOne($formId);
+                $ok = $response instanceof \Symfony\Component\HttpFoundation\Response && $response->getStatusCode() < 400;
+                $body = $response ? json_decode($response->getContent(), true) : null;
+                $firstError = is_array($body['errors'] ?? null) ? collect($body['errors'])->flatten()->first() : null;
+                $message = $body['message'] ?? $firstError ?? ($ok ? 'Approved' : 'The server gave no reason.');
+            } catch (ValidationException $e) {
+                $ok = false;
+                $message = $e->validator->errors()->first();
+            } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
+                $ok = false;
+                $message = $e->getMessage() ?: 'The form could not be approved.';
+            } catch (\Throwable $e) {
+                Log::error('Bulk submit failed for form ' . $formId . ': ' . $e->getMessage());
+                $ok = false;
+                $message = 'An unexpected error stopped this form from being approved.';
+            }
+            $results[] = ['form_id' => $formId, 'ok' => $ok, 'message' => $message];
+        }
+
+        $total = count($results);
+        $failed = array_values(array_filter($results, fn ($row) => !$row['ok']));
+        $approved = $total - count($failed);
+        $noun = $total === 1 ? 'form' : 'forms';
+        if (!$failed) {
+            $summary = "$total $noun approved.";
+        } elseif ($approved === 0) {
+            $summary = ($total === 1 ? 'The form could not' : "None of the $total forms could") . " be approved: {$failed[0]['message']}";
+        } else {
+            $summary = "$approved of $total forms approved; " . count($failed) . ' could not be: ' . $failed[0]['message'];
+        }
+        if (!preg_match('/[.!?]$/', $summary)) {
+            $summary .= '.';
+        }
+
+        return response()->json(['message' => $summary, 'results' => $results], $failed ? 422 : 200);
+    }
 }
