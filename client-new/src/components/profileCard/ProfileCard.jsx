@@ -426,6 +426,10 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
         {can("can_propose_supervisor_changes") && (
           <CustomButton text="Manage supervisors/doctoral" variant="secondary" onClick={() => setShowSupervisorDoctoralModal(true)} />
         )}
+        {/* The same form admin page the Students list opens, on this scholar. */}
+        {ACCESS.admin.includes(role) && !permissions.is_self && (
+          <CustomButton text="Manage forms" variant="secondary" onClick={() => navigate(`/forms/manage?roll_no=${profile.roll_no}`)} />
+        )}
         {permissions.can_edit && permissions.is_self && (
           isEditingInline ? (
             <>
