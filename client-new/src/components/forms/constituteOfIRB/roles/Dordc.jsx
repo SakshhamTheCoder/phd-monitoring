@@ -12,6 +12,7 @@ import { baseURL } from "../../../../api/urls";
 import Recommendation from "../../layouts/Recommendation";
 import { toast } from "react-toastify";
 import TableComponent from "../../table/TableComponent";
+import { stepAnswered } from '../../../../utils/formSteps';
 
 const Dordc = ({ formData }) => {
   const [lock, setLock] = useState(formData.locks?.dordc);
@@ -26,7 +27,7 @@ const Dordc = ({ formData }) => {
     setLock(formData.locks?.dordc);
     setBody({
       // The column defaults to 0; unanswered must read as nothing chosen.
-      approval: formData.locks?.dordc ? formData.approvals.dordc : null,
+      approval: stepAnswered(formData, 'dordc') ? formData.approvals.dordc : null,
       comments: formData.comments.dordc,
       cognate_expert: formData.cognate_expert?.faculty_code,
       outside_expert: formData.outside_expert?.id,

@@ -8,6 +8,7 @@ import { getRoleName } from '../../../utils/roleName';
 import { useLoading } from '../../../context/LoadingContext';
 import { submitForm } from '../../../api/form';
 import { toast } from 'react-toastify';
+import { stepAnswered } from '../../../utils/formSteps';
 
 const Recommendation = ({formData,allowRejection,role,moreFields,handleRecommendationChange,isLocked,submitPath,decision,title}) => {
     const [roleName, setRoleName] = useState('');
@@ -23,7 +24,7 @@ const Recommendation = ({formData,allowRejection,role,moreFields,handleRecommend
                 // The approval column defaults to 0, which the radios read as
                 // "Not Recommend" already chosen. Until the step is answered
                 // (locked), nothing is chosen, so a bare Submit cannot reject.
-                approval: formData.locks[role] ? formData.approvals[role] : null,
+                approval: stepAnswered(formData, role) ? formData.approvals[role] : null,
                 rejection: false,
                 comments: formData.comments[role],
             });

@@ -2,6 +2,7 @@ import React from 'react';
 import Recommendation from '../layouts/Recommendation';
 import { PanelSection } from '../../panel/Panel';
 import { getRoleName } from '../../../utils/roleName';
+import { stepReached } from '../../../utils/formSteps';
 
 // Renders a form's approval chain from `formData.steps`.
 //
@@ -52,6 +53,16 @@ const FormLadder = ({ formData, panels = {}, stepProps = {} }) => {
             {visible.filter(isApprovalStep).map((step) => {
                 const Panel = panels[step];
                 const extra = stepProps[step] || {};
+                // Admin and the ADORDC read the whole chain. A step the form has
+                // not come to has no answer yet, so it says so rather than
+                // drawing locked controls that read as a decision.
+                if (!stepReached(formData, roleForStep(step))) {
+                    return (
+                        <PanelSection key={step} title={getRoleName(roleForStep(step), formType)} className="form-step">
+                            <p className="form-step-pending">Not reached yet.</p>
+                        </PanelSection>
+                    );
+                }
                 // Each step is a titled section of the one form panel, so the
                 // reader can see whose part of the form they are looking at.
                 return (

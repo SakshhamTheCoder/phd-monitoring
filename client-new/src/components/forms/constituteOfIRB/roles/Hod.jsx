@@ -12,6 +12,7 @@ import { baseURL } from "../../../../api/urls";
 import Recommendation from "../../layouts/Recommendation";
 import { toast } from "react-toastify";
 import TableComponent from "../../table/TableComponent";
+import { stepAnswered } from '../../../../utils/formSteps';
 
 const Hod = ({ formData }) => {
   const [lock, setLock] = useState(formData.locks?.hod);
@@ -44,7 +45,7 @@ const Hod = ({ formData }) => {
     setBody({
       // The approval column defaults to 0, which would submit as "Not Recommend"
       // if Submit is pressed before choosing. Unanswered means nothing chosen.
-      approval: formData.locks?.hod ? formData.approvals?.hod : null,
+      approval: stepAnswered(formData, 'hod') ? formData.approvals?.hod : null,
       comments: formData.comments?.hod,
       chairman_experts: cognates,
       outside_experts: outside_experts,

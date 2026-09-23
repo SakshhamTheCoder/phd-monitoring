@@ -10,6 +10,7 @@ import Recommendation from "../../layouts/Recommendation";
 import CustomButton from "../../fields/CustomButton";
 import { submitForm } from "../../../../api/form";
 import { toast } from "react-toastify";
+import { stepAnswered } from '../../../../utils/formSteps';
 
 const Supervisor = ({ formData }) => {
   // Progress is scored once, on the written round. After the viva the
@@ -29,7 +30,7 @@ const Supervisor = ({ formData }) => {
     setBody({
       // The approval column defaults to 0, which would submit as "Not Recommend"
       // if Submit is pressed before choosing. Unanswered means nothing chosen.
-      approval: formData.locks?.supervisor ? formData.approvals.supervisor : null,
+      approval: stepAnswered(formData, 'supervisor') ? formData.approvals.supervisor : null,
       attendance: formData.attendance,
       contact_hours: formData.contact_hours,
       current_progress: formData.current_progress,

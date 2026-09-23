@@ -987,6 +987,13 @@
 /* A form that has no ladder step to wrap still gets the panel's padding. */
 .form-container > :not(.panel-section):not(.form-step) { margin: var(--space-5); }
 
+/* A ladder step the form has not come to yet. */
+.form-step-pending {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+}
+
 /* A line of context above a form: which round it is on, what the round is for.
    Reads as prose, not as an alert; nothing here is wrong. */
 .form-note {

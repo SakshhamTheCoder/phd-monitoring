@@ -13,6 +13,7 @@ import TableComponent from "../../table/TableComponent";
 import CounterField from "../../fields/CounterField";
 import Recommendation from "../../layouts/Recommendation";
 import { toast } from "react-toastify";
+import { stepAnswered } from '../../../../utils/formSteps';
 
 
 const Supervisor = ({ formData }) => {
@@ -29,7 +30,7 @@ const Supervisor = ({ formData }) => {
     setBody({
       // The approval column defaults to 0, which would submit as "Not Recommend"
       // if Submit is pressed before choosing. Unanswered means nothing chosen.
-      approval: formData.locks?.supervisor ? formData.approvals?.supervisor : null,
+      approval: stepAnswered(formData, 'supervisor') ? formData.approvals?.supervisor : null,
       supervised_outside: formData.current_supervisor?.supervised_outside,
     });
     setIsLoaded(true);
