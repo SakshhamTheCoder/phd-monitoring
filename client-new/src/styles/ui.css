@@ -37,7 +37,9 @@
     gap: var(--space-5);
 }
 
-.page-header-text { min-width: 0; }
+/* A basis of its own, so a row of actions wrapping beside it shrinks mostly
+   itself and a short title is not broken onto two lines. */
+.page-header-text { flex: 1 1 20rem; min-width: 0; }
 
 .page-title {
     font-size: var(--text-page);
@@ -72,7 +74,9 @@
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: var(--space-2);
-    flex-shrink: 0;
+    /* Wraps rather than widening the page once a profile carries five
+       actions; min-width lets it shrink below its one-line width. */
+    min-width: 0;
 }
 
 /* The tab bar sits under the title, not as a separate band. */
