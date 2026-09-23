@@ -232,9 +232,16 @@ class IrbSubController extends Controller
     {
         $model = IrbSubForm::class;
         $form=IrbSubForm::find($form_id);
-        return $this->submitForm($user, $request, $form_id, $model, 'faculty', 'student', 'external',
-        function ($formInstance) use ($request, $user) {
+        // A scholar carried over without an outside expert has nobody to send
+        // the external review to, and the form sat at that step for good. It
+        // goes on to the doctoral committee instead, and says so in its history.
+        $hasExpert = (bool) $form?->student?->outsideExpert();
+        return $this->submitForm($user, $request, $form_id, $model, 'faculty', 'student', $hasExpert ? 'external' : 'doctoral',
+        function ($formInstance) use ($request, $user, $hasExpert) {
             $this->handleSupervisorSubmitForm($user, $request, $formInstance);
+            if (!$hasExpert) {
+                $formInstance->addHistoryEntry('External review skipped: no outside expert is on record for this scholar.', 'System');
+            }
         });
     }   
 
