@@ -46,7 +46,7 @@ class RoleSweepTest extends TestCase
         'irb-submission' => 'irb_sub_forms',
         'irb-extension' => 'research_extentions_form',
         'synopsis-submission' => 'synopsis_submissions',
-        'revise-title' => 'synopsis_submissions',
+        'revise-title' => 'revise_title_forms',
         'thesis-submission' => 'thesis_submissions',
         'thesis-extension' => 'thesis_extentions_form',
         'supervisor-change' => 'supervisor_change_forms',

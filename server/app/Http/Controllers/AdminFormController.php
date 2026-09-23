@@ -8,6 +8,7 @@ use App\Models\ConstituteOfIRB;
 use App\Models\IrbSubForm;
 use App\Models\ResearchExtentionsForm;
 use App\Models\ListOfExaminersForm;
+use App\Models\ReviseTitleForm;
 use App\Models\StudentSemesterOffForm;
 use App\Models\SupervisorChangeForm;
 use App\Models\SupervisorAllocation;
@@ -27,6 +28,7 @@ class AdminFormController extends Controller
         'irb-submission' => IrbSubForm::class,
         'irb-extension' => ResearchExtentionsForm::class,
         'list-of-examiners' => ListOfExaminersForm::class,
+        'revise-title' => ReviseTitleForm::class,
         'semester-off' => StudentSemesterOffForm::class,
         'status-change' => StudentStatusChangeForms::class,
         'supervisor-allocation' => SupervisorAllocation::class,
@@ -95,6 +97,14 @@ class AdminFormController extends Controller
             // always built the chain with it. The same roles answer twice, once
             // on the written submission and again after the viva; the chain is
             // listed once, because that is what the row stores.
+            'steps' => ['student', 'faculty', 'doctoral', 'phd_coordinator', 'hod', 'dordc', 'complete']
+        ],
+        'revise-title' => [
+            'form_name' => 'Revise Title',
+            // As-needed, like IRB Extension and Supervisor Change: each revision
+            // is its own form, and createForms allows one open at a time.
+            'max_count' => 10,
+            // The synopsis's first round, with no viva after it.
             'steps' => ['student', 'faculty', 'doctoral', 'phd_coordinator', 'hod', 'dordc', 'complete']
         ],
         'thesis-submission' => [

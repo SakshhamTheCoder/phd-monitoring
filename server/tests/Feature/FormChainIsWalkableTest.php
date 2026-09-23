@@ -38,6 +38,7 @@ class FormChainIsWalkableTest extends TestCase
         'irb-submission' => \App\Http\Controllers\IrbSubController::class,
         'irb-extension' => \App\Http\Controllers\ResearchExtentionController::class,
         'synopsis-submission' => \App\Http\Controllers\SynopsisSubmissionController::class,
+        'revise-title' => \App\Http\Controllers\ReviseTitleController::class,
         'thesis-submission' => \App\Http\Controllers\ThesisSubmissionController::class,
         'thesis-extension' => \App\Http\Controllers\ThesisExtentionController::class,
         'supervisor-change' => \App\Http\Controllers\SupervisorChangeFormController::class,

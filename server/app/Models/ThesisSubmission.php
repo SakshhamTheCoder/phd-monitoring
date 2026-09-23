@@ -48,7 +48,7 @@ class ThesisSubmission extends Model
         $formData= array_merge($commonJSON, [
             // The form's own date wins; the scholar's is the fallback. A second
             // key further down used to overwrite this one.
-            'date_of_synopsis' => $this->date_of_synopsis ?? $this->student->date_of_synopsis,
+            'date_of_synopsis' => $this->date_of_synopsis ?? $this->student->date_of_synopsis?->toDateString(),
             'reciept_no' => $this->reciept_no,
             'date_of_fee_submission' => $this->date_of_fee_submission,
             'fee_receipt' => $this->fee_receipt,
@@ -57,7 +57,7 @@ class ThesisSubmission extends Model
             'current_status'=>$this->student->current_status,
             'address'=>$this->student->user->address,
             'initial_status'=>$this->student->initialStatus(),
-            'date_of_irb'=>$this->student->date_of_irb,
+            'date_of_irb'=>$this->student->date_of_irb?->toDateString(),
             'previous_extension_date'=>$prev_date,
             'sci' => $publicationsQuery->clone()->where('publication_type', 'journal')->where('type', 'sci')->get(),
             'non_sci' => $publicationsQuery->clone()->where('publication_type', 'journal')->where('type', 'non-sci')->get(),

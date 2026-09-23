@@ -103,6 +103,8 @@ class FormLevelController extends Controller
                 return ConstituteOfIRB::class;
             case 'synopsis-submission':
                 return SynopsisSubmission::class;
+            case 'revise-title':
+                return \App\Models\ReviseTitleForm::class;
             case 'list-of-examiners':
                 return ListOfExaminersForm::class;
             case 'thesis-submission':

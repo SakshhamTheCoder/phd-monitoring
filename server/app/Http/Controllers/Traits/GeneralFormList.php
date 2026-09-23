@@ -422,11 +422,11 @@ trait GeneralFormList
             'current_status' => $student->current_status,
             'fathers_name' => $student->fathers_name,
             'address' => $student->address,
-            'date_of_registration' => $student->date_of_registration,
-            'date_of_irb' => $student->date_of_irb,
-            'date_of_synopsis' => $student->date_of_synopsis,
-            'date_of_thesis' => $student->date_of_thesis,
-            'date_of_thesis_awarded' => $student->date_of_thesis_awarded,
+            'date_of_registration' => $student->date_of_registration?->toDateString(),
+            'date_of_irb' => $student->date_of_irb?->toDateString(),
+            'date_of_synopsis' => $student->date_of_synopsis?->toDateString(),
+            'date_of_thesis' => $student->date_of_thesis?->toDateString(),
+            'date_of_thesis_awarded' => $student->date_of_thesis_awarded?->toDateString(),
             'thesis_window' => $student->thesisWindow(),
             // The IRB committee's one member from outside the institute, who
             // reviews the revised IRB. Null for a scholar carried over without one.

@@ -46,9 +46,9 @@ class HomeController extends Controller
                     'current_status' => $student->current_status,
                     'fathers_name' => $student->fathers_name,
                     'address' => $student->address,
-                    'date_of_registration' => $student->date_of_registration,
-                    'date_of_irb' => $student->date_of_irb,
-                    'date_of_synopsis' => $student->date_of_synopsis,
+                    'date_of_registration' => $student->date_of_registration?->toDateString(),
+                    'date_of_irb' => $student->date_of_irb?->toDateString(),
+                    'date_of_synopsis' => $student->date_of_synopsis?->toDateString(),
                     'doctoral' => $student->doctoralCommittee->map(function ($faculty) {
                         return [
                             'faculty_code' => $faculty->faculty_code,

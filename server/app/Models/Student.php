@@ -41,11 +41,14 @@ class Student extends Model
 
     protected $casts = [
         'imported_at' => 'datetime',
-        'date_of_registration' => 'date',
-        'date_of_irb' => 'date',
-        'date_of_synopsis' => 'date',
-        'date_of_thesis' => 'date',
-        'date_of_thesis_awarded' => 'date',
+        // Serialised as plain Y-m-d. The bare 'date' cast sent a UTC timestamp,
+        // which with APP_TIMEZONE=Asia/Kolkata is 18:30 the day before; a form
+        // that saved that string back moved the date a day earlier every time.
+        'date_of_registration' => 'date:Y-m-d',
+        'date_of_irb' => 'date:Y-m-d',
+        'date_of_synopsis' => 'date:Y-m-d',
+        'date_of_thesis' => 'date:Y-m-d',
+        'date_of_thesis_awarded' => 'date:Y-m-d',
         'is_jrf' => 'boolean',
         'overall_progress' => 'float',
     ];

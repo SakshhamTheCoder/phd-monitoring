@@ -482,6 +482,7 @@ trait GeneralFormSubmitter
             'ThesisExtentionForm' => 'thesis-extension',
             'ListOfExaminersForm' => 'list-of-examiners',
             'SynopsisSubmission' => 'synopsis-submission',
+            'ReviseTitleForm' => 'revise-title',
             'Presentation' => 'presentation',
             'StudentLeaveForm' => 'student-leave',
         };

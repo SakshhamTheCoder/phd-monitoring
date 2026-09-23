@@ -132,7 +132,22 @@ class SynopsisSubmissionController extends Controller
         }
 
         $form = SynopsisSubmission::find($form_id);
-        return $form && $form->student->checkDoctoralCommittee($user->faculty?->faculty_code) ? 'doctoral' : $role;
+
+        $code = $user->faculty?->faculty_code;
+
+        if (!$form || !$form->student->checkDoctoralCommittee($code)) {
+
+            return $role;
+
+        }
+
+        // A supervisor who also sits on the committee answers as supervisor until
+
+        // the form reaches the committee; otherwise the supervisor step could
+
+        // never be answered by them.
+
+        return $form->student->checkSupervises($code) && $form->stage !== 'doctoral' ? $role : 'doctoral';
     }
 
     /**

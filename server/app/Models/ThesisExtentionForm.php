@@ -42,8 +42,8 @@ class ThesisExtentionForm extends Model
             'period_of_extention' => $this->period_of_extention,
             'reason' => $this->reason,
             'initial_status'=>$this->student->initialStatus(),
-            'date_of_irb'=>$this->student->date_of_irb,
-            'date_of_synopsis'=>$this->student->date_of_synopsis,
+            'date_of_irb'=>$this->student->date_of_irb?->toDateString(),
+            'date_of_synopsis'=>$this->student->date_of_synopsis?->toDateString(),
             // ->get(), not the relation: without it this serialised to {} and the
             // form had no way to tell a repeat extension from a first one, which
             // is the difference between needing the previous grant's PDF or not.
