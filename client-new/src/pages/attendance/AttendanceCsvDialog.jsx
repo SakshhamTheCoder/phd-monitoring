@@ -71,8 +71,15 @@ const AttendanceCsvDialog = ({ isOpen, onClose, onImported, editWindow }) => {
         // to write because the scholar has an approved leave for that date —
         // same silent-drop risk the Mark tab's save toast guards against, so
         // it gets the same treatment here.
-        toast.success(buildSaveMessage(data.message || 'CSV imported', data.data?.skipped_on_leave));
-        if (data.data?.errors?.length) toast.warning(`${data.data.error_count} rows had errors — check console`);
+        const saveMessage = buildSaveMessage(data.message || 'CSV imported', data.data?.skipped_on_leave);
+        // A file whose every row was refused still answers 200.
+        if ((data.data?.created ?? 0) + (data.data?.updated ?? 0) > 0) toast.success(saveMessage);
+        else toast.error(saveMessage);
+        const errors = data.data?.errors || [];
+        if (errors.length) {
+          const more = errors.length > 3 ? `; and ${errors.length - 3} more` : '';
+          toast.warning(`Check these rows: ${errors.slice(0, 3).join('; ')}${more}`, { autoClose: 10000 });
+        }
         close();
         onImported();
       } else toast.error(data.message || 'Import failed.');

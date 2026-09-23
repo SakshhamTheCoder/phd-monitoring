@@ -215,9 +215,12 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
         }
       }
 
-      toast.success(`Import completed: ${totalSuccess} created, ${totalUpdated} updated, ${totalErrors} errors`);
+      const summary = `${totalSuccess} created, ${totalUpdated} updated, ${totalErrors} errors`;
+      if (totalSuccess + totalUpdated > 0) toast.success(`Import completed: ${summary}`);
+      else toast.error(`Nothing was imported: ${summary}`);
       if (allErrors.length > 0) {
-        toast.warning(`${totalErrors} rows failed. Check console for details.`);
+        const more = allErrors.length > 3 ? `; and ${allErrors.length - 3} more` : '';
+        toast.warning(`Check these rows: ${allErrors.slice(0, 3).join('; ')}${more}`, { autoClose: 10000 });
       }
 
       setIsBulkUploadModalOpen(false);
