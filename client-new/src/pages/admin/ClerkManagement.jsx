@@ -10,6 +10,7 @@ import CustomButton from '../../components/forms/fields/CustomButton';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import ClerkForm from '../../components/clerkForm/ClerkForm';
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
+import { useRowMenu } from '../../hooks/useRowMenu';
 
 /**
  * Admin → Clerk Management
@@ -33,7 +34,7 @@ const ClerkManagement = () => {
   const [isBulkUpdateOpen, setIsBulkUpdateOpen] = useState(false);
   const [bulkSubmitting, setBulkSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(null);
-  const [openMenu, setOpenMenu] = useState(null);
+  const { openMenu, menuStyle, toggleMenu, closeMenu } = useRowMenu();
 
   const clerkSampleCsv = `email,phone,department_codes,full_name
 clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
@@ -51,14 +52,6 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
       if (res.success) setDepartments(res.response.data || []);
     });
   }, []);
-
-  // Close row-actions dropdown on outside click — same as PagenationTable:9
-  useEffect(() => {
-    if (openMenu === null) return;
-    const close = () => setOpenMenu(null);
-    document.addEventListener('click', close);
-    return () => document.removeEventListener('click', close);
-  }, [openMenu]);
 
   const openEditor = (clerk) => {
     setEditing(clerk);
@@ -263,20 +256,18 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
                       <button
                         className="row-actions-trigger"
                         title="Actions"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setOpenMenu(openMenu === idx ? null : idx);
-                        }}
+                        aria-expanded={openMenu === idx}
+                        onClick={(e) => toggleMenu(idx, e)}
                       >
                         <i className="fa fa-ellipsis-v"></i>
                       </button>
                       {openMenu === idx && (
-                        <div className="row-actions-menu" onClick={(e) => e.stopPropagation()}>
+                        <div className="row-actions-menu" style={menuStyle} onClick={(e) => e.stopPropagation()}>
                           <button
                             className="row-actions-item"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setOpenMenu(null);
+                              closeMenu();
                               openEditor(clerk);
                             }}
                           >

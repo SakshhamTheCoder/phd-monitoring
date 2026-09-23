@@ -6,6 +6,7 @@ import { useLoading } from "../../context/LoadingContext";
 import { toast } from "react-toastify";
 import FileLink, { isFilePath } from "../common/FileLink";
 import { EMPTY_VALUE } from "../../utils/timeParse";
+import { useRowMenu } from "../../hooks/useRowMenu";
 
 const PagenationTable = ({
   endpoint,
@@ -35,7 +36,7 @@ const PagenationTable = ({
   const [totalPages, setTotalPages] = useState(1);
   const [selectMode, setSelectMode] = useState(false);
   const [role, setRole] = useState("student");
-  const [openMenu, setOpenMenu] = useState(null);
+  const { openMenu, menuStyle, toggleMenu, closeMenu } = useRowMenu();
   // The table's own request, not the page-wide loader. That loader is one flag
   // shared by every request on the page, so it could already be off while this
   // table was still waiting, and the table said "No results yet." meanwhile.
@@ -69,14 +70,6 @@ const PagenationTable = ({
   const selecting = persistentSelect || selectMode;
   const allSelected = forms.length > 0 && selectedForms.size === forms.length;
   const toggleAll = () => setSelectedForms(allSelected ? new Set() : new Set(forms.map((form) => form.id)));
-
-  // Close the open row-actions menu on any outside click
-  useEffect(() => {
-    if (openMenu === null) return;
-    const close = () => setOpenMenu(null);
-    document.addEventListener("click", close);
-    return () => document.removeEventListener("click", close);
-  }, [openMenu]);
 
   const fetchData = async (page = 1, rows = rowsPerPage, filters = null) => {
     const request = (latestRequest.current += 1);
@@ -335,15 +328,13 @@ const PagenationTable = ({
                           <button
                             className="row-actions-trigger"
                             title="Actions"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenMenu(openMenu === index ? null : index);
-                            }}
+                            aria-expanded={openMenu === index}
+                            onClick={(e) => toggleMenu(index, e)}
                           >
                             <i className="fa fa-ellipsis-v"></i>
                           </button>
                           {openMenu === index && (
-                            <div className="row-actions-menu" onClick={(e) => e.stopPropagation()}>
+                            <div className="row-actions-menu" style={menuStyle} onClick={(e) => e.stopPropagation()}>
                               {rowActions.map((action, actionIndex) => {
                                 const danger = action.danger || /delete|remove/i.test(action.tooltip || "");
                                 return (
@@ -352,7 +343,7 @@ const PagenationTable = ({
                                     className={`row-actions-item${danger ? " danger" : ""}`}
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      setOpenMenu(null);
+                                      closeMenu();
                                       action.onClick(form);
                                     }}
                                   >

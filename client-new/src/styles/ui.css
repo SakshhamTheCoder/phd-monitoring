@@ -562,10 +562,10 @@
   background: #f2e6e6;
   color: var(--primary-color);
 }
+/* Fixed, and placed by useRowMenu, so the table card's sideways scroll does
+   not clip it. */
 .row-actions-menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
+  position: fixed;
   z-index: 50;
   min-width: 200px;
   padding: 6px;
@@ -649,6 +649,10 @@
     border-radius: var(--radius);
     background-color: var(--surface);
     box-shadow: var(--shadow-sm);
+    /* A table with more columns than the content column is wide scrolls inside
+       its own card, rather than widening the page. Eight columns overflow at
+       1024 with the sidebar open, not only on a phone. */
+    overflow-x: auto;
 }
 
 .form-table { margin-bottom: 20px; }
@@ -811,13 +815,8 @@
 
     .empty-state { padding: 2rem 1rem; }
 
-    /* A table with more columns than the screen is wide scrolls inside its own
-       card, rather than widening the page and dragging every other element
-       sideways with it. .data-table-wrap already scrolls; .form-list-container
-       is the same card without the wrapper. */
     .form-list-container {
         padding: 12px;
-        overflow-x: auto;
     }
 
     .table-bottom {

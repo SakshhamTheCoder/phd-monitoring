@@ -9,7 +9,9 @@
 /* Stats Grid */
 .po-stats-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1.5fr 1fr 1fr;
+  /* minmax(0, ...) so a long label wraps inside its card instead of setting
+     the column's minimum and pushing the grid past the page edge at 1024. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr);
   gap: 1rem;
   margin-bottom: 2rem;
 }
@@ -230,7 +232,7 @@
    numbers in them. Two across keeps them scannable without scrolling. */
 @media (max-width: 768px) {
   .po-stats-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.75rem;
     margin-bottom: 1.5rem;
   }
