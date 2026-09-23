@@ -4,7 +4,7 @@ import FilterBar from "../../components/filterBar/FilterBar";
 import PagenationTable from "../../components/pagenationTable/PagenationTable";
 import SemesterStatsCard from "./SemsterStatsCard";
 import { useLocation, useParams } from "react-router-dom";
-import PageHeader from '../../components/pageHeader/PageHeader';
+import Page from '../../components/page/Page';
 import { currentRole } from '../../auth/access';
 
 // Admin reads every evaluation but reviews none, so nothing waits on it.
@@ -60,8 +60,7 @@ const PresentationListPage = () => {
   const endpoint = presentationTab === NOT_SCHEDULED_TAB ? `${pathname}/not-scheduled` : pathname;
 
   return (
-    <>
-      <PageHeader title="Progress Monitoring List" />
+    <Page title="Progress monitoring list">
 
       <SemesterStatsCard semesterName={semester_id} filtersEnabled={extraFilter} setFilters={setExtraFilter} />
 
@@ -70,13 +69,13 @@ const PresentationListPage = () => {
           value={presentationTab}
           onChange={selectTab}
           items={[
-            'Action Required',
-            'Upcoming Progress Monitoring',
+            'Action required',
+            'Upcoming progress monitoring',
             'Completed',
-            'Not Scheduled',
-            'Semester Off',
-            'Not Submitted',
-            'All Progress Monitoring',
+            'Not scheduled',
+            'Semester off',
+            'Not submitted',
+            'All progress monitoring',
           ]
             .map((label, i) => ({ value: i, label }))
             .filter((tab) => tab.value !== SEMESTER_OFF_TAB)
@@ -84,15 +83,15 @@ const PresentationListPage = () => {
             .filter((tab) => !(tab.value === NOT_SCHEDULED_TAB && !READS_NOT_SCHEDULED.includes(role)))}
         />
       )}
-      {/* Keyed by tab: a tab change drops the search, so the box must empty too. */}
-      {extraFilter && <FilterBar key={presentationTab} onSearch={setSearchFilters} />}
       <PagenationTable
+        // Keyed by tab: a tab change drops the search, so the box must empty too.
+        search={extraFilter && <FilterBar key={presentationTab} onSearch={setSearchFilters} />}
         endpoint={endpoint}
         filters={filters}
         enableApproval={enableApproval}
         enableSelect={enableApproval}
       />
-    </>
+    </Page>
   );
 };
 

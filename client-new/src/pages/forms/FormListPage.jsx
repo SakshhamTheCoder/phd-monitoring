@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import PageHeader from "../../components/pageHeader/PageHeader";
+import Page from "../../components/page/Page";
 import FormList from "../../components/forms/formList/FormList";
 import { useLocation } from "react-router-dom";
 import CreateNewBar from "../../components/forms/formList/CreateNewBar";
@@ -19,17 +19,19 @@ import { currentRole } from '../../auth/access';
 // ordinary form either way and still opens at the scholar's step, because the
 // preferences and the reason are theirs to give.
 const RAISED_FOR_A_SCHOLAR = {
-  'list-of-examiners': { role: 'faculty', label: 'Create New Form +' },
-  'supervisor-change': { role: 'phd_coordinator', label: 'Raise Supervisor Change +' },
+  'list-of-examiners': { role: 'faculty', label: 'Create new form' },
+  'supervisor-change': { role: 'phd_coordinator', label: 'Raise supervisor change' },
 };
 
 const FormListPage = () => {
   const location = useLocation();
   const scholar = useScholarInPath();
-  // The form type is the last path segment: /forms/synopsis-submission
+  // The form type is the last path segment: /forms/synopsis-submission reads
+  // "Synopsis submission", with the acronyms kept whole.
   const formTypeLabel = (location.pathname.split('/').filter(Boolean).pop() || 'Forms')
     .replace(/[-_]/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+    .replace(/^\w/, (c) => c.toUpperCase())
+    .replace(/\b(irb|urf|phd)\b/gi, (word) => (word.toLowerCase() === 'phd' ? 'PhD' : word.toUpperCase()));
   const [role, setRole] = useState();
   const [showBar, setShowBar] = useState(false);
   // Read from the path on every render: this page is reused across form
@@ -69,7 +71,7 @@ const FormListPage = () => {
     : raisable && role === raisable.role
       ? <CreateNewBar rollNumber={scholarFormMatch[1]} label={raisable.label} />
     : role === "faculty" && modalButtonShow ? (
-      <CustomButton onClick={() => setIsModalOpen(true)} text="Create New Form +" />
+      <CustomButton onClick={() => setIsModalOpen(true)} text="Create new form" />
     ) : null;
 
   const handleSearch = (query) => {
@@ -79,32 +81,29 @@ const FormListPage = () => {
   };
 
   return (
-    <>
-      <PageHeader
-        title={formTypeLabel}
-        subtitle={scholar ? `Viewing ${scholar.label}` : undefined}
-        actions={headerAction}
-      />
+    <Page
+      title={formTypeLabel}
+      description={scholar ? `Viewing ${scholar.label}` : undefined}
+      actions={headerAction}
+    >
       {role !== "student" ? (
-        <>
-          <FilterBar onSearch={handleSearch} />
-          <PagenationTable
-            key={refreshKey}
-            endpoint={location.pathname}
-            filters={filters}
-            enableApproval={role !== "faculty" && role !== "admin"}
-            enableSelect={role !== "faculty" && role !== "admin"}
-            extraTopbarComponents={
-              showBulkAllocate ? (
-                <CustomButton
-                  text="Bulk Allocate"
-                  variant="secondary"
-                  onClick={() => setIsBulkAllocateOpen(true)}
-                />
-              ) : null
-            }
-          />
-        </>
+        <PagenationTable
+          key={refreshKey}
+          search={<FilterBar onSearch={handleSearch} />}
+          endpoint={location.pathname}
+          filters={filters}
+          enableApproval={role !== "faculty" && role !== "admin"}
+          enableSelect={role !== "faculty" && role !== "admin"}
+          extraTopbarComponents={
+            showBulkAllocate ? (
+              <CustomButton
+                text="Bulk allocate"
+                variant="secondary"
+                onClick={() => setIsBulkAllocateOpen(true)}
+              />
+            ) : null
+          }
+        />
       ) : (
         <FormList />
       )}
@@ -131,11 +130,11 @@ const FormListPage = () => {
             <>
             {!showBar ? (
             <GridContainer 
-            label="Enter Student Roll Number to initiate List of Examiners"
+            label="Enter the student roll number to initiate a list of examiners"
             elements={[
                 <InputField 
-                    hint={"Enter Roll Number"}
-                    label={"Roll Number"}
+                    hint={"Enter roll number"}
+                    label={"Roll number"}
                     onChange={(value)=>{setRollNumber(value.trim())}}
                 />,
                 <CustomButton
@@ -148,11 +147,11 @@ const FormListPage = () => {
                 />
             ]}
                 
-            />):(<CreateNewBar rollNumber={rollNumber} label={"Confirm Form for "+rollNumber} />)}
+            />):(<CreateNewBar rollNumber={rollNumber} label={"Confirm form for "+rollNumber} />)}
             </>,
         ]}
       />
-    </>
+    </Page>
   );
 };
 

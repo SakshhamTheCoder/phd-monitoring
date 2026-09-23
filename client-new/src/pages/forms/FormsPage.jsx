@@ -5,6 +5,7 @@ import { baseURL } from '../../api/urls';
 import { useLoading } from '../../context/LoadingContext';
 import { useLocation } from 'react-router-dom';
 import LoadError from '../../components/common/LoadError';
+import Page from '../../components/page/Page';
 
 
 
@@ -40,17 +41,17 @@ const FormsPage = () => {
       };
     }, [location.pathname, attempt]);
 
-  if (loadFailed) {
-    return (
-      <LoadError
-        message="Could not load the forms. Check your connection and try again."
-        onRetry={() => setAttempt((n) => n + 1)}
-      />
-    );
-  }
-
   return (
-    <FormGrid forms={forms} loading={!loaded} />
+    <Page title="Forms">
+      {loadFailed ? (
+        <LoadError
+          message="Could not load the forms. Check your connection and try again."
+          onRetry={() => setAttempt((n) => n + 1)}
+        />
+      ) : (
+        <FormGrid forms={forms} loading={!loaded} />
+      )}
+    </Page>
   );
 }
 

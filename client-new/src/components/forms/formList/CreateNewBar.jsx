@@ -30,7 +30,7 @@ const CreateNewBar = ({rollNumber=null,label}) => {
             })
     };
 
-    return <CustomButton onClick={handleClick} text={label || 'Create New Form +'} />;
+    return <CustomButton onClick={handleClick} text={label || 'Create new form'} />;
 };
 
 export default CreateNewBar;

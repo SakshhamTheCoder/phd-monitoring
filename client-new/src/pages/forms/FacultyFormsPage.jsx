@@ -6,6 +6,7 @@ import { baseURL, ENDPOINTS } from '../../api/urls';
 import { useLoading } from '../../context/LoadingContext';
 import { useLocation } from 'react-router-dom';
 import { currentRole } from '../../auth/access';
+import Page from '../../components/page/Page';
 
 const FacultyFormsPage = () => {
     const role = currentRole();
@@ -73,7 +74,9 @@ const FacultyFormsPage = () => {
     }, [role]);
 
   return (
-    <FormGrid forms={forms}/>
+    <Page title="Forms">
+      <FormGrid forms={forms}/>
+    </Page>
   );
 }
 

@@ -100,7 +100,7 @@ const SchedulePresentation = ({ close, semester }) => {
           <GridContainer
             elements={[
               <InputField
-                label={"Period of Report"}
+                label={"Period of report"}
                 isLocked={true}
                 initialValue={semester}
                 required={true}
@@ -130,7 +130,7 @@ const SchedulePresentation = ({ close, semester }) => {
           <GridContainer
             elements={[
               <InputField
-              label={"Venue (Leave Blank to Auto Schedule Meet)"}
+              label={"Venue (leave blank to auto schedule a Meet)"}
               onChange={(value) =>
                 setBody((prev) => ({ ...prev, venue: value }))
               }
@@ -141,7 +141,7 @@ const SchedulePresentation = ({ close, semester }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Additional Guest Emails (comma separated)"
+                label="Additional guest emails (comma separated)"
                 onChange={(value) =>
                   setBody((prev) => ({ ...prev, guest_emails_raw: value }))
                 }
@@ -149,9 +149,9 @@ const SchedulePresentation = ({ close, semester }) => {
             ]}
             space={3}
           />
-          <GridContainer
-            elements={[<></>, <></>, <CustomButton text="Schedule" onClick={schedule} />]}
-          />
+          <div className="modal-actions">
+            <CustomButton text="Schedule" onClick={schedule} />
+          </div>
         </>
       )}
     </>

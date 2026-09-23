@@ -1,73 +1,11 @@
-.semester-card {
-    margin-top: 20px;
-    /* background-color: hsl(0, 27%, 96%); */
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    padding: 20px 20px;
-    margin-bottom: 20px;
-    box-shadow: var(--shadow-sm);
-  }
-  
-  .semester-card h3 {
-    margin-bottom: 12px;
-    font-size: var(--text-xl);
-    color: var(--text-color);
-  }
-  
-  .semester-stats-line {
-    display: flex;
-    flex-wrap: wrap;
-    /* Pills sit next to each other, not across the room. The row gap is what
-       separates the stats from the actions below them, so the action rows no
-       longer add a margin of their own. */
-    gap: 0.6rem;
-    row-gap: 1rem;
-    align-items: center;
-  }
-  
-  .semester-card .stat-item {
-    font-size: var(--text-base);
-    color: var(--text-color);
-    background: var(--surface);
-    padding: 10px 14px;
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-sm);
-  }
-  
-  .button{
-    margin-left: 5px;
-    padding: 10px 15px;
-    /* width: 100%; */
-    border-radius: var(--radius);
-    background-color: var(--primary-color);
-    color: #FFF;
-}
-.button:hover{
-    background-color: var(--hover-color);
-    cursor: pointer;
-}
-  /* .input-field and its readonly state come from Fields.css */
-  
-
-  .semester-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  
-  .semester-status-indicator {
-    color: var(--success);
-    font-weight: bold;
-    margin-left: 10px;
-    font-size: var(--text-sm);
-  }
-  
-/* Actions sit inline, on their own row of the stats line. */
-.semester-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  width: 100%;
+/* The Active or Upcoming badge sits beside the semester's name in the title. */
+.semester-badge {
+  margin-left: var(--space-2);
+  vertical-align: middle;
 }
 
+.semester-note {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}

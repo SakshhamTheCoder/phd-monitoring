@@ -238,6 +238,7 @@ const BulkSchedulePresentation = ({semester_name}) => {
           />,
           <CustomButton
             text='Sample CSV'
+            variant='secondary'
             onClick={downloadSampleCSV}
           />,
         ]}
@@ -248,7 +249,7 @@ const BulkSchedulePresentation = ({semester_name}) => {
         elements={[
 
           <InputField 
-            label={"Period of Report"}
+            label={"Period of report"}
             isLocked={true}
             initialValue={semester_name }
           />
@@ -259,7 +260,7 @@ const BulkSchedulePresentation = ({semester_name}) => {
       {csvData.length > 0 && (
         <>
           <div className="bulk-preview-heading bulk-preview-heading--tight">
-            Selected Period: {body.period_of_report}
+            Selected period: {body.period_of_report}
           </div>
           <div className="bulk-preview-scroll bulk-preview-scroll--full">
             <table
@@ -301,7 +302,7 @@ const BulkSchedulePresentation = ({semester_name}) => {
 
           <div className="bulk-preview-actions">
             <CustomButton
-              text='Confirm Bulk Schedule'
+              text='Confirm bulk schedule'
               onClick={confirmBulkSchedule}
             />
           </div>

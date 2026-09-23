@@ -7,6 +7,8 @@ import { useLoading } from "../../../context/LoadingContext";
 import { parseDateTime } from "../../../utils/timeParse";
 import { currentRole } from '../../../auth/access';
 import LoadError from "../../common/LoadError";
+import Panel from "../../panel/Panel";
+import StatusNotice from "../../common/StatusNotice";
 
 const FormList = () => {
   const [forms, setForms] = useState([]);
@@ -58,17 +60,14 @@ const FormList = () => {
     );
   }
 
-  if (!loaded) return <p>Loading forms…</p>;
+  if (!loaded) return <Panel><StatusNotice tone="loading" title="Loading forms" /></Panel>;
 
   return (
-    <>
+    <Panel>
       {forms?.length > 0 ? (
-        <div className="form-card-stack">
+        <ul className="form-card-stack">
           {forms.map((form) => (
-            <div
-              key={form.id}
-              className="form-card-list"
-            >
+            <li key={form.id} className="form-card-list">
               {/* Covers the whole card, so the card opens by click or keyboard.
                   It is a sibling of the fields rather than around them, because
                   the approved form's own link below cannot sit inside another. */}
@@ -86,51 +85,34 @@ const FormList = () => {
               {form.completion === "complete" && form.status === "rejected" && (
                 <span className="action-label-list"></span>
               )}
-              {role === "student" ? (
-                <>
-                  {" "}
-                  <p className="form-title">
-                    <b>Stage:</b> <br /> {form.stage}
-                  </p>
-                  <p className="form-title">
-                    <b>Status:</b> <br /> {form.status}
-                  </p>
-                  <p className="form-title">
-                    <b>Created:</b> <br /> {parseDateTime(form.created_at)}
-                  </p>
-                  <p className="form-title">
-                    <b>Updated:</b> <br /> {parseDateTime(form.updated_at)}
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="form-title">
-                    <b>Name:</b> <br /> {form.name}
-                  </p>
-                  <p className="form-title">
-                    <b>Stage:</b> <br /> {form.stage}
-                  </p>
-                  <p className="form-title">
-                    <b>Status:</b> <br /> {form.status}
-                  </p>
-                  <p className="form-title">
-                    <b>Created:</b> <br /> {parseDateTime(form.created_at)}
-                  </p>
-                  {form.completion === "complete" &&
-                    form.status === "accepted" && (
-                      <p className="form-title">
-                        <b>Link:</b> <br /> <a href={form.link}>View Link</a>
-                      </p>
-                    )}
-                </>
-              )}
-            </div>
+              <dl className="facts">
+                {role === "student" ? (
+                  <>
+                    <div><dt>Stage</dt><dd>{form.stage}</dd></div>
+                    <div><dt>Status</dt><dd>{form.status}</dd></div>
+                    <div><dt>Created</dt><dd>{parseDateTime(form.created_at)}</dd></div>
+                    <div><dt>Updated</dt><dd>{parseDateTime(form.updated_at)}</dd></div>
+                  </>
+                ) : (
+                  <>
+                    <div><dt>Name</dt><dd>{form.name}</dd></div>
+                    <div><dt>Stage</dt><dd>{form.stage}</dd></div>
+                    <div><dt>Status</dt><dd>{form.status}</dd></div>
+                    <div><dt>Created</dt><dd>{parseDateTime(form.created_at)}</dd></div>
+                    {form.completion === "complete" &&
+                      form.status === "accepted" && (
+                        <div><dt>Link</dt><dd><a href={form.link}>View link</a></dd></div>
+                      )}
+                  </>
+                )}
+              </dl>
+            </li>
           ))}
-        </div>
+        </ul>
       ) : (
-        <p>No forms yet.</p>
+        <StatusNotice tone="empty" title="No forms yet" />
       )}
-    </>
+    </Panel>
   );
 };
 

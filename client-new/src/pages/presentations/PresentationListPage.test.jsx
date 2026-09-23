@@ -38,36 +38,36 @@ const renderAs = (role) => {
 const filterKeys = (props) => (props.filters?.mandatory_filter ?? []).map((filter) => filter.key);
 
 describe('PresentationListPage', () => {
-  it('opens admin on every evaluation, with no Action Required tab and no bulk approve', () => {
+  it('opens admin on every evaluation, with no Action required tab and no bulk approve', () => {
     const table = renderAs('admin');
-    expect(screen.queryByText('Action Required')).toBeNull();
-    expect(screen.getByText('All Progress Monitoring')).toBeTruthy();
+    expect(screen.queryByText('Action required')).toBeNull();
+    expect(screen.getByText('All progress monitoring')).toBeTruthy();
     expect(filterKeys(table)).not.toContain('action');
     expect(table.enableApproval).toBe(false);
   });
 
-  it('shows Not Scheduled only to roles the server answers, and never the empty Semester Off tab', () => {
+  it('shows Not scheduled only to roles the server answers, and never the empty Semester off tab', () => {
     for (const role of ['hod', 'phd_coordinator', 'faculty', 'dordc', 'admin']) {
       renderAs(role);
-      expect(screen.getByText('Not Scheduled')).toBeTruthy();
-      expect(screen.queryByText('Semester Off')).toBeNull();
+      expect(screen.getByText('Not scheduled')).toBeTruthy();
+      expect(screen.queryByText('Semester off')).toBeNull();
       cleanup();
     }
     for (const role of ['adordc', 'dra', 'director']) {
       renderAs(role);
-      expect(screen.queryByText('Not Scheduled')).toBeNull();
+      expect(screen.queryByText('Not scheduled')).toBeNull();
       cleanup();
     }
   });
 
-  it('offers bulk approve on Action Required only to roles the server accepts it from', () => {
+  it('offers bulk approve on Action required only to roles the server accepts it from', () => {
     for (const role of ['hod', 'dordc', 'adordc']) {
       expect(renderAs(role).enableApproval).toBe(true);
       cleanup();
     }
     for (const role of ['faculty', 'phd_coordinator', 'dra', 'director']) {
       const table = renderAs(role);
-      expect(screen.getByText('Action Required')).toBeTruthy();
+      expect(screen.getByText('Action required')).toBeTruthy();
       expect(filterKeys(table)).toContain('action');
       expect(table.enableApproval).toBe(false);
       cleanup();

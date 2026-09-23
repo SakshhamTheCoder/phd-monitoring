@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import PageHeader from '../../components/pageHeader/PageHeader';
+import Page from '../../components/page/Page';
 import { useLocation, useNavigate } from "react-router-dom";
 import FilterBar from "../../components/filterBar/FilterBar";
 import PagenationTable from "../../components/pagenationTable/PagenationTable";
@@ -257,11 +257,27 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
     setIsModalOpen(true);
   };
 
-  return (
-    <>
-      <PageHeader title="Students" subtitle="All PhD scholars and their current stage." />
+  // Adding and importing belong to the list on screen, so they follow the tab.
+  const pageActions = tab === 'ug'
+    ? managesUrf && (
+      <>
+        <CustomButton text="Bulk import" variant="secondary" onClick={() => setUgImportOpen(true)} />
+        <CustomButton text="Add UG student" onClick={() => { setUgStudent(null); setUgFormOpen(true); }} />
+      </>
+    )
+    : can("can_manage_students") && (
+      <>
+        <CustomButton text="Bulk import" variant="secondary" onClick={() => setIsBulkUploadModalOpen(true)} />
+        <CustomButton text="Add student" onClick={() => handleOpenForm()} />
+      </>
+    );
 
-      {readsUrf && (
+  return (
+    <Page
+      title="Students"
+      description="All PhD scholars and their current stage."
+      actions={pageActions || undefined}
+      tabs={readsUrf && (
         <Tabs
           value={tab}
           // Each tab's FilterBar unmounts when the other opens, so a search
@@ -272,73 +288,41 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
             setUgFilter({ conditions: [] });
           }}
           items={[
-            { value: 'phd', label: 'PhD Scholars' },
-            { value: 'ug', label: 'UG Students' },
+            { value: 'phd', label: 'PhD scholars' },
+            { value: 'ug', label: 'UG students' },
           ]}
         />
       )}
-
+    >
       {tab === 'ug' ? (
-        <>
-          <FilterBar
-            path="/ug-students"
-            placeholder="Search by name, roll number or branch…"
-            onSearch={setUgFilter}
-          />
-          <PagenationTable
-            key={ugRefreshKey}
-            endpoint="/ug-students"
-            // UG students have no profile page; editing is in the row menu.
-            rowClickable={false}
-            filters={ugFilter}
-            enableApproval={false}
-            enableSelect={false}
-            extraTopbarComponents={
-              managesUrf ? (
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <CustomButton
-                    text="Bulk Import"
-                    variant="secondary"
-                    onClick={() => setUgImportOpen(true)}
-                  />
-                  <CustomButton
-                    text="Add UG Student +"
-                    onClick={() => { setUgStudent(null); setUgFormOpen(true); }}
-                  />
-                </div>
-              ) : null
-            }
-            actions={managesUrf ? [{
-              icon: <i className="fa fa-pencil-square-o"></i>,
-              tooltip: "Edit",
-              onClick: (student) => { setUgStudent(student); setUgFormOpen(true); },
-            }] : []}
-          />
-        </>
+        <PagenationTable
+          key={ugRefreshKey}
+          search={
+            <FilterBar
+              path="/ug-students"
+              placeholder="Search by name, roll number or branch…"
+              onSearch={setUgFilter}
+            />
+          }
+          endpoint="/ug-students"
+          // UG students have no profile page; editing is in the row menu.
+          rowClickable={false}
+          filters={ugFilter}
+          enableApproval={false}
+          enableSelect={false}
+          actions={managesUrf ? [{
+            icon: <i className="fa fa-pencil-square-o"></i>,
+            tooltip: "Edit",
+            onClick: (student) => { setUgStudent(student); setUgFormOpen(true); },
+          }] : []}
+        />
       ) : (
-      <>
-      <FilterBar onSearch={handleFilterChange} />
-
       <PagenationTable
         key={refreshKey}
+        search={<FilterBar onSearch={handleFilterChange} />}
         endpoint={location.pathname}
         filters={filter}
         enableApproval={false}
-        extraTopbarComponents={
-          can("can_manage_students") ? (
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <CustomButton
-                text="Bulk Import"
-                variant="secondary"
-                onClick={() => setIsBulkUploadModalOpen(true)}
-              />
-              <CustomButton
-                text="Add Student +"
-                onClick={() => handleOpenForm()}
-              />
-            </div>
-          ) : null
-        }
         actions={[
           ...(can("can_manage_students") ? [{
             icon: <i className="fa fa-pencil-square-o"></i>,
@@ -349,7 +333,7 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
           }] : []),
           ...(can("can_propose_supervisor_changes") ? [{
             icon: <i className="fa fa-users"></i>,
-            tooltip: "Manage Supervisors/Doctoral",
+            tooltip: "Manage supervisors/doctoral",
             onClick: (studentData) => {
               setStudentToEdit(studentData);
               setIsModalEditStudentOpen(true);
@@ -357,21 +341,20 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
           }] : []),
           ...(role === "admin" ? [{
             icon: <i className="fa fa-file-text-o"></i>,
-            tooltip: "Manage Forms",
+            tooltip: "Manage forms",
             onClick: (studentData) => {
               navigate(`/forms/manage?roll_no=${studentData.roll_no}`);
             },
           }] : []),
         ]}
       />
-      </>
       )}
 
       <CustomModal
         isOpen={ugFormOpen}
         onClose={() => setUgFormOpen(false)}
         closeOnOutsideClick={false}
-        title={ugStudent ? "Edit UG Student" : "Add UG Student"}
+        title={ugStudent ? "Edit UG student" : "Add UG student"}
         width="60vw"
       >
         <UgStudentForm
@@ -384,7 +367,7 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
       <UnifiedBulkImportModal
         isOpen={ugImportOpen}
         onClose={() => setUgImportOpen(false)}
-        title="Bulk Import UG Students"
+        title="Bulk import UG students"
         required={['full_name', 'email', 'roll_no', 'branch_code', 'year']}
         rules={[
           'Matched on email, so importing a corrected file updates rather than duplicates.',
@@ -403,7 +386,7 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
         onClose={closeForm}
         setIsOpen={setIsModalOpen}
         closeOnOutsideClick={false}
-        title={editMode ? "Edit Student" : "Add Student"}
+        title={editMode ? "Edit student" : "Add student"}
         width="80vw"
       >
         <StudentForm
@@ -419,7 +402,7 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
         onClose={() => {
           setIsModalEditStudentOpen(false);
         }}
-        title={"Add Student Panel"}
+        title="Add student panel"
       >
           {/* {role=== "admin" && <AssignPanel roll_no={studentToEdit?.roll_no}/>} */}
         {can("can_propose_supervisor_changes") && (
@@ -437,7 +420,7 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
       <UnifiedBulkImportModal
         isOpen={isBulkUploadModalOpen}
         onClose={() => { setIsBulkUploadModalOpen(false); }}
-        title="Bulk Import Students"
+        title="Bulk import students"
         required={['Registration Number', 'Full Name', 'Email', 'Phone', 'Department Code', 'Date of Admission', 'Enrollment Type']}
         rules={[
           'Matched by registration number, then email. Both must belong to the same scholar.',
@@ -466,8 +449,7 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
           </label>
         }
       />
-
-    </>
+    </Page>
   );
 };
 

@@ -1,6 +1,6 @@
 import React, { Suspense, lazy, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import PageHeader from '../../components/pageHeader/PageHeader';
+import Page from '../../components/page/Page';
 import CustomModal from "../../components/forms/modal/CustomModal";
 import CustomButton from "../../components/forms/fields/CustomButton";
 import GridContainer from "../../components/forms/fields/GridContainer";
@@ -152,27 +152,26 @@ const PresentationSemester = () => {
   };
 
   return (
-    <>
-      <PageHeader title="Progress Monitoring" subtitle="Evaluation semesters and their deadlines." />
-     <SemesterStatsCard key={refreshKey} />
+    <Page title="Progress monitoring" description="Evaluation semesters and their deadlines.">
+     <SemesterStatsCard key={`stats-${refreshKey}`} />
      <PagenationTable
         key={refreshKey}
         endpoint={location}
         enableApproval={false}
         enableSelect={false}
-        tableTitle="Past Semesters"
+        tableTitle="Past semesters"
         customOpenForm={(semester) => {
             navigate(location + `/semester/${semester.semester_name}`);
         }}
         extraTopbarComponents={
           (role === "admin" || role === "dordc") ? (
-            <CustomButton text="Import Progress History" variant="secondary" onClick={() => setShowProgressImport(true)} />
+            <CustomButton text="Import progress history" variant="secondary" onClick={() => setShowProgressImport(true)} />
           ) : null
         }
         actions={(role === "admin" || role === "dordc") ? [
           {
-            icon: "✏️",
-            tooltip: "Edit Semester",
+            icon: <i className="fa fa-pencil-square-o"></i>,
+            tooltip: "Edit semester",
             onClick: handleEditClick,
           },
         ] : []}
@@ -181,7 +180,7 @@ const PresentationSemester = () => {
       <UnifiedBulkImportModal
         isOpen={showProgressImport}
         onClose={() => setShowProgressImport(false)}
-        title="Import Progress History"
+        title="Import progress history"
         required={['Registration Number', 'Progress for AY', 'Total Progress %']}
         rules={[
           'One row per scholar per semester. The gain for each period is worked out from the totals.',
@@ -199,14 +198,14 @@ const PresentationSemester = () => {
         <CustomModal
           isOpen={openEditModal}
           onClose={() => setOpenEditModal(false)}
-          title="Edit Semester Deadline"
+          title="Edit semester deadline"
           minWidth="300px"
           minHeight="300px"
         >
           <GridContainer
             elements={[
               <InputField
-                label="Period of Report"
+                label="Period of report"
                 isLocked={true}
                 initialValue={editForm.semester_name}
               />,
@@ -215,7 +214,7 @@ const PresentationSemester = () => {
           />
 
           <Suspense fallback={<Loader />}>
-          <label className="input-label" htmlFor="presentation-semester-evaluation-start-date">Evaluation Start Date</label>
+          <label className="input-label" htmlFor="presentation-semester-evaluation-start-date">Evaluation start date</label>
           <DatePicker id="presentation-semester-evaluation-start-date"
             selected={editForm.start_date}
             readOnly
@@ -223,7 +222,7 @@ const PresentationSemester = () => {
             className="input-field field-readonly"
           />
 
-          <label className="input-label" htmlFor="presentation-semester-evaluation-end-date">Evaluation End Date</label>
+          <label className="input-label" htmlFor="presentation-semester-evaluation-end-date">Evaluation end date</label>
           <DatePicker id="presentation-semester-evaluation-end-date"
             selected={editForm.end_date}
             onChange={(date) => setEditForm({ ...editForm, end_date: date })}
@@ -242,7 +241,7 @@ const PresentationSemester = () => {
           />
 
           <FileUploadField
-            label="Sample PPT Template (Optional)"
+            label="Sample PPT template (optional)"
             initialValue={editForm.ppt_file}
             isLocked={false}
             onChange={(file) => setEditForm({ ...editForm, ppt_file: file })}
@@ -252,14 +251,13 @@ const PresentationSemester = () => {
             fileTypeLabel="PPT/PPTX"
           />
 
-          <div style={{ textAlign: "right", marginTop: "10px" }}>
-            <CustomButton onClick={handleEditSubmit} text={saving ? "Saving…" : "Save Changes"} disabled={saving} />
+          <div className="modal-actions">
+            <CustomButton onClick={handleEditSubmit} text={saving ? "Saving…" : "Save changes"} disabled={saving} />
           </div>
           </Suspense>
         </CustomModal>
       )}
-    </>
-    
+    </Page>
   );
 };
 
