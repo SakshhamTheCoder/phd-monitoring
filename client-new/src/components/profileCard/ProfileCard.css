@@ -224,3 +224,9 @@
   .student-overview { flex-direction: column-reverse; align-items: stretch; }
   .student-progress { width: 80px; }
 }
+
+/* A note or a control inside a flush panel, which has no body padding. */
+.profile-panel-note { padding: var(--space-4) var(--space-5); margin: 0; }
+.profile-panel-note--muted { color: var(--text-muted); font-size: var(--text-sm); }
+.outside-expert-picker { display: flex; align-items: flex-end; gap: var(--space-3); border-top: 1px solid var(--border-subtle); }
+.outside-expert-picker .input-suggestions-container { max-width: 420px; }

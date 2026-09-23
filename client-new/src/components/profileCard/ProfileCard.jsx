@@ -19,6 +19,7 @@ import Page from "../page/Page";
 import Panel, { PanelSection } from "../panel/Panel";
 import CustomModal from "../forms/modal/CustomModal";
 import SupervisorDoctoralManager from "../supervisorDoctoralManager/SupervisorDoctoralManager";
+import OutsideExpertPanel from "./OutsideExpertPanel";
 import InfoGrid from "../profileFields/InfoGrid";
 import { toast } from "react-toastify";
 import useCapabilities from "../../context/CapabilitiesContext";
@@ -616,6 +617,15 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
               components={[facultyNameCell]}
             />
           </Panel>
+
+          <OutsideExpertPanel
+            expert={profile.irb_outside_expert}
+            canManage={permissions.can_manage}
+            rollNo={profile.roll_no}
+            onSaved={() => customFetch(profileUrl, "GET", {}, true, false).then((res) => {
+              if (res?.success) setProfile(res.response.profile);
+            })}
+          />
 
           {publications && (
             <Panel>

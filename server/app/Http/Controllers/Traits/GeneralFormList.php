@@ -429,6 +429,15 @@ trait GeneralFormList
             'date_of_thesis' => $student->date_of_thesis,
             'date_of_thesis_awarded' => $student->date_of_thesis_awarded,
             'thesis_window' => $student->thesisWindow(),
+            // The IRB committee's one member from outside the institute, who
+            // reviews the revised IRB. Null for a scholar carried over without one.
+            'irb_outside_expert' => ($expert = $student->outsideExpert()) ? [
+                'id' => $expert->id,
+                'name' => trim($expert->first_name . ' ' . $expert->last_name),
+                'email' => $expert->email,
+                'designation' => $expert->designation,
+                'institution' => $expert->institution,
+            ] : null,
             'doctoral' => $student->doctoralCommittee->map(function ($faculty) {
                 return [
                     'faculty_code' => $faculty->faculty_code,

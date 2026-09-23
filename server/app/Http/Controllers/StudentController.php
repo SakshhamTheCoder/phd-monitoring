@@ -1076,6 +1076,31 @@ class StudentController extends Controller {
             && (bool) optional(Auth::user())?->may('can_edit_own_student_profile');
     }
 
+    /**
+     * Set the scholar's IRB outside expert, the person the revised IRB's
+     * external review goes to. A form already waiting at that step does not
+     * send itself; Resend review request on the form mails the new expert.
+     */
+    public function setOutsideExpert(Request $request, $roll_no)
+    {
+        if (!$this->canManageStudents()) {
+            return response()->json(['message' => 'You do not have permission to edit student'], 403);
+        }
+
+        $student = Student::where('roll_no', $roll_no)->first();
+        if (!$student) {
+            return response()->json(['message' => 'Student not found'], 404);
+        }
+
+        $request->validate(['outside_expert_id' => 'required|integer|exists:outside_experts,id']);
+        $expert = OutsideExpert::find($request->outside_expert_id);
+        ScholarCommittee::setOutsideExpert($student, $expert);
+
+        return response()->json([
+            'message' => 'Outside expert set to ' . trim($expert->first_name . ' ' . $expert->last_name) . '.',
+        ], 200);
+    }
+
     // Admin/privileged update of any student, keyed by roll_no. Distinct from
     // updateProfile (which is the student editing their own limited fields).
     public function adminUpdate(Request $request, $roll_no)

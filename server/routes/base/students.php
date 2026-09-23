@@ -27,6 +27,7 @@ Route::prefix('{id}')->group(function () {
     // keeps current, '/update' the provisioning half only a privileged role sets.
     Route::post('/profile', [StudentController::class, 'updateProfile'])->middleware('auth:sanctum');
     Route::post('/update', [StudentController::class, 'adminUpdate'])->middleware('auth:sanctum');
+    Route::post('/outside-expert', [StudentController::class, 'setOutsideExpert'])->middleware('auth:sanctum');
 
     Route::get('/forms', [UserController::class, 'listForms'])->middleware('auth:sanctum');
 
