@@ -37,6 +37,9 @@ class FormLadder
             'synopsis-submission',
             'thesis-extension',
             'thesis-submission',
+            // The title and objectives the revised IRB settled can be revised
+            // from here on.
+            'revise-title',
         ],
     ];
 
