@@ -213,14 +213,23 @@ const CreateProject = () => {
     if (/^https?:\/\//i.test(link)) {
       return apiUpdateProject(projectId, { sanction_letter_link: link, sanction_letter_name: 'Sanction Letter' });
     }
+    // A stored link that was emptied is cleared, or the old one would come back.
+    if (!link && initialForm?.sanctionLetterLink) {
+      return apiUpdateProject(projectId, { sanction_letter_link: null });
+    }
     return null;
   };
 
   // The server only names a missing field as "Validation failed", so say which
   // one here and open the step it is on.
   const missingField = () => {
-    if (!form.title.trim()) return 'the project title';
-    if (!form.category) return 'a category';
+    if (!form.title.trim()) return { what: 'the project title', step: 0 };
+    if (!form.category) return { what: 'a category', step: 0 };
+    // amount is NOT NULL whole rupees: a blank would be saved as 0 and a
+    // decimal cut short, so neither gets past here.
+    if (!/^\d+$/.test(String(form.sanctionAmount).trim())) {
+      return { what: 'the total sanctioned amount in whole rupees', step: 2 };
+    }
     return null;
   };
 
@@ -228,8 +237,8 @@ const CreateProject = () => {
     if (submitting) return;
     const missing = missingField();
     if (missing) {
-      setCurrentStep(0);
-      toast.error(`Enter ${missing} on the Basic info step before submitting.`);
+      setCurrentStep(missing.step);
+      toast.error(`Enter ${missing.what} on the ${STEPS[missing.step]} step before submitting.`);
       return;
     }
     setSubmitting(true);
@@ -451,7 +460,7 @@ const CreateProject = () => {
             <PanelSection title="Funding information">
               <div className="cp-form-grid">
                 <div className="cp-field input-field-container"><label htmlFor="create-project-funding-agency-2">Funding agency</label><input id="create-project-funding-agency-2" type="text" value={form.fundingAgency} readOnly className="field-readonly" /></div>
-                <div className="cp-field"><label htmlFor="create-project-total-sanctioned-amount">Total sanctioned amount (₹)</label><input id="create-project-total-sanctioned-amount" type="number" value={form.sanctionAmount} onChange={e => updateField('sanctionAmount', e.target.value)} placeholder="e.g. 4850000" /></div>
+                <div className="cp-field"><label htmlFor="create-project-total-sanctioned-amount">Total sanctioned amount (₹) {required}</label><input id="create-project-total-sanctioned-amount" type="number" step="1" min="0" aria-required="true" value={form.sanctionAmount} onChange={e => updateField('sanctionAmount', e.target.value)} placeholder="e.g. 4850000" /></div>
                 <div className="cp-field"><label htmlFor="create-project-tiet-share">TIET share (₹)</label><input id="create-project-tiet-share" type="number" value={form.tietShare} onChange={e => updateField('tietShare', e.target.value)} /></div>
                 <div className="cp-field"><label htmlFor="create-project-sanction-letter-link">Sanction letter link</label><input id="create-project-sanction-letter-link" type="url" value={form.sanctionLetterLink} onChange={e => updateField('sanctionLetterLink', e.target.value)} placeholder="https://..." /></div>
                 <div className="cp-field">

@@ -895,11 +895,22 @@ class UrfController extends Controller
 
             // As a PhD progress form links them: a copy of each chosen entry,
             // tagged with this report. The library entry stays for later ones.
+            // A resubmit sends the whole set: copies already on the report come
+            // back by their own id, new picks by their library id.
             foreach (['publications' => Publication::class, 'patents' => Patent::class] as $key => $model) {
-                $model::whereIn('id', $linked[$key])
+                $ids = array_map('intval', $linked[$key]);
+                $copies = $model::where('form_id', $report->id)->where('form_type', 'urf_report');
+                // Taken off on the page: its copy goes, the library entry stays.
+                $copies->clone()->whereNotIn('id', $ids)->delete();
+                $kept = $copies->clone()->get();
+                // Copies keep no source id, so an entry already on the report is
+                // recognised by title and kind, as the progress form does.
+                $model::whereIn('id', $ids)
                     ->where('user_id', $user->id)
                     ->whereNull('form_id')
                     ->get()
+                    ->reject(fn ($entry) => $kept->contains(fn ($copy) => $copy->title === $entry->title
+                        && $copy->publication_type === $entry->publication_type))
                     ->each(fn ($entry) => $entry->replicate()->forceFill([
                         'form_id' => $report->id,
                         'form_type' => 'urf_report',

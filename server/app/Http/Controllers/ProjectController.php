@@ -135,6 +135,11 @@ class ProjectController extends Controller {
             $this->queueFileDeletion($project->sanction_letter_link);
             $project->sanction_letter_link = $request->sanction_letter_link;
             $project->sanction_letter_name = $request->input('sanction_letter_name', 'Sanction Letter');
+        } elseif ($request->exists('sanction_letter_link') && preg_match('#^https?://#i', (string) $project->sanction_letter_link)) {
+            // The link box was emptied. Only an external link is cleared: an
+            // uploaded file is not shown in that box, so emptying it is not removing the file.
+            $project->sanction_letter_link = null;
+            $project->sanction_letter_name = null;
         }
         if ($request->hasFile('gantt_chart')) {
             $project->gantt_chart_path = $this->replaceUploadedFile($project->gantt_chart_path, $request->file('gantt_chart'), 'project_gantt', $project->id);

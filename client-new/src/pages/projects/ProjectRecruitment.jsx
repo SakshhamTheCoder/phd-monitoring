@@ -32,9 +32,9 @@ const toPositionBody = (f) => ({
 // The advertisement is a file, so the whole body has to go up as multipart.
 const toPositionForm = (f) => {
   const fd = new FormData();
-  Object.entries(toPositionBody(f)).forEach(([key, value]) => {
-    if (value !== null && value !== '') fd.append(key, value);
-  });
+  // Blanks go up as '' so a cleared field is saved cleared; the server's
+  // empty-string middleware stores them as null.
+  Object.entries(toPositionBody(f)).forEach(([key, value]) => fd.append(key, value ?? ''));
   fd.append('advertisement', f.advertisementFile);
   return fd;
 };
