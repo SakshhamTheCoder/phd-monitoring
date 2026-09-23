@@ -7,8 +7,7 @@ import PagenationTable from '../../components/pagenationTable/PagenationTable';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import Page from '../../components/page/Page';
 import CustomButton from '../../components/forms/fields/CustomButton';
-import InputField from '../../components/forms/fields/InputField';
-import GridContainer from '../../components/forms/fields/GridContainer';
+import OutsideExpertFields, { EMPTY_EXPERT } from '../../components/outsideExperts/OutsideExpertFields';
 
 // The header row the import expects, in order.
 const EXPERT_CSV_COLUMNS = ['full_name', 'email', 'phone', 'designation', 'department', 'institution', 'area_of_expertise', 'website'];
@@ -24,16 +23,7 @@ const OutsideExperts = () => {
   const [showBulkImportModal, setShowBulkImportModal] = useState(false);
   
   // Form data
-  const [formData, setFormData] = useState({
-    full_name: '',
-    designation: '',
-    department: '',
-    institution: '',
-    email: '',
-    phone: '',
-    area_of_expertise: '',
-    website: '',
-  });
+  const [formData, setFormData] = useState(EMPTY_EXPERT);
   
   const [editingExpert, setEditingExpert] = useState(null);
   const [csvFile, setCsvFile] = useState(null);
@@ -181,16 +171,7 @@ const OutsideExperts = () => {
   };
 
   const resetForm = () => {
-    setFormData({
-      full_name: '',
-      designation: '',
-      department: '',
-      institution: '',
-      email: '',
-      phone: '',
-      area_of_expertise: '',
-      website: '',
-    });
+    setFormData(EMPTY_EXPERT);
     setEditingExpert(null);
   };
 
@@ -247,93 +228,8 @@ const OutsideExperts = () => {
       closeOnOutsideClick={false}
     >
       <>
-        <GridContainer
-          elements={[
-            <InputField
-              label="Full Name"
-              initialValue={formData.full_name}
-              onChange={(value) => handleInputChange('full_name', value)}
-              placeholder="e.g. Dr. Tarunpreet Bhatia"
-              required
-            />,
-          ]}
-        />
+        <OutsideExpertFields values={formData} onChange={handleInputChange} />
 
-        <GridContainer
-          elements={[
-            <InputField
-              label="Email"
-              type="email"
-              initialValue={formData.email}
-              onChange={(value) => handleInputChange('email', value)}
-              placeholder="expert@example.com"
-              required
-            />,
-            <InputField
-              label="Phone"
-              initialValue={formData.phone}
-              onChange={(value) => handleInputChange('phone', value)}
-              placeholder="Enter phone number"
-            />,
-          ]}
-        />
-          
-        <GridContainer
-          elements={[
-            <InputField
-              label="Designation"
-              initialValue={formData.designation}
-              onChange={(value) => handleInputChange('designation', value)}
-              placeholder="e.g., Professor"
-              required
-            />,
-            <InputField
-              label="Department"
-              initialValue={formData.department}
-              onChange={(value) => handleInputChange('department', value)}
-              placeholder="e.g., Computer Science"
-              required
-            />,
-          ]}
-        />
-          
-        <GridContainer
-          elements={[
-            <InputField
-              label="Institution"
-              initialValue={formData.institution}
-              onChange={(value) => handleInputChange('institution', value)}
-              placeholder="e.g., University Name"
-              required
-            />,
-          ]}
-          space={2}
-        />
-          
-        <GridContainer
-          elements={[
-            <InputField
-              label="Area of Expertise"
-              initialValue={formData.area_of_expertise}
-              onChange={(value) => handleInputChange('area_of_expertise', value)}
-              placeholder="Research areas"
-            />,
-          ]}
-          space={2}
-        />
-          
-        <GridContainer
-          elements={[
-            <InputField
-              label="Website"
-              initialValue={formData.website}
-              onChange={(value) => handleInputChange('website', value)}
-              placeholder="https://example.com"
-            />,
-          ]}
-          space={2}
-        />
-          
         <div className="modal-actions">
           <CustomButton
             text="Cancel"
@@ -410,82 +306,8 @@ const OutsideExperts = () => {
       closeOnOutsideClick={false}
     >
       <>
-        <GridContainer
-          elements={[
-            <InputField
-              label="Full Name"
-              initialValue={formData.full_name}
-              onChange={(value) => handleInputChange('full_name', value)}
-              required
-            />,
-          ]}
-        />
+        <OutsideExpertFields values={formData} onChange={handleInputChange} />
 
-        <GridContainer
-          elements={[
-            <InputField
-              label="Email"
-              type="email"
-              initialValue={formData.email}
-              onChange={(value) => handleInputChange('email', value)}
-              required
-            />,
-            <InputField
-              label="Phone"
-              initialValue={formData.phone}
-              onChange={(value) => handleInputChange('phone', value)}
-            />,
-          ]}
-        />
-          
-        <GridContainer
-          elements={[
-            <InputField
-              label="Designation"
-              initialValue={formData.designation}
-              onChange={(value) => handleInputChange('designation', value)}
-              required
-            />,
-            <InputField
-              label="Department"
-              initialValue={formData.department}
-              onChange={(value) => handleInputChange('department', value)}
-              required
-            />,
-          ]}
-        />
-          
-        <GridContainer
-          elements={[
-            <InputField
-              label="Institution"
-              initialValue={formData.institution}
-              onChange={(value) => handleInputChange('institution', value)}
-              required
-            />,
-          ]}
-        />
-          
-        <GridContainer
-          elements={[
-            <InputField
-              label="Area of Expertise"
-              initialValue={formData.area_of_expertise}
-              onChange={(value) => handleInputChange('area_of_expertise', value)}
-            />,
-          ]}
-        />
-          
-        <GridContainer
-          elements={[
-            <InputField
-              label="Website"
-              initialValue={formData.website}
-              onChange={(value) => handleInputChange('website', value)}
-            />,
-          ]}
-        />
-          
         <div className="modal-actions">
           <CustomButton
             text="Cancel"
