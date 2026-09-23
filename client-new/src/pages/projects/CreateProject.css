@@ -63,8 +63,6 @@
 .cp-btn-primary:hover { background: var(--hover-color); }
 .cp-btn-outline { background: #FFF; color: #555; border: 1px solid var(--border-color); padding: 10px 15px; border-radius: var(--radius); font-size: var(--text-sm); font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
 .cp-btn-outline:hover { border-color: var(--primary-color); color: var(--primary-color); }
-.cp-btn-draft { background: #FFF; color: var(--primary-color); border: 1px solid var(--primary-color); padding: 10px 15px; border-radius: var(--radius); font-size: var(--text-sm); font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
-.cp-btn-draft:hover { background: #fef2f2; }
 
 /* Budget Table */
 .cp-budget-table-wrap { overflow-x: auto; }

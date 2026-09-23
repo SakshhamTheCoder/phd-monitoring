@@ -139,11 +139,6 @@ const CreateProject = () => {
     return form.milestones.length ? Math.round((done / form.milestones.length) * 100) : 0;
   };
 
-  const saveDraft = () => {
-    localStorage.setItem('projectDraft', JSON.stringify(form));
-    toast.success('Draft saved.');
-  };
-
   const [submitting, setSubmitting] = useState(false);
 
   // The sanction letter rides on the update endpoint, which already knows how to
@@ -592,9 +587,6 @@ const CreateProject = () => {
             </button>
           )}
           <div className="cp-nav-right">
-            <button className="cp-btn-draft" onClick={saveDraft}>
-              <i className="fa fa-file-text-o"></i> Save Draft
-            </button>
             {currentStep < STEPS.length - 1 ? (
               <button className="cp-btn-primary" onClick={() => setCurrentStep(currentStep + 1)}>
                 Continue <i className="fa fa-chevron-right"></i>
