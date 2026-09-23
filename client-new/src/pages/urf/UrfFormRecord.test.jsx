@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, within, cleanup } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 
@@ -70,18 +70,19 @@ describe('UrfFormRecord', () => {
     expect(fetched[0]).toMatch(/\/urf\/urf-application\/12$/);
     expect(screen.getByText('Form ID: 12')).toBeTruthy();
     expect(screen.getByText('Stage: ADORDC')).toBeTruthy();
-    expect(screen.getByText('View Status')).toBeTruthy();
+    expect(screen.getByText('View status')).toBeTruthy();
   });
 
   it('shows the chain and the history behind View Status', async () => {
     await renderPage(formAt('adordc', 'adordc'));
-    screen.getByText('View Status').click();
+    screen.getByText('View status').click();
 
-    await screen.findByText('Form Status');
+    // The form's own sections carry the step names too, so look in the dialog.
+    const status = within((await screen.findByText('Form Status')).parentElement);
     // The mentor step is a URF one and has to be named, not left as "mentor".
-    expect(screen.getByText('Faculty Mentor')).toBeTruthy();
-    expect(screen.getByText('DORDC')).toBeTruthy();
-    expect(screen.getByText('Submitted by Asha Rao (the student)')).toBeTruthy();
+    expect(status.getByText('Faculty Mentor')).toBeTruthy();
+    expect(status.getByText('DORDC')).toBeTruthy();
+    expect(status.getByText('Submitted by Asha Rao (the student)')).toBeTruthy();
   });
 
   it('shows a reader what was filled in and the steps up to their own', async () => {

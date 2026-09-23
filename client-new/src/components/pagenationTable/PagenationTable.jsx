@@ -26,7 +26,8 @@ const PagenationTable = ({
   enableSelect=true,
   actions = [],
   num = null,
-  tableTitle=""
+  tableTitle="",
+  search = null, // the page's <FilterBar>, drawn in the table's own head
 }) => {
   const [forms, setForms] = useState([]);
   const [fields, setFields] = useState(["name", "roll_no"]);
@@ -176,12 +177,18 @@ const PagenationTable = ({
     }
   };
 
+  const showActions = role !== "student" || extraTopbarComponents;
+
+  // The table draws its own panel: search and actions in the head, the rows,
+  // then the pager as the foot.
   return (
-    <>
-      {(role !== "student" || extraTopbarComponents) && (
-        <div className="table-toolbar">
-            {tableTitle && <h3>{tableTitle}</h3>}
-          <div className="top-actions">
+    <section className="panel panel--flush data-panel">
+      {(tableTitle || search || showActions) && (
+        <div className="panel-head table-toolbar">
+          {tableTitle && <h2 className="panel-title">{tableTitle}</h2>}
+          {search && <div className="table-search">{search}</div>}
+          {showActions && (
+          <div className="top-actions panel-actions">
           {extraTopbarComponents && (
                <div className="extra-components">{extraTopbarComponents}</div> )}
                {enableSelect && persistentSelect && (
@@ -219,11 +226,12 @@ const PagenationTable = ({
               </button>
             ))}
           </div>
+          )}
         </div>
       )}
 
-      <div className="form-list-container">
-      <table className="form-table form-table--tint">
+      <div className="table-scroll">
+      <table className="form-table">
         <thead>
           <tr>
             {selecting && <th><input
@@ -383,8 +391,9 @@ const PagenationTable = ({
           })}
         </tbody>
       </table>
+      </div>
 
-      <div className="table-bottom table-bottom--paged">
+      <div className="table-bottom">
         <label className="rows-per-page">
           Rows per page:
           <select value={rowsPerPage} onChange={(e) => {
@@ -407,8 +416,7 @@ const PagenationTable = ({
           </button>
         </div>
       </div>
-    </div>
-    </>
+    </section>
   );
 };
 

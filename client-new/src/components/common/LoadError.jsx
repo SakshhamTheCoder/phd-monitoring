@@ -16,9 +16,10 @@ const LoadError = ({ message, onRetry }) => {
   useEffect(() => dismissRequestErrors(), []);
 
   return (
-    <div className="empty-state load-error" role="alert">
+    <div className="status-notice status-notice--error load-error" role="alert">
+      <i className="fa fa-exclamation-circle status-notice-icon" aria-hidden="true" />
       <p>{message}</p>
-      {onRetry && <CustomButton text="Try again" variant="secondary" size="sm" onClick={onRetry} />}
+      {onRetry && <CustomButton text="Try again" variant="quiet" size="sm" onClick={onRetry} />}
     </div>
   );
 };

@@ -1,17 +1,24 @@
 /* The card the search bar sits in. Other pages reuse .filter-bar and
    .filter-row for their own rows of controls, so both stay generic. */
 .filter-bar {
-  padding: 1rem;
-  border: 1px solid #ccc;
-  border-radius: var(--radius);
-  margin: 1rem 0;
-  background-color: #f9f9f9;
+  padding: var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background-color: var(--surface);
+}
+
+/* In a table's head the panel is the box. */
+.table-search .filter-bar {
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
 }
 
 .filter-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: var(--space-2);
   align-items: center;
 }
 
@@ -21,21 +28,23 @@
 .filter-bar-row {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: var(--space-2);
 }
 
 .filter-bar-icon {
-  color: #6b7280;
-  margin-left: 0.2rem;
+  color: var(--text-subtle);
+  margin-left: var(--space-1);
 }
 
 .filter-bar-input {
   flex: 1 1 auto;
-  height: 40px;
-  padding: 0.6rem 0.8rem;
+  min-width: 0;
+  height: var(--field-height);
+  padding: var(--field-padding);
   border-radius: var(--radius);
   border: 1px solid var(--border-color);
-  background: #fff;
+  background: var(--surface);
+  color: var(--text-color);
   font-size: var(--text-sm);
   font-family: inherit;
   font-weight: 400;
@@ -48,29 +57,33 @@
   box-shadow: 0 0 0 3px var(--primary-tint);
 }
 
+/* Search is not the page's action (that is Add, Import, Submit), so it is an
+   outlined button beside the box rather than a second filled one. */
 .filter-bar-go {
-  height: 40px;
-  padding: 0 1.2rem;
-  border: none;
-  border-radius: var(--radius-sm);
-  background-color: var(--primary-color);
-  color: #fff;
+  height: var(--field-height);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--primary-color);
+  border-radius: var(--radius);
+  background-color: var(--surface);
+  color: var(--primary-color);
+  font-family: inherit;
   font-size: var(--text-sm);
   font-weight: 500;
   cursor: pointer;
   transition: 0.2s;
 }
 
-.filter-bar-go:hover { background-color: var(--hover-color); }
+.filter-bar-go:hover { background-color: var(--primary-wash); }
 
 .filter-bar-toggle,
 .filter-bar-clear {
-  height: 40px;
-  padding: 0 1rem;
-  border-radius: var(--radius-sm);
+  height: var(--field-height);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius);
   border: 1px solid var(--border-color);
-  background: #fff;
-  color: #374151;
+  background: var(--surface);
+  color: var(--text-color);
+  font-family: inherit;
   font-size: var(--text-sm);
   font-weight: 500;
   cursor: pointer;
@@ -90,10 +103,10 @@
 .filter-bar-fields {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-subtle);
 }
 
 .filter-bar-fields .input-field-container { margin: 0; }
@@ -102,17 +115,18 @@
 .filter-bar-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.85rem;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
 }
 
 .filter-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.35rem 0.8rem;
-  border-radius: 20px;
-  background: #e0e3e7;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--primary-wash);
+  color: var(--text-color);
   font-size: var(--text-sm);
   font-weight: 400;
 }
@@ -123,11 +137,11 @@
   cursor: pointer;
   font-size: var(--text-md);
   line-height: 1;
-  color: #555;
+  color: var(--text-muted);
   padding: 0;
 }
 
-.filter-chip button:hover { color: #991b1b; }
+.filter-chip button:hover { color: var(--danger-text); }
 
 /* The search row is an input and three buttons, which needs about 420px. It
    wraps onto a second line rather than pushing the page sideways. */

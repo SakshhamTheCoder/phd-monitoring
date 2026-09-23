@@ -1,102 +1,67 @@
-/* The paginated table's own chrome. The card, the pager and the row beneath
-   are shared with FormTable and live in styles/ui.css. */
+/* The paginated table's own chrome. It draws a flush panel (styles/ui.css):
+   search and actions in the head, the rows, the pager as the foot. */
 
-/* Action toolbar — sits ABOVE the table card, buttons right-aligned */
-.table-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  width: 100%;
-  margin-bottom: 14px;
+/* The rows scroll sideways inside the panel rather than widening the page. */
+.table-scroll { overflow-x: auto; }
+
+.table-search {
+  flex: 1 1 360px;
+  min-width: 0;
+  max-width: 720px;
 }
 
-.table-toolbar h3 {
-  margin: 0 auto 0 0; /* push title left, actions stay right */
-  font-size: var(--text-xl);
-  color: #333;
-}
+.table-toolbar .panel-actions { margin-left: auto; }
 
 .extra-components {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2);
   flex-wrap: wrap;
 }
 
-/* Tint behind the rows, which only this table has ever had. It used to be set
-   on .form-table itself, from a global stylesheet, so whether a hand-drawn
-   table elsewhere came out grey or white depended on load order. */
-.form-table--tint {
-  background-color: #f8f9fa;
-}
-
-/* Shared size for all toolbar buttons so Select matches the CustomButtons */
+/* Toolbar buttons share the CustomButton size. */
 .select-btn,
-.approve-btn {
-  padding: 10px 15px;
-  border-radius: var(--radius);
-  cursor: pointer;
-  font-weight: 500;
-  font-family: inherit;
-  font-size: var(--text-sm);
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-/* Select = outlined brand button, consistent with the secondary CustomButtons */
-.select-btn {
-  background-color: #fff;
-  color: var(--primary-color);
-  border: 1px solid var(--primary-color);
-}
-
-.select-btn:hover {
-  background-color: var(--primary-color);
-  color: #fff;
-}
-
-.approve-btn {
-  background-color: #28a745;
-  color: white;
-  border: 1px solid #28a745;
-}
-
-.approve-btn:hover {
-  background-color: #1e7e34;
-}
-
-/* A bulk action stands beside Select, and is dead until something is ticked. */
+.approve-btn,
 .bulk-action-btn {
-  padding: 10px 15px;
+  min-height: var(--field-height);
+  padding: 0 var(--space-4);
   border-radius: var(--radius);
   cursor: pointer;
   font-weight: 500;
   font-family: inherit;
   font-size: var(--text-sm);
-  background-color: #28a745;
-  color: #fff;
-  border: 1px solid #28a745;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-.bulk-action-btn:hover:not(:disabled) { background-color: #1e7e34; }
+/* Select is a mode switch, not the page's action: quiet. */
+.select-btn {
+  background-color: var(--surface);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+.select-btn:hover { border-color: var(--text-subtle); }
+
+/* Approve and the bulk actions act on the ticked rows, so they are the one
+   filled button while rows are being picked. */
+.approve-btn,
+.bulk-action-btn {
+  background-color: var(--success);
+  color: #fff;
+  border: 1px solid var(--success);
+}
+
+.approve-btn:hover,
+.bulk-action-btn:hover:not(:disabled) { background-color: #12662f; border-color: #12662f; }
 
 .bulk-action-btn.danger {
-  background-color: #dc3545;
-  border-color: #dc3545;
+  background-color: var(--danger);
+  border-color: var(--danger);
 }
 
-.bulk-action-btn.danger:hover:not(:disabled) { background-color: #b02a37; }
+.bulk-action-btn.danger:hover:not(:disabled) { background-color: var(--danger-text); border-color: var(--danger-text); }
 
 .bulk-action-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-/* This table hangs its spacing off the label rather than the row. Kept as it
-   was drawn, rather than unified with FormTable's, which would have moved the
-   pager on every list page. */
-.table-bottom--paged .rows-per-page {
-  margin-top: 20px;
 }

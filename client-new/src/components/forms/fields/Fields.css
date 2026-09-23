@@ -6,44 +6,59 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.4rem;
-    padding: 10px 15px;
+    gap: var(--space-2);
+    min-height: var(--field-height);
+    padding: 0 var(--space-4);
     border-radius: var(--radius);
     background-color: var(--primary-color);
     color: #FFF;
+    white-space: nowrap;
     /* Stated rather than inherited, so every button in the product is one size.
        Five page-local primary classes had drifted to their own padding and font
        size, which put three different button heights on three pages. */
     font-size: var(--text-sm);
-    font-weight: 600;
+    font-weight: 500;
     font-family: inherit;
-    border: none;
+    /* Every variant has a 1px border, so filled and outlined buttons in one row
+       are the same height. */
+    border: 1px solid var(--primary-color);
+    box-sizing: border-box;
 }
 
 /* Compact, for a dense toolbar or a table row. */
 .custom-button--sm {
-    padding: 6px 10px;
+    min-height: 32px;
+    padding: 0 var(--space-3);
     font-size: var(--text-xs);
 }
 
 .custom-button--block { width: 100%; }
 .custom-button:hover{
     background-color: var(--hover-color);
+    border-color: var(--hover-color);
     cursor: pointer;
 }
 
 /* Button variants (an inline style prop still overrides these) */
-.custom-button--danger { background-color: var(--danger); }
-.custom-button--danger:hover { background-color: var(--danger-text); }
-/* Secondary = outlined brand button, for less-primary actions (Bulk Import, Tag, Select) */
+.custom-button--danger { background-color: var(--danger); border-color: var(--danger); }
+.custom-button--danger:hover { background-color: var(--danger-text); border-color: var(--danger-text); }
+/* Secondary = outlined brand button, for less-primary actions (Import, Tag, Select).
+   A view has one filled button; everything else is secondary or quiet. */
 .custom-button--secondary {
     background-color: var(--surface);
     color: var(--primary-color);
     border: 1px solid var(--primary-color);
 }
-.custom-button--secondary:hover { background-color: var(--primary-color); color: #fff; }
-.custom-button--success { background-color: var(--success); }
-.custom-button--success:hover { background-color: #12662f; }
+.custom-button--secondary:hover { background-color: var(--primary-wash); border-color: var(--primary-color); color: var(--primary-color); }
+/* Quiet = neutral outline, for Cancel, Close, Back and the pager. */
+.custom-button--quiet {
+    background-color: var(--surface);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+.custom-button--quiet:hover { background-color: var(--surface); border-color: var(--text-subtle); color: var(--text-color); }
+.custom-button--success { background-color: var(--success); border-color: var(--success); }
+.custom-button--success:hover { background-color: #12662f; border-color: #12662f; }
 .custom-button:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .input-suggestions-container {
@@ -131,14 +146,17 @@
 
 /* The gap under this label used to come from the grid cell's own top padding,
    so it vanished when that padding was removed. It belongs on the label. */
+/* A row's own heading ("Revised PhD objectives"). Section-title size, so it
+   does not outrank the panel it sits in. */
 .grid-label{
-    font-size: var(--text-lg);
-    font-weight: bold;
-    margin-top: 15px;
-    margin-bottom: 12px;
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--text-color);
+    margin: var(--space-2) 0 var(--space-3);
     text-align: left;
     display: flex;
     align-items: center;
+    gap: var(--space-2);
 }
 
 /* All the spacing lives in the gap. It used to be split between a 10px gap and
@@ -151,16 +169,17 @@
 .grid-container-wrapper + .grid-container-wrapper,
 .grid-container-wrapper + .form-section,
 .form-section + .grid-container-wrapper {
-    margin-top: 1.25rem;
+    margin-top: var(--space-4);
 }
 
 .grid-container {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    /* Row then column. 2rem in both directions put 32px between a label and the
-       field beside it, which read as three separate forms rather than one. The
-       column count is deliberate and unchanged: it carries the filling order. */
-    gap: 1.25rem 1.5rem;
+    /* minmax(0, ...) so a long value cannot widen its column and push the
+       other two out of line with the rows above and below. */
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    /* Row then column. The column count is deliberate and unchanged: it
+       carries the filling order. */
+    gap: var(--space-4) var(--space-5);
 }
 
 /* Left-aligned, because centring a form field was wrong and needed two
@@ -170,7 +189,7 @@
 }
 
 .grid-item p {
-    font-weight: bold;
+    font-weight: 600;
     margin: 6px 0;
 }
 
@@ -194,8 +213,8 @@
    inline style, while a .req class sat in a page stylesheet where none of
    them could reach it. */
 .req {
-    color: var(--danger-text);
-    margin-left: 0.25rem;
+    color: var(--primary-color);
+    margin-left: 2px;
 }
 
 .input-field-container {
@@ -217,10 +236,10 @@
     display: flex;
     align-items: center;
     gap: 0.2rem;
-    font-weight: 600;
+    font-weight: 500;
     font-size: var(--text-sm);
-    color: #444;
-    margin-bottom: 0.35rem;
+    color: var(--text-color);
+    margin-bottom: 6px;
     min-height: 20px;
     text-align: left;
 }
@@ -244,8 +263,10 @@
 .pd-modal-field input,
 .rp-id-form input,
 .rp-filters select {
-    padding: 0.6rem 0.8rem;
+    padding: var(--field-padding);
     font-size: var(--text-sm);
+    color: var(--text-color);
+    background-color: var(--surface);
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
     width: 100%;
@@ -253,7 +274,7 @@
     /* A select builds a shorter line box than an input with the same padding, so
        a row of both stood 5px apart. One height for every control in a row. */
     line-height: 1.5;
-    min-height: 42px;
+    min-height: var(--field-height);
     outline: none;
     font-family: inherit;
     font-weight: 400;
@@ -278,24 +299,45 @@
     box-shadow: 0 0 0 3px var(--primary-tint);
 }
 
-/* A field you cannot edit has to look like one. #f9f9f9 on white was almost
-   invisible, so a completed form read as an editable one. Grey enough to
-   register at a glance, dark enough to stay readable. */
+/* A value carried into the form that the reader cannot change: roll number,
+   name, a previous title. Same shape and grid slot as an input, so the rows
+   line up and nothing moves, but the text stays at full contrast and a lock
+   sits at the right. Greyed-out text read as "skip this", when these are the
+   values a student most needs to check before submitting. */
 .input-field[readonly],
 .input-field:disabled,
 .field-readonly {
-    background-color: #F1F2F4;
-    border-color: #E2E4E8;
-    color: #5A5F66;
-    -webkit-text-fill-color: #5A5F66;
+    background-color: var(--readonly-bg);
+    border-color: var(--border-subtle);
+    color: var(--text-color);
+    -webkit-text-fill-color: var(--text-color);
+    font-weight: 500;
     opacity: 1;
-    cursor: not-allowed;
+    cursor: default;
+    padding-right: 2.25rem;
+}
+
+.input-field[readonly]::placeholder { color: var(--text-muted); -webkit-text-fill-color: var(--text-muted); font-weight: 400; }
+
+.input-field-container:has(> .input-field[readonly], > .input-field:disabled, > .field-readonly) {
+    position: relative;
+}
+
+.input-field-container:has(> .input-field[readonly], > .input-field:disabled, > .field-readonly)::after {
+    content: "\f023";
+    font-family: FontAwesome;
+    position: absolute;
+    right: var(--space-3);
+    bottom: 11px;
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    pointer-events: none;
 }
 
 /* No focus ring on something that cannot take input. */
 .input-field[readonly]:focus,
 .input-field:disabled:focus {
-    border-color: #E2E4E8;
+    border-color: var(--border-subtle);
     box-shadow: none;
 }
 

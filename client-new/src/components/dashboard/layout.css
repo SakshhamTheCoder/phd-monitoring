@@ -26,7 +26,7 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background-color: #FAFAFA;
+    background-color: var(--canvas);
 }
 
 /* Sticky rather than fixed. Fixed needed .content to guess its height with a
@@ -45,7 +45,7 @@
    breadcrumb and the page title line up. */
 .content {
     flex: 1;
-    padding: 1.5rem 2rem 3rem;
+    padding: var(--space-5) var(--space-6) var(--space-7);
     width: 100%;
     box-sizing: border-box;
 }
@@ -106,7 +106,7 @@
     }
 
     .content {
-        padding: 1rem 1rem 2rem;
+        padding: var(--space-4) var(--space-4) var(--space-6);
     }
 }
 

@@ -1,5 +1,7 @@
 import React from 'react';
 import Recommendation from '../layouts/Recommendation';
+import { PanelSection } from '../../panel/Panel';
+import { getRoleName } from '../../../utils/roleName';
 
 // Renders a form's approval chain from `formData.steps`.
 //
@@ -32,6 +34,10 @@ const isApprovalStep = (step) => step !== 'complete';
 const READS_EVERY_STEP = ['admin', 'adordc'];
 
 const FormLadder = ({ formData, panels = {}, stepProps = {} }) => {
+    // The form type is the path segment after "forms"; it only changes one
+    // step's name (the doctoral committee reviews an IRB as the IRB committee).
+    const segments = window.location.pathname.split('/');
+    const formType = segments[segments.indexOf('forms') + 1];
     const steps = formData?.steps || [];
     const reached = steps.indexOf(formData?.role);
     // Admin reviews every stage, and the ADORDC reads every form while holding a
@@ -46,16 +52,21 @@ const FormLadder = ({ formData, panels = {}, stepProps = {} }) => {
             {visible.filter(isApprovalStep).map((step) => {
                 const Panel = panels[step];
                 const extra = stepProps[step] || {};
-                return Panel ? (
-                    <Panel key={step} formData={formData} {...extra} />
-                ) : (
-                    <Recommendation
-                        key={step}
-                        formData={formData}
-                        role={roleForStep(step)}
-                        allowRejection={false}
-                        {...extra}
-                    />
+                // Each step is a titled section of the one form panel, so the
+                // reader can see whose part of the form they are looking at.
+                return (
+                    <PanelSection key={step} title={getRoleName(roleForStep(step), formType)} className="form-step">
+                        {Panel ? (
+                            <Panel formData={formData} {...extra} />
+                        ) : (
+                            <Recommendation
+                                formData={formData}
+                                role={roleForStep(step)}
+                                allowRejection={false}
+                                {...extra}
+                            />
+                        )}
+                    </PanelSection>
                 );
             })}
         </>

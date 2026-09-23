@@ -59,8 +59,10 @@ const MainFormPage = () => {
     };
   }, [location.pathname, attempt]);
 
+  // A form page is a page like any other: header band, then the form panel,
+  // with the page's gap between them. The form components draw both.
   return (
-    <>
+    <div className="page">
       {scholar && (
         <p className="viewing-scholar">
           You are viewing <strong>{scholar.label}</strong>'s form.
@@ -118,7 +120,7 @@ const MainFormPage = () => {
           })()}
         </>
       )}
-    </>
+    </div>
   );
 };
 
