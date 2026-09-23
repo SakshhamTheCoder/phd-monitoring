@@ -32,7 +32,7 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
     gender: "",
     physically_handicapped: false,
     is_jrf: false,
-    is_net_gate_qualified: false,
+    net_gate: "",
     overall_progress: 0,
     cgpa: "",
   });
@@ -59,7 +59,7 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
         gender: ["Male", "Female"].includes(studentData.gender) ? studentData.gender : "",
         physically_handicapped: !!studentData.physically_handicapped,
         is_jrf: !!studentData.is_jrf,
-        is_net_gate_qualified: !!studentData.is_net_gate_qualified,
+        net_gate: studentData.net_gate || "",
         overall_progress: studentData.overall_progress || 0,
         cgpa: studentData.cgpa || "",
       });
@@ -217,10 +217,17 @@ const StudentForm = ({ edit = false, studentData = {}, onClose, onSuccess }) => 
             isOn={formData.is_jrf}
             onToggle={() => handleChange("is_jrf", !formData.is_jrf)}
           />,
-          <ToggleSwitch
-            label="NET/GATE qualified"
-            isOn={formData.is_net_gate_qualified}
-            onToggle={() => handleChange("is_net_gate_qualified", !formData.is_net_gate_qualified)}
+          // Which exam, not yes or no. An imported value the list does not
+          // name (DBT-BET, GPAT) still shows and is kept.
+          <DropdownField
+            label="NET/GATE"
+            initialValue={formData.net_gate}
+            options={[
+              { value: "NET", title: "NET" },
+              { value: "GATE", title: "GATE" },
+              { value: "NA", title: "NA" },
+            ]}
+            onChange={(value) => handleChange("net_gate", value)}
           />,
         ]}
       />

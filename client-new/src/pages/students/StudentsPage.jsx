@@ -93,11 +93,20 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
     return ENROLMENT_TYPES[key] ?? value.trim().toLowerCase().replace(/\s+/g, '-');
   };
 
-  // A blank cell means nobody has said yet, which is not the same as No.
-  //
   // The sheet answers the NET/GATE column by naming the qualification rather
-  // than saying yes: GATE, NET(UGC/CSIR), DBT-BET, GPAT. Reading only a
-  // leading "y" filed every one of those as not qualified.
+  // than saying yes: GATE, NET(UGC/CSIR), DBT-BET, GPAT. Kept as the exam,
+  // named the portal's way where it can be: GATE, NET, or NA for a plain no.
+  // Anything else is kept as the sheet wrote it. Blank is nobody has said.
+  const netGate = (value) => {
+    const answer = value.trim();
+    if (answer === '') return null;
+    if (/^(no|n|none|not qualified|na|n\/a|nil)$/i.test(answer)) return 'NA';
+    if (/gate/i.test(answer)) return 'GATE';
+    if (/\bnet\b/i.test(answer)) return 'NET';
+    return answer.slice(0, 40);
+  };
+
+  // A blank cell means nobody has said yet, which is not the same as No.
   const yesNo = (value) => {
     const answer = value.trim().toLowerCase();
     if (answer === '') return null;
@@ -162,7 +171,7 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
           current_status: enrolmentType(column(r, 'Enrollment Type', 'Enrolment Type', 'Current Status', 'current_status')),
           cgpa: column(r, 'CGPA', 'cgpa'),
           is_jrf: yesNo(column(r, 'JRF?', 'JRF', 'is_jrf')),
-          is_net_gate_qualified: yesNo(column(r, 'NET/Gate', 'NET/GATE', 'NET/Gate (Yes/No)', 'is_net_gate_qualified')),
+          net_gate: netGate(column(r, 'NET/Gate', 'NET/GATE', 'NET/Gate (Yes/No)', 'net_gate', 'is_net_gate_qualified')),
           overall_progress: column(r, 'Overall Progress', 'overall_progress'),
           supervisors: [1, 2, 3]
             .map((slot) => column(r, `Supervisor ${slot} Email`))

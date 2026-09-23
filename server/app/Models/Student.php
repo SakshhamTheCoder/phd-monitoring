@@ -33,7 +33,7 @@ class Student extends Model
         'current_status',
         'cgpa',
         'is_jrf',
-        'is_net_gate_qualified',
+        'net_gate',
         'strengths',
         'help_needed',
         'overall_progress',
@@ -47,7 +47,6 @@ class Student extends Model
         'date_of_thesis' => 'date',
         'date_of_thesis_awarded' => 'date',
         'is_jrf' => 'boolean',
-        'is_net_gate_qualified' => 'boolean',
         'overall_progress' => 'float',
     ];
 

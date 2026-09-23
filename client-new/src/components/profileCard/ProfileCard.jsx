@@ -320,7 +320,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
       // Read-only here too: it says where the scholar's stipend comes from.
       // Null means nobody has stated it, which is not the same as No.
       { label: "JRF", value: statedYesNo(profile.is_jrf) },
-      { label: "NET/GATE", value: statedYesNo(profile.is_net_gate_qualified) },
+      { label: "NET/GATE", value: profile.net_gate || EMPTY_VALUE },
       { label: "Date of Admission", value: formatDate(date_of_registration) },
       { label: "Date of IRB", value: formatDate(date_of_irb) },
       { label: "Date of Synopsis", value: formatDate(date_of_synopsis) },

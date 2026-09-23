@@ -63,7 +63,7 @@ class StudentController extends Controller {
                 'gender' => 'required|in:Male,Female',
                 'physically_handicapped' => 'nullable|boolean',
                 'is_jrf' => 'nullable|boolean',
-                'is_net_gate_qualified' => 'nullable|boolean',
+                'net_gate' => 'nullable|string|max:40',
                 'date_of_irb' => 'nullable|date',
                 'date_of_synopsis' => 'nullable|date',
                 'date_of_thesis' => 'nullable|date',
@@ -115,7 +115,7 @@ class StudentController extends Controller {
         $student->address = $request->address;
         $student->cgpa = $request->cgpa;
         $student->is_jrf = $request->has('is_jrf') ? $request->boolean('is_jrf') : null;
-        $student->is_net_gate_qualified = $request->has('is_net_gate_qualified') ? $request->boolean('is_net_gate_qualified') : null;
+        $student->net_gate = $request->input('net_gate') ?: null;
         if($request->has('overall_progress'))
              $student->overall_progress = $request->overall_progress;
         else
@@ -153,7 +153,7 @@ class StudentController extends Controller {
         'address',
         'cgpa',
         'is_jrf',
-        'is_net_gate_qualified',
+        'net_gate',
         'overall_progress',
         'current_status',
         'date_of_registration',
@@ -532,7 +532,7 @@ class StudentController extends Controller {
             'students.*.cgpa' => 'nullable|numeric',
             'students.*.gender' => 'nullable|string',
             'students.*.is_jrf' => 'nullable|boolean',
-            'students.*.is_net_gate_qualified' => 'nullable|boolean',
+            'students.*.net_gate' => 'nullable|string|max:40',
             'students.*.date_of_synopsis' => 'nullable|date',
             'students.*.date_of_thesis' => 'nullable|date',
             'students.*.date_of_thesis_awarded' => 'nullable|date',
@@ -666,7 +666,7 @@ class StudentController extends Controller {
                     $student->address = $studentData['address'] ?? null;
                     $student->cgpa = $studentData['cgpa'] ?? null;
                     $student->is_jrf = $studentData['is_jrf'] ?? null;
-                    $student->is_net_gate_qualified = $studentData['is_net_gate_qualified'] ?? null;
+                    $student->net_gate = $studentData['net_gate'] ?? null;
                     $student->overall_progress = $studentData['overall_progress'] ?? 0.0;
                     $student->import_batch = $batch;
                     $student->imported_at = $importedAt;
@@ -1128,7 +1128,7 @@ class StudentController extends Controller {
             'gender' => 'required|in:Male,Female',
             'physically_handicapped' => 'nullable|boolean',
             'is_jrf' => 'nullable|boolean',
-            'is_net_gate_qualified' => 'nullable|boolean',
+            'net_gate' => 'nullable|string|max:40',
             'date_of_irb' => 'nullable|date',
             'date_of_synopsis' => 'nullable|date',
             'date_of_thesis' => 'nullable|date',
@@ -1168,7 +1168,7 @@ class StudentController extends Controller {
         // privileged path rather than the scholar's own profile edit.
         if ($request->has('is_jrf')) $student->is_jrf = $request->boolean('is_jrf');
         // Off the office's sheet, like JRF, so it stays on the privileged path.
-        if ($request->has('is_net_gate_qualified')) $student->is_net_gate_qualified = $request->boolean('is_net_gate_qualified');
+        if ($request->has('net_gate')) $student->net_gate = $request->input('net_gate') ?: null;
         if ($request->has('overall_progress')) $student->overall_progress = $request->overall_progress;
         $student->save();
 
