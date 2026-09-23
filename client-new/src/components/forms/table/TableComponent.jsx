@@ -31,7 +31,7 @@ const TableComponent = ({ data, keys, titles, components = [], rowStyle, label, 
                     {data?.map((row, index) => (
                         <tr key={index} style={rowStyle ? rowStyle(row) : {}}>
                             {leading && <td>{leading({ row })}</td>}
-                            <td>{index + 1}</td> {/* S.No */}
+                            <td>{index + 1}</td>
                             {keys?.map((key, keyIndex) => {
                                 const value = row[key];
                                 const renderCell = componentMap[key];
