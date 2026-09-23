@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   categoryOptions,
+  statusOptions,
   roleOptions,
   milestoneStatusOptions,
   formatDuration,
@@ -27,7 +28,7 @@ import './CreateProject.css';
 const STEPS = ['Basic info', 'Team', 'Budget', 'Objectives', 'Milestones', 'Review'];
 
 const emptyForm = {
-  title: '', category: '', role: 'PI', focusArea: '', grantType: '',
+  title: '', category: '', status: 'Pending', role: 'PI', focusArea: '', grantType: '',
   fundingAgency: '', description: '',
   startDate: '', durationYears: 1, durationMonths: 0, endDate: '',
   sdgs: [],
@@ -44,6 +45,7 @@ const emptyForm = {
 const buildFormFromProject = (p) => ({
   title: p.title || '',
   category: p.category || '',
+  status: p.status || 'Pending',
   role: p.role || 'PI',
   focusArea: p.focusArea || '',
   grantType: p.grantType || '',
@@ -318,6 +320,12 @@ const CreateProject = () => {
               </select>
             </div>
             <div className="cp-field">
+              <label htmlFor="create-project-status">Status</label>
+              <select id="create-project-status" value={form.status} onChange={e => updateField('status', e.target.value)}>
+                {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div className="cp-field">
               <label htmlFor="create-project-funding-agency">Funding agency {required}</label>
               <input id="create-project-funding-agency" type="text" aria-required="true" value={form.fundingAgency} onChange={e => updateField('fundingAgency', e.target.value)} placeholder="e.g. DST, CSIR, ISRO" />
             </div>
@@ -580,6 +588,7 @@ const CreateProject = () => {
               <dl className="kv">
                 <div><dt>Title</dt><dd>{form.title || EMPTY_VALUE}</dd></div>
                 <div><dt>Category</dt><dd>{form.category || EMPTY_VALUE}</dd></div>
+                <div><dt>Status</dt><dd>{form.status}</dd></div>
                 <div><dt>Funding agency</dt><dd>{form.fundingAgency || EMPTY_VALUE}</dd></div>
                 <div><dt>Duration</dt><dd>{formatDuration(form.durationYears, form.durationMonths)}{form.startDate ? ` · ${formatDate(form.startDate)} to ${formatDate(form.endDate)}` : ''}</dd></div>
                 <div><dt>SDGs</dt><dd>{form.sdgs.length ? form.sdgs.map(id => (meta.sdgs.find(g => g.id === id) || {}).label).filter(Boolean).join(', ') : EMPTY_VALUE}</dd></div>

@@ -74,6 +74,7 @@ export const mapProject = (p) => (p ? {
 export const toProjectBody = (form) => ({
   title: form.title,
   category: form.category,
+  status: form.status || 'Pending',
   role: form.role || '',
   focus_area: form.focusArea || '',
   grant_type: form.grantType || '',

@@ -1,5 +1,8 @@
 // Shared constants and helpers for the Projects module.
 
+// The four the projects table allows. A new project starts Pending.
+export const statusOptions = ['Pending', 'Active', 'On Hold', 'Completed'];
+
 export const categoryOptions = [
   'In-house', 'Research', 'Consultancy', 'Industry', 'International', 'Other'
 ];
