@@ -167,15 +167,15 @@ const Openings = () => {
       )}
 
       {ready && tab === 'All' && (openPositions.length ? (
-        <div className="op-grid">{openPositions.map(p => renderPosCard(p, false))}</div>
+        <div className="op-grid reveal">{openPositions.map(p => renderPosCard(p, false))}</div>
       ) : <StatusNotice tone="empty" title="No open positions right now. Check back soon." />)}
 
       {ready && tab === 'Closed' && (closedPositions.length ? (
-        <div className="op-grid">{closedPositions.map(p => renderPosCard(p, true))}</div>
+        <div className="op-grid reveal">{closedPositions.map(p => renderPosCard(p, true))}</div>
       ) : <StatusNotice tone="empty" title="No closed positions." />)}
 
       {ready && tab === 'Applied' && (myApps.length ? (
-        <div className="op-grid">
+        <div className="op-grid reveal">
           {myApps.map(a => (
             <Panel key={a.id} className="op-posting">
               <div className="op-card-top">
@@ -272,7 +272,7 @@ const Openings = () => {
 
             <div className="modal-actions">
               <CustomButton text="Cancel" variant="quiet" onClick={closeApply} />
-              <CustomButton text="Submit application" onClick={submitApply} disabled={submitting} />
+              <CustomButton text="Submit application" onClick={submitApply} busy={submitting} />
             </div>
           </>
         </CustomModal>

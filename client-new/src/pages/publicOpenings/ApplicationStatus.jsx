@@ -52,6 +52,7 @@ const ApplicationStatus = ({ verify = false }) => {
 
         {application && (
           <Panel
+            className="reveal"
             title={application.position_title}
             description={<><i className="fa fa-flask" aria-hidden="true"></i> {application.project_title}</>}
           >

@@ -252,7 +252,7 @@ const PresentationSemester = () => {
           />
 
           <div className="modal-actions">
-            <CustomButton onClick={handleEditSubmit} text={saving ? "Saving…" : "Save changes"} disabled={saving} />
+            <CustomButton onClick={handleEditSubmit} text="Save changes" busy={saving} />
           </div>
           </Suspense>
         </CustomModal>

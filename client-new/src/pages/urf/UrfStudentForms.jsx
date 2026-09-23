@@ -141,7 +141,7 @@ export const UrfFormsPage = () => {
     >
       {!state && <Pending failed={failed} onRetry={load} />}
       {state && state.applications.length === 0 && (
-        <Panel>
+        <Panel className="reveal">
           <StatusNotice tone="empty">
             {state.applications_open ? `You have not applied for URF ${state.session} yet.` : 'URF applications are closed right now.'}
           </StatusNotice>
@@ -150,6 +150,7 @@ export const UrfFormsPage = () => {
       {state?.applications.map((application) => (
         <Panel
           key={application.id}
+          className="reveal"
           title={`URF ${application.session} · ${application.project_title}`}
           actions={<StatusText status={application.status} />}
         >

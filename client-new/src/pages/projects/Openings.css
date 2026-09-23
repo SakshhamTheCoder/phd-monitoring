@@ -48,7 +48,7 @@
 .op-upload:hover { background: var(--primary-wash); }
 
 /* Public application form: a validation message, and a field only a bot fills. */
-.op-form-error { color: var(--danger-text); font-size: var(--text-sm); margin: var(--space-3) 0 0; }
+.op-form-error { color: var(--danger-text); font-size: var(--text-sm); margin: var(--space-3) 0 0; animation: slide-in 200ms ease-out; }
 .op-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 
 /* The card grid asks for 340px columns, which is wider than a 360px phone once

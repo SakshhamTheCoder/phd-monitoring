@@ -53,7 +53,7 @@ const PublicOpenings = () => {
         )}
 
         {openings.length > 0 && (
-          <div className="op-grid">
+          <div className="op-grid reveal">
             {openings.map((pos) => (
               <div key={pos.id} className="op-card">
                 <div className="op-card-top">

@@ -22,7 +22,7 @@ const Field = ({ id, label, error, children }) => (
   <div>
     <label htmlFor={id} className="tw-block tw-text-sm tw-text-[color:var(--text-color)] tw-mb-1">{label}</label>
     {children}
-    {error && <p className="tw-text-[color:var(--danger-text)] tw-text-xs tw-mt-1">{error}</p>}
+    {error && <p className="tw-text-[color:var(--danger-text)] tw-text-xs tw-mt-1 tw-animate-[slide-in_200ms_ease-out]">{error}</p>}
   </div>
 );
 

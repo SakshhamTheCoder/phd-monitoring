@@ -23,6 +23,7 @@ import Page from '../../components/page/Page';
 import Panel, { PanelSection } from '../../components/panel/Panel';
 import './ProjectDetails.css';
 import { useFeatures } from '../../context/FeaturesContext';
+import useDoneFlash from '../../hooks/useDoneFlash';
 
 // Build the sanction-letter display object from a loaded project.
 const sanctionFromProject = (p) => {
@@ -231,13 +232,14 @@ const ProjectDetails = () => {
   };
 
   const ganttInputRef = useRef(null);
+  const [ganttUploaded, flashGanttUploaded] = useDoneFlash();
   const uploadGantt = async (e) => {
     const file = e.target.files[0];
     // Cleared so picking the same file again still fires a change.
     e.target.value = '';
     if (!file) return;
     const res = await apiUploadGanttChart(project.id, file);
-    if (res.success) { toast.success('Gantt chart uploaded.'); refreshProject(); }
+    if (res.success) { toast.success('Gantt chart uploaded.'); flashGanttUploaded(); refreshProject(); }
   };
 
   // Sync all sub-states from a loaded project.
@@ -362,6 +364,7 @@ const ProjectDetails = () => {
                   text={project.ganttChartName ? 'Replace Gantt chart' : 'Upload Gantt chart'}
                   variant="secondary"
                   size="sm"
+                  done={ganttUploaded}
                   onClick={() => ganttInputRef.current && ganttInputRef.current.click()}
                 />
                 <input type="file" ref={ganttInputRef} accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls,.doc,.docx" style={{ display: 'none' }} onChange={uploadGantt} />
@@ -626,6 +629,7 @@ const ProjectDetails = () => {
         <i className="fa fa-arrow-left" aria-hidden="true"></i> Back to projects
       </button>
       <Page
+        className="reveal"
         title={project.title}
         meta={<>
           <span className={badgeClass(project.category)}>{project.category}</span>
@@ -739,7 +743,7 @@ const ProjectDetails = () => {
               </div>
               <div className="modal-actions">
                 <CustomButton text="Cancel" variant="quiet" onClick={() => setShowDocModal(false)} />
-                <CustomButton text={editingDocIdx !== null ? 'Save changes' : 'Add document'} onClick={saveDoc} disabled={saving} />
+                <CustomButton text={editingDocIdx !== null ? 'Save changes' : 'Add document'} onClick={saveDoc} busy={saving} />
               </div>
             </>
           </CustomModal>
@@ -785,7 +789,7 @@ const ProjectDetails = () => {
               )}
               <div className="modal-actions">
                 <CustomButton text="Cancel" variant="quiet" onClick={() => setShowSanctionModal(false)} />
-                <CustomButton text="Save" onClick={saveSanctionModal} disabled={saving} />
+                <CustomButton text="Save" onClick={saveSanctionModal} busy={saving} />
               </div>
             </>
           </CustomModal>

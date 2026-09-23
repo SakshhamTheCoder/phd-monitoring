@@ -150,6 +150,7 @@ const PublicOpeningDetail = () => {
   return (
     <ExternalLayout crumbs={crumbs(opening.title)}>
       <Page
+        className="reveal"
         title={opening.title}
         description={<><i className="fa fa-flask" aria-hidden="true"></i> {opening.project_title}</>}
         meta={opening.type && <span className="badge badge--accent">{opening.type}</span>}
@@ -245,8 +246,9 @@ const PublicOpeningDetail = () => {
 
             <FormActions>
               <CustomButton
-                text={submitting ? 'Submitting...' : 'Submit application'}
-                onClick={submitting ? undefined : submit}
+                text="Submit application"
+                onClick={submit}
+                busy={submitting}
               />
             </FormActions>
           </PanelSection>

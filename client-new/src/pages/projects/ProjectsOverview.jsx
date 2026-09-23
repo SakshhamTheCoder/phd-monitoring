@@ -10,6 +10,7 @@ import Page from '../../components/page/Page';
 import Panel from '../../components/panel/Panel';
 import StatusNotice from '../../components/common/StatusNotice';
 import LoadError from '../../components/common/LoadError';
+import useDoneFlash from '../../hooks/useDoneFlash';
 import './ProjectsOverview.css';
 
 const emptyStats = { active: 0, completed: 0, totalFunding: 0, consultancy: 0, industry: 0, international: 0 };
@@ -23,6 +24,7 @@ const ProjectsOverview = () => {
   const [loadFailed, setLoadFailed] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [exported, flashExported] = useDoneFlash();
 
   useEffect(() => {
     // A slower answer to an older search must not overwrite the current one.
@@ -68,6 +70,7 @@ const ProjectsOverview = () => {
     a.download = 'projects_export.csv';
     a.click();
     URL.revokeObjectURL(url);
+    flashExported();
   };
 
   const facts = [
@@ -83,7 +86,7 @@ const ProjectsOverview = () => {
       title="Projects overview"
       description="Monitoring all ongoing research initiatives and funding channels."
       actions={<>
-        <CustomButton text="Export CSV" variant="secondary" onClick={handleExportCSV} />
+        <CustomButton text="Export CSV" variant="secondary" done={exported} onClick={handleExportCSV} />
         <CustomButton text="Create project" onClick={() => navigate('/projects/create')} />
       </>}
     >
@@ -126,7 +129,8 @@ const ProjectsOverview = () => {
               {projects.map(project => (
                 <tr
                   key={project.id}
-                  className="row-link"
+                  // reveal: a row arriving (first load, a new search) fades in.
+                  className="row-link reveal"
                   tabIndex={0}
                   onClick={() => navigate(`/projects/${project.id}`)}
                   onKeyDown={(e) => e.key === 'Enter' && navigate(`/projects/${project.id}`)}

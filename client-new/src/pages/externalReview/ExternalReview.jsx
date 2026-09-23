@@ -107,7 +107,7 @@ const ExternalReview = () => {
     const cmt = done ? comment.trim() : data?.comment;
     return (
       <ReviewPage formId={data?.form_id}>
-        <Panel>
+        <Panel className="reveal">
           <div className="xr-stack">
             <p className="xr-note-success" role="status">
               <i className="fa fa-check-circle" aria-hidden="true" />
@@ -141,7 +141,7 @@ const ExternalReview = () => {
   if (data?.state === "closed") {
     return (
       <ReviewPage formId={data?.form_id}>
-        <Panel>
+        <Panel className="reveal">
           <StatusNotice tone="info">This submission is no longer awaiting your review. No action is needed.</StatusNotice>
         </Panel>
       </ReviewPage>
@@ -151,7 +151,7 @@ const ExternalReview = () => {
   // pending
   return (
     <ReviewPage formId={data?.form_id}>
-      <div className="form-container">
+      <div className="form-container reveal">
         <GridContainer
           elements={[
             <InputField label="Student" initialValue={data?.student_name || "-"} isLocked={true} />,
@@ -207,9 +207,9 @@ const ExternalReview = () => {
 
         <FormActions>
           <CustomButton
-            text={submitting ? "Submitting…" : "Submit recommendation"}
+            text="Submit recommendation"
             onClick={submit}
-            disabled={submitting}
+            busy={submitting}
           />
         </FormActions>
       </div>

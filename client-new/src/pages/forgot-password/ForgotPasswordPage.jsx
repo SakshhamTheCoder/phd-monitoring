@@ -85,7 +85,7 @@ const ForgotPasswordPage = () => {
                     {loading ? 'Sending...' : 'Send reset link'}
                 </button>
                 {message && (
-                    <div className="tw-mt-4 tw-p-3 tw-bg-[color:var(--success-bg)] tw-border tw-border-[color:var(--success-bg)] tw-rounded">
+                    <div className="tw-mt-4 tw-p-3 tw-bg-[color:var(--success-bg)] tw-border tw-border-[color:var(--success-bg)] tw-rounded tw-animate-[slide-in_200ms_ease-out]">
                         <p className="tw-text-sm tw-text-[color:var(--success)] tw-text-center">{message}</p>
                     </div>
                 )}

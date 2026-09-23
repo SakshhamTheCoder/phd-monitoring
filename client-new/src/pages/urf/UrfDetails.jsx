@@ -84,7 +84,7 @@ const UrfDetails = () => {
         </p>
         <div className="modal-actions">
           <CustomButton text="Cancel" variant="quiet" onClick={() => setPending(null)} />
-          <CustomButton text={saving ? 'Saving…' : pending?.label} onClick={decide} disabled={saving} />
+          <CustomButton text={pending?.label} onClick={decide} busy={saving} />
         </div>
       </CustomModal>
     </>

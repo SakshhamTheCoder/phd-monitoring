@@ -85,7 +85,7 @@ const Publications = () => {
                 "No publications yet" for a scholar who has some. */}
             {isLoaded
               ? (
-                <Panel>
+                <Panel className="reveal">
                   <ShowPublications formData={formData} refetchData={fetchData} enableDelete={true} onDelete={handleDelete} canAdd={true}/>
                 </Panel>
               )

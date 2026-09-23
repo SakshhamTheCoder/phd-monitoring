@@ -11,6 +11,7 @@ import LoadError from '../../components/common/LoadError';
 import StatusNotice from '../../components/common/StatusNotice';
 import Page from '../../components/page/Page';
 import Panel from '../../components/panel/Panel';
+import useDoneFlash from '../../hooks/useDoneFlash';
 import './ProjectRecruitment.css';
 
 const emptyPos = {
@@ -54,6 +55,7 @@ const ProjectRecruitment = () => {
   const [positions, setPositions] = useState([]);
   const [applications, setApplications] = useState([]);
   const adRef = useRef(null);
+  const [decided, flashDecided] = useDoneFlash();
 
   const handleAdvertisement = (e) => {
     const file = e.target.files && e.target.files[0];
@@ -152,6 +154,7 @@ const ProjectRecruitment = () => {
     if (res.success) {
       setApplications(prev => prev.map(a => (a.id === selectedApplicant.id ? { ...a, status: newStatus } : a)));
       setSelectedApplicant({ ...selectedApplicant, status: newStatus });
+      flashDecided();
       toast.success(`Marked as ${newStatus}.`);
     }
   };
@@ -164,6 +167,7 @@ const ProjectRecruitment = () => {
         <i className="fa fa-arrow-left" aria-hidden="true"></i> Back to project
       </button>
       <Page
+        className="reveal"
         title={`Recruitment: ${project.title.length > 50 ? project.title.slice(0, 50) + '...' : project.title}`}
         description="Manage positions and applications for this project."
         actions={canEdit && (
@@ -209,7 +213,7 @@ const ProjectRecruitment = () => {
               <div className="pr-field full"><label htmlFor="project-recruitment-job-description">Job description</label><textarea id="project-recruitment-job-description" rows="4" value={posForm.description} onChange={e => setPosForm({...posForm, description: e.target.value})} placeholder="Describe the role, responsibilities, and what the candidate will work on. This is shown to students on the Openings portal." /></div>
             </div>
             <div className="pr-form-actions">
-              <CustomButton text={editingPosIdx !== null ? 'Save changes' : 'Publish opening'} onClick={publishPosition} disabled={publishing} />
+              <CustomButton text={editingPosIdx !== null ? 'Save changes' : 'Publish opening'} onClick={publishPosition} busy={publishing} />
               <CustomButton text="Cancel" variant="quiet" onClick={closePostForm} />
             </div>
           </Panel>
@@ -333,7 +337,8 @@ const ProjectRecruitment = () => {
                 <div>
                   <h2 className="pr-modal-name">{selectedApplicant.name}</h2>
                   <p>{selectedApplicant.degree} · {selectedApplicant.institute}</p>
-                  <span className={badgeClass(selectedApplicant.status)}>{selectedApplicant.status}</span>
+                  {/* Keyed so a new decision remounts the badge and replays its pop. */}
+                  <span key={selectedApplicant.status} className={badgeClass(selectedApplicant.status)}>{selectedApplicant.status}</span>
                 </div>
               </div>
               <dl className="facts pr-modal-facts">
@@ -358,10 +363,12 @@ const ProjectRecruitment = () => {
               </div>
               {canEdit && (
                 <div className="modal-actions pr-decisions">
-                  <CustomButton text="Shortlist" variant="secondary" size="sm" onClick={() => setAppStatus('Shortlisted')} />
-                  <CustomButton text="Interview" variant="secondary" size="sm" onClick={() => setAppStatus('Interview Scheduled')} />
-                  <CustomButton text="Select" variant="success" size="sm" onClick={() => setAppStatus('Selected')} />
-                  <CustomButton text="Reject" variant="danger-outline" size="sm" onClick={() => setAppStatus('Rejected')} />
+                  {/* The applicant's status is now the decision just made, so it
+                      names the button to check. */}
+                  <CustomButton text="Shortlist" variant="secondary" size="sm" done={decided && selectedApplicant.status === 'Shortlisted'} onClick={() => setAppStatus('Shortlisted')} />
+                  <CustomButton text="Interview" variant="secondary" size="sm" done={decided && selectedApplicant.status === 'Interview Scheduled'} onClick={() => setAppStatus('Interview Scheduled')} />
+                  <CustomButton text="Select" variant="success" size="sm" done={decided && selectedApplicant.status === 'Selected'} onClick={() => setAppStatus('Selected')} />
+                  <CustomButton text="Reject" variant="danger-outline" size="sm" done={decided && selectedApplicant.status === 'Rejected'} onClick={() => setAppStatus('Rejected')} />
                 </div>
               )}
             </>

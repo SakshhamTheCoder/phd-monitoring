@@ -228,6 +228,7 @@ const SemesterStatsCard = ({ semesterName = null, filtersEnabled = false, setFil
       return (
         <>
           <Panel
+            className="reveal"
             title="No evaluation semester found"
             actions={<CustomButton text="Create first evaluation semester" onClick={() => setOpenCreateModal(true)} />}
           >
@@ -320,6 +321,7 @@ const SemesterStatsCard = ({ semesterName = null, filtersEnabled = false, setFil
     return (
       <>
         <Panel
+          className="reveal"
           title="Evaluation semester completed"
           actions={<CustomButton text="Create new evaluation semester" onClick={() => setOpenCreateModal(true)} />}
         >
@@ -412,6 +414,7 @@ const SemesterStatsCard = ({ semesterName = null, filtersEnabled = false, setFil
   return (
     <>
       <Panel
+        className="reveal"
         title={
           <>
             {semester_name} semester stats
