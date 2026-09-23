@@ -74,14 +74,19 @@
 }
 
 @media (max-width: 768px) {
+    /* Off-screen alone left the closed drawer's links in the tab order.
+       Hidden once the slide-out has finished, visible at once on open. */
     .sidebar {
         transform: translateX(-100%);
-        transition: transform var(--transition) ease-out;
+        visibility: hidden;
+        transition: transform var(--transition) ease-out, visibility 0s linear var(--transition);
         box-shadow: var(--shadow-lg);
     }
 
     .layout--nav-open .sidebar {
         transform: translateX(0);
+        visibility: visible;
+        transition-delay: 0s;
     }
 
     .main-content {

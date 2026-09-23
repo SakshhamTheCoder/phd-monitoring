@@ -4,6 +4,7 @@ import "./AdminHome.css";
 import { getRoleName } from "../../utils/roleName";
 import { buttonConfig } from "../navbar/CustomNavBar";
 import { useFeatures } from "../../context/FeaturesContext";
+import { useCapabilities } from "../../context/CapabilitiesContext";
 import GridContainer from "../forms/fields/GridContainer";
 import CustomButton from "../forms/fields/CustomButton";
 import { currentRole } from '../../auth/access';
@@ -55,13 +56,18 @@ const storedName = () => {
 const AdminHome = ({ data }) => {
   const navigate = useNavigate();
   const features = useFeatures();
+  const can = useCapabilities();
   const d = data || {}; // data can be null (default params only cover undefined)
   const role = d.role || currentRole() || "admin";
   const name = d.name || storedName() || "there";
   const tiles = LINKS.filter((l) => {
     const roles = l.roles || NAV_BY_PATH[l.path]?.roles || [];
     const feature = NAV_BY_PATH[l.path]?.feature;
-    return roles.includes(role) && (!feature || features[feature]);
+    // Same capability rule as the sidebar: a tile the server would refuse
+    // (URF for faculty who mentor nothing) is not offered.
+    const capability = NAV_BY_PATH[l.path]?.capability;
+    const holds = !capability || (Array.isArray(capability) ? capability.some(can) : can(capability));
+    return roles.includes(role) && (!feature || features[feature]) && holds;
   });
 
   return (

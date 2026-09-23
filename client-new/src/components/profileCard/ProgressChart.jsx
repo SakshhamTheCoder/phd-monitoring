@@ -138,7 +138,6 @@ const ProgressChart = ({ points = [], milestones = [] }) => {
             onFocus={() => setHovered(point)}
             onBlur={() => setHovered(null)}
             tabIndex={0}
-            role="button"
             aria-label={`${point.semester || formatDate(point.date)}: ${point.progress} percent`}
           />
         ))}

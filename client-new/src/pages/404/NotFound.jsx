@@ -1,18 +1,17 @@
 import React from 'react';
-import './NotFound.css'; 
-import SCIJournal from '../../components/publications/SCIJournal';
-import Conference from '../../components/publications/Conference';
-import Patents from '../../components/publications/Patents';
-import AddPublication from '../../components/publications/AddPublication';
-import Layout from '../../components/dashboard/layout';
+import { Link } from 'react-router-dom';
+import './NotFound.css';
+
+// Signed in, this renders inside the shell, and an address can also miss
+// because the role has no route for it rather than because it does not exist.
 const NotFound = () => {
+  const signedIn = !!localStorage.getItem('token');
   return (
-    // <Layout children={<AddPublication></AddPublication>}/>
-    <div className="not-found-container">
+    <div className={`not-found-container${signedIn ? ' not-found-container--shell' : ''}`}>
       <div className="not-found-box">
         <h1>404</h1>
-        <p>Page Not Found</p>
-        <a href="/home" className="back-link">Home</a>
+        <p>{signedIn ? 'This page does not exist, or is not available for your role.' : 'Page Not Found'}</p>
+        <Link to="/home" className="back-link">Home</Link>
       </div>
     </div>
   );

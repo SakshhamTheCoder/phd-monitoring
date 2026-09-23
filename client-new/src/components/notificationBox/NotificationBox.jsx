@@ -6,18 +6,17 @@ import { toast } from "react-toastify";
 import { getRoleName } from "../../utils/roleName";
 import { timeAgo } from "../../utils/timeParse";
 import { currentRole } from '../../auth/access';
+import LoadError from "../common/LoadError";
 
 const NotificationBox = () => {
   const [isOpen, setIsOpen] = useState(false);
   const notificationRef = useRef(null);
   const toggleRef = useRef(null);
   const [notifications, setNotifications] = useState([]);
-  const [allRead, setAllRead] = useState(false);
   // An empty list after a failed load is not "all caught up".
   const [loadFailed, setLoadFailed] = useState(false);
 
   const fetchNotifications = useCallback(async () => {
-    setAllRead(false);
     const { success, response } = await APIlistUnreadNotifications();
     if (success) setNotifications(response);
     setLoadFailed(!success);
@@ -71,7 +70,7 @@ const NotificationBox = () => {
     }
   };
 
-  const isRead = (n) => allRead || n.is_read;
+  const isRead = (n) => n.is_read;
   const unreadCount = notifications.filter((n) => !isRead(n)).length;
 
   const handleMarkAllAsRead = async (event) => {
@@ -80,7 +79,9 @@ const NotificationBox = () => {
     const result = await APImarkAllNotificationsAsRead();
     if (result && result.success) {
       // Keep them listed in the dropdown, just mark them read (dots vanish).
-      setAllRead(true);
+      // Marked on the items themselves, so the next refetch cannot bring the
+      // badge back while it is in flight.
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
       toast.success("All notifications marked as read");
     } else {
       toast.error("Couldn't mark notifications as read");
@@ -122,9 +123,16 @@ const NotificationBox = () => {
           </div>
           <div className="notification_content">
             {notifications.length === 0 ? (
-              !loadFailed && <div className="notification_empty">
-                <p>You're all caught up.</p>
-              </div>
+              loadFailed ? (
+                <LoadError
+                  message="Could not load your notifications. Check your connection and try again."
+                  onRetry={fetchNotifications}
+                />
+              ) : (
+                <div className="notification_empty">
+                  <p>You're all caught up.</p>
+                </div>
+              )
             ) : (
               notifications.map((notification) => (
                 <button

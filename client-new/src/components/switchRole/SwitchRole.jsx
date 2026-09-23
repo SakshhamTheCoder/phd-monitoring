@@ -60,6 +60,7 @@ const SwitchRole = () => {
                 <DropdownField
                     label="Role"
                     options={roles}
+                    initialValue={currentRole()}
                     onChange={(value)=>{
                         setRole(value);
 

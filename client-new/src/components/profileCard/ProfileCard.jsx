@@ -13,6 +13,7 @@ import { customFetch } from "../../api/base";
 import GridContainer from "../forms/fields/GridContainer";
 import TableComponent from "../forms/table/TableComponent";
 import CustomButton from "../forms/fields/CustomButton";
+import LoadError from "../common/LoadError";
 import CustomModal from "../forms/modal/CustomModal";
 import SupervisorDoctoralManager from "../supervisorDoctoralManager/SupervisorDoctoralManager";
 import InfoGrid from "../profileFields/InfoGrid";
@@ -75,7 +76,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
 
   const profileUrl = roll_no ? `${baseURL}/students/${roll_no}` : `${baseURL}/students/me`;
 
-  useEffect(() => {
+  const loadProfile = () => {
     customFetch(profileUrl, "GET", {}, true, false).then((res) => {
       if (res?.success) {
         setPermissions({
@@ -89,6 +90,10 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
       }
       setLoading(false);
     });
+  };
+
+  useEffect(() => {
+    loadProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileUrl]);
   
@@ -219,6 +224,10 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
   };
 
   const cancelInlineEdit = () => {
+    // Compared the way startInlineEdit filled the form, so opening and
+    // cancelling without typing does not ask.
+    const changed = Object.keys(editForm).some((key) => editForm[key] !== (profile?.[key] || ''));
+    if (changed && !window.confirm('Discard your unsaved changes to this profile?')) return;
     setIsEditingInline(false);
   };
 
@@ -849,7 +858,15 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
       </>
     );
   } else {
-    return <p>Profile data not available.</p>;
+    return (
+      <LoadError
+        message="Could not load this profile. Check your connection and try again."
+        onRetry={() => {
+          setLoading(true);
+          loadProfile();
+        }}
+      />
+    );
   }
 };
 

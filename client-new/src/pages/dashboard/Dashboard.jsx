@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import './Dashboard.css';
 import { useLoading } from '../../context/LoadingContext';
 import ProfileCard from '../../components/profileCard/ProfileCard';
@@ -8,6 +8,7 @@ import FacultyProfile from '../admin/ResearchProfile';
 import AdminHome from '../../components/profileCard/AdminHome';
 import UgProfile from '../../components/urf/UgProfile';
 import { currentRole } from '../../auth/access';
+import LoadError from '../../components/common/LoadError';
 
 const Dashboard = () => {
   const userRole = currentRole();
@@ -15,6 +16,31 @@ const Dashboard = () => {
   const { setLoading } = useLoading();
   const [data, setData] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setFailed(false);
+    // showToast = false: a missing profile shouldn't pop an error toast; we fall
+    // back to the admin overview below instead.
+    const result = await customFetch(baseURL + '/home', 'GET', {}, false);
+    const payload = result.response;
+
+    if (result.success && payload?.type) {
+      setView(payload.type);
+      setData(payload.data);
+    } else if (result.success || result.status === 404) {
+      // No student/faculty record for this role (a 404 for a student account
+      // without one), so show the overview rather than a dead "loading" state.
+      setView('admin');
+    } else {
+      // A network or server failure is not "no profile": the admin overview
+      // would tell a student or faculty member they are someone else.
+      setFailed(true);
+    }
+    setLoading(false);
+    setIsLoaded(true);
+  }, [setLoading]);
 
   useEffect(() => {
     // Admin / clerk accounts have no personal (student/faculty) profile, and /home 404s for
@@ -32,39 +58,16 @@ const Dashboard = () => {
       return;
     }
 
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        // showToast = false: a missing profile shouldn't pop an error toast; we fall
-        // back to the admin overview below instead.
-        const result = await customFetch(baseURL + '/home', 'GET', {}, false);
-        const payload = result?.response;
-
-        if (result?.success && payload?.type) {
-          setView(payload.type);
-          setData(payload.data);
-        } else {
-          // No student/faculty record for this role — show the overview rather than
-          // a dead "loading" state.
-          setView('admin');
-        }
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        setView('admin');
-      } finally {
-        setLoading(false);
-        setIsLoaded(true);
-      }
-    };
-
     fetchData();
-  }, [setLoading, userRole]);
+  }, [fetchData, userRole]);
 
   return (
     <>
       {isLoaded && (
         <>
-          {view === 'student' ? (
+          {failed ? (
+            <LoadError message="Could not load your home page. Check your connection and try again." onRetry={fetchData} />
+          ) : view === 'student' ? (
             <ProfileCard data={data} />
           ) : view === 'ug_student' ? (
             <UgProfile />
@@ -73,7 +76,7 @@ const Dashboard = () => {
           ) : (
             // The faculty profile is one page; the dashboard shows the
             // signed-in faculty's own, without the page chrome.
-            <FacultyProfile facultyCode={data.faculty_code} />
+            <FacultyProfile facultyCode={data?.faculty_code} />
           )}
         </>
       )}

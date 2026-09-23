@@ -32,3 +32,10 @@
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
+/* Inside the shell the sidebar and top bar already frame the page. */
+.not-found-container--shell{
+    height: auto;
+    padding: 64px 16px;
+    background-image: none;
+    text-align: center;
+}

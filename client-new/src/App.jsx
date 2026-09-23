@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import './App.css';
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -7,6 +7,7 @@ import { LoadingProvider, useLoading } from './context/LoadingContext';
 import { FeaturesProvider, useFeatures } from './context/FeaturesContext';
 import { CapabilitiesProvider } from './context/CapabilitiesContext';
 import Loader from './components/loader/loader';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import { ACCESS, currentRole } from './auth/access';
 
 // Every page is split out of the entry chunk. A student signing in should not
@@ -80,13 +81,20 @@ const App = () => {
 // One shell for every signed-in page. Held by a parent route, it stays mounted
 // across navigation, so the sidebar, notifications and profile are not rebuilt
 // on each click, and a page still loading shows the loader inside it.
-const Shell = () => (
-  <Layout>
-    <Suspense fallback={<Loader />}>
-      <Outlet />
-    </Suspense>
-  </Layout>
-);
+// A page that fails to render leaves the shell standing; keyed by path, the
+// boundary starts clean when the user navigates away.
+const Shell = () => {
+  const { pathname } = useLocation();
+  return (
+    <Layout>
+      <ErrorBoundary key={pathname}>
+        <Suspense fallback={<Loader />}>
+          <Outlet />
+        </Suspense>
+      </ErrorBoundary>
+    </Layout>
+  );
+};
 
 // Pages a visitor reaches without signing in.
 const PUBLIC_PATHS = /^\/($|team|privacy|support|login|signup|google\/callback|forgot-password|reset-password|external-review\/|openings|applications\/)/;
@@ -104,8 +112,9 @@ const AppContent = () => {
   // Signed out, a protected address has no route at all and fell through to
   // "Not found". Send the visitor to sign in and back to where they were going.
   const { pathname, search } = window.location;
-  if (!localStorage.getItem('token') && !PUBLIC_PATHS.test(pathname)) {
-    window.location.replace(`/login?onLogin=${encodeURIComponent(pathname + search)}`);
+  const signedIn = !!localStorage.getItem('token');
+  if (!signedIn && !PUBLIC_PATHS.test(pathname)) {
+    window.location.replace(`/login?next=${encodeURIComponent(pathname + search)}`);
     return null;
   }
   return (
@@ -121,6 +130,7 @@ const AppContent = () => {
         }}
       />
       <Router>
+        <ErrorBoundary>
         <Suspense fallback={<Loader />}>
           <Routes>
             {/* Landing Page */}
@@ -262,11 +272,15 @@ const AppContent = () => {
                   <Route path="/configuration" element={<Configuration />} />
                 </>
               )}
+              {/* Signed in, a miss (often a page this role has no route for)
+                  keeps the sidebar, so the way back is still on screen. */}
+              {signedIn && <Route path="*" element={<NotFound />} />}
             </Route>
 
-            <Route path="*" element={<NotFound />} />
+            {!signedIn && <Route path="*" element={<NotFound />} />}
           </Routes>
         </Suspense>
+        </ErrorBoundary>
       </Router>
     </>
   );

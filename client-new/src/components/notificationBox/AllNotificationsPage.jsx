@@ -5,11 +5,12 @@ import { timeAgo } from "../../utils/timeParse";
 import { toast } from "react-toastify";
 import { getRoleName } from "../../utils/roleName";
 import { currentRole } from '../../auth/access';
+import LoadError from "../common/LoadError";
 
 const AllNotificationsPage = () => {
   const [notifications, setNotifications] = useState([]);
-  // A failed load has already toasted, and saying "No notifications yet" after
-  // it would be untrue, so it shows neither the list nor the empty state.
+  // Saying "No notifications yet" after a failed load would be untrue, so a
+  // failure says so in place of the list and offers another try.
   const [status, setStatus] = useState("loading"); // "loading" | "ready" | "failed"
 
   const fetchNotifications = useCallback(async () => {
@@ -52,7 +53,15 @@ const AllNotificationsPage = () => {
 
       {status === "loading" ? (
         <p className="notification-muted">Loading…</p>
-      ) : status === "failed" ? null : notifications.length === 0 ? (
+      ) : status === "failed" ? (
+        <LoadError
+          message="Could not load your notifications. Check your connection and try again."
+          onRetry={() => {
+            setStatus("loading");
+            fetchNotifications();
+          }}
+        />
+      ) : notifications.length === 0 ? (
         <div className="empty-state">
           No notifications yet. Anything that needs your attention in this role
           will show up here.
