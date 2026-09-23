@@ -52,8 +52,9 @@ export const customFetch = async (
         sessionStorage.clear();
         // Already there: navigating again reloads the page and repeats
         // whatever request just failed, forever.
-        if (window.location.pathname !== "/login") {
-          window.location.href = "/login";
+        const { pathname, search } = window.location;
+        if (pathname !== "/login") {
+          window.location.href = `/login?next=${encodeURIComponent(pathname + search)}`;
         }
         return { success: false, response: data || {} };
       }
@@ -63,7 +64,7 @@ export const customFetch = async (
           ? `The server did not respond properly (error ${error.status}). Try again in a moment.`
           : `The request failed (error ${error.status}).`;
         if (showToast) toast.error(message);
-        return { success: false, response: { message } };
+        return { success: false, response: { message }, status: error.status };
       }
 
       if (error.status === 422) {
@@ -80,7 +81,8 @@ export const customFetch = async (
         if (showToast) toast.error(data.message);
       }
 
-      return { success: false, response: data };
+      // The status lets a caller tell "not there" (404) from "could not ask".
+      return { success: false, response: data, status: error.status };
     } else if (isNetworkError(error)) {
       // Browser reports a failed fetch the same way for offline, DNS failure and a
       // dead server, so blame the connection rather than showing "Failed to fetch".

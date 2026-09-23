@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Loader from '../../components/loader/loader';
 import { apiUrfResendVerification, apiUrfSignup } from '../../api/urf';
+import { NETWORK_ERROR_MESSAGE } from '../../api/base';
 import { useBranches } from '../../hooks/useBranches';
 import { rootURL } from '../../api/urls';
 import { mountTurnstile } from '../login/turnstile';
@@ -34,6 +35,12 @@ const SignupPage = () => {
   const [sentTo, setSentTo] = useState(null);
   // Set once Google has vouched for an address.
   const [google, setGoogle] = useState(null);
+  const [resending, setResending] = useState(false);
+  const navigate = useNavigate();
+  // Removes the open Google popup's listener, if there is one.
+  const stopGoogle = useRef(() => {});
+
+  useEffect(() => () => stopGoogle.current(), []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -49,6 +56,7 @@ const SignupPage = () => {
   }, [google, reset]);
 
   const signUpWithGoogle = () => {
+    stopGoogle.current();
     const popup = window.open(
       `${rootURL}/api/google/redirect`,
       'Google Sign Up',
@@ -59,26 +67,32 @@ const SignupPage = () => {
       return;
     }
 
+    const stop = () => window.removeEventListener('message', listener);
+
     const listener = (event) => {
       if (event.origin !== window.location.origin) return;
 
       if (event.data.type === 'GOOGLE_SIGNUP') {
-        window.removeEventListener('message', listener);
+        stop();
         setGoogle(event.data);
       } else if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
         // The address already has an account, so this was a sign-in.
-        window.removeEventListener('message', listener);
+        stop();
         localStorage.setItem('token', event.data.token);
         localStorage.setItem('userRole', event.data.user.role.role);
         localStorage.setItem('available_roles', JSON.stringify(event.data.available_roles));
         localStorage.setItem('user', JSON.stringify(event.data.user));
         window.location.href = '/home';
       } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
-        window.removeEventListener('message', listener);
+        stop();
         toast.error(event.data.error || 'Google sign-in failed.');
       }
     };
     window.addEventListener('message', listener);
+    // Listeners used to pile up, one per click. The next click and leaving the
+    // page both remove this one. A closed popup does not: Google's pages can cut
+    // the opener link so `closed` reads true while sign-in is still under way.
+    stopGoogle.current = stop;
   };
 
   useEffect(() => {
@@ -87,6 +101,8 @@ const SignupPage = () => {
   }, [sentTo, google]);
 
   const onSubmit = async (data) => {
+    // Enter in a field submits again while the first request is in flight.
+    if (loading) return;
     setLoading(true);
     setErrors({});
     const result = await apiUrfSignup(google
@@ -97,7 +113,8 @@ const SignupPage = () => {
     if (result.success) {
       if (result.response?.verified) {
         toast.success(result.response.message);
-        window.location.href = '/login';
+        // In-app, so the toast is still on screen when sign in opens.
+        navigate('/login');
         return;
       }
       setSentTo(data.email);
@@ -123,8 +140,14 @@ const SignupPage = () => {
   }, {});
 
   const resend = async () => {
+    setResending(true);
     const result = await apiUrfResendVerification(sentTo);
-    toast.info(result.response?.message || 'The link is on its way.');
+    setResending(false);
+    if (result.success) {
+      toast.info(result.response?.message || 'The link is on its way.');
+    } else {
+      toast.error(result.networkError ? NETWORK_ERROR_MESSAGE : result.response?.message || 'Could not send the link. Try again in a moment.');
+    }
   };
 
   return (
@@ -148,7 +171,7 @@ const SignupPage = () => {
                 <Link to="/login" className="tw-bg-brand tw-text-white tw-px-5 tw-py-2 tw-rounded-md tw-font-bold hover:tw-bg-brand-hover">
                   Go to sign in
                 </Link>
-                <button type="button" onClick={resend} className="tw-text-brand hover:tw-underline">
+                <button type="button" onClick={resend} disabled={resending} className="tw-text-brand hover:tw-underline">
                   Send the link again
                 </button>
               </div>
@@ -255,6 +278,7 @@ const SignupPage = () => {
 
                 <button
                   type="submit"
+                  disabled={loading}
                   className="sm:tw-col-span-2 tw-bg-brand tw-text-white tw-py-2 tw-rounded-md tw-font-bold hover:tw-bg-brand-hover tw-duration-200"
                 >
                   Create account

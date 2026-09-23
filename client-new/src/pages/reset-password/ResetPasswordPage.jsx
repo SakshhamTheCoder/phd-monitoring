@@ -1,6 +1,6 @@
 import React from "react";
 import { useForm } from "react-hook-form";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Loader from "../../components/loader/loader";
 import { customFetch } from "../../api/base";
 import { baseURL } from "../../api/urls";
@@ -12,6 +12,7 @@ const ResetPasswordPage = () => {
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const token = searchParams.get("token");
   const email = searchParams.get("email");
 
@@ -23,6 +24,8 @@ const ResetPasswordPage = () => {
 
  
   const onSubmit = async (data) => {
+    // Enter in a field submits again while the first request is in flight.
+    if (loading) return;
     setLoading(true);
     // The email comes from the link. The field showing it is disabled, and a
     // disabled field is left out of the form's data, so the request went without
@@ -40,7 +43,8 @@ const ResetPasswordPage = () => {
     if (!response.success) return;
 
     toast.success("Password reset. Sign in with the new password.");
-    window.location.href = "/login";
+    // In-app, so the toast is still on screen when sign in opens.
+    navigate("/login");
   };
 
   return (
@@ -103,7 +107,7 @@ const ResetPasswordPage = () => {
               </button>
             </div>
 
-            <button type="submit" className="tw-bg-brand tw-text-white tw-py-2 tw-rounded tw-w-full hover:tw-bg-brand-hover">
+            <button type="submit" disabled={loading} className="tw-bg-brand tw-text-white tw-py-2 tw-rounded tw-w-full hover:tw-bg-brand-hover">
               Reset Password
             </button>
           </form>

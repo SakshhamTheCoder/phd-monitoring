@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { loginAPI } from "../../api/login";
 import { apiUrfResendVerification } from "../../api/urf";
 import { rootURL } from "../../api/urls";
 import Loader from "../../components/loader/loader";
 import { toast } from "react-toastify";
+import { NETWORK_ERROR_MESSAGE } from "../../api/base";
 import { mountTurnstile } from "./turnstile";
 
 // Where to go once signed in: the page that sent the visitor here, or home.
-// Only a path on this site. Anything else ("https://...", "//host") was followed
-// as given, which made the login page an open redirect.
+// Only a path on this site. Anything else ("https://...", "//host", and "/\host",
+// which browsers read as "//host") was followed as given, which made the login
+// page an open redirect. `onLogin` is the older name, still in old links.
 const afterLogin = () => {
-  const target = new URLSearchParams(window.location.search).get('onLogin') || '';
-  return target.startsWith('/') && !target.startsWith('//') ? target : '/home';
+  const params = new URLSearchParams(window.location.search);
+  const target = params.get('next') || params.get('onLogin') || '';
+  return /^\/(?![/\\])/.test(target) ? target : '/home';
 };
 
 const LoginPage = () => {
@@ -23,13 +26,17 @@ const LoginPage = () => {
   const [showEmailForm, setShowEmailForm] = useState(false);
   // Set when the account exists but its email is unconfirmed.
   const [unverifiedEmail, setUnverifiedEmail] = useState(null);
+  const [resending, setResending] = useState(false);
   const { register, handleSubmit } = useForm();
+  const navigate = useNavigate();
 
   // Check if user is already logged in
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      window.location.href = "/home";
+      // Replace, so Back does not return to a login page that bounces again.
+      window.location.replace(afterLogin());
+      return undefined;
     }
 
     const verified = new URLSearchParams(window.location.search).get("verified");
@@ -68,12 +75,29 @@ const LoginPage = () => {
       `width=${width},height=${height},left=${left},top=${top}`
     );
 
+    const stop = () => {
+      clearTimeout(timeout);
+      clearInterval(closedPoll);
+      window.removeEventListener('message', messageListener);
+    };
+
     // Set a timeout to stop loading if no response after 60 seconds
     const timeout = setTimeout(() => {
+      stop();
       setLoading(false);
-      window.removeEventListener('message', messageListener);
       toast.error('Google Sign-In timed out. Please try again.');
     }, 60000);
+
+    // Closed by hand, the popup never answers, and the page sat behind the
+    // loader until the timeout. Only the loader goes: Google's pages can cut the
+    // opener link so `closed` reads true while sign-in is still under way, and
+    // the listener has to be there when the callback posts back.
+    const closedPoll = setInterval(() => {
+      if (popup && popup.closed) {
+        clearInterval(closedPoll);
+        setLoading(false);
+      }
+    }, 500);
 
     // Listen for messages from the popup
     const messageListener = (event) => {
@@ -83,9 +107,8 @@ const LoginPage = () => {
       }
 
       if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
-        clearTimeout(timeout);
-        window.removeEventListener('message', messageListener);
-        
+        stop();
+
         // Store the auth data
         localStorage.setItem('token', event.data.token);
         localStorage.setItem('userRole', event.data.user.role.role);
@@ -94,11 +117,17 @@ const LoginPage = () => {
         
         // Redirect to appropriate page
         window.location.href = afterLogin();
-      } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
-        clearTimeout(timeout);
-        window.removeEventListener('message', messageListener);
+      } else if (event.data.type === 'GOOGLE_SIGNUP') {
+        // The address has no account yet: finish on the sign-up form, as the
+        // callback does when it has no opener.
+        stop();
         setLoading(false);
-        
+        const { ticket, email, name } = event.data;
+        navigate(`/signup?ticket=${encodeURIComponent(ticket)}&email=${encodeURIComponent(email || '')}&name=${encodeURIComponent(name || '')}`);
+      } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
+        stop();
+        setLoading(false);
+
         toast.error(event.data.error || 'Google login failed');
       }
     };
@@ -107,15 +136,16 @@ const LoginPage = () => {
 
     // Check if popup was blocked
     if (!popup) {
-      clearTimeout(timeout);
+      stop();
       setLoading(false);
-      window.removeEventListener('message', messageListener);
       toast.error('Popup was blocked. Please allow popups for this site.');
     }
   };
 
   // Define the onSubmit function
   const onSubmit = async (data) => {
+    // Enter in a field submits again while the first request is in flight.
+    if (loading) return;
     setLoading(true);
 
     const result = await loginAPI(data.email, data.password, captchaToken);
@@ -252,9 +282,16 @@ const LoginPage = () => {
                   {unverifiedEmail && (
                     <button
                       type="button"
+                      disabled={resending}
                       onClick={async () => {
+                        setResending(true);
                         const result = await apiUrfResendVerification(unverifiedEmail);
-                        toast.info(result.response?.message || 'The link is on its way.');
+                        setResending(false);
+                        if (result.success) {
+                          toast.info(result.response?.message || 'The link is on its way.');
+                        } else {
+                          toast.error(result.networkError ? NETWORK_ERROR_MESSAGE : result.response?.message || 'Could not send the confirmation email. Try again in a moment.');
+                        }
                       }}
                       className="tw-text-brand hover:tw-underline"
                     >
@@ -268,6 +305,7 @@ const LoginPage = () => {
 
                 <button
                   type="submit"
+                  disabled={loading}
                   className="tw-bg-brand tw-w-4/5 tw-mx-auto tw-block tw-text-center tw-text-white tw-py-2 tw-rounded-md tw-font-bold hover:tw-bg-brand-hover tw-duration-200"
                 >
                   Login

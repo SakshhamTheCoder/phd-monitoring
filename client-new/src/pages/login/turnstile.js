@@ -35,6 +35,8 @@ export const mountTurnstile = (onToken) => {
           sitekey: CLOUDFLARE_SITE_KEY,
           theme: 'light',
           callback: onToken,
+          // A token expires after a few minutes; submitting it fails server-side.
+          'expired-callback': () => onToken(null),
         });
       } catch (error) {
         console.error('Turnstile render error:', error);
