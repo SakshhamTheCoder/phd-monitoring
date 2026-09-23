@@ -14,7 +14,7 @@ import Student from "./roles/Student";
 const ThesisExtention = ({ formData }) => {
   return (
     <>
-      <FormTitleBar formName="Extension for Submission of Thesis" formData={formData} />
+      <FormTitleBar formName="Extension for submission of thesis" formData={formData} />
       <div className="form-container">
         <FormLadder formData={formData} panels={{ student: Student }} />
       </div>

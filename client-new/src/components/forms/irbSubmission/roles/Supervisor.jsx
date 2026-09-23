@@ -47,8 +47,8 @@ const Supervisor = ({ formData }) => {
         <>
           {!!lock && (
             <>
-              <p>Supervisors</p>
               <GridContainer
+                label="Supervisors"
                 elements={[
                   <TableComponent
                     data={formData.supervisors}
@@ -63,8 +63,8 @@ const Supervisor = ({ formData }) => {
                       "Name",
                       "Department",
                       "Designation",
-                      "Supervised Campus",
-                      "Supervised Outside",
+                      "Supervised campus",
+                      "Supervised outside",
                     ]}
                   />,
                 ]}
@@ -112,21 +112,18 @@ const Supervisor = ({ formData }) => {
                       />,
                     ]}
                   />
-                  <>
-                    Total Number of Students under Guidance (including this
-                    applicant)
-                  </>
                   <GridContainer
+                    label="Total number of students under guidance (including this applicant)"
                     elements={[
                       <CounterField
-                        label="Inside TIET Students"
+                        label="Inside TIET students"
                         initialValue={
                           formData.current_supervisor?.supervised_campus
                         }
                         isLocked={true}
                       />,
                       <CounterField required={true}
-                        label="Outside TIET Students"
+                        label="Outside TIET students"
                         initialValue={
                           formData.current_supervisor?.supervised_outside
                         }

@@ -25,7 +25,7 @@ const Student = ({ formData, refetchData = null, }) => {
   const [showPublication, setShowPublication] = useState(false);
   const [temp, setTemp] = useState([]);
   const [files, setFiles] = useState([]);
-  // The scholar's unlinked publication library, shown in the "Add Publications"
+  // The scholar's unlinked publication library, shown in the "Add publications"
   // picker. Kept in state so a publication added from inside the picker appears
   // without reloading the page.
   const [studentPublications, setStudentPublications] = useState(
@@ -188,7 +188,7 @@ const Student = ({ formData, refetchData = null, }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Roll Number"
+                label="Roll number"
                 initialValue={formData.roll_no}
                 isLocked={true}
               />,
@@ -203,7 +203,7 @@ const Student = ({ formData, refetchData = null, }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Period of Report"
+                label="Period of report"
                 initialValue={formData.period_of_report}
                 isLocked={true}
               />,
@@ -213,7 +213,7 @@ const Student = ({ formData, refetchData = null, }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Title of Phd Thesis"
+                label="Title of PhD thesis"
                 initialValue={formData.phd_title}
                 isLocked={true}
               />,
@@ -224,17 +224,17 @@ const Student = ({ formData, refetchData = null, }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Extension Availed"
+                label="Extension availed"
                 initialValue={formData.extention_availed ? "Yes" : "No"}
                 isLocked={true}
               />,
               <DropdownField required={true}
-                label="Teaching Work Done"
+                label="Teaching work done"
                 options={[
                   { title: "UG", value: "UG" },
                   { title: "PG", value: "PG" },
                   { title: "UG & PG (Both)", value: "Both" },
-                  { title: "Other Assignments", value: "None" },
+                  { title: "Other assignments", value: "None" },
                 ]}
                 initialValue={formData.teaching_work}
                 isLocked={lock}
@@ -252,7 +252,7 @@ const Student = ({ formData, refetchData = null, }) => {
           <GridContainer
             elements={[
               <DropdownField required={true}
-                label="Publication During the Period Under Report"
+                label="Publication during the period under report"
                 options={[
                   { title: "Yes", value: true },
                   { title: "No", value: false },
@@ -281,7 +281,7 @@ const Student = ({ formData, refetchData = null, }) => {
                <GridContainer
                   elements={[
                     <InputField required={true}
-                      label="No. of Papers in SCI/SCIE/SSCI/ABDC/AHCI Journal"
+                      label="No. of papers in SCI/SCIE/SSCI/ABDC/AHCI journal"
                       initialValue={formData.no_paper_sci_journal}
                       isLocked={lock}
                       onChange={(value) => {
@@ -297,7 +297,7 @@ const Student = ({ formData, refetchData = null, }) => {
                 <GridContainer
                   elements={[
                     <InputField required={true}
-                      label="No. of Papers in Scopus Journal"
+                      label="No. of papers in Scopus journal"
                       initialValue={formData.no_paper_scopus_journal}
                       isLocked={lock}
                       onChange={(value) => {
@@ -313,7 +313,7 @@ const Student = ({ formData, refetchData = null, }) => {
                 <GridContainer
                   elements={[
                     <InputField required={true}
-                      label="No. of Papers in Conferences Under Report"
+                      label="No. of papers in conferences under report"
                       initialValue={formData.no_paper_conference}
                       isLocked={lock}
                       onChange={(value) => {
@@ -329,7 +329,7 @@ const Student = ({ formData, refetchData = null, }) => {
                 <GridContainer
                   elements={[
                     <InputField required={true}
-                      label="Total of Number of Papers"
+                      label="Total number of papers"
                       initialValue={formData.total_paper_sci_journal}
                       isLocked={true}
                       onChange={(value) => {
@@ -344,13 +344,12 @@ const Student = ({ formData, refetchData = null, }) => {
                 />
                 {formData?.role === "student" && !lock && (
                   <GridContainer
+                    label="Publications"
                     elements={[
-                      <>
-                        <h2 className="section-heading">Publications</h2>
-                      </>,
-                      <></>,
                       <CustomButton
-                        text="Link Publications"
+                        text="Link publications"
+                        variant="secondary"
+                        size="sm"
                         onClick={() => {
                           openModal();
                         }}
@@ -376,7 +375,7 @@ const Student = ({ formData, refetchData = null, }) => {
           <GridContainer
             elements={[
               <FileUploadField required={true}
-                label={"Upload Presentation PDF"}
+                label={"Upload presentation PDF"}
                 onChange={(file) => {
                   setFiles([{ key: "presentation_pdf", file }]);
                 }}
@@ -388,7 +387,7 @@ const Student = ({ formData, refetchData = null, }) => {
               ...(formData.ppt_file
                 ? [
                     <FileUploadField
-                      label={"Download Sample PDF"}
+                      label={"Download sample PDF"}
                       isLocked={true}
                       initialValue={formData.ppt_file}
                     />,
@@ -399,7 +398,7 @@ const Student = ({ formData, refetchData = null, }) => {
           <CustomModal
             isOpen={open}
             onClose={closeModal}
-            title={"Add Publication"}
+            title={"Add publication"}
             minHeight="200px"
             maxHeight="600px"
             minWidth="650px"

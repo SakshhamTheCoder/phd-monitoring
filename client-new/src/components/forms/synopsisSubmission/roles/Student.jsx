@@ -25,7 +25,7 @@ const Student = ({ formData }) => {
   const [showPublication, setShowPublication] = useState(false);
   const [temp, setTemp] = useState([]);
   const [files, setFiles] = useState([]);
-  // The scholar's unlinked publication library, shown in the "Add Publications"
+  // The scholar's unlinked publication library, shown in the "Add publications"
   // picker. Kept in state so a publication added from inside the picker appears
   // without reloading the page.
   const [studentPublications, setStudentPublications] = useState(
@@ -201,7 +201,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Roll Number"
+                label="Roll number"
                 initialValue={formData.roll_no}
                 isLocked={true}
               />,
@@ -211,7 +211,7 @@ const Student = ({ formData }) => {
                 isLocked={true}
               />,
               <InputField
-                label="Date of Revised IRB"
+                label="Date of revised IRB"
                 initialValue={formatDate(formData.date_of_irb)}
                 isLocked={true}
               />,
@@ -221,7 +221,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Date of Admission"
+                label="Date of admission"
                 initialValue={formatDate(formData.date_of_registration)}
                 isLocked={true}
               />,
@@ -231,7 +231,7 @@ const Student = ({ formData }) => {
                 isLocked={true}
               />,
               <InputField
-                label="Current Status"
+                label="Current status"
                 initialValue={formData.current_status}
                 isLocked={true}
               />,
@@ -240,7 +240,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Address of Correspondance"
+                label="Address of correspondence"
                 initialValue={formData.address}
                 isLocked={true}
               />,
@@ -251,7 +251,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Title of Phd Thesis"
+                label="Title of PhD thesis"
                 initialValue={formData.phd_title}
                 isLocked={true}
               />,
@@ -263,7 +263,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <TableComponent
-                label={"Objectives of Research"}
+                label={"Objectives of research"}
                 data={objectivesData}
                 keys={["objective"]}
                 titles={["Objective"]}
@@ -282,7 +282,7 @@ const Student = ({ formData }) => {
                       revisedOBJ: prev.revisedOBJ === true ? false : true,
                     }));
                   }}
-                  text={"Revise Objectives"}
+                  text={"Revise objectives"}
                 />,
               ]}
             />
@@ -322,7 +322,7 @@ const Student = ({ formData }) => {
                 <GridContainer
                   elements={[
                     <TableComponent
-                      label={"Approved Objectives"}
+                      label={"Approved objectives"}
                       data={robjectivesData}
                       keys={["objective"]}
                       titles={["Objective"]}
@@ -336,13 +336,12 @@ const Student = ({ formData }) => {
           <>
             {formData?.role === "student" && !lock && (
               <GridContainer
+                label="Publications"
                 elements={[
-                  <>
-                    <h2 className="section-heading">Publications</h2>
-                  </>,
-                  <></>,
                   <CustomButton
-                    text="Add Publications"
+                    text="Add publications"
+                    variant="secondary"
+                    size="sm"
                     onClick={() => {
                       openModal();
                     }}
@@ -370,7 +369,7 @@ const Student = ({ formData }) => {
               Shown here as a record once it has been made. */}
           {formData.checklist_choice && (
             <GridContainer
-              label={<p>Publication category</p>}
+              label="Publication category"
               elements={[
                 <InputField
                   label="Declared by the supervisor"
@@ -397,7 +396,7 @@ const Student = ({ formData }) => {
           <CustomModal
             isOpen={open}
             onClose={closeModal}
-            title={"Add Publication"}
+            title={"Add publication"}
             minHeight="200px"
             maxHeight="600px"
             minWidth="650px"

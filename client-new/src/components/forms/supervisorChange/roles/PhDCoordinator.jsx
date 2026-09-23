@@ -49,11 +49,12 @@ const PhDCoordinator = ({ formData }) => {
           {formData.role === "phd_coordinator" && !lock ? (
             <>
               <GridContainer
+                label="Allot supervisors"
                 elements={[
-                  <p>Allot Supervisors</p>,
-                  <></>,
                   <CustomButton
-                    text="Add Supervisor +"
+                    text="Add supervisor"
+                    variant="secondary"
+                    size="sm"
                     onClick={handleAddSupervisor}
                   />,
                 ]}
@@ -88,13 +89,9 @@ const PhDCoordinator = ({ formData }) => {
             </>
           ) : (
             <>
-                 <GridContainer
+              <GridContainer
+                label="Supervisors allocated by PhD Coordinator"
                 elements={[
-                  <p>Supervisors Allocated By PhDCoordinator</p>,
-                ]}
-                space={2}
-              />
-              <GridContainer elements={[
                 <TableComponent 
                   data={formData.new_supervisors}
                   keys={[ "name", "department"]}

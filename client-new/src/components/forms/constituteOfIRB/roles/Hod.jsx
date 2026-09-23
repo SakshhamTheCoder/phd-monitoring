@@ -82,11 +82,11 @@ const Hod = ({ formData }) => {
               body, and a remount showed the fields blank while body still sent
               those picks. */}
           <div hidden={!body.approval}>
-            <p style={{ fontWeight: "bold", textAlign: "left" }}>List of 3 outside experts proposed by the HOD</p>
 
           {greater && lock && formData.outside_experts?.length === 3 ? (
             <>
               <GridContainer
+                label="List of 3 outside experts proposed by the HOD"
                 elements={[
                   <TableComponent
                     data={formData.outside_experts}
@@ -105,6 +105,7 @@ const Hod = ({ formData }) => {
           ) : (
             <>
               <GridContainer
+                label="List of 3 outside experts proposed by the HOD"
                 elements={[
                   <InputSuggestion
                     apiUrl={apiURL2}
@@ -141,14 +142,8 @@ const Hod = ({ formData }) => {
 
             {lock && formData.chairman_experts ?(<>
                 <GridContainer
+                label="Expert(s) recommended by chairman board of the studies of concerned department in cognate area of department:"
                 elements={[
-                  <p>
-                    Expert(s) recommended by chairman board of the studies of
-                    concerned department in cognate area of department:{" "}
-                  </p>,  
-                ]} space={3}
-              />
-                <GridContainer elements={[
                 <TableComponent
                     data={formData.chairman_experts}
                     keys={["name", "department", "designation"]}
@@ -157,13 +152,9 @@ const Hod = ({ formData }) => {
                 ]} space={3}/>
             </>):(<> 
                 <GridContainer
-                label="Expert(s) recommended by chairman board of the studies of concerned department in cognate area of department: "
+                label="Expert(s) recommended by chairman board of the studies of concerned department in cognate area of department:"
                 elements={[
-                  
-                   <></>,
-                  <></>,
-                  <>{!lock && ( <CustomButton text="Add Expert +" onClick={handleAddExpert}></CustomButton>)}</>
-                 
+                  <>{!lock && ( <CustomButton text="Add expert" variant="secondary" size="sm" onClick={handleAddExpert}></CustomButton>)}</>
                 ]}
               />
                 <GridContainer

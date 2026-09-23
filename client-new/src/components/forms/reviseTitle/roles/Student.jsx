@@ -101,7 +101,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Roll Number"
+                label="Roll number"
                 initialValue={formData.roll_no}
                 isLocked={true}
               />,
@@ -111,7 +111,7 @@ const Student = ({ formData }) => {
                 isLocked={true}
               />,
               <InputField
-                label="Date of Revised IRB"
+                label="Date of revised IRB"
                 initialValue={formatDate(formData.date_of_irb)}
                 isLocked={true}
               />,
@@ -121,7 +121,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Date of Admission"
+                label="Date of admission"
                 initialValue={formatDate(formData.date_of_registration)}
                 isLocked={true}
               />,
@@ -131,7 +131,7 @@ const Student = ({ formData }) => {
                 isLocked={true}
               />,
               <InputField
-                label="Current Status"
+                label="Current status"
                 initialValue={formData.current_status}
                 isLocked={true}
               />,
@@ -140,7 +140,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Address of Correspondance"
+                label="Address of correspondence"
                 initialValue={formData.address}
                 isLocked={true}
               />,
@@ -151,7 +151,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Title of Phd Thesis"
+                label="Title of PhD thesis"
                 initialValue={formData.phd_title}
                 isLocked={true}
               />,
@@ -168,7 +168,8 @@ const Student = ({ formData }) => {
                       revised: prev.revised === true ? false : true,
                     }));
                   }}
-                  text={"Revise Title of PhD"}
+                  text={"Revise title of PhD"}
+                  variant="secondary"
                 />,
               ]}
             />
@@ -178,7 +179,7 @@ const Student = ({ formData }) => {
             <GridContainer
               elements={[
                 <InputField required={true}
-                  label="Revised Title of Phd Thesis"
+                  label="Revised title of PhD thesis"
                   initialValue={formData.revised_title}
                   isLocked={lock}
                   onChange={(value) => {
@@ -196,7 +197,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <TableComponent
-                label={"Objectives of Research"}
+                label={"Objectives of research"}
                 data={objectivesData}
                 keys={["objective"]}
                 titles={["Objective"]}
@@ -215,7 +216,8 @@ const Student = ({ formData }) => {
                       revisedOBJ: prev.revisedOBJ === true ? false : true,
                     }));
                   }}
-                  text={"Revise Objectives"}
+                  text={"Revise objectives"}
+                  variant="secondary"
                 />,
               ]}
             />
@@ -226,12 +228,11 @@ const Student = ({ formData }) => {
               {!lock && formData.role === "student" ? (
                 <>
                   <GridContainer
+                    label="Revised objectives"
                     elements={[
-                      <p>Revised Objectives</p>,
-                      <></>,
                       <>
                         {!lock && formData.role === "student" && (
-                          <CustomButton text={"+ Add"} onClick={addObjective} />
+                          <CustomButton text="Add objective" variant="secondary" size="sm" onClick={addObjective} />
                         )}
                       </>,
                     ]}
@@ -255,7 +256,7 @@ const Student = ({ formData }) => {
                 <GridContainer
                   elements={[
                     <TableComponent
-                      label={"Approved Objectives"}
+                      label={"Approved objectives"}
                       data={robjectivesData}
                       keys={["objective"]}
                       titles={["Objective"]}

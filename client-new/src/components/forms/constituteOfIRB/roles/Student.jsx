@@ -59,12 +59,12 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label={"Date of Form Submission"}
+                label={"Date of form submission"}
                 initialValue={formatDate(formData.created_at)}
                 isLocked={true}
               />,
               <InputField
-                label={"Date of Admission"}
+                label={"Date of admission"}
                 initialValue={formatDate(formData.date_of_registration)}
                 isLocked={true}
               />,
@@ -74,7 +74,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label={"Roll Number"}
+                label={"Roll number"}
                 initialValue={formData.roll_no}
                 isLocked={true}
               />,
@@ -111,7 +111,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label={"Chairman, Board of Studies of the Concerned Department"}
+                label={"Chairman, Board of Studies of the concerned department"}
                 initialValue={formData.chairman?.name}
                 isLocked={true}
               />,
@@ -142,7 +142,7 @@ const Student = ({ formData }) => {
             elements={[
               <InputField required={true}
                 initialValue={formData.address}
-                label={"Address of Correspondence"}
+                label={"Address of correspondence"}
                 isLocked={lock}
                 onChange={(value) => {
                   body.address = value;
@@ -155,7 +155,7 @@ const Student = ({ formData }) => {
             elements={[
               <InputField required={true}
                 initialValue={formData.phd_title}
-                label={"Title of Phd Thesis"}
+                label={"Title of PhD thesis"}
                 isLocked={lock}
                 onChange={(value) => {
                   body.title = value;
@@ -169,7 +169,7 @@ const Student = ({ formData }) => {
             elements={[
               <InputSuggestions
                 required={true}
-                label={"Broad Area of Research"}
+                label={"Broad area of research"}
                 initialValue={formData.broad_area_of_research}
                 apiUrl={baseURL + "/suggestions/specialization"}
                 onSelect={(value) => {
@@ -184,13 +184,11 @@ const Student = ({ formData }) => {
           />
 
           <GridContainer
-            label={[<p>Objectives of Research</p>]}
+            label="Objectives of research"
             elements={[
-              <></>,
-              <></>,
               <>
                 {!lock && (
-                  <CustomButton text={"+ Add"} onClick={addObjective} />
+                  <CustomButton text="Add objective" variant="secondary" size="sm" onClick={addObjective} />
                 )}
               </>,
             ]}
@@ -204,7 +202,7 @@ const Student = ({ formData }) => {
                   onChange={(value) => {
                     body.objectives[index] = value;
                   }}
-                  hint={`Enter Objective ${index + 1} Here`}
+                  hint={`Enter objective ${index + 1} here`}
                   showLabel={false}
                 />
               ))}
@@ -228,13 +226,11 @@ const Student = ({ formData }) => {
           )}
 
           <GridContainer
-            label={[<p>Subdomain</p>]}
+            label="Subdomain"
             elements={[
-              <></>,
-              <></>,
               <>
                 {!lock && (
-                  <CustomButton text={"+ Add"} onClick={addSubdomain} />
+                  <CustomButton text="Add subdomain" variant="secondary" size="sm" onClick={addSubdomain} />
                 )}
               </>,
             ]}
@@ -272,7 +268,7 @@ const Student = ({ formData }) => {
           )}
 
           <GridContainer
-            label="Upload IRB PDF File"
+            label="Upload IRB PDF file"
             elements={[
               <FileUploadField required={true}
                 initialValue={formData.irb_pdf}

@@ -23,7 +23,7 @@
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    background-color: #888; /* Gray color for history dots */
+    background-color: var(--text-subtle);
     margin-right: 10px;
     z-index: 1; /* Dot should be above the line */
 }
@@ -36,21 +36,21 @@
 
 .history-timeline-text {
     text-align: left;
-    font-size: var(--text-md);
-    color: #555; /* Gray text */
+    font-size: var(--text-sm);
+    color: var(--text-color);
 }
 
 .history-timeline-timestamp {
     font-size: var(--text-sm);
     text-align: left;
-    color: #777; /* Lighter gray for timestamp */
+    color: var(--text-muted);
 }
 
 /* Line connecting the dots */
 .history-timeline-line {
     width: 2px;
     height: 100%;
-    background-color: #888; /* Same gray color as dots */
+    background-color: var(--border-color);
     position: absolute;
     left: 6px; /* Align the line with the center of the dots */
     top: 50%; /* Adjust this to center the line */

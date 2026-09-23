@@ -88,16 +88,12 @@ const AddExaminer = ({ data, onSubmit, existing = [] }) => {
                     />,
                 ]}
             />
-            <GridContainer
-                elements={[
-                    <></>,
-                    <></>,
-                    <CustomButton
-                        text={"Add Examiner"}
-                        onClick={handleSubmit}
-                    />,
-                ]}
-            />
+            <div className="modal-actions">
+                <CustomButton
+                    text={"Add examiner"}
+                    onClick={handleSubmit}
+                />
+            </div>
         </div>
     );
 };

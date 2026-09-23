@@ -12,7 +12,7 @@ import FormLadder from "../formLadder/FormLadder";
 const ReviseTitle = ({ formData }) => {
   return (
     <>
-      <FormTitleBar formName="Revise Title or Objectives" formData={formData} />
+      <FormTitleBar formName="Revise title or objectives" formData={formData} />
       <div className="form-container">
         <FormLadder
           formData={formData}

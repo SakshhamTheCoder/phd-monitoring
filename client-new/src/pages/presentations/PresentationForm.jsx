@@ -52,8 +52,10 @@ const Presentation = () => {
         setLoading(false);
       });
   }
+  // A page like any other: the form draws its header and its panel, and the
+  // page supplies the gap between them.
   return (
-    <>
+    <div className="page">
       {loadFailed && (
         <LoadError
           message="Could not load this progress monitoring form. Check your connection and try again."
@@ -61,13 +63,9 @@ const Presentation = () => {
         />
       )}
       {isLoaded && formData && (
-        <>
-          <PresentationForm formData={formData} refetchData={refetchData}
-          
-          />
-        </>
+        <PresentationForm formData={formData} refetchData={refetchData} />
       )}
-    </>
+    </div>
   );
 };
 export default Presentation;

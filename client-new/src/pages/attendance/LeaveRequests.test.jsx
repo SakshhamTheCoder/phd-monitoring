@@ -92,7 +92,7 @@ describe('LeaveRequests', () => {
     renderAs('admin', { showDepartment: true });
 
     fireEvent.click(await screen.findByText('Scholar One'));
-    expect(await screen.findByText('Leave Application')).toBeTruthy();
+    expect(await screen.findByText('Leave application')).toBeTruthy();
 
     // Recommendation renders unlocked and locks in an effect once it knows who
     // is reading, so the settled form is the one to judge. Waiting for the

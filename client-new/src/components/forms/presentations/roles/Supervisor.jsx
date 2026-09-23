@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useLoading } from "../../../../context/LoadingContext";
 import GridContainer from "../../fields/GridContainer";
+import StatusNotice from "../../../common/StatusNotice";
 import InputField from "../../fields/InputField";
 import TableComponent from "../../table/TableComponent";
 import Recommendation from "../../layouts/Recommendation";
@@ -113,8 +114,8 @@ const Supervisor = ({ formData }) => {
         <>
           {!!lock && (
             <>
-              <p style={{ fontWeight: "bold", textAlign: "left" }}>Supervisor(s) Review</p>
               <GridContainer
+                label="Supervisor(s) review"
                 elements={[
                   <TableComponent
                     data={formData.supervisorReviews}
@@ -152,7 +153,7 @@ const Supervisor = ({ formData }) => {
                 <GridContainer
                   elements={[
                     <InputField
-                      label={"Previous Quantum Progress Percentage"}
+                      label={"Previous quantum progress percentage"}
                       initialValue={body.current_progress}
                       isLocked={true}
                     />,
@@ -162,7 +163,7 @@ const Supervisor = ({ formData }) => {
                 <GridContainer
                   elements={[
                     <InputField
-                      label={"Increase in Quantum Progress Percentage"}
+                      label={"Increase in quantum progress percentage"}
                       initialValue={body.progress}
                       isLocked={lock}
                       onChange={updateTotal}
@@ -172,14 +173,19 @@ const Supervisor = ({ formData }) => {
                   space={2}
                 />
                 {parseFloat(body.progress || 0) > 20 && (
-                  <div style={{ color: "red", marginTop: 0 }}>
-                    Supervisor has marked progress of student more than 20%
-                  </div>
+                  <GridContainer
+                    elements={[
+                      <StatusNotice tone="warning">
+                        Supervisor has marked progress of student more than 20%
+                      </StatusNotice>,
+                    ]}
+                    space={2}
+                  />
                 )}
                 <GridContainer
                   elements={[
                     <InputField
-                      label={"Total Quantum Progress Percentage"}
+                      label={"Total quantum progress percentage"}
                       // body, not formData: the stored total is 0 until the form
                       // is submitted, so the box never followed what was typed.
                       initialValue={body.total_progress}
@@ -210,7 +216,7 @@ const Supervisor = ({ formData }) => {
                   <GridContainer
                     elements={[
                       <InputField required={true}
-                        label={"No. of Contact Hours"}
+                        label={"No. of contact hours"}
                         initialValue={formData.contact_hours}
                         isLocked={lock}
                         onChange={(updated) => {

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useLoading } from "../../../../context/LoadingContext";
 import GridContainer from "../../fields/GridContainer";
+import StatusNotice from "../../../common/StatusNotice";
 import InputField from "../../fields/InputField";
 import RadioButtonGroup from "../../fields/RadioButtonGroup";
 import TableComponent from "../../table/TableComponent";
@@ -102,7 +103,7 @@ const Supervisor = ({ formData }) => {
               <GridContainer
                 elements={[
                   <InputField
-                    label={"Previous Quantum Progress Percentage"}
+                    label={"Previous quantum progress percentage"}
                     initialValue={formData.previous_progress}
                     isLocked={true}
                   />,
@@ -112,7 +113,7 @@ const Supervisor = ({ formData }) => {
               <GridContainer
                 elements={[
                   <InputField required={scoring}
-                    label={"Increase in Quantum Progress Percentage"}
+                    label={"Increase in quantum progress percentage"}
                     initialValue={body.current_progress}
                     isLocked={lock || !scoring}
                     onChange={(updated) => {
@@ -126,14 +127,19 @@ const Supervisor = ({ formData }) => {
                 space={2}
               />
               {scoring && parseFloat(body.current_progress || 0) > 20 && (
-                <div style={{ color: "red", marginTop: 0 }}>
-                  Supervisor has marked progress of student more than 20%
-                </div>
+                <GridContainer
+                  elements={[
+                    <StatusNotice tone="warning">
+                      Supervisor has marked progress of student more than 20%
+                    </StatusNotice>,
+                  ]}
+                  space={2}
+                />
               )}
               <GridContainer
                 elements={[
                   <InputField
-                    label={"Total Quantum Progress Percentage"}
+                    label={"Total quantum progress percentage"}
                     // The stored total is 0 until the supervisor submits, so while
                     // entering, show what the server will store: previous plus increase.
                     initialValue={lock || !scoring
@@ -151,7 +157,7 @@ const Supervisor = ({ formData }) => {
               asked for nothing, and the server agrees. */}
           {scoring && !!body.approval && (formData.checklist_options?.length || 0) > 0 && (
             <GridContainer
-              label={<p>Publication category met</p>}
+              label="Publication category met"
               elements={[
                 lock ? (
                   <InputField

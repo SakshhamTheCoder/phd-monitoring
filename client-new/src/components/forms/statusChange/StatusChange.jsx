@@ -9,7 +9,7 @@ import FormLadder from "../formLadder/FormLadder";
 const StatusChange=({formData}) => {
     return (
       <>
-        <FormTitleBar formName={"Application for Status Change"} formData={formData} />
+        <FormTitleBar formName={"Application for status change"} formData={formData} />
         <div className="form-container">
           <FormLadder
             formData={formData}

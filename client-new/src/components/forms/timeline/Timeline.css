@@ -15,17 +15,17 @@
     width: 15px;
     height: 15px;
     border-radius: 50%;
-    background-color: #ccc; /* Default color */
+    background-color: var(--border-color);
     margin-right: 10px;
     z-index: 1;
 }
 
 .timeline-item.green .timeline-dot {
-    background-color: #4CAF50; /* Green color for completed */
+    background-color: var(--success);
 }
 
 .timeline-item.yellow .timeline-dot {
-    background-color: #FFC107; /* Yellow color for current */
+    background-color: var(--warning);
     animation: breathe 2s infinite;
 }
 
@@ -42,8 +42,8 @@
 }
 
 .timeline-step {
-    font-size: var(--text-md);
-    color: #333;
+    font-size: var(--text-sm);
+    color: var(--text-color);
 }
 
 
@@ -58,7 +58,7 @@
 .timeline-line {
     width: 2.5px;
     height: 25px;
-    background-color: #ccc; /* Default color */
+    background-color: var(--border-color);
     position: absolute;
     left: 6.5px; /* Align the line with the center of the dots */
     top: 30px; /* Adjust this to center the line */

@@ -20,7 +20,7 @@ const ConstituteOfIRB = ({formData}) => {
   if (formData?.carried_over_at) {
     return (
       <>
-        <FormTitleBar formName="CONSTITUTE OF INSTITUTE RESEARCH BOARD" formData={formData} />
+        <FormTitleBar formName="Constitution of Institute Research Board" formData={formData} />
         <p className="form-note">
           {formData.date_of_irb
             ? `This IRB was constituted on ${formatDate(formData.date_of_irb)}, before the portal.`
@@ -43,7 +43,7 @@ const ConstituteOfIRB = ({formData}) => {
           />
           {formData.outside_expert && (
             <GridContainer
-              label="External Expert"
+              label="External expert"
               elements={[
                 <TableComponent
                   data={[formData.outside_expert]}
@@ -61,7 +61,7 @@ const ConstituteOfIRB = ({formData}) => {
 
   return (
     <>
-      <FormTitleBar formName="CONSTITUTE OF INSTITUTE RESEARCH BOARD" formData={formData} />
+      <FormTitleBar formName="Constitution of Institute Research Board" formData={formData} />
       <div className="form-container">
         
       <FormLadder

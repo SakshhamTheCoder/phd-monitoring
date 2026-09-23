@@ -5,6 +5,7 @@ import TableComponent from "../../table/TableComponent";
 import RadioButtonGroup from "../../fields/RadioButtonGroup";
 import { useLoading } from "../../../../context/LoadingContext";
 import CustomButton from "../../fields/CustomButton";
+import StatusNotice from "../../../common/StatusNotice";
 import { submitForm } from "../../../../api/form";
 import { useLocation } from "react-router-dom";
 
@@ -142,7 +143,7 @@ const Dordc = ({ formData }) => {
                 ]}
               />,
             ]}
-            label="National Examiners"
+            label="National examiners"
             space={3}
           />
 
@@ -189,7 +190,7 @@ const Dordc = ({ formData }) => {
                 ]}
               />,
             ]}
-            label="International Examiners"
+            label="International examiners"
             space={3}
           />
           
@@ -206,9 +207,7 @@ const Dordc = ({ formData }) => {
           }
         </>
       ) : (
-        <div style={{ textAlign: "center", marginTop: "20px" }}>
-          <p>Loading...</p>
-        </div>
+        <StatusNotice tone="loading" title="Loading the examiners" />
       )}
     </>
   );

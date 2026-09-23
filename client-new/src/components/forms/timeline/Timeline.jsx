@@ -20,7 +20,12 @@ const StepTimeline = ({ formData}) => {
                     <div key={index} className="timeline-item-wrapper">
                     <div key={index} className={`timeline-item ${stepColor}`}>
                         <div className="timeline-dot"></div>
-                        <span className="timeline-step">{step}</span>
+                        <span className="timeline-step">
+                            {step}
+                            {/* The dot's colour says done or current; say it in words too. */}
+                            {stepColor === 'green' && <span className="sr-only"> (done)</span>}
+                            {stepColor === 'yellow' && <span className="sr-only"> (current step)</span>}
+                        </span>
                     </div>
                     {index < steps.length - 1 && <div className="timeline-line"></div>}
                     </div>

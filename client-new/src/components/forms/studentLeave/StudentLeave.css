@@ -1,42 +1,44 @@
-/* This form is rendered inside a modal from the attendance pages, which do not
-   import pages/forms/forms.css, so .form-container arrived with no padding at
-   all and every field sat against the dialog edge. The form carries its own
-   spacing instead of depending on whichever page happens to host it. */
-
-.student-leave .form-container {
-    padding: 0 1.75rem 1.75rem;
-    margin-top: 0;
+/* The form is drawn on its own page and inside a dialog on the attendance
+   pages, so it keeps the page's gap between its header and its panel itself
+   rather than relying on whichever parent hosts it. */
+.student-leave {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    min-width: 0;
 }
 
-.student-leave .grid-container {
-    margin-bottom: 1.25rem;
+/* The scholar's fields are stacked rather than laid out in GridContainer rows,
+   so they need their own separation. */
+.student-leave .input-field-container + .input-field-container,
+.student-leave .input-field-container + .student-leave-dates,
+.student-leave .student-leave-dates + .input-field-container,
+.student-leave .input-field-container + .grid-container-wrapper {
+    margin-top: var(--space-4);
 }
 
-.student-leave .input-field-container {
-    margin-bottom: 0.5rem;
-}
-
-.student-leave .recommendation-field {
+/* From and To sit side by side and wrap to a column on a narrow screen. */
+.student-leave-dates {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
-    gap: 0.75rem 1.5rem;
-    padding: 1rem 1.25rem;
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: var(--radius);
+    gap: var(--space-4);
+}
+
+.student-leave-dates > .input-field-container {
+    flex: 1;
+    min-width: 180px;
 }
 
 .student-leave .recommendation-field .options {
     display: flex;
     flex-wrap: wrap;
-    gap: 1.5rem;
+    gap: var(--space-5);
 }
 
 .student-leave .recommendation-field label {
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: var(--space-2);
     font-weight: 400;
     cursor: pointer;
 }
@@ -44,42 +46,33 @@
 /* What the scholar sees in place of the HOD's radio buttons. */
 .leave-outcome {
     display: grid;
-    gap: 0.75rem;
-    padding: 1rem 1.25rem;
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: var(--radius);
+    gap: var(--space-3);
 }
 
 .leave-outcome__row {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: var(--space-3);
 }
 
 .leave-outcome__row > span:first-child {
     min-width: 120px;
-    font-size: var(--text-xs);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: #6b7280;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--text-muted);
 }
 
 .leave-outcome__row > span:last-child {
-    font-weight: 400;
-    color: #374151;
-    text-transform: capitalize;
+    font-size: var(--text-sm);
+    color: var(--text-color);
 }
+
+/* The API sends the status in lower case; the remarks are shown as written. */
+.leave-outcome .badge { text-transform: capitalize; }
 
 .student-leave .field-hint {
-    margin: 0.35rem 0 0;
+    margin: var(--space-1) 0 0;
     font-size: var(--text-xs);
     font-weight: 400;
-    color: #6b7280;
-}
-
-.student-leave .input-field:disabled {
-    background: #f3f4f6;
-    color: #6b7280;
-    cursor: not-allowed;
+    color: var(--text-muted);
 }

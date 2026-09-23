@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import FormTitleBar from '../formTitleBar/FormTitleBar';
 import Recommendation from '../layouts/Recommendation';
 import Student from './roles/Student';
+import { PanelSection } from '../../panel/Panel';
 import { badgeClass } from '../../../data/badges';
 import './StudentLeave.css';
 import { currentRole } from '../../../auth/access';
@@ -24,31 +25,37 @@ const StudentLeave = ({ formData, submitPath }) => {
 
   return (
     <div className="student-leave">
-      <FormTitleBar formName="Leave Application" formData={current} />
+      <FormTitleBar formName="Leave application" formData={current} />
+      {/* Sectioned like a form ladder: the scholar's application, then the
+          HOD's decision on it. */}
       <div className="form-container">
-        <Student formData={formData} onReload={setCurrent} />
+        <PanelSection title="Student" className="form-step">
+          <Student formData={formData} onReload={setCurrent} />
+        </PanelSection>
 
-        {isStudent ? (
-          <div className="leave-outcome">
-            <div className="leave-outcome__row">
-              <span>Status</span>
-              <span className={badgeClass(current.status)}>{current.status}</span>
+        <PanelSection title="HOD" className="form-step">
+          {isStudent ? (
+            <div className="leave-outcome">
+              <div className="leave-outcome__row">
+                <span>Status</span>
+                <span className={badgeClass(current.status)}>{current.status}</span>
+              </div>
+              <div className="leave-outcome__row">
+                <span>HOD remarks</span>
+                <span>{current.comments?.hod || 'None'}</span>
+              </div>
             </div>
-            <div className="leave-outcome__row">
-              <span>HOD remarks</span>
-              <span>{current.comments?.hod || '—'}</span>
-            </div>
-          </div>
-        ) : (
-          <Recommendation
-            formData={formData}
-            role="hod"
-            allowRejection={true}
-            submitPath={submitPath}
-            decision
-            title="Decision:"
-          />
-        )}
+          ) : (
+            <Recommendation
+              formData={formData}
+              role="hod"
+              allowRejection={true}
+              submitPath={submitPath}
+              decision
+              title="Decision:"
+            />
+          )}
+        </PanelSection>
       </div>
     </div>
   );

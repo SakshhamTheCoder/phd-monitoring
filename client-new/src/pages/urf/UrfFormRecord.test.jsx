@@ -78,7 +78,7 @@ describe('UrfFormRecord', () => {
     screen.getByText('View status').click();
 
     // The form's own sections carry the step names too, so look in the dialog.
-    const status = within((await screen.findByText('Form Status')).parentElement);
+    const status = within((await screen.findByText('Form status')).parentElement);
     // The mentor step is a URF one and has to be named, not left as "mentor".
     expect(status.getByText('Faculty Mentor')).toBeTruthy();
     expect(status.getByText('DORDC')).toBeTruthy();

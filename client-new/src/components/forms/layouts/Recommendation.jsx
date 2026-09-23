@@ -7,7 +7,6 @@ import InputField from '../fields/InputField';
 import { getRoleName } from '../../../utils/roleName';
 import { useLoading } from '../../../context/LoadingContext';
 import { submitForm } from '../../../api/form';
-import TableComponent from '../table/TableComponent';
 import { toast } from 'react-toastify';
 
 const Recommendation = ({formData,allowRejection,role,moreFields,handleRecommendationChange,isLocked,submitPath,decision,title}) => {
@@ -59,64 +58,15 @@ const Recommendation = ({formData,allowRejection,role,moreFields,handleRecommend
 
     return (
         <>
-              {/* <GridContainer elements={[
-
-            <>
-            
-            {role==='doctoral' && formData&& (<>
-                <TableComponent
-                    data={formData.doctoralCommitteeReviews}
-                    keys={[
-                      "faculty",
-                      "progress",
-                      "comments",
-                      "review_status",
-                   
-                    ]}
-                    titles={[
-                      "Doctoral Member Name",
-                      "Review",
-                      "Comments",
-                      "Review Status",
-                     
-                    ]}
-                  />,
-            
-            </>)}
-              <>{role==='supervisor'&& formData && (<>
-                <TableComponent
-                    data={formData.supervisorReviews}
-                    keys={[
-                      "faculty",
-                      "progress",
-                      "comments",
-                      "review_status",
-                   
-                    ]}
-                    titles={[
-                      "Doctoral Member Name",
-                      "Review",
-                      "Comments",
-                      "Review Status",
-                     
-                    ]}
-                  />,
-            
-            </>)}</>
-            
-            
-            </>,
-            
-                 ]}/> */}
             <RecommendationField role={roleName} allowRejection={allowRejection} onRecommendationChange={(data)=>{onRecommendationChange(data)}} initialValue={body} lock={lock} formData={formData} decision={decision} title={title}/>
             {(!lock || body.comments) && (
                 <GridContainer
                     elements={[
                         <InputField
-                            label={"Remarks  (if Any)"}
+                            label={"Remarks (if any)"}
                             initialValue={body.comments || ''}
                             isLocked={lock}
-                            hint="Enter Comments.."
+                            hint="Enter comments.."
                             onChange={(value) => {
                                 const updated = { ...body, comments: value };
                                 setBody(updated);

@@ -55,7 +55,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Roll Number"
+                label="Roll number"
                 initialValue={formData.roll_no}
                 isLocked={true}
               />,
@@ -70,7 +70,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Date of Admission"
+                label="Date of admission"
                 initialValue={formatDate(formData.date_of_registration)}
                 isLocked={true}
               />,
@@ -90,7 +90,7 @@ const Student = ({ formData }) => {
                 isLocked={true}
               />,
               <InputField
-                label="Phone Number"
+                label="Phone number"
                 initialValue={formData.phone}
                 isLocked={true}
               />,
@@ -100,7 +100,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Title of Phd Thesis"
+                label="Title of PhD thesis"
                 initialValue={formData.phd_title}
                 isLocked={true}
               />,
@@ -111,7 +111,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Status of Student at Time of Admission"
+                label="Status of student at time of admission"
                 initialValue={formData.initial_status}
                 isLocked={true}
               />,
@@ -122,7 +122,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Change of Status Availed (if any earlier)"
+                label="Change of status availed (if any earlier)"
                 initialValue={prevOff?prevOff:"No"}
                 isLocked={true}
               />,
@@ -132,7 +132,7 @@ const Student = ({ formData }) => {
             <>
               {prevOff==="Yes" && (
                 <GridContainer elements={[
-               <InputField label={"Date of Previous Extension"}
+               <InputField label={"Date of previous extension"}
                initialValue={prevDate}
                isLocked={true}
                />,
@@ -146,7 +146,7 @@ const Student = ({ formData }) => {
             <GridContainer
             elements={[
               <InputField
-                label="Required Status Change"
+                label="Required status change"
                 initialValue={formData.type_of_change}
                 isLocked={true}
                
@@ -157,7 +157,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField required={true}
-                label="Reason for Status Change"
+                label="Reason for status change"
                 initialValue={formData.reason}
                 isLocked={lock}
                 onChange={(value) => {

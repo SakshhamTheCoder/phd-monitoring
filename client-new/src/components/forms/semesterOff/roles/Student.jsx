@@ -70,7 +70,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Roll Number"
+                label="Roll number"
                 initialValue={formData.roll_no}
                 isLocked={true}
               />,
@@ -85,7 +85,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Date of Admission"
+                label="Date of admission"
                 initialValue={formatDate(formData.date_of_registration)}
                 isLocked={true}
               />,
@@ -105,7 +105,7 @@ const Student = ({ formData }) => {
                 isLocked={true}
               />,
               <InputField
-                label="Phone Number"
+                label="Phone number"
                 initialValue={formData.phone}
                 isLocked={true}
               />,
@@ -115,7 +115,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Title of Phd Thesis"
+                label="Title of PhD thesis"
                 initialValue={formData.phd_title}
                 isLocked={true}
               />,
@@ -126,7 +126,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Semester Off (if any earlier)"
+                label="Semester off (if any earlier)"
                 initialValue={prevOff ? prevOff : "N/A"}
                 isLocked={true}
               />,
@@ -134,7 +134,7 @@ const Student = ({ formData }) => {
                 {prevOff && (
                   <FileUploadField
                     required={true}
-                    label={"Attach Previous Approval"}
+                    label={"Attach previous approval"}
                     onChange={(file) => handleFileChange("previous_approval_pdf", file)}
                     isLocked={prevOff && lock}
                     initialValue={formData.previous_approval_pdf}
@@ -148,7 +148,7 @@ const Student = ({ formData }) => {
             elements={[
               <DropdownField
                 required={true}
-                label="Semester off Required"
+                label="Semester off required"
                 initialValue={formData.semester_off_required}
                 isLocked={lock}
                 options={reportPeriods}
@@ -161,7 +161,7 @@ const Student = ({ formData }) => {
               />,
               <FileUploadField
                 required={true}
-                label={"Attach Proof (if any)"}
+                label={"Attach proof (if any)"}
                 onChange={(file) => handleFileChange("proof_pdf", file)}
                 isLocked={lock}
                 initialValue={formData.proof_pdf}
@@ -170,7 +170,7 @@ const Student = ({ formData }) => {
           />
            <GridContainer elements={[
              <InputField required={true}
-             label="Reason for Semester Off"
+             label="Reason for semester off"
              initialValue={formData.reason}
              isLocked={lock}
              onChange={(value)=>{

@@ -1,0 +1,8 @@
+/* Secondary text beside the recommended supervisors: the loading hint, a
+   row's areas and availability, and the line explaining the list. */
+.supervisor-allocation-note {
+    margin: 0;
+    font-size: var(--text-xs);
+    font-weight: 400;
+    color: var(--text-muted);
+}

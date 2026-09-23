@@ -119,7 +119,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Roll Number"
+                label="Roll number"
                 initialValue={formData.roll_no}
                 isLocked={true}
               />,
@@ -134,7 +134,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Date Of Admission"
+                label="Date of admission"
                 initialValue={formatDate(formData.date_of_registration)}
                 isLocked={true}
               />,
@@ -149,7 +149,7 @@ const Student = ({ formData }) => {
                 isLocked={true}
               />,
               <InputField
-                label="Mobile Number"
+                label="Mobile number"
                 initialValue={formData.phone}
                 isLocked={true}
               />,
@@ -159,7 +159,7 @@ const Student = ({ formData }) => {
         
 
           <GridContainer
-           label={[<p>Select 3 Broad Areas of Research</p>]}
+           label="Select 3 broad areas of research"
             elements={[
               <InputSuggestions
                 initialValue={formData.broad_area_of_research?.[0]}
@@ -203,23 +203,23 @@ const Student = ({ formData }) => {
       {isLoaded && (formData.role === "student" && formData.stage === "student" && !lock) ? (
         <>
           <GridContainer
-            label={[<span>Recommended supervisors (Top 8) {recLoading && <span style={{ color: 'var(--text-muted)' }}>loading…</span>}</span>]}
+            label={<>Recommended supervisors (top 8) {recLoading && <span className="supervisor-allocation-note">loading…</span>}</>}
             elements={[
               <TableComponent
                 data={recs}
                 keys={["name","department","expertise","supervision","select"]}
-                titles={["Name","Department","Area of Expertise","Availability","Action"]}
+                titles={["Name","Department","Area of expertise","Availability","Action"]}
                 components={[
                   {
                     key: "expertise",
-                    component: ({ row }) => <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{(row.expertise || []).slice(0,3).join(', ')}</span>
+                    component: ({ row }) => <span className="supervisor-allocation-note">{(row.expertise || []).slice(0,3).join(', ')}</span>
                   },
                   {
                     key: "supervision",
                     component: ({ row }) => row.supervision?.is_full ? (
                       <span className="badge badge--warning">Full</span>
                     ) : (
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{row.supervision ? `${row.supervision.remaining} of ${row.supervision.limit} free` : ''}</span>
+                      <span className="supervisor-allocation-note">{row.supervision ? `${row.supervision.remaining} of ${row.supervision.limit} free` : ''}</span>
                     )
                   },
                   {
@@ -228,20 +228,21 @@ const Student = ({ formData }) => {
                       <CustomButton
                         text="Select"
                         variant="secondary"
+                        size="sm"
                         onClick={() => applyRec(row)}
                       />
                     )
                   }
                 ]}
               />,
-              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Based on your broad areas. Free choice: pick anyone or use recommended.</span>,
-              recs.length === 0 && !recLoading ? <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{(body.broad_area_of_research || []).filter(Boolean).length ? 'No strong matches yet. Try adding clearer areas or pick manually.' : 'Select your 3 broad areas above to see recommendations.'}</p> : null,
+              <span className="supervisor-allocation-note">Based on your broad areas. Free choice: pick anyone or use recommended.</span>,
+              recs.length === 0 && !recLoading ? <span className="supervisor-allocation-note">{(body.broad_area_of_research || []).filter(Boolean).length ? 'No strong matches yet. Try adding clearer areas or pick manually.' : 'Select your 3 broad areas above to see recommendations.'}</span> : null,
             ].filter(Boolean)}
             space={3}
           />
 
           <GridContainer
-            label={[<p>Select 6 Tentative Name of Supervisor (in order)</p>]}
+            label="Select 6 tentative names of supervisors (in order)"
             elements={[
               <InputSuggestions
                 initialValue={body.prefrences[0] ? [body.prefrences[0].name, body.prefrences[0].department].filter(Boolean).join(' - ') : ''}
@@ -326,12 +327,12 @@ const Student = ({ formData }) => {
         <>
       
           <GridContainer
-          label={[<p>Student Preferences</p>]}
+          label="Student preferences"
             elements={[
               <TableComponent
                 data={formData.prefrences}
                 keys={["name","email", "department"]}
-                titles={["Supervisor Name","Email", "Department"]}
+                titles={["Supervisor name","Email", "Department"]}
               />,
             ]}
             space={3}

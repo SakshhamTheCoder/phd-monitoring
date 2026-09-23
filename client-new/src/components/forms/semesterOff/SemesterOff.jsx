@@ -9,7 +9,7 @@ import FormLadder from "../formLadder/FormLadder";
 const SemesterOff=({formData}) => {
     return (
       <>
-        <FormTitleBar formName={"Application for Semester Off"} formData={formData} />
+        <FormTitleBar formName={"Application for semester off"} formData={formData} />
         <div className="form-container">
           <FormLadder
             formData={formData}

@@ -70,10 +70,10 @@ const Supervisor = ({ formData }) => {
     <>
       {isLoaded && formData && (
         <>
-          <p>List of nominees of the DoRDC in cognate area from the institute</p>
           {greater && lock && formData.nominee_cognates?.length === 3 ? (
             <>
               <GridContainer
+                label="List of nominees of the DoRDC in cognate area from the institute"
                 elements={[
                   <TableComponent
                     data={formData.nominee_cognates}
@@ -87,6 +87,7 @@ const Supervisor = ({ formData }) => {
           ) : (
             <>
               <GridContainer
+                label="List of nominees of the DoRDC in cognate area from the institute"
                 elements={[
                   <InputSuggestion
                     apiUrl={apiURL}

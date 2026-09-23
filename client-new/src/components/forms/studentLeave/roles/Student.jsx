@@ -122,7 +122,7 @@ const Student = ({ formData, onReload }) => {
   return (
     <div>
       <div className="input-field-container">
-        <label className="input-label">Leave Type</label>
+        <label className="input-label">Leave type</label>
         {lock ? (
           <input
             className="input-field"
@@ -140,8 +140,8 @@ const Student = ({ formData, onReload }) => {
         )}
       </div>
 
-      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-        <div className="input-field-container" style={{ flex: 1, minWidth: '180px' }}>
+      <div className="student-leave-dates">
+        <div className="input-field-container">
           <label className="input-label" htmlFor="student-from">From</label>
           <DatePicker id="student-from"
             selected={parseDate(fromDate)}
@@ -156,7 +156,7 @@ const Student = ({ formData, onReload }) => {
             dropdownMode="select"
           />
         </div>
-        <div className="input-field-container" style={{ flex: 1, minWidth: '180px' }}>
+        <div className="input-field-container">
           <label className="input-label" htmlFor="student-to">To</label>
           <DatePicker id="student-to"
             selected={parseDate(toDate)}
@@ -176,7 +176,7 @@ const Student = ({ formData, onReload }) => {
       {/* day_part is only valid when from_date === to_date — a multi-day
           application must stay 'full' or the backend returns a 422. */}
       <div className="input-field-container">
-        <label className="input-label" htmlFor="student-part-of-day">Part of Day</label>
+        <label className="input-label" htmlFor="student-part-of-day">Part of day</label>
         <select
           id="student-part-of-day"
           className="input-field"
@@ -210,7 +210,7 @@ const Student = ({ formData, onReload }) => {
           carry one at all, so the field only exists for academic. */}
       {leaveType === 'academic' && (
         <FileUploadField
-          label="Supporting Document"
+          label="Supporting document"
           required
           initialValue={instance?.supporting_document}
           isLocked={lock}
@@ -223,13 +223,13 @@ const Student = ({ formData, onReload }) => {
       {!lock && overage > 0 && (
         <div className="input-field-container">
           <span className="badge badge--danger">
-            {formatDays(overage)} day(s) over your {leaveType} quota — this can still be submitted.
+            {formatDays(overage)} day(s) over your {leaveType} quota. This can still be submitted.
           </span>
         </div>
       )}
 
       {instance?.role === 'student' && !lock && (
-        <div className="input-field-container" style={{ marginTop: '0.5rem' }}>
+        <div className="input-field-container">
           <CustomButton
             text={submitting ? 'Submitting…' : 'Submit'}
             onClick={handleSubmit}

@@ -7,7 +7,7 @@ import FormLadder from "../formLadder/FormLadder";
 const PresentationForm = ({formData, refetchData = null,}) => {
   return (
     <>
-      <FormTitleBar formName={"Progress Monitoring " + formData.period_of_report} formData={formData} />
+      <FormTitleBar formName={"Progress monitoring " + formData.period_of_report} formData={formData} />
       <div className="form-container">
           
     <FormLadder

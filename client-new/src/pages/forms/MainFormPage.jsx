@@ -19,6 +19,7 @@ import ThesisExtention from "../../components/forms/thesisExtention/ThesisExtent
 import useScholarInPath from "../../hooks/useScholarInPath";
 import Loader from "../../components/loader/loader";
 import LoadError from "../../components/common/LoadError";
+import StatusNotice from "../../components/common/StatusNotice";
 
 // Lazy because it brings react-datepicker and its stylesheet, which no other
 // form on this page needs.
@@ -107,7 +108,7 @@ const MainFormPage = () => {
               // The API serves /forms/student-leave/:id, and StudentLeave
               // defaults submitPath to the current location, which is that
               // endpoint. Without this the canonical URL fell through to the
-              // "Are You Sure this is a FORM?" default.
+              // unknown-form notice.
               case "student-leave":
                 return (
                   <Suspense fallback={<Loader />}>
@@ -115,7 +116,11 @@ const MainFormPage = () => {
                   </Suspense>
                 );
               default:
-                return <p>Are You Sure this is a FORM?</p>;
+                return (
+                  <StatusNotice tone="warning" title="This is not a form the portal knows">
+                    Check the link, or open the form from your list of forms.
+                  </StatusNotice>
+                );
             }
           })()}
         </>

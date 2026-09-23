@@ -7,7 +7,7 @@ import FormLadder from "../formLadder/FormLadder";
 const ThesisSubmission=({formData}) => {
     return (
       <>
-        <FormTitleBar formName={"Thesis Submission"} formData={formData} />
+        <FormTitleBar formName={"Thesis submission"} formData={formData} />
         <div className="form-container">
            <FormLadder
              formData={formData}

@@ -45,7 +45,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Roll Number"
+                label="Roll number"
                 initialValue={formData.roll_no}
                 isLocked={true}
               />,
@@ -60,7 +60,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Date of Admission"
+                label="Date of admission"
                 initialValue={formatDate(formData.date_of_registration)}
                 isLocked={true}
               />,
@@ -80,7 +80,7 @@ const Student = ({ formData }) => {
                 isLocked={true}
               />,
               <InputField
-                label="Phone Number"
+                label="Phone number"
                 initialValue={formData.phone}
                 isLocked={true}
               />,
@@ -89,7 +89,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Tentative Title of Phd Thesis"
+                label="Tentative title of PhD thesis"
                 initialValue={formData.phd_title}
                 isLocked={true}
               />,
@@ -100,7 +100,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField
-                label="Status of Student at Time of Admission"
+                label="Status of student at time of admission"
                 initialValue={formData.initial_status}
                 isLocked={true}
               />,
@@ -138,7 +138,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <InputField required={true}
-                label="Reason for Extension"
+                label="Reason for extension"
                 initialValue={formData.reason}
                 isLocked={lock}
                 onChange={(value) => {
@@ -155,7 +155,7 @@ const Student = ({ formData }) => {
           <GridContainer
             elements={[
               <FileUploadField required={true}
-                label={"Upload Research Proposal"}
+                label={"Upload research proposal"}
                 onChange={(file) => {
                   setFiles([{ key: "research_pdf", file }]);
                 }}

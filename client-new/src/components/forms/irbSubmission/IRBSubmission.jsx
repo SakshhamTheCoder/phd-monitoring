@@ -4,6 +4,8 @@ import Student from "./roles/Student";
 import FormTitleBar from "../formTitleBar/FormTitleBar";
 import Supervisor from "./roles/Supervisor";
 import FormLadder from "../formLadder/FormLadder";
+import StatusNotice from "../../common/StatusNotice";
+import CustomButton from "../fields/CustomButton";
 import { customFetch } from "../../../api/base";
 import { baseURL } from "../../../api/urls";
 
@@ -39,24 +41,22 @@ const IRBSubmission = ({ formData }) => {
 
   return (
     <>
-      <FormTitleBar formName="IRB Submission" formData={formData} />
+      <FormTitleBar formName="IRB submission" formData={formData} />
       {canResend && (
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          gap: 12, flexWrap: "wrap", background: "#fdf6f6", border: "1px solid #f0d9d9",
-          borderRadius: 8, padding: "10px 14px", margin: "10px 0",
-        }}>
-          <span style={{ color: "#7a1f1f", fontSize: 14 }}>
-            This submission is awaiting the outside expert's review.
-          </span>
-          <button onClick={resend} disabled={resending} style={{
-            padding: "8px 14px", background: "var(--primary-color)", color: "#fff", border: "none",
-            borderRadius: 6, cursor: resending ? "not-allowed" : "pointer",
-            opacity: resending ? 0.6 : 1, fontWeight: 600,
-          }}>
-            {resending ? "Resending…" : "Resend review request"}
-          </button>
-        </div>
+        <StatusNotice
+          tone="info"
+          action={(
+            <CustomButton
+              text={resending ? "Resending…" : "Resend review request"}
+              variant="secondary"
+              size="sm"
+              onClick={resend}
+              disabled={resending}
+            />
+          )}
+        >
+          This submission is awaiting the outside expert's review.
+        </StatusNotice>
       )}
       <div className="form-container">
       <FormLadder

@@ -92,19 +92,19 @@ const ExaminerManager = ({
                 showLabel={false}
               />,
               <CustomButton
-                text={`Add New ${type}`}
+                text={`Add new ${type.toLowerCase()} examiner`}
+                variant="secondary"
                 onClick={handleOpenModal}
               />,
             ]}
             ratio={[2, 1]}
             space={2}
-            label={`${type} Examiners`}
+            label={`${type} examiners`}
           />
         </>
       )}
       {formData.role !== 'dordc' && (
         <>
-          {' '}
           <GridContainer
             elements={[
               <TableComponent
