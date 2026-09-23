@@ -12,7 +12,9 @@ import DropdownField from "../../components/forms/fields/DropdownField";
 import CustomModal from "../../components/forms/modal/CustomModal";
 import AdminFormInstancesModal from "./AdminFormInstancesModal";
 import "./AdminFormManagement.css";
-import PageHeader from '../../components/pageHeader/PageHeader';
+import Page from "../../components/page/Page";
+import Panel from "../../components/panel/Panel";
+import StatusNotice from "../../components/common/StatusNotice";
 
 const AdminFormManagement = () => {
   const [students, setStudents] = useState([]);
@@ -498,113 +500,122 @@ const AdminFormManagement = () => {
   }, [students, searchTerm]);
 
   return (
-    <div className="admin-form-management">
-      <PageHeader
-        title="Admin Form Management"
-        subtitle="Manage form stages, locks, and availability per student"
-      />
-
-      <div className="student-selector-section">
+    <Page
+      title="Admin form management"
+      description="Manage form stages, locks, and availability per student"
+    >
+      <Panel>
         <GridContainer
           elements={[
             <InputField
-              label="Search Student"
+              label="Search student"
               hint="Search by roll number or name..."
               initialValue={searchTerm}
               onChange={(value) => setSearchTerm(value)}
             />,
             // Named so a ?roll_no= link shows whose forms these are.
             <DropdownField
-              label="Select Student"
+              label="Select student"
               options={studentOptions}
               initialValue={selectedStudent?.roll_no}
               onChange={(value) => handleStudentSelect(value)}
             />,
           ]}
         />
-      </div>
+      </Panel>
 
       {selectedStudent && (
         <>
-          <div className="student-info-card">
-            <h2>{selectedStudent.name}</h2>
-            <p>
-              <strong>Roll No:</strong> {selectedStudent.roll_no}
-            </p>
-            <p>
-              <strong>Department:</strong> {selectedStudent.department}
-            </p>
-          </div>
+          <Panel title={selectedStudent.name}>
+            <dl className="facts">
+              <div>
+                <dt>Roll no</dt>
+                <dd>{selectedStudent.roll_no}</dd>
+              </div>
+              <div>
+                <dt>Department</dt>
+                <dd>{selectedStudent.department}</dd>
+              </div>
+            </dl>
+          </Panel>
 
-          <div className="forms-list-header">
-            <h3>Available Forms ({studentForms.length})</h3>
-            <CustomButton
-              text="+ Enable New Form"
-              onClick={() => setIsCreateModalOpen(true)}
-            />
-          </div>
-
-          {studentForms.length === 0 ? (
-            <div className="empty-state">
-              <p>No forms available for this student yet.</p>
-            </div>
-          ) : (
-            <div className="forms-grid">
-              {studentForms.map((form) => (
-                <div 
-                  key={form.form_type} 
-                  className={`form-grid-card ${!form.exists_in_forms_table ? 'form-disabled' : ''}`}
-                >
-                  <div className="form-grid-header">
-                    <h4>{form.form_name}</h4>
-                    <span className="form-type-badge">{form.form_type}</span>
-                  </div>
-
-                  <div className="form-grid-body">
-                    {form.exists_in_forms_table ? (
-                      <>
-                        <div className="form-stats">
-                          <div className="stat-item">
-                            <span className="stat-label">Stage</span>
-                            <span className="stat-value stage-badge-mini">
-                              {form.general_form.stage}
-                            </span>
-                          </div>
-                          <div className="stat-item">
-                            <span className="stat-label">Instances</span>
-                            <span className="stat-value count-badge-mini">
-                              {form.general_form.count} / {form.general_form.max_count}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="form-grid-actions">
-                          <CustomButton
-                            text="Manage Form"
-                            onClick={() => openManageFormModal(form)}
-                          />
-                          <CustomButton
-                            text="View Instances"
-                            onClick={() => openInstancesModal(form)}
-                          />
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="form-disabled-notice">
-                          <span className="disabled-badge">Not Enabled</span>
-                          <p>Enable this form to allow students to submit</p>
-                        </div>
-                        <CustomButton
-                          text="Enable Form"
-                          onClick={() => handleEnableForm(form.form_type)}
-                        />
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <Panel
+            flush
+            title={`Available forms (${studentForms.length})`}
+            actions={
+              <CustomButton
+                text="Enable new form"
+                onClick={() => setIsCreateModalOpen(true)}
+              />
+            }
+          >
+            {studentForms.length === 0 ? (
+              <div className="afm-state">
+                <StatusNotice tone="empty">No forms available for this student yet.</StatusNotice>
+              </div>
+            ) : (
+              <div className="data-table-wrap">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Form</th>
+                      <th>Type</th>
+                      <th>Stage</th>
+                      <th>Instances</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {studentForms.map((form) => (
+                      <tr key={form.form_type}>
+                        <td className="afm-form-name">{form.form_name}</td>
+                        <td><span className="badge badge--neutral">{form.form_type}</span></td>
+                        {form.exists_in_forms_table ? (
+                          <>
+                            <td><span className="badge badge--info">{form.general_form.stage}</span></td>
+                            <td>{form.general_form.count} / {form.general_form.max_count}</td>
+                            <td>
+                              <div className="afm-row-actions">
+                                <CustomButton
+                                  text="Manage form"
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => openManageFormModal(form)}
+                                />
+                                <CustomButton
+                                  text="View instances"
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => openInstancesModal(form)}
+                                />
+                              </div>
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            <td colSpan={2}>
+                              <span className="badge badge--neutral">Not enabled</span>
+                              <p className="afm-muted">Enable this form to allow students to submit</p>
+                            </td>
+                            <td>
+                              <div className="afm-row-actions">
+                                <CustomButton
+                                  text="Enable form"
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => handleEnableForm(form.form_type)}
+                                />
+                              </div>
+                            </td>
+                          </>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Panel>
         </>
       )}
 
@@ -612,41 +623,34 @@ const AdminFormManagement = () => {
       <CustomModal
         isOpen={isCreateModalOpen}
         onClose={closeCreateModal}
-        title="Enable New Form Type"
+        title="Enable new form type"
         minHeight="300px"
         maxHeight="500px"
         minWidth="500px"
         maxWidth="600px"
       >
-        <div className="create-form-modal">
-          <GridContainer
-            elements={[
-              <DropdownField
-                label="Select Form Type"
-                options={studentForms.map((f) => ({
-                    title: f.form_name,
-                    value: f.form_type,
-                  }))}
-                onChange={(value) => setCreateFormType(value)}
-              />,
-            ]}
-            space={2}
-          />
+        <GridContainer
+          elements={[
+            <DropdownField
+              label="Select form type"
+              options={studentForms.map((f) => ({
+                  title: f.form_name,
+                  value: f.form_type,
+                }))}
+              onChange={(value) => setCreateFormType(value)}
+            />,
+          ]}
+          space={2}
+        />
 
-          <p className="info-note">
-            This will enable the selected form type for {selectedStudent?.name}, 
-            allowing them to create submissions.
-          </p>
+        <p className="modal-note afm-create-note">
+          This will enable the selected form type for {selectedStudent?.name},
+          allowing them to create submissions.
+        </p>
 
-          <GridContainer
-            elements={[
-              <CustomButton
-                text="Cancel"
-                onClick={closeCreateModal}
-              />,
-              <CustomButton text="Enable" onClick={handleCreateForm} />,
-            ]}
-          />
+        <div className="modal-actions">
+          <CustomButton text="Cancel" variant="quiet" onClick={closeCreateModal} />
+          <CustomButton text="Enable" onClick={handleCreateForm} />
         </div>
       </CustomModal>
 
@@ -657,38 +661,38 @@ const AdminFormManagement = () => {
           setIsManageFormModalOpen(false);
           setSelectedFormForManagement(null);
         }}
-        title={`Manage ${selectedFormForManagement?.form_name || 'Form'}`}
+        title={`Manage ${selectedFormForManagement?.form_name || 'form'}`}
         minHeight="400px"
         maxHeight="700px"
         minWidth="600px"
         maxWidth="800px"
       >
         {selectedFormForManagement && (
-          <div className="manage-form-modal">
-            <div className="form-overview-section">
-              <h3>Form Overview</h3>
-              <div className="overview-grid">
-                <div className="overview-item">
-                  <label htmlFor="admin-form-management-form-type">Form Type</label>
-                  <span className="form-type-badge">{selectedFormForManagement.form_type}</span>
+          <>
+            <section className="afm-section">
+              <h3 className="afm-section-title">Form overview</h3>
+              <dl className="facts">
+                <div>
+                  <dt>Form type</dt>
+                  <dd><span className="badge badge--neutral">{selectedFormForManagement.form_type}</span></dd>
                 </div>
-                <div className="overview-item">
-                  <label htmlFor="admin-form-management-current-stage">Current Stage</label>
-                  <span className="stage-badge">{selectedFormForManagement.general_form.stage}</span>
+                <div>
+                  <dt>Current stage</dt>
+                  <dd><span className="badge badge--info">{selectedFormForManagement.general_form.stage}</span></dd>
                 </div>
-                <div className="overview-item">
-                  <label>Instance Count</label>
-                  <span className="count-badge">
+                <div>
+                  <dt>Instance count</dt>
+                  <dd>
                     {selectedFormForManagement.general_form.count} / {selectedFormForManagement.general_form.max_count}
-                  </span>
+                  </dd>
                 </div>
-              </div>
-            </div>
+              </dl>
+            </section>
 
-            <div className="form-availability-section">
-              <h3>Role Availability</h3>
-              <p className="section-description">Toggle role access for this form type</p>
-              <div className="availability-grid-editable">
+            <section className="afm-section">
+              <h3 className="afm-section-title">Role availability</h3>
+              <p className="afm-section-description">Toggle role access for this form type</p>
+              <div className="afm-toggle-grid">
                 {[
                   { key: 'student_available', role: 'student', label: 'Student' },
                   { key: 'supervisor_available', role: 'supervisor', label: 'Supervisor' },
@@ -699,10 +703,11 @@ const AdminFormManagement = () => {
                   { key: 'director_available', role: 'director', label: 'Vice Chancellor' },
                   { key: 'doctoral_available', role: 'doctoral', label: 'Doctoral' },
                 ].map((role) => (
-                  <div key={role.key} className="availability-item-editable">
-                    <span className="availability-label">{role.label}</span>
+                  <div key={role.key} className="afm-toggle-item">
+                    <span className="afm-toggle-label">{role.label}</span>
                     <button
-                      className={`availability-toggle ${selectedFormForManagement.general_form[role.key] ? 'available' : 'unavailable'}`}
+                      type="button"
+                      className={`row-action-btn${selectedFormForManagement.general_form[role.key] ? '' : ' danger'}`}
                       onClick={() =>
                         handleToggleAvailability(
                           selectedFormForManagement.form_type,
@@ -716,29 +721,32 @@ const AdminFormManagement = () => {
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
 
             <div className="modal-actions">
               <CustomButton
-                text="View Instances"
+                text="View instances"
+                variant="secondary"
                 onClick={() => {
                   setIsManageFormModalOpen(false);
                   openInstancesModal(selectedFormForManagement);
                 }}
               />
               <CustomButton
-                text="Disable Form"
+                text="Disable form"
+                variant="danger"
                 onClick={() => handleDisableForm(selectedFormForManagement.form_type)}
               />
               <CustomButton
                 text="Close"
+                variant="quiet"
                 onClick={() => {
                   setIsManageFormModalOpen(false);
                   setSelectedFormForManagement(null);
                 }}
               />
             </div>
-          </div>
+          </>
         )}
       </CustomModal>
 
@@ -758,7 +766,7 @@ const AdminFormManagement = () => {
         onUpdateStage={handleUpdateStage}
         onUpdateSteps={handleUpdateSteps}
       />
-    </div>
+    </Page>
   );
 };
 

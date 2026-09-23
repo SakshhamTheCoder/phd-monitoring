@@ -57,9 +57,9 @@ const LeaveQuotas = () => {
   };
 
   return (
-    <div className="config-block">
-      <div className="filter-bar">
-        <div className="filter-row config-filter-row">
+    <>
+      <div className="config-fields">
+        <div className="config-filter-row">
           <div className="input-field-container config-field-160">
             <label className="input-label" htmlFor="leave-quotas-academic-quota">Academic quota</label>
             <input
@@ -104,7 +104,7 @@ const LeaveQuotas = () => {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

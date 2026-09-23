@@ -72,16 +72,14 @@ const SupervisionLimits = () => {
 
   if (loadFailed) {
     return (
-      <div className="config-block">
-        <LoadError message="Could not load the supervision limits. Check your connection and try again." onRetry={load} />
-      </div>
+      <LoadError message="Could not load the supervision limits. Check your connection and try again." onRetry={load} />
     );
   }
 
   return (
-    <div className="config-block">
-      <div className="filter-bar">
-        <div className="filter-row config-filter-row">
+    <>
+      <div className="config-fields">
+        <div className="config-filter-row">
           {FIELDS.map(({ key, label, hint }) => (
             <div key={key} className="input-field-container config-field-220">
               <label className="input-label" htmlFor={key}>{label}</label>
@@ -107,7 +105,7 @@ const SupervisionLimits = () => {
       <p className="config-note">
         The limit counts scholars a faculty member is currently guiding. Once a thesis is submitted, it no longer occupies a slot.
       </p>
-    </div>
+    </>
   );
 };
 

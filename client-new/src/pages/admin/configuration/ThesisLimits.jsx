@@ -54,9 +54,9 @@ const ThesisLimits = () => {
   };
 
   return (
-    <div className="config-block">
-      <div className="filter-bar">
-        <div className="filter-row config-filter-row">
+    <>
+      <div className="config-fields">
+        <div className="config-filter-row">
           {FIELDS.map(({ key, label, hint }) => (
             <div key={key} className="input-field-container config-field-220">
               <label className="input-label" htmlFor={key}>{label}</label>
@@ -79,7 +79,7 @@ const ThesisLimits = () => {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

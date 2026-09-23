@@ -1,80 +1,68 @@
-/* The picker that opens before a new user form: one card per kind of account.
-
-   Every rule here was an inline style, and the hover was two JavaScript
-   handlers writing to element.style. CSS does hover without a render. */
-
-.kind-picker { padding: 1.5rem; }
+/* The picker that opens before a new user form: one option per kind of account.
+   The dialog already pads its content, so the picker adds none of its own. */
 
 .kind-picker-title {
   margin: 0;
-  font-size: 1.25rem;
-  color: #111827;
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--text-color);
 }
 
 .kind-picker-intro {
-  margin-top: 0.4rem;
-  margin-bottom: 1.25rem;
-  font-size: 0.875rem;
-  color: #6b7280;
+  margin: var(--space-1) 0 var(--space-5);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
 }
 
 .kind-picker-options {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .kind-picker-option {
   display: flex;
   align-items: flex-start;
-  gap: 0.9rem;
+  gap: var(--space-3);
   width: 100%;
   text-align: left;
-  padding: 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  background: white;
+  padding: var(--space-4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  background: var(--surface);
   font-family: inherit;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: border-color 0.15s ease-out, background-color 0.15s ease-out;
 }
 
 .kind-picker-option:hover {
   border-color: var(--primary-color);
-  background: #fdf6f6;
+  background: var(--primary-wash);
+}
+
+.kind-picker-option:focus-visible {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-focus);
 }
 
 .kind-picker-icon {
-  font-size: 1.1rem;
+  font-size: var(--text-lg);
   color: var(--primary-color);
-  margin-top: 0.15rem;
-  width: 1.4rem;
+  margin-top: 2px;
+  width: var(--space-5);
+  flex-shrink: 0;
+  text-align: center;
 }
 
 .kind-picker-option-title {
   display: block;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-color);
 }
 
 .kind-picker-option-text {
   display: block;
-  font-size: 0.8rem;
-  color: #6b7280;
-  margin-top: 0.2rem;
-}
-
-.kind-picker-footer {
-  margin-top: 1.25rem;
-  text-align: right;
-}
-
-.kind-picker-cancel {
-  padding: 0.5rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  background: white;
-  font-family: inherit;
-  font-size: 0.875rem;
-  color: #374151;
-  cursor: pointer;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: var(--space-1);
 }

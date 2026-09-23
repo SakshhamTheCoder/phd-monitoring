@@ -27,7 +27,7 @@
 .log-terminal::-webkit-scrollbar-thumb:hover { background-color: #4E535F; }
 
 .log-empty {
-  padding: 2rem;
+  padding: var(--space-6);
   text-align: center;
   color: #6B7280;
 }
@@ -89,7 +89,13 @@
   padding: 0.5rem 1rem;
   color: #6B7280;
   font-size: var(--text-2xs);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
   border-bottom: 1px solid #21242B;
+}
+
+/* In the page's panel the panel draws the edge; clipping keeps the dark
+   console inside its rounded corners. */
+.log-panel { overflow: hidden; }
+.log-panel .log-terminal {
+  border: none;
+  border-radius: 0;
 }

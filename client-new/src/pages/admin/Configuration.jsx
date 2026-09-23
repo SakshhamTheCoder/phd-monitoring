@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import PageHeader from '../../components/pageHeader/PageHeader';
+import Page from '../../components/page/Page';
+import Panel from '../../components/panel/Panel';
 import Tabs from '../../components/tabs/Tabs';
 import LeaveQuotas from './configuration/LeaveQuotas';
 import ThesisLimits from './configuration/ThesisLimits';
@@ -18,38 +19,37 @@ import SynopsisChecklist from './configuration/SynopsisChecklist';
  * own endpoint.
  */
 const SECTIONS = [
-  { value: 'leave', label: 'Leave Quotas', Component: LeaveQuotas },
-  { value: 'thesis', label: 'Thesis Duration', Component: ThesisLimits },
-  { value: 'supervision', label: 'Supervision Limits', Component: SupervisionLimits },
-  { value: 'branches', label: 'UG Branches', Component: UgBranches },
-  { value: 'coursework', label: 'Coursework Credits', Component: CourseworkCredits },
-  { value: 'checklist', label: 'Synopsis Checklist', Component: SynopsisChecklist },
+  { value: 'leave', label: 'Leave quotas', Component: LeaveQuotas },
+  { value: 'thesis', label: 'Thesis duration', Component: ThesisLimits },
+  { value: 'supervision', label: 'Supervision limits', Component: SupervisionLimits },
+  { value: 'branches', label: 'UG branches', Component: UgBranches },
+  { value: 'coursework', label: 'Coursework credits', Component: CourseworkCredits },
+  { value: 'checklist', label: 'Synopsis checklist', Component: SynopsisChecklist },
 ];
 
 const Configuration = () => {
   const [activeTab, setActiveTab] = useState(SECTIONS[0].value);
 
   return (
-    <>
-      <PageHeader
-        title="Configuration"
-        subtitle="Values the app reads at runtime. A change here applies to everyone immediately."
-      />
-
-      <Tabs
-        value={activeTab}
-        onChange={setActiveTab}
-        items={SECTIONS.map(({ value, label }) => ({ value, label }))}
-      />
-
+    <Page
+      title="Configuration"
+      description="Values the app reads at runtime. A change here applies to everyone immediately."
+      tabs={(
+        <Tabs
+          value={activeTab}
+          onChange={setActiveTab}
+          items={SECTIONS.map(({ value, label }) => ({ value, label }))}
+        />
+      )}
+    >
       {/* Every section stays mounted and the others are hidden, so an edit
           not yet saved survives a look at another tab. */}
-      {SECTIONS.map(({ value, Component }) => (
-        <div key={value} hidden={value !== activeTab}>
+      {SECTIONS.map(({ value, label, Component }) => (
+        <Panel key={value} title={label} hidden={value !== activeTab}>
           <Component />
-        </div>
+        </Panel>
       ))}
-    </>
+    </Page>
   );
 };
 

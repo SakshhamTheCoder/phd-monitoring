@@ -65,16 +65,14 @@ const CourseworkCredits = () => {
 
   if (loadFailed) {
     return (
-      <div className="config-block">
-        <LoadError message="Could not load the coursework requirements. Check your connection and try again." onRetry={load} />
-      </div>
+      <LoadError message="Could not load the coursework requirements. Check your connection and try again." onRetry={load} />
     );
   }
 
   return (
-    <div className="config-block">
-      <div className="filter-bar">
-        <div className="filter-row config-filter-row">
+    <>
+      <div className="config-fields">
+        <div className="config-filter-row">
           {FIELDS.map(({ key, label }) => (
             <div key={key} className="input-field-container config-field-200">
               <label className="input-label" htmlFor={key}>{label}</label>
@@ -100,7 +98,7 @@ const CourseworkCredits = () => {
         Until they reach the figure for their status, the synopsis cannot be raised, and
         their profile says how far off they are.
       </p>
-    </div>
+    </>
   );
 };
 

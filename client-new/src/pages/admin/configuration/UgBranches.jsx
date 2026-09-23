@@ -111,9 +111,9 @@ const UgBranches = () => {
   }));
 
   return (
-    <div className="config-block">
-      <div className="filter-bar">
-        <div className="filter-row config-filter-row">
+    <>
+      <div className="config-fields">
+        <div className="config-filter-row">
           <div className="input-field-container config-field-140">
             <label className="input-label" htmlFor="ug-branches-programme">Programme</label>
             <input
@@ -158,10 +158,11 @@ const UgBranches = () => {
             />
           </div>
           <CustomButton text={editing ? 'Save changes' : 'Add branch'} onClick={save} disabled={busy} />
-          {!editing && <CustomButton text="Import CSV" onClick={() => setImportOpen(true)} />}
+          {!editing && <CustomButton text="Import from CSV" variant="secondary" onClick={() => setImportOpen(true)} />}
           {editing && (
             <CustomButton
               text="Cancel"
+              variant="quiet"
               onClick={() => { setEditing(null); setForm(EMPTY); setFormResets((count) => count + 1); }}
             />
           )}
@@ -196,7 +197,7 @@ const UgBranches = () => {
       <UnifiedBulkImportModal
         isOpen={importOpen}
         onClose={() => setImportOpen(false)}
-        title="Import Branches"
+        title="Import branches from CSV"
         required={['programme', 'code', 'name']}
         rules={[
           'Matched on programme and code, so importing the same file twice renames rather than duplicates.',
@@ -208,7 +209,7 @@ const UgBranches = () => {
         onImport={importRows}
         submitting={importing}
       />
-    </div>
+    </>
   );
 };
 

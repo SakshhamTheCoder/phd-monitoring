@@ -9,6 +9,7 @@ import DropdownField from '../forms/fields/DropdownField';
 import GridContainer from '../forms/fields/GridContainer';
 import ToggleSwitch from '../forms/fields/ToggleSwitch';
 import LoadError from '../common/LoadError';
+import StatusNotice from '../common/StatusNotice';
 import useBranches from '../../hooks/useBranches';
 import './UserForm.css';
 
@@ -226,13 +227,13 @@ const UserForm = ({ edit, userData, onClose }) => {
 
   return (
     <div className="user-form">
-      <h2>{edit ? 'Edit User' : 'Create New User'}</h2>
+      <h2 className="user-form-title">{edit ? 'Edit user' : 'Create new user'}</h2>
       
       <form onSubmit={handleSubmit}>
         <GridContainer
           elements={[
             <InputField
-              label="Full Name *"
+              label="Full name *"
               initialValue={formData.full_name}
               isLocked={false}
               onChange={(value) => setFormData((prev) => ({ ...prev, full_name: value }))}
@@ -293,7 +294,7 @@ const UserForm = ({ edit, userData, onClose }) => {
             // The label goes through the field so it is tied to the select; a
             // bare <label> beside it named nothing for a screen reader.
             <DropdownField
-              label="Main Role"
+              label="Main role"
               required
               options={roles}
               initialValue={formData.role_id || ''}
@@ -303,7 +304,7 @@ const UserForm = ({ edit, userData, onClose }) => {
           ) : rolesFailed ? (
             <LoadError message="Could not load the roles. Check your connection and try again." onRetry={fetchRoles} />
           ) : (
-            <p>Loading roles...</p>
+            <StatusNotice tone="loading" title="Loading roles" />
           )}
         </div>
 
@@ -312,27 +313,27 @@ const UserForm = ({ edit, userData, onClose }) => {
             <div>
               {rolesLoaded && roles.length > 0 ? (
                 <DropdownField
-                  label="Current Role"
+                  label="Current role"
                   options={roles}
                   initialValue={formData.current_role_id || ''}
                   onChange={(value) => setFormData((prev) => ({ ...prev, current_role_id: value }))}
                   key={`current_role_${formData.id || 'new'}`}
                 />
               ) : (
-                !rolesFailed && <p>Loading...</p>
+                !rolesFailed && <StatusNotice tone="loading" title="Loading roles" />
               )}
             </div>,
             <div>
               {rolesLoaded && roles.length > 0 ? (
                 <DropdownField
-                  label="Default Role"
+                  label="Default role"
                   options={roles}
                   initialValue={formData.default_role_id || ''}
                   onChange={(value) => setFormData((prev) => ({ ...prev, default_role_id: value }))}
                   key={`default_role_${formData.id || 'new'}`}
                 />
               ) : (
-                !rolesFailed && <p>Loading...</p>
+                !rolesFailed && <StatusNotice tone="loading" title="Loading roles" />
               )}
             </div>
           ]}
@@ -341,13 +342,11 @@ const UserForm = ({ edit, userData, onClose }) => {
 
         {roleById(formData.role_id)?.role_name === 'ug_student' && (
           <>
-            <label className="user-form-section-label">
-              URF Details
-            </label>
+            <h3 className="user-form-section-label">URF details</h3>
             <GridContainer
               elements={[
                 <InputField
-                  label="Roll Number"
+                  label="Roll number"
                   initialValue={formData.roll_no || ''}
                   onChange={(value) => setFormData((prev) => ({ ...prev, roll_no: value }))}
                 />,
@@ -359,7 +358,7 @@ const UserForm = ({ edit, userData, onClose }) => {
                   key={`branch_${formData.id || 'new'}`}
                 />,
                 <DropdownField
-                  label="Year of Study (blank counts from the roll number)"
+                  label="Year of study (blank counts from the roll number)"
                   options={[1, 2, 3, 4].map((year) => ({ title: `${year} Year`, value: year }))}
                   initialValue={formData.year || ''}
                   onChange={(value) => setFormData((prev) => ({ ...prev, year: value }))}
@@ -372,17 +371,17 @@ const UserForm = ({ edit, userData, onClose }) => {
         )}
 
         <div className="user-form-row">
-          <label className="user-form-block-label">
-            Available Roles (Select multiple)
-          </label>
-          <p className="user-form-note-warn">
+          <p className="user-form-block-label" id="user-form-available-roles">
+            Available roles (select multiple)
+          </p>
+          <StatusNotice tone="warning">
             Ticking a role here grants it, but does not create the record it depends on.
             <strong>Hod</strong>, <strong>Phd_coordinator</strong> and <strong>Adordc</strong> are
             assigned from the Departments page, <strong>Clerk</strong> from Clerk Management.
             <strong>Faculty</strong>-type roles need a faculty record and <strong>Student</strong>
             needs a student record. Until those exist the user cannot switch into the role.
-          </p>
-          <div className="user-form-role-grid">
+          </StatusNotice>
+          <div className="user-form-role-grid" role="group" aria-labelledby="user-form-available-roles">
             {allRoleOptions.map(roleName => (
               <label
                 key={roleName}
@@ -405,7 +404,7 @@ const UserForm = ({ edit, userData, onClose }) => {
         {!edit && (
           <div className="user-form-row">
             <InputField
-              label="Custom Password (Optional, min 8 characters)"
+              label="Custom password (optional, min 8 characters)"
               type="password"
               initialValue={customPassword}
               isLocked={false}
@@ -418,17 +417,11 @@ const UserForm = ({ edit, userData, onClose }) => {
           </div>
         )}
 
-        <div className="user-form-actions">
-          <button
-            type="button"
-            onClick={onClose}
-            className="user-form-btn-cancel"
-          >
-            Cancel
-          </button>
+        <div className="modal-actions">
+          <CustomButton text="Cancel" variant="quiet" onClick={onClose} />
           <CustomButton
             type="submit"
-            text={loading ? 'Saving...' : (edit ? 'Update User' : 'Create User')}
+            text={loading ? 'Saving...' : (edit ? 'Update user' : 'Create user')}
             disabled={loading}
           />
         </div>
@@ -436,29 +429,26 @@ const UserForm = ({ edit, userData, onClose }) => {
 
       {edit && (
         <div className="user-form-password">
-          <h3>Password Management</h3>
+          <h3 className="user-form-section-label">Password management</h3>
           
           {!showPasswordSection ? (
             <div className="user-form-button-row">
-              <button
+              <CustomButton
+                text="Set custom password"
+                variant="secondary"
                 onClick={() => setShowPasswordSection(true)}
-                className="user-form-btn-amber"
-              >
-                Set Custom Password
-              </button>
-              <button
-                type="button"
+              />
+              <CustomButton
+                text="Send password reset email"
+                variant="secondary"
                 onClick={handleSendResetEmail}
                 disabled={loading}
-                className="user-form-btn-primary"
-              >
-                Send Password Reset Email
-              </button>
+              />
             </div>
           ) : (
             <div>
               <InputField
-                label="New Password (min 8 characters)"
+                label="New password (min 8 characters)"
                 type="password"
                 initialValue={customPassword}
                 isLocked={false}
@@ -466,22 +456,20 @@ const UserForm = ({ edit, userData, onClose }) => {
                 key={`reset_password_${formData.id}`}
               />
               <div className="user-form-button-row user-form-button-row--spaced">
-                <button
+                <CustomButton
+                  text="Cancel"
+                  variant="quiet"
                   onClick={() => {
                     setShowPasswordSection(false);
                     setCustomPassword('');
                   }}
-                  className="user-form-btn-cancel"
-                >
-                  Cancel
-                </button>
-                <button
+                />
+                <CustomButton
+                  text={loading ? 'Resetting...' : 'Reset password'}
+                  variant="secondary"
                   onClick={handleResetPassword}
                   disabled={loading || !customPassword || customPassword.length < 8}
-                  className="user-form-btn-amber"
-                >
-                  {loading ? 'Resetting...' : 'Reset Password'}
-                </button>
+                />
               </div>
             </div>
           )}

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import CustomModal from "../../components/forms/modal/CustomModal";
 import CustomButton from "../../components/forms/fields/CustomButton";
+import StatusNotice from "../../components/common/StatusNotice";
 import { EMPTY_VALUE } from "../../utils/timeParse";
 
 /**
@@ -30,7 +31,7 @@ const StepInput = ({ id, value, min, max, onCommit }) => {
       onBlur={commit}
       // Enter commits by leaving the field, so the blur does not send it twice.
       onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
-      className="control-input"
+      className="input-field"
     />
   );
 };
@@ -57,52 +58,51 @@ const AdminFormInstancesModal = ({
     <CustomModal
       isOpen={isOpen}
       onClose={onClose}
-      title={`${form?.form_name || 'Form'} - Instances`}
+      title={`${form?.form_name || 'Form'} - instances`}
         minHeight="500px"
         maxHeight="90vh"
         minWidth="900px"
         maxWidth="1200px"
       >
         {form && (
-          <div className="instances-modal">
-            <div className="instances-header-section">
-              <div className="instances-summary">
-                <h3>Total Instances: {form.instances.length}</h3>
-                <p>Maximum allowed: {form.general_form.max_count}</p>
+          <div className="afm-instances">
+            <div className="afm-instances-head">
+              <div>
+                <h3 className="afm-section-title">Total instances: {form.instances.length}</h3>
+                <p className="afm-muted">Maximum allowed: {form.general_form.max_count}</p>
               </div>
               <CustomButton
-                text="+ Create New Instance"
+                text="Create new instance"
                 onClick={() => onCreateInstance(form.form_type)}
               />
             </div>
 
             {form.instances.length === 0 ? (
-              <div className="empty-instances">
-                <p>No instances yet. Create one to get started.</p>
-              </div>
+              <StatusNotice tone="empty">No instances yet. Create one to get started.</StatusNotice>
             ) : (
-              <div className="instances-list">
+              <div className="afm-instance-list">
                 {form.instances.map((instance) => (
-                  <div key={instance.id} className="instance-detail-card">
-                    <div className="instance-card-header">
-                      <div className="instance-title-group">
-                        <span className="instance-id-badge">ID: {instance.id}</span>
-                        <span className={`status-badge ${instance.completion}`}>
+                  <div key={instance.id} className="afm-instance">
+                    <div className="afm-instance-head">
+                      <div className="afm-instance-title">
+                        <span className="badge badge--accent">ID: {instance.id}</span>
+                        <span className={`badge ${instance.completion === 'complete' ? 'badge--success' : 'badge--warning'}`}>
                           {instance.completion}
                         </span>
                       </div>
                       <button
-                        className="delete-instance-btn"
+                        type="button"
+                        className="row-action-btn danger"
                         onClick={() => onDeleteForm(form.form_type, instance.id)}
                       >
                         Delete
                       </button>
                     </div>
 
-                    <div className="instance-card-body">
-                      <div className="instance-controls">
-                        <div className="control-group">
-                          <label htmlFor={`admin-form-management-stage-${instance.id}`}>Stage</label>
+                    <div className="afm-instance-body">
+                      <div className="afm-controls">
+                        <div className="afm-control">
+                          <label className="afm-control-label" htmlFor={`admin-form-management-stage-${instance.id}`}>Stage</label>
                           <select id={`admin-form-management-stage-${instance.id}`}
                             value={instance.stage}
                             onChange={(e) => {
@@ -133,7 +133,7 @@ const AdminFormInstancesModal = ({
                                 }
                               }
                             }}
-                            className="control-select"
+                            className="input-field"
                           >
                             {instance.steps?.map((step) => (
                               <option key={step} value={step}>
@@ -143,8 +143,8 @@ const AdminFormInstancesModal = ({
                           </select>
                         </div>
 
-                        <div className="control-group">
-                          <label htmlFor={`admin-form-management-current-step-index-in-steps-${instance.id}`}>Current Step (Index in Steps)</label>
+                        <div className="afm-control">
+                          <label className="afm-control-label" htmlFor={`admin-form-management-current-step-index-in-steps-${instance.id}`}>Current step (index in steps)</label>
                           <StepInput
                             key={instance.current_step || 0}
                             id={`admin-form-management-current-step-index-in-steps-${instance.id}`}
@@ -163,8 +163,8 @@ const AdminFormInstancesModal = ({
                           />
                         </div>
 
-                        <div className="control-group">
-                          <label htmlFor={`admin-form-management-maximum-step-max-reached-${instance.id}`}>Maximum Step (Max Reached)</label>
+                        <div className="afm-control">
+                          <label className="afm-control-label" htmlFor={`admin-form-management-maximum-step-max-reached-${instance.id}`}>Maximum step (max reached)</label>
                           <StepInput
                             key={instance.maximum_step || 0}
                             id={`admin-form-management-maximum-step-max-reached-${instance.id}`}
@@ -182,11 +182,11 @@ const AdminFormInstancesModal = ({
                           />
                         </div>
 
-                        <div className="control-group full-width">
-                          <label>Steps Sequence (Current: {instance.steps?.[instance.current_step] || EMPTY_VALUE})</label>
-                          <span className="steps-display-modal">
+                        <div className="afm-control afm-control--wide">
+                          <span className="afm-control-label">Steps sequence (current: {instance.steps?.[instance.current_step] || EMPTY_VALUE})</span>
+                          <span className="afm-steps">
                             {instance.steps?.map((step, idx) => (
-                              <span key={idx} className={idx === instance.current_step ? 'current-step' : idx <= (instance.maximum_step || 0) ? 'reached-step' : ''}>
+                              <span key={idx} className={idx === instance.current_step ? 'afm-step-current' : idx <= (instance.maximum_step || 0) ? 'afm-step-reached' : ''}>
                                 {step}
                                 {idx < instance.steps.length - 1 ? ' → ' : ''}
                               </span>
@@ -195,16 +195,17 @@ const AdminFormInstancesModal = ({
                         </div>
                       </div>
 
-                      <div className="instance-section">
-                        <h4>Locks Control</h4>
-                        <div className="locks-grid-modal">
+                      <div className="afm-locks">
+                        <h4 className="afm-section-title">Locks control</h4>
+                        <div className="afm-toggle-grid">
                           {lockRoles.map((role) => (
-                            <div key={role} className="lock-item-modal">
-                              <span className="lock-label">
+                            <div key={role} className="afm-toggle-item">
+                              <span className="afm-toggle-label afm-toggle-label--role">
                                 {role === 'faculty' ? 'Supervisor' : role.replace(/_/g, ' ')}
                               </span>
                               <button
-                                className={`lock-toggle-modal ${instance.locks[role] ? "locked" : "unlocked"}`}
+                                type="button"
+                                className={`row-action-btn${instance.locks[role] ? " danger" : ""}`}
                                 onClick={() =>
                                   onToggleLock(
                                     form.form_type,

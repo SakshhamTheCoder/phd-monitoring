@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import PageHeader from '../../components/pageHeader/PageHeader';
+import Page from '../../components/page/Page';
 import { useLoading } from '../../context/LoadingContext';
 import { useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -13,7 +13,8 @@ import FacultyForm from '../../components/facultyForm/FacultyForm';
 import ClerkForm from '../../components/clerkForm/ClerkForm';
 import { baseURL } from '../../api/urls';
 import CustomButton from '../../components/forms/fields/CustomButton';
-import { customFetch, NETWORK_ERROR_MESSAGE } from '../../api/base';
+import { customFetch, NETWORK_ERROR_MESSAGE } from '../../api/base';
+
 import { formatDate } from '../../utils/timeParse';
 import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImportModal';
 import useCapabilities from '../../context/CapabilitiesContext';
@@ -246,36 +247,39 @@ Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,d
   };
 
   return (
-    <>
-      <PageHeader title="Manage Users" subtitle="Create accounts and assign roles." />
-      <FilterBar onSearch={handleFilterChange} />
+    <Page
+      title="Manage users"
+      description="Create accounts and assign roles."
+      actions={managesUsers ? (
+        <>
+          <CustomButton
+            text={waitingEveryone ? `Send sign-in links (${waitingEveryone})` : 'Send sign-in links'}
+            variant="quiet"
+            disabled={!waitingEveryone}
+            onClick={() => { setChosenRun(runs[0]?.batch ?? 'everyone'); setLinksOpen(true); }}
+          />
+          <CustomButton
+            text="Import from CSV"
+            variant="secondary"
+            onClick={() => setShowBulkImportModal(true)}
+          />
+          <CustomButton text="Add user" onClick={() => openForm()} />
+        </>
+      ) : null}
+    >
+      {/* Refreshed through `num`, not a key: a key would remount the table
+          and with it the FilterBar in its head, clearing the search box while
+          the search itself stayed applied. */}
       <PagenationTable
-        key={refreshKey}
+        num={refreshKey}
         endpoint={location.pathname}
         filters={filter}
+        search={<FilterBar onSearch={handleFilterChange} />}
         enableApproval={false}
         // The row is a way into the edit form, so it follows the same
         // capability as the Edit action rather than the route alone.
         rowClickable={can('can_manage_users')}
         customOpenForm={openForm}
-        extraTopbarComponents={
-          can('can_manage_users') ? (
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <CustomButton
-                text={waitingEveryone ? `Send sign-in links (${waitingEveryone})` : 'Send sign-in links'}
-                variant="secondary"
-                disabled={!waitingEveryone}
-                onClick={() => { setChosenRun(runs[0]?.batch ?? 'everyone'); setLinksOpen(true); }}
-              />
-              <CustomButton
-                text="Bulk Import"
-                variant="secondary"
-                onClick={() => setShowBulkImportModal(true)}
-              />
-              <CustomButton text="Add User +" onClick={() => openForm()} />
-            </div>
-          ) : null
-        }
         actions={can('can_manage_users') ? [
           {
             icon: <i className="fa fa-pencil-square-o"></i>,
@@ -284,7 +288,7 @@ Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,d
           },
           {
             icon: <i className="fa fa-key"></i>,
-            tooltip: 'Reset Password',
+            tooltip: 'Reset password',
             onClick: (userData) => handleResetPassword(userData),
           },
           {
@@ -332,7 +336,7 @@ Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,d
           </p>
 
           {runs.map((run) => (
-            <label key={run.batch} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '10px' }}>
+            <label key={run.batch} style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-2)', marginBottom: 'var(--space-3)' }}>
               <input
                 type="radio"
                 name="sign-in-link-group"
@@ -347,7 +351,7 @@ Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,d
             </label>
           ))}
 
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-2)' }}>
             <input
               type="radio"
               name="sign-in-link-group"
@@ -362,7 +366,7 @@ Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,d
           </label>
 
           <div className="modal-actions">
-            <CustomButton text="Cancel" variant="secondary" onClick={() => setLinksOpen(false)} />
+            <CustomButton text="Cancel" variant="quiet" onClick={() => setLinksOpen(false)} />
             <CustomButton
               text={sendingLinks ? 'Sending...' : 'Send links'}
               disabled={sendingLinks || !waitingEveryone}
@@ -376,7 +380,7 @@ Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,d
       <UnifiedBulkImportModal
         isOpen={showBulkImportModal}
         onClose={() => setShowBulkImportModal(false)}
-        title="Bulk Import Users"
+        title="Import users from CSV"
         required={['full_name', 'email', 'role']}
         rules={[
           'Matched by email. An existing user is updated from the cells the row fills in.',
@@ -389,7 +393,7 @@ Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,d
         submitting={submitting}
         uploadProgress={uploadProgress}
       />
-    </>
+    </Page>
   );
 };
 

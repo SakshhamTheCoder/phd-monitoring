@@ -179,9 +179,9 @@ const SynopsisChecklist = () => {
   }));
 
   return (
-    <div className="config-block">
-      <div className="filter-bar">
-        <div className="filter-row config-filter-row">
+    <>
+      <div className="config-fields">
+        <div className="config-filter-row">
           <div className="input-field-container config-field-240">
             <label className="input-label" htmlFor="rule-name">Condition</label>
             <input
@@ -262,12 +262,12 @@ const SynopsisChecklist = () => {
           </div>
           <CustomButton text={editingRule ? 'Save changes' : 'Add condition'} onClick={saveRule} disabled={busy} />
           {editingRule && (
-            <CustomButton text="Cancel" onClick={() => { setEditingRule(null); setRule(EMPTY_RULE); }} />
+            <CustomButton text="Cancel" variant="quiet" onClick={() => { setEditingRule(null); setRule(EMPTY_RULE); }} />
           )}
         </div>
 
         {rule.departments.length > 0 && (
-          <div className="filter-row config-chip-row">
+          <div className="config-chip-row">
             {rule.departments.map((department) => (
               <button
                 key={department.id}
@@ -316,8 +316,8 @@ const SynopsisChecklist = () => {
 
       {open && (
         <>
-          <div className="filter-bar config-block">
-            <div className="filter-row config-filter-row">
+          <div className="config-fields config-fields--spaced">
+            <div className="config-filter-row">
               <div className="input-field-container config-field-440">
                 <label className="input-label" htmlFor="option-label">Category under {open.name}</label>
                 <input
@@ -351,9 +351,9 @@ const SynopsisChecklist = () => {
                   {' '}Offer this category
                 </label>
               </div>
-              <CustomButton text={editingOption ? 'Save changes' : 'Add category'} onClick={saveOption} disabled={busy} />
+              <CustomButton text={editingOption ? 'Save changes' : 'Add category'} variant="secondary" onClick={saveOption} disabled={busy} />
               {editingOption && (
-                <CustomButton text="Cancel" onClick={() => { setEditingOption(null); setOption(EMPTY_OPTION); }} />
+                <CustomButton text="Cancel" variant="quiet" onClick={() => { setEditingOption(null); setOption(EMPTY_OPTION); }} />
               )}
             </div>
           </div>
@@ -404,7 +404,7 @@ const SynopsisChecklist = () => {
         be removed; retire it instead and the forms that chose it still read back the wording
         that was agreed.
       </p>
-    </div>
+    </>
   );
 };
 

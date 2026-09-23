@@ -91,17 +91,14 @@ const ClerkForm = ({ onSuccess, onClose }) => {
 
   return (
     <>
-      <GridContainer
-        space={3}
-        elements={[<div className="form-title">Create Clerk</div>]}
-      />
+      <h2 className="modal-title">Create clerk</h2>
       <p className="modal-note" style={{ marginTop: 0 }}>
         A clerk has no student or faculty record. Departments are tagged afterwards from this page.
       </p>
       <GridContainer
         elements={[
           <InputField
-            label="Full Name*"
+            label="Full name*"
             initialValue={formData.full_name}
             onChange={(val) => handleChange("full_name", val)}
           />,
@@ -149,25 +146,23 @@ const ClerkForm = ({ onSuccess, onClose }) => {
       <GridContainer
         elements={[
           <InputField
-            label="Custom Password (Optional, min 8 characters)"
+            label="Custom password (optional, min 8 characters)"
             type="password"
             initialValue={formData.password}
             onChange={(val) => handleChange("password", val)}
           />,
         ]}
       />
-      <p style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "0.25rem" }}>
+      <p style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", marginTop: "var(--space-1)" }}>
         Leave empty and they are emailed a link to set their own.
       </p>
-      <GridContainer
-        elements={[
-          <CustomButton
-            text={submitting ? "Adding..." : "Add Clerk"}
-            onClick={handleSubmit}
-            disabled={submitting}
-          />,
-        ]}
-      />
+      <div className="modal-actions">
+        <CustomButton
+          text={submitting ? "Adding..." : "Add clerk"}
+          onClick={handleSubmit}
+          disabled={submitting}
+        />
+      </div>
     </>
   );
 };
