@@ -20,6 +20,7 @@ import InputSuggestions from '../../components/forms/fields/InputSuggestions';
 import FacultyLink from '../../components/facultyLink/FacultyLink';
 import { baseURL } from '../../api/urls';
 import { toast } from 'react-toastify';
+import { toastUndo, insertAt } from '../../utils/undoToast';
 import ProjectBudgetStep from './ProjectBudgetStep';
 import './CreateProject.css';
 
@@ -82,6 +83,8 @@ const CreateProject = () => {
   const [showExtForm, setShowExtForm] = useState(false);
   const [extCopi, setExtCopi] = useState({ name: '', designation: '', institute: '', email: '', mobile: '', website: '' });
   const [pi, setPi] = useState(editProject?.pi || null);
+  // The row just added, as 'copi-2' or 'milestone-0', so it is marked where it landed.
+  const [lastAdded, setLastAdded] = useState(null);
   const sanctionRef = useRef(null);
   const ganttRef = useRef(null);
   const [meta, setMeta] = useState({ sdgs: [], manpowerCategories: [], budgetHeads: [], duration: { years: [0,1,2,3,4,5], maxMonths: 11 } });
@@ -134,6 +137,7 @@ const CreateProject = () => {
   const addInternalCopi = (fac) => {
     if (!fac || !fac.name) return;
     if (form.coPIs.find(c => c.name === fac.name)) return;
+    setLastAdded(`copi-${form.coPIs.length}`);
     setForm({
       ...form,
       coPIs: [...form.coPIs, {
@@ -145,21 +149,43 @@ const CreateProject = () => {
 
   const addExternalCopi = () => {
     if (extCopi.name) {
+      setLastAdded(`copi-${form.coPIs.length}`);
       setForm({ ...form, coPIs: [...form.coPIs, { type: 'external', ...extCopi }] });
       setExtCopi({ name: '', designation: '', institute: '', email: '', mobile: '', website: '' });
       setShowExtForm(false);
     }
   };
 
-  const removeCopi = (idx) => setForm({ ...form, coPIs: form.coPIs.filter((_, i) => i !== idx) });
+  // Nothing is saved until Submit, so a removal happens at once and Undo puts it back.
+  const removeCopi = (idx) => {
+    const removed = form.coPIs[idx];
+    // Rows are keyed by index, so the mark would land on whichever row an Undo shifts there.
+    setLastAdded(null);
+    setForm({ ...form, coPIs: form.coPIs.filter((_, i) => i !== idx) });
+    toastUndo(`${removed.name} removed.`, () => setForm(prev => ({ ...prev, coPIs: insertAt(prev.coPIs, idx, removed) })));
+  };
+
+  const removeObjective = (idx) => {
+    const removed = form.objectives[idx];
+    setForm(p => ({ ...p, objectives: p.objectives.filter((_, j) => j !== idx) }));
+    toastUndo('Objective removed.', () => setForm(prev => ({ ...prev, objectives: insertAt(prev.objectives, idx, removed) })));
+  };
 
   const handleSanctionFile = (e) => {
     const file = e.target.files && e.target.files[0];
     if (file) setForm(prev => ({ ...prev, sanctionLetterFile: file, sanctionLetterFileName: file.name }));
   };
 
-  const addMilestone = () => setForm({ ...form, milestones: [...form.milestones, { name: '', deliverable: '', dueDate: '', status: 'Not Started' }] });
-  const removeMilestone = (i) => setForm({ ...form, milestones: form.milestones.filter((_, idx) => idx !== i) });
+  const addMilestone = () => {
+    setLastAdded(`milestone-${form.milestones.length}`);
+    setForm({ ...form, milestones: [...form.milestones, { name: '', deliverable: '', dueDate: '', status: 'Not Started' }] });
+  };
+  const removeMilestone = (i) => {
+    const removed = form.milestones[i];
+    setLastAdded(null);
+    setForm({ ...form, milestones: form.milestones.filter((_, idx) => idx !== i) });
+    toastUndo('Milestone removed.', () => setForm(prev => ({ ...prev, milestones: insertAt(prev.milestones, i, removed) })));
+  };
   const updateMilestone = (i, field, val) => {
     const ms = [...form.milestones];
     ms[i] = { ...ms[i], [field]: val };
@@ -389,13 +415,13 @@ const CreateProject = () => {
                     <div className="cp-field full"><label htmlFor="create-project-website">Website</label><input id="create-project-website" type="url" value={extCopi.website} onChange={e => setExtCopi({...extCopi, website: e.target.value})} /></div>
                   </div>
                   <div className="cp-inline-actions">
-                    <CustomButton text="Save Co-PI" variant="secondary" size="sm" onClick={addExternalCopi} />
+                    <CustomButton text="Add Co-PI" variant="secondary" size="sm" onClick={addExternalCopi} />
                     <CustomButton text="Cancel" variant="quiet" size="sm" onClick={() => setShowExtForm(false)} />
                   </div>
                 </div>
               )}
               {form.coPIs.map((c, i) => (
-                <div key={i} className="cp-person cp-copi-row">
+                <div key={i} className={`cp-person cp-copi-row${lastAdded === `copi-${i}` ? ' just-added' : ''}`}>
                   <div className="cp-avatar" aria-hidden="true">{c.name.split(' ').map(n => n[0]).join('').slice(0,2)}</div>
                   <div className="cp-person-info">
                     <p className="cp-person-name">{c.name}</p>
@@ -427,7 +453,7 @@ const CreateProject = () => {
                 </div>
               </div>
             </PanelSection>
-            <ProjectBudgetStep budget={form.budget} years={budgetYears} meta={meta} onChange={(next) => setForm(prev => ({ ...prev, budget: next }))} />
+            <ProjectBudgetStep budget={form.budget} years={budgetYears} meta={meta} onChange={(next) => setForm(prev => ({ ...prev, budget: typeof next === 'function' ? next(prev.budget) : next }))} />
           </>
         ),
       };
@@ -454,7 +480,7 @@ const CreateProject = () => {
                     <button
                       type="button" className="cp-remove-btn" title="Remove objective" aria-label={`Remove objective ${i + 1}`}
                       disabled={form.objectives.length === 1}
-                      onClick={() => setForm(p => ({ ...p, objectives: p.objectives.filter((_, j) => j !== i) }))}
+                      onClick={() => removeObjective(i)}
                     >
                       <i className="fa fa-trash" aria-hidden="true"></i>
                     </button>
@@ -521,7 +547,7 @@ const CreateProject = () => {
                   </thead>
                   <tbody>
                     {form.milestones.map((m, i) => (
-                      <tr key={i}>
+                      <tr key={i} className={lastAdded === `milestone-${i}` ? 'just-added' : undefined}>
                         <td><input type="text" aria-label={`Milestone ${i + 1} name`} value={m.name} onChange={e => updateMilestone(i, 'name', e.target.value)} placeholder="e.g. Literature Review" /></td>
                         <td><input type="text" aria-label={`Milestone ${i + 1} deliverable`} value={m.deliverable} onChange={e => updateMilestone(i, 'deliverable', e.target.value)} placeholder="e.g. Draft Summary Report" /></td>
                         <td><input type="date" aria-label={`Milestone ${i + 1} due date`} value={m.dueDate} onChange={e => updateMilestone(i, 'dueDate', e.target.value)} /></td>
@@ -629,7 +655,7 @@ const CreateProject = () => {
       {currentStep < STEPS.length - 1 ? (
         <CustomButton text="Continue" className="cp-nav-next" onClick={() => setCurrentStep(currentStep + 1)} />
       ) : (
-        <CustomButton text={isEditMode ? 'Save changes' : 'Submit'} className="cp-nav-next" onClick={handleSubmit} disabled={submitting} />
+        <CustomButton text={isEditMode ? 'Save changes' : 'Submit'} className="cp-nav-next" onClick={handleSubmit} busy={submitting} />
       )}
     </>
   );
@@ -666,6 +692,7 @@ const CreateProject = () => {
     <>
       {backLink}
       <Page
+        className={isEditMode ? 'reveal' : undefined}
         title={isEditMode ? 'Edit project' : 'Create new project proposal'}
         meta={<span className="badge badge--accent">{isEditMode ? 'Editing' : 'Draft'}</span>}
         tabs={stepper}

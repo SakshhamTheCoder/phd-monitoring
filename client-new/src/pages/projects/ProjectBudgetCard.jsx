@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import {
   subVal, setSubCell, headTotal, yearTotal, grandTotal, budgetYears as budgetYearsOf,
@@ -14,6 +14,8 @@ import { EMPTY_VALUE } from '../../utils/timeParse';
 import { apiUpdateProject } from '../../api/projects';
 import Panel from '../../components/panel/Panel';
 import CustomButton from '../../components/forms/fields/CustomButton';
+import { toastUndo } from '../../utils/undoToast';
+import { restoreDropped } from './ProjectBudgetStep';
 
 /**
  * The project's budget, read and edited in place.
@@ -27,7 +29,13 @@ const ProjectBudgetCard = ({ projectId, budget, meta, canEdit, onSaved }) => {
   const [editingBudget, setEditingBudget] = useState(false);
   const [budgetDraft, setBudgetDraft] = useState({});
   const startBudgetEdit = () => { setBudgetDraft(JSON.parse(JSON.stringify(budgetData))); setEditingBudget(true); };
-  const cancelBudgetEdit = () => setEditingBudget(false);
+  // An Undo is for the draft, so it goes when the draft is saved or dropped.
+  const undoToasts = useRef([]);
+  const endBudgetEdit = () => {
+    undoToasts.current.forEach((id) => toast.dismiss(id));
+    undoToasts.current = [];
+    setEditingBudget(false);
+  };
   const updateBudgetCell = (year, head, value) => {
     setBudgetDraft(prev => ({ ...prev, [year]: { ...prev[year], [head]: value === '' ? 0 : Number(value) } }));
   };
@@ -36,7 +44,7 @@ const ProjectBudgetCard = ({ projectId, budget, meta, canEdit, onSaved }) => {
   };
   const saveBudgetEdit = async () => {
     const res = await apiUpdateProject(projectId, { budget: budgetDraft });
-    if (res.success) { onSaved(budgetDraft); setEditingBudget(false); toast.success('Budget updated.'); }
+    if (res.success) { onSaved(budgetDraft); endBudgetEdit(); toast.success('Budget updated.'); }
   };
 
   // In-table editing for the derived heads, mirroring the create wizard:
@@ -57,8 +65,13 @@ const ProjectBudgetCard = ({ projectId, budget, meta, canEdit, onSaved }) => {
     setBudgetDraft(prev => renameEquipRow(prev, key, label));
   const addEquip = () =>
     setBudgetDraft(prev => addEquipRow(prev, budgetYears));
+  const dropWithUndo = (message, after) => {
+    const before = budgetDraft;
+    setBudgetDraft(after);
+    undoToasts.current.push(toastUndo(message, () => setBudgetDraft(now => restoreDropped(now, before, after))));
+  };
   const dropEquip = (key) =>
-    setBudgetDraft(prev => dropEquipRow(prev, key));
+    dropWithUndo('Item removed.', dropEquipRow(budgetDraft, key));
   const editTypedHead = (y, head, value) =>
     setBudgetDraft(prev => setTypedHead(prev, y, head, value));
   const editOther = (y, key, parentKey, value) =>
@@ -66,7 +79,7 @@ const ProjectBudgetCard = ({ projectId, budget, meta, canEdit, onSaved }) => {
   const renameOther = (key, label) =>
     setBudgetDraft(prev => renameOtherRow(prev, key, label));
   const dropOther = (key) =>
-    setBudgetDraft(prev => dropOtherRow(prev, key));
+    dropWithUndo('Expense removed.', dropOtherRow(budgetDraft, key));
   const addOther = (parentKey) =>
     setBudgetDraft(prev => addOtherRow(prev, budgetYears, parentKey));
 
@@ -310,7 +323,7 @@ const ProjectBudgetCard = ({ projectId, budget, meta, canEdit, onSaved }) => {
               actions={editingBudget ? (
                 <>
                   <CustomButton text="Save changes" variant="secondary" size="sm" onClick={saveBudgetEdit} />
-                  <CustomButton text="Cancel" variant="quiet" size="sm" onClick={cancelBudgetEdit} />
+                  <CustomButton text="Cancel" variant="quiet" size="sm" onClick={endBudgetEdit} />
                 </>
               ) : (
                 canEdit && <CustomButton text="Edit budget" variant="secondary" size="sm" onClick={startBudgetEdit} />
