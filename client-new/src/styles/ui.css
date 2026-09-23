@@ -666,6 +666,12 @@
     white-space: nowrap;
 }
 
+/* Column titles come from the server in whatever case it stores them
+   ("semester name"); the first letter makes them read as sentence case. */
+.data-table th::first-letter,
+.form-table th::first-letter,
+.custom-table thead th::first-letter { text-transform: uppercase; }
+
 .data-table td,
 .form-table td,
 .custom-table tbody td {

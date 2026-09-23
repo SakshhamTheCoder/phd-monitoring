@@ -177,7 +177,11 @@ const PagenationTable = ({
     }
   };
 
-  const showActions = role !== "student" || extraTopbarComponents;
+  // An empty head is 64px of nothing, so it is drawn only when it holds a
+  // title, the search or a button.
+  const hasActions = extraTopbarComponents
+    || (enableSelect && (persistentSelect || enableApproval || customBulkAction || bulkActions.length > 0));
+  const showActions = (role !== "student" || extraTopbarComponents) && hasActions;
 
   // The table draws its own panel: search and actions in the head, the rows,
   // then the pager as the foot.
