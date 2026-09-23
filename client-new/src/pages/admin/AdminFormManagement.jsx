@@ -5,7 +5,6 @@ import { EMPTY_VALUE } from "../../utils/timeParse";
 import { useLoading } from "../../context/LoadingContext";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import Layout from "../../components/dashboard/layout";
 import CustomButton from "../../components/forms/fields/CustomButton";
 import GridContainer from "../../components/forms/fields/GridContainer";
 import InputField from "../../components/forms/fields/InputField";
@@ -476,7 +475,6 @@ const AdminFormManagement = () => {
   }, [students, searchTerm]);
 
   return (
-    <Layout>
     <div className="admin-form-management">
       <PageHeader
         title="Admin Form Management"
@@ -735,7 +733,6 @@ const AdminFormManagement = () => {
         onUpdateSteps={handleUpdateSteps}
       />
     </div>
-    </Layout>
   );
 };
 

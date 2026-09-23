@@ -1,6 +1,5 @@
 import React, { Suspense, lazy, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Layout from "../../components/dashboard/layout";
 import PageHeader from '../../components/pageHeader/PageHeader';
 import CustomModal from "../../components/forms/modal/CustomModal";
 import CustomButton from "../../components/forms/fields/CustomButton";
@@ -137,117 +136,113 @@ const PresentationSemester = () => {
   };
 
   return (
-    <Layout
-      children={
-        <>
-          <PageHeader title="Progress Monitoring" subtitle="Evaluation semesters and their deadlines." />
-         <SemesterStatsCard key={refreshKey} />
-         <PagenationTable
-            key={refreshKey}
-            endpoint={location}
-            enableApproval={false}
-            enableSelect={false}
-            tableTitle="Past Semesters"
-            customOpenForm={(semester) => {
-                navigate(location + `/semester/${semester.semester_name}`);
-            }}
-            extraTopbarComponents={
-              (role === "admin" || role === "dordc") ? (
-                <CustomButton text="Import Progress History" variant="secondary" onClick={() => setShowProgressImport(true)} />
-              ) : null
-            }
-            actions={(role === "admin" || role === "dordc") ? [
-              {
-                icon: "✏️",
-                tooltip: "Edit Semester",
-                onClick: handleEditClick,
-              },
-            ] : []}
-          />
+    <>
+      <PageHeader title="Progress Monitoring" subtitle="Evaluation semesters and their deadlines." />
+     <SemesterStatsCard key={refreshKey} />
+     <PagenationTable
+        key={refreshKey}
+        endpoint={location}
+        enableApproval={false}
+        enableSelect={false}
+        tableTitle="Past Semesters"
+        customOpenForm={(semester) => {
+            navigate(location + `/semester/${semester.semester_name}`);
+        }}
+        extraTopbarComponents={
+          (role === "admin" || role === "dordc") ? (
+            <CustomButton text="Import Progress History" variant="secondary" onClick={() => setShowProgressImport(true)} />
+          ) : null
+        }
+        actions={(role === "admin" || role === "dordc") ? [
+          {
+            icon: "✏️",
+            tooltip: "Edit Semester",
+            onClick: handleEditClick,
+          },
+        ] : []}
+      />
 
-          <UnifiedBulkImportModal
-            isOpen={showProgressImport}
-            onClose={() => setShowProgressImport(false)}
-            title="Import Progress History"
-            required={['Registration Number', 'Progress for AY', 'Total Progress %']}
-            rules={[
-              'One row per scholar per semester. The gain for each period is worked out from the totals.',
-              'Progress for AY is the semester code, for example 2425ODD.',
-              'A blank total means the evaluation has not happened yet, so the row is skipped.',
-              'A semester the scholar already has a presentation for is left to its own workflow.',
+      <UnifiedBulkImportModal
+        isOpen={showProgressImport}
+        onClose={() => setShowProgressImport(false)}
+        title="Import Progress History"
+        required={['Registration Number', 'Progress for AY', 'Total Progress %']}
+        rules={[
+          'One row per scholar per semester. The gain for each period is worked out from the totals.',
+          'Progress for AY is the semester code, for example 2425ODD.',
+          'A blank total means the evaluation has not happened yet, so the row is skipped.',
+          'A semester the scholar already has a presentation for is left to its own workflow.',
+        ]}
+        sampleFileName="progress_history_sample.csv"
+        sampleCsvContent={progressSampleCsv}
+        onImport={handleProgressImport}
+        submitting={importing}
+      />
+
+      {(role === "admin" || role === "dordc") && (
+        <CustomModal
+          isOpen={openEditModal}
+          onClose={() => setOpenEditModal(false)}
+          title="Edit Semester Deadline"
+          minWidth="300px"
+          minHeight="300px"
+        >
+          <GridContainer
+            elements={[
+              <InputField
+                label="Period of Report"
+                isLocked={true}
+                initialValue={editForm.semester_name}
+              />,
             ]}
-            sampleFileName="progress_history_sample.csv"
-            sampleCsvContent={progressSampleCsv}
-            onImport={handleProgressImport}
-            submitting={importing}
+            space={2}
           />
 
-          {(role === "admin" || role === "dordc") && (
-            <CustomModal
-              isOpen={openEditModal}
-              onClose={() => setOpenEditModal(false)}
-              title="Edit Semester Deadline"
-              minWidth="300px"
-              minHeight="300px"
-            >
-              <GridContainer
-                elements={[
-                  <InputField
-                    label="Period of Report"
-                    isLocked={true}
-                    initialValue={editForm.semester_name}
-                  />,
-                ]}
-                space={2}
-              />
+          <Suspense fallback={<Loader />}>
+          <label className="input-label" htmlFor="presentation-semester-evaluation-start-date">Evaluation Start Date</label>
+          <DatePicker id="presentation-semester-evaluation-start-date"
+            selected={editForm.start_date}
+            readOnly
+            disabled
+            className="input-field field-readonly"
+          />
 
-              <Suspense fallback={<Loader />}>
-              <label className="input-label" htmlFor="presentation-semester-evaluation-start-date">Evaluation Start Date</label>
-              <DatePicker id="presentation-semester-evaluation-start-date"
-                selected={editForm.start_date}
-                readOnly
-                disabled
-                className="input-field field-readonly"
-              />
+          <label className="input-label" htmlFor="presentation-semester-evaluation-end-date">Evaluation End Date</label>
+          <DatePicker id="presentation-semester-evaluation-end-date"
+            selected={editForm.end_date}
+            onChange={(date) => setEditForm({ ...editForm, end_date: date })}
+            className="input-field"
+          />
 
-              <label className="input-label" htmlFor="presentation-semester-evaluation-end-date">Evaluation End Date</label>
-              <DatePicker id="presentation-semester-evaluation-end-date"
-                selected={editForm.end_date}
-                onChange={(date) => setEditForm({ ...editForm, end_date: date })}
-                className="input-field"
-              />
+          <label className="input-label">Notification</label>
+          <ToggleSwitch
+            isOn={editForm.notification}
+            onToggle={() =>
+              setEditForm((prev) => ({
+                ...prev,
+                notification: !prev.notification,
+              }))
+            }
+          />
 
-              <label className="input-label">Notification</label>
-              <ToggleSwitch
-                isOn={editForm.notification}
-                onToggle={() =>
-                  setEditForm((prev) => ({
-                    ...prev,
-                    notification: !prev.notification,
-                  }))
-                }
-              />
+          <FileUploadField
+            label="Sample PPT Template (Optional)"
+            initialValue={editForm.ppt_file}
+            isLocked={false}
+            onChange={(file) => setEditForm({ ...editForm, ppt_file: file })}
+            showLabel={true}
+            acceptedTypes=".ppt,.pptx"
+            maxSizeMB={15}
+            fileTypeLabel="PPT/PPTX"
+          />
 
-              <FileUploadField
-                label="Sample PPT Template (Optional)"
-                initialValue={editForm.ppt_file}
-                isLocked={false}
-                onChange={(file) => setEditForm({ ...editForm, ppt_file: file })}
-                showLabel={true}
-                acceptedTypes=".ppt,.pptx"
-                maxSizeMB={15}
-                fileTypeLabel="PPT/PPTX"
-              />
-
-              <div style={{ textAlign: "right", marginTop: "10px" }}>
-                <CustomButton onClick={handleEditSubmit} text="Save Changes" />
-              </div>
-              </Suspense>
-            </CustomModal>
-          )}
-        </>
-      }
-    />
+          <div style={{ textAlign: "right", marginTop: "10px" }}>
+            <CustomButton onClick={handleEditSubmit} text="Save Changes" />
+          </div>
+          </Suspense>
+        </CustomModal>
+      )}
+    </>
     
   );
 };

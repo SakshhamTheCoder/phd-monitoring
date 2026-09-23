@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import Layout from "../../components/dashboard/layout";
 import PageHeader from "../../components/pageHeader/PageHeader";
 import PagenationTable from "../../components/pagenationTable/PagenationTable";
 import ProgressChart from "../../components/profileCard/ProgressChart";
@@ -44,30 +43,26 @@ const StudentProgressMonitoring = () => {
   };
 
   return (
-    <Layout
-      children={
-        <>
-          <PageHeader
-            title="Progress Monitoring"
-            subtitle={`Every evaluation recorded for ${scholar?.label ?? roll_no}.`}
-          />
-          {progress?.points?.length > 0 && (
-            <GridContainer
-              label="Progress over time"
-              elements={[
-                <ProgressChart points={progress.points} milestones={progress.milestones} />,
-              ]}
-              space={3}
-            />
-          )}
-          <PagenationTable
-            endpoint={`/students/${roll_no}/forms/presentation`}
-            customOpenForm={openPresentation}
-            enableSelect={false}
-          />
-        </>
-      }
-    />
+    <>
+      <PageHeader
+        title="Progress Monitoring"
+        subtitle={`Every evaluation recorded for ${scholar?.label ?? roll_no}.`}
+      />
+      {progress?.points?.length > 0 && (
+        <GridContainer
+          label="Progress over time"
+          elements={[
+            <ProgressChart points={progress.points} milestones={progress.milestones} />,
+          ]}
+          space={3}
+        />
+      )}
+      <PagenationTable
+        endpoint={`/students/${roll_no}/forms/presentation`}
+        customOpenForm={openPresentation}
+        enableSelect={false}
+      />
+    </>
   );
 };
 

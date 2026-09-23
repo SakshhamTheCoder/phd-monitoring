@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import Layout from "../../components/dashboard/layout";
 import PresentationForm from "../../components/forms/presentations/PresentationForm";
 import { useLoading } from "../../context/LoadingContext";
 import { useLocation, useParams } from "react-router-dom";
@@ -48,19 +47,13 @@ const Presentation = () => {
   }
   return (
     <>
-      <Layout
-        children={
-          <>
-            {isLoaded && formData && (
-              <>
-                <PresentationForm formData={formData} refetchData={refetchData}
-                
-                />
-              </>
-            )}
-          </>
-        }
-      />
+      {isLoaded && formData && (
+        <>
+          <PresentationForm formData={formData} refetchData={refetchData}
+          
+          />
+        </>
+      )}
     </>
   );
 };

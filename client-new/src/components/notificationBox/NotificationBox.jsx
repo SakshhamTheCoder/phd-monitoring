@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import "./NotificationBox.css";
 import { APIlistUnreadNotifications, APImarkNotificationAsRead, APImarkAllNotificationsAsRead } from "../../api/notifications";
 import { toast } from "react-toastify";
@@ -23,9 +23,13 @@ const NotificationBox = () => {
     setLoadFailed(!success);
   }, []);
 
+  // The shell no longer remounts per page, which is what used to refresh the
+  // badge. Asking again on each navigation keeps it current, e.g. after items
+  // are read on the notifications page.
+  const { pathname } = useLocation();
   useEffect(() => {
     fetchNotifications();
-  }, [fetchNotifications]);
+  }, [fetchNotifications, pathname]);
 
   const toggleNotifications = () => {
     if (!isOpen) fetchNotifications(); // always show the latest when opening

@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import Tabs from '../../components/tabs/Tabs';
 import CustomButton from '../../components/forms/fields/CustomButton';
@@ -138,7 +137,7 @@ const StudentAttendancePage = () => {
   };
 
   return (
-    <Layout>
+    <>
       <PageHeader
         title="My Attendance"
         actions={
@@ -305,7 +304,7 @@ const StudentAttendancePage = () => {
       <CustomModal isOpen={!!openForm} onClose={handleCloseForm} width="90vw" minHeight="300px" maxHeight="85vh">
         {openForm && <StudentLeave formData={openForm} />}
       </CustomModal>
-    </Layout>
+    </>
   );
 };
 

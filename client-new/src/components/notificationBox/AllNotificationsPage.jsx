@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { APIlistAllNotifications, APImarkNotificationAsRead } from "../../api/notifications";
 import "./AllNotificationsPage.css";
-import Layout from "../dashboard/layout";
 import { timeAgo } from "../../utils/timeParse";
 import { toast } from "react-toastify";
 import { getRoleName } from "../../utils/roleName";
@@ -43,45 +42,43 @@ const AllNotificationsPage = () => {
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   return (
-    <Layout>
-      <div className="all-notifications-page">
-        <div className="notification-page-head">
-          <h1 className="page-title">Notifications</h1>
-          {unreadCount > 0 && (
-            <span className="notification-unread-pill">{unreadCount} unread</span>
-          )}
-        </div>
-
-        {status === "loading" ? (
-          <p className="notification-muted">Loading…</p>
-        ) : status === "failed" ? null : notifications.length === 0 ? (
-          <div className="empty-state">
-            No notifications yet. Anything that needs your attention in this role
-            will show up here.
-          </div>
-        ) : (
-          <div className="notification-list">
-            {notifications.map((notification) => (
-              <button
-                type="button"
-                className={`notification-card ${notification.is_read ? "is-read" : "is-unread"}`}
-                key={notification.id}
-                onClick={() => openNotification(notification)}
-              >
-                <span className="notification-card-main">
-                  <span className="notification-card-titlerow">
-                    {!notification.is_read && <span className="notification-dot" />}
-                    <span className="notification-title">{notification.title}</span>
-                  </span>
-                  <span className="notification-body">{notification.body}</span>
-                </span>
-                <span className="notif-date">{timeAgo(notification.created_at)}</span>
-              </button>
-            ))}
-          </div>
+    <div className="all-notifications-page">
+      <div className="notification-page-head">
+        <h1 className="page-title">Notifications</h1>
+        {unreadCount > 0 && (
+          <span className="notification-unread-pill">{unreadCount} unread</span>
         )}
       </div>
-    </Layout>
+
+      {status === "loading" ? (
+        <p className="notification-muted">Loading…</p>
+      ) : status === "failed" ? null : notifications.length === 0 ? (
+        <div className="empty-state">
+          No notifications yet. Anything that needs your attention in this role
+          will show up here.
+        </div>
+      ) : (
+        <div className="notification-list">
+          {notifications.map((notification) => (
+            <button
+              type="button"
+              className={`notification-card ${notification.is_read ? "is-read" : "is-unread"}`}
+              key={notification.id}
+              onClick={() => openNotification(notification)}
+            >
+              <span className="notification-card-main">
+                <span className="notification-card-titlerow">
+                  {!notification.is_read && <span className="notification-dot" />}
+                  <span className="notification-title">{notification.title}</span>
+                </span>
+                <span className="notification-body">{notification.body}</span>
+              </span>
+              <span className="notif-date">{timeAgo(notification.created_at)}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 };
 

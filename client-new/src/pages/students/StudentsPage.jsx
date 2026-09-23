@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import Layout from "../../components/dashboard/layout";
 import PageHeader from '../../components/pageHeader/PageHeader';
 import { useLocation, useNavigate } from "react-router-dom";
 import FilterBar from "../../components/filterBar/FilterBar";
@@ -259,212 +258,208 @@ Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female`;
   };
 
   return (
-    <Layout
-      children={
+    <>
+      <PageHeader title="Students" subtitle="All PhD scholars and their current stage." />
+
+      {readsUrf && (
+        <Tabs
+          value={tab}
+          onChange={setTab}
+          items={[
+            { value: 'phd', label: 'PhD Scholars' },
+            { value: 'ug', label: 'UG Students' },
+          ]}
+        />
+      )}
+
+      {tab === 'ug' ? (
         <>
-          <PageHeader title="Students" subtitle="All PhD scholars and their current stage." />
-
-          {readsUrf && (
-            <Tabs
-              value={tab}
-              onChange={setTab}
-              items={[
-                { value: 'phd', label: 'PhD Scholars' },
-                { value: 'ug', label: 'UG Students' },
-              ]}
-            />
-          )}
-
-          {tab === 'ug' ? (
-            <>
-              <FilterBar
-                path="/ug-students"
-                placeholder="Search by name, roll number or branch…"
-                onSearch={setUgFilter}
-              />
-              <PagenationTable
-                key={ugRefreshKey}
-                endpoint="/ug-students"
-                // UG students have no profile page; editing is in the row menu.
-                rowClickable={false}
-                filters={ugFilter}
-                enableApproval={false}
-                enableSelect={false}
-                extraTopbarComponents={
-                  managesUrf ? (
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                      <CustomButton
-                        text="Bulk Import"
-                        variant="secondary"
-                        onClick={() => setUgImportOpen(true)}
-                      />
-                      <CustomButton
-                        text="Add UG Student +"
-                        onClick={() => { setUgStudent(null); setUgFormOpen(true); }}
-                      />
-                    </div>
-                  ) : null
-                }
-                actions={managesUrf ? [{
-                  icon: <i className="fa fa-pencil-square-o"></i>,
-                  tooltip: "Edit",
-                  onClick: (student) => { setUgStudent(student); setUgFormOpen(true); },
-                }] : []}
-              />
-            </>
-          ) : (
-          <>
-          <FilterBar onSearch={handleFilterChange} />
-
+          <FilterBar
+            path="/ug-students"
+            placeholder="Search by name, roll number or branch…"
+            onSearch={setUgFilter}
+          />
           <PagenationTable
-            key={refreshKey}
-            endpoint={location.pathname}
-            filters={filter}
+            key={ugRefreshKey}
+            endpoint="/ug-students"
+            // UG students have no profile page; editing is in the row menu.
+            rowClickable={false}
+            filters={ugFilter}
             enableApproval={false}
+            enableSelect={false}
             extraTopbarComponents={
-              can("can_manage_students") ? (
+              managesUrf ? (
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <CustomButton
                     text="Bulk Import"
                     variant="secondary"
-                    onClick={() => setIsBulkUploadModalOpen(true)}
+                    onClick={() => setUgImportOpen(true)}
                   />
                   <CustomButton
-                    text="Add Student +"
-                    onClick={() => handleOpenForm()}
+                    text="Add UG Student +"
+                    onClick={() => { setUgStudent(null); setUgFormOpen(true); }}
                   />
                 </div>
               ) : null
             }
-            actions={[
-              ...(can("can_manage_students") ? [{
-                icon: <i className="fa fa-pencil-square-o"></i>,
-                tooltip: "Edit",
-                onClick: (studentData) => {
-                  handleOpenForm(studentData);
-                },
-              }] : []),
-              ...(can("can_propose_supervisor_changes") ? [{
-                icon: <i className="fa fa-users"></i>,
-                tooltip: "Manage Supervisors/Doctoral",
-                onClick: (studentData) => {
-                  setStudentToEdit(studentData);
-                  setIsModalEditStudentOpen(true);
-                },
-              }] : []),
-              ...(role === "admin" ? [{
-                icon: <i className="fa fa-file-text-o"></i>,
-                tooltip: "Manage Forms",
-                onClick: (studentData) => {
-                  navigate(`/forms/manage?roll_no=${studentData.roll_no}`);
-                },
-              }] : []),
-            ]}
+            actions={managesUrf ? [{
+              icon: <i className="fa fa-pencil-square-o"></i>,
+              tooltip: "Edit",
+              onClick: (student) => { setUgStudent(student); setUgFormOpen(true); },
+            }] : []}
           />
-          </>
-          )}
+        </>
+      ) : (
+      <>
+      <FilterBar onSearch={handleFilterChange} />
 
-          <CustomModal
-            isOpen={ugFormOpen}
-            onClose={() => setUgFormOpen(false)}
-            title={ugStudent ? "Edit UG Student" : "Add UG Student"}
-            width="60vw"
-          >
-            <UgStudentForm
-              student={ugStudent}
-              onClose={() => setUgFormOpen(false)}
-              onSaved={() => setUgRefreshKey((k) => k + 1)}
-            />
-          </CustomModal>
+      <PagenationTable
+        key={refreshKey}
+        endpoint={location.pathname}
+        filters={filter}
+        enableApproval={false}
+        extraTopbarComponents={
+          can("can_manage_students") ? (
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <CustomButton
+                text="Bulk Import"
+                variant="secondary"
+                onClick={() => setIsBulkUploadModalOpen(true)}
+              />
+              <CustomButton
+                text="Add Student +"
+                onClick={() => handleOpenForm()}
+              />
+            </div>
+          ) : null
+        }
+        actions={[
+          ...(can("can_manage_students") ? [{
+            icon: <i className="fa fa-pencil-square-o"></i>,
+            tooltip: "Edit",
+            onClick: (studentData) => {
+              handleOpenForm(studentData);
+            },
+          }] : []),
+          ...(can("can_propose_supervisor_changes") ? [{
+            icon: <i className="fa fa-users"></i>,
+            tooltip: "Manage Supervisors/Doctoral",
+            onClick: (studentData) => {
+              setStudentToEdit(studentData);
+              setIsModalEditStudentOpen(true);
+            },
+          }] : []),
+          ...(role === "admin" ? [{
+            icon: <i className="fa fa-file-text-o"></i>,
+            tooltip: "Manage Forms",
+            onClick: (studentData) => {
+              navigate(`/forms/manage?roll_no=${studentData.roll_no}`);
+            },
+          }] : []),
+        ]}
+      />
+      </>
+      )}
 
-          <UnifiedBulkImportModal
-            isOpen={ugImportOpen}
-            onClose={() => setUgImportOpen(false)}
-            title="Bulk Import UG Students"
-            required={['full_name', 'email', 'roll_no', 'branch_code', 'year']}
-            rules={[
-              'Matched on email, so importing a corrected file updates rather than duplicates.',
-              'branch_code is the code from Configuration, and programme narrows it when two degrees share one.',
-              'year is the year of study, 1 to 4.',
-              'A new student is emailed a link to set their password.',
-            ]}
-            sampleFileName="ug_students_sample.csv"
-            sampleCsvContent={UG_SAMPLE_CSV}
-            onImport={importUgStudents}
-            submitting={submitting}
-          />
+      <CustomModal
+        isOpen={ugFormOpen}
+        onClose={() => setUgFormOpen(false)}
+        title={ugStudent ? "Edit UG Student" : "Add UG Student"}
+        width="60vw"
+      >
+        <UgStudentForm
+          student={ugStudent}
+          onClose={() => setUgFormOpen(false)}
+          onSaved={() => setUgRefreshKey((k) => k + 1)}
+        />
+      </CustomModal>
 
-          <CustomModal
-            isOpen={isModalOpen}
-            onClose={closeForm}
-            setIsOpen={setIsModalOpen}
-            title={editMode ? "Edit Student" : "Add Student"}
-            width="80vw"
-          >
-            <StudentForm
-              edit={editMode}
-              studentData={studentToEdit}
-              onClose={closeForm}
-              onSuccess={handleFormSuccess}
-            />
-          </CustomModal>
+      <UnifiedBulkImportModal
+        isOpen={ugImportOpen}
+        onClose={() => setUgImportOpen(false)}
+        title="Bulk Import UG Students"
+        required={['full_name', 'email', 'roll_no', 'branch_code', 'year']}
+        rules={[
+          'Matched on email, so importing a corrected file updates rather than duplicates.',
+          'branch_code is the code from Configuration, and programme narrows it when two degrees share one.',
+          'year is the year of study, 1 to 4.',
+          'A new student is emailed a link to set their password.',
+        ]}
+        sampleFileName="ug_students_sample.csv"
+        sampleCsvContent={UG_SAMPLE_CSV}
+        onImport={importUgStudents}
+        submitting={submitting}
+      />
 
-          <CustomModal
-            isOpen={isModalEditStudentOpen}
+      <CustomModal
+        isOpen={isModalOpen}
+        onClose={closeForm}
+        setIsOpen={setIsModalOpen}
+        title={editMode ? "Edit Student" : "Add Student"}
+        width="80vw"
+      >
+        <StudentForm
+          edit={editMode}
+          studentData={studentToEdit}
+          onClose={closeForm}
+          onSuccess={handleFormSuccess}
+        />
+      </CustomModal>
+
+      <CustomModal
+        isOpen={isModalEditStudentOpen}
+        onClose={() => {
+          setIsModalEditStudentOpen(false);
+        }}
+        title={"Add Student Panel"}
+      >
+          {/* {role=== "admin" && <AssignPanel roll_no={studentToEdit?.roll_no}/>} */}
+        {can("can_propose_supervisor_changes") && (
+          <SupervisorDoctoralManager
+            studentId={studentToEdit?.roll_no}
+            supervisors={studentToEdit?.supervisors}
+            doctoralCommittee={studentToEdit?.doctoral}
             onClose={() => {
               setIsModalEditStudentOpen(false);
             }}
-            title={"Add Student Panel"}
-          >
-              {/* {role=== "admin" && <AssignPanel roll_no={studentToEdit?.roll_no}/>} */}
-            {can("can_propose_supervisor_changes") && (
-              <SupervisorDoctoralManager
-                studentId={studentToEdit?.roll_no}
-                supervisors={studentToEdit?.supervisors}
-                doctoralCommittee={studentToEdit?.doctoral}
-                onClose={() => {
-                  setIsModalEditStudentOpen(false);
-                }}
-              />
-            )}
-          </CustomModal>
-
-          <UnifiedBulkImportModal
-            isOpen={isBulkUploadModalOpen}
-            onClose={() => { setIsBulkUploadModalOpen(false); }}
-            title="Bulk Import Students"
-            required={['Registration Number', 'Full Name', 'Email', 'Phone', 'Department Code', 'Date of Admission', 'Enrollment Type']}
-            rules={[
-              'Matched by registration number, then email. Both must belong to the same scholar.',
-              'A blank cell never clears a stored value. Clear one on the scholar\'s profile.',
-              'Supervisors and committee: filled cells replace the whole list, all blank leaves it alone.',
-              'Enrollment Type reads REG, PT and Exec as well as Full Time, Part Time and Executive.',
-              'Nobody is mailed. Use Send sign-in links when the scholars are ready to be told.',
-              'IRB members and the external expert go on the IRB committee only. The doctoral committee is a separate body, filled from its own columns.',
-              'Named supervisors, a Date of IRB, of Synopsis and of Thesis each record that milestone as done, which opens the forms that come after it.',
-              'Those forms are created complete and locked, and nothing in them is recorded as approved, because nobody approved them here.',
-            ]}
-            sampleFileName="students_bulk_import_sample.csv"
-            sampleCsvContent={studentsSampleCsv}
-            onImport={handleBulkImport}
-            submitting={submitting}
-            uploadProgress={uploadProgress}
-            extraControls={
-              <label className="csv-import-note" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <input
-                  type="checkbox"
-                  checked={inviteOnImport}
-                  onChange={(e) => setInviteOnImport(e.target.checked)}
-                />
-                Email each new scholar their sign-in link now. The link lasts 24 hours, so
-                leave this off until they have been told the portal exists.
-              </label>
-            }
           />
+        )}
+      </CustomModal>
 
-        </>
-      }
-    />
+      <UnifiedBulkImportModal
+        isOpen={isBulkUploadModalOpen}
+        onClose={() => { setIsBulkUploadModalOpen(false); }}
+        title="Bulk Import Students"
+        required={['Registration Number', 'Full Name', 'Email', 'Phone', 'Department Code', 'Date of Admission', 'Enrollment Type']}
+        rules={[
+          'Matched by registration number, then email. Both must belong to the same scholar.',
+          'A blank cell never clears a stored value. Clear one on the scholar\'s profile.',
+          'Supervisors and committee: filled cells replace the whole list, all blank leaves it alone.',
+          'Enrollment Type reads REG, PT and Exec as well as Full Time, Part Time and Executive.',
+          'Nobody is mailed. Use Send sign-in links when the scholars are ready to be told.',
+          'IRB members and the external expert go on the IRB committee only. The doctoral committee is a separate body, filled from its own columns.',
+          'Named supervisors, a Date of IRB, of Synopsis and of Thesis each record that milestone as done, which opens the forms that come after it.',
+          'Those forms are created complete and locked, and nothing in them is recorded as approved, because nobody approved them here.',
+        ]}
+        sampleFileName="students_bulk_import_sample.csv"
+        sampleCsvContent={studentsSampleCsv}
+        onImport={handleBulkImport}
+        submitting={submitting}
+        uploadProgress={uploadProgress}
+        extraControls={
+          <label className="csv-import-note" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input
+              type="checkbox"
+              checked={inviteOnImport}
+              onChange={(e) => setInviteOnImport(e.target.checked)}
+            />
+            Email each new scholar their sign-in link now. The link lasts 24 hours, so
+            leave this off until they have been told the portal exists.
+          </label>
+        }
+      />
+
+    </>
   );
 };
 

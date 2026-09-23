@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import Tabs from '../../components/tabs/Tabs';
 import LeaveQuotas from './configuration/LeaveQuotas';
@@ -32,7 +31,7 @@ const Configuration = () => {
   const ActiveSection = SECTIONS.find((s) => s.value === activeTab).Component;
 
   return (
-    <Layout>
+    <>
       <PageHeader
         title="Configuration"
         subtitle="Values the app reads at runtime. A change here applies to everyone immediately."
@@ -45,7 +44,7 @@ const Configuration = () => {
       />
 
       <ActiveSection />
-    </Layout>
+    </>
   );
 };
 

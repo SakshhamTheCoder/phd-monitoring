@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import Layout from "../../components/dashboard/layout";
 import Tabs from "../../components/tabs/Tabs";
 import FilterBar from "../../components/filterBar/FilterBar";
 import PagenationTable from "../../components/pagenationTable/PagenationTable";
@@ -64,42 +63,38 @@ const PresentationListPage = () => {
   }, [presentationTab]);
 
   return (
-    <Layout
-      children={
-        <>
-          <PageHeader title="Progress Monitoring List" />
+    <>
+      <PageHeader title="Progress Monitoring List" />
 
-          <SemesterStatsCard semesterName={semester_id} setFilters={setExtraFilter} />
+      <SemesterStatsCard semesterName={semester_id} setFilters={setExtraFilter} />
 
-          {role !== "student" && (
-            <Tabs
-              value={presentationTab}
-              onChange={selectTab}
-              items={[
-                'Action Required',
-                'Upcoming Progress Monitoring',
-                'Completed',
-                'Not Scheduled',
-                'Semester Off',
-                'Not Submitted',
-                'All Progress Monitoring',
-              ]
-                .map((label, i) => ({ value: i, label }))
-                .filter((tab) => tab.value !== SEMESTER_OFF_TAB)
-                .filter((tab) => !(tab.value === ACTION_TAB && REVIEWS_NOTHING.includes(role)))
-                .filter((tab) => !(tab.value === NOT_SCHEDULED_TAB && !READS_NOT_SCHEDULED.includes(role)))}
-            />
-          )}
-          {extraFilter && <FilterBar onSearch={setSearchFilters} />}
-          <PagenationTable
-            endpoint={endpoint}
-            filters={filters}
-            enableApproval={enableApproval}
-            enableSelect={enableApproval}
-          />
-        </>
-      }
-    />
+      {role !== "student" && (
+        <Tabs
+          value={presentationTab}
+          onChange={selectTab}
+          items={[
+            'Action Required',
+            'Upcoming Progress Monitoring',
+            'Completed',
+            'Not Scheduled',
+            'Semester Off',
+            'Not Submitted',
+            'All Progress Monitoring',
+          ]
+            .map((label, i) => ({ value: i, label }))
+            .filter((tab) => tab.value !== SEMESTER_OFF_TAB)
+            .filter((tab) => !(tab.value === ACTION_TAB && REVIEWS_NOTHING.includes(role)))
+            .filter((tab) => !(tab.value === NOT_SCHEDULED_TAB && !READS_NOT_SCHEDULED.includes(role)))}
+        />
+      )}
+      {extraFilter && <FilterBar onSearch={setSearchFilters} />}
+      <PagenationTable
+        endpoint={endpoint}
+        filters={filters}
+        enableApproval={enableApproval}
+        enableSelect={enableApproval}
+      />
+    </>
   );
 };
 

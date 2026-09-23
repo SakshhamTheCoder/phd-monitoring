@@ -1,6 +1,5 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import Layout from '../../components/dashboard/layout';
 import UrfFormShell from '../../components/urf/UrfFormShell';
 
 /**
@@ -12,9 +11,7 @@ const UrfFormRecord = () => {
   const { pathname } = useLocation();
 
   return (
-    <Layout>
-      <UrfFormShell path={pathname} />
-    </Layout>
+    <UrfFormShell path={pathname} />
   );
 };
 

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import { useLoading } from '../../context/LoadingContext';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -218,83 +217,79 @@ const FacultyPage = () => {
   };
 
   return (
-    <Layout
-      children={
-        <>
-          <PageHeader title="Faculty" subtitle="Directory of internal faculty." />
-          <FilterBar onSearch={handleFilterChange} />
-          <PagenationTable
-            key={refreshKey}
-            endpoint={location.pathname}
-            filters={filter}
-            enableApproval={false}
-            // A row leads to the profile, never to the edit form. Editing lives
-            // in the actions menu, where the role check is.
-            rowClickable={true}
-            customOpenForm={(facultyData) =>
-              navigate(`/faculty/${facultyData.faculty_code}/profile`)
-            }
-            extraTopbarComponents={
-              // A viewer with only directory access is browsing, not managing.
-              can('can_manage_faculties') ? (
-                <div className="top-actions">
-                  <CustomButton
-                    text="Bulk Import"
-                    variant="secondary"
-                    onClick={() => setShowBulkImportModal(true)}
-                  />
-                  <CustomButton text="Add Faculty +" onClick={() => openForm()} />
-                </div>
-              ) : null
-            }
+    <>
+      <PageHeader title="Faculty" subtitle="Directory of internal faculty." />
+      <FilterBar onSearch={handleFilterChange} />
+      <PagenationTable
+        key={refreshKey}
+        endpoint={location.pathname}
+        filters={filter}
+        enableApproval={false}
+        // A row leads to the profile, never to the edit form. Editing lives
+        // in the actions menu, where the role check is.
+        rowClickable={true}
+        customOpenForm={(facultyData) =>
+          navigate(`/faculty/${facultyData.faculty_code}/profile`)
+        }
+        extraTopbarComponents={
+          // A viewer with only directory access is browsing, not managing.
+          can('can_manage_faculties') ? (
+            <div className="top-actions">
+              <CustomButton
+                text="Bulk Import"
+                variant="secondary"
+                onClick={() => setShowBulkImportModal(true)}
+              />
+              <CustomButton text="Add Faculty +" onClick={() => openForm()} />
+            </div>
+          ) : null
+        }
             
-            actions={[
-              ...(can('can_manage_faculties') ? [{
-                icon: <i className="fa fa-pencil-square-o"></i>,
-                tooltip: 'Edit',
-                onClick: (facultyData) => openForm(facultyData),
-              }] : []),
-              {
-                icon: <i className="fa fa-user-circle"></i>,
-                tooltip: 'View profile',
-                onClick: (facultyData) => navigate(`/faculty/${facultyData.faculty_code}/profile`),
-              },
-            ]}
-          />
-          <CustomModal
-            isOpen={isOpen}
-            onClose={() => setIsOpen(false)}
-            width="800px"
-          >
-            <FacultyForm
-              edit={!!editData}
-              facultyData={editData}
-              onClose={() => setIsOpen(false)}
-              onSuccess={() => setRefreshKey((prev) => prev + 1)}
-            />
-          </CustomModal>
+        actions={[
+          ...(can('can_manage_faculties') ? [{
+            icon: <i className="fa fa-pencil-square-o"></i>,
+            tooltip: 'Edit',
+            onClick: (facultyData) => openForm(facultyData),
+          }] : []),
+          {
+            icon: <i className="fa fa-user-circle"></i>,
+            tooltip: 'View profile',
+            onClick: (facultyData) => navigate(`/faculty/${facultyData.faculty_code}/profile`),
+          },
+        ]}
+      />
+      <CustomModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        width="800px"
+      >
+        <FacultyForm
+          edit={!!editData}
+          facultyData={editData}
+          onClose={() => setIsOpen(false)}
+          onSuccess={() => setRefreshKey((prev) => prev + 1)}
+        />
+      </CustomModal>
 
-          {/* Bulk Import Modal */}
-          <UnifiedBulkImportModal
-            isOpen={showBulkImportModal}
-            onClose={() => setShowBulkImportModal(false)}
-            title="Bulk Import Faculty"
-            required={['Emp id', 'Full Name', 'Email', 'Designation', 'Department Code']}
-            rules={[
-              'Matched by email. An existing faculty member is updated from the cells the row fills in.',
-              "Broad Area of Expertise must already be on that department's research area list.",
-              'Students Supervising in TIET is compared against the portal\'s own count, not stored.',
-              'New faculty are added as internal faculty.',
-            ]}
-            sampleFileName="faculty_bulk_import_sample.csv"
-            sampleCsvContent={facultySampleCsv}
-            onImport={handleBulkImport}
-            submitting={submitting}
-            uploadProgress={uploadProgress}
-          />
-        </>
-      }
-    />
+      {/* Bulk Import Modal */}
+      <UnifiedBulkImportModal
+        isOpen={showBulkImportModal}
+        onClose={() => setShowBulkImportModal(false)}
+        title="Bulk Import Faculty"
+        required={['Emp id', 'Full Name', 'Email', 'Designation', 'Department Code']}
+        rules={[
+          'Matched by email. An existing faculty member is updated from the cells the row fills in.',
+          "Broad Area of Expertise must already be on that department's research area list.",
+          'Students Supervising in TIET is compared against the portal\'s own count, not stored.',
+          'New faculty are added as internal faculty.',
+        ]}
+        sampleFileName="faculty_bulk_import_sample.csv"
+        sampleCsvContent={facultySampleCsv}
+        onImport={handleBulkImport}
+        submitting={submitting}
+        uploadProgress={uploadProgress}
+      />
+    </>
   );
 };
 

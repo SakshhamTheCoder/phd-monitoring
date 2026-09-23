@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import Layout from '../../components/dashboard/layout';
 import AddPublication from '../../components/publications/AddPublication';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import CustomButton from '../../components/forms/fields/CustomButton';
@@ -60,7 +59,7 @@ const emptyProfileForm = {
     orcid_id: '', scopus_id: '', google_scholar_id: '', joined_on: '', citations: '', h_index: '',
 };
 
-const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => {
+const ResearchProfile = ({ facultyCode: codeProp = null }) => {
     // No code in the URL and none passed in means "my own profile".
     const { facultyCode: routeCode } = useParams();
     const facultyCode = routeCode || codeProp || null;
@@ -87,8 +86,6 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
     const [editingProfile, setEditingProfile] = useState(false);
     const [profileForm, setProfileForm] = useState(emptyProfileForm);
     const researchRef = useRef(null);
-    // Embedded on the dashboard, the page chrome is the host's job.
-    const Shell = embedded ? React.Fragment : Layout;
 
     const load = useCallback(async () => {
         if (!facultyCode) return;
@@ -170,7 +167,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
     const authorIdentity = useMemo(() => profileIdentity(profileName), [profileName]);
     const selectedIds = useMemo(() => new Set(selected), [selected]);
 
-    if (!data) return <Shell><div className="loading-state">Loading Profile…</div></Shell>;
+    if (!data) return <div className="loading-state">Loading Profile…</div>;
 
     const {
         profile,
@@ -472,7 +469,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
     );
 
     return (
-        <Shell>
+        <>
             <div className="rp-container">
                 <div className="faculty-container">
                     <div className="faculty-header">
@@ -771,7 +768,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null, embedded = false }) => 
                     />
                 </CustomModal>
             </div>
-        </Shell>
+        </>
     );
 };
 

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
 import Loader from '../../components/loader/loader';
-import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import Tabs from '../../components/tabs/Tabs';
 import './StudentCourses.css';
@@ -71,7 +70,6 @@ const StudentCourses = () => {
   }
 
   return (
-    <Layout> 
     <div className="student-courses-container">
       <PageHeader title="My Courses" />
 
@@ -110,7 +108,6 @@ const StudentCourses = () => {
         )}
       </div>
     </div>
-     </Layout>
   );
 };
 

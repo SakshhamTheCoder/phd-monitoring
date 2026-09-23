@@ -1,5 +1,4 @@
 import React, { useEffect,useState } from 'react';
-import Layout from '../../components/dashboard/layout';
 import FormGrid from '../../components/forms/formGrid/FormGrid';
 import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
@@ -29,7 +28,7 @@ const FormsPage = () => {
     }, [location.pathname]);
 
   return (
-    <Layout children={<FormGrid forms={forms} loading={!loaded} />} />
+    <FormGrid forms={forms} loading={!loaded} />
   );
 }
 

@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import Tabs from '../../components/tabs/Tabs';
 import FilterBar from '../../components/filterBar/FilterBar';
@@ -248,7 +247,7 @@ const UrfList = () => {
   }, [refreshKey]);
 
   return (
-    <Layout>
+    <>
       <PageHeader
         title="URF"
         subtitle={can('can_manage_urf')
@@ -388,7 +387,7 @@ const UrfList = () => {
           <CustomButton text={saving ? 'Saving…' : pending?.label} onClick={decide} disabled={saving} />
         </div>
       </CustomModal>
-    </Layout>
+    </>
   );
 };
 

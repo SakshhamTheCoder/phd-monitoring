@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Layout from '../../components/dashboard/layout';
 import {
   formatCurrency,
   getMilestoneProgress,
@@ -226,10 +225,10 @@ const ProjectDetails = () => {
   useEffect(() => { loadProject(); }, [id]);
 
   if (loading) {
-    return <Layout><div className="pd-empty">Loading project…</div></Layout>;
+    return <div className="pd-empty">Loading project…</div>;
   }
   if (!project) {
-    return <Layout><div className="pd-empty">Project not found. <button onClick={() => navigate('/projects')}>Go Back</button></div></Layout>;
+    return <div className="pd-empty">Project not found. <button onClick={() => navigate('/projects')}>Go Back</button></div>;
   }
 
   // A HOD or coordinator reads every project in their department but writes
@@ -605,159 +604,157 @@ const ProjectDetails = () => {
   };
 
   return (
-    <Layout>
-      <div className="pd-container">
-        <button className="page-back-link" onClick={() => navigate('/projects')}>
-          <i className="fa fa-arrow-left"></i> BACK TO PROJECTS
-        </button>
-        {/* Header */}
-        <div className="pd-header">
-          <div className="pd-header-main">
-            <div className="pd-header-top">
-              <span className={badgeClass(project.category)}>
-                <i className="fa fa-flask"></i> {project.category}
-              </span>
-            </div>
-            <h1 className="page-title">{project.title}</h1>
-            <div className="pd-header-meta">
-              <div className="pd-hm-item"><span>FUNDING AGENCY</span><strong>{project.fundingAgency || EMPTY_VALUE}</strong></div>
-              <div className="pd-hm-item"><span>SANCTIONED AMOUNT</span><strong>₹ {Number(project.amount || 0).toLocaleString('en-IN')}</strong></div>
-              <div className="pd-hm-item">
-                <span>DURATION</span>
-                <strong>
-                  {formatDuration(project.durationYears, project.durationMonths)}
-                  {project.startDate ? ` · ${formatDate(project.startDate)} — ${formatDate(project.endDate)}` : ''}
-                </strong>
-              </div>
-            </div>
-            {canEdit && features.job_openings && (
-              <div className="pd-header-actions">
-                <button type="button" className="pd-hire-btn" onClick={() => navigate(`/projects/${id}/recruit`)}>
-                  <i className="fa fa-user-plus"></i>
-                  {openPositions.length ? 'Manage recruitment' : 'Post an opening'}
-                </button>
-              </div>
-            )}
+    <div className="pd-container">
+      <button className="page-back-link" onClick={() => navigate('/projects')}>
+        <i className="fa fa-arrow-left"></i> BACK TO PROJECTS
+      </button>
+      {/* Header */}
+      <div className="pd-header">
+        <div className="pd-header-main">
+          <div className="pd-header-top">
+            <span className={badgeClass(project.category)}>
+              <i className="fa fa-flask"></i> {project.category}
+            </span>
           </div>
-          <div className="pd-header-side">
-            <span className={badgeClass(project.status)}>{project.status}</span>
-            {canEdit && (
-              <button className="pd-header-edit-btn" onClick={() => navigate('/projects/create', { state: { editProject: project } })}>
-                <i className="fa fa-pencil"></i> Edit Project
-              </button>
-            )}
-            <div className="pd-header-progress">
-              <span className="pd-progress-label">CURRENT PROGRESS</span>
-              <span className="pd-progress-value">{progress}%</span>
-              <div className="pd-progress-bar"><div className="pd-progress-fill" style={{ width: `${progress}%` }}></div></div>
-              <p className="pd-progress-note">
-                {progress < 100
-                  ? `On track for Milestone ${milestones.filter(m => m.status === 'Completed').length + 1} completion.`
-                  : 'All milestones completed!'}
-              </p>
+          <h1 className="page-title">{project.title}</h1>
+          <div className="pd-header-meta">
+            <div className="pd-hm-item"><span>FUNDING AGENCY</span><strong>{project.fundingAgency || EMPTY_VALUE}</strong></div>
+            <div className="pd-hm-item"><span>SANCTIONED AMOUNT</span><strong>₹ {Number(project.amount || 0).toLocaleString('en-IN')}</strong></div>
+            <div className="pd-hm-item">
+              <span>DURATION</span>
+              <strong>
+                {formatDuration(project.durationYears, project.durationMonths)}
+                {project.startDate ? ` · ${formatDate(project.startDate)} — ${formatDate(project.endDate)}` : ''}
+              </strong>
             </div>
+          </div>
+          {canEdit && features.job_openings && (
+            <div className="pd-header-actions">
+              <button type="button" className="pd-hire-btn" onClick={() => navigate(`/projects/${id}/recruit`)}>
+                <i className="fa fa-user-plus"></i>
+                {openPositions.length ? 'Manage recruitment' : 'Post an opening'}
+              </button>
+            </div>
+          )}
+        </div>
+        <div className="pd-header-side">
+          <span className={badgeClass(project.status)}>{project.status}</span>
+          {canEdit && (
+            <button className="pd-header-edit-btn" onClick={() => navigate('/projects/create', { state: { editProject: project } })}>
+              <i className="fa fa-pencil"></i> Edit Project
+            </button>
+          )}
+          <div className="pd-header-progress">
+            <span className="pd-progress-label">CURRENT PROGRESS</span>
+            <span className="pd-progress-value">{progress}%</span>
+            <div className="pd-progress-bar"><div className="pd-progress-fill" style={{ width: `${progress}%` }}></div></div>
+            <p className="pd-progress-note">
+              {progress < 100
+                ? `On track for Milestone ${milestones.filter(m => m.status === 'Completed').length + 1} completion.`
+                : 'All milestones completed!'}
+            </p>
           </div>
         </div>
+      </div>
 
-        {/* Tabs */}
-        <Tabs items={TABS} value={activeTab} onChange={setActiveTab} className="pd-tabs" />
+      {/* Tabs */}
+      <Tabs items={TABS} value={activeTab} onChange={setActiveTab} className="pd-tabs" />
 
-        {renderTab()}
+      {renderTab()}
 
-        {/* Add / Edit Document Modal */}
-        {showDocModal && (
-          <CustomModal
-            isOpen={showDocModal}
-            onClose={() => setShowDocModal(false)}
-            title={editingDocIdx !== null ? 'Edit Document' : 'Add Document'}
-            maxWidth="520px"
-            minHeight="auto"
-          >
-            <>
+      {/* Add / Edit Document Modal */}
+      {showDocModal && (
+        <CustomModal
+          isOpen={showDocModal}
+          onClose={() => setShowDocModal(false)}
+          title={editingDocIdx !== null ? 'Edit Document' : 'Add Document'}
+          maxWidth="520px"
+          minHeight="auto"
+        >
+          <>
+            <div className="pd-modal-field">
+              <label htmlFor="project-details-document-name">Document Name <span className="req">*</span></label>
+              <input id="project-details-document-name"
+                type="text"
+                value={docForm.name}
+                onChange={e => setDocForm({ ...docForm, name: e.target.value })}
+                placeholder="e.g. Year 1 Progress Report"
+              />
+            </div>
+            <div className="pd-modal-field">
+              <label htmlFor="project-details-document-file">{editingDocIdx !== null ? 'Replace Document' : 'Upload Document'} {editingDocIdx !== null && <span className="pd-modal-hint">(optional — leave empty to keep the current file)</span>}</label>
+              {editingDocIdx !== null && docForm.currentLabel && !docForm.fileName && (
+                <span className="pd-upload-selected" style={{ color: 'var(--text-muted)' }}><i className="fa fa-paperclip"></i> {docForm.currentLabel}</span>
+              )}
+              <button type="button" className="pd-upload-label" onClick={() => docFileRef.current && docFileRef.current.click()}>
+                <i className="fa fa-upload"></i> {editingDocIdx !== null ? 'Replace file' : 'Select file from system'}
+              </button>
+              <input
+                id="project-details-document-file"
+                type="file"
+                ref={docFileRef}
+                style={{ display: 'none' }}
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                onChange={handleDocFileSelect}
+              />
+              {docForm.fileName && <span className="pd-upload-selected"><i className="fa fa-check-circle"></i> {docForm.fileName}</span>}
+            </div>
+            <div className="modal-actions">
+              <CustomButton text="Cancel" variant="secondary" onClick={() => setShowDocModal(false)} />
+              <CustomButton text={editingDocIdx !== null ? 'Save Changes' : 'Add Document'} onClick={saveDoc} />
+            </div>
+          </>
+        </CustomModal>
+      )}
+
+      {/* Sanction Letter Modal (file or link) */}
+      {showSanctionModal && (
+        <CustomModal
+          isOpen={showSanctionModal}
+          onClose={() => setShowSanctionModal(false)}
+          title="Sanction Letter"
+          maxWidth="520px"
+          minHeight="auto"
+        >
+          <>
+            <div className="pd-sanction-tabs">
+              <button type="button" className={`pd-sanction-tab ${sanctionMode === 'file' ? 'active' : ''}`} onClick={() => setSanctionMode('file')}>
+                <i className="fa fa-upload"></i> Choose File
+              </button>
+              <button type="button" className={`pd-sanction-tab ${sanctionMode === 'link' ? 'active' : ''}`} onClick={() => setSanctionMode('link')}>
+                <i className="fa fa-link"></i> Paste Link
+              </button>
+            </div>
+            {sanctionMode === 'file' ? (
               <div className="pd-modal-field">
-                <label htmlFor="project-details-document-name">Document Name <span className="req">*</span></label>
-                <input id="project-details-document-name"
-                  type="text"
-                  value={docForm.name}
-                  onChange={e => setDocForm({ ...docForm, name: e.target.value })}
-                  placeholder="e.g. Year 1 Progress Report"
-                />
-              </div>
-              <div className="pd-modal-field">
-                <label htmlFor="project-details-document-file">{editingDocIdx !== null ? 'Replace Document' : 'Upload Document'} {editingDocIdx !== null && <span className="pd-modal-hint">(optional — leave empty to keep the current file)</span>}</label>
-                {editingDocIdx !== null && docForm.currentLabel && !docForm.fileName && (
-                  <span className="pd-upload-selected" style={{ color: 'var(--text-muted)' }}><i className="fa fa-paperclip"></i> {docForm.currentLabel}</span>
-                )}
-                <button type="button" className="pd-upload-label" onClick={() => docFileRef.current && docFileRef.current.click()}>
-                  <i className="fa fa-upload"></i> {editingDocIdx !== null ? 'Replace file' : 'Select file from system'}
+                <label htmlFor="project-details-choose-file">Choose File</label>
+                <button type="button" className="pd-upload-label" onClick={() => sanctionInputRef.current && sanctionInputRef.current.click()}>
+                  <i className="fa fa-upload"></i> {sanctionFileSel ? 'Change file' : 'Select file from system'}
                 </button>
                 <input
-                  id="project-details-document-file"
+                  id="project-details-choose-file"
                   type="file"
-                  ref={docFileRef}
+                  ref={sanctionInputRef}
                   style={{ display: 'none' }}
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
-                  onChange={handleDocFileSelect}
+                  accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                  onChange={handleSanctionFile}
                 />
-                {docForm.fileName && <span className="pd-upload-selected"><i className="fa fa-check-circle"></i> {docForm.fileName}</span>}
+                {sanctionFileSel && <span className="pd-upload-selected"><i className="fa fa-check-circle"></i> {sanctionFileSel.name}</span>}
               </div>
-              <div className="modal-actions">
-                <CustomButton text="Cancel" variant="secondary" onClick={() => setShowDocModal(false)} />
-                <CustomButton text={editingDocIdx !== null ? 'Save Changes' : 'Add Document'} onClick={saveDoc} />
+            ) : (
+              <div className="pd-modal-field">
+                <label htmlFor="project-details-document-link">Document Link</label>
+                <input id="project-details-document-link" type="url" value={sanctionLinkInput} onChange={e => setSanctionLinkInput(e.target.value)} placeholder="https://… link to sanction letter" />
               </div>
-            </>
-          </CustomModal>
-        )}
-
-        {/* Sanction Letter Modal (file or link) */}
-        {showSanctionModal && (
-          <CustomModal
-            isOpen={showSanctionModal}
-            onClose={() => setShowSanctionModal(false)}
-            title="Sanction Letter"
-            maxWidth="520px"
-            minHeight="auto"
-          >
-            <>
-              <div className="pd-sanction-tabs">
-                <button type="button" className={`pd-sanction-tab ${sanctionMode === 'file' ? 'active' : ''}`} onClick={() => setSanctionMode('file')}>
-                  <i className="fa fa-upload"></i> Choose File
-                </button>
-                <button type="button" className={`pd-sanction-tab ${sanctionMode === 'link' ? 'active' : ''}`} onClick={() => setSanctionMode('link')}>
-                  <i className="fa fa-link"></i> Paste Link
-                </button>
-              </div>
-              {sanctionMode === 'file' ? (
-                <div className="pd-modal-field">
-                  <label htmlFor="project-details-choose-file">Choose File</label>
-                  <button type="button" className="pd-upload-label" onClick={() => sanctionInputRef.current && sanctionInputRef.current.click()}>
-                    <i className="fa fa-upload"></i> {sanctionFileSel ? 'Change file' : 'Select file from system'}
-                  </button>
-                  <input
-                    id="project-details-choose-file"
-                    type="file"
-                    ref={sanctionInputRef}
-                    style={{ display: 'none' }}
-                    accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-                    onChange={handleSanctionFile}
-                  />
-                  {sanctionFileSel && <span className="pd-upload-selected"><i className="fa fa-check-circle"></i> {sanctionFileSel.name}</span>}
-                </div>
-              ) : (
-                <div className="pd-modal-field">
-                  <label htmlFor="project-details-document-link">Document Link</label>
-                  <input id="project-details-document-link" type="url" value={sanctionLinkInput} onChange={e => setSanctionLinkInput(e.target.value)} placeholder="https://… link to sanction letter" />
-                </div>
-              )}
-              <div className="modal-actions">
-                <CustomButton text="Cancel" variant="secondary" onClick={() => setShowSanctionModal(false)} />
-                <CustomButton text="Save" onClick={saveSanctionModal} />
-              </div>
-            </>
-          </CustomModal>
-        )}
-      </div>
-    </Layout>
+            )}
+            <div className="modal-actions">
+              <CustomButton text="Cancel" variant="secondary" onClick={() => setShowSanctionModal(false)} />
+              <CustomButton text="Save" onClick={saveSanctionModal} />
+            </div>
+          </>
+        </CustomModal>
+      )}
+    </div>
   );
 };
 

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Layout from '../../components/dashboard/layout';
 import { formatCurrency, formatDuration } from '../../data/projectsData';
 import { badgeClass } from '../../data/badges';
 import { apiListProjects, apiProjectStats, apiDeleteProject } from '../../api/projects';
@@ -66,157 +65,155 @@ const ProjectsOverview = () => {
   };
 
   return (
-    <Layout>
-      <div className="po-container">
-        {/* Page Header */}
-        <PageHeader
-          title="Projects Overview"
-          subtitle="Monitoring all ongoing research initiatives and funding channels."
-          actions={<><CustomButton text="Create Project +" onClick={() => navigate('/projects/create')} /></>}
-        />
+    <div className="po-container">
+      {/* Page Header */}
+      <PageHeader
+        title="Projects Overview"
+        subtitle="Monitoring all ongoing research initiatives and funding channels."
+        actions={<><CustomButton text="Create Project +" onClick={() => navigate('/projects/create')} /></>}
+      />
 
-        {/* Stats Cards */}
-        <div className="po-stats-grid">
-          <div className="po-stat-card">
-            <div className="po-stat-header">
-              <span className="po-stat-label">ACTIVE PROJECTS</span>
-              <span className="po-stat-icon active"><i className="fa fa-rocket"></i></span>
-            </div>
-            <span className="po-stat-value">{String(stats.active).padStart(2, '0')}</span>
+      {/* Stats Cards */}
+      <div className="po-stats-grid">
+        <div className="po-stat-card">
+          <div className="po-stat-header">
+            <span className="po-stat-label">ACTIVE PROJECTS</span>
+            <span className="po-stat-icon active"><i className="fa fa-rocket"></i></span>
           </div>
-          <div className="po-stat-card">
-            <div className="po-stat-header">
-              <span className="po-stat-label">COMPLETED</span>
-              <span className="po-stat-icon completed"><i className="fa fa-check-circle"></i></span>
-            </div>
-            <span className="po-stat-value accent">{String(stats.completed).padStart(2, '0')}</span>
-          </div>
-          <div className="po-stat-card wide">
-            <div className="po-stat-header">
-              <span className="po-stat-label">TOTAL FUNDING RECEIVED</span>
-              <span className="po-stat-icon funding"><i className="fa fa-inr"></i></span>
-            </div>
-            <span className="po-stat-value large">{formatCurrency(stats.totalFunding)}</span>
-          </div>
-          <div className="po-stat-card">
-            <div className="po-stat-header">
-              <span className="po-stat-label">CONSULTANCY</span>
-              <span className="po-stat-icon consultancy"><i className="fa fa-handshake-o"></i></span>
-            </div>
-            <span className="po-stat-value">{String(stats.consultancy).padStart(2, '0')}</span>
-            <span className="po-stat-meta">Current active</span>
-          </div>
-          <div className="po-stat-card">
-            <div className="po-stat-header">
-              <span className="po-stat-label">INTERNATIONAL</span>
-              <span className="po-stat-icon international"><i className="fa fa-globe"></i></span>
-            </div>
-            <span className="po-stat-value">{String(stats.international).padStart(2, '0')}</span>
-            <span className="po-stat-meta">Collaborative</span>
-          </div>
+          <span className="po-stat-value">{String(stats.active).padStart(2, '0')}</span>
         </div>
-
-        {/* Filter Bar */}
-        <div className="po-filter-bar">
-          <FilterBar onSearch={(q) => { setLoading(true); setQuery(q); }} />
-          <button className="po-export-btn" onClick={handleExportCSV}>
-            <i className="fa fa-download" aria-hidden="true"></i> Export CSV
-          </button>
-        </div>
-
-        {/* Projects Table */}
-        <div className="data-table-wrap">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>PROJECT TITLE</th>
-                <th>CATEGORY</th>
-                <th>ROLE</th>
-                <th>FUNDING AGENCY</th>
-                <th>AMOUNT</th>
-                <th>DURATION</th>
-                <th>STATUS</th>
-                <th></th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {projects.map(project => (
-                <tr
-                  key={project.id}
-                  className="row-link"
-                  tabIndex={0}
-                  onClick={() => navigate(`/projects/${project.id}`)}
-                  onKeyDown={(e) => e.key === 'Enter' && navigate(`/projects/${project.id}`)}
-                >
-                  <td>
-                    <div className="po-project-title">{project.title}</div>
-                  </td>
-                  <td>
-                    <span className={badgeClass(project.category)}>
-                      {project.category}
-                    </span>
-                  </td>
-                  <td>{project.role}</td>
-                  <td>{project.fundingAgency}</td>
-                  <td className="po-amount">{formatCurrency(project.amount)}</td>
-                  <td>{formatDuration(project.durationYears, project.durationMonths)}</td>
-                  <td>
-                    <span className={badgeClass(project.status)}>{project.status}</span>
-                  </td>
-                  <td>
-                    <div className="po-action-buttons">
-                      {project.canEdit ? (
-                        <>
-                          <button
-                            className="po-icon-btn edit"
-                            title="Edit project"
-                            onClick={(e) => handleEdit(e, project)}
-                          >
-                            <i className="fa fa-pencil"></i>
-                          </button>
-                          <button
-                            className="po-icon-btn delete"
-                            title="Delete project"
-                            onClick={(e) => handleDelete(e, project)}
-                          >
-                            <i className="fa fa-trash"></i>
-                          </button>
-                        </>
-                      ) : (
-                        <span className="po-readonly">View only</span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="row-go" title="Open project"><i className="fa fa-angle-right"></i></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {loading ? (
-            <div className="empty-state">Loading projects…</div>
-          ) : projects.length === 0 && (
-            <div className="empty-state">{query ? 'No projects match these filters.' : 'No projects yet.'}</div>
-          )}
-        </div>
-
-        <CustomModal
-          isOpen={!!deleteTarget}
-          onClose={() => setDeleteTarget(null)}
-          title="Delete Project"
-          maxWidth="420px"
-          minHeight="auto"
-        >
-          <p className="po-modal-text">
-            Are you sure you want to delete <strong>{deleteTarget?.title}</strong>? This action cannot be undone.
-          </p>
-          <div className="modal-actions">
-            <CustomButton text="Cancel" variant="secondary" onClick={() => setDeleteTarget(null)} />
-            <CustomButton text="Delete" variant="danger" onClick={confirmDelete} />
+        <div className="po-stat-card">
+          <div className="po-stat-header">
+            <span className="po-stat-label">COMPLETED</span>
+            <span className="po-stat-icon completed"><i className="fa fa-check-circle"></i></span>
           </div>
-        </CustomModal>
+          <span className="po-stat-value accent">{String(stats.completed).padStart(2, '0')}</span>
+        </div>
+        <div className="po-stat-card wide">
+          <div className="po-stat-header">
+            <span className="po-stat-label">TOTAL FUNDING RECEIVED</span>
+            <span className="po-stat-icon funding"><i className="fa fa-inr"></i></span>
+          </div>
+          <span className="po-stat-value large">{formatCurrency(stats.totalFunding)}</span>
+        </div>
+        <div className="po-stat-card">
+          <div className="po-stat-header">
+            <span className="po-stat-label">CONSULTANCY</span>
+            <span className="po-stat-icon consultancy"><i className="fa fa-handshake-o"></i></span>
+          </div>
+          <span className="po-stat-value">{String(stats.consultancy).padStart(2, '0')}</span>
+          <span className="po-stat-meta">Current active</span>
+        </div>
+        <div className="po-stat-card">
+          <div className="po-stat-header">
+            <span className="po-stat-label">INTERNATIONAL</span>
+            <span className="po-stat-icon international"><i className="fa fa-globe"></i></span>
+          </div>
+          <span className="po-stat-value">{String(stats.international).padStart(2, '0')}</span>
+          <span className="po-stat-meta">Collaborative</span>
+        </div>
       </div>
-    </Layout>
+
+      {/* Filter Bar */}
+      <div className="po-filter-bar">
+        <FilterBar onSearch={(q) => { setLoading(true); setQuery(q); }} />
+        <button className="po-export-btn" onClick={handleExportCSV}>
+          <i className="fa fa-download" aria-hidden="true"></i> Export CSV
+        </button>
+      </div>
+
+      {/* Projects Table */}
+      <div className="data-table-wrap">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>PROJECT TITLE</th>
+              <th>CATEGORY</th>
+              <th>ROLE</th>
+              <th>FUNDING AGENCY</th>
+              <th>AMOUNT</th>
+              <th>DURATION</th>
+              <th>STATUS</th>
+              <th></th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {projects.map(project => (
+              <tr
+                key={project.id}
+                className="row-link"
+                tabIndex={0}
+                onClick={() => navigate(`/projects/${project.id}`)}
+                onKeyDown={(e) => e.key === 'Enter' && navigate(`/projects/${project.id}`)}
+              >
+                <td>
+                  <div className="po-project-title">{project.title}</div>
+                </td>
+                <td>
+                  <span className={badgeClass(project.category)}>
+                    {project.category}
+                  </span>
+                </td>
+                <td>{project.role}</td>
+                <td>{project.fundingAgency}</td>
+                <td className="po-amount">{formatCurrency(project.amount)}</td>
+                <td>{formatDuration(project.durationYears, project.durationMonths)}</td>
+                <td>
+                  <span className={badgeClass(project.status)}>{project.status}</span>
+                </td>
+                <td>
+                  <div className="po-action-buttons">
+                    {project.canEdit ? (
+                      <>
+                        <button
+                          className="po-icon-btn edit"
+                          title="Edit project"
+                          onClick={(e) => handleEdit(e, project)}
+                        >
+                          <i className="fa fa-pencil"></i>
+                        </button>
+                        <button
+                          className="po-icon-btn delete"
+                          title="Delete project"
+                          onClick={(e) => handleDelete(e, project)}
+                        >
+                          <i className="fa fa-trash"></i>
+                        </button>
+                      </>
+                    ) : (
+                      <span className="po-readonly">View only</span>
+                    )}
+                  </div>
+                </td>
+                <td className="row-go" title="Open project"><i className="fa fa-angle-right"></i></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {loading ? (
+          <div className="empty-state">Loading projects…</div>
+        ) : projects.length === 0 && (
+          <div className="empty-state">{query ? 'No projects match these filters.' : 'No projects yet.'}</div>
+        )}
+      </div>
+
+      <CustomModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        title="Delete Project"
+        maxWidth="420px"
+        minHeight="auto"
+      >
+        <p className="po-modal-text">
+          Are you sure you want to delete <strong>{deleteTarget?.title}</strong>? This action cannot be undone.
+        </p>
+        <div className="modal-actions">
+          <CustomButton text="Cancel" variant="secondary" onClick={() => setDeleteTarget(null)} />
+          <CustomButton text="Delete" variant="danger" onClick={confirmDelete} />
+        </div>
+      </CustomModal>
+    </div>
   );
 };
 

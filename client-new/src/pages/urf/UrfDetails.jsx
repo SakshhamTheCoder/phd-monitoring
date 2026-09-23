@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import Layout from '../../components/dashboard/layout';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import UrfRecord from '../../components/urf/UrfRecord';
@@ -43,7 +42,7 @@ const UrfDetails = () => {
   };
 
   return (
-    <Layout>
+    <>
       {record && (
         <UrfRecord
           record={record}
@@ -69,7 +68,7 @@ const UrfDetails = () => {
           <CustomButton text={saving ? 'Saving…' : pending?.label} onClick={decide} disabled={saving} />
         </div>
       </CustomModal>
-    </Layout>
+    </>
   );
 };
 

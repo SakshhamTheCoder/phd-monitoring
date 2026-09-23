@@ -1,5 +1,4 @@
 import React, { useEffect,useState } from 'react';
-import Layout from '../../components/dashboard/layout';
 import FormGrid from '../../components/forms/formGrid/FormGrid';
 import ProfileBar from '../../components/profileBar/ProfileBar';
 import { customFetch } from '../../api/base';
@@ -74,15 +73,7 @@ const FacultyFormsPage = () => {
     }, [role]);
 
   return (
-    <>
-
-       <Layout children={
-        <>
-          <FormGrid forms={forms}/>
-        </>
-        }/>
-
-    </>
+    <FormGrid forms={forms}/>
   );
 }
 

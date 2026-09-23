@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import FormGrid from '../../components/forms/formGrid/FormGrid';
 import CustomButton from '../../components/forms/fields/CustomButton';
@@ -102,7 +101,7 @@ export const UrfFormsPage = () => {
   const { state } = useUrf();
 
   return (
-    <Layout>
+    <>
       <PageHeader
         title="Available Forms"
         subtitle="Undergraduate Research Fellowship"
@@ -123,7 +122,7 @@ export const UrfFormsPage = () => {
           <FormGrid forms={formsFor(application, state.report_windows)} title={null} />
         </div>
       ))}
-    </Layout>
+    </>
   );
 };
 
@@ -198,12 +197,12 @@ export const UrfFormPage = ({ type }) => {
   }
 
   return (
-    <Layout>
+    <>
       <PageHeader
         title={type === 'new' ? `Apply for URF ${state?.session ?? ''}` : TITLES[type]}
         subtitle={application ? `URF ${application.session} · ${application.project_title}` : undefined}
       />
       <React.Fragment key={version}>{body}</React.Fragment>
-    </Layout>
+    </>
   );
 };

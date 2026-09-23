@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import Layout from '../../components/dashboard/layout';
 import { formatDate, toDateValue } from '../../utils/timeParse';
 import { badgeClass } from '../../data/badges';
 import { apiOpenings, apiApply, apiMyApplications, apiApplicantProfile } from '../../api/openings';
@@ -122,136 +121,134 @@ const Openings = () => {
   );
 
   return (
-    <Layout>
-      <div className="op-container">
-        <PageHeader
-          title="Openings"
-          subtitle="Browse research positions and internships, and apply directly through the portal."
-        />
+    <div className="op-container">
+      <PageHeader
+        title="Openings"
+        subtitle="Browse research positions and internships, and apply directly through the portal."
+      />
 
-        <Tabs
-          value={tab}
-          onChange={setTab}
-          items={[
-            { value: 'All', label: `All (${openPositions.length})` },
-            { value: 'Applied', label: `Applied (${myApps.length})` },
-            { value: 'Closed', label: `Closed (${closedPositions.length})` },
-          ]}
-        />
+      <Tabs
+        value={tab}
+        onChange={setTab}
+        items={[
+          { value: 'All', label: `All (${openPositions.length})` },
+          { value: 'Applied', label: `Applied (${myApps.length})` },
+          { value: 'Closed', label: `Closed (${closedPositions.length})` },
+        ]}
+      />
 
-        {tab === 'All' && (openPositions.length ? (
-          <div className="op-grid">{openPositions.map(p => renderPosCard(p, false))}</div>
-        ) : <div className="empty-state">No open positions right now. Check back soon.</div>)}
+      {tab === 'All' && (openPositions.length ? (
+        <div className="op-grid">{openPositions.map(p => renderPosCard(p, false))}</div>
+      ) : <div className="empty-state">No open positions right now. Check back soon.</div>)}
 
-        {tab === 'Closed' && (closedPositions.length ? (
-          <div className="op-grid">{closedPositions.map(p => renderPosCard(p, true))}</div>
-        ) : <div className="empty-state">No closed positions.</div>)}
+      {tab === 'Closed' && (closedPositions.length ? (
+        <div className="op-grid">{closedPositions.map(p => renderPosCard(p, true))}</div>
+      ) : <div className="empty-state">No closed positions.</div>)}
 
-        {tab === 'Applied' && (myApps.length ? (
-          <div className="op-grid">
-            {myApps.map(a => (
-              <div key={a.id} className="op-card">
-                <div className="op-card-top">
-                  <div className="op-card-head">
-                    <span className="op-type">{a.position}</span>
-                    <h3 className="op-title">{a.positionTitle}</h3>
-                    <p className="op-project"><i className="fa fa-flask"></i> {a.projectTitle}</p>
-                  </div>
-                  <span className={badgeClass(a.status)}>{a.status}</span>
+      {tab === 'Applied' && (myApps.length ? (
+        <div className="op-grid">
+          {myApps.map(a => (
+            <div key={a.id} className="op-card">
+              <div className="op-card-top">
+                <div className="op-card-head">
+                  <span className="op-type">{a.position}</span>
+                  <h3 className="op-title">{a.positionTitle}</h3>
+                  <p className="op-project"><i className="fa fa-flask"></i> {a.projectTitle}</p>
                 </div>
-                <div className="op-meta">
-                  <span><i className="fa fa-calendar"></i> Applied on {formatDate(a.appliedDate)}</span>
-                  {a.resume && <span><i className="fa fa-file-pdf-o"></i> {a.resume}</span>}
+                <span className={badgeClass(a.status)}>{a.status}</span>
+              </div>
+              <div className="op-meta">
+                <span><i className="fa fa-calendar"></i> Applied on {formatDate(a.appliedDate)}</span>
+                {a.resume && <span><i className="fa fa-file-pdf-o"></i> {a.resume}</span>}
+              </div>
+              {posByKey(a.posKey) && (
+                <div className="op-card-actions">
+                  <button className="op-details-btn" onClick={() => setViewJob(posByKey(a.posKey))}><i className="fa fa-file-text-o"></i> View Details</button>
                 </div>
-                {posByKey(a.posKey) && (
-                  <div className="op-card-actions">
-                    <button className="op-details-btn" onClick={() => setViewJob(posByKey(a.posKey))}><i className="fa fa-file-text-o"></i> View Details</button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : <div className="empty-state">You haven't applied to any openings yet.</div>)}
+              )}
+            </div>
+          ))}
+        </div>
+      ) : <div className="empty-state">You haven't applied to any openings yet.</div>)}
 
-        {/* Job Description Modal */}
-        {viewJob && (
-          <CustomModal isOpen={!!viewJob} onClose={() => setViewJob(null)} maxWidth="560px" minHeight="auto">
-            <>
-              <span className="op-type">{viewJob.type}</span>
-              <h2 className="op-jd-title">{viewJob.title}</h2>
-              <p className="op-jd-project"><i className="fa fa-flask"></i> {viewJob.projectTitle}</p>
-              <div className="op-jd-facts">
-                {viewJob.stipend && <div className="op-jd-fact"><span>Stipend</span><strong>{viewJob.stipend}</strong></div>}
-                {viewJob.openings != null && <div className="op-jd-fact"><span>Openings</span><strong>{viewJob.openings}</strong></div>}
-                {viewJob.cgpa && <div className="op-jd-fact"><span>Min CGPA</span><strong>{viewJob.cgpa}</strong></div>}
-                {viewJob.deadline && <div className="op-jd-fact"><span>Apply By</span><strong>{formatDate(viewJob.deadline)}</strong></div>}
-              </div>
-              {viewJob.eligibility && (<><div className="op-modal-section">Eligibility</div><p className="op-jd-text">{viewJob.eligibility}</p></>)}
-              {viewJob.description
-                ? (<><div className="op-modal-section">Job Description</div><p className="op-jd-text">{viewJob.description}</p></>)
-                : (<><div className="op-modal-section">Job Description</div><p className="op-jd-text op-jd-muted">No description provided for this opening.</p></>)}
-              {skillList(viewJob.skills).length > 0 && (<><div className="op-modal-section">Skills</div><div className="op-skills">{skillList(viewJob.skills).map((s, i) => <span key={i} className="op-skill">{s}</span>)}</div></>)}
-              <div className="modal-actions">
-                <CustomButton text="Close" variant="secondary" onClick={() => setViewJob(null)} />
-                {viewJob.deadline && viewJob.deadline < today ? (
-                  <CustomButton text="Applications Closed" disabled />
-                ) : appliedKeys.has(String(viewJob.posKey)) ? (
-                  <CustomButton text="Applied" variant="success" disabled />
-                ) : (
-                  <CustomButton text="Apply Now" onClick={() => { const p = viewJob; setViewJob(null); openApply(p); }} />
-                )}
-              </div>
-            </>
-          </CustomModal>
-        )}
+      {/* Job Description Modal */}
+      {viewJob && (
+        <CustomModal isOpen={!!viewJob} onClose={() => setViewJob(null)} maxWidth="560px" minHeight="auto">
+          <>
+            <span className="op-type">{viewJob.type}</span>
+            <h2 className="op-jd-title">{viewJob.title}</h2>
+            <p className="op-jd-project"><i className="fa fa-flask"></i> {viewJob.projectTitle}</p>
+            <div className="op-jd-facts">
+              {viewJob.stipend && <div className="op-jd-fact"><span>Stipend</span><strong>{viewJob.stipend}</strong></div>}
+              {viewJob.openings != null && <div className="op-jd-fact"><span>Openings</span><strong>{viewJob.openings}</strong></div>}
+              {viewJob.cgpa && <div className="op-jd-fact"><span>Min CGPA</span><strong>{viewJob.cgpa}</strong></div>}
+              {viewJob.deadline && <div className="op-jd-fact"><span>Apply By</span><strong>{formatDate(viewJob.deadline)}</strong></div>}
+            </div>
+            {viewJob.eligibility && (<><div className="op-modal-section">Eligibility</div><p className="op-jd-text">{viewJob.eligibility}</p></>)}
+            {viewJob.description
+              ? (<><div className="op-modal-section">Job Description</div><p className="op-jd-text">{viewJob.description}</p></>)
+              : (<><div className="op-modal-section">Job Description</div><p className="op-jd-text op-jd-muted">No description provided for this opening.</p></>)}
+            {skillList(viewJob.skills).length > 0 && (<><div className="op-modal-section">Skills</div><div className="op-skills">{skillList(viewJob.skills).map((s, i) => <span key={i} className="op-skill">{s}</span>)}</div></>)}
+            <div className="modal-actions">
+              <CustomButton text="Close" variant="secondary" onClick={() => setViewJob(null)} />
+              {viewJob.deadline && viewJob.deadline < today ? (
+                <CustomButton text="Applications Closed" disabled />
+              ) : appliedKeys.has(String(viewJob.posKey)) ? (
+                <CustomButton text="Applied" variant="success" disabled />
+              ) : (
+                <CustomButton text="Apply Now" onClick={() => { const p = viewJob; setViewJob(null); openApply(p); }} />
+              )}
+            </div>
+          </>
+        </CustomModal>
+      )}
 
-        {/* Apply Modal */}
-        {applyFor && (
-          <CustomModal
-            isOpen={!!applyFor}
-            onClose={() => setApplyFor(null)}
-            title={`Apply: ${applyFor.title}`}
-            maxWidth="560px"
-            minHeight="auto"
-          >
-            <>
-              <p className="op-modal-sub">{applyFor.type} &middot; {applyFor.projectTitle}</p>
+      {/* Apply Modal */}
+      {applyFor && (
+        <CustomModal
+          isOpen={!!applyFor}
+          onClose={() => setApplyFor(null)}
+          title={`Apply: ${applyFor.title}`}
+          maxWidth="560px"
+          minHeight="auto"
+        >
+          <>
+            <p className="op-modal-sub">{applyFor.type} &middot; {applyFor.projectTitle}</p>
 
-              <div className="op-modal-section">Contact Details</div>
-              <div className="op-form-grid">
-                <div className="op-field"><label htmlFor="openings-full-name">Full Name *</label><input id="openings-full-name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Your full name" /></div>
-                <div className="op-field"><label htmlFor="openings-email">Email *</label><input id="openings-email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" /></div>
-                <div className="op-field"><label htmlFor="openings-phone">Phone *</label><input id="openings-phone" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+91-…" /></div>
-              </div>
+            <div className="op-modal-section">Contact Details</div>
+            <div className="op-form-grid">
+              <div className="op-field"><label htmlFor="openings-full-name">Full Name *</label><input id="openings-full-name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Your full name" /></div>
+              <div className="op-field"><label htmlFor="openings-email">Email *</label><input id="openings-email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" /></div>
+              <div className="op-field"><label htmlFor="openings-phone">Phone *</label><input id="openings-phone" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="+91-…" /></div>
+            </div>
 
-              <div className="op-modal-section">Academic Details</div>
-              <div className="op-form-grid">
-                <div className="op-field"><label htmlFor="openings-degree">Degree *</label><input id="openings-degree" value={form.degree} onChange={e => setForm({ ...form, degree: e.target.value })} placeholder="e.g. M.Tech CSE" /></div>
-                <div className="op-field"><label htmlFor="openings-institute">Institute *</label><input id="openings-institute" value={form.institute} onChange={e => setForm({ ...form, institute: e.target.value })} placeholder="e.g. TIET" /></div>
-                <div className="op-field"><label htmlFor="openings-cgpa">CGPA *</label><input id="openings-cgpa" value={form.cgpa} onChange={e => setForm({ ...form, cgpa: e.target.value })} placeholder="e.g. 8.5" /></div>
-              </div>
+            <div className="op-modal-section">Academic Details</div>
+            <div className="op-form-grid">
+              <div className="op-field"><label htmlFor="openings-degree">Degree *</label><input id="openings-degree" value={form.degree} onChange={e => setForm({ ...form, degree: e.target.value })} placeholder="e.g. M.Tech CSE" /></div>
+              <div className="op-field"><label htmlFor="openings-institute">Institute *</label><input id="openings-institute" value={form.institute} onChange={e => setForm({ ...form, institute: e.target.value })} placeholder="e.g. TIET" /></div>
+              <div className="op-field"><label htmlFor="openings-cgpa">CGPA *</label><input id="openings-cgpa" value={form.cgpa} onChange={e => setForm({ ...form, cgpa: e.target.value })} placeholder="e.g. 8.5" /></div>
+            </div>
 
-              <div className="op-modal-section">Profile</div>
-              <div className="op-field full"><label htmlFor="openings-skills-comma-separated">Skills (comma separated)</label><input id="openings-skills-comma-separated" value={form.skills} onChange={e => setForm({ ...form, skills: e.target.value })} placeholder="e.g. Python, ML, IoT" /></div>
-              <div className="op-field full"><label htmlFor="openings-research-interest">Research Interest</label><input id="openings-research-interest" value={form.research} onChange={e => setForm({ ...form, research: e.target.value })} placeholder="e.g. Edge AI" /></div>
-              <div className="op-field full">
-                <label>Resume *</label>
-                <button type="button" className="op-upload" onClick={() => resumeRef.current && resumeRef.current.click()}>
-                  <i className="fa fa-upload"></i> {form.resume || 'Select resume from system'}
-                </button>
-                <input type="file" ref={resumeRef} style={{ display: 'none' }} accept=".pdf,.doc,.docx" onChange={handleResume} />
-              </div>
-              <div className="op-field full"><label htmlFor="openings-cover-note">Cover Note</label><textarea id="openings-cover-note" rows="3" value={form.coverNote} onChange={e => setForm({ ...form, coverNote: e.target.value })} placeholder="A short statement of purpose (optional)…" /></div>
+            <div className="op-modal-section">Profile</div>
+            <div className="op-field full"><label htmlFor="openings-skills-comma-separated">Skills (comma separated)</label><input id="openings-skills-comma-separated" value={form.skills} onChange={e => setForm({ ...form, skills: e.target.value })} placeholder="e.g. Python, ML, IoT" /></div>
+            <div className="op-field full"><label htmlFor="openings-research-interest">Research Interest</label><input id="openings-research-interest" value={form.research} onChange={e => setForm({ ...form, research: e.target.value })} placeholder="e.g. Edge AI" /></div>
+            <div className="op-field full">
+              <label>Resume *</label>
+              <button type="button" className="op-upload" onClick={() => resumeRef.current && resumeRef.current.click()}>
+                <i className="fa fa-upload"></i> {form.resume || 'Select resume from system'}
+              </button>
+              <input type="file" ref={resumeRef} style={{ display: 'none' }} accept=".pdf,.doc,.docx" onChange={handleResume} />
+            </div>
+            <div className="op-field full"><label htmlFor="openings-cover-note">Cover Note</label><textarea id="openings-cover-note" rows="3" value={form.coverNote} onChange={e => setForm({ ...form, coverNote: e.target.value })} placeholder="A short statement of purpose (optional)…" /></div>
 
-              <div className="modal-actions">
-                <CustomButton text="Cancel" variant="secondary" onClick={() => setApplyFor(null)} />
-                <CustomButton text="Submit Application" onClick={submitApply} />
-              </div>
-            </>
-          </CustomModal>
-        )}
-      </div>
-    </Layout>
+            <div className="modal-actions">
+              <CustomButton text="Cancel" variant="secondary" onClick={() => setApplyFor(null)} />
+              <CustomButton text="Submit Application" onClick={submitApply} />
+            </div>
+          </>
+        </CustomModal>
+      )}
+    </div>
   );
 };
 

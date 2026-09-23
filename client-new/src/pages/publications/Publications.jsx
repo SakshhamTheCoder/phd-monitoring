@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import Layout from '../../components/dashboard/layout';
 import './Publications.css';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import CustomModal from '../../components/forms/modal/CustomModal';
@@ -75,37 +74,34 @@ const Publications = () => {
 
     return (
         <>
+        <PageHeader
+            title="Publications"
+            actions={<CustomButton text="+ Add Publication" onClick={openModal} />}
+        />
 
-        <Layout children={<>
-            <PageHeader
-                title="Publications"
-                actions={<CustomButton text="+ Add Publication" onClick={openModal} />}
-            />
+            {/* Before the first answer the lists are empty, which read as
+                "No publications yet" for a scholar who has some. */}
+            {isLoaded
+              ? <ShowPublications formData={formData} refetchData={fetchData} enableDelete={true} onDelete={handleDelete} canAdd={true}/>
+              : <p className="no-data-cell" aria-busy="true">Loading publications…</p>}
 
-                {/* Before the first answer the lists are empty, which read as
-                    "No publications yet" for a scholar who has some. */}
-                {isLoaded
-                  ? <ShowPublications formData={formData} refetchData={fetchData} enableDelete={true} onDelete={handleDelete} canAdd={true}/>
-                  : <p className="no-data-cell" aria-busy="true">Loading publications…</p>}
+            <CustomModal isOpen={open} onClose={closeModal} title={'Add Publication'}
+                minHeight='200px' maxHeight='600px' minWidth='650px' maxWidth='700px' closeOnOutsideClick={false}>
+             <AddPublication close={closeModal}/>
+             </CustomModal>
 
-                <CustomModal isOpen={open} onClose={closeModal} title={'Add Publication'}
-                    minHeight='200px' maxHeight='600px' minWidth='650px' maxWidth='700px' closeOnOutsideClick={false}>
-                 <AddPublication close={closeModal}/>
-                 </CustomModal>
-
-                <CustomModal isOpen={!!deleteTarget} onClose={cancelDelete} title={'Confirm Deletion'}
-                    minHeight='140px' maxHeight='300px' minWidth='380px' maxWidth='460px' closeOnOutsideClick={true}>
-                    <div className='delete-confirm'>
-                        <p className='delete-confirm-text'>
-                            Are you sure you want to delete this {deleteTarget?.type === 'patents' ? 'patent' : 'publication'}? This action cannot be undone.
-                        </p>
-                        <div className='delete-confirm-actions'>
-                            <button className='delete-cancel-btn' onClick={cancelDelete}>Cancel</button>
-                            <button className='delete-confirm-btn' onClick={confirmDelete}>Delete</button>
-                        </div>
+            <CustomModal isOpen={!!deleteTarget} onClose={cancelDelete} title={'Confirm Deletion'}
+                minHeight='140px' maxHeight='300px' minWidth='380px' maxWidth='460px' closeOnOutsideClick={true}>
+                <div className='delete-confirm'>
+                    <p className='delete-confirm-text'>
+                        Are you sure you want to delete this {deleteTarget?.type === 'patents' ? 'patent' : 'publication'}? This action cannot be undone.
+                    </p>
+                    <div className='delete-confirm-actions'>
+                        <button className='delete-cancel-btn' onClick={cancelDelete}>Cancel</button>
+                        <button className='delete-confirm-btn' onClick={confirmDelete}>Delete</button>
                     </div>
-                </CustomModal>
-            </>}/>
+                </div>
+            </CustomModal>
         </>
     );
 };

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import './Dashboard.css';
-import Layout from '../../components/dashboard/layout';
 import { useLoading } from '../../context/LoadingContext';
 import ProfileCard from '../../components/profileCard/ProfileCard';
 import { customFetch } from '../../api/base';
@@ -62,7 +61,7 @@ const Dashboard = () => {
   }, [setLoading, userRole]);
 
   return (
-    <Layout>
+    <>
       {isLoaded && (
         <>
           {view === 'student' ? (
@@ -74,11 +73,11 @@ const Dashboard = () => {
           ) : (
             // The faculty profile is one page; the dashboard shows the
             // signed-in faculty's own, without the page chrome.
-            <FacultyProfile facultyCode={data.faculty_code} embedded />
+            <FacultyProfile facultyCode={data.faculty_code} />
           )}
         </>
       )}
-    </Layout>
+    </>
   );
 };
 

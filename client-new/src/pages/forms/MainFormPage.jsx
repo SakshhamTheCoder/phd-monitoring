@@ -1,5 +1,4 @@
 import React, { Suspense, lazy, useEffect, useState } from "react";
-import Layout from "../../components/dashboard/layout";
 import SupervisorAllocation from "../../components/forms/supervisorAllocation/SupervisorAllocation";
 import { useLoading } from "../../context/LoadingContext";
 import { useLocation, useParams } from "react-router-dom";
@@ -54,63 +53,59 @@ const MainFormPage = () => {
   }, [location.pathname]);
 
   return (
-    <Layout
-      children={
+    <>
+      {scholar && (
+        <p className="viewing-scholar">
+          You are viewing <strong>{scholar.label}</strong>'s form.
+        </p>
+      )}
+      {isLoaded && formData && (
         <>
-          {scholar && (
-            <p className="viewing-scholar">
-              You are viewing <strong>{scholar.label}</strong>'s form.
-            </p>
-          )}
-          {isLoaded && formData && (
-            <>
-              {(() => {
-                switch (form_type) {
-                  case "supervisor-allocation":
-                    return <SupervisorAllocation formData={formData} />;
-                  case "irb-constitution":
-                    return <ConstituteOfIRB formData={formData} />;
-                  case "irb-submission":
-                    return <IRBSubmission formData={formData} />;
-                  case "presentation":
-                    return <PresentationForm formData={formData} />;
-                  case "synopsis-submission":
-                    return <SynopsisSubmission formData={formData} />;
-                  case "thesis-submission":
-                    return <ThesisSubmission formData={formData} />;
-                  case "semester-off":
-                    return <SemesterOff formData={formData} />;
-                    case "status-change":
-                      return <StatusChange formData={formData} />;
-                  case "irb-extension":
-                    return <IrbExtention formData={formData}/>
-                  case "supervisor-change":
-                    return <SupervisorChange formData={formData}/>
-                  case "list-of-examiners":
-                    return <ListOfExaminers formData={formData}/>
-                  case "thesis-extension":
-                    return <ThesisExtention formData={formData} />
-                  case "revise-title":
-                    return <ReviseTitle formData={formData}/>
-                  // The API serves /forms/student-leave/:id, and StudentLeave
-                  // defaults submitPath to the current location, which is that
-                  // endpoint. Without this the canonical URL fell through to the
-                  // "Are You Sure this is a FORM?" default.
-                  case "student-leave":
-                    return (
-                      <Suspense fallback={<Loader />}>
-                        <StudentLeave formData={formData} />
-                      </Suspense>
-                    );
-                  default:
-                    return <p>Are You Sure this is a FORM?</p>;
-                }
-              })()}
-            </>
-          )}
+          {(() => {
+            switch (form_type) {
+              case "supervisor-allocation":
+                return <SupervisorAllocation formData={formData} />;
+              case "irb-constitution":
+                return <ConstituteOfIRB formData={formData} />;
+              case "irb-submission":
+                return <IRBSubmission formData={formData} />;
+              case "presentation":
+                return <PresentationForm formData={formData} />;
+              case "synopsis-submission":
+                return <SynopsisSubmission formData={formData} />;
+              case "thesis-submission":
+                return <ThesisSubmission formData={formData} />;
+              case "semester-off":
+                return <SemesterOff formData={formData} />;
+                case "status-change":
+                  return <StatusChange formData={formData} />;
+              case "irb-extension":
+                return <IrbExtention formData={formData}/>
+              case "supervisor-change":
+                return <SupervisorChange formData={formData}/>
+              case "list-of-examiners":
+                return <ListOfExaminers formData={formData}/>
+              case "thesis-extension":
+                return <ThesisExtention formData={formData} />
+              case "revise-title":
+                return <ReviseTitle formData={formData}/>
+              // The API serves /forms/student-leave/:id, and StudentLeave
+              // defaults submitPath to the current location, which is that
+              // endpoint. Without this the canonical URL fell through to the
+              // "Are You Sure this is a FORM?" default.
+              case "student-leave":
+                return (
+                  <Suspense fallback={<Loader />}>
+                    <StudentLeave formData={formData} />
+                  </Suspense>
+                );
+              default:
+                return <p>Are You Sure this is a FORM?</p>;
+            }
+          })()}
         </>
-      }
-    />
+      )}
+    </>
   );
 };
 

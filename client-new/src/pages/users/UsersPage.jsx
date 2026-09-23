@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import { useLoading } from '../../context/LoadingContext';
 import { useLocation } from 'react-router-dom';
@@ -287,151 +286,147 @@ Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,d
   };
 
   return (
-    <Layout
-      children={
-        <>
-          <PageHeader title="Manage Users" subtitle="Create accounts and assign roles." />
-          <FilterBar onSearch={handleFilterChange} />
-          <PagenationTable
-            key={refreshKey}
-            endpoint={location.pathname}
-            filters={filter}
-            enableApproval={false}
-            // The row is a way into the edit form, so it follows the same
-            // capability as the Edit action rather than the route alone.
-            rowClickable={can('can_manage_users')}
-            customOpenForm={openForm}
-            extraTopbarComponents={
-              can('can_manage_users') ? (
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <CustomButton
-                    text={waitingEveryone ? `Send sign-in links (${waitingEveryone})` : 'Send sign-in links'}
-                    variant="secondary"
-                    disabled={!waitingEveryone}
-                    onClick={() => { setChosenRun(runs[0]?.batch ?? 'everyone'); setLinksOpen(true); }}
-                  />
-                  <CustomButton
-                    text="Bulk Import"
-                    variant="secondary"
-                    onClick={() => setShowBulkImportModal(true)}
-                  />
-                  <CustomButton text="Add User +" onClick={() => openForm()} />
-                </div>
-              ) : null
-            }
-            actions={can('can_manage_users') ? [
-              {
-                icon: <i className="fa fa-pencil-square-o"></i>,
-                tooltip: 'Edit',
-                onClick: (userData) => openForm(userData),
-              },
-              {
-                icon: <i className="fa fa-key"></i>,
-                tooltip: 'Reset Password',
-                onClick: (userData) => handleResetPassword(userData),
-              },
-              {
-                icon: <i className="fa fa-trash"></i>,
-                tooltip: 'Delete',
-                onClick: (userData) => handleDeleteUser(userData),
-              },
-            ] : []}
-          />
-          <CustomModal
-            isOpen={isOpen}
-            onClose={() => closeUserModal(false)}
-            width={createKind === null && !editData ? '520px' : '80vw'}
-          >
-            {/* These forms only invoke onSuccess/onClose after a save completes,
-                so those close with saved=true. The modal's own X and the picker's
-                Cancel are dismissals and close without refetching. */}
-            {editData ? (
-              // Editing an existing user is unchanged, since the record already
-              // exists there is nothing to pick.
-              <UserForm edit={true} userData={editData} onClose={() => closeUserModal(true)} />
-            ) : createKind === null ? (
-              <NewUserKindPicker onSelect={setCreateKind} onCancel={() => closeUserModal(false)} />
-            ) : createKind === 'student' ? (
-              // Creates the User and Student record in one call.
-              <StudentForm onSuccess={() => closeUserModal(true)} onClose={() => closeUserModal(true)} />
-            ) : createKind === 'faculty' ? (
-              // Creates the User and Faculty record in one call.
-              <FacultyForm onSuccess={() => closeUserModal(true)} onClose={() => closeUserModal(true)} />
-            ) : createKind === 'clerk' ? (
-              <ClerkForm onSuccess={() => closeUserModal(true)} onClose={() => closeUserModal(true)} />
-            ) : (
-              <UserForm edit={false} userData={null} onClose={() => closeUserModal(true)} />
-            )}
-          </CustomModal>
-
-          <CustomModal isOpen={linksOpen} onClose={() => setLinksOpen(false)} title="Send sign-in links">
-            <div className="modal-form">
-              <p>
-                A link lets somebody choose their password. Anybody who already signs in,
-                with a password or through Google, is left out.
-              </p>
-
-              {runs.map((run) => (
-                <label key={run.batch} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '10px' }}>
-                  <input
-                    type="radio"
-                    name="sign-in-link-group"
-                    value={run.batch}
-                    checked={chosenRun === run.batch}
-                    onChange={() => setChosenRun(run.batch)}
-                  />
-                  <span>
-                    <strong>{run.of === 'staff' ? 'Staff' : 'Scholars'} imported {formatDate(run.imported_at)}</strong>
-                    {' '}({run.waiting} waiting)
-                  </span>
-                </label>
-              ))}
-
-              <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                <input
-                  type="radio"
-                  name="sign-in-link-group"
-                  value="everyone"
-                  checked={chosenRun === 'everyone'}
-                  onChange={() => setChosenRun('everyone')}
-                />
-                <span>
-                  <strong>Everyone who cannot sign in yet ({waitingEveryone})</strong>
-                  {waitingByRole && <>: {waitingByRole}</>}
-                </span>
-              </label>
-
-              <div className="modal-actions">
-                <CustomButton text="Cancel" variant="secondary" onClick={() => setLinksOpen(false)} />
-                <CustomButton
-                  text={sendingLinks ? 'Sending...' : 'Send links'}
-                  disabled={sendingLinks || !waitingEveryone}
-                  onClick={sendSignInLinks}
-                />
-              </div>
+    <>
+      <PageHeader title="Manage Users" subtitle="Create accounts and assign roles." />
+      <FilterBar onSearch={handleFilterChange} />
+      <PagenationTable
+        key={refreshKey}
+        endpoint={location.pathname}
+        filters={filter}
+        enableApproval={false}
+        // The row is a way into the edit form, so it follows the same
+        // capability as the Edit action rather than the route alone.
+        rowClickable={can('can_manage_users')}
+        customOpenForm={openForm}
+        extraTopbarComponents={
+          can('can_manage_users') ? (
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <CustomButton
+                text={waitingEveryone ? `Send sign-in links (${waitingEveryone})` : 'Send sign-in links'}
+                variant="secondary"
+                disabled={!waitingEveryone}
+                onClick={() => { setChosenRun(runs[0]?.batch ?? 'everyone'); setLinksOpen(true); }}
+              />
+              <CustomButton
+                text="Bulk Import"
+                variant="secondary"
+                onClick={() => setShowBulkImportModal(true)}
+              />
+              <CustomButton text="Add User +" onClick={() => openForm()} />
             </div>
-          </CustomModal>
+          ) : null
+        }
+        actions={can('can_manage_users') ? [
+          {
+            icon: <i className="fa fa-pencil-square-o"></i>,
+            tooltip: 'Edit',
+            onClick: (userData) => openForm(userData),
+          },
+          {
+            icon: <i className="fa fa-key"></i>,
+            tooltip: 'Reset Password',
+            onClick: (userData) => handleResetPassword(userData),
+          },
+          {
+            icon: <i className="fa fa-trash"></i>,
+            tooltip: 'Delete',
+            onClick: (userData) => handleDeleteUser(userData),
+          },
+        ] : []}
+      />
+      <CustomModal
+        isOpen={isOpen}
+        onClose={() => closeUserModal(false)}
+        width={createKind === null && !editData ? '520px' : '80vw'}
+      >
+        {/* These forms only invoke onSuccess/onClose after a save completes,
+            so those close with saved=true. The modal's own X and the picker's
+            Cancel are dismissals and close without refetching. */}
+        {editData ? (
+          // Editing an existing user is unchanged, since the record already
+          // exists there is nothing to pick.
+          <UserForm edit={true} userData={editData} onClose={() => closeUserModal(true)} />
+        ) : createKind === null ? (
+          <NewUserKindPicker onSelect={setCreateKind} onCancel={() => closeUserModal(false)} />
+        ) : createKind === 'student' ? (
+          // Creates the User and Student record in one call.
+          <StudentForm onSuccess={() => closeUserModal(true)} onClose={() => closeUserModal(true)} />
+        ) : createKind === 'faculty' ? (
+          // Creates the User and Faculty record in one call.
+          <FacultyForm onSuccess={() => closeUserModal(true)} onClose={() => closeUserModal(true)} />
+        ) : createKind === 'clerk' ? (
+          <ClerkForm onSuccess={() => closeUserModal(true)} onClose={() => closeUserModal(true)} />
+        ) : (
+          <UserForm edit={false} userData={null} onClose={() => closeUserModal(true)} />
+        )}
+      </CustomModal>
 
-          {/* Bulk Import Modal */}
-          <UnifiedBulkImportModal
-            isOpen={showBulkImportModal}
-            onClose={() => setShowBulkImportModal(false)}
-            title="Bulk Import Users"
-            required={['full_name', 'email', 'role']}
-            rules={[
-              'Matched by email. An existing user is updated from the cells the row fills in.',
-              'gender is male, female or other. status is active, inactive or suspended.',
-              'available_roles is a comma separated list.',
-            ]}
-            sampleFileName="users_bulk_import_sample.csv"
-            sampleCsvContent={usersSampleCsv}
-            onImport={handleBulkImport}
-            submitting={submitting}
-            uploadProgress={uploadProgress}
-          />
-        </>
-      }
-    />
+      <CustomModal isOpen={linksOpen} onClose={() => setLinksOpen(false)} title="Send sign-in links">
+        <div className="modal-form">
+          <p>
+            A link lets somebody choose their password. Anybody who already signs in,
+            with a password or through Google, is left out.
+          </p>
+
+          {runs.map((run) => (
+            <label key={run.batch} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '10px' }}>
+              <input
+                type="radio"
+                name="sign-in-link-group"
+                value={run.batch}
+                checked={chosenRun === run.batch}
+                onChange={() => setChosenRun(run.batch)}
+              />
+              <span>
+                <strong>{run.of === 'staff' ? 'Staff' : 'Scholars'} imported {formatDate(run.imported_at)}</strong>
+                {' '}({run.waiting} waiting)
+              </span>
+            </label>
+          ))}
+
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+            <input
+              type="radio"
+              name="sign-in-link-group"
+              value="everyone"
+              checked={chosenRun === 'everyone'}
+              onChange={() => setChosenRun('everyone')}
+            />
+            <span>
+              <strong>Everyone who cannot sign in yet ({waitingEveryone})</strong>
+              {waitingByRole && <>: {waitingByRole}</>}
+            </span>
+          </label>
+
+          <div className="modal-actions">
+            <CustomButton text="Cancel" variant="secondary" onClick={() => setLinksOpen(false)} />
+            <CustomButton
+              text={sendingLinks ? 'Sending...' : 'Send links'}
+              disabled={sendingLinks || !waitingEveryone}
+              onClick={sendSignInLinks}
+            />
+          </div>
+        </div>
+      </CustomModal>
+
+      {/* Bulk Import Modal */}
+      <UnifiedBulkImportModal
+        isOpen={showBulkImportModal}
+        onClose={() => setShowBulkImportModal(false)}
+        title="Bulk Import Users"
+        required={['full_name', 'email', 'role']}
+        rules={[
+          'Matched by email. An existing user is updated from the cells the row fills in.',
+          'gender is male, female or other. status is active, inactive or suspended.',
+          'available_roles is a comma separated list.',
+        ]}
+        sampleFileName="users_bulk_import_sample.csv"
+        sampleCsvContent={usersSampleCsv}
+        onImport={handleBulkImport}
+        submitting={submitting}
+        uploadProgress={uploadProgress}
+      />
+    </>
   );
 };
 

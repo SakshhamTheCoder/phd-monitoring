@@ -1,5 +1,4 @@
 import React from 'react';
-import Layout from '../../components/dashboard/layout';
 import Tabs from '../../components/tabs/Tabs';
 import LeaveRequests from './LeaveRequests';
 
@@ -11,7 +10,7 @@ import LeaveRequests from './LeaveRequests';
  * department, so there is nothing to filter and no department column here.
  */
 const HodAttendancePage = () => (
-  <Layout>
+  <>
     <h1 className="page-title">Attendance</h1>
 
     <Tabs
@@ -21,7 +20,7 @@ const HodAttendancePage = () => (
     />
 
     <LeaveRequests />
-  </Layout>
+  </>
 );
 
 export default HodAttendancePage;

@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import FilterBar from '../../components/filterBar/FilterBar';
 import PagenationTable from '../../components/pagenationTable/PagenationTable';
@@ -68,7 +67,7 @@ const UrfFormList = () => {
   }), [filters, session]);
 
   return (
-    <Layout>
+    <>
       <PageHeader title={TITLES[pathname.split('/').pop()]} subtitle="Undergraduate Research Fellowship" />
       {sessions?.length > 0 && (
         <div className="urf-stage-bar">
@@ -96,7 +95,7 @@ const UrfFormList = () => {
           />
         )}
       </div>
-    </Layout>
+    </>
   );
 };
 

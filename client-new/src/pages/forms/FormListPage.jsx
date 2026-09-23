@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import Layout from "../../components/dashboard/layout";
 import PageHeader from "../../components/pageHeader/PageHeader";
 import FormList from "../../components/forms/formList/FormList";
 import { useLocation } from "react-router-dom";
@@ -73,83 +72,79 @@ const FormListPage = () => {
   };
 
   return (
-    <Layout
-      children={
+    <>
+      <PageHeader
+        title={formTypeLabel}
+        subtitle={scholar ? `Viewing ${scholar.label}` : undefined}
+        actions={headerAction}
+      />
+      {role !== "student" ? (
         <>
-          <PageHeader
-            title={formTypeLabel}
-            subtitle={scholar ? `Viewing ${scholar.label}` : undefined}
-            actions={headerAction}
-          />
-          {role !== "student" ? (
-            <>
-              <FilterBar onSearch={handleSearch} />
-              <PagenationTable
-                key={refreshKey}
-                endpoint={location.pathname}
-                filters={filters}
-                enableApproval={role !== "faculty" && role !== "admin"}
-                enableSelect={role !== "faculty" && role !== "admin"}
-                extraTopbarComponents={
-                  showBulkAllocate ? (
-                    <CustomButton
-                      text="Bulk Allocate"
-                      variant="secondary"
-                      onClick={() => setIsBulkAllocateOpen(true)}
-                    />
-                  ) : null
-                }
-              />
-            </>
-          ) : (
-            <FormList />
-          )}
-          <CustomModal
-            isOpen={isBulkAllocateOpen}
-            onClose={() => setIsBulkAllocateOpen(false)}
-            width="90vw"
-          >
-            <BulkAllocateSupervisors
-              onSuccess={() => {
-                setIsBulkAllocateOpen(false);
-                setRefreshKey((prev) => prev + 1);
-              }}
-            />
-          </CustomModal>
-          <CustomModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            minWidth="500px"
-            maxWidth="600px"
-            minHeight="200px"
-            maxHeight="400px"
-            children={[
-                <>
-                {!showBar ? (
-                <GridContainer 
-                label="Enter Student Roll Number to initiate List of Examiners"
-                elements={[
-                    <InputField 
-                        hint={"Enter Roll Number"}
-                        label={"Roll Number"}
-                        onChange={(value)=>{setRollNumber(value)}}
-                    />,
-                    <CustomButton
-                        label=" "
-                        text="Submit"
-                        onClick={()=>{
-                           setShowBar(true);
-                        }}
-                    />
-                ]}
-                
-                />):(<CreateNewBar rollNumber={rollNumber} label={"Confirm Form for "+rollNumber} />)}
-                </>,
-            ]}
+          <FilterBar onSearch={handleSearch} />
+          <PagenationTable
+            key={refreshKey}
+            endpoint={location.pathname}
+            filters={filters}
+            enableApproval={role !== "faculty" && role !== "admin"}
+            enableSelect={role !== "faculty" && role !== "admin"}
+            extraTopbarComponents={
+              showBulkAllocate ? (
+                <CustomButton
+                  text="Bulk Allocate"
+                  variant="secondary"
+                  onClick={() => setIsBulkAllocateOpen(true)}
+                />
+              ) : null
+            }
           />
         </>
-      }
-    />
+      ) : (
+        <FormList />
+      )}
+      <CustomModal
+        isOpen={isBulkAllocateOpen}
+        onClose={() => setIsBulkAllocateOpen(false)}
+        width="90vw"
+      >
+        <BulkAllocateSupervisors
+          onSuccess={() => {
+            setIsBulkAllocateOpen(false);
+            setRefreshKey((prev) => prev + 1);
+          }}
+        />
+      </CustomModal>
+      <CustomModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        minWidth="500px"
+        maxWidth="600px"
+        minHeight="200px"
+        maxHeight="400px"
+        children={[
+            <>
+            {!showBar ? (
+            <GridContainer 
+            label="Enter Student Roll Number to initiate List of Examiners"
+            elements={[
+                <InputField 
+                    hint={"Enter Roll Number"}
+                    label={"Roll Number"}
+                    onChange={(value)=>{setRollNumber(value)}}
+                />,
+                <CustomButton
+                    label=" "
+                    text="Submit"
+                    onClick={()=>{
+                       setShowBar(true);
+                    }}
+                />
+            ]}
+                
+            />):(<CreateNewBar rollNumber={rollNumber} label={"Confirm Form for "+rollNumber} />)}
+            </>,
+        ]}
+      />
+    </>
   );
 };
 

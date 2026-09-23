@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import { customFetch, NETWORK_ERROR_MESSAGE } from '../../api/base';
 import { baseURL } from '../../api/urls';
-import Layout from '../../components/dashboard/layout';
 import { useLoading } from '../../context/LoadingContext';
 import PagenationTable from '../../components/pagenationTable/PagenationTable';
 import CustomModal from '../../components/forms/modal/CustomModal';
@@ -198,316 +197,314 @@ const OutsideExperts = () => {
   };
 
   return (
-    <Layout>
-      <div className="outside-experts-management">
-        <PageHeader
-          title="Outside Experts"
-          subtitle="External examiners and experts available to committees."
-        />
-        <PagenationTable
-          key={refreshKey}
-          endpoint="/outside-experts/list"
-          // No detail page for an expert; editing is in the row menu.
-          rowClickable={false}
-          enableApproval={false}
-          extraTopbarComponents={
-            <div className="top-actions">
-              <CustomButton
-                text="Bulk Import"
-                variant="secondary"
-                onClick={() => setShowBulkImportModal(true)}
-              />
-              <CustomButton
-                text="Add Outside Expert +"
-                onClick={() => setShowAddModal(true)}
-              />
-            </div>
-          }
-          actions={[
-            {
-              icon: <i className="fa fa-pencil-square-o"></i>,
-              tooltip: 'Edit',
-              onClick: (data) => openEditModal(data),
-            },
-            {
-              icon: <i className="fa fa-trash"></i>,
-              tooltip: 'Delete',
-              onClick: (data) => handleDeleteExpert(data.id),
-            },
+    <div className="outside-experts-management">
+      <PageHeader
+        title="Outside Experts"
+        subtitle="External examiners and experts available to committees."
+      />
+      <PagenationTable
+        key={refreshKey}
+        endpoint="/outside-experts/list"
+        // No detail page for an expert; editing is in the row menu.
+        rowClickable={false}
+        enableApproval={false}
+        extraTopbarComponents={
+          <div className="top-actions">
+            <CustomButton
+              text="Bulk Import"
+              variant="secondary"
+              onClick={() => setShowBulkImportModal(true)}
+            />
+            <CustomButton
+              text="Add Outside Expert +"
+              onClick={() => setShowAddModal(true)}
+            />
+          </div>
+        }
+        actions={[
+          {
+            icon: <i className="fa fa-pencil-square-o"></i>,
+            tooltip: 'Edit',
+            onClick: (data) => openEditModal(data),
+          },
+          {
+            icon: <i className="fa fa-trash"></i>,
+            tooltip: 'Delete',
+            onClick: (data) => handleDeleteExpert(data.id),
+          },
+        ]}
+      />
+
+    {/* Add Expert Modal */}
+    <CustomModal
+      isOpen={showAddModal}
+      onClose={() => {
+        setShowAddModal(false);
+        resetForm();
+      }}
+      title="Add New Outside Expert"
+    >
+      <div className="modal-form">
+        <GridContainer
+          elements={[
+            <InputField
+              label="Full Name"
+              initialValue={formData.full_name}
+              onChange={(value) => handleInputChange('full_name', value)}
+              placeholder="e.g. Dr. Tarunpreet Bhatia"
+              required
+            />,
           ]}
         />
 
-      {/* Add Expert Modal */}
-      <CustomModal
-        isOpen={showAddModal}
-        onClose={() => {
-          setShowAddModal(false);
-          resetForm();
-        }}
-        title="Add New Outside Expert"
-      >
-        <div className="modal-form">
-          <GridContainer
-            elements={[
-              <InputField
-                label="Full Name"
-                initialValue={formData.full_name}
-                onChange={(value) => handleInputChange('full_name', value)}
-                placeholder="e.g. Dr. Tarunpreet Bhatia"
-                required
-              />,
-            ]}
-          />
-
-          <GridContainer
-            elements={[
-              <InputField
-                label="Email"
-                type="email"
-                initialValue={formData.email}
-                onChange={(value) => handleInputChange('email', value)}
-                placeholder="expert@example.com"
-                required
-              />,
-              <InputField
-                label="Phone"
-                initialValue={formData.phone}
-                onChange={(value) => handleInputChange('phone', value)}
-                placeholder="Enter phone number"
-              />,
-            ]}
-          />
+        <GridContainer
+          elements={[
+            <InputField
+              label="Email"
+              type="email"
+              initialValue={formData.email}
+              onChange={(value) => handleInputChange('email', value)}
+              placeholder="expert@example.com"
+              required
+            />,
+            <InputField
+              label="Phone"
+              initialValue={formData.phone}
+              onChange={(value) => handleInputChange('phone', value)}
+              placeholder="Enter phone number"
+            />,
+          ]}
+        />
           
-          <GridContainer
-            elements={[
-              <InputField
-                label="Designation"
-                initialValue={formData.designation}
-                onChange={(value) => handleInputChange('designation', value)}
-                placeholder="e.g., Professor"
-                required
-              />,
-              <InputField
-                label="Department"
-                initialValue={formData.department}
-                onChange={(value) => handleInputChange('department', value)}
-                placeholder="e.g., Computer Science"
-                required
-              />,
-            ]}
-          />
+        <GridContainer
+          elements={[
+            <InputField
+              label="Designation"
+              initialValue={formData.designation}
+              onChange={(value) => handleInputChange('designation', value)}
+              placeholder="e.g., Professor"
+              required
+            />,
+            <InputField
+              label="Department"
+              initialValue={formData.department}
+              onChange={(value) => handleInputChange('department', value)}
+              placeholder="e.g., Computer Science"
+              required
+            />,
+          ]}
+        />
           
-          <GridContainer
-            elements={[
-              <InputField
-                label="Institution"
-                initialValue={formData.institution}
-                onChange={(value) => handleInputChange('institution', value)}
-                placeholder="e.g., University Name"
-                required
-              />,
-            ]}
-            space={2}
-          />
+        <GridContainer
+          elements={[
+            <InputField
+              label="Institution"
+              initialValue={formData.institution}
+              onChange={(value) => handleInputChange('institution', value)}
+              placeholder="e.g., University Name"
+              required
+            />,
+          ]}
+          space={2}
+        />
           
-          <GridContainer
-            elements={[
-              <InputField
-                label="Area of Expertise"
-                initialValue={formData.area_of_expertise}
-                onChange={(value) => handleInputChange('area_of_expertise', value)}
-                placeholder="Research areas"
-              />,
-            ]}
-            space={2}
-          />
+        <GridContainer
+          elements={[
+            <InputField
+              label="Area of Expertise"
+              initialValue={formData.area_of_expertise}
+              onChange={(value) => handleInputChange('area_of_expertise', value)}
+              placeholder="Research areas"
+            />,
+          ]}
+          space={2}
+        />
           
-          <GridContainer
-            elements={[
-              <InputField
-                label="Website"
-                initialValue={formData.website}
-                onChange={(value) => handleInputChange('website', value)}
-                placeholder="https://example.com"
-              />,
-            ]}
-            space={2}
-          />
+        <GridContainer
+          elements={[
+            <InputField
+              label="Website"
+              initialValue={formData.website}
+              onChange={(value) => handleInputChange('website', value)}
+              placeholder="https://example.com"
+            />,
+          ]}
+          space={2}
+        />
           
-          <div className="modal-actions">
-            <button
-              onClick={() => {
-                setShowAddModal(false);
-                resetForm();
-              }}
-              className="custom-button custom-button--secondary"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleAddExpert}
-              className="custom-button"
-              disabled={submitting}
-            >
-              {submitting ? 'Adding...' : 'Add Expert'}
-            </button>
-          </div>
+        <div className="modal-actions">
+          <button
+            onClick={() => {
+              setShowAddModal(false);
+              resetForm();
+            }}
+            className="custom-button custom-button--secondary"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleAddExpert}
+            className="custom-button"
+            disabled={submitting}
+          >
+            {submitting ? 'Adding...' : 'Add Expert'}
+          </button>
         </div>
-      </CustomModal>
+      </div>
+    </CustomModal>
 
-      {/* Bulk Import Modal */}
-      <CustomModal
-        isOpen={showBulkImportModal}
-        onClose={() => {
-          setShowBulkImportModal(false);
-          setCsvFile(null);
-        }}
-        title="Bulk Import Outside Experts"
-      >
-        <div className="modal-form">
-          <div className="info-box">
-            <p><strong>CSV Format:</strong></p>
-            <p>full_name,email,phone,designation,department,institution,area_of_expertise,website</p>
-            <p className="note">Note: Phone, area_of_expertise, and website are optional. If an expert with the same email exists, their record will be updated.</p>
-          </div>
-          
-          <input
-            type="file"
-            accept=".csv"
-            onChange={(e) => setCsvFile(e.target.files[0])}
-            className="file-input"
-          />
-          
-          <div className="modal-actions">
-            <button
-              onClick={() => {
-                setShowBulkImportModal(false);
-                setCsvFile(null);
-              }}
-              className="custom-button custom-button--secondary"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleBulkImport}
-              className="custom-button"
-              disabled={submitting || !csvFile}
-            >
-              {submitting ? 'Importing...' : 'Import'}
-            </button>
-          </div>
+    {/* Bulk Import Modal */}
+    <CustomModal
+      isOpen={showBulkImportModal}
+      onClose={() => {
+        setShowBulkImportModal(false);
+        setCsvFile(null);
+      }}
+      title="Bulk Import Outside Experts"
+    >
+      <div className="modal-form">
+        <div className="info-box">
+          <p><strong>CSV Format:</strong></p>
+          <p>full_name,email,phone,designation,department,institution,area_of_expertise,website</p>
+          <p className="note">Note: Phone, area_of_expertise, and website are optional. If an expert with the same email exists, their record will be updated.</p>
         </div>
-      </CustomModal>
-
-      {/* Edit Expert Modal */}
-      <CustomModal
-        isOpen={showEditModal}
-        onClose={() => {
-          setShowEditModal(false);
-          resetForm();
-        }}
-        title="Edit Outside Expert"
-      >
-        <div className="modal-form">
-          <GridContainer
-            elements={[
-              <InputField
-                label="Full Name"
-                initialValue={formData.full_name}
-                onChange={(value) => handleInputChange('full_name', value)}
-                required
-              />,
-            ]}
-          />
-
-          <GridContainer
-            elements={[
-              <InputField
-                label="Email"
-                type="email"
-                initialValue={formData.email}
-                onChange={(value) => handleInputChange('email', value)}
-                required
-              />,
-              <InputField
-                label="Phone"
-                initialValue={formData.phone}
-                onChange={(value) => handleInputChange('phone', value)}
-              />,
-            ]}
-          />
           
-          <GridContainer
-            elements={[
-              <InputField
-                label="Designation"
-                initialValue={formData.designation}
-                onChange={(value) => handleInputChange('designation', value)}
-                required
-              />,
-              <InputField
-                label="Department"
-                initialValue={formData.department}
-                onChange={(value) => handleInputChange('department', value)}
-                required
-              />,
-            ]}
-          />
+        <input
+          type="file"
+          accept=".csv"
+          onChange={(e) => setCsvFile(e.target.files[0])}
+          className="file-input"
+        />
           
-          <GridContainer
-            elements={[
-              <InputField
-                label="Institution"
-                initialValue={formData.institution}
-                onChange={(value) => handleInputChange('institution', value)}
-                required
-              />,
-            ]}
-          />
-          
-          <GridContainer
-            elements={[
-              <InputField
-                label="Area of Expertise"
-                initialValue={formData.area_of_expertise}
-                onChange={(value) => handleInputChange('area_of_expertise', value)}
-              />,
-            ]}
-          />
-          
-          <GridContainer
-            elements={[
-              <InputField
-                label="Website"
-                initialValue={formData.website}
-                onChange={(value) => handleInputChange('website', value)}
-              />,
-            ]}
-          />
-          
-          <div className="modal-actions">
-            <button
-              onClick={() => {
-                setShowEditModal(false);
-                resetForm();
-              }}
-              className="custom-button custom-button--secondary"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleEditExpert}
-              className="custom-button"
-              disabled={submitting}
-            >
-              {submitting ? 'Updating...' : 'Update Expert'}
-            </button>
-          </div>
+        <div className="modal-actions">
+          <button
+            onClick={() => {
+              setShowBulkImportModal(false);
+              setCsvFile(null);
+            }}
+            className="custom-button custom-button--secondary"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleBulkImport}
+            className="custom-button"
+            disabled={submitting || !csvFile}
+          >
+            {submitting ? 'Importing...' : 'Import'}
+          </button>
         </div>
-      </CustomModal>
+      </div>
+    </CustomModal>
 
-    </div>
-    </Layout>
+    {/* Edit Expert Modal */}
+    <CustomModal
+      isOpen={showEditModal}
+      onClose={() => {
+        setShowEditModal(false);
+        resetForm();
+      }}
+      title="Edit Outside Expert"
+    >
+      <div className="modal-form">
+        <GridContainer
+          elements={[
+            <InputField
+              label="Full Name"
+              initialValue={formData.full_name}
+              onChange={(value) => handleInputChange('full_name', value)}
+              required
+            />,
+          ]}
+        />
+
+        <GridContainer
+          elements={[
+            <InputField
+              label="Email"
+              type="email"
+              initialValue={formData.email}
+              onChange={(value) => handleInputChange('email', value)}
+              required
+            />,
+            <InputField
+              label="Phone"
+              initialValue={formData.phone}
+              onChange={(value) => handleInputChange('phone', value)}
+            />,
+          ]}
+        />
+          
+        <GridContainer
+          elements={[
+            <InputField
+              label="Designation"
+              initialValue={formData.designation}
+              onChange={(value) => handleInputChange('designation', value)}
+              required
+            />,
+            <InputField
+              label="Department"
+              initialValue={formData.department}
+              onChange={(value) => handleInputChange('department', value)}
+              required
+            />,
+          ]}
+        />
+          
+        <GridContainer
+          elements={[
+            <InputField
+              label="Institution"
+              initialValue={formData.institution}
+              onChange={(value) => handleInputChange('institution', value)}
+              required
+            />,
+          ]}
+        />
+          
+        <GridContainer
+          elements={[
+            <InputField
+              label="Area of Expertise"
+              initialValue={formData.area_of_expertise}
+              onChange={(value) => handleInputChange('area_of_expertise', value)}
+            />,
+          ]}
+        />
+          
+        <GridContainer
+          elements={[
+            <InputField
+              label="Website"
+              initialValue={formData.website}
+              onChange={(value) => handleInputChange('website', value)}
+            />,
+          ]}
+        />
+          
+        <div className="modal-actions">
+          <button
+            onClick={() => {
+              setShowEditModal(false);
+              resetForm();
+            }}
+            className="custom-button custom-button--secondary"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleEditExpert}
+            className="custom-button"
+            disabled={submitting}
+          >
+            {submitting ? 'Updating...' : 'Update Expert'}
+          </button>
+        </div>
+      </div>
+    </CustomModal>
+
+  </div>
   );
 };
 

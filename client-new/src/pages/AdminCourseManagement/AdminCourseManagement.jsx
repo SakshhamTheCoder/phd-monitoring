@@ -3,7 +3,6 @@ import { toast } from 'react-toastify';
 import { customFetch, NETWORK_ERROR_MESSAGE } from '../../api/base';
 import { apiDepartmentList } from '../../api/lookups';
 import { baseURL } from '../../api/urls';
-import Layout from '../../components/dashboard/layout';
 import { useLoading } from '../../context/LoadingContext';
 import PagenationTable from '../../components/pagenationTable/PagenationTable';
 import CustomModal from '../../components/forms/modal/CustomModal';
@@ -272,282 +271,280 @@ const AdminCourseManagement = () => {
   };
 
   return (
-    <Layout>
-      <div className="admin-course-management">
-        <PageHeader title="Course Management" />
+    <div className="admin-course-management">
+      <PageHeader title="Course Management" />
 
-        <PagenationTable
-          key={refreshKey}
-          endpoint="/courses/list"
-          // A course has no page of its own; editing is in the row menu.
-          rowClickable={false}
-          enableApproval={false}
-          extraTopbarComponents={
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <CustomButton
-                text="Tag Student"
-                variant="secondary"
-                onClick={() => setShowTagModal(true)}
-              />
-              <CustomButton
-                text="Bulk Import"
-                variant="secondary"
-                onClick={() => setShowBulkImportModal(true)}
-              />
-              <CustomButton
-                text="Add Course +"
-                onClick={() => setShowAddModal(true)}
-              />
-            </div>
-          }
-          actions={[
-            {
-              icon: <i className="fa fa-pencil-square-o"></i>,
-              tooltip: 'Edit',
-              onClick: (data) => openEditModal(data),
-            },
-            {
-              icon: <i className="fa fa-trash"></i>,
-              tooltip: 'Delete',
-              onClick: (data) => handleDeleteCourse(data.id),
-            },
-          ]}
-        />
-
-      {/* Add Course Modal */}
-      <CustomModal
-        isOpen={showAddModal}
-        onClose={() => {
-          setShowAddModal(false);
-          resetForm();
-        }}
-        title="Add New Course"
-        closeOnOutsideClick={false}
-      >
-        <div className="modal-form">
-          <InputField
-            label="Course Code"
-            initialValue={formData.course_code}
-            onChange={(value) => handleInputChange('course_code', value)}
-            placeholder="e.g., CS101"
-            required
-          />
-          
-          <InputField
-            label="Course Name"
-            initialValue={formData.course_name}
-            onChange={(value) => handleInputChange('course_name', value)}
-            placeholder="e.g., Introduction to Computer Science"
-            required
-          />
-          
-          <InputField
-            label="Credits"
-            type="number"
-            initialValue={formData.credits}
-            onChange={(value) => handleInputChange('credits', value)}
-            placeholder="e.g., 3"
-            required
-          />
-          
-          {picksDepartment && (
-            <DropdownField
-              label="Department"
-              options={departments}
-              initialValue={formData.department_id}
-              onChange={(value) => handleInputChange('department_id', value)}
-              required
+      <PagenationTable
+        key={refreshKey}
+        endpoint="/courses/list"
+        // A course has no page of its own; editing is in the row menu.
+        rowClickable={false}
+        enableApproval={false}
+        extraTopbarComponents={
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <CustomButton
+              text="Tag Student"
+              variant="secondary"
+              onClick={() => setShowTagModal(true)}
             />
-          )}
-          
-          <div className="modal-actions">
-            <button
-              onClick={() => {
-                setShowAddModal(false);
-                resetForm();
-              }}
-              className="custom-button custom-button--secondary"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleAddCourse}
-              className="custom-button"
-              disabled={submitting}
-            >
-              {submitting ? 'Adding…' : 'Add Course'}
-            </button>
-          </div>
-        </div>
-      </CustomModal>
-
-      {/* Edit Course Modal */}
-      <CustomModal
-        isOpen={showEditModal}
-        onClose={() => {
-          setShowEditModal(false);
-          resetForm();
-        }}
-        title="Edit Course"
-        closeOnOutsideClick={false}
-      >
-        <div className="modal-form">
-          <InputField
-            label="Course Code"
-            initialValue={formData.course_code}
-            onChange={(value) => handleInputChange('course_code', value)}
-            required
-          />
-          
-          <InputField
-            label="Course Name"
-            initialValue={formData.course_name}
-            onChange={(value) => handleInputChange('course_name', value)}
-            required
-          />
-          
-          <InputField
-            label="Credits"
-            type="number"
-            initialValue={formData.credits}
-            onChange={(value) => handleInputChange('credits', value)}
-            required
-          />
-          
-          {picksDepartment && (
-            <DropdownField
-              label="Department"
-              options={departments}
-              initialValue={
-                departments?.find(
-                  (dept) => String(dept.value) === String(formData.department_id)
-                )?.title || ''
-              }
-              onChange={(value) => handleInputChange('department_id', value)}
-              required
+            <CustomButton
+              text="Bulk Import"
+              variant="secondary"
+              onClick={() => setShowBulkImportModal(true)}
             />
-          )}
-
-          <div className="modal-actions">
-            <button
-              onClick={() => {
-                setShowEditModal(false);
-                resetForm();
-              }}
-              className="custom-button custom-button--secondary"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleEditCourse}
-              className="custom-button"
-              disabled={submitting}
-            >
-              {submitting ? 'Updating…' : 'Update Course'}
-            </button>
-          </div>
-        </div>
-      </CustomModal>
-
-      {/* Tag Student Modal */}
-      <CustomModal
-        isOpen={showTagModal}
-        onClose={() => {
-          setShowTagModal(false);
-          resetTagData();
-        }}
-        title="Tag Student with Course"
-        closeOnOutsideClick={false}
-      >
-        <div className="modal-form">
-          <InputSuggestions
-            label="Student"
-            apiUrl={`${baseURL}/suggestions/student`}
-            initialValue={tagData.student_name}
-            fields={["name", "roll_no"]}
-            hint="Type a name or registration number"
-            onSelect={(student) => {
-              handleTagInputChange('student_id', student.roll_no);
-              handleTagInputChange('student_name', student.name);
-            }}
-            required
-          />
-          
-          <DropdownField
-            label="Course"
-            options={courses?.map(c => ({ value: c.id, title: `${c.course_code} - ${c.course_name}` }))}
-            initialValue={tagData.course_id}
-            onChange={(value) => handleTagInputChange('course_id', value)}
-            required
-          />
-          
-          <InputField
-            label="Semester"
-            initialValue={tagData.semester}
-            onChange={(value) => handleTagInputChange('semester', value)}
-            hint="e.g., Fall 2024"
-            required
-          />
-          
-          <DropdownField
-            label="Status"
-            options={[
-              { value: 'enrolled', title: 'Enrolled' },
-              { value: 'completed', title: 'Completed' }
-            ]}
-            initialValue={tagData.status}
-            onChange={(value) => handleTagInputChange('status', value)}
-            required
-          />
-          
-          {tagData.status === 'completed' && (
-            <InputField
-              label="Grade"
-              initialValue={tagData.grade}
-              onChange={(value) => handleTagInputChange('grade', value)}
-              placeholder="e.g., A+"
+            <CustomButton
+              text="Add Course +"
+              onClick={() => setShowAddModal(true)}
             />
-          )}
-          
-          <div className="modal-actions">
-            <button
-              onClick={() => {
-                setShowTagModal(false);
-                resetTagData();
-              }}
-              className="custom-button custom-button--secondary"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleTagStudent}
-              className="custom-button"
-              disabled={submitting}
-            >
-              {submitting ? 'Tagging…' : 'Tag Student'}
-            </button>
           </div>
-        </div>
-      </CustomModal>
-
-      <UnifiedBulkImportModal
-        isOpen={showBulkImportModal}
-        onClose={() => setShowBulkImportModal(false)}
-        title="Bulk Import Coursework"
-        required={['Registration Number', 'Academic Year', 'Subject Code']}
-        rules={[
-              'A subject code the portal does not have yet is created from the row.',
-              'A grade means the course is finished. Leave it blank while it is still being taken.',
-              'Academic Year is the semester code, for example 2425ODD.',
-              'Importing the same file again updates the enrolments rather than duplicating them.',
-            ]}
-        sampleFileName="coursework_sample.csv"
-        sampleCsvContent={courseSampleCsv}
-        onImport={handleBulkImport}
-        submitting={submitting}
+        }
+        actions={[
+          {
+            icon: <i className="fa fa-pencil-square-o"></i>,
+            tooltip: 'Edit',
+            onClick: (data) => openEditModal(data),
+          },
+          {
+            icon: <i className="fa fa-trash"></i>,
+            tooltip: 'Delete',
+            onClick: (data) => handleDeleteCourse(data.id),
+          },
+        ]}
       />
-    </div>
-    </Layout>
+
+    {/* Add Course Modal */}
+    <CustomModal
+      isOpen={showAddModal}
+      onClose={() => {
+        setShowAddModal(false);
+        resetForm();
+      }}
+      title="Add New Course"
+      closeOnOutsideClick={false}
+    >
+      <div className="modal-form">
+        <InputField
+          label="Course Code"
+          initialValue={formData.course_code}
+          onChange={(value) => handleInputChange('course_code', value)}
+          placeholder="e.g., CS101"
+          required
+        />
+          
+        <InputField
+          label="Course Name"
+          initialValue={formData.course_name}
+          onChange={(value) => handleInputChange('course_name', value)}
+          placeholder="e.g., Introduction to Computer Science"
+          required
+        />
+          
+        <InputField
+          label="Credits"
+          type="number"
+          initialValue={formData.credits}
+          onChange={(value) => handleInputChange('credits', value)}
+          placeholder="e.g., 3"
+          required
+        />
+          
+        {picksDepartment && (
+          <DropdownField
+            label="Department"
+            options={departments}
+            initialValue={formData.department_id}
+            onChange={(value) => handleInputChange('department_id', value)}
+            required
+          />
+        )}
+          
+        <div className="modal-actions">
+          <button
+            onClick={() => {
+              setShowAddModal(false);
+              resetForm();
+            }}
+            className="custom-button custom-button--secondary"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleAddCourse}
+            className="custom-button"
+            disabled={submitting}
+          >
+            {submitting ? 'Adding…' : 'Add Course'}
+          </button>
+        </div>
+      </div>
+    </CustomModal>
+
+    {/* Edit Course Modal */}
+    <CustomModal
+      isOpen={showEditModal}
+      onClose={() => {
+        setShowEditModal(false);
+        resetForm();
+      }}
+      title="Edit Course"
+      closeOnOutsideClick={false}
+    >
+      <div className="modal-form">
+        <InputField
+          label="Course Code"
+          initialValue={formData.course_code}
+          onChange={(value) => handleInputChange('course_code', value)}
+          required
+        />
+          
+        <InputField
+          label="Course Name"
+          initialValue={formData.course_name}
+          onChange={(value) => handleInputChange('course_name', value)}
+          required
+        />
+          
+        <InputField
+          label="Credits"
+          type="number"
+          initialValue={formData.credits}
+          onChange={(value) => handleInputChange('credits', value)}
+          required
+        />
+          
+        {picksDepartment && (
+          <DropdownField
+            label="Department"
+            options={departments}
+            initialValue={
+              departments?.find(
+                (dept) => String(dept.value) === String(formData.department_id)
+              )?.title || ''
+            }
+            onChange={(value) => handleInputChange('department_id', value)}
+            required
+          />
+        )}
+
+        <div className="modal-actions">
+          <button
+            onClick={() => {
+              setShowEditModal(false);
+              resetForm();
+            }}
+            className="custom-button custom-button--secondary"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleEditCourse}
+            className="custom-button"
+            disabled={submitting}
+          >
+            {submitting ? 'Updating…' : 'Update Course'}
+          </button>
+        </div>
+      </div>
+    </CustomModal>
+
+    {/* Tag Student Modal */}
+    <CustomModal
+      isOpen={showTagModal}
+      onClose={() => {
+        setShowTagModal(false);
+        resetTagData();
+      }}
+      title="Tag Student with Course"
+      closeOnOutsideClick={false}
+    >
+      <div className="modal-form">
+        <InputSuggestions
+          label="Student"
+          apiUrl={`${baseURL}/suggestions/student`}
+          initialValue={tagData.student_name}
+          fields={["name", "roll_no"]}
+          hint="Type a name or registration number"
+          onSelect={(student) => {
+            handleTagInputChange('student_id', student.roll_no);
+            handleTagInputChange('student_name', student.name);
+          }}
+          required
+        />
+          
+        <DropdownField
+          label="Course"
+          options={courses?.map(c => ({ value: c.id, title: `${c.course_code} - ${c.course_name}` }))}
+          initialValue={tagData.course_id}
+          onChange={(value) => handleTagInputChange('course_id', value)}
+          required
+        />
+          
+        <InputField
+          label="Semester"
+          initialValue={tagData.semester}
+          onChange={(value) => handleTagInputChange('semester', value)}
+          hint="e.g., Fall 2024"
+          required
+        />
+          
+        <DropdownField
+          label="Status"
+          options={[
+            { value: 'enrolled', title: 'Enrolled' },
+            { value: 'completed', title: 'Completed' }
+          ]}
+          initialValue={tagData.status}
+          onChange={(value) => handleTagInputChange('status', value)}
+          required
+        />
+          
+        {tagData.status === 'completed' && (
+          <InputField
+            label="Grade"
+            initialValue={tagData.grade}
+            onChange={(value) => handleTagInputChange('grade', value)}
+            placeholder="e.g., A+"
+          />
+        )}
+          
+        <div className="modal-actions">
+          <button
+            onClick={() => {
+              setShowTagModal(false);
+              resetTagData();
+            }}
+            className="custom-button custom-button--secondary"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleTagStudent}
+            className="custom-button"
+            disabled={submitting}
+          >
+            {submitting ? 'Tagging…' : 'Tag Student'}
+          </button>
+        </div>
+      </div>
+    </CustomModal>
+
+    <UnifiedBulkImportModal
+      isOpen={showBulkImportModal}
+      onClose={() => setShowBulkImportModal(false)}
+      title="Bulk Import Coursework"
+      required={['Registration Number', 'Academic Year', 'Subject Code']}
+      rules={[
+            'A subject code the portal does not have yet is created from the row.',
+            'A grade means the course is finished. Leave it blank while it is still being taken.',
+            'Academic Year is the semester code, for example 2425ODD.',
+            'Importing the same file again updates the enrolments rather than duplicating them.',
+          ]}
+      sampleFileName="coursework_sample.csv"
+      sampleCsvContent={courseSampleCsv}
+      onImport={handleBulkImport}
+      submitting={submitting}
+    />
+  </div>
   );
 };
 

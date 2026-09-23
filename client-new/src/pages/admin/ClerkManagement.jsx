@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import FilterBar from '../../components/filterBar/FilterBar';
 import { toast } from 'react-toastify';
@@ -16,7 +15,7 @@ import UnifiedBulkImportModal from '../../components/bulkImport/UnifiedBulkImpor
  * Admin → Clerk Management
  *
  * Mirrors StudentsPage / FacultyPage / UsersPage:
- *  - Layout + PageHeader (+ actions)
+ *  - PageHeader (+ actions)
  *  - FilterBar → client-side filter (clerks endpoint is small and not paginated)
  *  - form-list-container / form-table + row-actions kebab + badges + empty-state
  *  - CustomModal (80vw create, 560px manage) + modal-note + modal-actions + CustomButton
@@ -216,7 +215,7 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
   };
 
   return (
-    <Layout>
+    <>
       <PageHeader
         title="Clerk Management"
         subtitle="Create clerk logins and tag them with the departments whose PhD attendance they mark."
@@ -387,7 +386,7 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
         submitting={bulkSubmitting}
         uploadProgress={uploadProgress}
       />
-    </Layout>
+    </>
   );
 };
 

@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Layout from '../../components/dashboard/layout';
 import PageHeader from '../../components/pageHeader/PageHeader';
 import Tabs from '../../components/tabs/Tabs';
 import { toast } from 'react-toastify';
@@ -257,7 +256,7 @@ const AttendancePage = () => {
   }, [isAdmin]);
 
   return (
-    <Layout>
+    <>
       <PageHeader
         title="Attendance"
         subtitle={!departmentsLoaded ? 'Loading departments…' : departments.length > 0 ? `${departments.map((d) => d.name).join(', ')}` : (isAdmin ? 'No departments exist yet.' : 'Your departments will appear here once an admin tags you.')}
@@ -610,7 +609,7 @@ const AttendancePage = () => {
         onImported={loadRoster}
         editWindow={EDIT_WINDOW}
       />
-    </Layout>
+    </>
   );
 };
 export default AttendancePage;

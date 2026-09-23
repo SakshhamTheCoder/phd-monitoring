@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import Layout from '../../components/dashboard/layout';
 import { useLoading } from '../../context/LoadingContext';
 import { useLocation } from 'react-router-dom';
 import FilterBar from '../../components/filterBar/FilterBar';
@@ -172,100 +171,98 @@ Machine Learning,CSED
 Data Science,CSED`;
 
   return (
-    <Layout>
-      <div className="area-specialization-page">
-        <PageHeader
-          title="Areas of Specialization"
-          subtitle="The research areas each department offers."
-        />
+    <div className="area-specialization-page">
+      <PageHeader
+        title="Areas of Specialization"
+        subtitle="The research areas each department offers."
+      />
 
-        {/* <FilterBar onSearch={handleFilterChange} /> */}
+      {/* <FilterBar onSearch={handleFilterChange} /> */}
         
-        <PagenationTable
-          key={refreshKey}
-          endpoint="/departments/area-of-specialization/list"
+      <PagenationTable
+        key={refreshKey}
+        endpoint="/departments/area-of-specialization/list"
 
-          enableApproval={false}
-          customOpenForm={openForm}
-          extraTopbarComponents={
-            <div className="top-actions">
-              <CustomButton
-                text="Bulk Import"
-                variant="secondary"
-                onClick={() => setIsUploadModalOpen(true)}
-              />
-              <CustomButton 
-                text="Add Area +" 
-                onClick={() => openForm()} 
-              />
-            </div>
-          }
-          actions={[
-            {
-              icon: <i className="fa fa-pencil-square-o"></i>,
-              tooltip: 'Edit',
-              onClick: (data) => openForm(data),
-            },
-            {
-              icon: <i className="fa fa-trash"></i>,
-              tooltip: 'Delete',
-              onClick: (data) => handleDelete(data.id),
-            },
-          ]}
-        />
-
-        {/* Add/Edit Modal */}
-        <CustomModal
-          isOpen={isOpen}
-          onClose={() => setIsOpen(false)}
-          title={editData ? 'Edit Area of Specialization' : 'Add Area of Specialization'}
-          minWidth="600px"
-          maxWidth="800px"
-        >
-          <div className="form-container">
-            <GridContainer
-              elements={[
-                <InputField
-                  label="Area Name"
-                  initialValue={formData.name}
-                  onChange={(value) => setFormData({ ...formData, name: value })}
-                  hint="e.g., Machine Learning, Data Science"
-                />,
-                <DropdownField
-                  label="Department"
-                  initialValue={formData.department_id}
-                  options={departments}
-                  onChange={(value) => setFormData({ ...formData, department_id: value })}
-                />,
-              ]}
+        enableApproval={false}
+        customOpenForm={openForm}
+        extraTopbarComponents={
+          <div className="top-actions">
+            <CustomButton
+              text="Bulk Import"
+              variant="secondary"
+              onClick={() => setIsUploadModalOpen(true)}
             />
-
-            <GridContainer
-              elements={[
-                <CustomButton text="Cancel" onClick={() => setIsOpen(false)} />,
-                <CustomButton text={editData ? 'Update' : 'Add'} onClick={handleSubmit} />,
-              ]}
+            <CustomButton 
+              text="Add Area +" 
+              onClick={() => openForm()} 
             />
           </div>
-        </CustomModal>
+        }
+        actions={[
+          {
+            icon: <i className="fa fa-pencil-square-o"></i>,
+            tooltip: 'Edit',
+            onClick: (data) => openForm(data),
+          },
+          {
+            icon: <i className="fa fa-trash"></i>,
+            tooltip: 'Delete',
+            onClick: (data) => handleDelete(data.id),
+          },
+        ]}
+      />
 
-        <UnifiedBulkImportModal
-          isOpen={isUploadModalOpen}
-          onClose={() => setIsUploadModalOpen(false)}
-          title="Bulk Import Research Areas"
-          required={['name', 'department_code']}
-          rules={[
-              "The institute's matrix also loads as it is: one column per department code, one area per cell.",
-              'An area already on the list is left alone, so the same file can be loaded twice.',
-              'An area the sheet drops is removed only when no scholar or faculty member points at it.',
+      {/* Add/Edit Modal */}
+      <CustomModal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        title={editData ? 'Edit Area of Specialization' : 'Add Area of Specialization'}
+        minWidth="600px"
+        maxWidth="800px"
+      >
+        <div className="form-container">
+          <GridContainer
+            elements={[
+              <InputField
+                label="Area Name"
+                initialValue={formData.name}
+                onChange={(value) => setFormData({ ...formData, name: value })}
+                hint="e.g., Machine Learning, Data Science"
+              />,
+              <DropdownField
+                label="Department"
+                initialValue={formData.department_id}
+                options={departments}
+                onChange={(value) => setFormData({ ...formData, department_id: value })}
+              />,
             ]}
-          sampleFileName="research_areas_sample.csv"
-          sampleCsvContent={areaSampleCsv}
-          onImport={handleCSVUpload}
-          submitting={submitting}
-        />
-      </div>
-    </Layout>
+          />
+
+          <GridContainer
+            elements={[
+              <CustomButton text="Cancel" onClick={() => setIsOpen(false)} />,
+              <CustomButton text={editData ? 'Update' : 'Add'} onClick={handleSubmit} />,
+            ]}
+          />
+        </div>
+      </CustomModal>
+
+      <UnifiedBulkImportModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        title="Bulk Import Research Areas"
+        required={['name', 'department_code']}
+        rules={[
+            "The institute's matrix also loads as it is: one column per department code, one area per cell.",
+            'An area already on the list is left alone, so the same file can be loaded twice.',
+            'An area the sheet drops is removed only when no scholar or faculty member points at it.',
+          ]}
+        sampleFileName="research_areas_sample.csv"
+        sampleCsvContent={areaSampleCsv}
+        onImport={handleCSVUpload}
+        submitting={submitting}
+      />
+    </div>
   );
 };
 

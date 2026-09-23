@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import Layout from '../../components/dashboard/layout';
 import {
   categoryOptions,
   roleOptions,
@@ -556,61 +555,59 @@ const CreateProject = () => {
   };
 
   return (
-    <Layout>
-      <div className="cp-container">
-        <button className="page-back-link" onClick={() => navigate('/projects')}>
-          <i className="fa fa-arrow-left"></i> BACK TO PROJECTS
-        </button>
-        <div className="cp-wizard-header">
-          <h1 className="page-title">{isEditMode ? 'Edit Project' : 'Create New Project Proposal'}</h1>
-          <span className="cp-draft-badge">{isEditMode ? 'EDITING' : 'DRAFT'}</span>
-        </div>
-        {/* Stepper */}
-        <div className="cp-stepper">
-          {STEPS.map((step, i) => (
-            <React.Fragment key={step}>
-              <button
-                type="button"
-                className={`cp-step-dot ${i < currentStep ? 'done' : ''} ${i === currentStep ? 'active' : ''}`}
-                onClick={() => setCurrentStep(i)}
-                aria-current={i === currentStep ? 'step' : undefined}
-                aria-label={`Step ${i + 1}: ${step}`}
-              >
-                {i < currentStep ? <i className="fa fa-check"></i> : <span>{String(i + 1).padStart(2, '0')}</span>}
-              </button>
-              {i < STEPS.length - 1 && <div className={`cp-step-line ${i < currentStep ? 'done' : ''}`}></div>}
-            </React.Fragment>
-          ))}
-        </div>
-        <div className="cp-step-labels">
-          {STEPS.map((step, i) => (
-            <span key={step} className={`cp-step-label ${i === currentStep ? 'active' : ''}`}>{step}</span>
-          ))}
-        </div>
+    <div className="cp-container">
+      <button className="page-back-link" onClick={() => navigate('/projects')}>
+        <i className="fa fa-arrow-left"></i> BACK TO PROJECTS
+      </button>
+      <div className="cp-wizard-header">
+        <h1 className="page-title">{isEditMode ? 'Edit Project' : 'Create New Project Proposal'}</h1>
+        <span className="cp-draft-badge">{isEditMode ? 'EDITING' : 'DRAFT'}</span>
+      </div>
+      {/* Stepper */}
+      <div className="cp-stepper">
+        {STEPS.map((step, i) => (
+          <React.Fragment key={step}>
+            <button
+              type="button"
+              className={`cp-step-dot ${i < currentStep ? 'done' : ''} ${i === currentStep ? 'active' : ''}`}
+              onClick={() => setCurrentStep(i)}
+              aria-current={i === currentStep ? 'step' : undefined}
+              aria-label={`Step ${i + 1}: ${step}`}
+            >
+              {i < currentStep ? <i className="fa fa-check"></i> : <span>{String(i + 1).padStart(2, '0')}</span>}
+            </button>
+            {i < STEPS.length - 1 && <div className={`cp-step-line ${i < currentStep ? 'done' : ''}`}></div>}
+          </React.Fragment>
+        ))}
+      </div>
+      <div className="cp-step-labels">
+        {STEPS.map((step, i) => (
+          <span key={step} className={`cp-step-label ${i === currentStep ? 'active' : ''}`}>{step}</span>
+        ))}
+      </div>
 
-        {renderStep()}
+      {renderStep()}
 
-        {/* Navigation */}
-        <div className="cp-nav-footer">
-          {currentStep > 0 && (
-            <button className="cp-btn-outline" onClick={() => setCurrentStep(currentStep - 1)}>
-              <i className="fa fa-chevron-left"></i> Previous Step
+      {/* Navigation */}
+      <div className="cp-nav-footer">
+        {currentStep > 0 && (
+          <button className="cp-btn-outline" onClick={() => setCurrentStep(currentStep - 1)}>
+            <i className="fa fa-chevron-left"></i> Previous Step
+          </button>
+        )}
+        <div className="cp-nav-right">
+          {currentStep < STEPS.length - 1 ? (
+            <button className="cp-btn-primary" onClick={() => setCurrentStep(currentStep + 1)}>
+              Continue <i className="fa fa-chevron-right"></i>
+            </button>
+          ) : (
+            <button className="cp-btn-primary" onClick={handleSubmit} disabled={submitting}>
+              <i className={`fa ${isEditMode ? 'fa-save' : 'fa-paper-plane'}`}></i> {isEditMode ? 'Save Changes' : 'Submit'}
             </button>
           )}
-          <div className="cp-nav-right">
-            {currentStep < STEPS.length - 1 ? (
-              <button className="cp-btn-primary" onClick={() => setCurrentStep(currentStep + 1)}>
-                Continue <i className="fa fa-chevron-right"></i>
-              </button>
-            ) : (
-              <button className="cp-btn-primary" onClick={handleSubmit} disabled={submitting}>
-                <i className={`fa ${isEditMode ? 'fa-save' : 'fa-paper-plane'}`}></i> {isEditMode ? 'Save Changes' : 'Submit'}
-              </button>
-            )}
-          </div>
         </div>
       </div>
-    </Layout>
+    </div>
   );
 };
 

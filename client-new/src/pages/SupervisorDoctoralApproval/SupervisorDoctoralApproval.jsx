@@ -7,7 +7,6 @@ import CustomButton from '../../components/forms/fields/CustomButton';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import GridContainer from '../../components/forms/fields/GridContainer';
 import InputField from '../../components/forms/fields/InputField';
-import Layout from '../../components/dashboard/layout';
 import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
 import PageHeader from '../../components/pageHeader/PageHeader';
 
@@ -154,7 +153,6 @@ const SupervisorDoctoralApproval = () => {
   }));
 
   return (
-    <Layout>
     <div>
       <PageHeader
         title="Supervisor &amp; Doctoral Committee Change Approvals"
@@ -257,7 +255,6 @@ const SupervisorDoctoralApproval = () => {
         </div>
       </CustomModal>
     </div>
-    </Layout>
   );
 };
 
