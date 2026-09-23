@@ -5,6 +5,10 @@ import './LogViewer.css';
 
 const POLL_MS = 5000;
 const SCROLL_BUFFER = 100;
+// Lines held at once, about three of the server's 64 KB chunks. Left open, the
+// poll and scroll-back grew the list, and the page, for as long as it stayed up.
+const MAX_LINES = 3000;
+const encoder = new TextEncoder();
 
 const parseLine = (line) => {
   const match = line.match(/^\[(.*?)\]\s+(.*?)\.(.*?):\s+(.*)$/);
@@ -19,15 +23,29 @@ const parseLine = (line) => {
       timestamp,
       level,
       message: messageRaw.substring(0, jsonStart).trim(),
-      json: JSON.parse(messageRaw.substring(jsonStart)),
+      json: JSON.stringify(JSON.parse(messageRaw.substring(jsonStart)), null, 2),
     };
   } catch (e) {
     return { timestamp, level, message: messageRaw };
   }
 };
 
+// Parsed once on arrival rather than on every render. Each line is keyed by its
+// byte offset in the file, which stays put however the list is added to.
+const toEntries = (text, start) => {
+  const entries = [];
+  let offset = start;
+  for (const line of text.split('\n')) {
+    if (line.trim() !== '') entries.push({ offset, ...parseLine(line) });
+    offset += encoder.encode(line).length + 1;
+  }
+  return entries;
+};
+
 const LogViewer = () => {
   const [logs, setLogs] = useState([]);
+  // The same list, readable from the poll, which only ever sees the first render.
+  const held = useRef([]);
   const [loading, setLoading] = useState(true);
   const [atStart, setAtStart] = useState(false);
   // No logs after a failed read says nothing about the file, so it is not
@@ -45,13 +63,16 @@ const LogViewer = () => {
   const containerRef = useRef(null);
 
   const fetchLogs = useCallback(async (direction) => {
+    const show = (next) => {
+      held.current = next;
+      setLogs(next);
+    };
+
     if (isFetching.current) return;
     if (direction === 'backward' && (from.current === null || from.current <= 0)) return;
     isFetching.current = true;
 
     const container = containerRef.current;
-    const prevScrollHeight = container ? container.scrollHeight : 0;
-    const prevScrollTop = container ? container.scrollTop : 0;
 
     const offset = direction === 'backward' ? from.current : to.current;
     const query = direction === 'tail' ? 'direction=tail' : `direction=${direction}&offset=${offset}`;
@@ -75,30 +96,45 @@ const LogViewer = () => {
         return;
       }
 
-      const lines = (response.logs || '').split('\n').filter((line) => line.trim() !== '');
+      const entries = toEntries(response.logs || '', response.from);
 
       if (direction === 'backward') {
         from.current = response.from;
         if (response.from <= 0) setAtStart(true);
-        if (lines.length) {
-          setLogs((prev) => [...lines, ...prev]);
+        if (entries.length) {
+          // Held in place by the row that was on top, not by the list height:
+          // over the cap the newest rows go too, which changes the height.
+          const anchor = container && container.querySelector('.log-line, .log-entry');
+          const anchorTop = anchor ? anchor.getBoundingClientRect().top : 0;
+          const merged = [...entries, ...held.current];
+          // Dropping the newest rows means the poll has to read them again.
+          if (merged.length > MAX_LINES) to.current = merged[MAX_LINES].offset;
+          show(merged.slice(0, MAX_LINES));
           requestAnimationFrame(() => {
-            if (!container) return;
-            container.scrollTop = container.scrollHeight - prevScrollHeight + prevScrollTop;
+            if (!container || !anchor) return;
+            container.scrollTop += anchor.getBoundingClientRect().top - anchorTop;
           });
         }
         return;
       }
 
       if (direction === 'tail') {
-        from.current = response.from;
-        if (response.from <= 0) setAtStart(true);
-        setLogs(lines);
+        const kept = entries.slice(-MAX_LINES);
+        from.current = kept.length < entries.length ? kept[0].offset : response.from;
+        setAtStart(from.current <= 0);
+        show(kept);
         requestAnimationFrame(() => {
           if (container) container.scrollTop = container.scrollHeight;
         });
-      } else if (lines.length) {
-        setLogs((prev) => [...prev, ...lines]);
+      } else if (entries.length) {
+        const merged = [...held.current, ...entries];
+        const kept = merged.slice(-MAX_LINES);
+        if (kept.length < merged.length) {
+          // Scrolling back has to fetch the dropped rows again.
+          from.current = kept[0].offset;
+          setAtStart(false);
+        }
+        show(kept);
         if (pinnedToBottom.current) {
           requestAnimationFrame(() => {
             if (container) container.scrollTop = container.scrollHeight;
@@ -143,19 +179,18 @@ const LogViewer = () => {
       {!loading && !failed && logs.length === 0 && <div className="log-empty">The log file is empty.</div>}
       {atStart && logs.length > 0 && <div className="log-boundary">Start of log file</div>}
 
-      {logs.map((line, idx) => {
-        const entry = parseLine(line);
+      {logs.map((entry) => {
         if (entry.raw !== undefined) {
-          return <div key={idx} className="log-line">{entry.raw}</div>;
+          return <div key={entry.offset} className="log-line">{entry.raw}</div>;
         }
         return (
-          <div key={idx} className="log-entry">
+          <div key={entry.offset} className="log-entry">
             <div className="log-meta">
               <span className="log-time">{entry.timestamp}</span>
               <span className={`log-level log-${entry.level.toLowerCase()}`}>{entry.level}</span>
             </div>
             <div className="log-message">{entry.message}</div>
-            {entry.json && <pre className="log-json">{JSON.stringify(entry.json, null, 2)}</pre>}
+            {entry.json && <pre className="log-json">{entry.json}</pre>}
           </div>
         );
       })}

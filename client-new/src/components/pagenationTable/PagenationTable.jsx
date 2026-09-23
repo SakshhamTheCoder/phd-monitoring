@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./PagenationTable.css";
 import { baseURL } from "../../api/urls";
 import { customFetch } from "../../api/base";
@@ -59,7 +59,10 @@ const PagenationTable = ({
     setCurrentPage(1);
   }
 
-  const componentMap = components.reduce((all, one) => ({ ...all, [one.key]: one.component }), {});
+  const componentMap = useMemo(
+    () => Object.fromEntries(components.map((one) => [one.key, one.component])),
+    [components]
+  );
 
   // The tick boxes can be on permanently. There is then no mode to enter, the
   // box itself does the ticking, and the row click still opens the row.

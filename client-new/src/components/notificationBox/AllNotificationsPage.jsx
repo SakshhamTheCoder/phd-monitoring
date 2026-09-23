@@ -20,15 +20,8 @@ const AllNotificationsPage = () => {
     setStatus(success ? "ready" : "failed");
   }, []);
 
-  // Fetch on mount and whenever the active role changes (no page reload needed).
   useEffect(() => {
     fetchNotifications();
-    const onRoleChange = () => {
-      setStatus("loading");
-      fetchNotifications();
-    };
-    window.addEventListener("rolechange", onRoleChange);
-    return () => window.removeEventListener("rolechange", onRoleChange);
   }, [fetchNotifications]);
 
   const openNotification = (notification) => {
@@ -69,20 +62,21 @@ const AllNotificationsPage = () => {
         ) : (
           <div className="notification-list">
             {notifications.map((notification) => (
-              <div
+              <button
+                type="button"
                 className={`notification-card ${notification.is_read ? "is-read" : "is-unread"}`}
                 key={notification.id}
                 onClick={() => openNotification(notification)}
               >
-                <div className="notification-card-main">
-                  <div className="notification-card-titlerow">
+                <span className="notification-card-main">
+                  <span className="notification-card-titlerow">
                     {!notification.is_read && <span className="notification-dot" />}
                     <span className="notification-title">{notification.title}</span>
-                  </div>
-                  <div className="notification-body">{notification.body}</div>
-                </div>
+                  </span>
+                  <span className="notification-body">{notification.body}</span>
+                </span>
                 <span className="notif-date">{timeAgo(notification.created_at)}</span>
-              </div>
+              </button>
             ))}
           </div>
         )}

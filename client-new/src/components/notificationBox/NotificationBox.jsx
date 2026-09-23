@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Link } from "react-router-dom";
 import "./NotificationBox.css";
 import { APIlistUnreadNotifications, APImarkNotificationAsRead, APImarkAllNotificationsAsRead } from "../../api/notifications";
 import { toast } from "react-toastify";
@@ -9,6 +10,7 @@ import { currentRole } from '../../auth/access';
 const NotificationBox = () => {
   const [isOpen, setIsOpen] = useState(false);
   const notificationRef = useRef(null);
+  const toggleRef = useRef(null);
   const [notifications, setNotifications] = useState([]);
   const [allRead, setAllRead] = useState(false);
   // An empty list after a failed load is not "all caught up".
@@ -21,12 +23,8 @@ const NotificationBox = () => {
     setLoadFailed(!success);
   }, []);
 
-  // Fetch on mount, and re-fetch whenever the active role changes so the bell
-  // reflects the role the user just switched to, without reloading the page.
   useEffect(() => {
     fetchNotifications();
-    window.addEventListener("rolechange", fetchNotifications);
-    return () => window.removeEventListener("rolechange", fetchNotifications);
   }, [fetchNotifications]);
 
   const toggleNotifications = () => {
@@ -44,6 +42,17 @@ const NotificationBox = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const closeOnEscape = (event) => {
+      if (event.key !== "Escape") return;
+      setIsOpen(false);
+      toggleRef.current?.focus();
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [isOpen]);
 
   const onNotificationClick = (notification) => {
     const role = currentRole();
@@ -78,6 +87,7 @@ const NotificationBox = () => {
     <div className="notification_wrapper" ref={notificationRef}>
       <button
         type="button"
+        ref={toggleRef}
         className="notification_icon"
         onClick={toggleNotifications}
         aria-haspopup="true"
@@ -113,23 +123,24 @@ const NotificationBox = () => {
               </div>
             ) : (
               notifications.map((notification) => (
-                <div
+                <button
+                  type="button"
                   className={`notification_item ${isRead(notification) ? "is_read" : ""}`}
                   key={notification.id}
                   onClick={() => onNotificationClick(notification)}
                 >
                   <span className={`notification_unread_dot ${isRead(notification) ? "hidden_dot" : ""}`} />
-                  <div className="notification_item_text">
-                    <h4>{notification.title}</h4>
-                    <p>{notification.body}</p>
+                  <span className="notification_item_text">
+                    <span className="notification_item_title">{notification.title}</span>
+                    <span className="notification_item_body">{notification.body}</span>
                     <span className="notification_time">{timeAgo(notification.created_at)}</span>
-                  </div>
-                </div>
+                  </span>
+                </button>
               ))
             )}
           </div>
           <div className="notification_footer">
-            <a href="/notifications" className="see_all">See all</a>
+            <Link to="/notifications" className="see_all" onClick={() => setIsOpen(false)}>See all</Link>
           </div>
         </div>
       )}

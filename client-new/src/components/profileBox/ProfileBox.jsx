@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import "./ProfileBox.css";
 import { generateAvatar } from "../../utils/profileImage";
 import CustomModal from "../forms/modal/CustomModal";
@@ -6,26 +6,24 @@ import SwitchRole from "../switchRole/SwitchRole";
 import ChangePassword from "./ChangePassword";
 import { getRoleName } from "../../utils/roleName";
 import { logoutAPI } from "../../api/login";
-import { toast } from "react-toastify";
 import { currentRole } from '../../auth/access';
+
+const readUser = () => JSON.parse(localStorage.getItem("user")) || {};
+
 const ProfileBox = () => {
   const [isOpen, setIsOpen] = useState(false);
   const profileRef = useRef(null);
+  const toggleRef = useRef(null);
 
-  const user = JSON.parse(localStorage.getItem("user")) || {};
+  // Read once, not per render. The one write made while this is mounted is the
+  // password dialog's, which re-reads below. A role switch reloads the page.
+  const [user, setUser] = useState(readUser);
 
   const name =
     user && user.first_name && user.last_name
       ? `${user.first_name} ${user.last_name}`
       : "Name";
-  const [role, setRole] = useState(getRoleName(currentRole()) || "Role");
-
-  useEffect(() => {
-    const onRoleChange = () =>
-      setRole(getRoleName(currentRole()) || "Role");
-    window.addEventListener("rolechange", onRoleChange);
-    return () => window.removeEventListener("rolechange", onRoleChange);
-  }, []);
+  const role = getRoleName(currentRole()) || "Role";
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
@@ -38,9 +36,11 @@ const ProfileBox = () => {
     setIsModalOpen(false);
   };
 
-  const image = user.profile_image
-    ? user.profile_image
-    : generateAvatar(user.first_name, user.last_name);
+  // The avatar is drawn on a canvas, too costly to redo on every render.
+  const image = useMemo(
+    () => user.profile_image || generateAvatar(user.first_name, user.last_name),
+    [user.profile_image, user.first_name, user.last_name]
+  );
 
   const toggleProfileMenu = () => {
     setIsOpen(!isOpen);
@@ -59,10 +59,22 @@ const ProfileBox = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const closeOnEscape = (event) => {
+      if (event.key !== "Escape") return;
+      setIsOpen(false);
+      toggleRef.current?.focus();
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [isOpen]);
+
   return (
     <div className="profile_wrapper" ref={profileRef}>
       <button
         type="button"
+        ref={toggleRef}
         className="user_section"
         onClick={toggleProfileMenu}
         aria-haspopup="true"
@@ -99,7 +111,6 @@ const ProfileBox = () => {
             </button>
             <button type="button" className="profile_item" onClick={() => {
               logoutAPI();
-              toast.success("Logged out");
               window.location.href = "/login";
             }}>
               <h4>Logout</h4>
@@ -127,7 +138,7 @@ const ProfileBox = () => {
         minWidth="400px"
         maxWidth="520px"
       >
-        <ChangePassword onDone={() => { setPasswordOpen(false); setIsOpen(false); }} />
+        <ChangePassword onDone={() => { setUser(readUser()); setPasswordOpen(false); setIsOpen(false); }} />
       </CustomModal>
     </div>
   );

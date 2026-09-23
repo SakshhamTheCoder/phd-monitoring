@@ -30,13 +30,20 @@
   gap: 0.85rem;
 }
 
+/* A button so the keyboard can reach it; the read and unread rules below set
+   its background and border, so only the rest of the button chrome is cleared. */
 .notification-card {
+  appearance: none;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
+  width: 100%;
   border-radius: var(--radius-lg);
   padding: 1.1rem 1.4rem;
+  font: inherit;
+  color: inherit;
+  text-align: left;
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
@@ -63,6 +70,11 @@
 
 .notification-card.is-read:hover {
   background-color: #f5f5f5;
+}
+
+.notification-card:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
 }
 
 .notification-card-main {
@@ -96,6 +108,7 @@
 }
 
 .notification-body {
+  display: block;
   margin-top: 0.35rem;
   font-size: var(--text-base);
   color: #6b7280;

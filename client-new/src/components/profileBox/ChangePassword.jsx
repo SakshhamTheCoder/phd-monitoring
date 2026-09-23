@@ -11,7 +11,7 @@ import './ChangePassword.css';
  * ask for. The server says so through `password_set` at sign-in.
  */
 const ChangePassword = ({ onDone }) => {
-  const user = JSON.parse(localStorage.getItem('user')) || {};
+  const [user] = useState(() => JSON.parse(localStorage.getItem('user')) || {});
   const hasPassword = user.password_set !== false;
 
   const [body, setBody] = useState({ current_password: '', password: '', password_confirmation: '' });
