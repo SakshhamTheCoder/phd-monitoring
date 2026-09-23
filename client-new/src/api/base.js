@@ -3,6 +3,19 @@ import { toast } from "react-toastify";
 export const NETWORK_ERROR_MESSAGE =
   "Network unstable. Check your internet connection and try again.";
 
+// A failed request's toast, keyed by its text. The same failure from two
+// requests at once (or a dev double mount) shows once, and a page that shows
+// the failure in place can take the toast back with dismissRequestErrors.
+const shownErrors = new Set();
+const showError = (message, toastId = `request-error:${message}`) => {
+  shownErrors.add(toastId);
+  toast.error(message, { toastId });
+};
+export const dismissRequestErrors = () => {
+  shownErrors.forEach((toastId) => toast.dismiss(toastId));
+  shownErrors.clear();
+};
+
 // fetch() rejects with a TypeError when the request never reached the server.
 export const isNetworkError = (error) =>
   !navigator.onLine || error instanceof TypeError;
@@ -63,22 +76,22 @@ export const customFetch = async (
         const message = error.status >= 500
           ? `The server did not respond properly (error ${error.status}). Try again in a moment.`
           : `The request failed (error ${error.status}).`;
-        if (showToast) toast.error(message);
+        if (showToast) showError(message);
         return { success: false, response: { message }, status: error.status };
       }
 
       if (error.status === 422) {
-        if (showToast) toast.error(data.message);
+        if (showToast) showError(data.message);
       } else if (error.status === 500) {
         if (showToast)
-          toast.error(data.message || data.error || "Internal server error");
+          showError(data.message || data.error || "Internal server error");
       } else if (error.status === 400) {
         const errorString = Object.entries(data)
           .map(([key, val]) => `${key}: ${val}`)
           .join("\n");
-        if (showToast) toast.error(errorString);
+        if (showToast) showError(errorString);
       } else {
-        if (showToast) toast.error(data.message);
+        if (showToast) showError(data.message);
       }
 
       // The status lets a caller tell "not there" (404) from "could not ask".
@@ -86,10 +99,10 @@ export const customFetch = async (
     } else if (isNetworkError(error)) {
       // Browser reports a failed fetch the same way for offline, DNS failure and a
       // dead server, so blame the connection rather than showing "Failed to fetch".
-      if (showToast) toast.error(NETWORK_ERROR_MESSAGE, { toastId: "network-error" });
+      if (showToast) showError(NETWORK_ERROR_MESSAGE, "network-error");
       return { success: false, response: error, networkError: true };
     } else {
-      if (showToast) toast.error("Unexpected error: " + error);
+      if (showToast) showError("Unexpected error: " + error);
       return { success: false, response: error };
     }
   }
