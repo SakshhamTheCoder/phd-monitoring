@@ -1,5 +1,4 @@
 import React from 'react';
-import Tabs from '../../components/tabs/Tabs';
 import LeaveRequests from './LeaveRequests';
 
 /**
@@ -12,12 +11,6 @@ import LeaveRequests from './LeaveRequests';
 const HodAttendancePage = () => (
   <>
     <h1 className="page-title">Attendance</h1>
-
-    <Tabs
-      value="leaves"
-      onChange={() => {}}
-      items={[{ value: 'leaves', label: 'Leave Requests' }]}
-    />
 
     <LeaveRequests />
   </>

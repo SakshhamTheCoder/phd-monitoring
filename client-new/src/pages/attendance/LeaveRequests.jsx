@@ -124,6 +124,10 @@ const LeaveRequests = ({ departmentId = '', showDepartment = false }) => {
   // Whatever happened inside the modal (approved, rejected, or just closed),
   // the list may now be stale.
   const handleCloseForm = () => {
+    // Closing while an application is still loading must not let it pop the
+    // modal open again when it lands.
+    latestOpenRef.current += 1;
+    setLoadingForm(false);
     setOpenForm(null);
     setBalance(null);
     loadList();
@@ -199,6 +203,13 @@ const LeaveRequests = ({ departmentId = '', showDepartment = false }) => {
               <tr
                 key={r.id}
                 onClick={() => openApplication(r.id)}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    openApplication(r.id);
+                  }
+                }}
                 className={r.id === opened.leave ? 'leave-row--highlight' : undefined}
                 style={{ cursor: 'pointer' }}
               >
@@ -219,10 +230,12 @@ const LeaveRequests = ({ departmentId = '', showDepartment = false }) => {
         </table>
       </div>
 
-      <CustomModal isOpen={!!openForm} onClose={handleCloseForm} width="90vw" minHeight="300px" maxHeight="85vh">
+      {/* Opens on the click, not when the application arrives, so the click
+          answers at once. */}
+      <CustomModal isOpen={!!openForm || loadingForm} onClose={handleCloseForm} width="90vw" minHeight="300px" maxHeight="85vh">
+        {loadingForm && <p>Loading…</p>}
         {openForm && (
           <>
-            {loadingForm && <p>Loading…</p>}
             {balance && <LeaveBalancePanel balance={balance} />}
             {overage > 0 && (
               <div className="filter-bar">

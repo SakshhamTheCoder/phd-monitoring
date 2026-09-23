@@ -144,7 +144,9 @@ const StudentAttendancePage = () => {
           <CustomButton
             text={applying ? 'Opening…' : 'Apply for Leave'}
             onClick={handleApply}
-            disabled={applying}
+            // Until the leaves have loaded, an existing draft cannot be found
+            // and a quick click would create a second one.
+            disabled={applying || !data}
           />
         }
       />
@@ -272,6 +274,13 @@ const StudentAttendancePage = () => {
                     className={l.id === opened.leave ? 'leave-row--highlight' : undefined}
                     style={{ cursor: 'pointer' }}
                     onClick={() => openLeave(l.id)}
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+                        e.preventDefault();
+                        openLeave(l.id);
+                      }
+                    }}
                   >
                     <td style={{ textTransform: 'capitalize' }}>{l.leave_type || EMPTY_VALUE}</td>
                     {/* l.from_date/to_date are Laravel date-cast timestamps, same as
@@ -301,7 +310,7 @@ const StudentAttendancePage = () => {
         </div>
       )}
 
-      <CustomModal isOpen={!!openForm} onClose={handleCloseForm} width="90vw" minHeight="300px" maxHeight="85vh">
+      <CustomModal isOpen={!!openForm} onClose={handleCloseForm} closeOnOutsideClick={false} width="90vw" minHeight="300px" maxHeight="85vh">
         {openForm && <StudentLeave formData={openForm} />}
       </CustomModal>
     </>
