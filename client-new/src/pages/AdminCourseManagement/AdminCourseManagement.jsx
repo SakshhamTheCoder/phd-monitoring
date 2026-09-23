@@ -373,9 +373,9 @@ const AdminCourseManagement = () => {
             }}
           />
           <CustomButton
-            text={submitting ? 'Adding…' : 'Add course'}
+            text="Add course"
             onClick={handleAddCourse}
-            disabled={submitting}
+            busy={submitting}
           />
         </div>
       </div>
@@ -434,9 +434,9 @@ const AdminCourseManagement = () => {
             }}
           />
           <CustomButton
-            text={submitting ? 'Updating…' : 'Update course'}
+            text="Update course"
             onClick={handleEditCourse}
-            disabled={submitting}
+            busy={submitting}
           />
         </div>
       </div>
@@ -512,9 +512,9 @@ const AdminCourseManagement = () => {
             }}
           />
           <CustomButton
-            text={submitting ? 'Tagging…' : 'Tag student'}
+            text="Tag student"
             onClick={handleTagStudent}
-            disabled={submitting}
+            busy={submitting}
           />
         </div>
       </div>

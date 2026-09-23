@@ -91,7 +91,7 @@ const StudentCourses = () => {
       ) : loadFailed ? (
         <LoadError message="Could not load your courses. Check your connection and try again." onRetry={fetchCourses} />
       ) : shownCourses.length > 0 ? (
-        <div className="sc-grid">{shownCourses.map(renderCourseCard)}</div>
+        <div className="sc-grid reveal">{shownCourses.map(renderCourseCard)}</div>
       ) : (
         <StatusNotice tone="empty" title={activeTab === 'ongoing' ? 'No ongoing courses' : 'No past courses'} />
       )}

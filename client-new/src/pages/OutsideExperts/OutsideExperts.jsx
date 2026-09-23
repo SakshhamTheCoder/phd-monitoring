@@ -344,9 +344,9 @@ const OutsideExperts = () => {
             }}
           />
           <CustomButton
-            text={submitting ? 'Adding...' : 'Add expert'}
+            text="Add expert"
             onClick={handleAddExpert}
-            disabled={submitting}
+            busy={submitting}
           />
         </div>
       </>
@@ -390,9 +390,10 @@ const OutsideExperts = () => {
             }}
           />
           <CustomButton
-            text={submitting ? 'Importing...' : 'Import'}
+            text="Import"
             onClick={handleBulkImport}
-            disabled={submitting || !csvFile}
+            busy={submitting}
+            disabled={!csvFile}
           />
         </div>
       </>
@@ -495,9 +496,9 @@ const OutsideExperts = () => {
             }}
           />
           <CustomButton
-            text={submitting ? 'Updating...' : 'Update expert'}
+            text="Update expert"
             onClick={handleEditExpert}
-            disabled={submitting}
+            busy={submitting}
           />
         </div>
       </>

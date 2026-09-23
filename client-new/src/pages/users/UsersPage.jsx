@@ -368,8 +368,9 @@ Khalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,"faculty,d
           <div className="modal-actions">
             <CustomButton text="Cancel" variant="quiet" onClick={() => setLinksOpen(false)} />
             <CustomButton
-              text={sendingLinks ? 'Sending...' : 'Send links'}
-              disabled={sendingLinks || !waitingEveryone}
+              text="Send links"
+              busy={sendingLinks}
+              disabled={!waitingEveryone}
               onClick={sendSignInLinks}
             />
           </div>

@@ -521,6 +521,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
 
     return (
         <Page
+            className="reveal"
             title={profile.name}
             description={`${profile.designation}, ${profile.department}`}
             actions={headerActions}
@@ -705,11 +706,12 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
                                 .map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                         </select>
                         <CustomButton
-                            text={bulkBusy ? 'Moving…' : 'Apply'}
+                            text="Apply"
                             variant="secondary"
                             size="sm"
                             onClick={applyBulkCategory}
-                            disabled={!bulkTarget || bulkBusy}
+                            busy={bulkBusy}
+                            disabled={!bulkTarget}
                         />
                         <CustomButton text="Clear" variant="quiet" size="sm" onClick={() => setSelected([])} disabled={bulkBusy} />
                     </div>

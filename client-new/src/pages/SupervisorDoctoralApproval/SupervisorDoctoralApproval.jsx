@@ -187,7 +187,7 @@ const SupervisorDoctoralApproval = () => {
         ) : pendingChanges.length === 0 ? (
           <StatusNotice tone="empty" title="No pending changes to review" />
         ) : (
-          <div className="data-table-wrap">
+          <div className="data-table-wrap reveal">
             <table className="data-table">
               <thead>
                 <tr>

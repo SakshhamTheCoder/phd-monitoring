@@ -117,6 +117,8 @@
     margin-top: var(--space-3);
 }
 
+.rp-year-tags .badge { animation: pop-in 150ms ease-out; }
+
 .rp-year-remove {
     background: none;
     border: none;

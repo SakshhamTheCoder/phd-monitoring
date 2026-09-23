@@ -254,7 +254,7 @@ Data Science,CSED`;
 
         <div className="modal-actions">
           <CustomButton text="Cancel" variant="quiet" onClick={() => setIsOpen(false)} />
-          <CustomButton text={editData ? 'Update' : 'Add'} onClick={handleSubmit} disabled={saving} />
+          <CustomButton text={editData ? 'Update' : 'Add'} onClick={handleSubmit} busy={saving} />
         </div>
       </CustomModal>
 

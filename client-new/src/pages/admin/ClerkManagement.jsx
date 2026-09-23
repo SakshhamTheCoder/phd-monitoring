@@ -242,7 +242,7 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
             </StatusNotice>
           </div>
         ) : (
-          <div className="data-table-wrap">
+          <div className="data-table-wrap reveal">
             <table className="data-table">
               <thead>
                 <tr>
@@ -348,7 +348,7 @@ clerk.one@demo.invalid,9800000031,"CSED, CHED",Anita Desai`;
         </div>
         <div className="modal-actions">
           <CustomButton text="Cancel" variant="quiet" onClick={() => setEditing(null)} />
-          <CustomButton text={saving ? 'Saving…' : 'Save'} onClick={handleSave} disabled={saving} />
+          <CustomButton text="Save" onClick={handleSave} busy={saving} />
         </div>
       </CustomModal>
 

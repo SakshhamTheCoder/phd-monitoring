@@ -69,9 +69,9 @@ const AddDepartmentForm = ({ onClose, onCreated }) => {
           disabled={submitting}
         />
         <CustomButton
-          text={submitting ? 'Adding...' : 'Add department'}
+          text="Add department"
           onClick={handleSubmit}
-          disabled={submitting}
+          busy={submitting}
         />
       </div>
     </>
