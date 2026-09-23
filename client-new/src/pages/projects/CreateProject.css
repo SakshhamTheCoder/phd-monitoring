@@ -60,7 +60,7 @@
 .cp-after { margin-top: var(--space-5); }
 .cp-char-count { margin-top: var(--space-1); font-size: var(--text-xs); color: var(--text-muted); text-align: right; }
 .cp-muted { margin: 0; font-size: var(--text-sm); color: var(--text-muted); }
-.cp-file-hint { font-size: var(--text-xs); color: var(--success); display: inline-flex; align-items: center; gap: var(--space-1); margin-top: var(--space-1); }
+.cp-file-hint { font-size: var(--text-xs); color: var(--text-muted); display: inline-flex; align-items: center; gap: var(--space-1); margin-top: var(--space-1); }
 
 /* Duration */
 .cp-duration-pair { display: flex; gap: var(--space-2); }

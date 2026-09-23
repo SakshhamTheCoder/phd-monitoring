@@ -739,7 +739,7 @@ const ProjectDetails = () => {
                   accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
                   onChange={handleDocFileSelect}
                 />
-                {docForm.fileName && <span className="pd-upload-selected"><i className="fa fa-check-circle" aria-hidden="true"></i> {docForm.fileName}</span>}
+                {docForm.fileName && <span className="pd-upload-selected"><i className="fa fa-paperclip" aria-hidden="true"></i> {docForm.fileName}</span>}
               </div>
               <div className="modal-actions">
                 <CustomButton text="Cancel" variant="quiet" onClick={() => setShowDocModal(false)} />
@@ -779,7 +779,7 @@ const ProjectDetails = () => {
                     accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
                     onChange={handleSanctionFile}
                   />
-                  {sanctionFileSel && <span className="pd-upload-selected"><i className="fa fa-check-circle" aria-hidden="true"></i> {sanctionFileSel.name}</span>}
+                  {sanctionFileSel && <span className="pd-upload-selected"><i className="fa fa-paperclip" aria-hidden="true"></i> {sanctionFileSel.name}</span>}
                 </div>
               ) : (
                 <div className="pd-modal-field">

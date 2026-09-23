@@ -207,7 +207,7 @@ const ProjectRecruitment = () => {
                 <label htmlFor="project-recruitment-advertisement-pdf">Advertisement PDF</label>
                 <input id="project-recruitment-advertisement-pdf" type="file" accept=".pdf" ref={adRef} onChange={handleAdvertisement} />
                 {posForm.advertisementName
-                  ? <span className="pr-field-hint"><i className="fa fa-check-circle" aria-hidden="true"></i> {posForm.advertisementName}</span>
+                  ? <span className="pr-field-hint"><i className="fa fa-paperclip" aria-hidden="true"></i> {posForm.advertisementName}</span>
                   : posForm.advertisementPath && <a className="pr-field-hint" href={fileUrl(posForm.advertisementPath)} target="_blank" rel="noopener noreferrer"><i className="fa fa-file-pdf-o" aria-hidden="true"></i> Current advertisement</a>}
               </div>
               <div className="pr-field full"><label htmlFor="project-recruitment-job-description">Job description</label><textarea id="project-recruitment-job-description" rows="4" value={posForm.description} onChange={e => setPosForm({...posForm, description: e.target.value})} placeholder="Describe the role, responsibilities, and what the candidate will work on. This is shown to students on the Openings portal." /></div>

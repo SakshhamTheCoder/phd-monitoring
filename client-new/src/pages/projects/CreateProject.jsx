@@ -449,7 +449,7 @@ const CreateProject = () => {
                 <div className="cp-field">
                   <label htmlFor="create-project-sanction-letter-upload">Sanction letter upload</label>
                   <input id="create-project-sanction-letter-upload" type="file" accept=".pdf,.doc,.docx" ref={sanctionRef} onChange={handleSanctionFile} />
-                  {form.sanctionLetterFileName && <span className="cp-file-hint"><i className="fa fa-check-circle" aria-hidden="true"></i> {form.sanctionLetterFileName}</span>}
+                  {form.sanctionLetterFileName && <span className="cp-file-hint"><i className="fa fa-paperclip" aria-hidden="true"></i> {form.sanctionLetterFileName}</span>}
                 </div>
               </div>
             </PanelSection>
@@ -536,7 +536,7 @@ const CreateProject = () => {
                     if (file) setForm(p => ({ ...p, ganttFile: file, ganttFileName: file.name }));
                   }}
                 />
-                {form.ganttFileName && <span className="cp-file-hint"><i className="fa fa-check-circle" aria-hidden="true"></i> {form.ganttFileName}</span>}
+                {form.ganttFileName && <span className="cp-file-hint"><i className="fa fa-paperclip" aria-hidden="true"></i> {form.ganttFileName}</span>}
               </div>
             </PanelSection>
             <PanelSection title="Milestones">
