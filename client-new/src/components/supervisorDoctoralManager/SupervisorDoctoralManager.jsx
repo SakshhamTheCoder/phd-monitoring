@@ -13,7 +13,13 @@ import Panel, { PanelSection } from '../panel/Panel';
 import StatusNotice from '../common/StatusNotice';
 
 
-const SupervisorDoctoralManager = ({ studentId, supervisors = [], doctoralCommittee = [], onClose }) => {
+/**
+ * `outsideExpert` (undefined when the caller does not know it) adds the IRB
+ * outside expert: with the doctoral committee, the IRB committee. It is set
+ * directly, not proposed, and only when `canSetOutsideExpert`; the server
+ * refuses anyone else. `onOutsideExpertSaved` refreshes the caller's copy.
+ */
+const SupervisorDoctoralManager = ({ studentId, supervisors = [], doctoralCommittee = [], onClose, outsideExpert, canSetOutsideExpert = false, onOutsideExpertSaved }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [changeType, setChangeType] = useState(null); // 'supervisor' or 'doctoral'
   const [operationType, setOperationType] = useState('add'); // 'add', 'remove', 'replace'
@@ -24,6 +30,21 @@ const SupervisorDoctoralManager = ({ studentId, supervisors = [], doctoralCommit
   const [reason, setReason] = useState('');
   const [pendingChanges, setPendingChanges] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [pickingExpert, setPickingExpert] = useState(false);
+  const [expertPick, setExpertPick] = useState(null);
+  const [savingExpert, setSavingExpert] = useState(false);
+
+  const saveOutsideExpert = async () => {
+    setSavingExpert(true);
+    const res = await customFetch(`${baseURL}/students/${studentId}/outside-expert`, 'POST', { outside_expert_id: expertPick.id });
+    setSavingExpert(false);
+    if (res.success) {
+      toast.success(res.response.message);
+      setPickingExpert(false);
+      setExpertPick(null);
+      onOutsideExpertSaved?.();
+    }
+  };
 
   useEffect(() => {
     fetchPendingChanges();
@@ -260,6 +281,44 @@ const SupervisorDoctoralManager = ({ studentId, supervisors = [], doctoralCommit
             ]}
           />
         </PanelSection>
+
+        {outsideExpert !== undefined && (
+          <PanelSection
+            title="IRB outside expert"
+            description="With the doctoral committee, the IRB committee. The revised IRB's external review goes to them."
+            actions={canSetOutsideExpert && !pickingExpert && (
+              <CustomButton
+                text={outsideExpert ? 'Change' : 'Set expert'}
+                variant="secondary"
+                size="sm"
+                onClick={() => setPickingExpert(true)}
+              />
+            )}
+          >
+            {outsideExpert ? (
+              <TableComponent
+                data={[outsideExpert]}
+                keys={['name', 'email', 'designation', 'institution']}
+                titles={['Name', 'Email', 'Designation', 'Institution']}
+              />
+            ) : (
+              <p className="modal-note">None on record, so the revised IRB skips the external review.</p>
+            )}
+            {pickingExpert && (
+              <div className="outside-expert-picker">
+                <InputSuggestions
+                  label={outsideExpert ? 'New outside expert' : 'Outside expert'}
+                  apiUrl={`${baseURL}/suggestions/outside-expert`}
+                  hint="Search by name, email or institution"
+                  fields={['name', 'institution']}
+                  onSelect={setExpertPick}
+                />
+                <CustomButton text="Save" onClick={saveOutsideExpert} busy={savingExpert} disabled={!expertPick} />
+                <CustomButton text="Cancel" variant="quiet" onClick={() => { setPickingExpert(false); setExpertPick(null); }} />
+              </div>
+            )}
+          </PanelSection>
+        )}
       </Panel>
 
       <CustomModal

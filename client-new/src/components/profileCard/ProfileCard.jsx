@@ -19,7 +19,6 @@ import Page from "../page/Page";
 import Panel, { PanelSection } from "../panel/Panel";
 import CustomModal from "../forms/modal/CustomModal";
 import SupervisorDoctoralManager from "../supervisorDoctoralManager/SupervisorDoctoralManager";
-import OutsideExpertPanel from "./OutsideExpertPanel";
 import InfoGrid from "../profileFields/InfoGrid";
 import { toast } from "react-toastify";
 import useCapabilities from "../../context/CapabilitiesContext";
@@ -618,14 +617,21 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
             />
           </Panel>
 
-          <OutsideExpertPanel
-            expert={profile.irb_outside_expert}
-            canManage={permissions.can_manage}
-            rollNo={profile.roll_no}
-            onSaved={() => customFetch(profileUrl, "GET", {}, true, false).then((res) => {
-              if (res?.success) setProfile(res.response.profile);
-            })}
-          />
+          {/* With the doctoral committee above, the IRB committee. Set from
+              Manage supervisors/doctoral. */}
+          <Panel flush title="IRB outside expert">
+            {profile.irb_outside_expert ? (
+              <TableComponent
+                data={[profile.irb_outside_expert]}
+                keys={["name", "email", "designation", "institution"]}
+                titles={["Name", "Email", "Designation", "Institution"]}
+              />
+            ) : (
+              <p className="profile-panel-note">
+                None on record. The revised IRB goes from the supervisors straight to the doctoral committee, with no external review.
+              </p>
+            )}
+          </Panel>
 
           {publications && (
             <Panel>
@@ -822,6 +828,11 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
             studentId={profile.roll_no}
             supervisors={supervisors || []}
             doctoralCommittee={doctoral || []}
+            outsideExpert={profile.irb_outside_expert ?? null}
+            canSetOutsideExpert={permissions.can_manage}
+            onOutsideExpertSaved={() => customFetch(profileUrl, "GET", {}, true, false).then((res) => {
+              if (res?.success) setProfile(res.response.profile);
+            })}
             onClose={() => {
               setShowSupervisorDoctoralModal(false);
               // Refresh profile data to show updated supervisors/doctoral

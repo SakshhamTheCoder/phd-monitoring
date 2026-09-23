@@ -225,8 +225,9 @@
   .student-progress { width: 80px; }
 }
 
-/* A note or a control inside a flush panel, which has no body padding. */
-.profile-panel-note { padding: var(--space-4) var(--space-5); margin: 0; }
-.profile-panel-note--muted { color: var(--text-muted); font-size: var(--text-sm); }
-.outside-expert-picker { display: flex; align-items: flex-end; gap: var(--space-3); border-top: 1px solid var(--border-subtle); }
+/* A note inside a flush panel, which has no body padding. */
+.profile-panel-note { padding: var(--space-4) var(--space-5); margin: 0; color: var(--text-muted); font-size: var(--text-sm); }
+
+/* The outside expert picker in Manage supervisors/doctoral. */
+.outside-expert-picker { display: flex; align-items: flex-end; gap: var(--space-2); margin-top: var(--space-3); }
 .outside-expert-picker .input-suggestions-container { max-width: 420px; }
