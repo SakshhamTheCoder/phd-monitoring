@@ -45,7 +45,6 @@ const Logs = lazy(() => import('./pages/logs/Logs'));
 const Team = lazy(() => import('./pages/team/Team'));
 const AdminFormManagement = lazy(() => import('./pages/admin/AdminFormManagement'));
 const StudentCourses = lazy(() => import('./pages/StudentCourses/StudentCourses'));
-const AdminCourseManagement = lazy(() => import('./pages/AdminCourseManagement/AdminCourseManagement'));
 const ServerListPage = lazy(() => import('./components/serverPage/ServerListPage'));
 const ExternalReview = lazy(() => import('./pages/externalReview/ExternalReview'));
 const SupervisorDoctoralApproval = lazy(() => import('./pages/SupervisorDoctoralApproval/SupervisorDoctoralApproval'));
@@ -236,7 +235,7 @@ const AppContent = () => {
                   <Route path="/students/:roll_no/forms/:form_type/:id" element={<MainFormPage />} />
                 </>
               )}
-              {may('courseManagement') && <Route path="/courses" element={<AdminCourseManagement />} />}
+              {may('courseManagement') && <Route path="/courses" element={<ServerListPage page="courses" />} />}
               {/* Matches can_edit_department, which DepartmentController::list requires. */}
               {may('departments') && <Route path="/departments" element={<DepartmentPage />} />}
               {/* can_manage_supervisor_changes is granted to dordc and admin on the server. */}
@@ -272,7 +271,7 @@ const AppContent = () => {
               {may('admin') && (
                 <>
                   <Route path="/forms/manage" element={<AdminFormManagement />} />
-                  <Route path="/courses/manage" element={<AdminCourseManagement />} />
+                  <Route path="/courses/manage" element={<ServerListPage page="courses" />} />
                   <Route path="/outside-experts" element={<ServerListPage page="outside-experts" />} />
                   <Route path="/logs" element={<Logs />} />
                   <Route path="/users" element={<UsersPage />} />
