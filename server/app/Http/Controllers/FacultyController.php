@@ -6,6 +6,7 @@ use App\Models\Department;
 use App\Models\Faculty;
 use App\Services\FacultyRecommendationService;
 use App\Support\PersonName;
+use App\Support\CsvRow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\Role;
@@ -403,9 +404,54 @@ class FacultyController extends Controller
     }
     
 
+    /**
+     * The faculty sheet's rows as it has them. The institute's supervisor sheet
+     * and the portal's own template word the same columns differently, and
+     * saved copies of both are in circulation, so each column is read by
+     * either name.
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return array<int, array<string, mixed>>
+     */
+    public static function facultyRows(array $rows): array
+    {
+        return array_map(fn (array $row) => [
+            'full_name' => CsvRow::fallback(
+                CsvRow::column($row, 'Full Name', 'full_name'),
+                CsvRow::words(CsvRow::column($row, 'first_name'), CsvRow::column($row, 'last_name'))
+            ),
+            'email' => CsvRow::column($row, 'Email', 'email'),
+            'phone' => CsvRow::column($row, 'Phone', 'phone'),
+            'designation' => CsvRow::column($row, 'Designation', 'designation'),
+            'faculty_code' => CsvRow::column($row, 'Emp id', 'E Code', 'faculty_code'),
+            'department_code' => CsvRow::column($row, 'Department Code', 'department_code'),
+            'institution' => CsvRow::column($row, 'institution'),
+            'website_link' => CsvRow::column($row, 'website_link'),
+            'broad_area' => CsvRow::column($row, 'Broad Area of Expertise', 'broad_area'),
+            'expertise' => CsvRow::column(
+                $row,
+                'Specific Areas under Broad Area of Expertise (comma separated)',
+                'Specific Areas under Broad Area of Expertise',
+                'Specific Areas under Broad Area of Expertise (comma seperated)',
+                'Area of Expertise',
+                'expertise'
+            ),
+            'supervised_campus' => CsvRow::column($row, 'Students Supervising in TIET', 'supervised_campus'),
+            'supervised_outside' => CsvRow::column($row, 'Students Supervising Outside TIET', 'Students Outside TIET', 'supervised_outside'),
+            'row_number' => $row['_rowNumber'] ?? $row['row_number'] ?? null,
+        ], $rows);
+    }
+
     public function upload(Request $request)
     {
         $user = Auth::user();
+
+        // The page posts the sheet's rows as they are; they are read here into
+        // the batch the rules below check, so a row the sheet leaves without an
+        // email still fails the batch the way it did.
+        if ($request->has('rows')) {
+            $request->merge(['batch_data' => self::facultyRows((array) $request->input('rows'))]);
+        }
 
         if(!$user->may('can_manage_faculties'))
         {

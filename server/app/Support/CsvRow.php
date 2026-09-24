@@ -40,6 +40,23 @@ final class CsvRow
         return '';
     }
 
+    /** The first of $values that is not '', as a sheet's `a || b` reads it. */
+    public static function fallback(string ...$values): string
+    {
+        foreach ($values as $value) {
+            if ($value !== '') {
+                return $value;
+            }
+        }
+        return '';
+    }
+
+    /** The filled ones of $parts joined by spaces, as a first and last name are. */
+    public static function words(string ...$parts): string
+    {
+        return implode(' ', array_filter($parts, fn ($part) => $part !== ''));
+    }
+
     private static function normalise(mixed $header): string
     {
         return preg_replace('/[^a-z0-9]+/', '', strtolower(preg_replace('/\([^)]*\)/', '', (string) $header)));

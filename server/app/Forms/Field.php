@@ -398,8 +398,8 @@ final class Field
 
     /**
      * Drawn only while the answer $key passes: 'set' (truthy), 'above' $than,
-     * or 'equals' $than. Checked as the reader answers, so a part can follow a
-     * choice.
+     * 'equals' $than or 'differs' from $than. Checked as the reader answers, so
+     * a part can follow a choice.
      */
     public function showIf(string $key, string $test = 'set', int|float|string $than = 0): self
     {
@@ -514,20 +514,64 @@ final class Field
     }
 
     /**
-     * A select whose options are read from $path (GET, the list under
-     * response.data) when it is drawn: each option's value is $value and its
-     * title fills {key} placeholders in $title from the entry.
+     * Answers a pick in a search box empties when it changes the search's own
+     * answer: a choice that belonged to the old pick (an area of the old
+     * department) is not kept against the new one.
      */
-    public function optionsFrom(string $path, string $value, string $title): self
+    public function clears(array $keys): self
     {
-        $this->props['options_from'] = ['path' => $path, 'value' => $value, 'title' => $title];
+        $this->props['clears'] = $keys;
         return $this;
     }
 
-    /** A submit that refuses, with $message, while any of $keys is empty. */
-    public function requiresAll(array $keys, string $message): self
+    /** Where a dialog opened on a row takes a search box's shown text from. */
+    public function displayFrom(string $key): self
     {
-        $this->props['requires'][] = ['keys' => $keys, 'message' => $message, 'check' => 'truthy'];
+        $this->props['display_from'] = $key;
+        return $this;
+    }
+
+    /** Like from(), for a row value that is a list, read as its entries joined by $glue. */
+    public function fromJoined(string $key, string $glue): self
+    {
+        $this->props['from'][] = ['key' => $key, 'join' => $glue];
+        return $this;
+    }
+
+    /**
+     * Never posted: a value read only to decide what is shown (the kind of
+     * record a dialog was opened on).
+     */
+    public function neverSent(): self
+    {
+        $this->props['send'] = 'never';
+        return $this;
+    }
+
+    /**
+     * A select whose options are read from $path (GET, the list under
+     * response.data) when it is drawn: each option's value is $value and its
+     * title fills {key} placeholders in $title from the entry. With
+     * $dependsOn, {key} in the path is filled from the answers and the
+     * options are read again, and the choice starts over, whenever that answer
+     * changes; with it empty there are no options.
+     */
+    public function optionsFrom(string $path, string $value, string $title, ?string $dependsOn = null): self
+    {
+        $this->props['options_from'] = array_filter(
+            ['path' => $path, 'value' => $value, 'title' => $title, 'depends_on' => $dependsOn],
+            fn ($part) => $part !== null
+        );
+        return $this;
+    }
+
+    /**
+     * A submit that refuses, with $message, while any of $keys is empty; with
+     * $if, only while those show_if tests pass.
+     */
+    public function requiresAll(array $keys, string $message, ?array $if = null): self
+    {
+        $this->props['requires'][] = array_filter(['keys' => $keys, 'message' => $message, 'check' => 'truthy', 'if' => $if]);
         return $this;
     }
 
@@ -541,10 +585,13 @@ final class Field
         return $this;
     }
 
-    /** A submit that refuses, with $message, while any of $keys is blank once trimmed. */
-    public function requiresFilled(array $keys, string $message): self
+    /**
+     * A submit that refuses, with $message, while any of $keys is blank once
+     * trimmed; with $if, only while those show_if tests pass.
+     */
+    public function requiresFilled(array $keys, string $message, ?array $if = null): self
     {
-        $this->props['requires'][] = ['keys' => $keys, 'message' => $message, 'check' => 'filled'];
+        $this->props['requires'][] = array_filter(['keys' => $keys, 'message' => $message, 'check' => 'filled', 'if' => $if]);
         return $this;
     }
 

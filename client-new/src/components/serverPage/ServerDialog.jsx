@@ -8,15 +8,25 @@ import DepartmentManagerBlock from './blocks/DepartmentManagerBlock';
 // Dialogs with behaviour of their own, which the server opens by name.
 const BLOCKS = { 'department-manager': DepartmentManagerBlock };
 
-// The first of a field's sources the row fills: a key, or keys read as words.
-const fromRow = (sources, row) => {
-  for (const source of sources) {
-    const value = Array.isArray(source)
-      ? source.map((key) => `${row[key] ?? ''}`.trim()).filter(Boolean).join(' ')
-      : row[source];
+// What one of a field's sources reads from the row: a key, keys read as
+// words, or a list read as its entries joined.
+const readSource = (source, row) => {
+  if (Array.isArray(source)) return source.map((key) => `${row[key] ?? ''}`.trim()).filter(Boolean).join(' ');
+  if (source && typeof source === 'object') {
+    const value = row[source.key];
+    return Array.isArray(value) ? value.join(source.join) : value;
+  }
+  return row[source];
+};
+
+// The first of a field's sources the row fills, else what the field starts
+// from anyway ('' unless the view gives it a default).
+const fromRow = (field, row) => {
+  for (const source of field.from) {
+    const value = readSource(source, row);
     if (value !== undefined && value !== null && value !== '') return value;
   }
-  return '';
+  return field.value ?? '';
 };
 
 // The dialog's rows with each field starting from the row it was opened on.
@@ -24,7 +34,11 @@ const startingFrom = (rows, row) =>
   !row ? rows : rows.map((entry) => {
     if (entry.rows) return { ...entry, rows: startingFrom(entry.rows, row) };
     if (entry.items) return { ...entry, items: startingFrom(entry.items, row) };
-    return entry.from ? { ...entry, value: fromRow(entry.from, row) } : entry;
+    return {
+      ...entry,
+      ...(entry.from ? { value: fromRow(entry, row) } : {}),
+      ...(entry.display_from ? { display: row[entry.display_from] ?? '' } : {}),
+    };
   });
 
 /**

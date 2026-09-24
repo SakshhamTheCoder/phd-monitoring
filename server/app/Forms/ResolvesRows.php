@@ -22,7 +22,7 @@ trait ResolvesRows
     }
 
     /** A row of fields side by side; see GridContainer on the web for space and each. */
-    protected static function row(array $items, ?int $space = null, ?int $each = null, ?string $label = null, ?array $showIf = null): array
+    protected static function row(array $items, ?int $space = null, ?int $each = null, ?string $label = null, ?array $showIf = null, ?array $ratio = null): array
     {
         return array_filter([
             'kind' => 'grid',
@@ -31,6 +31,7 @@ trait ResolvesRows
             'each' => $each,
             'label' => $label,
             'show_if' => $showIf,
+            'ratio' => $ratio,
         ], fn ($value) => $value !== null);
     }
 
@@ -40,8 +41,8 @@ trait ResolvesRows
         return ['kind' => 'heading', 'text' => $text];
     }
 
-    /** A show_if test for row(): the answer $key is set, or above $than. */
-    protected static function when(string $key, string $test = 'set', int|float $than = 0): array
+    /** A show_if test for row(): the answer $key is set, above $than, or equals or differs from it. */
+    protected static function when(string $key, string $test = 'set', int|float|string $than = 0): array
     {
         return ['key' => $key, 'test' => $test, 'than' => $than];
     }

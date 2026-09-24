@@ -33,7 +33,6 @@ const PresentationListPage = lazy(() => import('./pages/presentations/Presentati
 const Presentation = lazy(() => import('./pages/presentations/PresentationForm'));
 const ForgotPasswordPage = lazy(() => import('./pages/forgot-password/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/reset-password/ResetPasswordPage'));
-const FacultyPage = lazy(() => import('./pages/faculty/FacultyPage'));
 const PublicOpenings = lazy(() => import('./pages/publicOpenings/PublicOpenings'));
 const PublicOpeningDetail = lazy(() => import('./pages/publicOpenings/PublicOpeningDetail'));
 const ApplicationStatus = lazy(() => import('./pages/publicOpenings/ApplicationStatus'));
@@ -241,7 +240,7 @@ const AppContent = () => {
               {may('supervisorApprovals') && (
                 <Route path="/supervisor-doctoral-approvals" element={<SupervisorDoctoralApproval />} />
               )}
-              {may('facultyDirectory') && <Route path="/faculty" element={<FacultyPage />} />}
+              {may('facultyDirectory') && <Route path="/faculty" element={<ServerListPage page="faculty" />} />}
               {/* The server decides what each of them reads, so the routes only
                   have to be reachable. */}
               {may('urf') && (

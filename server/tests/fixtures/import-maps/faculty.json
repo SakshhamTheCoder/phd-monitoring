@@ -1,0 +1,62 @@
+{
+  "sheet": [
+    {
+      "_rowNumber": 2,
+      "Emp id": "10001",
+      "Full Name": "Dr. Asha Rao",
+      "Email": "asha.rao@demo.invalid",
+      "Phone": "9800000001",
+      "Designation": "Professor",
+      "Department Code": "CSED",
+      "Broad Area of Expertise": "Artificial Intelligence",
+      "Specific Areas under Broad Area of Expertise (comma seperated)": "Machine Learning, Cyber Security",
+      "Students Supervising in TIET": "3",
+      "Students Outside TIET": "1"
+    },
+    {
+      "_rowNumber": 3,
+      "Emp id": "E-202",
+      "Full Name": "",
+      "Email": "",
+      "Phone": "NA",
+      "Designation": "Assistant Professor",
+      "Department Code": "#N/A",
+      "Broad Area of Expertise": "-",
+      "Specific Areas under Broad Area of Expertise (comma seperated)": "",
+      "Students Supervising in TIET": "0",
+      "Students Outside TIET": ""
+    }
+  ],
+  "read": [
+    {
+      "full_name": "Dr. Asha Rao",
+      "email": "asha.rao@demo.invalid",
+      "phone": "9800000001",
+      "designation": "Professor",
+      "faculty_code": "10001",
+      "department_code": "CSED",
+      "institution": "",
+      "website_link": "",
+      "broad_area": "Artificial Intelligence",
+      "expertise": "Machine Learning, Cyber Security",
+      "supervised_campus": "3",
+      "supervised_outside": "1",
+      "row_number": 2
+    },
+    {
+      "full_name": "",
+      "email": "",
+      "phone": "",
+      "designation": "Assistant Professor",
+      "faculty_code": "E-202",
+      "department_code": "",
+      "institution": "",
+      "website_link": "",
+      "broad_area": "",
+      "expertise": "",
+      "supervised_campus": "0",
+      "supervised_outside": "",
+      "row_number": 3
+    }
+  ]
+}

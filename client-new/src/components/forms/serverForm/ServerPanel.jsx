@@ -38,6 +38,15 @@ const display = (field) => (field.format === "date" ? formatDate(field.value) : 
 
 const has = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
 
+// Whether a part is on the page for the answers as they stand (show_if).
+const shows = (tests = [], values) =>
+  tests.every((test) => {
+    if (test.test === "above") return parseFloat(values[test.key] || 0) > test.than;
+    if (test.test === "equals") return values[test.key] === test.than;
+    if (test.test === "differs") return values[test.key] !== test.than;
+    return !!values[test.key];
+  });
+
 // A list drawn as a table has one column.
 const asRows = (entries) => (entries || []).map((entry) => ({ entry }));
 
@@ -59,7 +68,7 @@ const editedValues = (rows) =>
   Object.fromEntries(
     fieldsOf(rows)
       .filter((field) => field.key && (field.locked === false || field.kind === "recommendation" || field.send === "always"))
-      .filter((field) => field.type !== "file" && field.send !== "changed")
+      .filter((field) => field.type !== "file" && field.send !== "changed" && field.send !== "never")
       .flatMap((field) => [
         [field.key, field.value],
         ...(field.sends_comments ? [["comments", field.comments]] : []),
@@ -68,9 +77,11 @@ const editedValues = (rows) =>
   );
 
 // Whether a submit's checks let it through; the first that fails is toasted.
-const passes = (checks = [], values, files) => {
+// A check with `if` applies only while those show_if tests pass.
+const passes = (checks = [], values, files, answers = values) => {
   const failed = checks.find((check) => {
     if (check.when && !values[check.when]) return false;
+    if (check.if && !shows(check.if, answers)) return false;
     return check.keys.some((key) => {
       if (check.check === "file") return !files[key];
       if (check.check === "truthy") return !values[key];
@@ -83,13 +94,6 @@ const passes = (checks = [], values, files) => {
   return !failed;
 };
 
-// Whether a part is on the page for the answers as they stand (show_if).
-const shows = (tests = [], values) =>
-  tests.every((test) => {
-    if (test.test === "above") return parseFloat(values[test.key] || 0) > test.than;
-    if (test.test === "equals") return values[test.key] === test.than;
-    return !!values[test.key];
-  });
 
 // `host` carries what a page hosting the form adds: a submit path when the form
 // is drawn away from its own route, and what to do after a reload or a delete.
@@ -136,7 +140,7 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
     );
 
   const submit = (field) => {
-    if (!passes(field.requires, values, files)) return undefined;
+    if (!passes(field.requires, values, files, answers)) return undefined;
     if (host.submit) return host.submit(submission(), files, field);
     const picked = Object.entries(files).map(([key, file]) => ({ key, file }));
     return submitForm({ ...submission(), ...field.sends }, location, setLoading, picked.length > 0 ? picked : null);
@@ -153,13 +157,21 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
     setValue(field.key, text);
   };
 
-  // Options a select reads from the server when it is drawn, by field key.
+  // Options a select reads from the server, by field key: once when the rows
+  // are drawn, or again whenever the answer they depend on changes.
   const [fetchedOptions, setFetchedOptions] = useState({});
+  const optionFields = fieldsOf(rows).filter((field) => field.options_from);
+  const dependsOn = (field) => field.options_from.depends_on;
+  const optionsKey = JSON.stringify(optionFields.map((field) => (dependsOn(field) ? answers[dependsOn(field)] ?? null : null)));
   useEffect(() => {
     let cancelled = false;
-    fieldsOf(rows).filter((field) => field.options_from).forEach((field) => {
+    optionFields.forEach((field) => {
       const { path, value, title } = field.options_from;
-      customFetch(baseURL + path, "GET").then((res) => {
+      if (dependsOn(field) && !answers[dependsOn(field)]) {
+        setFetchedOptions((now) => ({ ...now, [field.key]: [] }));
+        return;
+      }
+      customFetch(baseURL + path.replace(/\{(\w+)\}/g, (_, name) => answers[name] ?? ""), "GET", {}, !dependsOn(field)).then((res) => {
         if (cancelled || !res?.success) return;
         const options = (res.response?.data || []).map((entry) => ({
           value: entry[value],
@@ -169,9 +181,9 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
       });
     });
     return () => { cancelled = true; };
-    // Read once, when the rows are first drawn.
+    // Read again only when an answer the options depend on changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [optionsKey]);
 
   const shownValue = (field) => {
     if (field.total_of) {
@@ -265,6 +277,9 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
       case "select":
         return (
           <DropdownField
+            // A select whose options follow another answer starts over when
+            // that answer changes.
+            key={field.options_from?.depends_on ? String(answers[field.options_from.depends_on] ?? "") : undefined}
             required={field.required}
             label={field.label}
             initialValue={has(field, "display") ? field.display : field.value}
@@ -315,7 +330,12 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
             lock={field.locked}
             onSelect={(picked) =>
               field.picks
-                ? setValues((now) => ({ ...now, ...Object.fromEntries(Object.entries(field.picks).map(([key, from]) => [key, picked[from]])) }))
+                ? setValues((now) => {
+                    const next = Object.fromEntries(Object.entries(field.picks).map(([key, from]) => [key, picked[from]]));
+                    const changed = Object.entries(next).some(([key, value]) => String(now[key]) !== String(value));
+                    const cleared = changed ? Object.fromEntries((field.clears || []).map((key) => [key, ""])) : {};
+                    return { ...now, ...next, ...cleared };
+                  })
                 : setValue(field.key, field.free ? picked?.name ?? picked ?? "" : picked.id)
             }
           />
@@ -585,6 +605,7 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
               label={row.label}
               space={row.space}
               each={row.each}
+              ratio={row.ratio}
               elements={row.items.map(renderField)}
             />
           );

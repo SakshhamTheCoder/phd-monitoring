@@ -9,6 +9,7 @@ final class Pages
         'areas-of-specialization' => AreasPage::class,
         'courses' => CoursesPage::class,
         'departments' => DepartmentsPage::class,
+        'faculty' => FacultyPage::class,
         'outside-experts' => OutsideExpertsPage::class,
     ];
 

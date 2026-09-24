@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\FacultyController;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -19,6 +20,7 @@ class ImportSheetsAreReadAsTheOldPagesReadThemTest extends TestCase
     {
         return [
             'department-officers' => fn (array $rows) => DepartmentController::officerRows($rows),
+            'faculty' => fn (array $rows) => FacultyController::facultyRows($rows),
         ];
     }
 
