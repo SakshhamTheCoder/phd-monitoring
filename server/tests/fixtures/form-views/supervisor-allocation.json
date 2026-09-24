@@ -43,6 +43,7 @@
             "view": {
                 "version": 1,
                 "title": "Supervisor allocation",
+                "notes": [],
                 "notices": [],
                 "panels": {
                     "student": {
@@ -150,6 +151,7 @@
             "view": {
                 "version": 1,
                 "title": "Supervisor allocation",
+                "notes": [],
                 "notices": [],
                 "panels": {
                     "student": {
@@ -253,6 +255,7 @@
             "view": {
                 "version": 1,
                 "title": "Supervisor allocation",
+                "notes": [],
                 "notices": [],
                 "panels": {
                     "student": {
@@ -346,6 +349,7 @@
             "view": {
                 "version": 1,
                 "title": "Supervisor allocation",
+                "notes": [],
                 "notices": [],
                 "panels": {
                     "student": {

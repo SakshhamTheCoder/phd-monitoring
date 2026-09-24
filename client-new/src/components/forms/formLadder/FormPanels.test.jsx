@@ -12,10 +12,6 @@ const FORMS_DIR = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 // metadata table only seeds the forms index row.
 const CHAINS = {
   'presentations/PresentationForm.jsx': ['student', 'faculty', 'doctoral', 'hod', 'dordc'],
-  // The same roles answer twice, once on the written submission and again
-  // after the viva. The row stores the chain once, so it is listed once.
-  'synopsisSubmission/SynopsisSubmission.jsx': ['student', 'faculty', 'doctoral', 'phd_coordinator', 'hod', 'dordc'],
-  'thesisSubmission/ThesisSubmission.jsx': ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc'],
 };
 
 // A step that collects the scholar's own answers rather than a recommendation.

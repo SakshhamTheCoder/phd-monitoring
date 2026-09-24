@@ -43,6 +43,7 @@
             "view": {
                 "version": 1,
                 "title": "List of examiners",
+                "notes": [],
                 "notices": [],
                 "panels": {
                     "faculty": {
@@ -193,6 +194,7 @@
             "view": {
                 "version": 1,
                 "title": "List of examiners",
+                "notes": [],
                 "notices": [],
                 "panels": {
                     "faculty": {
@@ -332,6 +334,7 @@
             "view": {
                 "version": 1,
                 "title": "List of examiners",
+                "notes": [],
                 "notices": [],
                 "panels": {
                     "faculty": {

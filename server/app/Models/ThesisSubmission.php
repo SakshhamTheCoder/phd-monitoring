@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Forms\ThesisSubmissionDefinition;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Traits\ModelCommonFormFields;
@@ -81,6 +82,7 @@ class ThesisSubmission extends Model
             $extraData['student_publications']=$ret;
         }
         $formData=array_merge($formData,$extraData);
+        $formData['view'] = (new ThesisSubmissionDefinition)->view($formData);
         return $formData;
     }
 

@@ -11,7 +11,7 @@ namespace App\Forms;
  * keep the plain recommendation every chain step already gets.
  *
  * Shape sent to clients (bump VERSION on any change a client must understand):
- *   { version, title, notices: [ notice, ... ], lead?, panels: { <step>: panel },
+ *   { version, title, notes: [ text, ... ], notices: [ notice, ... ], lead?, panels: { <step>: panel },
  *     step_options?: { <step>: { allow_rejection } }, summary? }
  *   lead = { title, wrapped, rows }: a section above the chain, for a form
  *     whose chain does not start with the scholar
@@ -25,6 +25,7 @@ namespace App\Forms;
  *       | { kind: 'list' | 'toggles' | 'recommendation', ...that field }
  *       | { kind: 'group', hidden_unless: key, rows: [ row, ... ] }: kept on
  *         the page but hidden while that answer is empty
+ *   A row or field with show_if is left off the page while an answer fails it.
  * `wrapped` is whether the panel sits in a block of its own, as most hand-built
  * panels did; a panel drawn straight into its step says false.
  *
@@ -45,6 +46,12 @@ abstract class FormDefinition
      * @return array<string, array<int, array|Field>>
      */
     abstract protected function panels(array $data): array;
+
+    /** Plain notes under the form's title, as paragraphs. */
+    protected function notes(array $data): array
+    {
+        return [];
+    }
 
     /**
      * Notices above the form for this reader, each with an optional action
@@ -96,6 +103,7 @@ abstract class FormDefinition
         $view = [
             'version' => self::VERSION,
             'title' => $this->title(),
+            'notes' => $this->notes($data),
             'notices' => $this->notices($data),
             'panels' => $panels,
         ];
@@ -215,7 +223,7 @@ abstract class FormDefinition
     }
 
     /** A row of fields side by side; see GridContainer on the web for space and each. */
-    protected static function row(array $items, ?int $space = null, ?int $each = null, ?string $label = null): array
+    protected static function row(array $items, ?int $space = null, ?int $each = null, ?string $label = null, ?array $showIf = null): array
     {
         return array_filter([
             'kind' => 'grid',
@@ -223,7 +231,14 @@ abstract class FormDefinition
             'space' => $space,
             'each' => $each,
             'label' => $label,
+            'show_if' => $showIf,
         ], fn ($value) => $value !== null);
+    }
+
+    /** A show_if test for row(): the answer $key is set, or above $than. */
+    protected static function when(string $key, string $test = 'set', int|float $than = 0): array
+    {
+        return ['key' => $key, 'test' => $test, 'than' => $than];
     }
 
     /** First value that is neither null nor an empty string or list. */

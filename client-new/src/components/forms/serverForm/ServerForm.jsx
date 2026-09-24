@@ -80,6 +80,9 @@ const ServerForm = ({ formData }) => {
   return (
     <>
       <FormTitleBar formName={view.title} formData={formData} />
+      {(view.notes || []).map((note, index) => (
+        <p key={index} className="form-note">{note}</p>
+      ))}
       {(view.notices || []).map((notice, index) => (
         <Notice key={index} notice={notice} />
       ))}

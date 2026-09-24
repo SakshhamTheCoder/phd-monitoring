@@ -8,6 +8,9 @@ import FileUploadField from "../fields/FileUploadField";
 import InputSuggestions from "../fields/InputSuggestions";
 import CounterField from "../fields/CounterField";
 import Recommendation from "../layouts/Recommendation";
+import RadioButtonGroup from "../fields/RadioButtonGroup";
+import StatusNotice from "../../common/StatusNotice";
+import PublicationsBlock from "./PublicationsBlock";
 import TableComponent from "../table/TableComponent";
 import CustomButton from "../fields/CustomButton";
 import { formatDate } from "../../../utils/timeParse";
@@ -55,22 +58,34 @@ const editedValues = (rows) =>
   );
 
 // Whether a submit's checks let it through; the first that fails is toasted.
-const passes = (checks = [], values) => {
+const passes = (checks = [], values, files) => {
   const failed = checks.find((check) => {
     if (check.when && !values[check.when]) return false;
-    return check.keys.some((key) =>
-      check.check === "truthy" ? !values[key] : values[key] === null || values[key] === undefined
-    );
+    return check.keys.some((key) => {
+      if (check.check === "file") return !files[key];
+      if (check.check === "truthy") return !values[key];
+      return values[key] === null || values[key] === undefined;
+    });
   });
   if (failed) toast.error(failed.message);
   return !failed;
 };
+
+// Whether a part is on the page for the answers as they stand (show_if).
+const shows = (tests = [], values) =>
+  tests.every((test) =>
+    test.test === "above" ? parseFloat(values[test.key] || 0) > test.than : !!values[test.key]
+  );
 
 const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
   const location = useLocation();
   const { setLoading } = useLoading();
   const [values, setValues] = useState(() => editedValues(rows));
   const [files, setFiles] = useState({});
+  // What each field holds, answered or recorded, so a condition reads the same
+  // for everyone who opens the form.
+  const recorded = Object.fromEntries(fieldsOf(rows).filter((field) => field.key).map((field) => [field.key, field.value]));
+  const answers = { ...recorded, ...values };
 
   const setValue = (key, value) => setValues((now) => ({ ...now, [key]: value }));
   const setEntry = (key, index, entry) =>
@@ -88,24 +103,57 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
     );
 
   const submit = (field) => {
-    if (!passes(field.requires, values)) return undefined;
+    if (!passes(field.requires, values, files)) return undefined;
     const picked = Object.entries(files).map(([key, file]) => ({ key, file }));
     return submitForm({ ...submission(), ...field.sends }, location, setLoading, picked.length > 0 ? picked : null);
   };
 
+  // A capped number is set back to its cap, with a word why, once typed past it.
+  const typeInto = (field, text) => {
+    const number = parseFloat(text);
+    if (field.max !== undefined && Number.isFinite(number) && number > field.max) {
+      setValue(field.key, field.max);
+      toast.error(field.max_message);
+      return;
+    }
+    setValue(field.key, text);
+  };
+
+  const shownValue = (field) => {
+    if (field.total_of) {
+      return field.total_of.base + (parseFloat(values[field.total_of.key]) || 0);
+    }
+    return field.locked ? display(field) : values[field.key];
+  };
+
   const renderField = (field) => {
+    if (field.show_if && !shows(field.show_if, answers)) return null;
     switch (field.type) {
       case "text":
         return (
           <InputField
             required={field.required}
             label={field.label}
-            initialValue={field.locked ? display(field) : values[field.key]}
+            initialValue={shownValue(field)}
             isLocked={field.locked}
             hint={field.hint}
-            onChange={field.locked ? undefined : (text) => setValue(field.key, text)}
+            onChange={field.locked ? undefined : (text) => typeInto(field, text)}
           />
         );
+      case "radio":
+        return (
+          <RadioButtonGroup
+            name={field.name}
+            titles={field.options.map((option) => option.title)}
+            values={field.options.map((option) => option.value)}
+            defaultValue={values[field.key]}
+            onSelect={(choice) => setValue(field.key, choice)}
+          />
+        );
+      case "notice":
+        return <StatusNotice tone={field.tone}>{field.text}</StatusNotice>;
+      case "publications":
+        return <PublicationsBlock formData={formData} field={field} />;
       case "date":
         return (
           <DateField
@@ -291,7 +339,8 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
       formData={formData}
       role={field.role}
       allowRejection={field.allow_rejection}
-      moreFields={true}
+      moreFields={field.more_fields !== false}
+      title={field.title}
       isLocked={field.is_locked}
       handleRecommendationChange={(answer) =>
         setValues((now) => ({ ...now, approval: answer.approval, comments: answer.comments }))
@@ -301,7 +350,10 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
 
   const drawRows = (rowsToDraw) =>
     rowsToDraw.map((row, index) => {
+      if (row.show_if && !shows(row.show_if, answers)) return null;
       switch (row.kind) {
+        case "publications":
+          return <PublicationsBlock key={index} formData={formData} field={row} />;
         case "recommendation":
           return <React.Fragment key={index}>{renderRecommendation(row)}</React.Fragment>;
         case "list":

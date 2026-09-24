@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Forms\ThesisSubmissionDefinition;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\GeneralFormCreate;
 use App\Http\Controllers\Traits\GeneralFormHandler;
@@ -269,14 +270,8 @@ class ThesisSubmissionController extends Controller
             'student',
             'faculty',
             function ($formInstance) use ($request, $user) {
-                // A resubmission after a send-back keeps the stored files unless new ones come.
-                $request->validate([
-                    'date_of_synopsis' => 'required|date',
-                    'reciept_no' => 'required|string',
-                    'date_of_fee_submission' => 'required|date',
-                    'thesis_pdf' => ($formInstance->thesis_pdf ? 'nullable' : 'required').'|file|mimes:pdf|max:20480',
-                    'fee_receipt' => ($formInstance->fee_receipt ? 'nullable' : 'required').'|file|mimes:pdf,jpg,jpeg,png|max:20480',
-                ]);
+                // A resubmission keeps the stored files unless new ones come.
+                $request->validate((new ThesisSubmissionDefinition)->rules('student', $formInstance->fullForm($user)));
                 $formInstance->date_of_synopsis = $request->date_of_synopsis;
                 if ($formInstance->student->date_of_synopsis == null) {
                     $formInstance->student->date_of_synopsis = $request->date_of_synopsis;

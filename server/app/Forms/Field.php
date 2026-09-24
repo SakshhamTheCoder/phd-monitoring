@@ -18,6 +18,7 @@ final class Field
     private bool $lockedAnyway = false;
     /** @var array{0: string, 1: string}|null ['editing'|'reading', step] */
     private ?array $shownWhile = null;
+    private bool $shown = true;
     private ?string $rules = null;
     private ?string $itemRules = null;
     private mixed $value = null;
@@ -107,6 +108,44 @@ final class Field
         $field->props['role'] = $role;
         $field->props['allow_rejection'] = $allowRejection;
         $field->props['key'] = 'approval';
+        return $field;
+    }
+
+    /**
+     * A choice drawn as radio buttons.
+     *
+     * @param array<int, array{value: mixed, title: string}> $options
+     */
+    public static function radio(string $label, string $name, array $options): self
+    {
+        $field = new self('radio', $label);
+        $field->props['name'] = $name;
+        $field->props['options'] = array_values($options);
+        return $field;
+    }
+
+    /** A notice inside a panel (tone: info, warning, success, danger). */
+    public static function notice(string $text, string $tone = 'info'): self
+    {
+        $field = new self('notice', '');
+        $field->props['text'] = $text;
+        $field->props['tone'] = $tone;
+        return $field;
+    }
+
+    /**
+     * The scholar's publications on this form, with a picker to link more from
+     * their library and a way to unlink them. The lists are read from the form
+     * data under $lists and the library under $library; linking and unlinking
+     * post to the form's own path plus /link and /unlink, and the form is read
+     * again afterwards.
+     */
+    public static function publications(string $label, array $lists, string $library, bool $editable): self
+    {
+        $field = new self('publications', $label);
+        $field->props['lists'] = $lists;
+        $field->props['library'] = $library;
+        $field->props['editable'] = $editable;
         return $field;
     }
 
@@ -234,6 +273,54 @@ final class Field
         return $this;
     }
 
+    /**
+     * A number that may not go above $max: typed higher, it is set to $max and
+     * $message is shown, so the box holds what will be sent.
+     */
+    public function capped(float $max, string $message): self
+    {
+        $this->props['max'] = self::number($max);
+        $this->props['max_message'] = $message;
+        return $this;
+    }
+
+    /** A whole number as an integer, so it reads the same after a trip through JSON. */
+    private static function number(float $value): int|float
+    {
+        return floor($value) === $value ? (int) $value : $value;
+    }
+
+    /** Shows $base plus the number typed into $key, as it is typed. */
+    public function runningTotal(float $base, string $key): self
+    {
+        $this->props['total_of'] = ['base' => self::number($base), 'key' => $key];
+        return $this;
+    }
+
+    /**
+     * Drawn only while the answer $key passes: 'set' (truthy) or 'above' $than.
+     * Checked as the reader answers, so a part can follow a choice.
+     */
+    public function showIf(string $key, string $test = 'set', int|float $than = 0): self
+    {
+        $this->props['show_if'][] = ['key' => $key, 'test' => $test, 'than' => $than];
+        return $this;
+    }
+
+    /** Drawn only when $shown, a condition the server already knows. */
+    public function onlyIf(bool $shown): self
+    {
+        $this->shown = $shown;
+        return $this;
+    }
+
+    /** A submit that refuses, with $message, until a file is picked for $key. */
+    public function requiresFile(string $key, string $message): self
+    {
+        $this->props['requires'][] = ['keys' => [$key], 'message' => $message, 'check' => 'file'];
+        return $this;
+    }
+
     /** A label the field draws above itself is left off (a row label says it). */
     public function hideLabel(): self
     {
@@ -328,6 +415,9 @@ final class Field
      */
     public function resolve(array $data): ?array
     {
+        if (!$this->shown) {
+            return null;
+        }
         if ($this->shownWhile) {
             [$mode, $step] = $this->shownWhile;
             $shown = match ($mode) {

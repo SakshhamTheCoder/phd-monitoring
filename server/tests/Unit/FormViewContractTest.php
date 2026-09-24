@@ -12,6 +12,7 @@ use App\Forms\SemesterOffDefinition;
 use App\Forms\StatusChangeDefinition;
 use App\Forms\SupervisorAllocationDefinition;
 use App\Forms\SupervisorChangeDefinition;
+use App\Forms\SynopsisSubmissionDefinition;
 use App\Forms\ThesisExtensionDefinition;
 use Tests\TestCase;
 
@@ -37,6 +38,7 @@ class FormViewContractTest extends TestCase
         'supervisor-allocation' => SupervisorAllocationDefinition::class,
         'irb-constitution' => IrbConstitutionDefinition::class,
         'list-of-examiners' => ListOfExaminersDefinition::class,
+        'synopsis-submission' => SynopsisSubmissionDefinition::class,
     ];
 
     public static function forms(): array
@@ -304,7 +306,33 @@ class FormViewContractTest extends TestCase
         $this->assertSame(['custom' => 'examiner-decisions'], $view['panels']['dordc']);
     }
 
-        public function test_a_locked_or_foreign_reader_gets_no_inputs_and_no_submit(): void
+        public function test_synopsis_asks_for_what_it_asked_before(): void
+    {
+        $definition = new SynopsisSubmissionDefinition;
+        $this->assertSame(['synopsis_pdf' => 'required|file|mimes:pdf|max:20480'], $definition->rules('student', ['synopsis_pdf' => null]));
+        $this->assertSame(['synopsis_pdf' => 'nullable|file|mimes:pdf|max:20480'], $definition->rules('student', ['synopsis_pdf' => 's.pdf']));
+        // Progress and category are checked by the controller, only on Recommend.
+        $this->assertSame([], $definition->rules('faculty', []));
+    }
+
+    public function test_synopsis_caps_progress_at_what_is_left_and_scores_only_once(): void
+    {
+        $scoring = ['role' => 'faculty', 'locks' => ['student' => true], 'previous_progress' => 55, 'round' => 1];
+        $increase = collect((new SynopsisSubmissionDefinition)->view($scoring)['panels']['faculty']['rows'])
+            ->flatMap(fn ($row) => $row['items'] ?? [])->firstWhere('key', 'current_progress');
+        $this->assertEquals(45, $increase['max']);
+        $this->assertFalse($increase['locked']);
+
+        $viva = (new SynopsisSubmissionDefinition)->view(['round' => 2] + $scoring);
+        $increase = collect($viva['panels']['faculty']['rows'])->flatMap(fn ($row) => $row['items'] ?? [])->firstWhere('key', 'current_progress');
+        $this->assertTrue($increase['locked']);
+        $this->assertArrayNotHasKey('max', $increase);
+        $this->assertNotEmpty($viva['notes']);
+        $this->assertArrayHasKey('phd_coordinator', $viva['panels']);
+        $this->assertArrayNotHasKey('phd_coordinator', (new SynopsisSubmissionDefinition)->view($scoring)['panels']);
+    }
+
+    public function test_a_locked_or_foreign_reader_gets_no_inputs_and_no_submit(): void
     {
         $base = ['phd_title' => 'Old', 'objectives' => ['One'], 'revised_title' => 'New', 'revised_objectives' => ['Two']];
         $readers = [
