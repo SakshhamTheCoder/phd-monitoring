@@ -20,6 +20,7 @@ final class Pages
         'students' => StudentsPage::class,
         'supervisor-approvals' => SupervisorApprovalsPage::class,
         'urf' => UrfPage::class,
+        'ug-profile' => UgProfilePage::class,
         'urf-record' => UrfRecordPage::class,
         'users' => UsersPage::class,
     ];

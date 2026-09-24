@@ -6,7 +6,7 @@ import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
 import FacultyProfile from '../admin/ResearchProfile';
 import AdminHome from '../../components/profileCard/AdminHome';
-import UgProfile from '../../components/urf/UgProfile';
+import ServerRecordPage from '../../components/serverPage/ServerRecordPage';
 import { currentRole } from '../../auth/access';
 import LoadError from '../../components/common/LoadError';
 
@@ -72,7 +72,7 @@ const Dashboard = () => {
             // needs that endpoint for its permissions anyway, so it loads its own.
             <ProfileCard />
           ) : view === 'ug_student' ? (
-            <UgProfile />
+            <ServerRecordPage page="ug-profile" failedMessage="Could not load your profile. Check your connection and try again." />
           ) : view === 'admin' ? (
             <AdminHome data={data} />
           ) : (
