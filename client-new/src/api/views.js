@@ -5,28 +5,29 @@ import { currentRole } from '../auth/access';
 
 // A page as the server describes it for this reader (server: App\Pages, GET
 // /views/{page}). It changes with the role, not while a page is open, so it is
-// read once per role and page and kept for the rest of the session.
+// read once per role and page and kept for the rest of the session. A record
+// carries its data and is read afresh each time it opens (`kept` false).
 const views = new Map();
 
-export const useView = (page, params = {}) => {
+export const useView = (page, params = {}, { kept = true } = {}) => {
   const query = new URLSearchParams(params).toString();
   const key = `${currentRole()}:${page}?${query}`;
-  const [answer, setAnswer] = useState(() => ({ key, view: views.get(key) ?? null, failed: false }));
+  const [answer, setAnswer] = useState(() => ({ key, view: kept ? views.get(key) ?? null : null, failed: false }));
   const [attempt, setAttempt] = useState(0);
 
   // Another page, or another role, is another description.
-  if (answer.key !== key) setAnswer({ key, view: views.get(key) ?? null, failed: false });
+  if (answer.key !== key) setAnswer({ key, view: kept ? views.get(key) ?? null : null, failed: false });
 
   useEffect(() => {
-    if (views.has(key)) return undefined;
+    if (kept && views.has(key)) return undefined;
     let cancelled = false;
     customFetch(`${baseURL}/views/${page}${query ? `?${query}` : ''}`, 'GET', {}, false).then((res) => {
       if (cancelled) return;
-      if (res?.success) views.set(key, res.response);
+      if (res?.success && kept) views.set(key, res.response);
       setAnswer({ key, view: res?.success ? res.response : null, failed: !res?.success });
     });
     return () => { cancelled = true; };
-  }, [key, page, query, attempt]);
+  }, [key, page, query, attempt, kept]);
 
   return {
     view: answer.key === key ? answer.view : null,

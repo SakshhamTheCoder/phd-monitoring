@@ -27,9 +27,10 @@ export const sendRequest = async (request, row, body, setLoading) => {
   if (request.confirm && !window.confirm(fillFromRow(request.confirm, row))) return false;
 
   // A request may keep the page's loader off, as a dialog that shows its own
-  // busy button did, and may leave a refusal to the request itself to report.
+  // busy button did, and may leave a refusal to the request itself to report,
+  // or have it reported and then say its own line as well ('both').
   const loader = request.loader !== false;
-  const reportsItself = request.failure === 'fetch';
+  const reportsItself = request.failure === 'fetch' || request.failure === 'both';
   if (loader) setLoading(true);
   try {
     const result = await customFetch(baseURL + fillFromRow(request.path, row), request.method, body, reportsItself);
@@ -44,6 +45,7 @@ export const sendRequest = async (request, row, body, setLoading) => {
       return true;
     }
     if (!reportsItself) toast.error(failureMessage(result, request));
+    if (request.failure === 'both') toast.error(request.failed);
     return false;
   } catch (error) {
     console.error(error);

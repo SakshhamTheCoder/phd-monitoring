@@ -16,6 +16,8 @@ final class Pages
         'outside-experts' => OutsideExpertsPage::class,
         'presentation-list' => PresentationListPage::class,
         'presentations' => PresentationsPage::class,
+        'research-profile' => ResearchProfilePage::class,
+        'student-profile' => StudentProfilePage::class,
         'student-progress' => StudentProgressPage::class,
         'students' => StudentsPage::class,
         'supervisor-approvals' => SupervisorApprovalsPage::class,

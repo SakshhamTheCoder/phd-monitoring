@@ -1,26 +1,20 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import AddPublication from '../../components/publications/AddPublication';
-import CustomModal from '../../components/forms/modal/CustomModal';
-import CustomButton from '../../components/forms/fields/CustomButton';
-import TableComponent from '../../components/forms/table/TableComponent';
-import Tabs from '../../components/tabs/Tabs';
-import InfoGrid from '../../components/profileFields/InfoGrid';
-import LoadError from '../../components/common/LoadError';
-import StatusNotice from '../../components/common/StatusNotice';
-import Page from '../../components/page/Page';
-import Panel, { PanelSection } from '../../components/panel/Panel';
-import { customFetch, isNetworkError, NETWORK_ERROR_MESSAGE } from '../../api/base';
-import { baseURL } from '../../api/urls';
-import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
-import { badgeClass } from '../../data/badges';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import AddPublication from '../../publications/AddPublication';
+import CustomModal from '../../forms/modal/CustomModal';
+import CustomButton from '../../forms/fields/CustomButton';
+import Tabs from '../../tabs/Tabs';
+import StatusNotice from '../../common/StatusNotice';
+import Panel from '../../panel/Panel';
+import { isNetworkError, NETWORK_ERROR_MESSAGE } from '../../../api/base';
+import { EMPTY_VALUE, formatDate } from '../../../utils/timeParse';
+import { badgeClass } from '../../../data/badges';
 import {
-    apiResearchProfile, apiUpdateResearchProfile, apiSyncPublications,
+    apiResearchProfile, apiSyncPublications,
     apiAddFacultyPublication, apiUpdateFacultyPublication, apiDeleteFacultyPublication,
-} from '../../api/researchProfile';
+} from '../../../api/researchProfile';
 import { toast } from 'react-toastify';
-import { profileIdentity, isProfileAuthor, splitAuthors } from '../../utils/authorMatch';
-import './ResearchProfile.css';
+import { profileIdentity, isProfileAuthor, splitAuthors } from '../../../utils/authorMatch';
+import '../ResearchProfile.css';
 
 const TYPE_OPTIONS = [
     { value: 'sci', label: 'SCI/SCIE/SSCI/ABDC/AHCI Journal' },
@@ -51,30 +45,23 @@ const CATEGORY_TO_FIELDS = {
     patents: { publication_type: 'patent', type: null },
 };
 
-// A supervised student's name opens their profile, as it did when these tables
-// lived on the dashboard.
-const studentNameCell = {
-    key: 'name',
-    component: ({ row }) => <Link to={`/students/${row.roll_no}`}>{row.name}</Link>,
-};
-
-// The publications panel, which the Research profile button scrolls to.
-const RESEARCH_ID = 'research-publications';
-
-const emptyProfileForm = {
-    phone: '', expertise: '',
-    orcid_id: '', scopus_id: '', google_scholar_id: '', joined_on: '', citations: '', h_index: '',
-};
-
-const ResearchProfile = ({ facultyCode: codeProp = null }) => {
-    // No code in the URL and none passed in means "my own profile".
-    const { facultyCode: routeCode } = useParams();
-    const facultyCode = routeCode || codeProp || null;
-    // The profile on screen now. Moving to another faculty reuses this
-    // component, so answers and the sync loop for the previous one check this
-    // before writing; null once unmounted.
-    const shownCodeRef = useRef(facultyCode);
-    const [data, setData] = useState(null);
+/**
+ * A faculty member's publications, on their research profile: synced from
+ * ORCID or Scopus or added by hand, filtered, reclassified in bulk, exported,
+ * and beside them the publications of the scholars they supervise. Its data
+ * is the profile view's (props); a change reads the view again (onChanged).
+ */
+const ResearchPublicationsBlock = ({ props, onChanged }) => {
+    const {
+        faculty_code: facultyCode,
+        profile,
+        can_edit: canEdit,
+        can_sync: canSync,
+        can_view_supervision: canViewSupervision,
+    } = props;
+    // A sync polls after it is queued, and stops once the page is left.
+    const mounted = useRef(true);
+    useEffect(() => () => { mounted.current = false; }, []);
     const [activeTab, setActiveTab] = useState(null);
     const [filterYears, setFilterYears] = useState([]);
     const [filterType, setFilterType] = useState('All');
@@ -85,77 +72,18 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
     // Ids ticked for bulk reclassification. Imported publications arrive with
     // only the category their source could prove, so moving a batch at once is
     // the difference between a short chore and twenty trips through the modal.
-    const [researchAreas, setResearchAreas] = useState([]);
     const [selected, setSelected] = useState([]);
     const [bulkTarget, setBulkTarget] = useState('');
     const [bulkBusy, setBulkBusy] = useState(false);
     const [syncing, setSyncing] = useState(false);
-    const [editingProfile, setEditingProfile] = useState(false);
-    const [profileForm, setProfileForm] = useState(emptyProfileForm);
-    const [loadFailed, setLoadFailed] = useState(false);
-
-    // A failed refresh keeps what is on screen; only a failed first load shows
-    // the error, since data is cleared whenever the faculty changes.
-    const load = useCallback(async () => {
-        if (!facultyCode) return;
-        setLoadFailed(false);
-        const res = await apiResearchProfile(facultyCode);
-        if (shownCodeRef.current !== facultyCode) return;
-        if (res) setData(res);
-        else setLoadFailed(true);
-    }, [facultyCode]);
-
-    useEffect(() => {
-        shownCodeRef.current = facultyCode;
-        // Another faculty starts clean. Keeping the last one's data let Edit
-        // open on it and Save write it to this faculty.
-        setData(null);
-        setEditingProfile(false);
-        setSelected([]);
-        setBulkTarget('');
-        setShowPubForm(false);
-        setEditPub(null);
-        return () => { shownCodeRef.current = null; };
-    }, [facultyCode]);
-
-    useEffect(() => { load(); }, [load]);
-
-    // The broad areas belong to the department of the profile being viewed,
-    // which is not the viewer's own when an admin opens someone else's page.
-    // Declared before the loading guard below, because a hook cannot run
-    // behind an early return.
-    const departmentId = data?.profile?.department_id;
-    useEffect(() => {
-        if (!departmentId) {
-            setResearchAreas([]);
-            return;
-        }
-
-        let cancelled = false;
-
-        customFetch(
-            `${baseURL}/departments/area-of-specialization?department_id=${departmentId}`,
-            'GET',
-            {},
-            false
-        ).then((response) => {
-            if (cancelled || !response.success) return;
-            const rows = response.response?.data || [];
-            setResearchAreas(rows.map((area) => ({ title: area.name, value: area.id })));
-        });
-
-        return () => {
-            cancelled = true;
-        };
-    }, [departmentId]);
 
     const tab = activeTab ?? 'faculty';
     const isOwnTab = tab === 'faculty';
-    const groups = !data ? null : (isOwnTab ? data.publications : (data.student_publications || {}));
-    const profileName = data?.profile?.name;
+    const groups = isOwnTab ? props.publications : (props.student_publications || {});
+    const profileName = profile.name;
 
-    // Memoised, and above the loading guard, so a search keystroke refilters
-    // once instead of rebuilding every derived list on each render.
+    // Memoised, so a search keystroke refilters once instead of rebuilding
+    // every derived list on each render.
     const filtered = useMemo(() => {
         const needle = search.trim().toLowerCase();
         const matchesFilters = (pub) => {
@@ -187,21 +115,6 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
     const authorIdentity = useMemo(() => profileIdentity(profileName), [profileName]);
     const selectedIds = useMemo(() => new Set(selected), [selected]);
 
-    if (!data) {
-        return loadFailed
-            ? <LoadError message="Could not load this research profile. Check your connection and try again." onRetry={load} />
-            : <Page><Panel><StatusNotice tone="loading" title="Loading profile" /></Panel></Page>;
-    }
-
-    const {
-        profile,
-        can_edit: canEdit,
-        can_sync: canSync,
-        can_view_supervision: canViewSupervision = false,
-        is_self: isSelf = false,
-        counts = {},
-    } = data;
-
     const formatAuthors = (authors) => {
         if (!authors) return '';
         const id = authorIdentity;
@@ -211,89 +124,8 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
         );
     };
 
-    const expertiseText = Array.isArray(profile.expertise)
-        ? profile.expertise.join(', ')
-        : profile.expertise || '';
-
-    const startProfileEdit = () => {
-        setProfileForm({
-            phone: profile.phone || '',
-            expertise: expertiseText,
-            area_of_specialization_id: profile.area_of_specialization_id || '',
-            supervised_outside: profile.supervised_outside ?? 0,
-            orcid_id: profile.orcid_id || '',
-            scopus_id: profile.scopus_id || '',
-            google_scholar_id: profile.google_scholar_id || '',
-            joined_on: profile.joined || '',
-            citations: profile.citations ?? '',
-            h_index: profile.h_index ?? '',
-        });
-        setEditingProfile(true);
-    };
-
-    const setProfileField = (field, value) => setProfileForm(prev => ({ ...prev, [field]: value }));
-
-    const saveProfile = async () => {
-        const res = await apiUpdateResearchProfile(facultyCode, profileForm);
-        if (res.success) { setEditingProfile(false); toast.success('Profile updated.'); load(); }
-    };
-
-    /**
-     * Who this faculty member is. Phone is absent, not blank, for a viewer who
-     * may not see it, so the row goes with it.
-     */
-    const identityRows = [
-        { label: 'Email', value: profile.email },
-        profile.phone !== undefined && { label: 'Phone', value: profile.phone, field: 'phone' },
-        { label: 'Faculty Code', value: profile.faculty_code },
-        { label: 'Supervised (Within TIET)', value: profile.supervised_campus ?? 0 },
-        {
-            label: 'Supervised (Outside TIET)',
-            value: profile.supervised_outside ?? 0,
-            field: 'supervised_outside',
-            type: 'number',
-            hint: 'Scholars you guide at another institute. They count against your supervision limit.',
-        },
-        // A viewer who may not see who the students are still sees how many.
-        ...(canViewSupervision ? [] : [
-            { label: 'Supervising', value: counts.supervised_count ?? 0 },
-            { label: 'Doctoral Committees', value: counts.doctoral_committee_count ?? 0 },
-        ]),
-        profile.website && { label: 'Website', value: profile.website },
-        {
-            label: 'Broad Area of Expertise',
-            value: profile.broad_area,
-            field: 'area_of_specialization_id',
-            options: researchAreas,
-            hint: "One of your department's research areas.",
-        },
-        {
-            label: 'Specific Areas',
-            value: expertiseText,
-            field: 'expertise',
-            hint: 'Separate each area with a comma.',
-            span: 'all',
-        },
-    ];
-
-    /** What the sync runs on, kept beside the Sync button that uses it. */
-    const identifierRows = [
-        { label: 'ORCID iD', value: profile.orcid_id, field: 'orcid_id' },
-        { label: 'Scopus ID', value: profile.scopus_id, field: 'scopus_id' },
-        {
-            label: 'Google Scholar ID',
-            field: 'google_scholar_id',
-            node: profile.google_scholar_id
-                ? <a href={`https://scholar.google.com/citations?user=${profile.google_scholar_id}`} target="_blank" rel="noopener noreferrer">{profile.google_scholar_id}</a>
-                : undefined,
-        },
-        { label: 'Citations', value: profile.citations, field: 'citations', type: 'number' },
-        { label: 'h-index', value: profile.h_index, field: 'h_index', type: 'number' },
-        { label: 'Joined', value: profile.joined && formatDate(profile.joined), field: 'joined_on', type: 'date' },
-    ];
-
     const runSync = async () => {
-        const isShown = () => shownCodeRef.current === facultyCode;
+        const isShown = () => mounted.current;
         setSyncing(true);
         try {
             const res = await apiSyncPublications(facultyCode);
@@ -314,7 +146,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
                 const cur = await apiResearchProfile(facultyCode);
                 if (!isShown()) return;
                 if (!cur) continue;
-                setData(cur);
+                onChanged();
                 const p = cur.profile || {};
                 if ((p.last_sync || null) !== prevSync || (p.total_publications ?? 0) !== prevTotal) {
                     toast.success('Sync finished. Profile updated.');
@@ -322,14 +154,14 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
                 }
             }
             if (!done) {
-                await load();
+                onChanged();
                 toast.info('Sync is taking longer than expected. Refresh in a bit.');
             }
         } catch (e) {
             toast.error(isNetworkError(e) ? NETWORK_ERROR_MESSAGE : 'Sync failed: ' + (e.message || 'unknown'));
         } finally {
             setSyncing(false);
-            if (isShown()) load();
+            if (isShown()) onChanged();
         }
     };
 
@@ -341,7 +173,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
             setShowPubForm(false);
             setEditPub(null);
             toast.success(editPub ? 'Publication updated.' : 'Publication added.');
-            load();
+            onChanged();
         }
     };
 
@@ -350,7 +182,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
         // asks first, and so does this now.
         if (!window.confirm(`Delete "${pub.title || 'this publication'}"? This cannot be undone.`)) return;
         const res = await apiDeleteFacultyPublication(facultyCode, pub.id);
-        if (res.success) { toast.success('Publication deleted.'); load(); }
+        if (res.success) { toast.success('Publication deleted.'); onChanged(); }
     };
 
     const exportCSV = () => {
@@ -425,7 +257,7 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
 
         if (moved) toast.success(`Moved ${moved} publication${moved === 1 ? '' : 's'}.`);
         if (failed) toast.error(`${failed} could not be moved.`);
-        load();
+        onChanged();
     };
 
     const selectHeader = canEdit && isOwnTab ? <th className="rp-select-col"><span className="sr-only">Select</span></th> : null;
@@ -497,91 +329,10 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
         <td>{pub.doi_link ? <a href={pub.doi_link} target="_blank" rel="noopener noreferrer"><i className="fa fa-link" aria-hidden="true"></i> DOI</a> : EMPTY_VALUE}</td>
     );
 
-    // Research lives on the same page, below the supervision tables: most
-    // visits are about supervision. The button beside the name reaches it
-    // without scrolling past them.
-    const headerActions = (
-        <>
-            {canEdit && !editingProfile && (
-                <CustomButton text="Edit" variant="secondary" onClick={startProfileEdit} />
-            )}
-            {canEdit && editingProfile && (
-                <>
-                    <CustomButton text="Save" onClick={saveProfile} />
-                    <CustomButton text="Cancel" variant="quiet" onClick={() => setEditingProfile(false)} />
-                </>
-            )}
-            <CustomButton
-                text="Research profile"
-                variant="secondary"
-                onClick={() => document.getElementById(RESEARCH_ID)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-            />
-        </>
-    );
-
     return (
-        <Page
-            className="reveal"
-            title={profile.name}
-            description={`${profile.designation}, ${profile.department}`}
-            actions={headerActions}
-        >
-            {/* One panel, so one Edit shows everything that one Save will write. */}
-            <Panel>
-                <PanelSection>
-                    <InfoGrid
-                        rows={identityRows}
-                        editing={editingProfile}
-                        values={profileForm}
-                        onChange={setProfileField}
-                    />
-                </PanelSection>
-                <PanelSection title="Academic identifiers">
-                    <InfoGrid
-                        rows={identifierRows}
-                        editing={editingProfile}
-                        values={profileForm}
-                        onChange={setProfileField}
-                    />
-                </PanelSection>
-            </Panel>
-
-            {canViewSupervision && (
-                <>
-                    <Panel flush title="Supervising students">
-                        <TableComponent
-                            data={data.supervised_students || []}
-                            keys={['name', 'roll_no', 'email', 'date_of_admission']}
-                            titles={['Name', 'Roll no', 'Email', 'Date of admission']}
-                            rowStyle={() => ({ cursor: 'pointer' })}
-                            components={[studentNameCell]}
-                        />
-                        {!(data.supervised_students || []).length && (
-                            <div className="rp-panel-note">
-                                <StatusNotice tone="empty">No students currently being supervised.</StatusNotice>
-                            </div>
-                        )}
-                    </Panel>
-
-                    <Panel flush title="Doctoral committee membership">
-                        <TableComponent
-                            data={data.doctoral_committee_students || []}
-                            keys={['name', 'roll_no', 'email', 'department', 'date_of_admission']}
-                            titles={['Name', 'Roll no', 'Email', 'Department', 'Date of admission']}
-                            rowStyle={() => ({ cursor: 'pointer' })}
-                            components={[studentNameCell]}
-                        />
-                        {!(data.doctoral_committee_students || []).length && (
-                            <div className="rp-panel-note">
-                                <StatusNotice tone="empty">Not a member of any doctoral committee.</StatusNotice>
-                            </div>
-                        )}
-                    </Panel>
-                </>
-            )}
-
+        <>
             <Panel
-                id={RESEARCH_ID}
+                id={props.anchor}
                 title="Publications"
                 actions={
                     <>
@@ -799,8 +550,8 @@ const ResearchProfile = ({ facultyCode: codeProp = null }) => {
                     onSave={savePublication}
                 />
             </CustomModal>
-        </Page>
+        </>
     );
 };
 
-export default ResearchProfile;
+export default ResearchPublicationsBlock;

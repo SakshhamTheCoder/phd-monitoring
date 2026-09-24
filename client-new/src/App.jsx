@@ -22,7 +22,6 @@ const SignupPage = lazy(() => import('./pages/signup/SignupPage'));
 const GoogleCallback = lazy(() => import('./pages/login/GoogleCallback'));
 const FormsPage = lazy(() => import('./pages/forms/FormsPage'));
 const MainFormPage = lazy(() => import('./pages/forms/MainFormPage'));
-const StudentProfile = lazy(() => import('./pages/students/StudentProfile'));
 const NotFound = lazy(() => import('./pages/404/NotFound'));
 const FacultyFormsPage = lazy(() => import('./pages/forms/FacultyFormsPage'));
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'));
@@ -43,7 +42,6 @@ const ExternalReview = lazy(() => import('./pages/externalReview/ExternalReview'
 const AttendanceRoute = lazy(() => import('./pages/attendance/AttendanceRoute'));
 const PrivacyPolicy = lazy(() => import('./pages/privacy/PrivacyPolicy'));
 const Support = lazy(() => import('./pages/support/Support'));
-const ResearchProfile = lazy(() => import('./pages/admin/ResearchProfile'));
 const ServerSectionsPage = lazy(() => import('./components/serverPage/ServerSectionsPage'));
 const ProjectsOverview = lazy(() => import('./pages/projects/ProjectsOverview'));
 const CreateProject = lazy(() => import('./pages/projects/CreateProject'));
@@ -190,7 +188,7 @@ const AppContent = () => {
               )}
               {may('publications') && <Route path="/publications" element={<Publications />} />}
               <Route path="/notifications" element={<AllNotificationsPage />} />
-              <Route path="/faculty/:facultyCode/profile" element={<ResearchProfile />} />
+              <Route path="/faculty/:facultyCode/profile" element={<ServerRecordPage page="research-profile" loadingTitle="Loading profile" failedMessage="Could not load this research profile. Check your connection and try again." />} />
               {/* Matches the sidebar's Progress Monitoring entry, so clerk and external
                   (who have no sidebar link for it) can't land on the page either. */}
               {may('presentations') && (
@@ -210,7 +208,7 @@ const AppContent = () => {
                 <>
                   <Route path="/forms" element={<FacultyFormsPage />} />
                   <Route path="/students" element={<ServerListPage page="students" />} />
-                  <Route path="/students/:roll_no" element={<StudentProfile />} />
+                  <Route path="/students/:roll_no" element={<ServerRecordPage page="student-profile" loadingTitle="Loading profile" failedMessage="Could not load this profile. Check your connection and try again." />} />
                   <Route path="/students/:roll_no/forms" element={<FormsPage />} />
                   {/* Progress Monitoring for one scholar, from their profile. The
                       pages read the path back as their API endpoint, and the

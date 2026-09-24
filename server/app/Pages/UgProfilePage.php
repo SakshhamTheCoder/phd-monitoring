@@ -45,6 +45,7 @@ final class UgProfilePage extends PageDefinition
         $years = array_map(fn ($year) => ['title' => self::yearLabel($year), 'value' => $year], [1, 2, 3, 4]);
 
         return self::page(implode(' ', array_filter([$user->first_name, $user->last_name])), null, [
+            'actions' => $student ? [['edit' => true]] : [],
             // How to reach them stays theirs to correct; who they are becomes the
             // office's once they hold a project. Edits in place.
             'edit' => $student ? [

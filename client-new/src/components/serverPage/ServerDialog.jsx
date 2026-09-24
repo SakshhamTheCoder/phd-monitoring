@@ -26,6 +26,7 @@ import DepartmentManagerBlock from './blocks/DepartmentManagerBlock';
 import UserEditorBlock from './blocks/UserEditorBlock';
 import SignInLinksBlock from './blocks/SignInLinksBlock';
 import SupervisorDoctoralBlock from './blocks/SupervisorDoctoralBlock';
+import CourseTagBlock from './blocks/CourseTagBlock';
 import SemesterEditorBlock from './blocks/SemesterEditorBlock';
 import BulkAllocateBlock from './blocks/BulkAllocateBlock';
 import ExaminerInitiatorBlock from './blocks/ExaminerInitiatorBlock';
@@ -37,6 +38,7 @@ const BLOCKS = {
   'user-editor': UserEditorBlock,
   'sign-in-links': SignInLinksBlock,
   'supervisor-doctoral-manager': SupervisorDoctoralBlock,
+  'course-tag': CourseTagBlock,
   'semester-editor': SemesterEditorBlock,
   'bulk-allocate': BulkAllocateBlock,
   'examiner-initiator': ExaminerInitiatorBlock,

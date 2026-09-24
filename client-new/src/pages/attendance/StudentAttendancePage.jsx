@@ -39,7 +39,7 @@ const StudentAttendancePage = () => {
   const highlightRef = useRef(null);
 
   // localStorage holds no roll_no for a scholar. GET /students/me answers with
-  // the caller's own record, the same endpoint ProfileCard reads.
+  // the caller's own record, the same endpoint the student profile reads.
   useEffect(() => {
     customFetch(`${baseURL}/students/me`, 'GET', {}, true, false).then((res) => {
       const rn = res?.success ? res.response.profile?.roll_no ?? null : null;
