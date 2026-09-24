@@ -7,6 +7,7 @@ use App\Forms\IrbConstitutionDefinition;
 use App\Forms\IrbExtensionDefinition;
 use App\Forms\IrbSubmissionDefinition;
 use App\Forms\ListOfExaminersDefinition;
+use App\Forms\PresentationDefinition;
 use App\Forms\ReviseTitleDefinition;
 use App\Forms\SemesterOffDefinition;
 use App\Forms\StatusChangeDefinition;
@@ -39,6 +40,8 @@ class FormViewContractTest extends TestCase
         'irb-constitution' => IrbConstitutionDefinition::class,
         'list-of-examiners' => ListOfExaminersDefinition::class,
         'synopsis-submission' => SynopsisSubmissionDefinition::class,
+        'thesis-submission' => \App\Forms\ThesisSubmissionDefinition::class,
+        'presentation' => PresentationDefinition::class,
     ];
 
     public static function forms(): array
@@ -330,6 +333,24 @@ class FormViewContractTest extends TestCase
         $this->assertNotEmpty($viva['notes']);
         $this->assertArrayHasKey('phd_coordinator', $viva['panels']);
         $this->assertArrayNotHasKey('phd_coordinator', (new SynopsisSubmissionDefinition)->view($scoring)['panels']);
+    }
+
+    public function test_presentation_asks_for_what_it_asked_before(): void
+    {
+        $this->assertSame([
+            'teaching_work' => 'required| in:UG,PG,Both,None',
+            'presentation_pdf' => 'required|file|mimes:pdf|max:20480',
+        ], (new PresentationDefinition)->rules('student', ['presentation_pdf' => null]));
+        // The supervisor's figures are checked by the controller on a first review.
+        $this->assertSame([], (new PresentationDefinition)->rules('faculty', []));
+    }
+
+    public function test_the_presentation_sends_the_attendance_figure_it_does_not_show(): void
+    {
+        $reviewing = ['role' => 'faculty', 'locks' => ['student' => true], 'teaching_work' => 'UG', 'attendance' => 88, 'contact_hours' => null];
+        $rows = (new PresentationDefinition)->view($reviewing)['panels']['faculty']['rows'];
+        $hidden = collect($rows)->firstWhere('kind', 'hidden');
+        $this->assertSame(['attendance', 88, false], [$hidden['key'], $hidden['value'], $hidden['locked']]);
     }
 
     public function test_a_locked_or_foreign_reader_gets_no_inputs_and_no_submit(): void

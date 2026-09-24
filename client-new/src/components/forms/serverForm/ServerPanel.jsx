@@ -121,7 +121,7 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
 
   const shownValue = (field) => {
     if (field.total_of) {
-      return field.total_of.base + (parseFloat(values[field.total_of.key]) || 0);
+      return Number(field.total_of.base ?? NaN) + (parseFloat(answers[field.total_of.key]) || 0);
     }
     return field.locked ? display(field) : values[field.key];
   };
@@ -182,7 +182,8 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
             initialValue={has(field, "display") ? field.display : field.value}
             isLocked={field.locked}
             options={field.options}
-            onChange={(choice) => setValue(field.key, choice)}
+            // A select hands back text; a yes or no choice is kept as true or false.
+            onChange={(choice) => setValue(field.key, field.boolean ? choice === "true" : choice)}
           />
         );
       case "file":
@@ -204,6 +205,12 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
             data={field.value}
             keys={field.columns.map((column) => column.key)}
             titles={field.columns.map((column) => column.title)}
+            components={field.columns
+              .filter((column) => column.format === "title-case")
+              .map((column) => ({
+                key: column.key,
+                component: ({ data }) => <span>{data ? data.replace(/\b\w/g, (c) => c.toUpperCase()) : data}</span>,
+              }))}
           />
         );
       case "suggest":
@@ -358,12 +365,14 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
           return <React.Fragment key={index}>{renderRecommendation(row)}</React.Fragment>;
         case "list":
           return <React.Fragment key={index}>{renderList(row)}</React.Fragment>;
+        case "hidden":
+          return null;
         case "toggles":
           return <React.Fragment key={index}>{renderToggles(row)}</React.Fragment>;
         // Kept on the page while hidden, so what was picked stays on screen.
         case "group":
           return (
-            <div key={index} hidden={!values[row.hidden_unless]}>
+            <div key={index} hidden={!answers[row.hidden_unless]}>
               {drawRows(row.rows)}
             </div>
           );

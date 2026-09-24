@@ -149,6 +149,14 @@ final class Field
         return $field;
     }
 
+    /** A value posted with the answers as it stands, not drawn. */
+    public static function hidden(string $key): self
+    {
+        $field = new self('hidden', '');
+        $field->props['key'] = $key;
+        return $field;
+    }
+
     /** An empty cell that keeps a row's columns where they were. */
     public static function blank(): self
     {
@@ -164,8 +172,10 @@ final class Field
     public static function table(string $label, array $columns, array $rows): self
     {
         $field = new self('table', $label);
+        // A column is 'key' => 'Title', or 'key' => ['title' => ..., 'format' =>
+        // 'title-case'] for text shown with each word capitalised.
         $field->props['columns'] = array_map(
-            fn ($key, $title) => ['key' => $key, 'title' => $title],
+            fn ($key, $title) => is_array($title) ? ['key' => $key] + $title : ['key' => $key, 'title' => $title],
             array_keys($columns),
             array_values($columns)
         );
@@ -290,10 +300,13 @@ final class Field
         return floor($value) === $value ? (int) $value : $value;
     }
 
-    /** Shows $base plus the number typed into $key, as it is typed. */
-    public function runningTotal(float $base, string $key): self
+    /**
+     * Shows $base plus the number in $key, as it is typed. A null base shows as
+     * no number (NaN), as the page it replaces did.
+     */
+    public function runningTotal(?float $base, string $key): self
     {
-        $this->props['total_of'] = ['base' => self::number($base), 'key' => $key];
+        $this->props['total_of'] = ['base' => $base === null ? null : self::number($base), 'key' => $key];
         return $this;
     }
 

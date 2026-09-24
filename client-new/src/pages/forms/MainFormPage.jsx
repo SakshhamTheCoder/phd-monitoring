@@ -3,7 +3,6 @@ import { useLoading } from "../../context/LoadingContext";
 import { useLocation, useParams } from "react-router-dom";
 import { customFetch } from "../../api/base";
 import { baseURL } from "../../api/urls";
-import PresentationForm from "../../components/forms/presentations/PresentationForm";
 import ServerForm from "../../components/forms/serverForm/ServerForm";
 import useScholarInPath from "../../hooks/useScholarInPath";
 import Loader from "../../components/loader/loader";
@@ -70,8 +69,6 @@ const MainFormPage = () => {
             // A form the server describes draws from that description.
             if (formData.view) return <ServerForm formData={formData} />;
             switch (form_type) {
-              case "presentation":
-                return <PresentationForm formData={formData} />;
               // The API serves /forms/student-leave/:id, and StudentLeave
               // defaults submitPath to the current location, which is that
               // endpoint. Without this the canonical URL fell through to the

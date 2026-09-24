@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Forms\PresentationDefinition;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Traits\GeneralFormHandler;
@@ -960,11 +961,8 @@ class PresentationController extends Controller
             'student',
             'faculty',
             function ($formInstance) use ($request, $user) {
-                $request->validate([
-                    'teaching_work' => 'required| in:UG,PG,Both,None',
-                    // A resubmission after a send-back keeps the stored PDF unless a new one comes.
-                    'presentation_pdf' => ($formInstance->presentation_pdf ? 'nullable' : 'required').'|file|mimes:pdf|max:20480',
-                ]);
+                // A resubmission keeps the stored PDF unless a new one comes.
+                $request->validate((new PresentationDefinition)->rules('student', $formInstance->fullForm($user)));
 
 
                 $formInstance->teaching_work = $request->teaching_work;

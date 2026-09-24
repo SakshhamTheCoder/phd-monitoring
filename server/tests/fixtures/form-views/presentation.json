@@ -1,0 +1,3472 @@
+[
+    {
+        "name": "new form, scholar editing",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "supervisor": false,
+                "doctoral": false
+            },
+            "approvals": {
+                "supervisor": false,
+                "doctoral": false
+            },
+            "comments": {
+                "supervisor": null,
+                "doctoral": null
+            },
+            "role": "student",
+            "steps": [
+                "student",
+                "faculty",
+                "doctoral",
+                "hod",
+                "dordc",
+                "complete"
+            ],
+            "period_of_report": "2526ODD",
+            "extention_availed": false,
+            "teaching_work": null,
+            "ppt_file": null,
+            "presentation_pdf": null,
+            "publication_count": 0,
+            "current_progress": 55,
+            "progress": null,
+            "total_progress": null,
+            "attendance": null,
+            "contact_hours": null,
+            "supervisorReviews": [],
+            "doctoralCommitteeReviews": [],
+            "no_paper_sci_journal": 0,
+            "no_paper_scopus_journal": 0,
+            "no_paper_conference": 0,
+            "total_paper_sci_journal": 2,
+            "sci": [],
+            "non_sci": [],
+            "national": [],
+            "international": [],
+            "book": [],
+            "patents": [],
+            "student_publications": {
+                "sci": [],
+                "non_sci": [],
+                "national": [],
+                "international": [],
+                "book": [],
+                "patents": []
+            },
+            "view": {
+                "version": 1,
+                "title": "Progress monitoring 2526ODD",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Period of report",
+                                        "value": "2526ODD",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Extension availed",
+                                        "value": "No",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "select",
+                                        "label": "Teaching work done",
+                                        "options": [
+                                            {
+                                                "value": "UG",
+                                                "title": "UG"
+                                            },
+                                            {
+                                                "value": "PG",
+                                                "title": "PG"
+                                            },
+                                            {
+                                                "value": "Both",
+                                                "title": "UG & PG (Both)"
+                                            },
+                                            {
+                                                "value": "None",
+                                                "title": "Other assignments"
+                                            }
+                                        ],
+                                        "key": "teaching_work",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "select",
+                                        "label": "Publication during the period under report",
+                                        "options": [
+                                            {
+                                                "value": true,
+                                                "title": "Yes"
+                                            },
+                                            {
+                                                "value": false,
+                                                "title": "No"
+                                            }
+                                        ],
+                                        "key": "publication_under_report",
+                                        "required": true,
+                                        "boolean": true,
+                                        "value": false,
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "group",
+                                "hidden_unless": "publication_under_report",
+                                "rows": [
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "No. of papers in SCI/SCIE/SSCI/ABDC/AHCI journal",
+                                                "required": true,
+                                                "value": 0,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "No. of papers in Scopus journal",
+                                                "required": true,
+                                                "value": 0,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "No. of papers in conferences under report",
+                                                "required": true,
+                                                "value": 0,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "Total number of papers",
+                                                "required": true,
+                                                "value": 2,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "publications",
+                                        "type": "publications",
+                                        "label": "Publications",
+                                        "lists": [
+                                            "sci",
+                                            "non_sci",
+                                            "patents",
+                                            "book",
+                                            "national",
+                                            "international"
+                                        ],
+                                        "library": "student_publications",
+                                        "editable": true,
+                                        "add_label": "Link publications",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload presentation PDF",
+                                        "key": "presentation_pdf",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "sends_comments": true,
+                                "comments": "",
+                                "is_locked": true,
+                                "value": false,
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous quantum progress percentage",
+                                        "value": 55,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Increase in quantum progress percentage",
+                                        "key": "progress",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "notice",
+                                        "label": "",
+                                        "text": "Supervisor has marked progress of student more than 20%",
+                                        "tone": "warning",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    },
+                                    {
+                                        "key": "progress",
+                                        "test": "above",
+                                        "than": 20
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Total quantum progress percentage",
+                                        "total_of": {
+                                            "base": 55,
+                                            "key": "progress"
+                                        },
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "No. of contact hours",
+                                        "key": "contact_hours",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ],
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "hidden",
+                                "type": "hidden",
+                                "label": "",
+                                "key": "attendance",
+                                "value": null,
+                                "locked": true
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "with publications and a sample, scholar editing",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "supervisor": false,
+                "doctoral": false
+            },
+            "approvals": {
+                "supervisor": false,
+                "doctoral": false
+            },
+            "comments": {
+                "supervisor": null,
+                "doctoral": null
+            },
+            "role": "student",
+            "steps": [
+                "student",
+                "faculty",
+                "doctoral",
+                "hod",
+                "dordc",
+                "complete"
+            ],
+            "period_of_report": "2526ODD",
+            "extention_availed": false,
+            "teaching_work": null,
+            "ppt_file": "semester/2526ODD/sample.pdf",
+            "presentation_pdf": null,
+            "publication_count": 1,
+            "current_progress": 55,
+            "progress": null,
+            "total_progress": null,
+            "attendance": null,
+            "contact_hours": null,
+            "supervisorReviews": [],
+            "doctoralCommitteeReviews": [],
+            "no_paper_sci_journal": 1,
+            "no_paper_scopus_journal": 0,
+            "no_paper_conference": 0,
+            "total_paper_sci_journal": 2,
+            "sci": [
+                {
+                    "id": 41,
+                    "authors": "A. Verma",
+                    "year": 2025,
+                    "title": "Ruthenium on ceria",
+                    "name": "J. Catal.",
+                    "volume": "12",
+                    "page": "1-9",
+                    "doi_link": null
+                }
+            ],
+            "non_sci": [],
+            "national": [],
+            "international": [],
+            "book": [],
+            "patents": [],
+            "student_publications": {
+                "sci": [],
+                "non_sci": [],
+                "national": [],
+                "international": [],
+                "book": [],
+                "patents": []
+            },
+            "view": {
+                "version": 1,
+                "title": "Progress monitoring 2526ODD",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Period of report",
+                                        "value": "2526ODD",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Extension availed",
+                                        "value": "No",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "select",
+                                        "label": "Teaching work done",
+                                        "options": [
+                                            {
+                                                "value": "UG",
+                                                "title": "UG"
+                                            },
+                                            {
+                                                "value": "PG",
+                                                "title": "PG"
+                                            },
+                                            {
+                                                "value": "Both",
+                                                "title": "UG & PG (Both)"
+                                            },
+                                            {
+                                                "value": "None",
+                                                "title": "Other assignments"
+                                            }
+                                        ],
+                                        "key": "teaching_work",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "select",
+                                        "label": "Publication during the period under report",
+                                        "options": [
+                                            {
+                                                "value": true,
+                                                "title": "Yes"
+                                            },
+                                            {
+                                                "value": false,
+                                                "title": "No"
+                                            }
+                                        ],
+                                        "key": "publication_under_report",
+                                        "required": true,
+                                        "boolean": true,
+                                        "value": true,
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "group",
+                                "hidden_unless": "publication_under_report",
+                                "rows": [
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "No. of papers in SCI/SCIE/SSCI/ABDC/AHCI journal",
+                                                "required": true,
+                                                "value": 1,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "No. of papers in Scopus journal",
+                                                "required": true,
+                                                "value": 0,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "No. of papers in conferences under report",
+                                                "required": true,
+                                                "value": 0,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "Total number of papers",
+                                                "required": true,
+                                                "value": 2,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "publications",
+                                        "type": "publications",
+                                        "label": "Publications",
+                                        "lists": [
+                                            "sci",
+                                            "non_sci",
+                                            "patents",
+                                            "book",
+                                            "national",
+                                            "international"
+                                        ],
+                                        "library": "student_publications",
+                                        "editable": true,
+                                        "add_label": "Link publications",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload presentation PDF",
+                                        "key": "presentation_pdf",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    },
+                                    {
+                                        "type": "file",
+                                        "label": "Download sample PDF",
+                                        "value": "semester/2526ODD/sample.pdf",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "sends_comments": true,
+                                "comments": "",
+                                "is_locked": true,
+                                "value": false,
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous quantum progress percentage",
+                                        "value": 55,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Increase in quantum progress percentage",
+                                        "key": "progress",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "notice",
+                                        "label": "",
+                                        "text": "Supervisor has marked progress of student more than 20%",
+                                        "tone": "warning",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    },
+                                    {
+                                        "key": "progress",
+                                        "test": "above",
+                                        "than": 20
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Total quantum progress percentage",
+                                        "total_of": {
+                                            "base": 55,
+                                            "key": "progress"
+                                        },
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "No. of contact hours",
+                                        "key": "contact_hours",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ],
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "hidden",
+                                "type": "hidden",
+                                "label": "",
+                                "key": "attendance",
+                                "value": null,
+                                "locked": true
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "submitted, scholar reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "supervisor",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "supervisor": false,
+                "doctoral": false
+            },
+            "approvals": {
+                "supervisor": false,
+                "doctoral": false
+            },
+            "comments": {
+                "supervisor": null,
+                "doctoral": null
+            },
+            "role": "student",
+            "steps": [
+                "student",
+                "faculty",
+                "doctoral",
+                "hod",
+                "dordc",
+                "complete"
+            ],
+            "period_of_report": "2526ODD",
+            "extention_availed": false,
+            "teaching_work": "UG",
+            "ppt_file": null,
+            "presentation_pdf": "presentation_pdf/102203456/p.pdf",
+            "publication_count": 1,
+            "current_progress": 55,
+            "progress": null,
+            "total_progress": null,
+            "attendance": null,
+            "contact_hours": null,
+            "supervisorReviews": [],
+            "doctoralCommitteeReviews": [],
+            "no_paper_sci_journal": 1,
+            "no_paper_scopus_journal": 0,
+            "no_paper_conference": 0,
+            "total_paper_sci_journal": 2,
+            "sci": [
+                {
+                    "id": 41,
+                    "authors": "A. Verma",
+                    "year": 2025,
+                    "title": "Ruthenium on ceria",
+                    "name": "J. Catal.",
+                    "volume": "12",
+                    "page": "1-9",
+                    "doi_link": null
+                }
+            ],
+            "non_sci": [],
+            "national": [],
+            "international": [],
+            "book": [],
+            "patents": [],
+            "student_publications": null,
+            "view": {
+                "version": 1,
+                "title": "Progress monitoring 2526ODD",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Period of report",
+                                        "value": "2526ODD",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Extension availed",
+                                        "value": "No",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "select",
+                                        "label": "Teaching work done",
+                                        "options": [
+                                            {
+                                                "value": "UG",
+                                                "title": "UG"
+                                            },
+                                            {
+                                                "value": "PG",
+                                                "title": "PG"
+                                            },
+                                            {
+                                                "value": "Both",
+                                                "title": "UG & PG (Both)"
+                                            },
+                                            {
+                                                "value": "None",
+                                                "title": "Other assignments"
+                                            }
+                                        ],
+                                        "key": "teaching_work",
+                                        "required": true,
+                                        "value": "UG",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "select",
+                                        "label": "Publication during the period under report",
+                                        "options": [
+                                            {
+                                                "value": true,
+                                                "title": "Yes"
+                                            },
+                                            {
+                                                "value": false,
+                                                "title": "No"
+                                            }
+                                        ],
+                                        "key": "publication_under_report",
+                                        "required": true,
+                                        "boolean": true,
+                                        "value": true,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "group",
+                                "hidden_unless": "publication_under_report",
+                                "rows": [
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "No. of papers in SCI/SCIE/SSCI/ABDC/AHCI journal",
+                                                "required": true,
+                                                "value": 1,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "No. of papers in Scopus journal",
+                                                "required": true,
+                                                "value": 0,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "No. of papers in conferences under report",
+                                                "required": true,
+                                                "value": 0,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "Total number of papers",
+                                                "required": true,
+                                                "value": 2,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "publications",
+                                        "type": "publications",
+                                        "label": "Publications",
+                                        "lists": [
+                                            "sci",
+                                            "non_sci",
+                                            "patents",
+                                            "book",
+                                            "national",
+                                            "international"
+                                        ],
+                                        "library": "student_publications",
+                                        "editable": false,
+                                        "add_label": "Link publications",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload presentation PDF",
+                                        "key": "presentation_pdf",
+                                        "value": "presentation_pdf/102203456/p.pdf",
+                                        "locked": true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "sends_comments": true,
+                                "comments": "",
+                                "is_locked": true,
+                                "value": false,
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous quantum progress percentage",
+                                        "value": 55,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Increase in quantum progress percentage",
+                                        "key": "progress",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "notice",
+                                        "label": "",
+                                        "text": "Supervisor has marked progress of student more than 20%",
+                                        "tone": "warning",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    },
+                                    {
+                                        "key": "progress",
+                                        "test": "above",
+                                        "than": 20
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Total quantum progress percentage",
+                                        "total_of": {
+                                            "base": 55,
+                                            "key": "progress"
+                                        },
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "No. of contact hours",
+                                        "key": "contact_hours",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ],
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "hidden",
+                                "type": "hidden",
+                                "label": "",
+                                "key": "attendance",
+                                "value": null,
+                                "locked": true
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "unsubmitted, admin reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "supervisor": false,
+                "doctoral": false
+            },
+            "approvals": {
+                "supervisor": false,
+                "doctoral": false
+            },
+            "comments": {
+                "supervisor": null,
+                "doctoral": null
+            },
+            "role": "admin",
+            "steps": [
+                "student",
+                "faculty",
+                "doctoral",
+                "hod",
+                "dordc",
+                "complete"
+            ],
+            "period_of_report": "2526ODD",
+            "extention_availed": false,
+            "teaching_work": null,
+            "ppt_file": null,
+            "presentation_pdf": null,
+            "publication_count": 0,
+            "current_progress": 55,
+            "progress": null,
+            "total_progress": null,
+            "attendance": null,
+            "contact_hours": null,
+            "supervisorReviews": [],
+            "doctoralCommitteeReviews": [],
+            "no_paper_sci_journal": 0,
+            "no_paper_scopus_journal": 0,
+            "no_paper_conference": 0,
+            "total_paper_sci_journal": 2,
+            "sci": [],
+            "non_sci": [],
+            "national": [],
+            "international": [],
+            "book": [],
+            "patents": [],
+            "student_publications": null,
+            "view": {
+                "version": 1,
+                "title": "Progress monitoring 2526ODD",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Period of report",
+                                        "value": "2526ODD",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Extension availed",
+                                        "value": "No",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "select",
+                                        "label": "Teaching work done",
+                                        "options": [
+                                            {
+                                                "value": "UG",
+                                                "title": "UG"
+                                            },
+                                            {
+                                                "value": "PG",
+                                                "title": "PG"
+                                            },
+                                            {
+                                                "value": "Both",
+                                                "title": "UG & PG (Both)"
+                                            },
+                                            {
+                                                "value": "None",
+                                                "title": "Other assignments"
+                                            }
+                                        ],
+                                        "key": "teaching_work",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "select",
+                                        "label": "Publication during the period under report",
+                                        "options": [
+                                            {
+                                                "value": true,
+                                                "title": "Yes"
+                                            },
+                                            {
+                                                "value": false,
+                                                "title": "No"
+                                            }
+                                        ],
+                                        "key": "publication_under_report",
+                                        "required": true,
+                                        "boolean": true,
+                                        "value": false,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "group",
+                                "hidden_unless": "publication_under_report",
+                                "rows": [
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "No. of papers in SCI/SCIE/SSCI/ABDC/AHCI journal",
+                                                "required": true,
+                                                "value": 0,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "No. of papers in Scopus journal",
+                                                "required": true,
+                                                "value": 0,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "No. of papers in conferences under report",
+                                                "required": true,
+                                                "value": 0,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "Total number of papers",
+                                                "required": true,
+                                                "value": 2,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "publications",
+                                        "type": "publications",
+                                        "label": "Publications",
+                                        "lists": [
+                                            "sci",
+                                            "non_sci",
+                                            "patents",
+                                            "book",
+                                            "national",
+                                            "international"
+                                        ],
+                                        "library": "student_publications",
+                                        "editable": false,
+                                        "add_label": "Link publications",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload presentation PDF",
+                                        "key": "presentation_pdf",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "sends_comments": true,
+                                "comments": "",
+                                "is_locked": true,
+                                "value": false,
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous quantum progress percentage",
+                                        "value": 55,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Increase in quantum progress percentage",
+                                        "key": "progress",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "notice",
+                                        "label": "",
+                                        "text": "Supervisor has marked progress of student more than 20%",
+                                        "tone": "warning",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    },
+                                    {
+                                        "key": "progress",
+                                        "test": "above",
+                                        "than": 20
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Total quantum progress percentage",
+                                        "total_of": {
+                                            "base": 55,
+                                            "key": "progress"
+                                        },
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "No. of contact hours",
+                                        "key": "contact_hours",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ],
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "hidden",
+                                "type": "hidden",
+                                "label": "",
+                                "key": "attendance",
+                                "value": null,
+                                "locked": true
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "at the supervisor, supervisor reviewing",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "supervisor",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "supervisor": false,
+                "doctoral": false
+            },
+            "approvals": {
+                "supervisor": false,
+                "doctoral": false
+            },
+            "comments": {
+                "supervisor": null,
+                "doctoral": null
+            },
+            "role": "faculty",
+            "steps": [
+                "student",
+                "faculty",
+                "doctoral",
+                "hod",
+                "dordc",
+                "complete"
+            ],
+            "period_of_report": "2526ODD",
+            "extention_availed": false,
+            "teaching_work": "UG",
+            "ppt_file": null,
+            "presentation_pdf": "presentation_pdf/102203456/p.pdf",
+            "publication_count": 0,
+            "current_progress": 55,
+            "progress": null,
+            "total_progress": null,
+            "attendance": null,
+            "contact_hours": null,
+            "supervisorReviews": [],
+            "doctoralCommitteeReviews": [],
+            "no_paper_sci_journal": 0,
+            "no_paper_scopus_journal": 0,
+            "no_paper_conference": 0,
+            "total_paper_sci_journal": 2,
+            "sci": [],
+            "non_sci": [],
+            "national": [],
+            "international": [],
+            "book": [],
+            "patents": [],
+            "student_publications": null,
+            "current_review": {
+                "progress": null,
+                "comments": "",
+                "review_status": "pending"
+            },
+            "view": {
+                "version": 1,
+                "title": "Progress monitoring 2526ODD",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Period of report",
+                                        "value": "2526ODD",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Extension availed",
+                                        "value": "No",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "select",
+                                        "label": "Teaching work done",
+                                        "options": [
+                                            {
+                                                "value": "UG",
+                                                "title": "UG"
+                                            },
+                                            {
+                                                "value": "PG",
+                                                "title": "PG"
+                                            },
+                                            {
+                                                "value": "Both",
+                                                "title": "UG & PG (Both)"
+                                            },
+                                            {
+                                                "value": "None",
+                                                "title": "Other assignments"
+                                            }
+                                        ],
+                                        "key": "teaching_work",
+                                        "required": true,
+                                        "value": "UG",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "select",
+                                        "label": "Publication during the period under report",
+                                        "options": [
+                                            {
+                                                "value": true,
+                                                "title": "Yes"
+                                            },
+                                            {
+                                                "value": false,
+                                                "title": "No"
+                                            }
+                                        ],
+                                        "key": "publication_under_report",
+                                        "required": true,
+                                        "boolean": true,
+                                        "value": false,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "group",
+                                "hidden_unless": "publication_under_report",
+                                "rows": [
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "No. of papers in SCI/SCIE/SSCI/ABDC/AHCI journal",
+                                                "required": true,
+                                                "value": 0,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "No. of papers in Scopus journal",
+                                                "required": true,
+                                                "value": 0,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "No. of papers in conferences under report",
+                                                "required": true,
+                                                "value": 0,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "Total number of papers",
+                                                "required": true,
+                                                "value": 2,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "publications",
+                                        "type": "publications",
+                                        "label": "Publications",
+                                        "lists": [
+                                            "sci",
+                                            "non_sci",
+                                            "patents",
+                                            "book",
+                                            "national",
+                                            "international"
+                                        ],
+                                        "library": "student_publications",
+                                        "editable": false,
+                                        "add_label": "Link publications",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload presentation PDF",
+                                        "key": "presentation_pdf",
+                                        "value": "presentation_pdf/102203456/p.pdf",
+                                        "locked": true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "sends_comments": true,
+                                "comments": "",
+                                "is_locked": false,
+                                "value": null,
+                                "locked": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous quantum progress percentage",
+                                        "value": 55,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Increase in quantum progress percentage",
+                                        "key": "progress",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "notice",
+                                        "label": "",
+                                        "text": "Supervisor has marked progress of student more than 20%",
+                                        "tone": "warning",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    },
+                                    {
+                                        "key": "progress",
+                                        "test": "above",
+                                        "than": 20
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Total quantum progress percentage",
+                                        "total_of": {
+                                            "base": 55,
+                                            "key": "progress"
+                                        },
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "No. of contact hours",
+                                        "key": "contact_hours",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ],
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "hidden",
+                                "type": "hidden",
+                                "label": "",
+                                "key": "attendance",
+                                "value": null,
+                                "locked": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit",
+                                        "requires": [
+                                            {
+                                                "keys": [
+                                                    "approval"
+                                                ],
+                                                "message": "Choose Recommend or Not Recommend first.",
+                                                "check": "set"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "at the supervisor, scholar has other assignments",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "supervisor",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "supervisor": false,
+                "doctoral": false
+            },
+            "approvals": {
+                "supervisor": false,
+                "doctoral": false
+            },
+            "comments": {
+                "supervisor": null,
+                "doctoral": null
+            },
+            "role": "faculty",
+            "steps": [
+                "student",
+                "faculty",
+                "doctoral",
+                "hod",
+                "dordc",
+                "complete"
+            ],
+            "period_of_report": "2526ODD",
+            "extention_availed": false,
+            "teaching_work": "None",
+            "ppt_file": null,
+            "presentation_pdf": "presentation_pdf/102203456/p.pdf",
+            "publication_count": 0,
+            "current_progress": 55,
+            "progress": null,
+            "total_progress": null,
+            "attendance": null,
+            "contact_hours": null,
+            "supervisorReviews": [],
+            "doctoralCommitteeReviews": [],
+            "no_paper_sci_journal": 0,
+            "no_paper_scopus_journal": 0,
+            "no_paper_conference": 0,
+            "total_paper_sci_journal": 2,
+            "sci": [],
+            "non_sci": [],
+            "national": [],
+            "international": [],
+            "book": [],
+            "patents": [],
+            "student_publications": null,
+            "current_review": null,
+            "view": {
+                "version": 1,
+                "title": "Progress monitoring 2526ODD",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Period of report",
+                                        "value": "2526ODD",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Extension availed",
+                                        "value": "No",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "select",
+                                        "label": "Teaching work done",
+                                        "options": [
+                                            {
+                                                "value": "UG",
+                                                "title": "UG"
+                                            },
+                                            {
+                                                "value": "PG",
+                                                "title": "PG"
+                                            },
+                                            {
+                                                "value": "Both",
+                                                "title": "UG & PG (Both)"
+                                            },
+                                            {
+                                                "value": "None",
+                                                "title": "Other assignments"
+                                            }
+                                        ],
+                                        "key": "teaching_work",
+                                        "required": true,
+                                        "value": "None",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "select",
+                                        "label": "Publication during the period under report",
+                                        "options": [
+                                            {
+                                                "value": true,
+                                                "title": "Yes"
+                                            },
+                                            {
+                                                "value": false,
+                                                "title": "No"
+                                            }
+                                        ],
+                                        "key": "publication_under_report",
+                                        "required": true,
+                                        "boolean": true,
+                                        "value": false,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "group",
+                                "hidden_unless": "publication_under_report",
+                                "rows": [
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "No. of papers in SCI/SCIE/SSCI/ABDC/AHCI journal",
+                                                "required": true,
+                                                "value": 0,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "No. of papers in Scopus journal",
+                                                "required": true,
+                                                "value": 0,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "No. of papers in conferences under report",
+                                                "required": true,
+                                                "value": 0,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "Total number of papers",
+                                                "required": true,
+                                                "value": 2,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "publications",
+                                        "type": "publications",
+                                        "label": "Publications",
+                                        "lists": [
+                                            "sci",
+                                            "non_sci",
+                                            "patents",
+                                            "book",
+                                            "national",
+                                            "international"
+                                        ],
+                                        "library": "student_publications",
+                                        "editable": false,
+                                        "add_label": "Link publications",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload presentation PDF",
+                                        "key": "presentation_pdf",
+                                        "value": "presentation_pdf/102203456/p.pdf",
+                                        "locked": true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "sends_comments": true,
+                                "comments": "",
+                                "is_locked": false,
+                                "value": null,
+                                "locked": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous quantum progress percentage",
+                                        "value": 55,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Increase in quantum progress percentage",
+                                        "key": "progress",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "notice",
+                                        "label": "",
+                                        "text": "Supervisor has marked progress of student more than 20%",
+                                        "tone": "warning",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    },
+                                    {
+                                        "key": "progress",
+                                        "test": "above",
+                                        "than": 20
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Total quantum progress percentage",
+                                        "total_of": {
+                                            "base": 55,
+                                            "key": "progress"
+                                        },
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "% Attendance",
+                                        "key": "attendance",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ],
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "hidden",
+                                "type": "hidden",
+                                "label": "",
+                                "key": "contact_hours",
+                                "value": null,
+                                "locked": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit",
+                                        "requires": [
+                                            {
+                                                "keys": [
+                                                    "approval"
+                                                ],
+                                                "message": "Choose Recommend or Not Recommend first.",
+                                                "check": "set"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "reviewed, supervisor reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "doctoral",
+            "maximum_step": 2,
+            "locks": {
+                "student": true,
+                "supervisor": true,
+                "doctoral": false
+            },
+            "approvals": {
+                "supervisor": true,
+                "doctoral": false
+            },
+            "comments": {
+                "supervisor": "Steady work."
+            },
+            "role": "faculty",
+            "steps": [
+                "student",
+                "faculty",
+                "doctoral",
+                "hod",
+                "dordc",
+                "complete"
+            ],
+            "period_of_report": "2526ODD",
+            "extention_availed": false,
+            "teaching_work": "UG",
+            "ppt_file": null,
+            "presentation_pdf": null,
+            "publication_count": 0,
+            "current_progress": 55,
+            "progress": 12,
+            "total_progress": 67,
+            "attendance": 90,
+            "contact_hours": 40,
+            "supervisorReviews": [
+                {
+                    "faculty": "Rakesh Gupta",
+                    "progress": "satisfactory",
+                    "comments": "Steady work.",
+                    "review_status": "completed"
+                }
+            ],
+            "doctoralCommitteeReviews": [],
+            "no_paper_sci_journal": 0,
+            "no_paper_scopus_journal": 0,
+            "no_paper_conference": 0,
+            "total_paper_sci_journal": 2,
+            "sci": [],
+            "non_sci": [],
+            "national": [],
+            "international": [],
+            "book": [],
+            "patents": [],
+            "student_publications": {
+                "sci": [],
+                "non_sci": [],
+                "national": [],
+                "international": [],
+                "book": [],
+                "patents": []
+            },
+            "current_review": {
+                "progress": "satisfactory",
+                "comments": "Steady work.",
+                "review_status": "completed"
+            },
+            "view": {
+                "version": 1,
+                "title": "Progress monitoring 2526ODD",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Period of report",
+                                        "value": "2526ODD",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Extension availed",
+                                        "value": "No",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "select",
+                                        "label": "Teaching work done",
+                                        "options": [
+                                            {
+                                                "value": "UG",
+                                                "title": "UG"
+                                            },
+                                            {
+                                                "value": "PG",
+                                                "title": "PG"
+                                            },
+                                            {
+                                                "value": "Both",
+                                                "title": "UG & PG (Both)"
+                                            },
+                                            {
+                                                "value": "None",
+                                                "title": "Other assignments"
+                                            }
+                                        ],
+                                        "key": "teaching_work",
+                                        "required": true,
+                                        "value": "UG",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "select",
+                                        "label": "Publication during the period under report",
+                                        "options": [
+                                            {
+                                                "value": true,
+                                                "title": "Yes"
+                                            },
+                                            {
+                                                "value": false,
+                                                "title": "No"
+                                            }
+                                        ],
+                                        "key": "publication_under_report",
+                                        "required": true,
+                                        "boolean": true,
+                                        "value": false,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "group",
+                                "hidden_unless": "publication_under_report",
+                                "rows": [
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "No. of papers in SCI/SCIE/SSCI/ABDC/AHCI journal",
+                                                "required": true,
+                                                "value": 0,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "No. of papers in Scopus journal",
+                                                "required": true,
+                                                "value": 0,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "No. of papers in conferences under report",
+                                                "required": true,
+                                                "value": 0,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "Total number of papers",
+                                                "required": true,
+                                                "value": 2,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "publications",
+                                        "type": "publications",
+                                        "label": "Publications",
+                                        "lists": [
+                                            "sci",
+                                            "non_sci",
+                                            "patents",
+                                            "book",
+                                            "national",
+                                            "international"
+                                        ],
+                                        "library": "student_publications",
+                                        "editable": false,
+                                        "add_label": "Link publications",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload presentation PDF",
+                                        "key": "presentation_pdf",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "faculty",
+                                                "title": "Name"
+                                            },
+                                            {
+                                                "key": "progress",
+                                                "title": "Progress",
+                                                "format": "title-case"
+                                            },
+                                            {
+                                                "key": "comments",
+                                                "title": "Comments"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "faculty": "Rakesh Gupta",
+                                                "progress": "satisfactory",
+                                                "comments": "Steady work.",
+                                                "review_status": "completed"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Supervisor(s) review"
+                            },
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "sends_comments": true,
+                                "comments": "Steady work.",
+                                "is_locked": true,
+                                "value": true,
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous quantum progress percentage",
+                                        "value": 55,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Increase in quantum progress percentage",
+                                        "key": "progress",
+                                        "required": true,
+                                        "value": 12,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "notice",
+                                        "label": "",
+                                        "text": "Supervisor has marked progress of student more than 20%",
+                                        "tone": "warning",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    },
+                                    {
+                                        "key": "progress",
+                                        "test": "above",
+                                        "than": 20
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Total quantum progress percentage",
+                                        "total_of": {
+                                            "base": 55,
+                                            "key": "progress"
+                                        },
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "No. of contact hours",
+                                        "key": "contact_hours",
+                                        "required": true,
+                                        "value": 40,
+                                        "locked": true
+                                    }
+                                ],
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "hidden",
+                                "type": "hidden",
+                                "label": "",
+                                "key": "attendance",
+                                "value": 90,
+                                "locked": true
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "reviewed above 20%, HOD reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "doctoral",
+            "maximum_step": 2,
+            "locks": {
+                "student": true,
+                "supervisor": true,
+                "doctoral": false
+            },
+            "approvals": {
+                "supervisor": true,
+                "doctoral": false
+            },
+            "comments": {
+                "supervisor": "Steady work."
+            },
+            "role": "hod",
+            "steps": [
+                "student",
+                "faculty",
+                "doctoral",
+                "hod",
+                "dordc",
+                "complete"
+            ],
+            "period_of_report": "2526ODD",
+            "extention_availed": false,
+            "teaching_work": "UG",
+            "ppt_file": null,
+            "presentation_pdf": null,
+            "publication_count": 0,
+            "current_progress": 55,
+            "progress": 25,
+            "total_progress": 80,
+            "attendance": 90,
+            "contact_hours": 40,
+            "supervisorReviews": [
+                {
+                    "faculty": "Rakesh Gupta",
+                    "progress": "satisfactory",
+                    "comments": "Steady work.",
+                    "review_status": "completed"
+                }
+            ],
+            "doctoralCommitteeReviews": [],
+            "no_paper_sci_journal": 0,
+            "no_paper_scopus_journal": 0,
+            "no_paper_conference": 0,
+            "total_paper_sci_journal": 2,
+            "sci": [],
+            "non_sci": [],
+            "national": [],
+            "international": [],
+            "book": [],
+            "patents": [],
+            "student_publications": {
+                "sci": [],
+                "non_sci": [],
+                "national": [],
+                "international": [],
+                "book": [],
+                "patents": []
+            },
+            "view": {
+                "version": 1,
+                "title": "Progress monitoring 2526ODD",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Period of report",
+                                        "value": "2526ODD",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Extension availed",
+                                        "value": "No",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "select",
+                                        "label": "Teaching work done",
+                                        "options": [
+                                            {
+                                                "value": "UG",
+                                                "title": "UG"
+                                            },
+                                            {
+                                                "value": "PG",
+                                                "title": "PG"
+                                            },
+                                            {
+                                                "value": "Both",
+                                                "title": "UG & PG (Both)"
+                                            },
+                                            {
+                                                "value": "None",
+                                                "title": "Other assignments"
+                                            }
+                                        ],
+                                        "key": "teaching_work",
+                                        "required": true,
+                                        "value": "UG",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "select",
+                                        "label": "Publication during the period under report",
+                                        "options": [
+                                            {
+                                                "value": true,
+                                                "title": "Yes"
+                                            },
+                                            {
+                                                "value": false,
+                                                "title": "No"
+                                            }
+                                        ],
+                                        "key": "publication_under_report",
+                                        "required": true,
+                                        "boolean": true,
+                                        "value": false,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "group",
+                                "hidden_unless": "publication_under_report",
+                                "rows": [
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "No. of papers in SCI/SCIE/SSCI/ABDC/AHCI journal",
+                                                "required": true,
+                                                "value": 0,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "No. of papers in Scopus journal",
+                                                "required": true,
+                                                "value": 0,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "No. of papers in conferences under report",
+                                                "required": true,
+                                                "value": 0,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "text",
+                                                "label": "Total number of papers",
+                                                "required": true,
+                                                "value": 2,
+                                                "locked": true
+                                            }
+                                        ],
+                                        "space": 2
+                                    },
+                                    {
+                                        "kind": "publications",
+                                        "type": "publications",
+                                        "label": "Publications",
+                                        "lists": [
+                                            "sci",
+                                            "non_sci",
+                                            "patents",
+                                            "book",
+                                            "national",
+                                            "international"
+                                        ],
+                                        "library": "student_publications",
+                                        "editable": false,
+                                        "add_label": "Link publications",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload presentation PDF",
+                                        "key": "presentation_pdf",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "faculty",
+                                                "title": "Name"
+                                            },
+                                            {
+                                                "key": "progress",
+                                                "title": "Progress",
+                                                "format": "title-case"
+                                            },
+                                            {
+                                                "key": "comments",
+                                                "title": "Comments"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "faculty": "Rakesh Gupta",
+                                                "progress": "satisfactory",
+                                                "comments": "Steady work.",
+                                                "review_status": "completed"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Supervisor(s) review"
+                            },
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "sends_comments": true,
+                                "comments": "Steady work.",
+                                "is_locked": true,
+                                "value": true,
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous quantum progress percentage",
+                                        "value": 55,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Increase in quantum progress percentage",
+                                        "key": "progress",
+                                        "required": true,
+                                        "value": 25,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "notice",
+                                        "label": "",
+                                        "text": "Supervisor has marked progress of student more than 20%",
+                                        "tone": "warning",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    },
+                                    {
+                                        "key": "progress",
+                                        "test": "above",
+                                        "than": 20
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Total quantum progress percentage",
+                                        "total_of": {
+                                            "base": 55,
+                                            "key": "progress"
+                                        },
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "No. of contact hours",
+                                        "key": "contact_hours",
+                                        "required": true,
+                                        "value": 40,
+                                        "locked": true
+                                    }
+                                ],
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "hidden",
+                                "type": "hidden",
+                                "label": "",
+                                "key": "attendance",
+                                "value": 90,
+                                "locked": true
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+]

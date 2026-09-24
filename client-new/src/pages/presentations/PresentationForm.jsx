@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import PresentationForm from "../../components/forms/presentations/PresentationForm";
+import ServerForm from "../../components/forms/serverForm/ServerForm";
 import { useLoading } from "../../context/LoadingContext";
 import { useLocation, useParams } from "react-router-dom";
 import { customFetch } from "../../api/base";
@@ -37,21 +37,6 @@ const Presentation = () => {
       setLoading(false);
     };
   }, [location.pathname, attempt]);
-  const refetchData = () => {
-    setLoading(true);
-    const url = baseURL + location.pathname;
-    customFetch(url, "GET")
-      .then((data) => {
-        if (data && data.success) {
-          setFormData(data.response);
-          setIsLoaded(true);
-        }
-        setLoading(false);
-      })
-      .catch((error) => {
-        setLoading(false);
-      });
-  }
   // A page like any other: the form draws its header and its panel, and the
   // page supplies the gap between them.
   return (
@@ -63,7 +48,7 @@ const Presentation = () => {
         />
       )}
       {isLoaded && formData && (
-        <PresentationForm formData={formData} refetchData={refetchData} />
+        <ServerForm formData={formData} />
       )}
     </div>
   );
