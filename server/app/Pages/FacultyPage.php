@@ -25,7 +25,7 @@ final class FacultyPage extends PageDefinition
         return Navigation::allows($user, 'facultyDirectory');
     }
 
-    public function view(User $user): array
+    public function view(User $user, array $params = []): array
     {
         // A viewer with only directory access is browsing, not managing.
         $manages = $user->may('can_manage_faculties');

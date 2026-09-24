@@ -15,7 +15,7 @@ final class CoursesPage extends PageDefinition
         return Navigation::allows($user, 'courseManagement');
     }
 
-    public function view(User $user): array
+    public function view(User $user, array $params = []): array
     {
         $role = $user->current_role?->role;
         // Tagging and the coursework import need can_manage_students, except for

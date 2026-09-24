@@ -24,6 +24,7 @@ const AS = {
 import DepartmentManagerBlock from './blocks/DepartmentManagerBlock';
 import UserEditorBlock from './blocks/UserEditorBlock';
 import SignInLinksBlock from './blocks/SignInLinksBlock';
+import SupervisorDoctoralBlock from './blocks/SupervisorDoctoralBlock';
 import ChoiceDialog from './ChoiceDialog';
 
 // Dialogs with behaviour of their own, which the server opens by name.
@@ -31,6 +32,7 @@ const BLOCKS = {
   'department-manager': DepartmentManagerBlock,
   'user-editor': UserEditorBlock,
   'sign-in-links': SignInLinksBlock,
+  'supervisor-doctoral-manager': SupervisorDoctoralBlock,
 };
 
 // What one of a field's sources reads from the row: a key, keys read as
@@ -38,6 +40,7 @@ const BLOCKS = {
 const readSource = (source, row) => {
   if (Array.isArray(source)) return source.map((key) => `${row[key] ?? ''}`.trim()).filter(Boolean).join(' ');
   if (source && typeof source === 'object') {
+    if (source.words) return source.words.map((key) => row[key]).filter(Boolean).join(' ');
     const value = row[source.key];
     if (source.pluck) return (value || []).map((entry) => entry[source.pluck]);
     if (source.as) return AS[source.as](value, source);
@@ -47,11 +50,12 @@ const readSource = (source, row) => {
 };
 
 // The first of a field's sources the row fills, else what the field starts
-// from anyway ('' unless the view gives it a default).
+// from anyway ('' unless the view gives it a default). A 0 or false reads as
+// unfilled, as the forms this replaced read `row.value || default`.
 const fromRow = (field, row) => {
   for (const source of field.from) {
     const value = readSource(source, row);
-    if (value !== undefined && value !== null && value !== '') return value;
+    if (value) return value;
   }
   return field.value ?? '';
 };
@@ -112,7 +116,7 @@ const ServerDialog = ({ dialog, isOpen, row, opened, onClose, onSaved, onChoose 
         <ServerPanel
           key={opened}
           rows={startingFrom(dialog.rows, row)}
-          wrapped={false}
+          wrapped={dialog.wrapped === true}
           host={{ submit, onCancel: onClose, busy }}
         />
       )}

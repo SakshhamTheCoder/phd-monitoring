@@ -55,7 +55,8 @@ abstract class PageDefinition
     /** Whether $user, as the role they act in, may open the page at all. */
     abstract public function allows(User $user): bool;
 
-    abstract public function view(User $user): array;
+    /** $params are the route's parameters, for a page that takes them (a form type). */
+    abstract public function view(User $user, array $params = []): array;
 
     /** A header button opening the dialog or import $opens. */
     protected static function action(string $label, string $opens, ?string $variant = null): array

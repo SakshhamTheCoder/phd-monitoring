@@ -14,7 +14,7 @@ final class OutsideExpertsPage extends PageDefinition
         return Navigation::allows($user, 'admin');
     }
 
-    public function view(User $user): array
+    public function view(User $user, array $params = []): array
     {
         return self::page('Outside experts', 'External examiners and experts available to committees.', [
             'actions' => [

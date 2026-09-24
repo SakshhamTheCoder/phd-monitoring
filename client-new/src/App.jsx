@@ -23,7 +23,6 @@ const GoogleCallback = lazy(() => import('./pages/login/GoogleCallback'));
 const FormsPage = lazy(() => import('./pages/forms/FormsPage'));
 const FormListPage = lazy(() => import('./pages/forms/FormListPage'));
 const MainFormPage = lazy(() => import('./pages/forms/MainFormPage'));
-const StudentsPage = lazy(() => import('./pages/students/StudentsPage'));
 const StudentProfile = lazy(() => import('./pages/students/StudentProfile'));
 const NotFound = lazy(() => import('./pages/404/NotFound'));
 const FacultyFormsPage = lazy(() => import('./pages/forms/FacultyFormsPage'));
@@ -217,7 +216,7 @@ const AppContent = () => {
               {may('scholars') && (
                 <>
                   <Route path="/forms" element={<FacultyFormsPage />} />
-                  <Route path="/students" element={<StudentsPage />} />
+                  <Route path="/students" element={<ServerListPage page="students" />} />
                   <Route path="/students/:roll_no" element={<StudentProfile />} />
                   <Route path="/students/:roll_no/forms" element={<FormsPage />} />
                   {/* Progress Monitoring for one scholar, from their profile. The

@@ -5,6 +5,7 @@ namespace Tests\Unit;
 use App\Http\Controllers\ClerkController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\FacultyController;
+use App\Http\Controllers\PresentationController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\UserManagementController;
 use PHPUnit\Framework\TestCase;
@@ -25,6 +26,7 @@ class ImportSheetsAreReadAsTheOldPagesReadThemTest extends TestCase
             'clerks' => fn (array $rows) => ClerkController::clerkRows($rows),
             'department-officers' => fn (array $rows) => DepartmentController::officerRows($rows),
             'faculty' => fn (array $rows) => FacultyController::facultyRows($rows),
+            'progress' => fn (array $rows) => PresentationController::progressRows($rows),
             'scholars' => fn (array $rows) => StudentController::scholarRows($rows),
             'users' => fn (array $rows) => UserManagementController::userRows($rows),
         ];

@@ -16,7 +16,7 @@ final class ClerksPage extends PageDefinition
         return Navigation::allows($user, 'admin');
     }
 
-    public function view(User $user): array
+    public function view(User $user, array $params = []): array
     {
         $departments = Department::orderBy('name')->get()->map(fn ($department) => [
             'value' => $department->id,

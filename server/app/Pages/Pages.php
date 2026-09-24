@@ -12,6 +12,7 @@ final class Pages
         'departments' => DepartmentsPage::class,
         'faculty' => FacultyPage::class,
         'outside-experts' => OutsideExpertsPage::class,
+        'students' => StudentsPage::class,
         'users' => UsersPage::class,
     ];
 

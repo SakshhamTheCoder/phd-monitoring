@@ -6,6 +6,7 @@ import PagenationTable from '../pagenationTable/PagenationTable';
 import FilterBar from '../filterBar/FilterBar';
 import CustomButton from '../forms/fields/CustomButton';
 import LoadError from '../common/LoadError';
+import Tabs from '../tabs/Tabs';
 import { useLoading } from '../../context/LoadingContext';
 import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
@@ -27,7 +28,10 @@ const ServerListPage = ({ page }) => {
   const { view, failed, retry, reload } = useView(page);
   const navigate = useNavigate();
   const { setLoading } = useLoading();
-  const [filters, setFilters] = useState([]);
+  // Null until searched: each table starts from the filters its view gives.
+  const [filters, setFilters] = useState(null);
+  // A page with tabs draws one list at a time; each tab has its own table and buttons.
+  const [tab, setTab] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
   // The dialog open now, the row it was opened on, and which opening it is.
   // One dialog at a time, drawn in one place, so a dialog that hands over to
@@ -95,21 +99,38 @@ const ServerListPage = ({ page }) => {
     if (await sendRequest(action.request, row, body, setLoading) && !action.request.keeps_rows) refresh();
   };
 
-  const { table } = view;
-  const opensRow = (row) => (table.opens.dialog ? open(table.opens.dialog, row) : navigate(fillFromRow(table.opens.navigate, row)));
+  const shownTab = view.tabs ? view.tabs.find((each) => each.value === tab) || view.tabs[0] : null;
+  const { table, actions } = shownTab || view;
+  // A row opens a dialog, a page, or (in_new_tab) the list's own path for it in a new tab.
+  const opensRow = table.opens && !table.opens.in_new_tab
+    ? (row) => (table.opens.dialog ? open(table.opens.dialog, row) : navigate(fillFromRow(table.opens.navigate, row)))
+    : undefined;
   if (dialog) lastDialog.current = dialog;
   const shownDialog = dialog || lastDialog.current;
   // Refreshed in place where the search in the table's head must survive a
   // save: remounting the table would empty the box with its search applied.
-  const refreshing = table.refresh === 'in_place' ? { num: refreshKey } : { key: refreshKey };
+  const tabKey = shownTab ? `${shownTab.value}-` : '';
+  const refreshing = table.refresh === 'in_place' ? { num: refreshKey } : { key: `${tabKey}${refreshKey}` };
 
   return (
     <Page
       title={view.title}
       description={view.description}
-      actions={view.actions.length > 0 ? (
+      tabs={view.tabs && (
+        <Tabs
+          value={shownTab.value}
+          // Each tab's search box unmounts when the other opens, so a search it
+          // kept would still filter the list with nothing on screen to say so.
+          onChange={(next) => {
+            setTab(next);
+            setFilters(null);
+          }}
+          items={view.tabs.map(({ value, label }) => ({ value, label }))}
+        />
+      )}
+      actions={actions.length > 0 ? (
         <>
-          {view.actions.map((action) => (
+          {actions.map((action) => (
             <CustomButton
               key={action.label}
               text={action.label}
@@ -127,7 +148,7 @@ const ServerListPage = ({ page }) => {
         <PagenationTable
           {...refreshing}
           endpoint={table.endpoint}
-          filters={filters}
+          filters={filters ?? table.filters ?? []}
           search={table.search && (
             <FilterBar
               path={table.search.path}
@@ -137,8 +158,9 @@ const ServerListPage = ({ page }) => {
             />
           )}
           rowClickable={!!table.opens}
-          customOpenForm={table.opens ? opensRow : undefined}
+          customOpenForm={opensRow}
           enableApproval={false}
+          enableSelect={table.select !== false}
           actions={table.actions.map((action) => ({
             icon: <i className={action.icon}></i>,
             tooltip: action.label,

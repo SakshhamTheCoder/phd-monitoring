@@ -14,7 +14,7 @@ final class UsersPage extends PageDefinition
         return Navigation::allows($user, 'admin');
     }
 
-    public function view(User $user): array
+    public function view(User $user, array $params = []): array
     {
         $manages = $user->may('can_manage_users');
         // Accounts nobody has claimed yet: an import creates them without

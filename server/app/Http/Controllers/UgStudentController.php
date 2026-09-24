@@ -226,7 +226,16 @@ class UgStudentController extends Controller
             }
         }
 
-        return response()->json(['added' => $added, 'updated' => $updated, 'errors' => $errors]);
+        return response()->json([
+            'added' => $added,
+            'updated' => $updated,
+            'errors' => $errors,
+            // What the page tells the reader, in order; a row's error stays up long enough to read.
+            'messages' => [
+                ['tone' => 'success', 'text' => "{$added} students added, {$updated} updated"],
+                ...array_map(fn ($error) => ['tone' => 'warn', 'text' => $error, 'sticky' => true], $errors),
+            ],
+        ]);
     }
 
     public function updateMine(Request $request)

@@ -12,6 +12,7 @@ use App\Models\OutsideExpert;
 use App\Models\ConstituteOfIRB;
 use App\Models\Presentation;
 use App\Models\Publication;
+use App\Support\CsvRow;
 use Illuminate\Http\Request;    
 use Illuminate\Support\Facades\Auth;
 use App\Models\Role;
@@ -499,8 +500,118 @@ class StudentController extends Controller {
         return ctype_digit($identifier) ? Faculty::where('faculty_code', $identifier)->first() : null;
     }
 
+    /**
+     * The scholars sheet's rows as it has them. Every column is read by the
+     * institute sheet's wording or the portal's older template, and a blank
+     * cell stays an empty string the upload treats as "not supplied"; sending
+     * null or 0 for a blank is what used to wipe stored values on an update.
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return array<int, array<string, mixed>>
+     */
+    public static function scholarRows(array $rows): array
+    {
+        $column = fn (array $row, string ...$aliases) => CsvRow::column($row, ...$aliases);
+        $slots = fn (array $row, callable $aliases) => array_values(array_filter(
+            array_map(fn ($slot) => $column($row, ...$aliases($slot)), [1, 2, 3]),
+            fn ($email) => $email !== ''
+        ));
+
+        return array_map(fn (array $row) => [
+            'full_name' => CsvRow::fallback($column($row, 'Full Name', 'full_name'), CsvRow::words($column($row, 'First Name'), $column($row, 'Last Name'))),
+            'email' => $column($row, 'Email', 'email'),
+            'phone' => $column($row, 'Phone', 'phone'),
+            'roll_no' => $column($row, 'Registration Number', 'Roll Number', 'roll_no'),
+            'department_code' => $column($row, 'Department Code', 'department_code'),
+            'gender' => $column($row, 'Gender', 'gender'),
+            'date_of_registration' => $column($row, 'Date of Admission', 'Date of Registration (YYYY-MM-DD)', 'date_of_registration'),
+            'date_of_irb' => $column($row, 'Date of IRB', 'Date of URB or IRB', 'Date of IRB (YYYY-MM-DD)', 'date_of_irb'),
+            'date_of_synopsis' => $column($row, 'Date of Synopsis', 'date_of_synopsis'),
+            'date_of_thesis' => $column($row, 'Date of Thesis', 'date_of_thesis'),
+            'date_of_thesis_awarded' => $column($row, 'Date of thesis awarded', 'Date of Thesis Awarded', 'date_of_thesis_awarded'),
+            'phd_title' => $column($row, 'PhD Title', 'phd_title'),
+            'fathers_name' => $column($row, 'Father Name', "Father's Name", 'fathers_name'),
+            'address' => $column($row, 'Permanent Address', 'Address', 'address'),
+            'current_status' => self::enrolmentType($column($row, 'Enrollment Type', 'Enrolment Type', 'Current Status', 'current_status')),
+            'cgpa' => $column($row, 'CGPA', 'cgpa'),
+            'is_jrf' => self::yesNo($column($row, 'JRF?', 'JRF', 'is_jrf')),
+            'net_gate' => self::netGate($column($row, 'NET/Gate', 'NET/GATE', 'NET/Gate (Yes/No)', 'net_gate', 'is_net_gate_qualified')),
+            'overall_progress' => $column($row, 'Overall Progress', 'overall_progress'),
+            'supervisors' => $slots($row, fn ($slot) => ["Supervisor {$slot} Email"]),
+            'committee' => $slots($row, fn ($slot) => ["Committee Member {$slot} Email"]),
+            // The sheet spells these three inconsistently, so all its spellings are read.
+            'irb_members' => $slots($row, fn ($slot) => ["IRB member{$slot} email", "IRB member {$slot} email", "IRB member {$slot} mail"]),
+            // The sheet stops prefixing after the expert's name, so its last
+            // five columns read Mail, Designation, Department and Institute name.
+            'external_expert' => [
+                'name' => $column($row, 'External expert for IRB Name'),
+                'email' => $column($row, 'External expert for IRB Mail', 'External expert for IRB Email', 'Mail'),
+                'designation' => $column($row, 'External expert for IRB Designation', 'Designation'),
+                'department' => $column($row, 'External expert for IRB Department', 'Department'),
+                'institution' => $column($row, 'External expert for IRB Institute name', 'Institute name'),
+            ],
+        ], $rows);
+    }
+
+    /**
+     * The office's sheet writes REG, PT and Executive; an older template writes
+     * Full Time and Part Time; the portal stores full-time, part-time and
+     * executive. Anything else is kept, spaced with hyphens, for the upload's
+     * own rule to refuse.
+     */
+    private static function enrolmentType(string $value): string
+    {
+        $types = [
+            'reg' => 'full-time', 'regular' => 'full-time', 'ft' => 'full-time', 'fulltime' => 'full-time',
+            'pt' => 'part-time', 'parttime' => 'part-time',
+            'exec' => 'executive', 'executive' => 'executive',
+        ];
+        $key = preg_replace('/[^a-z]/', '', strtolower(trim($value)));
+        return $types[$key] ?? preg_replace('/\s+/', '-', strtolower(trim($value)));
+    }
+
+    /** A blank cell means nobody has said yet, which is not the same as No. */
+    private static function yesNo(string $value): ?bool
+    {
+        $answer = strtolower(trim($value));
+        if ($answer === '') {
+            return null;
+        }
+        return !preg_match('/^(no|n|none|not qualified)$/', $answer);
+    }
+
+    /**
+     * The sheet answers NET/GATE by naming the qualification: GATE,
+     * NET(UGC/CSIR), DBT-BET, GPAT. Kept as the exam, named the portal's way
+     * where it can be: GATE, NET, or NA for a plain no. Anything else is kept as
+     * the sheet wrote it. Blank is nobody has said.
+     */
+    private static function netGate(string $value): ?string
+    {
+        $answer = trim($value);
+        if ($answer === '') {
+            return null;
+        }
+        if (preg_match('/^(no|n|none|not qualified|na|n\/a|nil)$/i', $answer)) {
+            return 'NA';
+        }
+        if (preg_match('/gate/i', $answer)) {
+            return 'GATE';
+        }
+        if (preg_match('/\bnet\b/i', $answer)) {
+            return 'NET';
+        }
+        return mb_substr($answer, 0, 40);
+    }
+
     public function bulkUpload(Request $request)
     {
+        // The page posts the sheet's rows as they are; read here into the
+        // scholars the rules below check.
+        if ($request->has('rows')) {
+            $request->merge(['students' => self::scholarRows((array) $request->input('rows'))]);
+        }
+
         $loggedInUser = Auth::user();
         if(!$loggedInUser->may('can_manage_students')){
             return response()->json([

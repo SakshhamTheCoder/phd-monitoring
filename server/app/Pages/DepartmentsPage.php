@@ -14,7 +14,7 @@ final class DepartmentsPage extends PageDefinition
         return Navigation::allows($user, 'departments');
     }
 
-    public function view(User $user): array
+    public function view(User $user, array $params = []): array
     {
         // Every department write is gated on can_add_department server side, so
         // a role without it is shown the directory, not the controls.

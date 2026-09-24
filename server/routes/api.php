@@ -231,7 +231,8 @@ Route::get('/views/{page}', function (string $page) {
     abort_if($definition === null, 404);
     abort_unless($definition->allows(Auth::user()), 403);
 
-    return response()->json($definition->view(Auth::user()));
+    // A page opened on a route with parameters (a form type, a scholar) is told them.
+    return response()->json($definition->view(Auth::user(), request()->query()));
 })->middleware('auth:sanctum');
 
 Route::post('/switch-role', function (Request $request) {

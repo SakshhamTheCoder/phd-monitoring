@@ -16,7 +16,7 @@ final class AreasPage extends PageDefinition
         return Navigation::allows($user, 'areasOfSpecialization');
     }
 
-    public function view(User $user): array
+    public function view(User $user, array $params = []): array
     {
         return self::page('Areas of specialization', 'The research areas each department offers.', [
             'actions' => [

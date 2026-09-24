@@ -32,7 +32,7 @@ final class StudentFields
 
         return [
             self::heading($edit ? 'Edit student' : 'Create student'),
-            self::row([Field::text('Full Name*')->key('full_name')->value('')->from('full_name', ['first_name', 'last_name'])->open()]),
+            self::row([Field::text('Full Name*')->key('full_name')->value('')->from('full_name')->fromWords(['first_name', 'last_name'])->open()]),
             self::row([$text('Email*', 'email'), $text('Phone*', 'phone')], space: 2, ratio: [2, 1]),
             self::row([
                 Field::text('Roll Number*')->key('roll_no')->value('')->from('roll_no')->lockedIf($edit)->alwaysSent()->open(),

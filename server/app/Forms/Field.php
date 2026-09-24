@@ -602,6 +602,16 @@ final class Field
         return $this;
     }
 
+    /**
+     * Like from() with a list of keys, for a form that joined them without
+     * trimming each first: the filled ones, as they are, joined by spaces.
+     */
+    public function fromWords(array $keys): self
+    {
+        $this->props['from'][] = ['words' => $keys];
+        return $this;
+    }
+
     /** Like from(), for a row value that is a list, read as its entries joined by $glue. */
     public function fromJoined(string $key, string $glue): self
     {
