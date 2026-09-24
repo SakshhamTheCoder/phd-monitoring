@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Forms\StatusChangeDefinition;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\GeneralFormCreate;
 use App\Http\Controllers\Traits\GeneralFormHandler;
@@ -150,9 +151,7 @@ class StatusChangeFormController extends Controller
         $model = StudentStatusChangeForms::class;
         return $this->submitForm($user, $request, $form_id, $model, 'student', 'student', 'faculty',
         function ($formInstance) use ($request, $user) {
-            $request->validate([
-                'reason' => 'required|string',
-            ]);
+            $request->validate((new StatusChangeDefinition)->rules('student', $formInstance->fullForm($user)));
             $formInstance->reason = $request->reason;
             $prevStatusChanges = $user->student->statusChanges();
             if ($prevStatusChanges->count() > 2) {

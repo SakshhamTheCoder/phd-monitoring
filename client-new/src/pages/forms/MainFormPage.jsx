@@ -9,8 +9,6 @@ import IRBSubmission from "../../components/forms/irbSubmission/IRBSubmission";
 import PresentationForm from "../../components/forms/presentations/PresentationForm";
 import SynopsisSubmission from "../../components/forms/synopsisSubmission/SynopsisSubmission";
 import ThesisSubmission from "../../components/forms/thesisSubmission/ThesisSubmission";
-import SemesterOff from "../../components/forms/semesterOff/SemesterOff";
-import StatusChange from "../../components/forms/statusChange/StatusChange";
 import SupervisorChange from "../../components/forms/supervisorChange/SupervisorChange";
 import ListOfExaminers from "../../components/forms/listOfExaminers/ListOfExaminers";
 import ServerForm from "../../components/forms/serverForm/ServerForm";
@@ -91,10 +89,6 @@ const MainFormPage = () => {
                 return <SynopsisSubmission formData={formData} />;
               case "thesis-submission":
                 return <ThesisSubmission formData={formData} />;
-              case "semester-off":
-                return <SemesterOff formData={formData} />;
-                case "status-change":
-                  return <StatusChange formData={formData} />;
               case "supervisor-change":
                 return <SupervisorChange formData={formData}/>
               case "list-of-examiners":

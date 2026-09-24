@@ -15,8 +15,6 @@ const CHAINS = {
   'irbSubmission/IRBSubmission.jsx': ['student', 'faculty', 'external', 'doctoral', 'phd_coordinator', 'hod', 'dra', 'dordc'],
   'listOfExaminers/ListOfExaminers.jsx': ['faculty', 'dordc', 'director'],
   'presentations/PresentationForm.jsx': ['student', 'faculty', 'doctoral', 'hod', 'dordc'],
-  'semesterOff/SemesterOff.jsx': ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc', 'director'],
-  'statusChange/StatusChange.jsx': ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc', 'director'],
   // Three or more supervisors extends this one with 'dordc' and 'director'.
   'supervisorAllocation/SupervisorAllocation.jsx': ['student', 'phd_coordinator', 'hod', 'dordc', 'director'],
   // Three or more supervisors extends this one with 'director'.

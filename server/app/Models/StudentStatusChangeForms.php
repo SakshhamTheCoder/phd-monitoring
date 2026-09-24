@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Forms\StatusChangeDefinition;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Traits\ModelCommonFormFields;
@@ -33,7 +34,7 @@ class StudentStatusChangeForms extends Model
     public function fullForm($user)
     {
         $commonJSON = $this->fullCommonForm($user);
-        return array_merge($commonJSON, [
+        $data = array_merge($commonJSON, [
             'reason' => $this->reason, // Include specific attributes
             'type_of_change' => $this->type_of_change,
             'initial_status'=>$this->student->initialStatus(),
@@ -43,6 +44,8 @@ class StudentStatusChangeForms extends Model
             'previous_changes'=>$this->student->statusChanges()->orderBy('created_at')->get()->makeVisible('created_at'),
             'date_of_irb'=>$this->student->date_of_irb
         ]);
+        $data['view'] = (new StatusChangeDefinition)->view($data);
+        return $data;
     }
 
 }

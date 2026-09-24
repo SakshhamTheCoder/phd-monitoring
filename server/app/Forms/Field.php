@@ -47,6 +47,24 @@ final class Field
     }
 
     /**
+     * A choice from a list.
+     *
+     * @param array<int, string> $options each option is shown as it is sent
+     */
+    public static function select(string $label, array $options): self
+    {
+        $field = new self('select', $label);
+        $field->props['options'] = array_map(fn ($option) => ['value' => $option, 'title' => $option], array_values($options));
+        return $field;
+    }
+
+    /** An empty cell that keeps a row's columns where they were. */
+    public static function blank(): self
+    {
+        return new self('blank', '');
+    }
+
+    /**
      * A read-only table.
      *
      * @param array<string, string> $columns row key => column title

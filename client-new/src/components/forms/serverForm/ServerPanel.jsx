@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import GridContainer from "../fields/GridContainer";
 import InputField from "../fields/InputField";
 import DateField from "../fields/DateField";
+import DropdownField from "../fields/DropdownField";
 import FileUploadField from "../fields/FileUploadField";
 import TableComponent from "../table/TableComponent";
 import CustomButton from "../fields/CustomButton";
@@ -74,6 +75,17 @@ const ServerPanel = ({ formData, rows = [] }) => {
             onChange={(date) => setValue(field.key, date)}
           />
         );
+      case "select":
+        return (
+          <DropdownField
+            required={field.required}
+            label={field.label}
+            initialValue={field.value}
+            isLocked={field.locked}
+            options={field.options}
+            onChange={(choice) => setValue(field.key, choice)}
+          />
+        );
       case "file":
         return (
           <FileUploadField
@@ -96,6 +108,7 @@ const ServerPanel = ({ formData, rows = [] }) => {
         );
       case "submit":
         return <CustomButton text={field.label} onClick={submit} />;
+      // "blank" is an empty cell holding the row's columns in place.
       default:
         return null;
     }

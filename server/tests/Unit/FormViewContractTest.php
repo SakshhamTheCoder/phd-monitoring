@@ -5,6 +5,8 @@ namespace Tests\Unit;
 use App\Forms\FormDefinition;
 use App\Forms\IrbExtensionDefinition;
 use App\Forms\ReviseTitleDefinition;
+use App\Forms\SemesterOffDefinition;
+use App\Forms\StatusChangeDefinition;
 use App\Forms\ThesisExtensionDefinition;
 use Tests\TestCase;
 
@@ -23,6 +25,8 @@ class FormViewContractTest extends TestCase
         'revise-title' => ReviseTitleDefinition::class,
         'irb-extension' => IrbExtensionDefinition::class,
         'thesis-extension' => ThesisExtensionDefinition::class,
+        'semester-off' => SemesterOffDefinition::class,
+        'status-change' => StatusChangeDefinition::class,
     ];
 
     public static function forms(): array
@@ -105,6 +109,37 @@ class FormViewContractTest extends TestCase
             'previous_extention_pdf' => 'required|file|mimes:pdf|max:20480',
         ], $definition->rules('student', $repeat + ['previous_extention_pdf' => null]));
         $this->assertSame('nullable|file|mimes:pdf|max:20480', $definition->rules('student', $repeat + ['previous_extention_pdf' => 'b.pdf'])['previous_extention_pdf']);
+    }
+
+    public function test_semester_off_asks_for_what_it_asked_before(): void
+    {
+        $definition = new SemesterOffDefinition;
+        $first = ['previous_off' => [], 'previous_approval_pdf' => null];
+        $this->assertSame([
+            'semester_off_required' => 'required|string',
+            'proof_pdf' => 'file|mimes:pdf|max:20480',
+            'reason' => 'required|string',
+        ], $definition->rules('student', $first));
+
+        // A repeat request also needs the earlier approval, once.
+        $repeat = ['previous_off' => [['semester_off_required' => '2425EVEN']]];
+        $this->assertSame('required|file|mimes:pdf|max:20480', $definition->rules('student', $repeat + $first)['previous_approval_pdf']);
+        $this->assertSame('nullable|file|mimes:pdf|max:20480', $definition->rules('student', $repeat + ['previous_approval_pdf' => 'p.pdf'])['previous_approval_pdf']);
+    }
+
+    public function test_semester_off_offers_the_terms_the_page_offered(): void
+    {
+        $view = (new SemesterOffDefinition)->view(['role' => 'student', 'locks' => []]);
+        $select = collect($view['panels']['student'])->flatMap(fn ($row) => $row['items'] ?? [])->firstWhere('type', 'select');
+        $this->assertSame(
+            array_map(fn ($code) => ['value' => $code, 'title' => $code], \App\Support\ReportPeriods::around(0, 1)),
+            $select['options']
+        );
+    }
+
+    public function test_status_change_asks_for_what_it_asked_before(): void
+    {
+        $this->assertSame(['reason' => 'required|string'], (new StatusChangeDefinition)->rules('student', []));
     }
 
     public function test_a_locked_or_foreign_reader_gets_no_inputs_and_no_submit(): void
