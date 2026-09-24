@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Forms\FormDefinition;
+use App\Forms\IrbConstitutionDefinition;
 use App\Forms\IrbExtensionDefinition;
 use App\Forms\IrbSubmissionDefinition;
 use App\Forms\ReviseTitleDefinition;
@@ -33,6 +34,7 @@ class FormViewContractTest extends TestCase
         'supervisor-change' => SupervisorChangeDefinition::class,
         'irb-submission' => IrbSubmissionDefinition::class,
         'supervisor-allocation' => SupervisorAllocationDefinition::class,
+        'irb-constitution' => IrbConstitutionDefinition::class,
     ];
 
     public static function forms(): array
@@ -206,6 +208,41 @@ class FormViewContractTest extends TestCase
         $this->assertSame(['supervisors' => 'required|array'], $definition->rules('phd_coordinator', []));
         // The scholar's answers are checked by the controller, as before.
         $this->assertSame([], $definition->rules('student', []));
+    }
+
+    public function test_irb_constitution_asks_for_what_it_asked_before(): void
+    {
+        $definition = new IrbConstitutionDefinition;
+        $profileEmpty = ['cgpa' => null, 'gender' => null, 'irb_pdf' => null];
+        $this->assertEquals([
+            'gender' => 'required|string|in:Male,Female',
+            'cgpa' => 'required|numeric',
+            'objectives' => 'required|array',
+            'title' => 'required|string',
+            'irb_pdf' => 'required|file|mimes:pdf|max:20480',
+            'address' => 'required|string',
+            'broad_area_of_research' => 'nullable|string|max:255',
+            'subdomains' => 'nullable|array',
+            'subdomains.*' => 'string',
+        ], $definition->rules('student', $profileEmpty));
+
+        // CGPA and gender are asked only while the profile lacks them.
+        $profileFull = $definition->rules('student', ['cgpa' => '8.1', 'gender' => 'Male', 'irb_pdf' => 'a.pdf']);
+        $this->assertSame('nullable|numeric', $profileFull['cgpa']);
+        $this->assertSame('nullable|string|in:Male,Female', $profileFull['gender']);
+        $this->assertSame('nullable|file|mimes:pdf|max:20480', $profileFull['irb_pdf']);
+
+        // The later steps are checked by the controller, and only on Recommend.
+        foreach (['faculty', 'hod', 'dordc'] as $step) {
+            $this->assertSame([], $definition->rules($step, []), $step);
+        }
+    }
+
+    public function test_a_carried_over_irb_shows_its_facts_not_the_chain(): void
+    {
+        $view = (new IrbConstitutionDefinition)->view(['role' => 'admin', 'locks' => [], 'carried_over_at' => '2026-09-01', 'date_of_irb' => null]);
+        $this->assertSame("This IRB was constituted before the portal. The record was brought in from the office's sheet on {carried_over_at}, so no step here was answered.", $view['summary']['note']);
+        $this->assertArrayNotHasKey('summary', (new IrbConstitutionDefinition)->view(['role' => 'admin', 'locks' => []]));
     }
 
     public function test_a_locked_or_foreign_reader_gets_no_inputs_and_no_submit(): void

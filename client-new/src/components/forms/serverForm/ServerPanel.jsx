@@ -18,27 +18,53 @@ import { baseURL } from "../../../api/urls";
 import "./ServerPanel.css";
 
 // One step's panel, drawn from the rows the server sends in `formData.view`
-// (server/app/Forms). The server has already decided what this reader may edit
-// and what an editor starts from; this only draws it with the form fields every
-// other panel uses, and posts what was edited.
+// (server/app/Forms/FormDefinition.php describes the shape). The server has
+// already decided what this reader may edit and what an editor starts from;
+// this only draws it with the form fields every other panel uses, and posts
+// what was edited.
 
 const display = (field) => (field.format === "date" ? formatDate(field.value) : field.value);
 
-// A locked list reads as a one-column table.
+const has = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
+
+// A list drawn as a table has one column.
 const asRows = (entries) => (entries || []).map((entry) => ({ entry }));
 
 // An entry left empty in a list someone can add to is dropped, not sent blank.
-const isEmpty = (entry) => entry === null || entry === undefined || (typeof entry === "string" && !entry.trim());
+// -1 is the placeholder the old panels put in a box nothing was picked for.
+const isEmpty = (entry) =>
+  entry === null || entry === undefined || entry === -1 || (typeof entry === "string" && !entry.trim());
+
+// Every field in the rows, with groups opened.
+const fieldsOf = (rows) =>
+  rows.flatMap((row) => (row.kind === "grid" ? row.items : row.kind === "group" ? fieldsOf(row.rows) : [row]));
 
 // What is posted if nothing is touched: every open field as prefilled, except
-// uploads (sent as files) and fields sent only once changed.
+// uploads (sent as files) and fields sent only once changed. A recommendation
+// seeds its recorded answer for every reader, since what it shows below it
+// depends on that answer.
 const editedValues = (rows) =>
   Object.fromEntries(
-    rows
-      .flatMap((row) => (row.kind === "grid" ? row.items : [row]))
-      .filter((field) => field.key && field.locked === false && field.type !== "file" && field.send !== "changed")
-      .map((field) => [field.key, field.value])
+    fieldsOf(rows)
+      .filter((field) => field.key && (field.locked === false || field.kind === "recommendation"))
+      .filter((field) => field.type !== "file" && field.send !== "changed")
+      .flatMap((field) => [
+        [field.key, field.value],
+        ...(field.sends_comments ? [["comments", field.comments]] : []),
+      ])
   );
+
+// Whether a submit's checks let it through; the first that fails is toasted.
+const passes = (checks = [], values) => {
+  const failed = checks.find((check) => {
+    if (check.when && !values[check.when]) return false;
+    return check.keys.some((key) =>
+      check.check === "truthy" ? !values[key] : values[key] === null || values[key] === undefined
+    );
+  });
+  if (failed) toast.error(failed.message);
+  return !failed;
+};
 
 const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
   const location = useLocation();
@@ -55,20 +81,16 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
       [key]: now[key].includes(value) ? now[key].filter((pressed) => pressed !== value) : [...now[key], value],
     }));
 
-  const growable = new Set(rows.filter((row) => row.kind === "list" && !row.fixed).map((row) => row.key));
+  const growable = new Set(fieldsOf(rows).filter((field) => field.kind === "list" && !field.fixed).map((field) => field.key));
   const submission = () =>
     Object.fromEntries(
       Object.entries(values).map(([key, value]) => [key, growable.has(key) ? value.filter((entry) => !isEmpty(entry)) : value])
     );
 
   const submit = (field) => {
-    if (field.requires && (values[field.requires.key] === null || values[field.requires.key] === undefined)) {
-      toast.error(field.requires.message);
-      return undefined;
-    }
-    const extra = field.sends;
+    if (!passes(field.requires, values)) return undefined;
     const picked = Object.entries(files).map(([key, file]) => ({ key, file }));
-    return submitForm({ ...submission(), ...extra }, location, setLoading, picked.length > 0 ? picked : null);
+    return submitForm({ ...submission(), ...field.sends }, location, setLoading, picked.length > 0 ? picked : null);
   };
 
   const renderField = (field) => {
@@ -109,7 +131,7 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
           <DropdownField
             required={field.required}
             label={field.label}
-            initialValue={field.value}
+            initialValue={has(field, "display") ? field.display : field.value}
             isLocked={field.locked}
             options={field.options}
             onChange={(choice) => setValue(field.key, choice)}
@@ -139,12 +161,16 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
       case "suggest":
         return (
           <InputSuggestions
+            required={field.required}
             label={field.label}
             apiUrl={baseURL + field.source}
             fields={field.shows}
+            body={field.params}
+            hint={field.hint}
+            suggestionManadatory={!field.free}
             initialValue={field.display}
             lock={field.locked}
-            onSelect={(picked) => setValue(field.key, picked.id)}
+            onSelect={(picked) => setValue(field.key, field.free ? picked?.name ?? picked ?? "" : picked.id)}
           />
         );
       case "submit":
@@ -155,18 +181,23 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
     }
   };
 
-  // Entries are numbered in their accessible name, when the list has one.
+  // Entries are numbered in their accessible name and hint, when the list has one.
   const entryLabel = (field, index) => (field.item_label ? `${field.item_label} ${index + 1}` : undefined);
+  const entryHint = (field, index) => field.item_hint?.replace("{n}", index + 1);
 
   const renderEntry = (field, entry, index) =>
     field.item === "suggest" ? (
       <InputSuggestions
         label={entryLabel(field, index)}
+        showLabel={field.item_show_label !== false}
         apiUrl={baseURL + field.source}
         fields={field.shows}
-        initialValue={field.displays?.[index]}
-        lock={false}
-        onSelect={(picked) => setEntry(field.key, index, picked.id)}
+        body={field.params}
+        hint={entryHint(field, index)}
+        suggestionManadatory={!field.free}
+        initialValue={field.free ? entry : field.displays?.[index]}
+        lock={field.locked}
+        onSelect={(picked) => setEntry(field.key, index, field.free ? picked?.name : picked.id)}
       />
     ) : (
       <InputField
@@ -175,48 +206,61 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
         showLabel={false}
         initialValue={entry}
         isLocked={field.locked}
+        hint={entryHint(field, index)}
         onChange={(text) => setEntry(field.key, index, text)}
       />
     );
 
-  const renderList = (field) =>
-    field.fixed ? (
-      <GridContainer
-        label={field.label}
-        elements={values[field.key].map((entry, index) => renderEntry(field, entry, index))}
-      />
-    ) : field.locked && field.read_as !== "inputs" ? (
-      <GridContainer
-        elements={[
-          <TableComponent
-            label={field.label}
-            data={asRows(field.value)}
-            keys={["entry"]}
-            titles={[field.column]}
-          />,
-        ]}
-        space={3}
-      />
-    ) : (
+  const addEntry = (field) => {
+    if (field.max && values[field.key].length >= field.max) {
+      toast.error(field.max_message);
+      return;
+    }
+    setValue(field.key, [...values[field.key], ""]);
+  };
+
+  // The label row, with the add button where this reader may add. Some panels
+  // kept an empty cell there when they may not.
+  const renderAddRow = (field) => {
+    const button = field.addable ? (
+      <CustomButton text={field.add_label} variant="secondary" size="sm" onClick={() => addEntry(field)} />
+    ) : null;
+    return <GridContainer label={field.label} elements={field.keep_add_slot ? [button] : button ? [button] : []} />;
+  };
+
+  const renderList = (field) => {
+    const entries = field.locked ? field.value : values[field.key];
+    if (field.fixed) {
+      return <GridContainer label={field.label} elements={entries.map((entry, index) => renderEntry(field, entry, index))} />;
+    }
+    const shownAs = field.as ?? (field.locked ? "table" : "inputs");
+    if (shownAs === "table") {
+      const table = field.table || {};
+      return (
+        <>
+          {table.keep_add_row && renderAddRow(field)}
+          <GridContainer
+            elements={[
+              <TableComponent
+                label={table.labelled === false ? undefined : field.label}
+                data={asRows(field.value)}
+                keys={["entry"]}
+                titles={[field.column]}
+              />,
+            ]}
+            space={table.space ?? 3}
+          />
+        </>
+      );
+    }
+    return (
       <>
-        <GridContainer
-          label={field.label}
-          elements={field.addable ? [
-            <CustomButton
-              text={field.add_label}
-              variant="secondary"
-              size="sm"
-              onClick={() => setValue(field.key, [...values[field.key], ""])}
-            />,
-          ] : []}
-        />
-        <GridContainer
-          each={field.each}
-          elements={(field.locked ? field.value : values[field.key]).map((entry, index) => renderEntry(field, entry, index))}
-        />
+        {renderAddRow(field)}
+        <GridContainer each={field.each} elements={entries.map((entry, index) => renderEntry(field, entry, index))} />
         {field.note && <p className="form-note">{field.note}</p>}
       </>
     );
+  };
 
   // Pressed or not, each a button so a keyboard reaches it and a screen reader
   // hears its state.
@@ -248,30 +292,43 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
       role={field.role}
       allowRejection={field.allow_rejection}
       moreFields={true}
+      isLocked={field.is_locked}
       handleRecommendationChange={(answer) =>
         setValues((now) => ({ ...now, approval: answer.approval, comments: answer.comments }))
       }
     />
   );
 
-  const drawn = rows.map((row, index) =>
-    row.kind === "recommendation" ? (
-      <React.Fragment key={index}>{renderRecommendation(row)}</React.Fragment>
-    ) : row.kind === "list" ? (
-      <React.Fragment key={index}>{renderList(row)}</React.Fragment>
-    ) : row.kind === "toggles" ? (
-      <React.Fragment key={index}>{renderToggles(row)}</React.Fragment>
-    ) : (
-      <GridContainer
-        key={index}
-        label={row.label}
-        space={row.space}
-        each={row.each}
-        elements={row.items.map(renderField)}
-      />
-    )
-  );
+  const drawRows = (rowsToDraw) =>
+    rowsToDraw.map((row, index) => {
+      switch (row.kind) {
+        case "recommendation":
+          return <React.Fragment key={index}>{renderRecommendation(row)}</React.Fragment>;
+        case "list":
+          return <React.Fragment key={index}>{renderList(row)}</React.Fragment>;
+        case "toggles":
+          return <React.Fragment key={index}>{renderToggles(row)}</React.Fragment>;
+        // Kept on the page while hidden, so what was picked stays on screen.
+        case "group":
+          return (
+            <div key={index} hidden={!values[row.hidden_unless]}>
+              {drawRows(row.rows)}
+            </div>
+          );
+        default:
+          return (
+            <GridContainer
+              key={index}
+              label={row.label}
+              space={row.space}
+              each={row.each}
+              elements={row.items.map(renderField)}
+            />
+          );
+      }
+    });
 
+  const drawn = drawRows(rows);
   return wrapped ? <div>{drawn}</div> : <>{drawn}</>;
 };
 

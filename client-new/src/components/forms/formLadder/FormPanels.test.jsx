@@ -11,7 +11,6 @@ const FORMS_DIR = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 // metadata: GeneralFormCreate::createForms writes $data['steps'], and the
 // metadata table only seeds the forms index row.
 const CHAINS = {
-  'constituteOfIRB/ConstituteOfIRB.jsx': ['student', 'faculty', 'phd_coordinator', 'hod', 'dra', 'dordc'],
   'listOfExaminers/ListOfExaminers.jsx': ['faculty', 'dordc', 'director'],
   'presentations/PresentationForm.jsx': ['student', 'faculty', 'doctoral', 'hod', 'dordc'],
   // The same roles answer twice, once on the written submission and again

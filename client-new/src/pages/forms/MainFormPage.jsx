@@ -3,7 +3,6 @@ import { useLoading } from "../../context/LoadingContext";
 import { useLocation, useParams } from "react-router-dom";
 import { customFetch } from "../../api/base";
 import { baseURL } from "../../api/urls";
-import ConstituteOfIRB from "../../components/forms/constituteOfIRB/ConstituteOfIRB";
 import PresentationForm from "../../components/forms/presentations/PresentationForm";
 import SynopsisSubmission from "../../components/forms/synopsisSubmission/SynopsisSubmission";
 import ThesisSubmission from "../../components/forms/thesisSubmission/ThesisSubmission";
@@ -74,8 +73,6 @@ const MainFormPage = () => {
             // A form the server describes draws from that description.
             if (formData.view) return <ServerForm formData={formData} />;
             switch (form_type) {
-              case "irb-constitution":
-                return <ConstituteOfIRB formData={formData} />;
               case "presentation":
                 return <PresentationForm formData={formData} />;
               case "synopsis-submission":

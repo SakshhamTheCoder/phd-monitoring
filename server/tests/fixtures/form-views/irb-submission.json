@@ -176,7 +176,7 @@
                                 "required": true,
                                 "add_label": "Add objective",
                                 "each": 3,
-                                "read_as": "inputs",
+                                "as": "inputs",
                                 "value": [],
                                 "locked": false,
                                 "addable": true
@@ -429,7 +429,7 @@
                                 "required": true,
                                 "add_label": "Add objective",
                                 "each": 3,
-                                "read_as": "inputs",
+                                "as": "inputs",
                                 "value": [
                                     "Screen ruthenium catalysts",
                                     "Model reaction kinetics"
@@ -684,7 +684,7 @@
                                 "required": true,
                                 "add_label": "Add objective",
                                 "each": 3,
-                                "read_as": "inputs",
+                                "as": "inputs",
                                 "value": [
                                     "Screen ruthenium catalysts",
                                     "Model reaction kinetics"
@@ -930,7 +930,7 @@
                                 "required": true,
                                 "add_label": "Add objective",
                                 "each": 3,
-                                "read_as": "inputs",
+                                "as": "inputs",
                                 "value": [
                                     "Screen ruthenium catalysts",
                                     "Model reaction kinetics"
@@ -1183,7 +1183,7 @@
                                 "required": true,
                                 "add_label": "Add objective",
                                 "each": 3,
-                                "read_as": "inputs",
+                                "as": "inputs",
                                 "value": [
                                     "Screen ruthenium catalysts",
                                     "Model reaction kinetics"
@@ -1294,10 +1294,15 @@
                                     {
                                         "type": "submit",
                                         "label": "Submit",
-                                        "requires": {
-                                            "key": "approval",
-                                            "message": "Choose Recommend or Not Recommend first."
-                                        }
+                                        "requires": [
+                                            {
+                                                "keys": [
+                                                    "approval"
+                                                ],
+                                                "message": "Choose Recommend or Not Recommend first.",
+                                                "check": "set"
+                                            }
+                                        ]
                                     }
                                 ]
                             }
@@ -1487,7 +1492,7 @@
                                 "required": true,
                                 "add_label": "Add objective",
                                 "each": 3,
-                                "read_as": "inputs",
+                                "as": "inputs",
                                 "value": [
                                     "Screen ruthenium catalysts",
                                     "Model reaction kinetics"
@@ -1593,10 +1598,15 @@
                                     {
                                         "type": "submit",
                                         "label": "Submit",
-                                        "requires": {
-                                            "key": "approval",
-                                            "message": "Choose Recommend or Not Recommend first."
-                                        }
+                                        "requires": [
+                                            {
+                                                "keys": [
+                                                    "approval"
+                                                ],
+                                                "message": "Choose Recommend or Not Recommend first.",
+                                                "check": "set"
+                                            }
+                                        ]
                                     }
                                 ]
                             }
@@ -1785,7 +1795,7 @@
                                 "required": true,
                                 "add_label": "Add objective",
                                 "each": 3,
-                                "read_as": "inputs",
+                                "as": "inputs",
                                 "value": [
                                     "Screen ruthenium catalysts",
                                     "Model reaction kinetics"
@@ -2083,7 +2093,7 @@
                                 "required": true,
                                 "add_label": "Add objective",
                                 "each": 3,
-                                "read_as": "inputs",
+                                "as": "inputs",
                                 "value": [
                                     "Screen ruthenium catalysts",
                                     "Model reaction kinetics"
@@ -2370,7 +2380,7 @@
                                 "required": true,
                                 "add_label": "Add objective",
                                 "each": 3,
-                                "read_as": "inputs",
+                                "as": "inputs",
                                 "value": [
                                     "Screen ruthenium catalysts",
                                     "Model reaction kinetics"

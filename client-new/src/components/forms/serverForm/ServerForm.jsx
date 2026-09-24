@@ -7,6 +7,7 @@ import CustomButton from "../fields/CustomButton";
 import { customFetch } from "../../../api/base";
 import { baseURL } from "../../../api/urls";
 import useDoneFlash from "../../../hooks/useDoneFlash";
+import { formatDate } from "../../../utils/timeParse";
 import ServerPanel from "./ServerPanel";
 import CUSTOM_PANELS from "./customPanels";
 
@@ -49,6 +50,21 @@ const Notice = ({ notice }) => {
 // recommendation. A form moved here needs no page of its own on the web.
 const ServerForm = ({ formData }) => {
   const { view } = formData;
+
+  // A record none of whose steps was answered here: its facts, not the chain.
+  if (view.summary) {
+    const { note, dates, rows } = view.summary;
+    return (
+      <>
+        <FormTitleBar formName={view.title} formData={formData} />
+        <p className="form-note">{note.replace(/\{(\w+)\}/g, (_, name) => formatDate(dates[name]))}</p>
+        <div className="form-container">
+          <ServerPanel formData={formData} rows={rows} wrapped={false} />
+        </div>
+      </>
+    );
+  }
+
   const steps = Object.keys(view.panels);
   const panelOf = (panel) => (panel.custom ? CUSTOM_PANELS[panel.custom] : ServerPanel);
   const panels = Object.fromEntries(steps.map((step) => [step, panelOf(view.panels[step])]));

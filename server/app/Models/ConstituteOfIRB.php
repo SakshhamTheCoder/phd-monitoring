@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Forms\IrbConstitutionDefinition;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Traits\ModelCommonFormFields;
@@ -38,7 +39,7 @@ class ConstituteOfIRB extends Model
     public function fullForm($user)
     {
         $commonJSON = $this->fullCommonForm($user);
-        return array_merge($commonJSON, [
+        $data = array_merge($commonJSON, [
             // Set when the IRB was constituted before the portal existed. The
             // page reads it to show a summary rather than a ladder of steps
             // nobody took.
@@ -114,6 +115,8 @@ class ConstituteOfIRB extends Model
                 ];
             }),
         ]);
+        $data['view'] = (new IrbConstitutionDefinition)->view($data);
+        return $data;
     }
 
     public function nomineeCognates()

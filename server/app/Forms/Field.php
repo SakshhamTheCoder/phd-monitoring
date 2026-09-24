@@ -52,12 +52,16 @@ final class Field
     /**
      * A choice from a list.
      *
-     * @param array<int, string> $options each option is shown as it is sent
+     * @param array<int, string|array{value: mixed, title: ?string}> $options
+     *   a plain string is its own value and title
      */
     public static function select(string $label, array $options): self
     {
         $field = new self('select', $label);
-        $field->props['options'] = array_map(fn ($option) => ['value' => $option, 'title' => $option], array_values($options));
+        $field->props['options'] = array_map(
+            fn ($option) => is_array($option) ? $option : ['value' => $option, 'title' => $option],
+            array_values($options)
+        );
         return $field;
     }
 
@@ -200,6 +204,30 @@ final class Field
         return $this;
     }
 
+    /**
+     * A search box that keeps whatever is typed, offering matches only as a
+     * start; its value is the text, not an id.
+     */
+    public function free(): self
+    {
+        $this->props['free'] = true;
+        return $this;
+    }
+
+    /** Extra values a search box sends with the typed text. */
+    public function params(array $params): self
+    {
+        $this->props['params'] = $params;
+        return $this;
+    }
+
+    /** Which parts of a match a search box shows, e.g. ['name', 'department']. */
+    public function shows(array $parts): self
+    {
+        $this->props['shows'] = $parts;
+        return $this;
+    }
+
     /** Text a search box shows for its value before anything is typed. */
     public function display(?string $text): self
     {
@@ -217,7 +245,14 @@ final class Field
     /** A submit that refuses, with $message, while $key has no value. */
     public function requires(string $key, string $message): self
     {
-        $this->props['requires'] = ['key' => $key, 'message' => $message];
+        $this->props['requires'][] = ['keys' => [$key], 'message' => $message, 'check' => 'set'];
+        return $this;
+    }
+
+    /** A submit that refuses, with $message, while $when is truthy and any of $keys is empty. */
+    public function requiresWhen(string $when, array $keys, string $message): self
+    {
+        $this->props['requires'][] = ['keys' => $keys, 'when' => $when, 'message' => $message, 'check' => 'truthy'];
         return $this;
     }
 
@@ -331,9 +366,9 @@ final class Field
         if ($this->props['type'] !== 'table') {
             $resolved['locked'] = !$editable;
         }
-        if ($this->props['type'] === 'list') {
+        if ($this->props['type'] === 'list' && !array_key_exists('addable', $resolved)) {
             // Adding a box is for the step's holder only, even where any reader
-            // sees the boxes open.
+            // sees the boxes open, unless the definition says otherwise.
             $resolved['addable'] = $this->editableBy !== null && FormDefinition::mayEdit($data, $this->editableBy);
         }
         return $resolved;

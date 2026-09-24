@@ -89,7 +89,7 @@ final class IrbSubmissionDefinition extends FormDefinition
                     ->with([
                         'add_label' => 'Add objective',
                         'each' => 3,
-                        'read_as' => 'inputs',
+                        'as' => 'inputs',
                     ]),
                 self::row([
                     // A resubmission keeps the stored PDF unless a new one comes.

@@ -11,11 +11,16 @@ namespace App\Forms;
  * keep the plain recommendation every chain step already gets.
  *
  * Shape sent to clients (bump VERSION on any change a client must understand):
- *   { version, title, notices: [ notice, ... ], panels: { <step>: panel } }
+ *   { version, title, notices: [ notice, ... ], panels: { <step>: panel }, summary? }
+ *   summary = { note, dates, rows }: drawn instead of the chain, for a record
+ *     no step of which was answered here; {name} in the note is dates[name],
+ *     formatted as a date
  *   panel = { wrapped, rows: [ row, ... ] } | { custom: name }
  *   notice = { tone, text, action?: { label, endpoint, done, failed } }
  *   row = { kind: 'grid', items: [field, ...], space?, each?, label? }
  *       | { kind: 'list' | 'toggles' | 'recommendation', ...that field }
+ *       | { kind: 'group', hidden_unless: key, rows: [ row, ... ] }: kept on
+ *         the page but hidden while that answer is empty
  * `wrapped` is whether the panel sits in a block of its own, as most hand-built
  * panels did; a panel drawn straight into its step says false.
  *
@@ -46,6 +51,12 @@ abstract class FormDefinition
         return [];
     }
 
+    /** Drawn instead of the chain, or null to draw the chain. */
+    protected function summary(array $data): ?array
+    {
+        return null;
+    }
+
     /** Steps whose panel is drawn without a block of its own around it. */
     protected function unwrapped(): array
     {
@@ -62,19 +73,22 @@ abstract class FormDefinition
             }
             $panels[$step] = [
                 'wrapped' => !in_array($step, $this->unwrapped(), true),
-                'rows' => array_values(array_filter(array_map(
-                    fn ($row) => $this->resolveRow($row, $data),
-                    $rows
-                ))),
+                'rows' => $this->resolveRows($rows, $data),
             ];
         }
 
-        return [
+        $view = [
             'version' => self::VERSION,
             'title' => $this->title(),
             'notices' => $this->notices($data),
             'panels' => $panels,
         ];
+        $summary = $this->summary($data);
+        if ($summary !== null) {
+            $summary['rows'] = $this->resolveRows($summary['rows'], $data);
+            $view['summary'] = $summary;
+        }
+        return $view;
     }
 
     /**
@@ -90,13 +104,27 @@ abstract class FormDefinition
             if (isset($rows['custom'])) {
                 continue;
             }
-            foreach ($rows as $row) {
-                foreach ($row instanceof Field ? [$row] : $row['items'] as $field) {
-                    $rules += $field->rulesFor($step);
-                }
+            foreach ($this->fieldsIn($rows) as $field) {
+                $rules += $field->rulesFor($step);
             }
         }
         return $rules;
+    }
+
+    /** Every field declared in $rows, groups opened. */
+    private function fieldsIn(array $rows): array
+    {
+        $fields = [];
+        foreach ($rows as $row) {
+            if ($row instanceof Field) {
+                $fields[] = $row;
+            } elseif (($row['kind'] ?? null) === 'group') {
+                array_push($fields, ...$this->fieldsIn($row['rows']));
+            } else {
+                array_push($fields, ...$row['items']);
+            }
+        }
+        return $fields;
     }
 
     /**
@@ -147,6 +175,12 @@ abstract class FormDefinition
         );
     }
 
+    /** Rows kept on the page but hidden while the answer $key is empty. */
+    protected static function group(array $rows, string $hiddenUnless): array
+    {
+        return ['kind' => 'group', 'hidden_unless' => $hiddenUnless, 'rows' => $rows];
+    }
+
     /** A panel each client draws by name. */
     protected static function custom(string $name): array
     {
@@ -176,8 +210,16 @@ abstract class FormDefinition
         return null;
     }
 
+    private function resolveRows(array $rows, array $data): array
+    {
+        return array_values(array_filter(array_map(fn ($row) => $this->resolveRow($row, $data), $rows)));
+    }
+
     private function resolveRow(array|Field $row, array $data): ?array
     {
+        if (is_array($row) && ($row['kind'] ?? null) === 'group') {
+            return array_merge($row, ['rows' => $this->resolveRows($row['rows'], $data)]);
+        }
         if ($row instanceof Field) {
             $field = $row->resolve($data);
             return $field === null ? null : ['kind' => $field['type']] + $field;
