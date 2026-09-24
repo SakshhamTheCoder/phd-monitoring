@@ -8,7 +8,7 @@ import LoadError from '../../components/common/LoadError';
 import { apiUrfShow, apiUrfStatus } from '../../api/urf';
 
 // An application is decided once: selected or rejected. A decided project
-// offers no further decision.
+// offers no further decision, and only those the server lets decide see one.
 const DECISIONS = {
   applied: [
     { status: 'selected', label: 'Select' },
@@ -65,9 +65,9 @@ const UrfDetails = () => {
       {record && (
         <UrfRecord
           record={record}
-          actions={DECISIONS[record.status]?.map((d) => (
+          actions={record.can_decide ? DECISIONS[record.status]?.map((d) => (
             <CustomButton key={d.status} text={d.label} variant={d.variant} onClick={() => setPending(d)} />
-          ))}
+          )) : null}
         />
       )}
 

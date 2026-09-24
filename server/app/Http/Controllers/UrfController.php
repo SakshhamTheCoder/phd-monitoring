@@ -977,6 +977,8 @@ class UrfController extends Controller
         $data['applied_on'] = $this->submittedOn($application)?->toIso8601String();
         $data['awaiting_me'] = $application->awaits($user);
         $data['may_reject'] = $application->awaits($user) && $application->stepFor($user) === 'dordc';
+        // Select or reject, as setStatus allows: a mentor reads the record only.
+        $data['can_decide'] = $user->may('can_manage_urf');
         foreach ($application->reports as $i => $report) {
             $data['reports'][$i]['awaiting_me'] = $report->awaits($user);
         }
