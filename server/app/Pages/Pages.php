@@ -12,6 +12,7 @@ final class Pages
         'departments' => DepartmentsPage::class,
         'faculty' => FacultyPage::class,
         'outside-experts' => OutsideExpertsPage::class,
+        'users' => UsersPage::class,
     ];
 
     public static function find(string $name): ?PageDefinition

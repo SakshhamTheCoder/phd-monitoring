@@ -9,6 +9,7 @@ import InputSuggestions from "../fields/InputSuggestions";
 import CounterField from "../fields/CounterField";
 import Recommendation from "../layouts/Recommendation";
 import RadioButtonGroup from "../fields/RadioButtonGroup";
+import ToggleSwitch from "../fields/ToggleSwitch";
 import StatusNotice from "../../common/StatusNotice";
 import PublicationsBlock from "./PublicationsBlock";
 import Recommender from "./Recommender";
@@ -149,6 +150,8 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
           growable.has(key) ? value.filter((entry) => !isEmpty(entry))
             : trimmed.has(key) ? `${value ?? ""}`.trim()
             : sending[key] === "null_if_empty" ? value || null
+            // A yes or no not always answered: '' is not stated.
+            : sending[key] === "yes_no" ? (value === "" ? null : value === "1")
             : value,
         ])
     );
@@ -298,6 +301,14 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
             isLocked={field.locked}
             hint={field.hint}
             onChange={(date) => setValue(field.key, date)}
+          />
+        );
+      case "switch":
+        return (
+          <ToggleSwitch
+            label={field.label}
+            isOn={values[field.key]}
+            onToggle={() => setValue(field.key, !values[field.key])}
           />
         );
       case "counter":

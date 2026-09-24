@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import Page from '../page/Page';
 import PagenationTable from '../pagenationTable/PagenationTable';
 import FilterBar from '../filterBar/FilterBar';
 import CustomButton from '../forms/fields/CustomButton';
 import LoadError from '../common/LoadError';
 import { useLoading } from '../../context/LoadingContext';
+import { customFetch } from '../../api/base';
+import { baseURL } from '../../api/urls';
 import { fillFromRow, useView } from '../../api/views';
 import { sendRequest } from './requests';
 import ServerDialog from './ServerDialog';
@@ -21,13 +24,17 @@ const IMPORTS = { file: FileImportModal, rows: RowsImportModal };
  * the dialogs and imports they open. Nothing here knows which page it is.
  */
 const ServerListPage = ({ page }) => {
-  const { view, failed, retry } = useView(page);
+  const { view, failed, retry, reload } = useView(page);
   const navigate = useNavigate();
   const { setLoading } = useLoading();
   const [filters, setFilters] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0);
   // The dialog open now, the row it was opened on, and which opening it is.
+  // One dialog at a time, drawn in one place, so a dialog that hands over to
+  // another (a choice) changes in place rather than closing and opening.
   const [dialog, setDialog] = useState(null);
+  // The last dialog shown, so it keeps its size while it closes.
+  const lastDialog = useRef(null);
   const [importing, setImporting] = useState(null);
 
   if (failed) {
@@ -39,10 +46,39 @@ const ServerListPage = ({ page }) => {
   }
   if (!view) return null;
 
-  const refresh = () => setRefreshKey((key) => key + 1);
-  const open = (name, row = null) => {
-    if (view.dialogs[name]) setDialog({ name, row, opened: Date.now() });
-    else setImporting(name);
+  // Some pages carry figures of their own (who still cannot sign in), which
+  // change with the rows.
+  const refresh = () => {
+    setRefreshKey((key) => key + 1);
+    if (view.reload_with_table) reload();
+  };
+
+  const open = async (name, row = null) => {
+    const spec = view.dialogs[name];
+    if (!spec) {
+      setImporting(name);
+      return;
+    }
+    // A dialog that edits a record reads it whole first.
+    if (spec.load) {
+      setLoading(true);
+      const res = await customFetch(baseURL + fillFromRow(spec.load, row), 'GET');
+      setLoading(false);
+      if (!res.success) return;
+      row = res.response;
+    }
+    setDialog({ name, row, opened: Date.now() });
+  };
+
+  // A value asked for in the browser's own prompt before a request is sent.
+  const asked = (prompt, row) => {
+    const answer = window.prompt(fillFromRow(prompt.text, row));
+    if (answer === null) return null;
+    if (prompt.min && answer.length < prompt.min) {
+      toast.error(prompt.too_short);
+      return null;
+    }
+    return { [prompt.key]: answer };
   };
 
   const runRowAction = async (action, row) => {
@@ -54,11 +90,18 @@ const ServerListPage = ({ page }) => {
       navigate(fillFromRow(action.navigate, row));
       return;
     }
-    if (await sendRequest(action.request, row, {}, setLoading)) refresh();
+    const body = action.prompt ? asked(action.prompt, row) : {};
+    if (body === null) return;
+    if (await sendRequest(action.request, row, body, setLoading) && !action.request.keeps_rows) refresh();
   };
 
   const { table } = view;
   const opensRow = (row) => (table.opens.dialog ? open(table.opens.dialog, row) : navigate(fillFromRow(table.opens.navigate, row)));
+  if (dialog) lastDialog.current = dialog;
+  const shownDialog = dialog || lastDialog.current;
+  // Refreshed in place where the search in the table's head must survive a
+  // save: remounting the table would empty the box with its search applied.
+  const refreshing = table.refresh === 'in_place' ? { num: refreshKey } : { key: refreshKey };
 
   return (
     <Page
@@ -67,7 +110,13 @@ const ServerListPage = ({ page }) => {
       actions={view.actions.length > 0 ? (
         <>
           {view.actions.map((action) => (
-            <CustomButton key={action.label} text={action.label} variant={action.variant} onClick={() => open(action.opens)} />
+            <CustomButton
+              key={action.label}
+              text={action.label}
+              variant={action.variant}
+              disabled={action.disabled}
+              onClick={() => open(action.opens)}
+            />
           ))}
         </>
       ) : null}
@@ -76,7 +125,7 @@ const ServerListPage = ({ page }) => {
         <LocalTable table={table} refreshKey={refreshKey} onRowAction={runRowAction} />
       ) : (
         <PagenationTable
-          key={refreshKey}
+          {...refreshing}
           endpoint={table.endpoint}
           filters={filters}
           search={table.search && (
@@ -98,17 +147,17 @@ const ServerListPage = ({ page }) => {
         />
       )}
 
-      {Object.entries(view.dialogs).map(([name, spec]) => (
+      {Object.keys(view.dialogs).length > 0 && (
         <ServerDialog
-          key={name}
-          dialog={spec}
-          isOpen={dialog?.name === name}
-          row={dialog?.name === name ? dialog.row : null}
-          opened={dialog?.name === name ? dialog.opened : 0}
+          dialog={shownDialog ? view.dialogs[shownDialog.name] : null}
+          isOpen={!!dialog}
+          row={shownDialog?.row ?? null}
+          opened={shownDialog?.opened ?? 0}
           onClose={() => setDialog(null)}
           onSaved={refresh}
+          onChoose={(name) => open(name, shownDialog?.row ?? null)}
         />
-      ))}
+      )}
 
       {Object.entries(view.imports).map(([name, spec]) => {
         const ImportModal = IMPORTS[spec.kind];

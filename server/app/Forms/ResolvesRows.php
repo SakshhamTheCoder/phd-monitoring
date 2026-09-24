@@ -35,6 +35,17 @@ trait ResolvesRows
         ], fn ($value) => $value !== null);
     }
 
+    /**
+     * A dialog's closing row: Cancel, then the button that sends it, named or
+     * given as a Field::submit carrying the checks it makes first.
+     */
+    protected static function buttons(string|Field $submit, string|Field|null $cancel = 'Cancel'): array
+    {
+        $submit = is_string($submit) ? Field::submit($submit) : $submit;
+        $cancel = is_string($cancel) ? Field::cancel($cancel) : $cancel;
+        return ['kind' => 'actions', 'items' => array_values(array_filter([$cancel, $submit->open()]))];
+    }
+
     /** A paragraph of plain text between rows, in the given classes. */
     protected static function paragraph(string $text, string $className): array
     {

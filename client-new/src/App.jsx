@@ -46,7 +46,6 @@ const StudentCourses = lazy(() => import('./pages/StudentCourses/StudentCourses'
 const ServerListPage = lazy(() => import('./components/serverPage/ServerListPage'));
 const ExternalReview = lazy(() => import('./pages/externalReview/ExternalReview'));
 const SupervisorDoctoralApproval = lazy(() => import('./pages/SupervisorDoctoralApproval/SupervisorDoctoralApproval'));
-const UsersPage = lazy(() => import('./pages/users/UsersPage'));
 const AttendanceRoute = lazy(() => import('./pages/attendance/AttendanceRoute'));
 const PrivacyPolicy = lazy(() => import('./pages/privacy/PrivacyPolicy'));
 const Support = lazy(() => import('./pages/support/Support'));
@@ -271,7 +270,7 @@ const AppContent = () => {
                   <Route path="/courses/manage" element={<ServerListPage page="courses" />} />
                   <Route path="/outside-experts" element={<ServerListPage page="outside-experts" />} />
                   <Route path="/logs" element={<Logs />} />
-                  <Route path="/users" element={<UsersPage />} />
+                  <Route path="/users" element={<ServerListPage page="users" />} />
                   <Route path="/clerk-management" element={<ServerListPage page="clerks" />} />
                   <Route path="/clerks" element={<ServerListPage page="clerks" />} />
                   <Route path="/configuration" element={<Configuration />} />

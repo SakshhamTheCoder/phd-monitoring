@@ -47,15 +47,7 @@ final class FacultyPage extends PageDefinition
                 ],
             ],
             'dialogs' => $manages ? [
-                'add' => $this->dialog(['close_outside' => false, 'width' => '800px'], self::facultyRows(edit: false), [
-                    'method' => 'POST',
-                    'path' => '/faculty/add',
-                    // A new faculty account is mailed a link and chooses its own password.
-                    'done' => 'Faculty added.',
-                    'done_from_answer' => true,
-                    'failure' => 'fetch',
-                    'loader' => false,
-                ]),
+                'add' => $this->dialog(['close_outside' => false, 'width' => '800px'], self::facultyRows(edit: false), self::createRequest()),
                 'edit' => $this->dialog(['close_outside' => false, 'width' => '800px'], self::facultyRows(edit: true), [
                     'method' => 'PUT',
                     'path' => '/faculty/update/{id}',
@@ -89,12 +81,26 @@ final class FacultyPage extends PageDefinition
         ]);
     }
 
+    /** Where a new faculty member is sent, and what the answer says. */
+    public static function createRequest(): array
+    {
+        return [
+            'method' => 'POST',
+            'path' => '/faculty/add',
+            // A new faculty account is mailed a link and chooses its own password.
+            'done' => 'Faculty added.',
+            'done_from_answer' => true,
+            'failure' => 'fetch',
+            'loader' => false,
+        ];
+    }
+
     /**
      * One faculty member's fields, for adding or editing one. An external
      * member's edit also asks their institution and website; the department
      * and faculty code are theirs to leave out.
      */
-    public static function facultyRows(bool $edit): array
+    public static function facultyRows(bool $edit, bool $cancel = true): array
     {
         $text = fn (string $label, string $key) => Field::text($label)->key($key)->value('')->from($key)->open();
         $internal = [['key' => 'type', 'test' => 'differs', 'than' => 'external']];
@@ -131,7 +137,7 @@ final class FacultyPage extends PageDefinition
                 Field::text('Specific Areas under Broad Area (comma separated)')->key('expertise')->value('')
                     ->hint('e.g., Machine Learning, Data Mining, Cyber Security')->fromJoined('expertise', ', ')->open(),
             ]),
-            self::buttons($submit),
+            self::buttons($submit, $cancel ? 'Cancel' : null),
         ];
     }
 }

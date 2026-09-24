@@ -435,6 +435,30 @@ final class Field
         return $field;
     }
 
+    /** An on or off switch, keeping true or false. */
+    public static function onOff(string $label): self
+    {
+        return new self('switch', $label);
+    }
+
+    /**
+     * Like from(), for a row value read as: 'date' (a timestamp as its day, in
+     * the reader's time zone), 'yes_no' ('1', '0', or '' for not stated),
+     * 'flag' (true or false) or 'one_of' ($of, else '').
+     */
+    public function fromAs(string $key, string $as, ?array $of = null): self
+    {
+        $this->props['from'][] = array_filter(['key' => $key, 'as' => $as, 'of' => $of], fn ($part) => $part !== null);
+        return $this;
+    }
+
+    /** Sent as null for '' and true or false for '1' or '0', as a yes or no not always answered. */
+    public function sentAsYesNo(): self
+    {
+        $this->props['send'] = 'yes_no';
+        return $this;
+    }
+
     /** Like from(), for a row value that is a list of records, read as each one's $key. */
     public function fromPlucked(string $key, string $pluck): self
     {

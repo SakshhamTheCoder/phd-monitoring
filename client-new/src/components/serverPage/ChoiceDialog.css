@@ -1,4 +1,4 @@
-/* The picker that opens before a new user form: one option per kind of account.
+/* A dialog that asks which of a few kinds of thing to make (a new user): one option per kind.
    The dialog already pads its content, so the picker adds none of its own. */
 
 .kind-picker-title {

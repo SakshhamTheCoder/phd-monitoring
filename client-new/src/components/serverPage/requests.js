@@ -37,7 +37,9 @@ export const sendRequest = async (request, row, body, setLoading) => {
       forgetKeptLists(request.invalidates);
       const answer = result.response || {};
       const says = (request.answer_says || []).find((said) => answer[said.key]);
-      toast.success(says ? fillFromRow(says.text, answer) : (request.done_from_answer && answer.message) || request.done);
+      // A request with nothing to say (done null) says nothing.
+      const done = says ? fillFromRow(says.text, answer) : (request.done_from_answer && answer.message) || request.done;
+      if (done) toast.success(done);
       (request.warnings_from ? answer[request.warnings_from] || [] : []).forEach((warning) => toast.warn(warning, { autoClose: 10000 }));
       return true;
     }

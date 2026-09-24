@@ -31,9 +31,15 @@ export const useView = (page) => {
     view: answer.key === key ? answer.view : null,
     failed: answer.key === key && answer.failed,
     retry: () => setAttempt((n) => n + 1),
+    // Read again, keeping what is shown until the new answer lands.
+    reload: () => {
+      views.delete(key);
+      setAttempt((n) => n + 1);
+    },
   };
 };
 
-// A path or message from a view with {key} filled from a table row.
+// A path or message from a view with {key} filled from a table row, or
+// {key|words} where the row leaves the key empty.
 export const fillFromRow = (template, row) =>
-  String(template ?? '').replace(/\{(\w+)\}/g, (_, name) => row?.[name] ?? '');
+  String(template ?? '').replace(/\{(\w+)(?:\|([^}]*))?\}/g, (_, name, otherwise) => row?.[name] || otherwise || (row?.[name] ?? ''));
