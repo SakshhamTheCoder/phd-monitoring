@@ -17,6 +17,7 @@ final class Pages
         'presentation-list' => PresentationListPage::class,
         'presentations' => PresentationsPage::class,
         'research-profile' => ResearchProfilePage::class,
+        'semester-card' => SemesterCardPage::class,
         'student-profile' => StudentProfilePage::class,
         'student-progress' => StudentProgressPage::class,
         'students' => StudentsPage::class,
