@@ -27,6 +27,11 @@ use App\Models\User;
  *     close_outside, rows, request }: rows as a form's; a field's `from` names
  *     the row key it starts from when the dialog opens on a row
  *   import = { kind: 'file', title, columns, note, path }: a CSV file posted as it is
+ *     | { kind: 'rows', title, required, rules, sample: { name, csv }, path,
+ *         confirm_first?, failed }: the CSV read in the browser and its rows
+ *       posted as { rows }; the answer's messages ([ { tone, text } ]) are shown
+ *       in order. With confirm_first the rows are posted with preview first,
+ *       and the answer's confirm is asked before anything is written.
  */
 abstract class PageDefinition
 {
@@ -58,10 +63,14 @@ abstract class PageDefinition
         ];
     }
 
-    /** A dialog's closing row: Cancel, then the button that sends it. */
-    protected static function buttons(string $submit, string $cancel = 'Cancel'): array
+    /**
+     * A dialog's closing row: Cancel, then the button that sends it, named or
+     * given as a Field::submit carrying the checks it makes first.
+     */
+    protected static function buttons(string|Field $submit, string $cancel = 'Cancel'): array
     {
-        return ['kind' => 'actions', 'items' => [Field::cancel($cancel), Field::submit($submit)->open()]];
+        $submit = is_string($submit) ? Field::submit($submit) : $submit;
+        return ['kind' => 'actions', 'items' => [Field::cancel($cancel), $submit->open()]];
     }
 
     /** What a view carries whatever the page. */

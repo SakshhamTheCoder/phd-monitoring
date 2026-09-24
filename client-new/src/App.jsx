@@ -44,7 +44,6 @@ const StudentProgressMonitoring = lazy(() => import('./pages/presentations/Stude
 const Logs = lazy(() => import('./pages/logs/Logs'));
 const Team = lazy(() => import('./pages/team/Team'));
 const AdminFormManagement = lazy(() => import('./pages/admin/AdminFormManagement'));
-const AreaOfSpecialization = lazy(() => import('./pages/areaOfSpecialization/AreaOfSpecialization'));
 const StudentCourses = lazy(() => import('./pages/StudentCourses/StudentCourses'));
 const AdminCourseManagement = lazy(() => import('./pages/AdminCourseManagement/AdminCourseManagement'));
 const ServerListPage = lazy(() => import('./components/serverPage/ServerListPage'));
@@ -269,7 +268,7 @@ const AppContent = () => {
                 </>
               )}
               {may('attendance') && <Route path="/attendance" element={<AttendanceRoute />} />}
-              {may('areasOfSpecialization') && <Route path="/areasOfSpecialization" element={<AreaOfSpecialization />} />}
+              {may('areasOfSpecialization') && <Route path="/areasOfSpecialization" element={<ServerListPage page="areas-of-specialization" />} />}
               {may('admin') && (
                 <>
                   <Route path="/forms/manage" element={<AdminFormManagement />} />

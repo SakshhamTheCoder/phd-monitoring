@@ -10,6 +10,9 @@ import { fillFromRow, useView } from '../../api/views';
 import { sendRequest } from './requests';
 import ServerDialog from './ServerDialog';
 import FileImportModal from './FileImportModal';
+import RowsImportModal from './RowsImportModal';
+
+const IMPORTS = { file: FileImportModal, rows: RowsImportModal };
 
 /**
  * A list page as the server describes it (GET /views/{page}, server:
@@ -102,15 +105,18 @@ const ServerListPage = ({ page }) => {
         />
       ))}
 
-      {Object.entries(view.imports).map(([name, spec]) => (
-        <FileImportModal
-          key={name}
-          spec={spec}
-          isOpen={importing === name}
-          onClose={() => setImporting(null)}
-          onImported={refresh}
-        />
-      ))}
+      {Object.entries(view.imports).map(([name, spec]) => {
+        const ImportModal = IMPORTS[spec.kind];
+        return (
+          <ImportModal
+            key={name}
+            spec={spec}
+            isOpen={importing === name}
+            onClose={() => setImporting(null)}
+            onImported={refresh}
+          />
+        );
+      })}
     </Page>
   );
 };

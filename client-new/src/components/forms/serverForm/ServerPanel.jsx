@@ -50,14 +50,15 @@ const isEmpty = (entry) =>
 const fieldsOf = (rows) =>
   rows.flatMap((row) => (row.kind === "grid" ? row.items : row.kind === "group" ? fieldsOf(row.rows) : [row]));
 
-// What is posted if nothing is touched: every open field as prefilled, except
-// uploads (sent as files) and fields sent only once changed. A recommendation
+// What is posted if nothing is touched: every open field as prefilled, and a
+// locked one the view says is sent anyway, except uploads (sent as files) and
+// fields sent only once changed. A recommendation
 // seeds its recorded answer for every reader, since what it shows below it
 // depends on that answer.
 const editedValues = (rows) =>
   Object.fromEntries(
     fieldsOf(rows)
-      .filter((field) => field.key && (field.locked === false || field.kind === "recommendation"))
+      .filter((field) => field.key && (field.locked === false || field.kind === "recommendation" || field.send === "always"))
       .filter((field) => field.type !== "file" && field.send !== "changed")
       .flatMap((field) => [
         [field.key, field.value],

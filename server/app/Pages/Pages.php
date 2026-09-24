@@ -6,6 +6,7 @@ namespace App\Pages;
 final class Pages
 {
     private const PAGES = [
+        'areas-of-specialization' => AreasPage::class,
         'outside-experts' => OutsideExpertsPage::class,
     ];
 

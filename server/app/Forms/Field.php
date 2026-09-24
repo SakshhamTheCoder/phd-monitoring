@@ -510,6 +510,23 @@ final class Field
         return $this;
     }
 
+    /** A submit that refuses, with $message, while any of $keys is empty. */
+    public function requiresAll(array $keys, string $message): self
+    {
+        $this->props['requires'][] = ['keys' => $keys, 'message' => $message, 'check' => 'truthy'];
+        return $this;
+    }
+
+    /**
+     * Posted with the answers even while locked, as a dialog fixing a value
+     * for this reader (their own department) still sends it.
+     */
+    public function alwaysSent(): self
+    {
+        $this->props['send'] = 'always';
+        return $this;
+    }
+
     /** A submit that refuses, with $message, while any of $keys is blank once trimmed. */
     public function requiresFilled(array $keys, string $message): self
     {

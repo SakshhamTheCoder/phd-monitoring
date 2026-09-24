@@ -387,6 +387,17 @@ class DepartmentController extends Controller
                 'rows.*' => 'array',
             ]);
 
+            // Asked first, before anything is written: importing deletes each
+            // covered department's unused areas the sheet leaves out, so the
+            // page says which departments before it does.
+            if ($request->boolean('preview')) {
+                $covered = $this->departmentsInSheet($request->rows);
+                return response()->json([
+                    'confirm' => 'Importing replaces the research areas of ' . ($covered ? implode(', ', $covered) : 'the departments in this sheet') . '. '
+                        . 'Any area of theirs that is not in the sheet is deleted, unless a scholar or faculty member uses it. Continue?',
+                ]);
+            }
+
             $areasByDepartment = $this->readAreaRows($request->rows, $errors, $ignoredColumns);
 
             $allowedDepartmentId = $this->areaWriteDepartmentId($loggedInUser);
@@ -433,6 +444,13 @@ class DepartmentController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => "Added {$created} areas, removed {$removed} unused areas",
+                // What the page tells the reader, in order.
+                'messages' => [
+                    ['tone' => 'success', 'text' => "{$created} areas added, {$removed} unused areas removed"],
+                    ...($ignoredColumns ? [['tone' => 'warn', 'text' => 'No department matches these columns, so they were skipped: ' . implode(', ', $ignoredColumns)]] : []),
+                    ...array_map(fn ($area) => ['tone' => 'info', 'text' => "{$area} is in use, so it was kept"], $kept),
+                    ...array_map(fn ($error) => ['tone' => 'warn', 'text' => $error], $errors),
+                ],
                 'imported_count' => $created,
                 'removed_count' => $removed,
                 'kept_in_use' => $kept,
@@ -444,6 +462,22 @@ class DepartmentController extends Controller
                 'message' => 'An error occurred: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * The department codes a sheet covers, as written: the template names one
+     * per row, the institute's matrix one per column after the first.
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return array<int, string>
+     */
+    private function departmentsInSheet(array $rows): array
+    {
+        $headers = array_values(array_filter(array_keys(reset($rows) ?: []), fn ($column) => $column !== '_rowNumber'));
+        $isLongTemplate = (bool) array_filter($headers, fn ($column) => strtolower(trim((string) $column)) === 'name');
+        $codes = $isLongTemplate ? array_map(fn ($row) => $row['department_code'] ?? '', $rows) : array_slice($headers, 1);
+
+        return array_values(array_unique(array_filter(array_map(fn ($code) => trim((string) $code), $codes), fn ($code) => $code !== '')));
     }
 
     /**
@@ -534,7 +568,7 @@ class DepartmentController extends Controller
      * The one department this user may write areas for, or null for a role that
      * may write any.
      */
-    private function areaWriteDepartmentId($user): ?int
+    public static function areaWriteDepartmentId($user): ?int
     {
         $role = $user->current_role->role;
 
