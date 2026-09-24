@@ -47,10 +47,56 @@
                 "notices": [],
                 "panels": {
                     "faculty": {
-                        "custom": "examiner-nominations"
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "examiners",
+                                "type": "examiners",
+                                "label": "National examiners",
+                                "source": "/suggestions/examiner",
+                                "remove_path": "/forms/list-of-examiners/7/examiners/{id}",
+                                "together": [
+                                    "national",
+                                    "international"
+                                ],
+                                "key": "national",
+                                "add_label": "Add new national examiner",
+                                "editable": true,
+                                "table": true,
+                                "value": [],
+                                "locked": false
+                            },
+                            {
+                                "kind": "examiners",
+                                "type": "examiners",
+                                "label": "International examiners",
+                                "source": "/suggestions/examiner",
+                                "remove_path": "/forms/list-of-examiners/7/examiners/{id}",
+                                "together": [
+                                    "national",
+                                    "international"
+                                ],
+                                "key": "international",
+                                "add_label": "Add new international examiner",
+                                "editable": true,
+                                "table": true,
+                                "value": [],
+                                "locked": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit"
+                                    }
+                                ]
+                            }
+                        ]
                     },
                     "dordc": {
-                        "custom": "examiner-decisions"
+                        "wrapped": false,
+                        "rows": []
                     }
                 },
                 "lead": {
@@ -198,10 +244,146 @@
                 "notices": [],
                 "panels": {
                     "faculty": {
-                        "custom": "examiner-nominations"
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "examiners",
+                                "type": "examiners",
+                                "label": "National examiners",
+                                "source": "/suggestions/examiner",
+                                "remove_path": "/forms/list-of-examiners/7/examiners/{id}",
+                                "together": [
+                                    "national",
+                                    "international"
+                                ],
+                                "key": "national",
+                                "add_label": "Add new national examiner",
+                                "editable": false,
+                                "table": false,
+                                "value": [],
+                                "locked": true
+                            },
+                            {
+                                "kind": "examiners",
+                                "type": "examiners",
+                                "label": "International examiners",
+                                "source": "/suggestions/examiner",
+                                "remove_path": "/forms/list-of-examiners/7/examiners/{id}",
+                                "together": [
+                                    "national",
+                                    "international"
+                                ],
+                                "key": "international",
+                                "add_label": "Add new international examiner",
+                                "editable": false,
+                                "table": false,
+                                "value": [],
+                                "locked": true
+                            }
+                        ]
                     },
                     "dordc": {
-                        "custom": "examiner-decisions"
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "group",
+                                "class_name": "reveal",
+                                "rows": [
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "decisions",
+                                                "label": "",
+                                                "columns": [
+                                                    {
+                                                        "key": "name",
+                                                        "title": "Name"
+                                                    },
+                                                    {
+                                                        "key": "email",
+                                                        "title": "Email"
+                                                    },
+                                                    {
+                                                        "key": "department",
+                                                        "title": "Department"
+                                                    },
+                                                    {
+                                                        "key": "designation",
+                                                        "title": "Designation"
+                                                    },
+                                                    {
+                                                        "key": "institution",
+                                                        "title": "Institution"
+                                                    }
+                                                ],
+                                                "rows": [],
+                                                "key": "approvals",
+                                                "rejects": "rejections",
+                                                "choice_title": "Status",
+                                                "rejected": [],
+                                                "value": [],
+                                                "locked": false
+                                            }
+                                        ],
+                                        "space": 3,
+                                        "label": "National examiners"
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "decisions",
+                                                "label": "",
+                                                "columns": [
+                                                    {
+                                                        "key": "name",
+                                                        "title": "Name"
+                                                    },
+                                                    {
+                                                        "key": "email",
+                                                        "title": "Email"
+                                                    },
+                                                    {
+                                                        "key": "department",
+                                                        "title": "Department"
+                                                    },
+                                                    {
+                                                        "key": "designation",
+                                                        "title": "Designation"
+                                                    },
+                                                    {
+                                                        "key": "institution",
+                                                        "title": "Institution"
+                                                    }
+                                                ],
+                                                "rows": [],
+                                                "key": "approvals",
+                                                "rejects": "rejections",
+                                                "choice_title": "Status",
+                                                "rejected": [],
+                                                "value": [],
+                                                "locked": false
+                                            }
+                                        ],
+                                        "space": 3,
+                                        "label": "International examiners"
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit",
+                                        "sends": {
+                                            "approval": true
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
                     }
                 },
                 "lead": {
@@ -338,10 +520,47 @@
                 "notices": [],
                 "panels": {
                     "faculty": {
-                        "custom": "examiner-nominations"
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "examiners",
+                                "type": "examiners",
+                                "label": "National examiners",
+                                "source": "/suggestions/examiner",
+                                "remove_path": "/forms/list-of-examiners/7/examiners/{id}",
+                                "together": [
+                                    "national",
+                                    "international"
+                                ],
+                                "key": "national",
+                                "add_label": "Add new national examiner",
+                                "editable": false,
+                                "table": true,
+                                "value": [],
+                                "locked": true
+                            },
+                            {
+                                "kind": "examiners",
+                                "type": "examiners",
+                                "label": "International examiners",
+                                "source": "/suggestions/examiner",
+                                "remove_path": "/forms/list-of-examiners/7/examiners/{id}",
+                                "together": [
+                                    "national",
+                                    "international"
+                                ],
+                                "key": "international",
+                                "add_label": "Add new international examiner",
+                                "editable": false,
+                                "table": true,
+                                "value": [],
+                                "locked": true
+                            }
+                        ]
                     },
                     "dordc": {
-                        "custom": "examiner-decisions"
+                        "wrapped": false,
+                        "rows": []
                     }
                 },
                 "lead": {
@@ -415,6 +634,1168 @@
                                         }
                                     ],
                                     "value": []
+                                }
+                            ],
+                            "space": 2,
+                            "label": "Supervisors"
+                        }
+                    ]
+                },
+                "step_options": {
+                    "director": {
+                        "allow_rejection": true
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "supervisor with saved and decided examiners",
+        "formData": {
+            "form_id": 121,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "supervisor",
+            "maximum_step": 0,
+            "locks": {
+                "supervisor": false,
+                "dordc": false,
+                "director": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "faculty",
+            "steps": [
+                "faculty",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "national": [
+                {
+                    "id": 5,
+                    "name": "Meera Rao",
+                    "email": "meera@iitrpr.ac.in",
+                    "department": "Chemistry",
+                    "designation": "Professor",
+                    "institution": "IIT Ropar",
+                    "recommendation": "pending"
+                },
+                {
+                    "id": 6,
+                    "name": "Arun Das",
+                    "email": "arun@nitj.ac.in",
+                    "department": "Chemical",
+                    "designation": "Professor",
+                    "institution": "NIT Jalandhar",
+                    "recommendation": "approved"
+                }
+            ],
+            "international": [
+                {
+                    "id": 7,
+                    "name": "Ana Lopez",
+                    "email": "ana@upm.es",
+                    "department": "Chemistry",
+                    "designation": "Professor",
+                    "institution": "UPM",
+                    "recommendation": "pending"
+                }
+            ],
+            "view": {
+                "version": 1,
+                "title": "List of examiners",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "faculty": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "examiners",
+                                "type": "examiners",
+                                "label": "National examiners",
+                                "source": "/suggestions/examiner",
+                                "remove_path": "/forms/list-of-examiners/121/examiners/{id}",
+                                "together": [
+                                    "national",
+                                    "international"
+                                ],
+                                "key": "national",
+                                "add_label": "Add new national examiner",
+                                "editable": true,
+                                "table": true,
+                                "value": [
+                                    {
+                                        "id": 5,
+                                        "name": "Meera Rao",
+                                        "email": "meera@iitrpr.ac.in",
+                                        "department": "Chemistry",
+                                        "designation": "Professor",
+                                        "institution": "IIT Ropar",
+                                        "recommendation": "pending"
+                                    },
+                                    {
+                                        "id": 6,
+                                        "name": "Arun Das",
+                                        "email": "arun@nitj.ac.in",
+                                        "department": "Chemical",
+                                        "designation": "Professor",
+                                        "institution": "NIT Jalandhar",
+                                        "recommendation": "approved"
+                                    }
+                                ],
+                                "locked": false
+                            },
+                            {
+                                "kind": "examiners",
+                                "type": "examiners",
+                                "label": "International examiners",
+                                "source": "/suggestions/examiner",
+                                "remove_path": "/forms/list-of-examiners/121/examiners/{id}",
+                                "together": [
+                                    "national",
+                                    "international"
+                                ],
+                                "key": "international",
+                                "add_label": "Add new international examiner",
+                                "editable": true,
+                                "table": true,
+                                "value": [
+                                    {
+                                        "id": 7,
+                                        "name": "Ana Lopez",
+                                        "email": "ana@upm.es",
+                                        "department": "Chemistry",
+                                        "designation": "Professor",
+                                        "institution": "UPM",
+                                        "recommendation": "pending"
+                                    }
+                                ],
+                                "locked": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "dordc": {
+                        "wrapped": false,
+                        "rows": []
+                    }
+                },
+                "lead": {
+                    "title": "Student",
+                    "wrapped": true,
+                    "rows": [
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Roll number",
+                                    "value": "102203456",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Name",
+                                    "value": "Asha Verma",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Date of admission",
+                                    "format": "date",
+                                    "value": "2023-08-01",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Email",
+                                    "value": "asha.verma@thapar.edu",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Mobile number",
+                                    "value": "9876543210",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "table",
+                                    "label": "",
+                                    "columns": [
+                                        {
+                                            "key": "name",
+                                            "title": "Name"
+                                        },
+                                        {
+                                            "key": "department",
+                                            "title": "Department"
+                                        },
+                                        {
+                                            "key": "designation",
+                                            "title": "Designation"
+                                        }
+                                    ],
+                                    "value": [
+                                        {
+                                            "name": "Rakesh Gupta",
+                                            "designation": "Professor",
+                                            "department": "Chemical Engineering"
+                                        },
+                                        {
+                                            "name": "Anika Jain",
+                                            "designation": "Assistant Professor",
+                                            "department": "Chemical Engineering"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "space": 2,
+                            "label": "Supervisors"
+                        }
+                    ]
+                },
+                "step_options": {
+                    "director": {
+                        "allow_rejection": true
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "sent to the DoRDC, DoRDC reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "dordc",
+            "maximum_step": 1,
+            "locks": {
+                "supervisor": true,
+                "dordc": false,
+                "director": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "dordc",
+            "steps": [
+                "faculty",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "national": [
+                {
+                    "id": 5,
+                    "name": "Meera Rao",
+                    "email": "meera@iitrpr.ac.in",
+                    "department": "Chemistry",
+                    "designation": "Professor",
+                    "institution": "IIT Ropar",
+                    "recommendation": "pending"
+                }
+            ],
+            "international": [],
+            "view": {
+                "version": 1,
+                "title": "List of examiners",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "faculty": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "examiners",
+                                "type": "examiners",
+                                "label": "National examiners",
+                                "source": "/suggestions/examiner",
+                                "remove_path": "/forms/list-of-examiners/7/examiners/{id}",
+                                "together": [
+                                    "national",
+                                    "international"
+                                ],
+                                "key": "national",
+                                "add_label": "Add new national examiner",
+                                "editable": false,
+                                "table": false,
+                                "value": [
+                                    {
+                                        "id": 5,
+                                        "name": "Meera Rao",
+                                        "email": "meera@iitrpr.ac.in",
+                                        "department": "Chemistry",
+                                        "designation": "Professor",
+                                        "institution": "IIT Ropar",
+                                        "recommendation": "pending"
+                                    }
+                                ],
+                                "locked": true
+                            },
+                            {
+                                "kind": "examiners",
+                                "type": "examiners",
+                                "label": "International examiners",
+                                "source": "/suggestions/examiner",
+                                "remove_path": "/forms/list-of-examiners/7/examiners/{id}",
+                                "together": [
+                                    "national",
+                                    "international"
+                                ],
+                                "key": "international",
+                                "add_label": "Add new international examiner",
+                                "editable": false,
+                                "table": false,
+                                "value": [],
+                                "locked": true
+                            }
+                        ]
+                    },
+                    "dordc": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "group",
+                                "class_name": "reveal",
+                                "rows": [
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "decisions",
+                                                "label": "",
+                                                "columns": [
+                                                    {
+                                                        "key": "name",
+                                                        "title": "Name"
+                                                    },
+                                                    {
+                                                        "key": "email",
+                                                        "title": "Email"
+                                                    },
+                                                    {
+                                                        "key": "department",
+                                                        "title": "Department"
+                                                    },
+                                                    {
+                                                        "key": "designation",
+                                                        "title": "Designation"
+                                                    },
+                                                    {
+                                                        "key": "institution",
+                                                        "title": "Institution"
+                                                    }
+                                                ],
+                                                "rows": [
+                                                    {
+                                                        "id": 5,
+                                                        "name": "Meera Rao",
+                                                        "email": "meera@iitrpr.ac.in",
+                                                        "department": "Chemistry",
+                                                        "designation": "Professor",
+                                                        "institution": "IIT Ropar",
+                                                        "recommendation": "pending"
+                                                    }
+                                                ],
+                                                "key": "approvals",
+                                                "rejects": "rejections",
+                                                "choice_title": "Status",
+                                                "rejected": [],
+                                                "value": [],
+                                                "locked": false
+                                            }
+                                        ],
+                                        "space": 3,
+                                        "label": "National examiners"
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "decisions",
+                                                "label": "",
+                                                "columns": [
+                                                    {
+                                                        "key": "name",
+                                                        "title": "Name"
+                                                    },
+                                                    {
+                                                        "key": "email",
+                                                        "title": "Email"
+                                                    },
+                                                    {
+                                                        "key": "department",
+                                                        "title": "Department"
+                                                    },
+                                                    {
+                                                        "key": "designation",
+                                                        "title": "Designation"
+                                                    },
+                                                    {
+                                                        "key": "institution",
+                                                        "title": "Institution"
+                                                    }
+                                                ],
+                                                "rows": [],
+                                                "key": "approvals",
+                                                "rejects": "rejections",
+                                                "choice_title": "Status",
+                                                "rejected": [],
+                                                "value": [],
+                                                "locked": false
+                                            }
+                                        ],
+                                        "space": 3,
+                                        "label": "International examiners"
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit",
+                                        "sends": {
+                                            "approval": true
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "lead": {
+                    "title": "Student",
+                    "wrapped": true,
+                    "rows": [
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Roll number",
+                                    "value": "102203456",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Name",
+                                    "value": "Asha Verma",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Date of admission",
+                                    "format": "date",
+                                    "value": "2023-08-01",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Email",
+                                    "value": "asha.verma@thapar.edu",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Mobile number",
+                                    "value": "9876543210",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "table",
+                                    "label": "",
+                                    "columns": [
+                                        {
+                                            "key": "name",
+                                            "title": "Name"
+                                        },
+                                        {
+                                            "key": "department",
+                                            "title": "Department"
+                                        },
+                                        {
+                                            "key": "designation",
+                                            "title": "Designation"
+                                        }
+                                    ],
+                                    "value": [
+                                        {
+                                            "name": "Rakesh Gupta",
+                                            "designation": "Professor",
+                                            "department": "Chemical Engineering"
+                                        },
+                                        {
+                                            "name": "Anika Jain",
+                                            "designation": "Assistant Professor",
+                                            "department": "Chemical Engineering"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "space": 2,
+                            "label": "Supervisors"
+                        }
+                    ]
+                },
+                "step_options": {
+                    "director": {
+                        "allow_rejection": true
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "DoRDC deciding with one accepted, one rejected",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "dordc",
+            "maximum_step": 1,
+            "locks": {
+                "supervisor": true,
+                "dordc": false,
+                "director": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "dordc",
+            "steps": [
+                "faculty",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "national": [
+                {
+                    "id": 5,
+                    "name": "Meera Rao",
+                    "email": "meera@iitrpr.ac.in",
+                    "department": "Chemistry",
+                    "designation": "Professor",
+                    "institution": "IIT Ropar",
+                    "recommendation": "approved"
+                },
+                {
+                    "id": 6,
+                    "name": "Arun Das",
+                    "email": "arun@nitj.ac.in",
+                    "department": "Chemical",
+                    "designation": "Professor",
+                    "institution": "NIT Jalandhar",
+                    "recommendation": "pending"
+                }
+            ],
+            "international": [
+                {
+                    "id": 7,
+                    "name": "Ana Lopez",
+                    "email": "ana@upm.es",
+                    "department": "Chemistry",
+                    "designation": "Professor",
+                    "institution": "UPM",
+                    "recommendation": "rejected"
+                }
+            ],
+            "view": {
+                "version": 1,
+                "title": "List of examiners",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "faculty": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "examiners",
+                                "type": "examiners",
+                                "label": "National examiners",
+                                "source": "/suggestions/examiner",
+                                "remove_path": "/forms/list-of-examiners/7/examiners/{id}",
+                                "together": [
+                                    "national",
+                                    "international"
+                                ],
+                                "key": "national",
+                                "add_label": "Add new national examiner",
+                                "editable": false,
+                                "table": false,
+                                "value": [
+                                    {
+                                        "id": 5,
+                                        "name": "Meera Rao",
+                                        "email": "meera@iitrpr.ac.in",
+                                        "department": "Chemistry",
+                                        "designation": "Professor",
+                                        "institution": "IIT Ropar",
+                                        "recommendation": "approved"
+                                    },
+                                    {
+                                        "id": 6,
+                                        "name": "Arun Das",
+                                        "email": "arun@nitj.ac.in",
+                                        "department": "Chemical",
+                                        "designation": "Professor",
+                                        "institution": "NIT Jalandhar",
+                                        "recommendation": "pending"
+                                    }
+                                ],
+                                "locked": true
+                            },
+                            {
+                                "kind": "examiners",
+                                "type": "examiners",
+                                "label": "International examiners",
+                                "source": "/suggestions/examiner",
+                                "remove_path": "/forms/list-of-examiners/7/examiners/{id}",
+                                "together": [
+                                    "national",
+                                    "international"
+                                ],
+                                "key": "international",
+                                "add_label": "Add new international examiner",
+                                "editable": false,
+                                "table": false,
+                                "value": [
+                                    {
+                                        "id": 7,
+                                        "name": "Ana Lopez",
+                                        "email": "ana@upm.es",
+                                        "department": "Chemistry",
+                                        "designation": "Professor",
+                                        "institution": "UPM",
+                                        "recommendation": "rejected"
+                                    }
+                                ],
+                                "locked": true
+                            }
+                        ]
+                    },
+                    "dordc": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "group",
+                                "class_name": "reveal",
+                                "rows": [
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "decisions",
+                                                "label": "",
+                                                "columns": [
+                                                    {
+                                                        "key": "name",
+                                                        "title": "Name"
+                                                    },
+                                                    {
+                                                        "key": "email",
+                                                        "title": "Email"
+                                                    },
+                                                    {
+                                                        "key": "department",
+                                                        "title": "Department"
+                                                    },
+                                                    {
+                                                        "key": "designation",
+                                                        "title": "Designation"
+                                                    },
+                                                    {
+                                                        "key": "institution",
+                                                        "title": "Institution"
+                                                    }
+                                                ],
+                                                "rows": [
+                                                    {
+                                                        "id": 5,
+                                                        "name": "Meera Rao",
+                                                        "email": "meera@iitrpr.ac.in",
+                                                        "department": "Chemistry",
+                                                        "designation": "Professor",
+                                                        "institution": "IIT Ropar",
+                                                        "recommendation": "approved"
+                                                    },
+                                                    {
+                                                        "id": 6,
+                                                        "name": "Arun Das",
+                                                        "email": "arun@nitj.ac.in",
+                                                        "department": "Chemical",
+                                                        "designation": "Professor",
+                                                        "institution": "NIT Jalandhar",
+                                                        "recommendation": "pending"
+                                                    }
+                                                ],
+                                                "key": "approvals",
+                                                "rejects": "rejections",
+                                                "choice_title": "Status",
+                                                "rejected": [
+                                                    7
+                                                ],
+                                                "value": [
+                                                    5
+                                                ],
+                                                "locked": false
+                                            }
+                                        ],
+                                        "space": 3,
+                                        "label": "National examiners"
+                                    },
+                                    {
+                                        "kind": "grid",
+                                        "items": [
+                                            {
+                                                "type": "decisions",
+                                                "label": "",
+                                                "columns": [
+                                                    {
+                                                        "key": "name",
+                                                        "title": "Name"
+                                                    },
+                                                    {
+                                                        "key": "email",
+                                                        "title": "Email"
+                                                    },
+                                                    {
+                                                        "key": "department",
+                                                        "title": "Department"
+                                                    },
+                                                    {
+                                                        "key": "designation",
+                                                        "title": "Designation"
+                                                    },
+                                                    {
+                                                        "key": "institution",
+                                                        "title": "Institution"
+                                                    }
+                                                ],
+                                                "rows": [
+                                                    {
+                                                        "id": 7,
+                                                        "name": "Ana Lopez",
+                                                        "email": "ana@upm.es",
+                                                        "department": "Chemistry",
+                                                        "designation": "Professor",
+                                                        "institution": "UPM",
+                                                        "recommendation": "rejected"
+                                                    }
+                                                ],
+                                                "key": "approvals",
+                                                "rejects": "rejections",
+                                                "choice_title": "Status",
+                                                "rejected": [
+                                                    7
+                                                ],
+                                                "value": [
+                                                    5
+                                                ],
+                                                "locked": false
+                                            }
+                                        ],
+                                        "space": 3,
+                                        "label": "International examiners"
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit",
+                                        "sends": {
+                                            "approval": true
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "lead": {
+                    "title": "Student",
+                    "wrapped": true,
+                    "rows": [
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Roll number",
+                                    "value": "102203456",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Name",
+                                    "value": "Asha Verma",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Date of admission",
+                                    "format": "date",
+                                    "value": "2023-08-01",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Email",
+                                    "value": "asha.verma@thapar.edu",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Mobile number",
+                                    "value": "9876543210",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "table",
+                                    "label": "",
+                                    "columns": [
+                                        {
+                                            "key": "name",
+                                            "title": "Name"
+                                        },
+                                        {
+                                            "key": "department",
+                                            "title": "Department"
+                                        },
+                                        {
+                                            "key": "designation",
+                                            "title": "Designation"
+                                        }
+                                    ],
+                                    "value": [
+                                        {
+                                            "name": "Rakesh Gupta",
+                                            "designation": "Professor",
+                                            "department": "Chemical Engineering"
+                                        },
+                                        {
+                                            "name": "Anika Jain",
+                                            "designation": "Assistant Professor",
+                                            "department": "Chemical Engineering"
+                                        }
+                                    ]
+                                }
+                            ],
+                            "space": 2,
+                            "label": "Supervisors"
+                        }
+                    ]
+                },
+                "step_options": {
+                    "director": {
+                        "allow_rejection": true
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "sent, director reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "director",
+            "maximum_step": 2,
+            "locks": {
+                "supervisor": true,
+                "dordc": true,
+                "director": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "director",
+            "steps": [
+                "faculty",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "national": [
+                {
+                    "id": 5,
+                    "name": "Meera Rao",
+                    "email": "meera@iitrpr.ac.in",
+                    "department": "Chemistry",
+                    "designation": "Professor",
+                    "institution": "IIT Ropar",
+                    "recommendation": "approved"
+                }
+            ],
+            "international": [],
+            "view": {
+                "version": 1,
+                "title": "List of examiners",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "faculty": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "examiners",
+                                "type": "examiners",
+                                "label": "National examiners",
+                                "source": "/suggestions/examiner",
+                                "remove_path": "/forms/list-of-examiners/7/examiners/{id}",
+                                "together": [
+                                    "national",
+                                    "international"
+                                ],
+                                "key": "national",
+                                "add_label": "Add new national examiner",
+                                "editable": false,
+                                "table": true,
+                                "value": [
+                                    {
+                                        "id": 5,
+                                        "name": "Meera Rao",
+                                        "email": "meera@iitrpr.ac.in",
+                                        "department": "Chemistry",
+                                        "designation": "Professor",
+                                        "institution": "IIT Ropar",
+                                        "recommendation": "approved"
+                                    }
+                                ],
+                                "locked": true
+                            },
+                            {
+                                "kind": "examiners",
+                                "type": "examiners",
+                                "label": "International examiners",
+                                "source": "/suggestions/examiner",
+                                "remove_path": "/forms/list-of-examiners/7/examiners/{id}",
+                                "together": [
+                                    "national",
+                                    "international"
+                                ],
+                                "key": "international",
+                                "add_label": "Add new international examiner",
+                                "editable": false,
+                                "table": true,
+                                "value": [],
+                                "locked": true
+                            }
+                        ]
+                    },
+                    "dordc": {
+                        "wrapped": false,
+                        "rows": []
+                    }
+                },
+                "lead": {
+                    "title": "Student",
+                    "wrapped": true,
+                    "rows": [
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Roll number",
+                                    "value": "102203456",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Name",
+                                    "value": "Asha Verma",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Date of admission",
+                                    "format": "date",
+                                    "value": "2023-08-01",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Email",
+                                    "value": "asha.verma@thapar.edu",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Mobile number",
+                                    "value": "9876543210",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "table",
+                                    "label": "",
+                                    "columns": [
+                                        {
+                                            "key": "name",
+                                            "title": "Name"
+                                        },
+                                        {
+                                            "key": "department",
+                                            "title": "Department"
+                                        },
+                                        {
+                                            "key": "designation",
+                                            "title": "Designation"
+                                        }
+                                    ],
+                                    "value": [
+                                        {
+                                            "name": "Rakesh Gupta",
+                                            "designation": "Professor",
+                                            "department": "Chemical Engineering"
+                                        },
+                                        {
+                                            "name": "Anika Jain",
+                                            "designation": "Assistant Professor",
+                                            "department": "Chemical Engineering"
+                                        }
+                                    ]
                                 }
                             ],
                             "space": 2,

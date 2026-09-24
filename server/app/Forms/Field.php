@@ -161,6 +161,36 @@ final class Field
         return $field;
     }
 
+    /**
+     * A list of examiners: search the directory or add one through a dialog,
+     * and remove one. $removePath deletes a saved row ({id} is the row); the
+     * lists named in $together are checked together for repeats.
+     */
+    public static function examiners(string $label, string $source, string $removePath, array $together): self
+    {
+        $field = new self('examiners', $label);
+        $field->props += ['source' => $source, 'remove_path' => $removePath, 'together' => $together];
+        return $field;
+    }
+
+    /**
+     * A table with an Accept or Reject choice on each row, kept as two lists of
+     * row ids: $accepted and $rejected (the field's key is the first). Several
+     * tables may share the same two lists.
+     *
+     * @param array<string, string> $columns row key => column title
+     */
+    public static function decisions(string $label, array $columns, array $rows, string $accepted, string $rejected, string $choiceTitle): self
+    {
+        $field = new self('decisions', $label);
+        $field->props['columns'] = array_map(fn ($key, $title) => ['key' => $key, 'title' => $title], array_keys($columns), array_values($columns));
+        $field->props['rows'] = array_values($rows);
+        $field->props['key'] = $accepted;
+        $field->props['rejects'] = $rejected;
+        $field->props['choice_title'] = $choiceTitle;
+        return $field;
+    }
+
     /** A value posted with the answers as it stands, not drawn. */
     public static function hidden(string $key): self
     {

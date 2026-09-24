@@ -19,19 +19,19 @@ namespace App\Forms;
  *   summary = { note, dates, rows }: drawn instead of the chain, for a record
  *     no step of which was answered here; {name} in the note is dates[name],
  *     formatted as a date
- *   panel = { wrapped, rows: [ row, ... ] } | { custom: name }
+ *   panel = { wrapped, rows: [ row, ... ] }
  *   notice = { tone, text, action?: { label, endpoint, done, failed } }
  *   row = { kind: 'grid', items: [field, ...], space?, each?, label? }
- *       | { kind: 'list' | 'toggles' | 'recommendation', ...that field }
- *       | { kind: 'group', hidden_unless: key, rows: [ row, ... ] }: kept on
- *         the page but hidden while that answer is empty
+ *       | { kind: 'list' | 'toggles' | 'recommendation' | 'publications'
+ *           | 'recommender' | 'examiners' | 'hidden', ...that field }
+ *       | { kind: 'group', hidden_unless?, class_name?, rows: [ row, ... ] }:
+ *         a block kept on the page, hidden while that answer is empty
  *   A row or field with show_if is left off the page while an answer fails it.
  * `wrapped` is whether the panel sits in a block of its own, as most hand-built
  * panels did; a panel drawn straight into its step says false.
  *
- * A custom panel is one too interactive to describe as fields (live
- * recommendations, pickers that fill each other). Each client draws it by
- * name; one that does not know the name sends the reader to the website.
+ * Blocks with behaviour of their own (publications, recommender, examiners,
+ * decisions) are placed and wired here and implemented once by each client.
  */
 abstract class FormDefinition
 {
@@ -90,10 +90,6 @@ abstract class FormDefinition
     {
         $panels = [];
         foreach ($this->panels($data) as $step => $rows) {
-            if (isset($rows['custom'])) {
-                $panels[$step] = $rows;
-                continue;
-            }
             $panels[$step] = [
                 'wrapped' => !in_array($step, $this->unwrapped(), true),
                 'rows' => $this->resolveRows($rows, $data),
@@ -135,10 +131,6 @@ abstract class FormDefinition
     {
         $rules = [];
         foreach ($this->panels($data) as $rows) {
-            // A custom panel's controller checks its own answers.
-            if (isset($rows['custom'])) {
-                continue;
-            }
             foreach ($this->fieldsIn($rows) as $field) {
                 $rules += $field->rulesFor($step);
             }
@@ -210,16 +202,16 @@ abstract class FormDefinition
         );
     }
 
-    /** Rows kept on the page but hidden while the answer $key is empty. */
-    protected static function group(array $rows, string $hiddenUnless): array
+    /**
+     * Rows in a block of their own: hidden while the answer $hiddenUnless is
+     * empty, and/or with a class (such as 'reveal', which fades them in).
+     */
+    protected static function group(array $rows, ?string $hiddenUnless = null, ?string $className = null): array
     {
-        return ['kind' => 'group', 'hidden_unless' => $hiddenUnless, 'rows' => $rows];
-    }
-
-    /** A panel each client draws by name. */
-    protected static function custom(string $name): array
-    {
-        return ['custom' => $name];
+        return array_filter(
+            ['kind' => 'group', 'hidden_unless' => $hiddenUnless, 'class_name' => $className, 'rows' => $rows],
+            fn ($value) => $value !== null
+        );
     }
 
     /** A row of fields side by side; see GridContainer on the web for space and each. */

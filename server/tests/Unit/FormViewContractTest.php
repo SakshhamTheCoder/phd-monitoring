@@ -131,7 +131,7 @@ class FormViewContractTest extends TestCase
         }
         $this->assertArrayHasKey('student', $view['panels']);
         $panel = $view['panels']['student'];
-        $this->assertTrue(!empty($panel['custom']) || !empty($panel['rows']));
+        $this->assertNotEmpty($panel['rows']);
     }
 
     public function test_revise_title_asks_for_what_it_asked_before(): void
@@ -317,8 +317,12 @@ class FormViewContractTest extends TestCase
         $view = (new ListOfExaminersDefinition)->view(['role' => 'director', 'locks' => []]);
         $this->assertSame('Student', $view['lead']['title']);
         $this->assertSame(['director' => ['allow_rejection' => true]], $view['step_options']);
-        $this->assertSame(['custom' => 'examiner-nominations'], $view['panels']['faculty']);
-        $this->assertSame(['custom' => 'examiner-decisions'], $view['panels']['dordc']);
+        // The DoRDC's choices show only while the form is at their step.
+        $this->assertSame([], $view['panels']['dordc']['rows']);
+        $atDordc = (new ListOfExaminersDefinition)->view(['role' => 'dordc', 'stage' => 'dordc', 'locks' => ['supervisor' => true], 'national' => [['id' => 5, 'recommendation' => 'approved']], 'international' => []]);
+        $this->assertNotEmpty($atDordc['panels']['dordc']['rows']);
+        $supervising = (new ListOfExaminersDefinition)->view(['role' => 'faculty', 'form_id' => 9, 'locks' => []]);
+        $this->assertSame('/forms/list-of-examiners/9/examiners/{id}', $supervising['panels']['faculty']['rows'][0]['remove_path']);
     }
 
         public function test_synopsis_asks_for_what_it_asked_before(): void

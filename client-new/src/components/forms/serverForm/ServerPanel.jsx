@@ -12,6 +12,7 @@ import RadioButtonGroup from "../fields/RadioButtonGroup";
 import StatusNotice from "../../common/StatusNotice";
 import PublicationsBlock from "./PublicationsBlock";
 import Recommender from "./Recommender";
+import ExaminerList from "./ExaminerList";
 import TableComponent from "../table/TableComponent";
 import CustomButton from "../fields/CustomButton";
 import { formatDate } from "../../../utils/timeParse";
@@ -55,6 +56,7 @@ const editedValues = (rows) =>
       .flatMap((field) => [
         [field.key, field.value],
         ...(field.sends_comments ? [["comments", field.comments]] : []),
+        ...(field.type === "decisions" ? [[field.rejects, field.rejected]] : []),
       ])
   );
 
@@ -162,6 +164,39 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
             onSelect={(choice) => setValue(field.key, choice)}
           />
         );
+      // Accept or Reject on each row, kept as two lists of row ids.
+      case "decisions": {
+        const accepted = values[field.key] || [];
+        const rejected = values[field.rejects] || [];
+        const decide = (id, choice) =>
+          setValues((now) => {
+            const without = (list) => (list || []).filter((item) => item !== id);
+            const add = (list) => ((list || []).includes(id) ? list : [...(list || []), id]);
+            if (choice === 1) return { ...now, [field.key]: add(now[field.key]), [field.rejects]: without(now[field.rejects]) };
+            if (choice === 0) return { ...now, [field.rejects]: add(now[field.rejects]), [field.key]: without(now[field.key]) };
+            return now;
+          });
+        return (
+          <TableComponent
+            data={field.rows}
+            titles={[...field.columns.map((column) => column.title), field.choice_title]}
+            keys={[...field.columns.map((column) => column.key), "decision"]}
+            components={[
+              {
+                key: "decision",
+                component: ({ row }) => (
+                  <RadioButtonGroup
+                    titles={["Accept", "Reject"]}
+                    values={[1, 0]}
+                    defaultValue={accepted.includes(row.id) ? 1 : rejected.includes(row.id) ? 0 : null}
+                    onSelect={(choice) => decide(row.id, choice)}
+                  />
+                ),
+              },
+            ]}
+          />
+        );
+      }
       case "notice":
         return <StatusNotice tone={field.tone}>{field.text}</StatusNotice>;
       case "publications":
@@ -429,6 +464,18 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
           return <React.Fragment key={index}>{renderList(row)}</React.Fragment>;
         case "hidden":
           return null;
+        case "examiners": {
+          const listOf = (key) => (row.locked ? recorded[key] : values[key]) || [];
+          return (
+            <ExaminerList
+              key={index}
+              field={row}
+              entries={listOf(row.key)}
+              setEntries={(change) => setValues((now) => ({ ...now, [row.key]: change(now[row.key] || []) }))}
+              everyone={row.together.flatMap(listOf)}
+            />
+          );
+        }
         case "recommender":
           return (
             <Recommender key={index} field={row} entries={values[row.from]} onPick={(match) => pickRecommended(row, match)} />
@@ -438,7 +485,11 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
         // Kept on the page while hidden, so what was picked stays on screen.
         case "group":
           return (
-            <div key={index} hidden={!answers[row.hidden_unless]}>
+            <div
+              key={index}
+              className={row.class_name}
+              hidden={row.hidden_unless ? !answers[row.hidden_unless] : undefined}
+            >
               {drawRows(row.rows)}
             </div>
           );
