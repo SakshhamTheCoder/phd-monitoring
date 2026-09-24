@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Forms\ThesisExtensionDefinition;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\GeneralFormCreate;
 use Illuminate\Http\Request;
@@ -144,21 +145,14 @@ class ThesisExtentionController extends Controller
             'student',
             'faculty',
             function ($formInstance) use ($request, $user) {
-                $request->validate([
-                    'reason' => 'string',
-                ]);
+                // Every answer is checked before anything is saved, so a missing
+                // upload no longer leaves the synopsis date written alone.
+                $request->validate((new ThesisExtensionDefinition)->rules('student', $formInstance->fullForm($user)));
                 if($formInstance->student->date_of_synopsis==null){
-                    $request->validate([
-                        'date_of_synopsis' => 'required|date',
-                    ]);
                     $formInstance->student->date_of_synopsis = $request->date_of_synopsis;
                     $formInstance->student->save();
                 }
                 if($formInstance->student->thesisExtentions->count()>0){
-                    // A resubmission after a send-back keeps the stored PDF unless a new one comes.
-                    $request->validate([
-                        'previous_extention_pdf' => ($formInstance->previous_extention_pdf ? 'nullable' : 'required').'|file|mimes:pdf|max:20480',
-                    ]);
                     if($request->hasFile('previous_extention_pdf')){
                         $link=$this->replaceUploadedFile($formInstance->previous_extention_pdf, $request->file('previous_extention_pdf'), 'thesis_extention', $user->student->roll_no);
                         $formInstance->previous_extention_pdf = $link;

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Forms\ThesisExtensionDefinition;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Traits\ModelCommonFormFields;
@@ -37,7 +38,7 @@ class ThesisExtentionForm extends Model
     public function fullForm($user)
     {
         $commonJSON = $this->fullCommonForm($user);
-        return array_merge($commonJSON, [
+        $data = array_merge($commonJSON, [
             'previous_extention_pdf' => $this->previous_extention_pdf,
             'period_of_extention' => $this->period_of_extention,
             'reason' => $this->reason,
@@ -51,6 +52,8 @@ class ThesisExtentionForm extends Model
             // No grant-date column exists on thesis_extentions; created_at is when it was granted.
             'date_of_extention' => optional($this->student->thesisExtentions->first())->created_at?->toDateString(),
         ]);
+        $data['view'] = (new ThesisExtensionDefinition)->view($data);
+        return $data;
     }
 
 }

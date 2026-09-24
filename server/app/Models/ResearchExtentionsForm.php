@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Forms\IrbExtensionDefinition;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Traits\ModelCommonFormFields;
@@ -33,7 +34,7 @@ class ResearchExtentionsForm extends Model
     public function fullForm($user)
     {
         $commonJSON = $this->fullCommonForm($user);
-        return array_merge($commonJSON, [
+        $data = array_merge($commonJSON, [
             'period_of_extension' => $this->period_of_extention,
             'research_pdf' => $this->research_pdf,
             'initial_status'=>$this->student->initialStatus(),
@@ -45,5 +46,7 @@ class ResearchExtentionsForm extends Model
                 ];
             }),
         ]);
+        $data['view'] = (new IrbExtensionDefinition)->view($data);
+        return $data;
     }
 }

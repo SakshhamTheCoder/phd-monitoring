@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Forms\IrbExtensionDefinition;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\GeneralFormCreate;
 use App\Http\Controllers\Traits\GeneralFormHandler;
@@ -172,11 +173,11 @@ class ResearchExtentionController extends Controller
         return $this->submitForm($user, $request, $form_id, $model, 'student', 'student', 'faculty',
         function ($formInstance) use ($request, $user) {
             // A resubmission after a send-back keeps the stored PDF unless a new one comes.
-            $request->validate([
-                'reason' => 'required|string',
-                'period_of_extention' => 'nullable|integer',
-                'research_pdf' => ($formInstance->research_pdf ? 'nullable' : 'required').'|file|mimes:pdf|max:20480',
-            ]);
+            $request->validate(array_merge(
+                (new IrbExtensionDefinition)->rules('student', $formInstance->fullForm($user)),
+                // Not asked on the form; the column defaults to six months.
+                ['period_of_extention' => 'nullable|integer']
+            ));
             $formInstance->reason = $request->reason;
             // The column defaults to six months; only an explicit period overrides it.
             if($request->filled('period_of_extention')){

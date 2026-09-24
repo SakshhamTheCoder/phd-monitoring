@@ -5,6 +5,7 @@ import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 // The views the server really sends, kept equal to it by FormViewContractTest.
 import cases from '../../../../../server/tests/fixtures/form-views/revise-title.json';
+import thesisExtension from '../../../../../server/tests/fixtures/form-views/thesis-extension.json';
 import ServerPanel from './ServerPanel';
 
 const submitForm = vi.fn();
@@ -16,7 +17,7 @@ afterEach(() => {
   submitForm.mockClear();
 });
 
-const formData = (name) => cases.find((c) => c.name === name).formData;
+const formData = (name, from = cases) => from.find((c) => c.name === name).formData;
 const draw = (data) =>
   render(
     <MemoryRouter>
@@ -56,4 +57,23 @@ describe('ServerPanel', () => {
       expect(screen.getByText('Revised objectives')).toBeTruthy();
     }
   );
+
+  it('sends an upload as a file and a date only once it is picked', () => {
+    const { container } = draw(formData('repeat request, no previous grant uploaded', thesisExtension));
+    const pdf = new File(['%PDF'], 'grant.pdf', { type: 'application/pdf' });
+    fireEvent.change(container.querySelector('input[type=file]'), { target: { files: [pdf] } });
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    const [body, , , files] = submitForm.mock.calls[0];
+    // The synopsis date is on record, so it is shown and never posted.
+    expect(body).toEqual({ reason: null });
+    expect(files).toEqual([{ key: 'previous_extention_pdf', file: pdf }]);
+  });
+
+  it('posts a date the scholar picks', () => {
+    const { container } = draw(formData('first request, no synopsis date on record', thesisExtension));
+    fireEvent.change(container.querySelector('input[type=date]'), { target: { value: '2025-11-20' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+    expect(submitForm.mock.calls[0][0]).toEqual({ reason: null, date_of_synopsis: '2025-11-20' });
+    expect(submitForm.mock.calls[0][3]).toBeNull();
+  });
 });

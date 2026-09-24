@@ -1,0 +1,1322 @@
+[
+    {
+        "name": "first request, no synopsis date on record",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "student",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "initial_status": "Full time",
+            "date_of_irb": "2024-02-10",
+            "date_of_synopsis": null,
+            "reason": null,
+            "previous_extention_pdf": null,
+            "previous_extensions": [],
+            "view": {
+                "version": 1,
+                "title": "Extension for submission of thesis",
+                "panels": {
+                    "student": [
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Roll number",
+                                    "value": "102203456",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Name",
+                                    "value": "Asha Verma",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Department",
+                                    "value": "Chemical Engineering",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Title of PhD thesis",
+                                    "value": "Catalysts for low-temperature ammonia synthesis",
+                                    "locked": true
+                                }
+                            ],
+                            "space": 3
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Supervisor 1",
+                                    "value": "Rakesh Gupta",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Supervisor 2",
+                                    "value": "Anika Jain",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Status of student at time of admission",
+                                    "value": "Full time",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Date of IRB Meeting",
+                                    "format": "date",
+                                    "value": "2024-02-10",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "date",
+                                    "label": "Date of synopsis presentation",
+                                    "key": "date_of_synopsis",
+                                    "required": true,
+                                    "send": "changed",
+                                    "value": null,
+                                    "locked": false
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Extension availed earlier",
+                                    "value": "No",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Period of extension requested",
+                                    "hint": "Fixed by regulation",
+                                    "value": "12 months",
+                                    "locked": true
+                                }
+                            ],
+                            "space": 2
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Reason for extension",
+                                    "key": "reason",
+                                    "required": true,
+                                    "hint": "Why the thesis could not be submitted within the deadline",
+                                    "value": null,
+                                    "locked": false
+                                }
+                            ],
+                            "space": 3
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "submit",
+                                    "label": "Submit"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "name": "first request, synopsis date on record",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "student",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "initial_status": "Full time",
+            "date_of_irb": "2024-02-10",
+            "date_of_synopsis": "2025-11-20",
+            "reason": null,
+            "previous_extention_pdf": null,
+            "previous_extensions": [],
+            "view": {
+                "version": 1,
+                "title": "Extension for submission of thesis",
+                "panels": {
+                    "student": [
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Roll number",
+                                    "value": "102203456",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Name",
+                                    "value": "Asha Verma",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Department",
+                                    "value": "Chemical Engineering",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Title of PhD thesis",
+                                    "value": "Catalysts for low-temperature ammonia synthesis",
+                                    "locked": true
+                                }
+                            ],
+                            "space": 3
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Supervisor 1",
+                                    "value": "Rakesh Gupta",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Supervisor 2",
+                                    "value": "Anika Jain",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Status of student at time of admission",
+                                    "value": "Full time",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Date of IRB Meeting",
+                                    "format": "date",
+                                    "value": "2024-02-10",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "date",
+                                    "label": "Date of synopsis presentation",
+                                    "key": "date_of_synopsis",
+                                    "send": "changed",
+                                    "value": "2025-11-20",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Extension availed earlier",
+                                    "value": "No",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Period of extension requested",
+                                    "hint": "Fixed by regulation",
+                                    "value": "12 months",
+                                    "locked": true
+                                }
+                            ],
+                            "space": 2
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Reason for extension",
+                                    "key": "reason",
+                                    "required": true,
+                                    "hint": "Why the thesis could not be submitted within the deadline",
+                                    "value": null,
+                                    "locked": false
+                                }
+                            ],
+                            "space": 3
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "submit",
+                                    "label": "Submit"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "name": "repeat request, no previous grant uploaded",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "student",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "initial_status": "Full time",
+            "date_of_irb": "2024-02-10",
+            "date_of_synopsis": "2025-11-20",
+            "reason": null,
+            "previous_extention_pdf": null,
+            "previous_extensions": [
+                {
+                    "id": 3,
+                    "student_id": "102203456",
+                    "period_of_extention": 12,
+                    "reason": "Data collection",
+                    "created_at": "2025-12-01T09:30:00.000000Z"
+                }
+            ],
+            "view": {
+                "version": 1,
+                "title": "Extension for submission of thesis",
+                "panels": {
+                    "student": [
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Roll number",
+                                    "value": "102203456",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Name",
+                                    "value": "Asha Verma",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Department",
+                                    "value": "Chemical Engineering",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Title of PhD thesis",
+                                    "value": "Catalysts for low-temperature ammonia synthesis",
+                                    "locked": true
+                                }
+                            ],
+                            "space": 3
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Supervisor 1",
+                                    "value": "Rakesh Gupta",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Supervisor 2",
+                                    "value": "Anika Jain",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Status of student at time of admission",
+                                    "value": "Full time",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Date of IRB Meeting",
+                                    "format": "date",
+                                    "value": "2024-02-10",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "date",
+                                    "label": "Date of synopsis presentation",
+                                    "key": "date_of_synopsis",
+                                    "send": "changed",
+                                    "value": "2025-11-20",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Extension availed earlier",
+                                    "value": "Yes",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Period of extension requested",
+                                    "hint": "Fixed by regulation",
+                                    "value": "12 months",
+                                    "locked": true
+                                }
+                            ],
+                            "space": 2
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Date of previous extension",
+                                    "format": "date",
+                                    "value": "2025-12-01T09:30:00.000000Z",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Period of previous extension",
+                                    "value": "12 months",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Reason for extension",
+                                    "key": "reason",
+                                    "required": true,
+                                    "hint": "Why the thesis could not be submitted within the deadline",
+                                    "value": null,
+                                    "locked": false
+                                }
+                            ],
+                            "space": 3
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "file",
+                                    "label": "Previous extension approval",
+                                    "key": "previous_extention_pdf",
+                                    "required": true,
+                                    "max_mb": 20,
+                                    "value": null,
+                                    "locked": false
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "submit",
+                                    "label": "Submit"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "name": "repeat request submitted, scholar reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "supervisor",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "student",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "initial_status": "Full time",
+            "date_of_irb": "2024-02-10",
+            "date_of_synopsis": "2025-11-20",
+            "reason": "Pilot runs delayed",
+            "previous_extention_pdf": "thesis_extention/102203456/grant.pdf",
+            "previous_extensions": [
+                {
+                    "id": 3,
+                    "period_of_extention": null,
+                    "created_at": "2025-12-01T09:30:00.000000Z"
+                }
+            ],
+            "view": {
+                "version": 1,
+                "title": "Extension for submission of thesis",
+                "panels": {
+                    "student": [
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Roll number",
+                                    "value": "102203456",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Name",
+                                    "value": "Asha Verma",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Department",
+                                    "value": "Chemical Engineering",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Title of PhD thesis",
+                                    "value": "Catalysts for low-temperature ammonia synthesis",
+                                    "locked": true
+                                }
+                            ],
+                            "space": 3
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Supervisor 1",
+                                    "value": "Rakesh Gupta",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Supervisor 2",
+                                    "value": "Anika Jain",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Status of student at time of admission",
+                                    "value": "Full time",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Date of IRB Meeting",
+                                    "format": "date",
+                                    "value": "2024-02-10",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "date",
+                                    "label": "Date of synopsis presentation",
+                                    "key": "date_of_synopsis",
+                                    "send": "changed",
+                                    "value": "2025-11-20",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Extension availed earlier",
+                                    "value": "Yes",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Period of extension requested",
+                                    "hint": "Fixed by regulation",
+                                    "value": "12 months",
+                                    "locked": true
+                                }
+                            ],
+                            "space": 2
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Date of previous extension",
+                                    "format": "date",
+                                    "value": "2025-12-01T09:30:00.000000Z",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Period of previous extension",
+                                    "value": "N/A",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Reason for extension",
+                                    "key": "reason",
+                                    "required": true,
+                                    "hint": "Why the thesis could not be submitted within the deadline",
+                                    "value": "Pilot runs delayed",
+                                    "locked": true
+                                }
+                            ],
+                            "space": 3
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "file",
+                                    "label": "Previous extension approval",
+                                    "key": "previous_extention_pdf",
+                                    "max_mb": 20,
+                                    "value": "thesis_extention/102203456/grant.pdf",
+                                    "locked": true
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "name": "unsubmitted repeat, admin reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "admin",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "initial_status": "Full time",
+            "date_of_irb": "2024-02-10",
+            "date_of_synopsis": null,
+            "reason": null,
+            "previous_extention_pdf": null,
+            "previous_extensions": [
+                {
+                    "id": 3,
+                    "period_of_extention": 12,
+                    "created_at": "2025-12-01T09:30:00.000000Z"
+                }
+            ],
+            "view": {
+                "version": 1,
+                "title": "Extension for submission of thesis",
+                "panels": {
+                    "student": [
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Roll number",
+                                    "value": "102203456",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Name",
+                                    "value": "Asha Verma",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Department",
+                                    "value": "Chemical Engineering",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Title of PhD thesis",
+                                    "value": "Catalysts for low-temperature ammonia synthesis",
+                                    "locked": true
+                                }
+                            ],
+                            "space": 3
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Supervisor 1",
+                                    "value": "Rakesh Gupta",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Supervisor 2",
+                                    "value": "Anika Jain",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Status of student at time of admission",
+                                    "value": "Full time",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Date of IRB Meeting",
+                                    "format": "date",
+                                    "value": "2024-02-10",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "date",
+                                    "label": "Date of synopsis presentation",
+                                    "key": "date_of_synopsis",
+                                    "required": true,
+                                    "send": "changed",
+                                    "value": null,
+                                    "locked": false
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Extension availed earlier",
+                                    "value": "Yes",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Period of extension requested",
+                                    "hint": "Fixed by regulation",
+                                    "value": "12 months",
+                                    "locked": true
+                                }
+                            ],
+                            "space": 2
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Date of previous extension",
+                                    "format": "date",
+                                    "value": "2025-12-01T09:30:00.000000Z",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Period of previous extension",
+                                    "value": "12 months",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Reason for extension",
+                                    "key": "reason",
+                                    "required": true,
+                                    "hint": "Why the thesis could not be submitted within the deadline",
+                                    "value": null,
+                                    "locked": false
+                                }
+                            ],
+                            "space": 3
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "file",
+                                    "label": "Previous extension approval",
+                                    "key": "previous_extention_pdf",
+                                    "required": true,
+                                    "max_mb": 20,
+                                    "value": null,
+                                    "locked": false
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "name": "submitted, supervisor reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "supervisor",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "faculty",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "initial_status": "Full time",
+            "date_of_irb": "2024-02-10",
+            "date_of_synopsis": "2025-11-20",
+            "reason": "Pilot runs delayed",
+            "previous_extention_pdf": null,
+            "previous_extensions": [],
+            "view": {
+                "version": 1,
+                "title": "Extension for submission of thesis",
+                "panels": {
+                    "student": [
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Roll number",
+                                    "value": "102203456",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Name",
+                                    "value": "Asha Verma",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Department",
+                                    "value": "Chemical Engineering",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Title of PhD thesis",
+                                    "value": "Catalysts for low-temperature ammonia synthesis",
+                                    "locked": true
+                                }
+                            ],
+                            "space": 3
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Supervisor 1",
+                                    "value": "Rakesh Gupta",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Supervisor 2",
+                                    "value": "Anika Jain",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Status of student at time of admission",
+                                    "value": "Full time",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Date of IRB Meeting",
+                                    "format": "date",
+                                    "value": "2024-02-10",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "date",
+                                    "label": "Date of synopsis presentation",
+                                    "key": "date_of_synopsis",
+                                    "send": "changed",
+                                    "value": "2025-11-20",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Extension availed earlier",
+                                    "value": "No",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Period of extension requested",
+                                    "hint": "Fixed by regulation",
+                                    "value": "12 months",
+                                    "locked": true
+                                }
+                            ],
+                            "space": 2
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Reason for extension",
+                                    "key": "reason",
+                                    "required": true,
+                                    "hint": "Why the thesis could not be submitted within the deadline",
+                                    "value": "Pilot runs delayed",
+                                    "locked": true
+                                }
+                            ],
+                            "space": 3
+                        }
+                    ]
+                }
+            }
+        }
+    },
+    {
+        "name": "no supervisors on record",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": null,
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "student",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "initial_status": "Full time",
+            "date_of_irb": "2024-02-10",
+            "date_of_synopsis": null,
+            "reason": null,
+            "previous_extention_pdf": null,
+            "previous_extensions": [],
+            "view": {
+                "version": 1,
+                "title": "Extension for submission of thesis",
+                "panels": {
+                    "student": [
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Roll number",
+                                    "value": "102203456",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Name",
+                                    "value": "Asha Verma",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Department",
+                                    "value": "Chemical Engineering",
+                                    "locked": true
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Title of PhD thesis",
+                                    "value": "Catalysts for low-temperature ammonia synthesis",
+                                    "locked": true
+                                }
+                            ],
+                            "space": 3
+                        },
+                        {
+                            "kind": "grid",
+                            "items": []
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Status of student at time of admission",
+                                    "value": "Full time",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Date of IRB Meeting",
+                                    "format": "date",
+                                    "value": "2024-02-10",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "date",
+                                    "label": "Date of synopsis presentation",
+                                    "key": "date_of_synopsis",
+                                    "required": true,
+                                    "send": "changed",
+                                    "value": null,
+                                    "locked": false
+                                }
+                            ]
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Extension availed earlier",
+                                    "value": "No",
+                                    "locked": true
+                                },
+                                {
+                                    "type": "text",
+                                    "label": "Period of extension requested",
+                                    "hint": "Fixed by regulation",
+                                    "value": "12 months",
+                                    "locked": true
+                                }
+                            ],
+                            "space": 2
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "text",
+                                    "label": "Reason for extension",
+                                    "key": "reason",
+                                    "required": true,
+                                    "hint": "Why the thesis could not be submitted within the deadline",
+                                    "value": null,
+                                    "locked": false
+                                }
+                            ],
+                            "space": 3
+                        },
+                        {
+                            "kind": "grid",
+                            "items": [
+                                {
+                                    "type": "submit",
+                                    "label": "Submit"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        }
+    }
+]

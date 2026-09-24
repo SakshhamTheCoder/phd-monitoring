@@ -70,6 +70,16 @@ abstract class FormDefinition
         return json_decode(json_encode($value), true);
     }
 
+    /** "Supervisor 1", "Supervisor 2", ... read-only, one per supervisor. */
+    protected static function supervisorFields(array $supervisors): array
+    {
+        return array_map(
+            fn ($supervisor, $index) => Field::text('Supervisor ' . ($index + 1))->value($supervisor['name'] ?? null),
+            array_values($supervisors),
+            array_keys(array_values($supervisors))
+        );
+    }
+
     /** A row of fields side by side; see GridContainer on the web for space and each. */
     protected static function row(array $items, ?int $space = null, ?int $each = null, ?string $label = null): array
     {

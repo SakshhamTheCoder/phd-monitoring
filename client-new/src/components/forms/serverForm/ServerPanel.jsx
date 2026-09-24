@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
 import GridContainer from "../fields/GridContainer";
 import InputField from "../fields/InputField";
+import DateField from "../fields/DateField";
+import FileUploadField from "../fields/FileUploadField";
 import TableComponent from "../table/TableComponent";
 import CustomButton from "../fields/CustomButton";
 import { formatDate } from "../../../utils/timeParse";
@@ -18,11 +20,13 @@ const display = (field) => (field.format === "date" ? formatDate(field.value) : 
 // A locked list reads as a one-column table.
 const asRows = (entries) => (entries || []).map((entry) => ({ entry }));
 
+// What is posted if nothing is touched: every open field as prefilled, except
+// uploads (sent as files) and fields sent only once changed.
 const editedValues = (rows) =>
   Object.fromEntries(
     rows
       .flatMap((row) => (row.kind === "grid" ? row.items : [row]))
-      .filter((field) => field.key && field.locked === false)
+      .filter((field) => field.key && field.locked === false && field.type !== "file" && field.send !== "changed")
       .map((field) => [field.key, field.value])
   );
 
@@ -30,6 +34,7 @@ const ServerPanel = ({ formData, rows = [] }) => {
   const location = useLocation();
   const { setLoading } = useLoading();
   const [values, setValues] = useState(() => editedValues(rows));
+  const [files, setFiles] = useState({});
 
   const setValue = (key, value) => setValues((now) => ({ ...now, [key]: value }));
   const setEntry = (key, index, text) =>
@@ -41,6 +46,11 @@ const ServerPanel = ({ formData, rows = [] }) => {
       Object.entries(values).map(([key, value]) => [key, Array.isArray(value) ? value.filter((text) => text?.trim()) : value])
     );
 
+  const submit = () => {
+    const picked = Object.entries(files).map(([key, file]) => ({ key, file }));
+    return submitForm(submission(), location, setLoading, picked.length > 0 ? picked : null);
+  };
+
   const renderField = (field) => {
     switch (field.type) {
       case "text":
@@ -50,7 +60,29 @@ const ServerPanel = ({ formData, rows = [] }) => {
             label={field.label}
             initialValue={field.locked ? display(field) : values[field.key]}
             isLocked={field.locked}
+            hint={field.hint}
             onChange={field.locked ? undefined : (text) => setValue(field.key, text)}
+          />
+        );
+      case "date":
+        return (
+          <DateField
+            required={field.required}
+            label={field.label}
+            initialValue={field.value}
+            isLocked={field.locked}
+            onChange={(date) => setValue(field.key, date)}
+          />
+        );
+      case "file":
+        return (
+          <FileUploadField
+            required={field.required}
+            label={field.label}
+            maxSizeMB={field.max_mb}
+            isLocked={field.locked}
+            initialValue={field.value}
+            onChange={(file) => setFiles((now) => ({ ...now, [field.key]: file }))}
           />
         );
       case "table":
@@ -63,7 +95,7 @@ const ServerPanel = ({ formData, rows = [] }) => {
           />
         );
       case "submit":
-        return <CustomButton text={field.label} onClick={() => submitForm(submission(), location, setLoading)} />;
+        return <CustomButton text={field.label} onClick={submit} />;
       default:
         return null;
     }

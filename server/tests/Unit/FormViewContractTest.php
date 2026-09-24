@@ -3,7 +3,9 @@
 namespace Tests\Unit;
 
 use App\Forms\FormDefinition;
+use App\Forms\IrbExtensionDefinition;
 use App\Forms\ReviseTitleDefinition;
+use App\Forms\ThesisExtensionDefinition;
 use Tests\TestCase;
 
 /**
@@ -19,6 +21,8 @@ class FormViewContractTest extends TestCase
 {
     private const DEFINITIONS = [
         'revise-title' => ReviseTitleDefinition::class,
+        'irb-extension' => IrbExtensionDefinition::class,
+        'thesis-extension' => ThesisExtensionDefinition::class,
     ];
 
     public static function forms(): array
@@ -74,6 +78,33 @@ class FormViewContractTest extends TestCase
         foreach (['faculty', 'doctoral', 'phd_coordinator', 'hod', 'dordc'] as $step) {
             $this->assertSame([], (new ReviseTitleDefinition)->rules($step), $step);
         }
+    }
+
+    public function test_irb_extension_asks_for_what_it_asked_before(): void
+    {
+        $definition = new IrbExtensionDefinition;
+        $this->assertSame([
+            'reason' => 'required|string',
+            'research_pdf' => 'required|file|mimes:pdf|max:20480',
+        ], $definition->rules('student', ['research_pdf' => null]));
+        // A resubmission keeps the stored proposal unless a new one comes.
+        $this->assertSame('nullable|file|mimes:pdf|max:20480', $definition->rules('student', ['research_pdf' => 'a.pdf'])['research_pdf']);
+    }
+
+    public function test_thesis_extension_asks_for_what_it_asked_before(): void
+    {
+        $definition = new ThesisExtensionDefinition;
+        $first = ['date_of_synopsis' => null, 'previous_extensions' => []];
+        $this->assertSame(['date_of_synopsis' => 'required|date', 'reason' => 'string'], $definition->rules('student', $first));
+        // The synopsis date is asked only while none is on record.
+        $this->assertSame(['reason' => 'string'], $definition->rules('student', ['date_of_synopsis' => '2025-11-20'] + $first));
+
+        $repeat = ['date_of_synopsis' => '2025-11-20', 'previous_extensions' => [['created_at' => '2025-12-01T00:00:00.000000Z']]];
+        $this->assertSame([
+            'reason' => 'string',
+            'previous_extention_pdf' => 'required|file|mimes:pdf|max:20480',
+        ], $definition->rules('student', $repeat + ['previous_extention_pdf' => null]));
+        $this->assertSame('nullable|file|mimes:pdf|max:20480', $definition->rules('student', $repeat + ['previous_extention_pdf' => 'b.pdf'])['previous_extention_pdf']);
     }
 
     public function test_a_locked_or_foreign_reader_gets_no_inputs_and_no_submit(): void

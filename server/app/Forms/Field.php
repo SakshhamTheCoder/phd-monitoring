@@ -100,9 +100,12 @@ final class Field
         return $this;
     }
 
-    public function required(): self
+    /** Marked with an asterisk. The rule that enforces it is set in rules(). */
+    public function required(bool $required = true): self
     {
-        $this->props['required'] = true;
+        if ($required) {
+            $this->props['required'] = true;
+        }
         return $this;
     }
 
