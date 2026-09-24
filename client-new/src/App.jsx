@@ -51,7 +51,6 @@ const CreateProject = lazy(() => import('./pages/projects/CreateProject'));
 const ProjectDetails = lazy(() => import('./pages/projects/ProjectDetails'));
 const ProjectRecruitment = lazy(() => import('./pages/projects/ProjectRecruitment'));
 const Openings = lazy(() => import('./pages/projects/Openings'));
-const UrfList = lazy(() => import('./pages/urf/UrfList'));
 const UrfDetails = lazy(() => import('./pages/urf/UrfDetails'));
 const UrfFormRecord = lazy(() => import('./pages/urf/UrfFormRecord'));
 const UrfFormsPage = lazy(() => import('./pages/urf/UrfStudentForms').then(m => ({ default: m.UrfFormsPage })));
@@ -237,7 +236,7 @@ const AppContent = () => {
                   have to be reachable. */}
               {may('urf') && (
                 <>
-                  <Route path="/urf" element={<UrfList />} />
+                  <Route path="/urf" element={<ServerListPage page="urf" />} />
                   {/* Each form's own submissions. These sit beside /urf rather
                       than with the admin routes: the office roles that manage URF
                       are not all the admin role, and a form card opening for them

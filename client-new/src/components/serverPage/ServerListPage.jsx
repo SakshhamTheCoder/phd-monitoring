@@ -21,16 +21,26 @@ import LocalTable from './LocalTable';
 import SemesterStatsBlock from './blocks/SemesterStatsBlock';
 import ProgressChartBlock from './blocks/ProgressChartBlock';
 import FormCardsBlock from './blocks/FormCardsBlock';
-// The session picker's styles; they move here with the URF projects page.
-import '../../pages/urf/UrfList.css';
+import FormGridBlock from './blocks/FormGridBlock';
+import UrfReportScheduleBlock from './blocks/UrfReportScheduleBlock';
+import UrfQueueBlock from './blocks/UrfQueueBlock';
+import UrfProjectsBlock from './blocks/UrfProjectsBlock';
+// The session picker and the URF projects' stage bar.
+import './Urf.css';
 
 const IMPORTS = { file: FileImportModal, rows: RowsImportModal };
 
 // Parts of a page above its list, which the server places by name.
-const ABOVE = { 'semester-stats': SemesterStatsBlock, 'progress-chart': ProgressChartBlock };
+const ABOVE = {
+  'semester-stats': SemesterStatsBlock,
+  'progress-chart': ProgressChartBlock,
+  'form-grid': FormGridBlock,
+  'urf-report-schedule': UrfReportScheduleBlock,
+  'urf-queue': UrfQueueBlock,
+};
 
 // A page's content drawn in place of its table (a scholar's own forms as cards).
-const CONTENT = { 'form-cards': FormCardsBlock };
+const CONTENT = { 'form-cards': FormCardsBlock, 'urf-projects': UrfProjectsBlock };
 
 // {name} in a view's paths and text filled from the page itself: its path,
 // the route's parameters and the scholar it is about. A name the page does
@@ -203,9 +213,10 @@ const ServerListPageFor = ({ page }) => {
     }
     const { request } = action;
     const body = Object.fromEntries(Object.entries(request.body || {}).map(([key, value]) => [key, fillFromPage(value, context)]));
-    if (await sendRequest({ ...request, path: fillFromPage(request.path, context) }, null, body, setLoading) && request.reload_page) {
-      window.location.reload();
-    }
+    if (!await sendRequest({ ...request, path: fillFromPage(request.path, context) }, null, body, setLoading)) return;
+    if (request.reload_page) window.location.reload();
+    // What the page says changed with it (applications opened or closed).
+    if (request.reload_view) reload();
   };
   const buttons = (list) => list.map((action) => (
     <CustomButton
@@ -217,13 +228,36 @@ const ServerListPageFor = ({ page }) => {
     />
   ));
   const Content = view.content ? CONTENT[view.content.block] : null;
+  // Drawn at the end of the page unless the view places them among the parts above the list.
+  const importModals = Object.entries(view.imports).map(([name, spec]) => {
+    const ImportModal = IMPORTS[spec.kind];
+    return (
+      <ImportModal
+        key={name}
+        spec={spec}
+        isOpen={importing === name}
+        onClose={() => setImporting(null)}
+        onImported={() => {
+          // An import can open a new session, so the page lands on the newest.
+          if (spec.resets_scope) setScopeValue(null);
+          refresh();
+        }}
+      />
+    );
+  });
+  // The scope as a part of the page draws it, where the view places it there.
+  const scope = view.scope && {
+    value: scopeValue ?? view.scope.value,
+    options: view.scope.options,
+    set: setScopeValue,
+  };
 
   return (
     <Page
       title={view.title}
       description={fillFromPage(view.description, context)}
       tabs={view.tabs_place === 'body' ? undefined : tabs}
-      actions={view.scope ? (
+      actions={view.scope && view.scope.place !== 'content' ? (
         view.scope.options.length > 0 && (
           <div className={view.scope.class_name}>
             <DropdownField
@@ -236,6 +270,7 @@ const ServerListPageFor = ({ page }) => {
       ) : actions.length === 1 ? buttons(actions)[0] : actions.length > 0 ? <>{buttons(actions)}</> : null}
     >
       {(view.above || []).map((part) => {
+        if (part.imports) return <React.Fragment key="imports">{importModals}</React.Fragment>;
         const Above = ABOVE[part.block];
         const props = Object.fromEntries(Object.entries(part.props || {}).map(([key, value]) => [key, fillFromPage(value, context)]));
         return (
@@ -243,6 +278,7 @@ const ServerListPageFor = ({ page }) => {
             key={part.with_rows ? `${part.block}-${refreshKey}` : part.block}
             props={props}
             search={part.controls_search ? search : undefined}
+            scope={part.uses_scope ? scope : undefined}
           />
         );
       })}
@@ -250,7 +286,7 @@ const ServerListPageFor = ({ page }) => {
       {view.tabs_place === 'body' && tabs}
 
       {Content ? (
-        <Content />
+        <Content props={view.content.props} scope={scope} refreshKey={refreshKey} onChanged={refresh} />
       ) : table.kind === 'local' ? (
         <LocalTable table={table} refreshKey={refreshKey} onRowAction={runRowAction} />
       ) : (
@@ -293,18 +329,7 @@ const ServerListPageFor = ({ page }) => {
         />
       )}
 
-      {Object.entries(view.imports).map(([name, spec]) => {
-        const ImportModal = IMPORTS[spec.kind];
-        return (
-          <ImportModal
-            key={name}
-            spec={spec}
-            isOpen={importing === name}
-            onClose={() => setImporting(null)}
-            onImported={refresh}
-          />
-        );
-      })}
+      {!(view.above || []).some((part) => part.imports) && importModals}
     </Page>
   );
 };

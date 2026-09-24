@@ -17,6 +17,7 @@ final class Pages
         'presentations' => PresentationsPage::class,
         'student-progress' => StudentProgressPage::class,
         'students' => StudentsPage::class,
+        'urf' => UrfPage::class,
         'users' => UsersPage::class,
     ];
 
