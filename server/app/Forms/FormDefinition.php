@@ -11,7 +11,11 @@ namespace App\Forms;
  * keep the plain recommendation every chain step already gets.
  *
  * Shape sent to clients (bump VERSION on any change a client must understand):
- *   { version, title, notices: [ notice, ... ], panels: { <step>: panel }, summary? }
+ *   { version, title, notices: [ notice, ... ], lead?, panels: { <step>: panel },
+ *     step_options?: { <step>: { allow_rejection } }, summary? }
+ *   lead = { title, wrapped, rows }: a section above the chain, for a form
+ *     whose chain does not start with the scholar
+ *   step_options: how a step's plain recommendation is drawn
  *   summary = { note, dates, rows }: drawn instead of the chain, for a record
  *     no step of which was answered here; {name} in the note is dates[name],
  *     formatted as a date
@@ -51,6 +55,18 @@ abstract class FormDefinition
         return [];
     }
 
+    /** A section drawn above the chain, as ['title' => ..., 'rows' => [...]], or null. */
+    protected function lead(array $data): ?array
+    {
+        return null;
+    }
+
+    /** Per step, how its plain recommendation is drawn, e.g. ['director' => ['allow_rejection' => true]]. */
+    protected function stepOptions(): array
+    {
+        return [];
+    }
+
     /** Drawn instead of the chain, or null to draw the chain. */
     protected function summary(array $data): ?array
     {
@@ -83,6 +99,17 @@ abstract class FormDefinition
             'notices' => $this->notices($data),
             'panels' => $panels,
         ];
+        $lead = $this->lead($data);
+        if ($lead !== null) {
+            $view['lead'] = [
+                'title' => $lead['title'],
+                'wrapped' => $lead['wrapped'] ?? true,
+                'rows' => $this->resolveRows($lead['rows'], $data),
+            ];
+        }
+        if ($this->stepOptions()) {
+            $view['step_options'] = $this->stepOptions();
+        }
         $summary = $this->summary($data);
         if ($summary !== null) {
             $summary['rows'] = $this->resolveRows($summary['rows'], $data);

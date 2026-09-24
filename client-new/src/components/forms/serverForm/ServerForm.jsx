@@ -10,6 +10,7 @@ import useDoneFlash from "../../../hooks/useDoneFlash";
 import { formatDate } from "../../../utils/timeParse";
 import ServerPanel from "./ServerPanel";
 import CUSTOM_PANELS from "./customPanels";
+import { PanelSection } from "../../panel/Panel";
 
 // A notice above the form, with the action the server offers this reader.
 const Notice = ({ notice }) => {
@@ -68,7 +69,13 @@ const ServerForm = ({ formData }) => {
   const steps = Object.keys(view.panels);
   const panelOf = (panel) => (panel.custom ? CUSTOM_PANELS[panel.custom] : ServerPanel);
   const panels = Object.fromEntries(steps.map((step) => [step, panelOf(view.panels[step])]));
-  const stepProps = Object.fromEntries(steps.map((step) => [step, view.panels[step].custom ? {} : view.panels[step]]));
+  const stepProps = {
+    // How a step's plain recommendation is drawn (the Director may reject).
+    ...Object.fromEntries(
+      Object.entries(view.step_options || {}).map(([step, options]) => [step, { allowRejection: options.allow_rejection }])
+    ),
+    ...Object.fromEntries(steps.map((step) => [step, view.panels[step].custom ? {} : view.panels[step]])),
+  };
 
   return (
     <>
@@ -77,6 +84,12 @@ const ServerForm = ({ formData }) => {
         <Notice key={index} notice={notice} />
       ))}
       <div className="form-container">
+        {/* A chain that starts after the scholar is headed by their details. */}
+        {view.lead && (
+          <PanelSection title={view.lead.title} className="form-step">
+            <ServerPanel formData={formData} rows={view.lead.rows} wrapped={view.lead.wrapped} />
+          </PanelSection>
+        )}
         <FormLadder formData={formData} panels={panels} stepProps={stepProps} />
       </div>
     </>

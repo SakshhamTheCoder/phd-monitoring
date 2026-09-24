@@ -6,6 +6,7 @@ use App\Forms\FormDefinition;
 use App\Forms\IrbConstitutionDefinition;
 use App\Forms\IrbExtensionDefinition;
 use App\Forms\IrbSubmissionDefinition;
+use App\Forms\ListOfExaminersDefinition;
 use App\Forms\ReviseTitleDefinition;
 use App\Forms\SemesterOffDefinition;
 use App\Forms\StatusChangeDefinition;
@@ -35,6 +36,7 @@ class FormViewContractTest extends TestCase
         'irb-submission' => IrbSubmissionDefinition::class,
         'supervisor-allocation' => SupervisorAllocationDefinition::class,
         'irb-constitution' => IrbConstitutionDefinition::class,
+        'list-of-examiners' => ListOfExaminersDefinition::class,
     ];
 
     public static function forms(): array
@@ -74,6 +76,11 @@ class FormViewContractTest extends TestCase
         // which asks them whether they recommend their own application.
         $view = (new $class)->view(['role' => 'student', 'locks' => []]);
         $this->assertSame(FormDefinition::VERSION, $view['version']);
+        // A chain that starts later heads the form with the scholar instead.
+        if (isset($view['lead'])) {
+            $this->assertNotEmpty($view['lead']['rows']);
+            return;
+        }
         $this->assertArrayHasKey('student', $view['panels']);
         $panel = $view['panels']['student'];
         $this->assertTrue(!empty($panel['custom']) || !empty($panel['rows']));
@@ -245,7 +252,16 @@ class FormViewContractTest extends TestCase
         $this->assertArrayNotHasKey('summary', (new IrbConstitutionDefinition)->view(['role' => 'admin', 'locks' => []]));
     }
 
-    public function test_a_locked_or_foreign_reader_gets_no_inputs_and_no_submit(): void
+    public function test_list_of_examiners_heads_with_the_scholar_and_lets_the_director_reject(): void
+    {
+        $view = (new ListOfExaminersDefinition)->view(['role' => 'director', 'locks' => []]);
+        $this->assertSame('Student', $view['lead']['title']);
+        $this->assertSame(['director' => ['allow_rejection' => true]], $view['step_options']);
+        $this->assertSame(['custom' => 'examiner-nominations'], $view['panels']['faculty']);
+        $this->assertSame(['custom' => 'examiner-decisions'], $view['panels']['dordc']);
+    }
+
+        public function test_a_locked_or_foreign_reader_gets_no_inputs_and_no_submit(): void
     {
         $base = ['phd_title' => 'Old', 'objectives' => ['One'], 'revised_title' => 'New', 'revised_objectives' => ['Two']];
         $readers = [

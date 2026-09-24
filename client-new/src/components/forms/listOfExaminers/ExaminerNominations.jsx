@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
-import CustomButton from '../../fields/CustomButton';
-import GridContainer from '../../fields/GridContainer';
-import { baseURL } from '../../../../api/urls';
-import InputSuggestions from '../../fields/InputSuggestions';
-import TableComponent from '../../table/TableComponent';
-import CustomModal from '../../modal/CustomModal';
-import AddExaminer from '../../AddExaminer/AddExaminer';
-import { customFetch } from '../../../../api/base';
-import { useLoading } from '../../../../context/LoadingContext';
+import CustomButton from '../fields/CustomButton';
+import GridContainer from '../fields/GridContainer';
+import { baseURL } from '../../../api/urls';
+import InputSuggestions from '../fields/InputSuggestions';
+import TableComponent from '../table/TableComponent';
+import CustomModal from '../modal/CustomModal';
+import AddExaminer from '../AddExaminer/AddExaminer';
+import { customFetch } from '../../../api/base';
+import { useLoading } from '../../../context/LoadingContext';
 import { useLocation } from 'react-router-dom';
-import RadioButtonGroup from '../../fields/RadioButtonGroup';
+import RadioButtonGroup from '../fields/RadioButtonGroup';
 import { toast } from 'react-toastify';
-import { insertAt, toastUndo } from '../../../../utils/undoToast';
+import { insertAt, toastUndo } from '../../../utils/undoToast';
 
 // `examiners` is the list Supervisor submits. A second copy kept here drifted
 // from it: this one dropped a row by identity, that one by email, so two blank
@@ -163,7 +163,10 @@ const ExaminerManager = ({
   );
 };
 
-const Supervisor = ({ formData }) => {
+// The supervisor's panel of the list of examiners: search the directory or
+// add a new examiner through a dialog, remove one at once. Too interactive to
+// describe as fields, so ListOfExaminersDefinition names it.
+const ExaminerNominations = ({ formData }) => {
   const [national, setNational] = useState(formData.national || []);
   const [international, setInternational] = useState(
     formData.international || []
@@ -237,4 +240,4 @@ const Supervisor = ({ formData }) => {
   );
 };
 
-export default Supervisor;
+export default ExaminerNominations;

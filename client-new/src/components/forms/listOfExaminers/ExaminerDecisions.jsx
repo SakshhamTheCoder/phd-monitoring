@@ -1,15 +1,17 @@
 import React, { useEffect, useState, useCallback } from "react";
-import Recommendation from "../../layouts/Recommendation";
-import GridContainer from "../../fields/GridContainer";
-import TableComponent from "../../table/TableComponent";
-import RadioButtonGroup from "../../fields/RadioButtonGroup";
-import { useLoading } from "../../../../context/LoadingContext";
-import CustomButton from "../../fields/CustomButton";
-import StatusNotice from "../../../common/StatusNotice";
-import { submitForm } from "../../../../api/form";
+import Recommendation from "../layouts/Recommendation";
+import GridContainer from "../fields/GridContainer";
+import TableComponent from "../table/TableComponent";
+import RadioButtonGroup from "../fields/RadioButtonGroup";
+import { useLoading } from "../../../context/LoadingContext";
+import CustomButton from "../fields/CustomButton";
+import StatusNotice from "../../common/StatusNotice";
+import { submitForm } from "../../../api/form";
 import { useLocation } from "react-router-dom";
 
-const Dordc = ({ formData }) => {
+// The DoRDC's panel of the list of examiners: accept or reject each examiner.
+// Named by ListOfExaminersDefinition rather than described as fields.
+const ExaminerDecisions = ({ formData }) => {
   const [selected, setSelected] = useState([]);
   const [rejected, setRejected] = useState([]);
   const [body, setBody] = useState({});
@@ -209,4 +211,4 @@ const Dordc = ({ formData }) => {
   );
 };
 
-export default Dordc;
+export default ExaminerDecisions;

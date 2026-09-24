@@ -6,7 +6,6 @@ import { baseURL } from "../../api/urls";
 import PresentationForm from "../../components/forms/presentations/PresentationForm";
 import SynopsisSubmission from "../../components/forms/synopsisSubmission/SynopsisSubmission";
 import ThesisSubmission from "../../components/forms/thesisSubmission/ThesisSubmission";
-import ListOfExaminers from "../../components/forms/listOfExaminers/ListOfExaminers";
 import ServerForm from "../../components/forms/serverForm/ServerForm";
 import useScholarInPath from "../../hooks/useScholarInPath";
 import Loader from "../../components/loader/loader";
@@ -79,8 +78,6 @@ const MainFormPage = () => {
                 return <SynopsisSubmission formData={formData} />;
               case "thesis-submission":
                 return <ThesisSubmission formData={formData} />;
-              case "list-of-examiners":
-                return <ListOfExaminers formData={formData}/>
               // The API serves /forms/student-leave/:id, and StudentLeave
               // defaults submitPath to the current location, which is that
               // endpoint. Without this the canonical URL fell through to the
