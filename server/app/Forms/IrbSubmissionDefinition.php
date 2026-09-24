@@ -75,7 +75,7 @@ final class IrbSubmissionDefinition extends FormDefinition
                     Field::text('Revised title of PhD thesis')
                         ->key('revised_phd_title')
                         ->required()
-                        ->editableBy('student', anyReader: true)
+                        ->editableBy('student')
                         ->rules('required|string')
                         ->value($data['revised_phd_title'] ?? null),
                 ], space: 2),
@@ -83,7 +83,7 @@ final class IrbSubmissionDefinition extends FormDefinition
                 Field::list('Revised PhD objectives')
                     ->key('revised_phd_objectives')
                     ->required()
-                    ->editableBy('student', anyReader: true)
+                    ->editableBy('student')
                     ->rules('required|array')
                     ->value($objectives ?? [''])
                     ->with([
@@ -97,7 +97,7 @@ final class IrbSubmissionDefinition extends FormDefinition
                         ->key('irb_pdf')
                         ->required(!$storedPdf)
                         ->hideLabel()
-                        ->editableBy('student', anyReader: true)
+                        ->editableBy('student')
                         ->rules(($storedPdf ? 'nullable' : 'required') . '|file|mimes:pdf|max:20480')
                         ->value($storedPdf),
                 ], label: 'Revised IRB PDF file'),
@@ -107,7 +107,7 @@ final class IrbSubmissionDefinition extends FormDefinition
                         ->required()
                         ->format('date')
                         ->hint('Select date...')
-                        ->editableBy('student', anyReader: true)
+                        ->editableBy('student')
                         ->rules('required|string')
                         ->value($data['date_of_irb'] ?? null),
                     Field::date('Date of IRB revision')->value(self::plain($data['created_at'] ?? null))->format('date'),

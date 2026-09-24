@@ -244,7 +244,6 @@
                                 "key": "objectives",
                                 "required": true,
                                 "add_label": "Add objective",
-                                "addable": true,
                                 "item_hint": "Enter objective {n} here",
                                 "each": 3,
                                 "as": "inputs",
@@ -255,7 +254,8 @@
                                 },
                                 "column": "Objective",
                                 "value": [],
-                                "locked": false
+                                "locked": false,
+                                "addable": true
                             },
                             {
                                 "kind": "list",
@@ -268,7 +268,6 @@
                                 "item_show_label": false,
                                 "item_hint": "Enter keyword {n}",
                                 "add_label": "Add subdomain",
-                                "addable": true,
                                 "each": 1,
                                 "as": "inputs",
                                 "table": {
@@ -278,7 +277,8 @@
                                 },
                                 "column": "Subdomain",
                                 "value": [],
-                                "locked": false
+                                "locked": false,
+                                "addable": true
                             },
                             {
                                 "kind": "grid",
@@ -332,7 +332,7 @@
                                     -1,
                                     -1
                                 ],
-                                "locked": false,
+                                "locked": true,
                                 "addable": false
                             }
                         ]
@@ -375,7 +375,7 @@
                                             -1,
                                             -1
                                         ],
-                                        "locked": false,
+                                        "locked": true,
                                         "addable": false
                                     },
                                     {
@@ -391,7 +391,6 @@
                                         },
                                         "displays": [],
                                         "add_label": "Add expert",
-                                        "addable": true,
                                         "keep_add_slot": true,
                                         "max": 2,
                                         "max_message": "You can only add max 2 experts",
@@ -399,7 +398,8 @@
                                         "value": [
                                             -1
                                         ],
-                                        "locked": false
+                                        "locked": true,
+                                        "addable": false
                                     }
                                 ]
                             }
@@ -710,7 +710,6 @@
                                 "key": "objectives",
                                 "required": true,
                                 "add_label": "Add objective",
-                                "addable": true,
                                 "item_hint": "Enter objective {n} here",
                                 "each": 3,
                                 "as": "inputs",
@@ -724,7 +723,8 @@
                                     "Screen ruthenium catalysts",
                                     "Model reaction kinetics"
                                 ],
-                                "locked": false
+                                "locked": false,
+                                "addable": true
                             },
                             {
                                 "kind": "list",
@@ -737,7 +737,6 @@
                                 "item_show_label": false,
                                 "item_hint": "Enter keyword {n}",
                                 "add_label": "Add subdomain",
-                                "addable": true,
                                 "each": 1,
                                 "as": "inputs",
                                 "table": {
@@ -750,7 +749,8 @@
                                     "Catalysis",
                                     "Kinetics"
                                 ],
-                                "locked": false
+                                "locked": false,
+                                "addable": true
                             },
                             {
                                 "kind": "grid",
@@ -803,7 +803,7 @@
                                     -1,
                                     -1
                                 ],
-                                "locked": false,
+                                "locked": true,
                                 "addable": false
                             }
                         ]
@@ -846,7 +846,7 @@
                                             -1,
                                             -1
                                         ],
-                                        "locked": false,
+                                        "locked": true,
                                         "addable": false
                                     },
                                     {
@@ -862,7 +862,6 @@
                                         },
                                         "displays": [],
                                         "add_label": "Add expert",
-                                        "addable": true,
                                         "keep_add_slot": true,
                                         "max": 2,
                                         "max_message": "You can only add max 2 experts",
@@ -870,7 +869,8 @@
                                         "value": [
                                             -1
                                         ],
-                                        "locked": false
+                                        "locked": true,
+                                        "addable": false
                                     }
                                 ]
                             }
@@ -1181,7 +1181,6 @@
                                 "key": "objectives",
                                 "required": true,
                                 "add_label": "Add objective",
-                                "addable": false,
                                 "item_hint": "Enter objective {n} here",
                                 "each": 3,
                                 "as": "inputs",
@@ -1195,7 +1194,8 @@
                                     "Screen ruthenium catalysts",
                                     "Model reaction kinetics"
                                 ],
-                                "locked": true
+                                "locked": true,
+                                "addable": false
                             },
                             {
                                 "kind": "list",
@@ -1208,7 +1208,6 @@
                                 "item_show_label": false,
                                 "item_hint": "Enter keyword {n}",
                                 "add_label": "Add subdomain",
-                                "addable": false,
                                 "each": 1,
                                 "as": "inputs",
                                 "table": {
@@ -1221,7 +1220,8 @@
                                     "Catalysis",
                                     "Kinetics"
                                 ],
-                                "locked": true
+                                "locked": true,
+                                "addable": false
                             },
                             {
                                 "kind": "grid",
@@ -1265,7 +1265,7 @@
                                     -1,
                                     -1
                                 ],
-                                "locked": false,
+                                "locked": true,
                                 "addable": false
                             }
                         ]
@@ -1308,7 +1308,7 @@
                                             -1,
                                             -1
                                         ],
-                                        "locked": false,
+                                        "locked": true,
                                         "addable": false
                                     },
                                     {
@@ -1324,7 +1324,6 @@
                                         },
                                         "displays": [],
                                         "add_label": "Add expert",
-                                        "addable": true,
                                         "keep_add_slot": true,
                                         "max": 2,
                                         "max_message": "You can only add max 2 experts",
@@ -1332,7 +1331,8 @@
                                         "value": [
                                             -1
                                         ],
-                                        "locked": false
+                                        "locked": true,
+                                        "addable": false
                                     }
                                 ]
                             }
@@ -1544,7 +1544,7 @@
                                         "key": "gender",
                                         "required": true,
                                         "value": "Female",
-                                        "locked": false
+                                        "locked": true
                                     }
                                 ]
                             },
@@ -1586,7 +1586,7 @@
                                         "key": "cgpa",
                                         "required": true,
                                         "value": "8.4",
-                                        "locked": false
+                                        "locked": true
                                     }
                                 ]
                             },
@@ -1599,7 +1599,7 @@
                                         "key": "address",
                                         "required": true,
                                         "value": "Hostel J, Patiala",
-                                        "locked": false
+                                        "locked": true
                                     }
                                 ],
                                 "space": 2
@@ -1613,7 +1613,7 @@
                                         "key": "title",
                                         "required": true,
                                         "value": "Catalysts for low-temperature ammonia synthesis",
-                                        "locked": false
+                                        "locked": true
                                     }
                                 ],
                                 "space": 2
@@ -1631,7 +1631,7 @@
                                         "hint": "Type your broad area of research",
                                         "display": "Heterogeneous catalysis",
                                         "value": "Heterogeneous catalysis",
-                                        "locked": false
+                                        "locked": true
                                     }
                                 ],
                                 "space": 2
@@ -1643,7 +1643,6 @@
                                 "key": "objectives",
                                 "required": true,
                                 "add_label": "Add objective",
-                                "addable": true,
                                 "item_hint": "Enter objective {n} here",
                                 "each": 3,
                                 "as": "table",
@@ -1657,7 +1656,8 @@
                                     "Screen ruthenium catalysts",
                                     "Model reaction kinetics"
                                 ],
-                                "locked": false
+                                "locked": true,
+                                "addable": false
                             },
                             {
                                 "kind": "list",
@@ -1670,7 +1670,6 @@
                                 "item_show_label": false,
                                 "item_hint": "Enter keyword {n}",
                                 "add_label": "Add subdomain",
-                                "addable": true,
                                 "each": 1,
                                 "as": "table",
                                 "table": {
@@ -1683,7 +1682,8 @@
                                     "Catalysis",
                                     "Kinetics"
                                 ],
-                                "locked": false
+                                "locked": true,
+                                "addable": false
                             },
                             {
                                 "kind": "grid",
@@ -1694,7 +1694,7 @@
                                         "key": "irb_pdf",
                                         "show_label": false,
                                         "value": "irb_const/102203456/irb.pdf",
-                                        "locked": false
+                                        "locked": true
                                     }
                                 ],
                                 "label": "Upload IRB PDF file"
@@ -1727,7 +1727,7 @@
                                     -1,
                                     -1
                                 ],
-                                "locked": false,
+                                "locked": true,
                                 "addable": false
                             }
                         ]
@@ -1770,7 +1770,7 @@
                                             -1,
                                             -1
                                         ],
-                                        "locked": false,
+                                        "locked": true,
                                         "addable": false
                                     },
                                     {
@@ -1786,7 +1786,6 @@
                                         },
                                         "displays": [],
                                         "add_label": "Add expert",
-                                        "addable": true,
                                         "keep_add_slot": true,
                                         "max": 2,
                                         "max_message": "You can only add max 2 experts",
@@ -1794,7 +1793,8 @@
                                         "value": [
                                             -1
                                         ],
-                                        "locked": false
+                                        "locked": true,
+                                        "addable": false
                                     }
                                 ]
                             }
@@ -2105,7 +2105,6 @@
                                 "key": "objectives",
                                 "required": true,
                                 "add_label": "Add objective",
-                                "addable": false,
                                 "item_hint": "Enter objective {n} here",
                                 "each": 3,
                                 "as": "table",
@@ -2119,7 +2118,8 @@
                                     "Screen ruthenium catalysts",
                                     "Model reaction kinetics"
                                 ],
-                                "locked": true
+                                "locked": true,
+                                "addable": false
                             },
                             {
                                 "kind": "list",
@@ -2132,7 +2132,6 @@
                                 "item_show_label": false,
                                 "item_hint": "Enter keyword {n}",
                                 "add_label": "Add subdomain",
-                                "addable": false,
                                 "each": 1,
                                 "as": "table",
                                 "table": {
@@ -2145,7 +2144,8 @@
                                     "Catalysis",
                                     "Kinetics"
                                 ],
-                                "locked": true
+                                "locked": true,
+                                "addable": false
                             },
                             {
                                 "kind": "grid",
@@ -2244,7 +2244,7 @@
                                             -1,
                                             -1
                                         ],
-                                        "locked": false,
+                                        "locked": true,
                                         "addable": false
                                     },
                                     {
@@ -2260,7 +2260,6 @@
                                         },
                                         "displays": [],
                                         "add_label": "Add expert",
-                                        "addable": true,
                                         "keep_add_slot": true,
                                         "max": 2,
                                         "max_message": "You can only add max 2 experts",
@@ -2268,7 +2267,8 @@
                                         "value": [
                                             -1
                                         ],
-                                        "locked": false
+                                        "locked": true,
+                                        "addable": false
                                     }
                                 ]
                             }
@@ -2598,7 +2598,6 @@
                                 "key": "objectives",
                                 "required": true,
                                 "add_label": "Add objective",
-                                "addable": false,
                                 "item_hint": "Enter objective {n} here",
                                 "each": 3,
                                 "as": "table",
@@ -2612,7 +2611,8 @@
                                     "Screen ruthenium catalysts",
                                     "Model reaction kinetics"
                                 ],
-                                "locked": true
+                                "locked": true,
+                                "addable": false
                             },
                             {
                                 "kind": "list",
@@ -2625,7 +2625,6 @@
                                 "item_show_label": false,
                                 "item_hint": "Enter keyword {n}",
                                 "add_label": "Add subdomain",
-                                "addable": false,
                                 "each": 1,
                                 "as": "table",
                                 "table": {
@@ -2638,7 +2637,8 @@
                                     "Catalysis",
                                     "Kinetics"
                                 ],
-                                "locked": true
+                                "locked": true,
+                                "addable": false
                             },
                             {
                                 "kind": "grid",
@@ -2737,7 +2737,7 @@
                                             -1,
                                             -1
                                         ],
-                                        "locked": false,
+                                        "locked": true,
                                         "addable": false
                                     },
                                     {
@@ -2753,7 +2753,6 @@
                                         },
                                         "displays": [],
                                         "add_label": "Add expert",
-                                        "addable": true,
                                         "keep_add_slot": true,
                                         "max": 2,
                                         "max_message": "You can only add max 2 experts",
@@ -2761,7 +2760,8 @@
                                         "value": [
                                             -1
                                         ],
-                                        "locked": false
+                                        "locked": true,
+                                        "addable": false
                                     }
                                 ]
                             }
@@ -3104,7 +3104,6 @@
                                 "key": "objectives",
                                 "required": true,
                                 "add_label": "Add objective",
-                                "addable": false,
                                 "item_hint": "Enter objective {n} here",
                                 "each": 3,
                                 "as": "table",
@@ -3118,7 +3117,8 @@
                                     "Screen ruthenium catalysts",
                                     "Model reaction kinetics"
                                 ],
-                                "locked": true
+                                "locked": true,
+                                "addable": false
                             },
                             {
                                 "kind": "list",
@@ -3131,7 +3131,6 @@
                                 "item_show_label": false,
                                 "item_hint": "Enter keyword {n}",
                                 "add_label": "Add subdomain",
-                                "addable": false,
                                 "each": 1,
                                 "as": "table",
                                 "table": {
@@ -3144,7 +3143,8 @@
                                     "Catalysis",
                                     "Kinetics"
                                 ],
-                                "locked": true
+                                "locked": true,
+                                "addable": false
                             },
                             {
                                 "kind": "grid",
@@ -3266,7 +3266,6 @@
                                         },
                                         "displays": [],
                                         "add_label": "Add expert",
-                                        "addable": true,
                                         "keep_add_slot": true,
                                         "max": 2,
                                         "max_message": "You can only add max 2 experts",
@@ -3274,7 +3273,8 @@
                                         "value": [
                                             -1
                                         ],
-                                        "locked": false
+                                        "locked": false,
+                                        "addable": true
                                     }
                                 ]
                             },
@@ -3629,7 +3629,6 @@
                                 "key": "objectives",
                                 "required": true,
                                 "add_label": "Add objective",
-                                "addable": false,
                                 "item_hint": "Enter objective {n} here",
                                 "each": 3,
                                 "as": "table",
@@ -3643,7 +3642,8 @@
                                     "Screen ruthenium catalysts",
                                     "Model reaction kinetics"
                                 ],
-                                "locked": true
+                                "locked": true,
+                                "addable": false
                             },
                             {
                                 "kind": "list",
@@ -3656,7 +3656,6 @@
                                 "item_show_label": false,
                                 "item_hint": "Enter keyword {n}",
                                 "add_label": "Add subdomain",
-                                "addable": false,
                                 "each": 1,
                                 "as": "table",
                                 "table": {
@@ -3669,7 +3668,8 @@
                                     "Catalysis",
                                     "Kinetics"
                                 ],
-                                "locked": true
+                                "locked": true,
+                                "addable": false
                             },
                             {
                                 "kind": "grid",
@@ -3756,7 +3756,7 @@
                                             -1,
                                             -1
                                         ],
-                                        "locked": false,
+                                        "locked": true,
                                         "addable": false
                                     },
                                     {
@@ -3772,7 +3772,6 @@
                                         },
                                         "displays": [],
                                         "add_label": "Add expert",
-                                        "addable": true,
                                         "keep_add_slot": true,
                                         "max": 2,
                                         "max_message": "You can only add max 2 experts",
@@ -3780,7 +3779,8 @@
                                         "value": [
                                             -1
                                         ],
-                                        "locked": false
+                                        "locked": true,
+                                        "addable": false
                                     }
                                 ]
                             }
@@ -4119,7 +4119,6 @@
                                 "key": "objectives",
                                 "required": true,
                                 "add_label": "Add objective",
-                                "addable": false,
                                 "item_hint": "Enter objective {n} here",
                                 "each": 3,
                                 "as": "table",
@@ -4133,7 +4132,8 @@
                                     "Screen ruthenium catalysts",
                                     "Model reaction kinetics"
                                 ],
-                                "locked": true
+                                "locked": true,
+                                "addable": false
                             },
                             {
                                 "kind": "list",
@@ -4146,7 +4146,6 @@
                                 "item_show_label": false,
                                 "item_hint": "Enter keyword {n}",
                                 "add_label": "Add subdomain",
-                                "addable": false,
                                 "each": 1,
                                 "as": "table",
                                 "table": {
@@ -4159,7 +4158,8 @@
                                     "Catalysis",
                                     "Kinetics"
                                 ],
-                                "locked": true
+                                "locked": true,
+                                "addable": false
                             },
                             {
                                 "kind": "grid",
@@ -4281,7 +4281,6 @@
                                         },
                                         "displays": [],
                                         "add_label": "Add expert",
-                                        "addable": true,
                                         "keep_add_slot": true,
                                         "max": 2,
                                         "max_message": "You can only add max 2 experts",
@@ -4289,7 +4288,8 @@
                                         "value": [
                                             -1
                                         ],
-                                        "locked": false
+                                        "locked": false,
+                                        "addable": true
                                     }
                                 ]
                             },
@@ -4685,7 +4685,6 @@
                                 "key": "objectives",
                                 "required": true,
                                 "add_label": "Add objective",
-                                "addable": false,
                                 "item_hint": "Enter objective {n} here",
                                 "each": 3,
                                 "as": "table",
@@ -4699,7 +4698,8 @@
                                     "Screen ruthenium catalysts",
                                     "Model reaction kinetics"
                                 ],
-                                "locked": true
+                                "locked": true,
+                                "addable": false
                             },
                             {
                                 "kind": "list",
@@ -4712,7 +4712,6 @@
                                 "item_show_label": false,
                                 "item_hint": "Enter keyword {n}",
                                 "add_label": "Add subdomain",
-                                "addable": false,
                                 "each": 1,
                                 "as": "table",
                                 "table": {
@@ -4725,7 +4724,8 @@
                                     "Catalysis",
                                     "Kinetics"
                                 ],
-                                "locked": true
+                                "locked": true,
+                                "addable": false
                             },
                             {
                                 "kind": "grid",
@@ -4849,7 +4849,6 @@
                                             "Haripada Bhunia"
                                         ],
                                         "add_label": "Add expert",
-                                        "addable": true,
                                         "keep_add_slot": true,
                                         "max": 2,
                                         "max_message": "You can only add max 2 experts",
@@ -4857,7 +4856,8 @@
                                         "value": [
                                             1000985
                                         ],
-                                        "locked": false
+                                        "locked": false,
+                                        "addable": true
                                     }
                                 ]
                             },
@@ -5263,7 +5263,6 @@
                                 "key": "objectives",
                                 "required": true,
                                 "add_label": "Add objective",
-                                "addable": false,
                                 "item_hint": "Enter objective {n} here",
                                 "each": 3,
                                 "as": "table",
@@ -5277,7 +5276,8 @@
                                     "Screen ruthenium catalysts",
                                     "Model reaction kinetics"
                                 ],
-                                "locked": true
+                                "locked": true,
+                                "addable": false
                             },
                             {
                                 "kind": "list",
@@ -5290,7 +5290,6 @@
                                 "item_show_label": false,
                                 "item_hint": "Enter keyword {n}",
                                 "add_label": "Add subdomain",
-                                "addable": false,
                                 "each": 1,
                                 "as": "table",
                                 "table": {
@@ -5303,7 +5302,8 @@
                                     "Catalysis",
                                     "Kinetics"
                                 ],
-                                "locked": true
+                                "locked": true,
+                                "addable": false
                             },
                             {
                                 "kind": "grid",
@@ -5894,7 +5894,6 @@
                                 "key": "objectives",
                                 "required": true,
                                 "add_label": "Add objective",
-                                "addable": false,
                                 "item_hint": "Enter objective {n} here",
                                 "each": 3,
                                 "as": "table",
@@ -5908,7 +5907,8 @@
                                     "Screen ruthenium catalysts",
                                     "Model reaction kinetics"
                                 ],
-                                "locked": true
+                                "locked": true,
+                                "addable": false
                             },
                             {
                                 "kind": "list",
@@ -5921,7 +5921,6 @@
                                 "item_show_label": false,
                                 "item_hint": "Enter keyword {n}",
                                 "add_label": "Add subdomain",
-                                "addable": false,
                                 "each": 1,
                                 "as": "table",
                                 "table": {
@@ -5934,7 +5933,8 @@
                                     "Catalysis",
                                     "Kinetics"
                                 ],
-                                "locked": true
+                                "locked": true,
+                                "addable": false
                             },
                             {
                                 "kind": "grid",
@@ -6536,7 +6536,6 @@
                                 "key": "objectives",
                                 "required": true,
                                 "add_label": "Add objective",
-                                "addable": false,
                                 "item_hint": "Enter objective {n} here",
                                 "each": 3,
                                 "as": "table",
@@ -6550,7 +6549,8 @@
                                     "Screen ruthenium catalysts",
                                     "Model reaction kinetics"
                                 ],
-                                "locked": true
+                                "locked": true,
+                                "addable": false
                             },
                             {
                                 "kind": "list",
@@ -6563,7 +6563,6 @@
                                 "item_show_label": false,
                                 "item_hint": "Enter keyword {n}",
                                 "add_label": "Add subdomain",
-                                "addable": false,
                                 "each": 1,
                                 "as": "table",
                                 "table": {
@@ -6576,7 +6575,8 @@
                                     "Catalysis",
                                     "Kinetics"
                                 ],
-                                "locked": true
+                                "locked": true,
+                                "addable": false
                             },
                             {
                                 "kind": "grid",
@@ -7002,7 +7002,7 @@
                                         "key": "gender",
                                         "required": true,
                                         "value": null,
-                                        "locked": false
+                                        "locked": true
                                     }
                                 ]
                             },
@@ -7044,7 +7044,7 @@
                                         "key": "cgpa",
                                         "required": true,
                                         "value": null,
-                                        "locked": false
+                                        "locked": true
                                     }
                                 ]
                             },
@@ -7057,7 +7057,7 @@
                                         "key": "address",
                                         "required": true,
                                         "value": null,
-                                        "locked": false
+                                        "locked": true
                                     }
                                 ],
                                 "space": 2
@@ -7071,7 +7071,7 @@
                                         "key": "title",
                                         "required": true,
                                         "value": "Catalysts for low-temperature ammonia synthesis",
-                                        "locked": false
+                                        "locked": true
                                     }
                                 ],
                                 "space": 2
@@ -7089,7 +7089,7 @@
                                         "hint": "Type your broad area of research",
                                         "display": null,
                                         "value": null,
-                                        "locked": false
+                                        "locked": true
                                     }
                                 ],
                                 "space": 2
@@ -7101,7 +7101,6 @@
                                 "key": "objectives",
                                 "required": true,
                                 "add_label": "Add objective",
-                                "addable": true,
                                 "item_hint": "Enter objective {n} here",
                                 "each": 3,
                                 "as": "table",
@@ -7112,7 +7111,8 @@
                                 },
                                 "column": "Objective",
                                 "value": [],
-                                "locked": false
+                                "locked": true,
+                                "addable": false
                             },
                             {
                                 "kind": "list",
@@ -7125,7 +7125,6 @@
                                 "item_show_label": false,
                                 "item_hint": "Enter keyword {n}",
                                 "add_label": "Add subdomain",
-                                "addable": true,
                                 "each": 1,
                                 "as": "table",
                                 "table": {
@@ -7135,7 +7134,8 @@
                                 },
                                 "column": "Subdomain",
                                 "value": [],
-                                "locked": false
+                                "locked": true,
+                                "addable": false
                             },
                             {
                                 "kind": "grid",
@@ -7147,7 +7147,7 @@
                                         "required": true,
                                         "show_label": false,
                                         "value": null,
-                                        "locked": false
+                                        "locked": true
                                     }
                                 ],
                                 "label": "Upload IRB PDF file"
@@ -7180,7 +7180,7 @@
                                     -1,
                                     -1
                                 ],
-                                "locked": false,
+                                "locked": true,
                                 "addable": false
                             }
                         ]
@@ -7223,7 +7223,7 @@
                                             -1,
                                             -1
                                         ],
-                                        "locked": false,
+                                        "locked": true,
                                         "addable": false
                                     },
                                     {
@@ -7239,7 +7239,6 @@
                                         },
                                         "displays": [],
                                         "add_label": "Add expert",
-                                        "addable": true,
                                         "keep_add_slot": true,
                                         "max": 2,
                                         "max_message": "You can only add max 2 experts",
@@ -7247,7 +7246,8 @@
                                         "value": [
                                             -1
                                         ],
-                                        "locked": false
+                                        "locked": true,
+                                        "addable": false
                                     }
                                 ]
                             }
@@ -7635,7 +7635,6 @@
                                 "key": "objectives",
                                 "required": true,
                                 "add_label": "Add objective",
-                                "addable": true,
                                 "item_hint": "Enter objective {n} here",
                                 "each": 3,
                                 "as": "inputs",
@@ -7646,7 +7645,8 @@
                                 },
                                 "column": "Objective",
                                 "value": [],
-                                "locked": false
+                                "locked": false,
+                                "addable": true
                             },
                             {
                                 "kind": "list",
@@ -7659,7 +7659,6 @@
                                 "item_show_label": false,
                                 "item_hint": "Enter keyword {n}",
                                 "add_label": "Add subdomain",
-                                "addable": true,
                                 "each": 1,
                                 "as": "inputs",
                                 "table": {
@@ -7669,7 +7668,8 @@
                                 },
                                 "column": "Subdomain",
                                 "value": [],
-                                "locked": false
+                                "locked": false,
+                                "addable": true
                             },
                             {
                                 "kind": "grid",
@@ -7723,7 +7723,7 @@
                                     -1,
                                     -1
                                 ],
-                                "locked": false,
+                                "locked": true,
                                 "addable": false
                             }
                         ]
@@ -7766,7 +7766,7 @@
                                             -1,
                                             -1
                                         ],
-                                        "locked": false,
+                                        "locked": true,
                                         "addable": false
                                     },
                                     {
@@ -7782,7 +7782,6 @@
                                         },
                                         "displays": [],
                                         "add_label": "Add expert",
-                                        "addable": true,
                                         "keep_add_slot": true,
                                         "max": 2,
                                         "max_message": "You can only add max 2 experts",
@@ -7790,7 +7789,8 @@
                                         "value": [
                                             -1
                                         ],
-                                        "locked": false
+                                        "locked": true,
+                                        "addable": false
                                     }
                                 ]
                             }

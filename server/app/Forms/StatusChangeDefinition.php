@@ -55,7 +55,7 @@ final class StatusChangeDefinition extends FormDefinition
                     Field::text('Reason for status change')
                         ->key('reason')
                         ->required()
-                        ->editableBy('student', anyReader: true)
+                        ->editableBy('student')
                         ->rules('required|string')
                         ->value($data['reason'] ?? null),
                 ], space: 2),

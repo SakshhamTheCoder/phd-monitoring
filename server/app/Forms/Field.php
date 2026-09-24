@@ -15,7 +15,6 @@ final class Field
 {
     private array $props;
     private ?string $editableBy = null;
-    private bool $anyReader = false;
     private bool $lockedAnyway = false;
     /** @var array{0: string, 1: string}|null ['editing'|'reading', step] */
     private ?array $shownWhile = null;
@@ -281,17 +280,10 @@ final class Field
         return $this;
     }
 
-    /**
-     * The chain step whose holder may edit this, while their step is unlocked.
-     *
-     * $anyReader keeps how the older hand-built panels drew it: open to whoever
-     * reads the form until the step is submitted, though only the holder gets
-     * the submit button, so nobody else can post it.
-     */
-    public function editableBy(string $step, bool $anyReader = false): self
+    /** The chain step whose holder may edit this, while their step is unlocked. */
+    public function editableBy(string $step): self
     {
         $this->editableBy = $step;
-        $this->anyReader = $anyReader;
         return $this;
     }
 
@@ -350,10 +342,10 @@ final class Field
         }
 
         if ($this->props['type'] === 'submit') {
-            return $this->isEditable($data, false) ? $this->props : null;
+            return $this->isEditable($data) ? $this->props : null;
         }
 
-        $editable = $this->isEditable($data, $this->anyReader) && !$this->lockedAnyway;
+        $editable = $this->isEditable($data) && !$this->lockedAnyway;
 
         $resolved = $this->props;
         // A value never given stays out, so a client's own default applies
@@ -367,15 +359,15 @@ final class Field
             $resolved['locked'] = !$editable;
         }
         if ($this->props['type'] === 'list' && !array_key_exists('addable', $resolved)) {
-            // Adding a box is for the step's holder only, even where any reader
-            // sees the boxes open, unless the definition says otherwise.
+            // Adding a box is for the step's holder, unless the definition says
+            // otherwise.
             $resolved['addable'] = $this->editableBy !== null && FormDefinition::mayEdit($data, $this->editableBy);
         }
         return $resolved;
     }
 
-    private function isEditable(array $data, bool $anyReader): bool
+    private function isEditable(array $data): bool
     {
-        return $this->editableBy !== null && FormDefinition::mayEdit($data, $this->editableBy, $anyReader);
+        return $this->editableBy !== null && FormDefinition::mayEdit($data, $this->editableBy);
     }
 }

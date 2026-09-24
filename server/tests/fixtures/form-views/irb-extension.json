@@ -764,7 +764,7 @@
                                         "key": "reason",
                                         "required": true,
                                         "value": "Draft reason",
-                                        "locked": false
+                                        "locked": true
                                     }
                                 ],
                                 "space": 2
@@ -778,7 +778,7 @@
                                         "key": "research_pdf",
                                         "required": true,
                                         "value": null,
-                                        "locked": false
+                                        "locked": true
                                     }
                                 ]
                             }

@@ -69,6 +69,49 @@ class FormViewContractTest extends TestCase
         }
     }
 
+    /**
+     * Only the holder of a step may edit it, and only until they submit it.
+     * The older pages left a step's fields open to anyone who opened the form
+     * before it was submitted; this keeps that from coming back.
+     *
+     * @dataProvider forms
+     */
+    public function test_only_the_holder_of_an_open_step_gets_open_fields(string $class): void
+    {
+        $type = array_search($class, self::DEFINITIONS, true);
+        $cases = json_decode(file_get_contents(base_path("tests/fixtures/form-views/$type.json")), true);
+        $this->assertNotEmpty($cases);
+        foreach ($cases as $case) {
+            $data = $case['formData'];
+            foreach ($data['view']['panels'] as $step => $panel) {
+                foreach ($this->fieldsOf($panel['rows'] ?? []) as $field) {
+                    if (($field['locked'] ?? null) === false && ($field['type'] ?? null) !== 'recommendation') {
+                        $this->assertTrue(
+                            FormDefinition::mayEdit($data, $step),
+                            "$type, {$case['name']}: {$field['label']} is open to {$data['role']} on the $step step"
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    private function fieldsOf(array $rows): array
+    {
+        $fields = [];
+        foreach ($rows as $row) {
+            $kind = $row['kind'] ?? null;
+            if ($kind === 'grid') {
+                array_push($fields, ...$row['items']);
+            } elseif ($kind === 'group') {
+                array_push($fields, ...$this->fieldsOf($row['rows']));
+            } else {
+                $fields[] = $row;
+            }
+        }
+        return $fields;
+    }
+
     /** @dataProvider forms */
     public function test_every_view_carries_the_scholars_own_panel(string $class): void
     {

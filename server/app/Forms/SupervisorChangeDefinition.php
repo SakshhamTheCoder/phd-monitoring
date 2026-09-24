@@ -65,7 +65,7 @@ final class SupervisorChangeDefinition extends FormDefinition
                     Field::text('Reason for supervisor change')
                         ->key('reason')
                         ->required()
-                        ->editableBy('student', anyReader: true)
+                        ->editableBy('student')
                         ->rules('required|string')
                         ->value($data['reason'] ?? null),
                 ], space: 2),

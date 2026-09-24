@@ -937,7 +937,7 @@
                                         "required": true,
                                         "send": "changed",
                                         "value": null,
-                                        "locked": false
+                                        "locked": true
                                     }
                                 ]
                             },
@@ -988,7 +988,7 @@
                                         "required": true,
                                         "hint": "Why the thesis could not be submitted within the deadline",
                                         "value": null,
-                                        "locked": false
+                                        "locked": true
                                     }
                                 ],
                                 "space": 3
@@ -1003,7 +1003,7 @@
                                         "required": true,
                                         "max_mb": 20,
                                         "value": null,
-                                        "locked": false
+                                        "locked": true
                                     }
                                 ]
                             }

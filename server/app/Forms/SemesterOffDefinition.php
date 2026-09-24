@@ -45,7 +45,7 @@ final class SemesterOffDefinition extends FormDefinition
                         ? Field::file('Attach previous approval')
                             ->key('previous_approval_pdf')
                             ->required(!$storedApproval)
-                            ->editableBy('student', anyReader: true)
+                            ->editableBy('student')
                             ->rules(($storedApproval ? 'nullable' : 'required') . '|file|mimes:pdf|max:20480')
                             ->value($storedApproval)
                         : Field::blank(),
@@ -54,15 +54,13 @@ final class SemesterOffDefinition extends FormDefinition
                     Field::select('Semester off required', ReportPeriods::around(0, 1))
                         ->key('semester_off_required')
                         ->required()
-                        ->editableBy('student', anyReader: true)
+                        ->editableBy('student')
                         ->rules('required|string')
                         ->value($data['semester_off_required'] ?? null),
-                    // Marked required on the page, though the server has always
-                    // accepted the form without it.
+                    // Optional, as its label and the server say.
                     Field::file('Attach proof (if any)')
                         ->key('proof_pdf')
-                        ->required()
-                        ->editableBy('student', anyReader: true)
+                        ->editableBy('student')
                         ->rules('file|mimes:pdf|max:20480')
                         ->value($data['proof_pdf'] ?? null),
                 ]),
@@ -70,7 +68,7 @@ final class SemesterOffDefinition extends FormDefinition
                     Field::text('Reason for semester off')
                         ->key('reason')
                         ->required()
-                        ->editableBy('student', anyReader: true)
+                        ->editableBy('student')
                         ->rules('required|string')
                         ->value($data['reason'] ?? null),
                 ], space: 2),

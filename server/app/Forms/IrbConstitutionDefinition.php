@@ -77,7 +77,6 @@ final class IrbConstitutionDefinition extends FormDefinition
         $subdomains = self::plain($data['subdomains'] ?? null);
         // Everyone but the scholar reads the lists as tables.
         $listsAs = ($data['role'] ?? null) === 'student' ? 'inputs' : 'table';
-        $anyReaderOpen = self::mayEdit($data, 'student', anyReader: true);
 
         return [
             self::row([
@@ -94,7 +93,7 @@ final class IrbConstitutionDefinition extends FormDefinition
                 Field::select('Gender', ['Male', 'Female'])
                     ->key('gender')
                     ->required()
-                    ->editableBy('student', anyReader: true)
+                    ->editableBy('student')
                     ->rules((empty($data['gender']) ? 'required' : 'nullable') . '|string|in:Male,Female')
                     ->value($data['gender'] ?? null),
             ]),
@@ -106,7 +105,7 @@ final class IrbConstitutionDefinition extends FormDefinition
                 Field::text('CGPA')
                     ->key('cgpa')
                     ->required()
-                    ->editableBy('student', anyReader: true)
+                    ->editableBy('student')
                     ->rules((empty($data['cgpa']) ? 'required' : 'nullable') . '|numeric')
                     ->value($data['cgpa'] ?? null),
             ]),
@@ -114,7 +113,7 @@ final class IrbConstitutionDefinition extends FormDefinition
                 Field::text('Address of correspondence')
                     ->key('address')
                     ->required()
-                    ->editableBy('student', anyReader: true)
+                    ->editableBy('student')
                     ->rules('required|string')
                     ->value($data['address'] ?? null),
             ], space: 2),
@@ -122,7 +121,7 @@ final class IrbConstitutionDefinition extends FormDefinition
                 Field::text('Title of PhD thesis')
                     ->key('title')
                     ->required()
-                    ->editableBy('student', anyReader: true)
+                    ->editableBy('student')
                     ->rules('required|string')
                     ->value($data['phd_title'] ?? null),
             ], space: 2),
@@ -134,7 +133,7 @@ final class IrbConstitutionDefinition extends FormDefinition
                     ->required()
                     ->free()
                     ->hint('Type your broad area of research')
-                    ->editableBy('student', anyReader: true)
+                    ->editableBy('student')
                     ->rules('nullable|string|max:255')
                     ->display($data['broad_area_of_research'] ?? null)
                     ->value(($data['broad_area_of_research'] ?? null) ?: null),
@@ -142,12 +141,11 @@ final class IrbConstitutionDefinition extends FormDefinition
             Field::list('Objectives of research')
                 ->key('objectives')
                 ->required()
-                ->editableBy('student', anyReader: true)
+                ->editableBy('student')
                 ->rules('required|array')
                 ->value($objectives ?? [])
                 ->with([
                     'add_label' => 'Add objective',
-                    'addable' => $anyReaderOpen,
                     'item_hint' => 'Enter objective {n} here',
                     'each' => 3,
                     'as' => $listsAs,
@@ -156,7 +154,7 @@ final class IrbConstitutionDefinition extends FormDefinition
                 ]),
             Field::list('Subdomain')
                 ->key('subdomains')
-                ->editableBy('student', anyReader: true)
+                ->editableBy('student')
                 ->rules('nullable|array', 'string')
                 ->value($subdomains ?? [])
                 ->with([
@@ -166,7 +164,6 @@ final class IrbConstitutionDefinition extends FormDefinition
                     'item_show_label' => false,
                     'item_hint' => 'Enter keyword {n}',
                     'add_label' => 'Add subdomain',
-                    'addable' => $anyReaderOpen,
                     'each' => 1,
                     'as' => $listsAs,
                     'table' => ['space' => 2, 'labelled' => false, 'keep_add_row' => true],
@@ -178,7 +175,7 @@ final class IrbConstitutionDefinition extends FormDefinition
                     ->key('irb_pdf')
                     ->required(!$storedPdf)
                     ->hideLabel()
-                    ->editableBy('student', anyReader: true)
+                    ->editableBy('student')
                     ->lockedIf(($data['form_type'] ?? null) === 'revised')
                     ->rules(($storedPdf ? 'nullable' : 'required') . '|file|mimes:pdf|max:20480')
                     ->value($storedPdf),
@@ -206,7 +203,7 @@ final class IrbConstitutionDefinition extends FormDefinition
                 ], space: 3, label: self::NOMINEES)
                 : Field::list(self::NOMINEES)
                     ->key('nominee_cognates')
-                    ->editableBy('faculty', anyReader: true)
+                    ->editableBy('faculty')
                     ->value($codes)
                     ->with([
                         'fixed' => true,
@@ -251,7 +248,7 @@ final class IrbConstitutionDefinition extends FormDefinition
                     ], space: 3, label: self::OUTSIDE)
                     : Field::list(self::OUTSIDE)
                         ->key('outside_experts')
-                        ->editableBy('hod', anyReader: true)
+                        ->editableBy('hod')
                         ->value($outsideIds)
                         ->with([
                             'fixed' => true,
@@ -266,7 +263,7 @@ final class IrbConstitutionDefinition extends FormDefinition
                     ], space: 3, label: self::CHAIRMAN)
                     : Field::list(self::CHAIRMAN)
                         ->key('chairman_experts')
-                        ->editableBy('hod', anyReader: true)
+                        ->editableBy('hod')
                         ->value($chairmanCodes)
                         ->with([
                             'item' => 'suggest',
@@ -275,7 +272,6 @@ final class IrbConstitutionDefinition extends FormDefinition
                             'params' => ['department_id' => $data['department_id'] ?? null],
                             'displays' => array_map(fn ($expert) => $expert['name'] ?? null, $chairman),
                             'add_label' => 'Add expert',
-                            'addable' => !$answered,
                             'keep_add_slot' => true,
                             'max' => 2,
                             'max_message' => 'You can only add max 2 experts',

@@ -917,7 +917,7 @@
                                         "key": "revised_phd_title",
                                         "required": true,
                                         "value": "Ruthenium catalysts for ammonia synthesis",
-                                        "locked": false
+                                        "locked": true
                                     }
                                 ],
                                 "space": 2
@@ -935,7 +935,7 @@
                                     "Screen ruthenium catalysts",
                                     "Model reaction kinetics"
                                 ],
-                                "locked": false,
+                                "locked": true,
                                 "addable": false
                             },
                             {
@@ -947,7 +947,7 @@
                                         "key": "irb_pdf",
                                         "show_label": false,
                                         "value": "irb_sub_rev/102203456/irb.pdf",
-                                        "locked": false
+                                        "locked": true
                                     }
                                 ],
                                 "label": "Revised IRB PDF file"
@@ -963,7 +963,7 @@
                                         "format": "date",
                                         "hint": "Select date...",
                                         "value": "2025-01-20",
-                                        "locked": false
+                                        "locked": true
                                     },
                                     {
                                         "type": "date",

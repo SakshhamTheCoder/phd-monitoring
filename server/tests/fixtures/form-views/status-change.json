@@ -937,7 +937,7 @@
                                         "key": "reason",
                                         "required": true,
                                         "value": "Took up a job",
-                                        "locked": false
+                                        "locked": true
                                     }
                                 ],
                                 "space": 2

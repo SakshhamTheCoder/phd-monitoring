@@ -44,7 +44,7 @@ final class ThesisExtensionDefinition extends FormDefinition
                     Field::date('Date of synopsis presentation')
                         ->key('date_of_synopsis')
                         ->required($needsSynopsisDate)
-                        ->editableBy('student', anyReader: true)
+                        ->editableBy('student')
                         ->lockedIf(!$needsSynopsisDate)
                         ->sentOnlyIfChanged()
                         ->rules($needsSynopsisDate ? 'required|date' : '')
@@ -64,7 +64,7 @@ final class ThesisExtensionDefinition extends FormDefinition
                         ->key('reason')
                         ->required()
                         ->hint('Why the thesis could not be submitted within the deadline')
-                        ->editableBy('student', anyReader: true)
+                        ->editableBy('student')
                         ->rules('string')
                         ->value($data['reason'] ?? null),
                 ], space: 3),
@@ -75,7 +75,7 @@ final class ThesisExtensionDefinition extends FormDefinition
                         ->key('previous_extention_pdf')
                         ->required(!$storedPdf)
                         ->maxMb(20)
-                        ->editableBy('student', anyReader: true)
+                        ->editableBy('student')
                         ->rules(($storedPdf ? 'nullable' : 'required') . '|file|mimes:pdf|max:20480')
                         ->value($storedPdf),
                 ]) : null,

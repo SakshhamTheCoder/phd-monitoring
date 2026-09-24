@@ -159,7 +159,6 @@
                                         "type": "file",
                                         "label": "Attach proof (if any)",
                                         "key": "proof_pdf",
-                                        "required": true,
                                         "value": null,
                                         "locked": false
                                     }
@@ -363,7 +362,6 @@
                                         "type": "file",
                                         "label": "Attach proof (if any)",
                                         "key": "proof_pdf",
-                                        "required": true,
                                         "value": null,
                                         "locked": false
                                     }
@@ -565,7 +563,6 @@
                                         "type": "file",
                                         "label": "Attach proof (if any)",
                                         "key": "proof_pdf",
-                                        "required": true,
                                         "value": "semester_off/102203456/proof.pdf",
                                         "locked": false
                                     }
@@ -760,7 +757,6 @@
                                         "type": "file",
                                         "label": "Attach proof (if any)",
                                         "key": "proof_pdf",
-                                        "required": true,
                                         "value": null,
                                         "locked": false
                                     }
@@ -955,7 +951,6 @@
                                         "type": "file",
                                         "label": "Attach proof (if any)",
                                         "key": "proof_pdf",
-                                        "required": true,
                                         "value": "semester_off/102203456/proof.pdf",
                                         "locked": true
                                     }
@@ -1120,7 +1115,7 @@
                                         "key": "previous_approval_pdf",
                                         "required": true,
                                         "value": null,
-                                        "locked": false
+                                        "locked": true
                                     }
                                 ]
                             },
@@ -1143,15 +1138,14 @@
                                         "key": "semester_off_required",
                                         "required": true,
                                         "value": null,
-                                        "locked": false
+                                        "locked": true
                                     },
                                     {
                                         "type": "file",
                                         "label": "Attach proof (if any)",
                                         "key": "proof_pdf",
-                                        "required": true,
                                         "value": null,
-                                        "locked": false
+                                        "locked": true
                                     }
                                 ]
                             },
@@ -1164,7 +1158,7 @@
                                         "key": "reason",
                                         "required": true,
                                         "value": null,
-                                        "locked": false
+                                        "locked": true
                                     }
                                 ],
                                 "space": 2
@@ -1335,7 +1329,6 @@
                                         "type": "file",
                                         "label": "Attach proof (if any)",
                                         "key": "proof_pdf",
-                                        "required": true,
                                         "value": null,
                                         "locked": true
                                     }

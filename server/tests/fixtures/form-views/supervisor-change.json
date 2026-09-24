@@ -2136,7 +2136,7 @@
                                         "key": "reason",
                                         "required": true,
                                         "value": "Draft",
-                                        "locked": false
+                                        "locked": true
                                     }
                                 ],
                                 "space": 2

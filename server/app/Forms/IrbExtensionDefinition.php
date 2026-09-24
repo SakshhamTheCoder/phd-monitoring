@@ -44,7 +44,7 @@ final class IrbExtensionDefinition extends FormDefinition
                     Field::text('Reason for extension')
                         ->key('reason')
                         ->required()
-                        ->editableBy('student', anyReader: true)
+                        ->editableBy('student')
                         ->rules('required|string')
                         ->value($data['reason'] ?? null),
                 ], space: 2),
@@ -54,7 +54,7 @@ final class IrbExtensionDefinition extends FormDefinition
                     Field::file('Upload research proposal')
                         ->key('research_pdf')
                         ->required(!$storedPdf)
-                        ->editableBy('student', anyReader: true)
+                        ->editableBy('student')
                         ->rules(($storedPdf ? 'nullable' : 'required') . '|file|mimes:pdf|max:20480')
                         ->value($storedPdf),
                 ]),

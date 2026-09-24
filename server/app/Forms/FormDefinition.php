@@ -156,9 +156,9 @@ abstract class FormDefinition
 
     /**
      * Whether this reader may answer $step now: they hold its role and have not
-     * submitted it yet, the rule the hand-built panels applied. $anyReader drops
-     * the role check (see Field::editableBy). The supervisor step is 'faculty'
-     * in a chain and 'supervisor' in the locks.
+     * submitted it yet. $anyReader drops the role check, which only asks whether
+     * the step is still open. The supervisor step is 'faculty' in a chain and
+     * 'supervisor' in the locks.
      */
     public static function mayEdit(array $data, string $step, bool $anyReader = false): bool
     {

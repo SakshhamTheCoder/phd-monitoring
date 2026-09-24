@@ -7,13 +7,12 @@ use Carbon\Carbon;
 /**
  * Semester codes around today, such as 2526ODD, for a scholar to pick from.
  *
- * A port of generateReportPeriods in client-new/src/utils/semester.js, so a
- * form the server describes offers exactly the list the web page offered.
- * Kept to the same arithmetic on purpose, including its one oddity: in an
- * EVEN term the ODD term before it comes out a year early (Feb 2026 offers
- * 2425ODD, not 2526ODD). Fix both together if that is ever changed.
+ * The same list generateReportPeriods (client-new/src/utils/semester.js) gives.
+ * An academic year runs July to June and is odd until December. Terms are
+ * counted in a row (year * 2, plus one for the even term), so stepping back
+ * from an even term lands on the odd term of the same academic year.
  *
- * Read on the institute's clock, as the browser did, so the list turns over
+ * Read on the institute's clock, as the browser does, so the list turns over
  * on 1 July and 1 January in India whatever the server's timezone.
  */
 final class ReportPeriods
@@ -22,19 +21,17 @@ final class ReportPeriods
     public static function around(int $next, int $prev, bool $includeCurrent = true, ?Carbon $now = null): array
     {
         $now = $now ?? Carbon::now('Asia/Kolkata');
-        $currentYear = $now->year % 100;
         $isEvenSemester = $now->month <= 6;
-        $academicStartYear = $isEvenSemester ? $currentYear - 1 : $currentYear;
+        $academicStartYear = ($now->year % 100) - ($isEvenSemester ? 1 : 0);
+        $currentTerm = $academicStartYear * 2 + ($isEvenSemester ? 1 : 0);
         $baseIndex = $includeCurrent ? 0 : ($isEvenSemester ? -1 : -2);
 
         $periods = [];
         for ($i = -$prev; $i <= $next; $i++) {
-            $index = $baseIndex + $i;
-            $semIsEven = $index % 2 !== 0 ? !$isEvenSemester : $isEvenSemester;
-            $yearOffset = (int) floor($index / 2);
-            $startYear = ($academicStartYear + $yearOffset + 100) % 100;
-            $endYear = ($startYear + 1) % 100;
-            $periods[] = sprintf('%02d%02d%s', $startYear, $endYear, $semIsEven ? 'EVEN' : 'ODD');
+            $term = $currentTerm + $baseIndex + $i;
+            $startYear = (((int) floor($term / 2)) % 100 + 100) % 100;
+            $even = (($term % 2) + 2) % 2 === 1;
+            $periods[] = sprintf('%02d%02d%s', $startYear, ($startYear + 1) % 100, $even ? 'EVEN' : 'ODD');
         }
         return $periods;
     }
