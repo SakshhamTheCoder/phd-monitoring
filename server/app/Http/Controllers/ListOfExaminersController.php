@@ -24,6 +24,9 @@ use App\Support\ExaminerOverlap;
 
 class ListOfExaminersController extends Controller
 {
+    /** Who may approve several of these at once; the list page offers it to the same. */
+    public const BULK_APPROVERS = ['director'];
+
     /** Examiners a supervisor must propose, and DoRDC must approve, per list. */
     private const REQUIRED_PER_LIST = 4;
 
@@ -92,8 +95,7 @@ class ListOfExaminersController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
        
-        $allowedRoles = ['director'];
-        if (!in_array($role->role, $allowedRoles)) {
+        if (!in_array($user->current_role->role, self::BULK_APPROVERS, true)) {
             return $this->refuse();
         }
         $request->validate([

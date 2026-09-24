@@ -16,6 +16,9 @@ use Illuminate\Support\Facades\Auth;
 
 class ResearchExtentionController extends Controller
 {
+    /** Who may approve several of these at once; the list page offers it to the same. */
+    public const BULK_APPROVERS = ['hod', 'phd_coordinator', 'dra', 'dordc', 'director'];
+
     use GeneralFormHandler;
     use GeneralFormSubmitter;
     use GeneralFormList;
@@ -156,8 +159,7 @@ class ResearchExtentionController extends Controller
     {
         $user = Auth::user();
         $role = $user->current_role;
-        $allowedRoles = ['hod', 'phd_coordinator', 'dra', 'dordc', 'director'];
-        if (!in_array($role->role, $allowedRoles)) {
+        if (!in_array($user->current_role->role, self::BULK_APPROVERS, true)) {
             return $this->refuse();
         }
         $request->validate([

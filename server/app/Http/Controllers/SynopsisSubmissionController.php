@@ -20,6 +20,9 @@ use App\Models\SynopsisSubmission;
 
 class SynopsisSubmissionController extends Controller
 {
+    /** Who may approve several of these at once; the list page offers it to the same. */
+    public const BULK_APPROVERS = ['hod', 'phd_coordinator', 'dordc'];
+
     
     use GeneralFormHandler;
     use GeneralFormSubmitter;
@@ -269,8 +272,7 @@ class SynopsisSubmissionController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
        
-        $allowedRoles = ['hod', 'phd_coordinator', 'dordc'];
-        if (!in_array($role->role, $allowedRoles)) {
+        if (!in_array($user->current_role->role, self::BULK_APPROVERS, true)) {
             return $this->refuse();
         }
         $request->validate([

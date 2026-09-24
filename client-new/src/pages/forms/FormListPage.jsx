@@ -93,8 +93,8 @@ const FormListPage = () => {
           search={<FilterBar onSearch={handleSearch} />}
           endpoint={location.pathname}
           filters={filters}
-          // Student leave has no bulk submit on the server, so no "Approve selected".
-          enableApproval={role !== "faculty" && role !== "admin" && !location.pathname.endsWith("/student-leave")}
+          // Offered where the server says this reader may bulk-approve.
+          enableApproval={true}
           enableSelect={role !== "faculty" && role !== "admin"}
           extraTopbarComponents={
             showBulkAllocate ? (

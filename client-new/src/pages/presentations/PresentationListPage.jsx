@@ -9,8 +9,6 @@ import { currentRole } from '../../auth/access';
 
 // Admin reads every evaluation but reviews none, so nothing waits on it.
 const REVIEWS_NOTHING = ['admin'];
-// Mirrors PresentationController::bulkSubmit.
-const BULK_APPROVERS = ['hod', 'dordc', 'adordc'];
 // Mirrors SemesterController::notScheduled.
 const READS_NOT_SCHEDULED = ['hod', 'phd_coordinator', 'faculty', 'dordc', 'admin'];
 const ACTION_TAB = 0;
@@ -56,7 +54,8 @@ const PresentationListPage = () => {
   // second filters object right after mount, so it fetched the list twice.
   const tabFilters = role === "student" ? NO_FILTERS : (TAB_FILTERS[presentationTab] ?? NO_FILTERS);
   const filters = searchFilters ?? tabFilters;
-  const enableApproval = presentationTab === ACTION_TAB && BULK_APPROVERS.includes(role);
+  // Where it belongs; the server's list says whether this reader may use it.
+  const enableApproval = presentationTab === ACTION_TAB;
   const endpoint = presentationTab === NOT_SCHEDULED_TAB ? `${pathname}/not-scheduled` : pathname;
 
   return (

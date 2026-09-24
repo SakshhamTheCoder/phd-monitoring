@@ -42,29 +42,46 @@ trait GeneralFormList
 
         switch ($role) {
             case 'student':
-                return $this->listStudentForms($user, $model, $filters, $page, $rows, $fields, $trusted);
+                $response = $this->listStudentForms($user, $model, $filters, $page, $rows, $fields, $trusted);
+                break;
             case 'hod':
             case 'phd_coordinator':
-                return $this->listHodForms($user, $model, $filters, false, $page, $rows, $fields, $trusted);
+                $response = $this->listHodForms($user, $model, $filters, false, $page, $rows, $fields, $trusted);
+                break;
             case 'dra':
             case 'dordc':
             case 'director':
             case 'admin':
-                return $this->listAdminForms($user, $model, $filters, $page, $rows, $fields, $trusted);
+                $response = $this->listAdminForms($user, $model, $filters, $page, $rows, $fields, $trusted);
+                break;
             case 'faculty':
-                return $this->listFacultyForms($user, $model, $filters, $override, $page, $rows, $fields, $trusted);
+                $response = $this->listFacultyForms($user, $model, $filters, $override, $page, $rows, $fields, $trusted);
+                break;
             case 'adordc':
                 // The ADORDC approves nothing and holds no step, so their list is
                 // the same read-only list the DRA and DORDC get. Department
                 // scoping is deliberately off: listAdordcForms below still has
                 // it and is what to route back to if it is wanted again.
-                return $this->listAdminForms($user, $model, $filters, $page, $rows, $fields, $trusted);
+                $response = $this->listAdminForms($user, $model, $filters, $page, $rows, $fields, $trusted);
+                break;
             case 'doctoral':
             case 'external':
-                return $this->listDoctoralForms($user, $model, $filters, $override, $page, $rows, $fields, $trusted);
+                $response = $this->listDoctoralForms($user, $model, $filters, $override, $page, $rows, $fields, $trusted);
+                break;
             default:
                 return $this->refuse();
         }
+
+        // Whether this reader may approve several at once: the controller's own
+        // list (BULK_APPROVERS), the one its bulk endpoint checks.
+        if (defined(static::class . '::BULK_APPROVERS') && $response instanceof \Illuminate\Http\JsonResponse) {
+            $payload = $response->getData(true);
+            if (is_array($payload) && array_key_exists('data', $payload)) {
+                $payload['can_bulk_approve'] = in_array($role, static::BULK_APPROVERS, true);
+                $response->setData($payload);
+            }
+        }
+        return $response;
     }
 
 

@@ -21,6 +21,9 @@ use App\Support\FormLadder;
 
 class SupervisorAllocationController extends Controller
 {
+    /** Who may approve several of these at once; the list page offers it to the same. */
+    public const BULK_APPROVERS = ['hod'];
+
     use GeneralFormHandler;
     use GeneralFormSubmitter;
     use GeneralFormList;
@@ -148,7 +151,7 @@ class SupervisorAllocationController extends Controller
         $request->validate([
             'form_ids' => 'array|required',
         ]);
-        if ($role->role != 'hod') {
+        if (!in_array($user->current_role->role, self::BULK_APPROVERS, true)) {
             return $this->refuse();
         }
         $request->merge(['approval' => true]);

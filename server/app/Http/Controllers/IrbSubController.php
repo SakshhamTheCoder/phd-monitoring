@@ -29,6 +29,9 @@ use App\Support\FormLadder;
 
 class IrbSubController extends Controller
 {
+    /** Who may approve several of these at once; the list page offers it to the same. */
+    public const BULK_APPROVERS = ['phd_coordinator', 'hod', 'dra', 'dordc'];
+
     use GeneralFormHandler;
     use GeneralFormSubmitter;
     use GeneralFormList;
@@ -175,8 +178,7 @@ class IrbSubController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
         $form_ids = $request->input('form_ids');
-        $allowed_roles = ['phd_coordinator', 'hod', 'dra', 'dordc'];
-        if (!in_array($role->role, $allowed_roles)) {
+        if (!in_array($user->current_role->role, self::BULK_APPROVERS, true)) {
             return $this->refuse();
         }
         $request->validate([

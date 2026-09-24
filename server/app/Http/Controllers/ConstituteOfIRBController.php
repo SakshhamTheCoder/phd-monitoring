@@ -30,6 +30,9 @@ use App\Models\PHDObjective;
 
 class ConstituteOfIRBController extends Controller
 {
+    /** Who may approve several of these at once; the list page offers it to the same. */
+    public const BULK_APPROVERS = ['dra'];
+
     use GeneralFormHandler;
     use GeneralFormSubmitter;
     use GeneralFormList;
@@ -149,7 +152,7 @@ class ConstituteOfIRBController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
         $form_id = $request->form_id;
-        if($role->role != 'dra'){
+        if (!in_array($user->current_role->role, self::BULK_APPROVERS, true)) {
             return $this->refuse();
         }
         $request->validate([

@@ -60,16 +60,14 @@ describe('PresentationListPage', () => {
     }
   });
 
-  it('offers bulk approve on Action required only to roles the server accepts it from', () => {
-    for (const role of ['hod', 'dordc', 'adordc']) {
-      expect(renderAs(role).enableApproval).toBe(true);
-      cleanup();
-    }
-    for (const role of ['faculty', 'phd_coordinator', 'dra', 'director']) {
+  // Who may use it is the list's answer (can_bulk_approve), which the table
+  // reads; the page only says where it belongs.
+  it('asks for bulk approve on Action required, whatever the role', () => {
+    for (const role of ['hod', 'dordc', 'faculty', 'phd_coordinator']) {
       const table = renderAs(role);
       expect(screen.getByText('Action required')).toBeTruthy();
       expect(filterKeys(table)).toContain('action');
-      expect(table.enableApproval).toBe(false);
+      expect(table.enableApproval).toBe(true);
       cleanup();
     }
   });
