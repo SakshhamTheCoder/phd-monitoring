@@ -11,6 +11,7 @@ import Recommendation from "../layouts/Recommendation";
 import RadioButtonGroup from "../fields/RadioButtonGroup";
 import StatusNotice from "../../common/StatusNotice";
 import PublicationsBlock from "./PublicationsBlock";
+import Recommender from "./Recommender";
 import TableComponent from "../table/TableComponent";
 import CustomButton from "../fields/CustomButton";
 import { formatDate } from "../../../utils/timeParse";
@@ -88,8 +89,19 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
   const answers = { ...recorded, ...values };
 
   const setValue = (key, value) => setValues((now) => ({ ...now, [key]: value }));
+  // A box past the end of a shorter list is filled in place, leaving gaps as
+  // they were.
   const setEntry = (key, index, entry) =>
-    setValues((now) => ({ ...now, [key]: now[key].map((current, at) => (at === index ? entry : current)) }));
+    setValues((now) => {
+      const list = [...(now[key] || [])];
+      list[index] = entry;
+      return { ...now, [key]: list };
+    });
+  // What a search box in a list shows once something is picked into it, and
+  // the box a pick from elsewhere last landed in.
+  const [labels, setLabels] = useState({});
+  const [landed, setLanded] = useState({});
+  const labelOf = (field, picked) => (field.shows || ["name"]).map((part) => picked[part]).filter(Boolean).join(" - ");
   const toggle = (key, value) =>
     setValues((now) => ({
       ...now,
@@ -240,6 +252,25 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
   const entryLabel = (field, index) => (field.item_label ? `${field.item_label} ${index + 1}` : undefined);
   const entryHint = (field, index) => field.item_hint?.replace("{n}", index + 1);
 
+  // In a list that takes each pick once, the other boxes are not offered what
+  // is already picked, and a pick of it is refused.
+  const pickedElsewhere = (field, index) =>
+    (values[field.key] || []).filter((code, at) => at !== index && code !== null && code !== undefined && code !== "");
+
+  const pickInto = (field, index, picked) => {
+    if (field.free) {
+      setEntry(field.key, index, picked?.name ?? picked ?? "");
+      return undefined;
+    }
+    if (field.unique && pickedElsewhere(field, index).includes(picked.id)) {
+      toast.warn(field.unique_message);
+      return false;
+    }
+    setEntry(field.key, index, picked.id);
+    setLabels((now) => ({ ...now, [`${field.key}.${index}`]: labelOf(field, picked) }));
+    return undefined;
+  };
+
   const renderEntry = (field, entry, index) =>
     field.item === "suggest" ? (
       <InputSuggestions
@@ -250,9 +281,11 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
         body={field.params}
         hint={entryHint(field, index)}
         suggestionManadatory={!field.free}
-        initialValue={field.free ? entry : field.displays?.[index]}
+        initialValue={field.free ? entry : labels[`${field.key}.${index}`] ?? field.displays?.[index]}
+        excludeIds={field.unique ? pickedElsewhere(field, index) : undefined}
+        inputClassName={landed[field.key] === index ? "just-added" : undefined}
         lock={field.locked}
-        onSelect={(picked) => setEntry(field.key, index, field.free ? picked?.name : picked.id)}
+        onSelect={(picked) => pickInto(field, index, picked)}
       />
     ) : (
       <InputField
@@ -286,7 +319,20 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
   const renderList = (field) => {
     const entries = field.locked ? field.value : values[field.key];
     if (field.fixed) {
-      return <GridContainer label={field.label} elements={entries.map((entry, index) => renderEntry(field, entry, index))} />;
+      // A set number of boxes, however many answers there are yet, split into
+      // rows where the list says so; the label heads the first.
+      const count = field.slots ?? entries.length;
+      const boxes = Array.from({ length: count }, (_, index) => renderEntry(field, entries[index], index));
+      const perRow = field.per_row || count || 1;
+      const rowsOfBoxes = [];
+      for (let start = 0; start < Math.max(count, 1); start += perRow) rowsOfBoxes.push(boxes.slice(start, start + perRow));
+      return (
+        <>
+          {rowsOfBoxes.map((rowBoxes, at) => (
+            <GridContainer key={at} label={at === 0 ? field.label : undefined} elements={rowBoxes} space={field.row_space} />
+          ))}
+        </>
+      );
     }
     const shownAs = field.as ?? (field.locked ? "table" : "inputs");
     if (shownAs === "table") {
@@ -355,6 +401,22 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
     />
   );
 
+  // A recommended match goes into the first empty box of the list it fills.
+  const pickRecommended = (field, match) => {
+    const target = fieldsOf(rows).find((candidate) => candidate.key === field.fills);
+    const list = values[field.fills] || [];
+    if (list.some((code) => code && code === match.faculty_code)) {
+      toast.warn(target.unique_message);
+      return;
+    }
+    const empty = list.findIndex((code) => !code);
+    const index = empty === -1 ? 0 : empty;
+    setEntry(field.fills, index, match.faculty_code);
+    setLabels((now) => ({ ...now, [`${field.fills}.${index}`]: labelOf(target, match) }));
+    setLanded((now) => ({ ...now, [field.fills]: index }));
+    toast.info(field.picked.replace("{n}", index + 1).replace("{name}", match.name));
+  };
+
   const drawRows = (rowsToDraw) =>
     rowsToDraw.map((row, index) => {
       if (row.show_if && !shows(row.show_if, answers)) return null;
@@ -367,6 +429,10 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
           return <React.Fragment key={index}>{renderList(row)}</React.Fragment>;
         case "hidden":
           return null;
+        case "recommender":
+          return (
+            <Recommender key={index} field={row} entries={values[row.from]} onPick={(match) => pickRecommended(row, match)} />
+          );
         case "toggles":
           return <React.Fragment key={index}>{renderToggles(row)}</React.Fragment>;
         // Kept on the page while hidden, so what was picked stays on screen.

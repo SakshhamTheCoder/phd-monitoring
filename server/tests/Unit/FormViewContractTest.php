@@ -255,14 +255,26 @@ class FormViewContractTest extends TestCase
         $this->assertSame([], $notices(['stage' => 'doctoral', 'role' => 'dordc']));
     }
 
-    public function test_supervisor_allocation_names_the_scholars_panel_and_describes_the_coordinators(): void
+    public function test_supervisor_allocation_asks_for_what_it_asked_before(): void
     {
         $definition = new SupervisorAllocationDefinition;
-        $view = $definition->view(['role' => 'phd_coordinator', 'locks' => ['student' => true]]);
-        $this->assertSame(['custom' => 'supervisor-preferences'], $view['panels']['student']);
+        $this->assertEquals([
+            'prefrences' => 'required|array',
+            'prefrences.*' => 'nullable|integer',
+            'broad_area_of_research' => 'required|array',
+            'broad_area_of_research.*' => 'nullable|string|max:255',
+        ], $definition->rules('student', []));
         $this->assertSame(['supervisors' => 'required|array'], $definition->rules('phd_coordinator', []));
-        // The scholar's answers are checked by the controller, as before.
-        $this->assertSame([], $definition->rules('student', []));
+    }
+
+    public function test_the_scholar_chooses_only_while_the_form_is_at_their_step(): void
+    {
+        $kinds = fn (array $data) => array_column((new SupervisorAllocationDefinition)->view($data + ['department_id' => 5])['panels']['student']['rows'], 'kind');
+        $open = ['role' => 'student', 'stage' => 'student', 'locks' => ['student' => false]];
+        $this->assertContains('recommender', $kinds($open));
+        // A form the scholar has sent, or one not at their step, shows the choices made.
+        $this->assertNotContains('recommender', $kinds(['stage' => 'phd_coordinator'] + $open));
+        $this->assertNotContains('recommender', $kinds(['role' => 'admin'] + $open));
     }
 
     public function test_irb_constitution_asks_for_what_it_asked_before(): void

@@ -270,14 +270,9 @@ class SupervisorAllocationController extends Controller
             'student',
             'phd_coordinator',
             function ($formInstance) use ($request, $user) {
-                $request->validate([
-                    'prefrences' => 'required|array',
-                    // Faculty codes. Anything else reached array_unique() below and
-                    // surfaced as "Array to string conversion".
-                    'prefrences.*' => 'nullable|integer',
-                    'broad_area_of_research' => 'required|array',
-                    'broad_area_of_research.*' => 'nullable|string|max:255',
-                ]);
+                // Faculty codes only: anything else reached array_unique() below
+                // and surfaced as "Array to string conversion".
+                $request->validate((new SupervisorAllocationDefinition)->rules('student', $formInstance->fullForm($user)));
                 $prefrences = array_values(array_filter($request->prefrences, fn ($code) => $code !== null));
                 if (count($prefrences) != 6 || count(array_unique($prefrences)) != 6) {
                     throw new \Exception("Please choose six different supervisors.");

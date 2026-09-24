@@ -149,6 +149,18 @@ final class Field
         return $field;
     }
 
+    /**
+     * Matches fetched from $source (POST { areas, ...$params, limit }) for the
+     * entries of the list $from, as they change. Each match can be picked into
+     * the next free box of the list $fills. Drawn as a row of its own.
+     */
+    public static function recommender(string $label, string $source, string $from, string $fills, array $params = [], int $limit = 8): self
+    {
+        $field = new self('recommender', $label);
+        $field->props += ['source' => $source, 'from' => $from, 'fills' => $fills, 'params' => $params, 'limit' => $limit];
+        return $field;
+    }
+
     /** A value posted with the answers as it stands, not drawn. */
     public static function hidden(string $key): self
     {

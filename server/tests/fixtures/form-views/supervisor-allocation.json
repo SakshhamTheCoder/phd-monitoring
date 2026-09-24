@@ -47,7 +47,110 @@
                 "notices": [],
                 "panels": {
                     "student": {
-                        "custom": "supervisor-preferences"
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Select 3 broad areas of research",
+                                "key": "broad_area_of_research",
+                                "fixed": true,
+                                "slots": 3,
+                                "per_row": 1,
+                                "row_space": 2,
+                                "item": "suggest",
+                                "free": true,
+                                "item_show_label": false,
+                                "source": "/suggestions/specialization",
+                                "value": [
+                                    "Catalysis",
+                                    "Reaction engineering",
+                                    "Process modelling"
+                                ],
+                                "locked": true,
+                                "addable": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Supervisor name"
+                                            },
+                                            {
+                                                "key": "email",
+                                                "title": "Email"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "name": "Raj Kumar Gupta",
+                                                "designation": "Professor",
+                                                "department": "Chemical Engineering",
+                                                "faculty_code": 1000744,
+                                                "email": "rk@thapar.edu"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Student preferences"
+                            }
+                        ]
                     },
                     "phd_coordinator": {
                         "wrapped": false,
@@ -155,7 +258,110 @@
                 "notices": [],
                 "panels": {
                     "student": {
-                        "custom": "supervisor-preferences"
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Select 3 broad areas of research",
+                                "key": "broad_area_of_research",
+                                "fixed": true,
+                                "slots": 3,
+                                "per_row": 1,
+                                "row_space": 2,
+                                "item": "suggest",
+                                "free": true,
+                                "item_show_label": false,
+                                "source": "/suggestions/specialization",
+                                "value": [
+                                    "Catalysis",
+                                    "Reaction engineering",
+                                    "Process modelling"
+                                ],
+                                "locked": true,
+                                "addable": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Supervisor name"
+                                            },
+                                            {
+                                                "key": "email",
+                                                "title": "Email"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "name": "Raj Kumar Gupta",
+                                                "designation": "Professor",
+                                                "department": "Chemical Engineering",
+                                                "faculty_code": 1000744,
+                                                "email": "rk@thapar.edu"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Student preferences"
+                            }
+                        ]
                     },
                     "phd_coordinator": {
                         "wrapped": false,
@@ -259,7 +465,110 @@
                 "notices": [],
                 "panels": {
                     "student": {
-                        "custom": "supervisor-preferences"
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Select 3 broad areas of research",
+                                "key": "broad_area_of_research",
+                                "fixed": true,
+                                "slots": 3,
+                                "per_row": 1,
+                                "row_space": 2,
+                                "item": "suggest",
+                                "free": true,
+                                "item_show_label": false,
+                                "source": "/suggestions/specialization",
+                                "value": [
+                                    "Catalysis",
+                                    "Reaction engineering",
+                                    "Process modelling"
+                                ],
+                                "locked": true,
+                                "addable": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Supervisor name"
+                                            },
+                                            {
+                                                "key": "email",
+                                                "title": "Email"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "name": "Raj Kumar Gupta",
+                                                "designation": "Professor",
+                                                "department": "Chemical Engineering",
+                                                "faculty_code": 1000744,
+                                                "email": "rk@thapar.edu"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Student preferences"
+                            }
+                        ]
                     },
                     "phd_coordinator": {
                         "wrapped": false,
@@ -353,7 +662,909 @@
                 "notices": [],
                 "panels": {
                     "student": {
-                        "custom": "supervisor-preferences"
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Select 3 broad areas of research",
+                                "key": "broad_area_of_research",
+                                "fixed": true,
+                                "slots": 3,
+                                "per_row": 1,
+                                "row_space": 2,
+                                "item": "suggest",
+                                "free": true,
+                                "item_show_label": false,
+                                "source": "/suggestions/specialization",
+                                "value": [
+                                    "Catalysis",
+                                    "Reaction engineering",
+                                    "Process modelling"
+                                ],
+                                "locked": true,
+                                "addable": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Supervisor name"
+                                            },
+                                            {
+                                                "key": "email",
+                                                "title": "Email"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "name": "Raj Kumar Gupta",
+                                                "designation": "Professor",
+                                                "department": "Chemical Engineering",
+                                                "faculty_code": 1000744,
+                                                "email": "rk@thapar.edu"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Student preferences"
+                            }
+                        ]
+                    },
+                    "phd_coordinator": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            },
+                                            {
+                                                "key": "supervised_campus",
+                                                "title": "Students supervised"
+                                            }
+                                        ],
+                                        "value": []
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Supervisors allocated by PhD Coordinator"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "new form, scholar choosing",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "phd_coordinator": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "student",
+            "steps": [
+                "student",
+                "phd_coordinator",
+                "hod",
+                "complete"
+            ],
+            "broad_area_of_research": [],
+            "prefrences": [],
+            "department_id": 5,
+            "view": {
+                "version": 1,
+                "title": "Supervisor allocation",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Select 3 broad areas of research",
+                                "key": "broad_area_of_research",
+                                "fixed": true,
+                                "slots": 3,
+                                "per_row": 1,
+                                "row_space": 2,
+                                "item": "suggest",
+                                "free": true,
+                                "item_show_label": false,
+                                "source": "/suggestions/specialization",
+                                "value": [],
+                                "locked": false,
+                                "addable": true
+                            },
+                            {
+                                "kind": "recommender",
+                                "type": "recommender",
+                                "label": "Recommended supervisors (top 8)",
+                                "source": "/faculty/recommend",
+                                "from": "broad_area_of_research",
+                                "fills": "prefrences",
+                                "params": {
+                                    "department_id": 5
+                                },
+                                "limit": 8,
+                                "note": "Based on your broad areas. Free choice: pick anyone or use recommended.",
+                                "empty_with_areas": "No strong matches yet. Try adding clearer areas or pick manually.",
+                                "empty_without_areas": "Select your 3 broad areas above to see recommendations.",
+                                "picked": "Preference {n} set to {name}",
+                                "locked": true
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Select 6 tentative names of supervisors (in order)",
+                                "key": "prefrences",
+                                "fixed": true,
+                                "per_row": 3,
+                                "item": "suggest",
+                                "item_label": "Preference",
+                                "source": "/suggestions/faculty",
+                                "shows": [
+                                    "name",
+                                    "department"
+                                ],
+                                "displays": [
+                                    "",
+                                    "",
+                                    "",
+                                    "",
+                                    "",
+                                    ""
+                                ],
+                                "unique": true,
+                                "unique_message": "This faculty already selected in another slot",
+                                "value": [
+                                    null,
+                                    null,
+                                    null,
+                                    null,
+                                    null,
+                                    null
+                                ],
+                                "locked": false,
+                                "addable": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "phd_coordinator": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            },
+                                            {
+                                                "key": "supervised_campus",
+                                                "title": "Students supervised"
+                                            }
+                                        ],
+                                        "value": []
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Supervisors allocated by PhD Coordinator"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "sent back, scholar choosing again",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [],
+            "stage": "student",
+            "maximum_step": 1,
+            "locks": {
+                "student": false,
+                "phd_coordinator": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "student",
+            "steps": [
+                "student",
+                "phd_coordinator",
+                "hod",
+                "complete"
+            ],
+            "broad_area_of_research": [
+                "Catalysis",
+                "Reaction engineering",
+                "Process modelling"
+            ],
+            "prefrences": [
+                {
+                    "name": "Raj Kumar Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000744,
+                    "email": "rk@thapar.edu"
+                },
+                {
+                    "name": "Rajeev Mehta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000813,
+                    "email": "rm@thapar.edu"
+                }
+            ],
+            "department_id": 5,
+            "view": {
+                "version": 1,
+                "title": "Supervisor allocation",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Select 3 broad areas of research",
+                                "key": "broad_area_of_research",
+                                "fixed": true,
+                                "slots": 3,
+                                "per_row": 1,
+                                "row_space": 2,
+                                "item": "suggest",
+                                "free": true,
+                                "item_show_label": false,
+                                "source": "/suggestions/specialization",
+                                "value": [
+                                    "Catalysis",
+                                    "Reaction engineering",
+                                    "Process modelling"
+                                ],
+                                "locked": false,
+                                "addable": true
+                            },
+                            {
+                                "kind": "recommender",
+                                "type": "recommender",
+                                "label": "Recommended supervisors (top 8)",
+                                "source": "/faculty/recommend",
+                                "from": "broad_area_of_research",
+                                "fills": "prefrences",
+                                "params": {
+                                    "department_id": 5
+                                },
+                                "limit": 8,
+                                "note": "Based on your broad areas. Free choice: pick anyone or use recommended.",
+                                "empty_with_areas": "No strong matches yet. Try adding clearer areas or pick manually.",
+                                "empty_without_areas": "Select your 3 broad areas above to see recommendations.",
+                                "picked": "Preference {n} set to {name}",
+                                "locked": true
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Select 6 tentative names of supervisors (in order)",
+                                "key": "prefrences",
+                                "fixed": true,
+                                "per_row": 3,
+                                "item": "suggest",
+                                "item_label": "Preference",
+                                "source": "/suggestions/faculty",
+                                "shows": [
+                                    "name",
+                                    "department"
+                                ],
+                                "displays": [
+                                    "Raj Kumar Gupta - Chemical Engineering",
+                                    "Rajeev Mehta - Chemical Engineering",
+                                    "",
+                                    "",
+                                    "",
+                                    ""
+                                ],
+                                "unique": true,
+                                "unique_message": "This faculty already selected in another slot",
+                                "value": [
+                                    1000744,
+                                    1000813,
+                                    null,
+                                    null,
+                                    null,
+                                    null
+                                ],
+                                "locked": false,
+                                "addable": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "phd_coordinator": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            },
+                                            {
+                                                "key": "supervised_campus",
+                                                "title": "Students supervised"
+                                            }
+                                        ],
+                                        "value": []
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Supervisors allocated by PhD Coordinator"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "unsent, admin reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "phd_coordinator": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "admin",
+            "steps": [
+                "student",
+                "phd_coordinator",
+                "hod",
+                "complete"
+            ],
+            "broad_area_of_research": [
+                "Catalysis",
+                "Reaction engineering",
+                "Process modelling"
+            ],
+            "prefrences": [
+                {
+                    "name": "Raj Kumar Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000744,
+                    "email": "rk@thapar.edu"
+                }
+            ],
+            "view": {
+                "version": 1,
+                "title": "Supervisor allocation",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Select 3 broad areas of research",
+                                "key": "broad_area_of_research",
+                                "fixed": true,
+                                "slots": 3,
+                                "per_row": 1,
+                                "row_space": 2,
+                                "item": "suggest",
+                                "free": true,
+                                "item_show_label": false,
+                                "source": "/suggestions/specialization",
+                                "value": [
+                                    "Catalysis",
+                                    "Reaction engineering",
+                                    "Process modelling"
+                                ],
+                                "locked": true,
+                                "addable": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Supervisor name"
+                                            },
+                                            {
+                                                "key": "email",
+                                                "title": "Email"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "name": "Raj Kumar Gupta",
+                                                "designation": "Professor",
+                                                "department": "Chemical Engineering",
+                                                "faculty_code": 1000744,
+                                                "email": "rk@thapar.edu"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Student preferences"
+                            }
+                        ]
+                    },
+                    "phd_coordinator": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            },
+                                            {
+                                                "key": "supervised_campus",
+                                                "title": "Students supervised"
+                                            }
+                                        ],
+                                        "value": []
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Supervisors allocated by PhD Coordinator"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "submitted, scholar reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [],
+            "stage": "phd_coordinator",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "phd_coordinator": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "student",
+            "steps": [
+                "student",
+                "phd_coordinator",
+                "hod",
+                "complete"
+            ],
+            "broad_area_of_research": [
+                "Catalysis",
+                "Reaction engineering",
+                "Process modelling"
+            ],
+            "prefrences": [
+                {
+                    "name": "Raj Kumar Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000744,
+                    "email": "rk@thapar.edu"
+                }
+            ],
+            "view": {
+                "version": 1,
+                "title": "Supervisor allocation",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Select 3 broad areas of research",
+                                "key": "broad_area_of_research",
+                                "fixed": true,
+                                "slots": 3,
+                                "per_row": 1,
+                                "row_space": 2,
+                                "item": "suggest",
+                                "free": true,
+                                "item_show_label": false,
+                                "source": "/suggestions/specialization",
+                                "value": [
+                                    "Catalysis",
+                                    "Reaction engineering",
+                                    "Process modelling"
+                                ],
+                                "locked": true,
+                                "addable": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Supervisor name"
+                                            },
+                                            {
+                                                "key": "email",
+                                                "title": "Email"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "name": "Raj Kumar Gupta",
+                                                "designation": "Professor",
+                                                "department": "Chemical Engineering",
+                                                "faculty_code": 1000744,
+                                                "email": "rk@thapar.edu"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Student preferences"
+                            }
+                        ]
                     },
                     "phd_coordinator": {
                         "wrapped": false,
