@@ -216,29 +216,12 @@ Route::post('/reset-password', function (Request $request) {
 
 // available_roles otherwise reaches the client only at login, so a role granted
 // mid-session stays invisible until the user logs out and back in.
-Route::get('/my-roles', function () {
-    $user = Auth::user();
-
-    // Capabilities of the role being acted as, so the client can hide actions
-    // the API would refuse. The API still refuses them; this only stops the UI
-    // offering a button that cannot work.
-    $capabilities = collect((array) ($user->current_role?->getAttributes() ?? []))
-        ->filter(fn ($value, $key) => str_starts_with($key, 'can_'))
-        ->map(fn ($value) => $value === 'true')
-        ->all();
-
-    // Mentoring is a fact about the person, not the role: true only while they
-    // mentor something, so the nav item stays off everyone else's screen.
-    $capabilities['can_read_urf_mentees'] = !empty($capabilities['can_manage_urf'])
-        || (!empty($capabilities['can_read_urf_mentees'])
-            && \App\Models\UrfApplication::mentoredBy($user->faculty?->faculty_code)->exists());
-
-    return response()->json([
-        'available_roles' => $user->availableRoles(),
-        'current_role' => $user->current_role?->role,
-        'capabilities' => $capabilities,
-    ]);
-})->middleware('auth:sanctum');
+// Who the user is acting as, what that role may do, and the menus and page
+// access to draw for it (App\Support\Navigation). /me is the same answer; the
+// web reads it for its routes and sidebar, and the app for its own.
+$me = fn () => response()->json(\App\Support\Navigation::me(Auth::user()));
+Route::get('/my-roles', $me)->middleware('auth:sanctum');
+Route::get('/me', $me)->middleware('auth:sanctum');
 
 Route::post('/switch-role', function (Request $request) {
     try {

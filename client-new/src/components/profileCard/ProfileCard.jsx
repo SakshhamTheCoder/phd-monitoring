@@ -5,7 +5,8 @@ import "react-circular-progressbar/dist/styles.css";
 import ShowPublications from "../publications/ShowPublications";
 import "./ProfileCard.css";
 import { facultyNameCell } from "../facultyLink/FacultyLink";
-import { ACCESS, currentRole } from "../../auth/access";
+import { currentRole } from "../../auth/access";
+import { useAccess } from "../../context/CapabilitiesContext";
 
 import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
 import { baseURL } from "../../api/urls";
@@ -67,7 +68,8 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
   // read the figure below with no page at all behind it, which is why this is
   // narrower than "may read attendance".
   const role = currentRole();
-  const opensAttendancePage = ACCESS.attendance.includes(role);
+  const { may } = useAccess();
+  const opensAttendancePage = may('attendance');
   const attendanceLinkText = role === 'hod' ? 'Leave requests' : 'View attendance';
 
   const [profile, setProfile] = useState(locationState || dataIP);
@@ -448,7 +450,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
           <CustomButton text="Manage supervisors/doctoral" variant="secondary" onClick={() => setShowSupervisorDoctoralModal(true)} />
         )}
         {/* The same form admin page the Students list opens, on this scholar. */}
-        {ACCESS.admin.includes(role) && !permissions.is_self && (
+        {may('admin') && !permissions.is_self && (
           <CustomButton text="Manage forms" variant="secondary" onClick={() => navigate(`/forms/manage?roll_no=${profile.roll_no}`)} />
         )}
         {permissions.can_edit && permissions.is_self && (

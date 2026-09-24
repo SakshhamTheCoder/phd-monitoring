@@ -5,10 +5,11 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { LoadingProvider, useLoading } from './context/LoadingContext';
 import { FeaturesProvider, useFeatures } from './context/FeaturesContext';
-import { CapabilitiesProvider } from './context/CapabilitiesContext';
+import { CapabilitiesProvider, useAccess } from './context/CapabilitiesContext';
 import Loader from './components/loader/loader';
+import LoadError from './components/common/LoadError';
 import ErrorBoundary from './components/common/ErrorBoundary';
-import { ACCESS, currentRole } from './auth/access';
+import { currentRole } from './auth/access';
 
 // Every page is split out of the entry chunk. A student signing in should not
 // download the admin surface to see their own forms.
@@ -108,8 +109,9 @@ const AppContent = () => {
   // A switched-off module leaves no route behind, so its address falls through
   // to the 404 page rather than rendering against an API that answers 404.
   const features = useFeatures();
-  // Route gates read the same lists the sidebar does, from src/auth/access.js.
-  const may = (area) => ACCESS[area].includes(role);
+  // Route gates read the same answer the sidebar does: which areas this role
+  // may reach, from the server (GET /me).
+  const { may, known, failed } = useAccess();
 
   // Signed out, a protected address has no route at all and fell through to
   // "Not found". Send the visitor to sign in and back to where they were going.
@@ -119,6 +121,12 @@ const AppContent = () => {
     window.location.replace(`/login?next=${encodeURIComponent(pathname + search)}`);
     return null;
   }
+  // Signed in, the routes wait for what this role may reach; it is cached, so
+  // this is only the first page after signing in or switching role.
+  if (signedIn && failed) {
+    return <LoadError message="Could not load your menu. Check your connection and try again." onRetry={() => window.location.reload()} />;
+  }
+  if (signedIn && !known) return <Loader scope="app" />;
   return (
     <>
       {loading && <Loader scope="app" />}
