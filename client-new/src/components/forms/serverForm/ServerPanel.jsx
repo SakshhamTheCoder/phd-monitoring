@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useState } from "react";
+import React, { Suspense, lazy, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import GridContainer from "../fields/GridContainer";
 import InputField from "../fields/InputField";
@@ -22,6 +22,7 @@ import TableComponent from "../table/TableComponent";
 import CustomButton from "../fields/CustomButton";
 import { formatDate } from "../../../utils/timeParse";
 import { submitForm } from "../../../api/form";
+import { customFetch } from "../../../api/base";
 import { toast } from "react-toastify";
 import { useLoading } from "../../../context/LoadingContext";
 import { baseURL } from "../../../api/urls";
@@ -72,6 +73,8 @@ const passes = (checks = [], values, files) => {
     return check.keys.some((key) => {
       if (check.check === "file") return !files[key];
       if (check.check === "truthy") return !values[key];
+      if (check.check === "filled") return !`${values[key] ?? ""}`.trim();
+      if (check.check === "number") return isNaN(Number(values[key]));
       return values[key] === null || values[key] === undefined;
     });
   });
@@ -81,12 +84,16 @@ const passes = (checks = [], values, files) => {
 
 // Whether a part is on the page for the answers as they stand (show_if).
 const shows = (tests = [], values) =>
-  tests.every((test) =>
-    test.test === "above" ? parseFloat(values[test.key] || 0) > test.than : !!values[test.key]
-  );
+  tests.every((test) => {
+    if (test.test === "above") return parseFloat(values[test.key] || 0) > test.than;
+    if (test.test === "equals") return values[test.key] === test.than;
+    return !!values[test.key];
+  });
 
 // `host` carries what a page hosting the form adds: a submit path when the form
 // is drawn away from its own route, and what to do after a reload or a delete.
+// A dialog hosts it too: it takes the answers (submit), closes (onCancel) and
+// says when its request is in flight (busy).
 const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
   const location = useLocation();
   const { setLoading } = useLoading();
@@ -125,6 +132,7 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
 
   const submit = (field) => {
     if (!passes(field.requires, values, files)) return undefined;
+    if (host.submit) return host.submit(submission(), files, field);
     const picked = Object.entries(files).map(([key, file]) => ({ key, file }));
     return submitForm({ ...submission(), ...field.sends }, location, setLoading, picked.length > 0 ? picked : null);
   };
@@ -139,6 +147,26 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
     }
     setValue(field.key, text);
   };
+
+  // Options a select reads from the server when it is drawn, by field key.
+  const [fetchedOptions, setFetchedOptions] = useState({});
+  useEffect(() => {
+    let cancelled = false;
+    fieldsOf(rows).filter((field) => field.options_from).forEach((field) => {
+      const { path, value, title } = field.options_from;
+      customFetch(baseURL + path, "GET").then((res) => {
+        if (cancelled || !res?.success) return;
+        const options = (res.response?.data || []).map((entry) => ({
+          value: entry[value],
+          title: title.replace(/\{(\w+)\}/g, (_, name) => entry[name] ?? ""),
+        }));
+        setFetchedOptions((now) => ({ ...now, [field.key]: options }));
+      });
+    });
+    return () => { cancelled = true; };
+    // Read once, when the rows are first drawn.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const shownValue = (field) => {
     if (field.total_of) {
@@ -155,6 +183,7 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
           <InputField
             required={field.required}
             label={field.label}
+            type={field.input_type}
             initialValue={shownValue(field)}
             isLocked={field.locked}
             hint={field.hint}
@@ -235,7 +264,7 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
             label={field.label}
             initialValue={has(field, "display") ? field.display : field.value}
             isLocked={field.locked}
-            options={field.options}
+            options={field.options_from ? fetchedOptions[field.key] : field.options}
             // A select hands back text; a yes or no choice is kept as true or false.
             onChange={(choice) => setValue(field.key, field.boolean ? choice === "true" : choice)}
           />
@@ -279,11 +308,17 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
             suggestionManadatory={!field.free}
             initialValue={field.display}
             lock={field.locked}
-            onSelect={(picked) => setValue(field.key, field.free ? picked?.name ?? picked ?? "" : picked.id)}
+            onSelect={(picked) =>
+              field.picks
+                ? setValues((now) => ({ ...now, ...Object.fromEntries(Object.entries(field.picks).map(([key, from]) => [key, picked[from]])) }))
+                : setValue(field.key, field.free ? picked?.name ?? picked ?? "" : picked.id)
+            }
           />
         );
       case "submit":
-        return <CustomButton text={field.label} onClick={() => submit(field)} />;
+        return <CustomButton text={field.label} onClick={() => submit(field)} busy={host.busy} />;
+      case "cancel":
+        return <CustomButton text={field.label} variant="quiet" onClick={host.onCancel} />;
       // "blank" is an empty cell holding the row's columns in place.
       default:
         return null;
@@ -509,6 +544,13 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
           );
         case "toggles":
           return <React.Fragment key={index}>{renderToggles(row)}</React.Fragment>;
+        // A dialog's closing buttons.
+        case "actions":
+          return (
+            <div key={index} className="modal-actions">
+              {row.items.map((field, at) => <React.Fragment key={at}>{renderField(field)}</React.Fragment>)}
+            </div>
+          );
         // Kept on the page while hidden, so what was picked stays on screen.
         case "group":
           return (
@@ -521,6 +563,8 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
             </div>
           );
         default:
+          // A field on a row of its own, as a stacked dialog draws them.
+          if (!row.items) return <React.Fragment key={index}>{renderField(row)}</React.Fragment>;
           return (
             <GridContainer
               key={index}

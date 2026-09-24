@@ -223,6 +223,17 @@ $me = fn () => response()->json(\App\Support\Navigation::me(Auth::user()));
 Route::get('/my-roles', $me)->middleware('auth:sanctum');
 Route::get('/me', $me)->middleware('auth:sanctum');
 
+// A page described for the reader: header, table, dialogs and imports
+// (App\Pages). The web and the app draw it from this rather than each keeping
+// its own copy.
+Route::get('/views/{page}', function (string $page) {
+    $definition = \App\Pages\Pages::find($page);
+    abort_if($definition === null, 404);
+    abort_unless($definition->allows(Auth::user()), 403);
+
+    return response()->json($definition->view(Auth::user()));
+})->middleware('auth:sanctum');
+
 Route::post('/switch-role', function (Request $request) {
     try {
         $request->validate([

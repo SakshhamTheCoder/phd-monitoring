@@ -37,6 +37,8 @@ namespace App\Forms;
  */
 abstract class FormDefinition
 {
+    use ResolvesRows;
+
     public const VERSION = 1;
 
     abstract public function title(): string;
@@ -218,37 +220,6 @@ abstract class FormDefinition
         );
     }
 
-    /**
-     * Rows in a block of their own: hidden while the answer $hiddenUnless is
-     * empty, and/or with a class (such as 'reveal', which fades them in).
-     */
-    protected static function group(array $rows, ?string $hiddenUnless = null, ?string $className = null): array
-    {
-        return array_filter(
-            ['kind' => 'group', 'hidden_unless' => $hiddenUnless, 'class_name' => $className, 'rows' => $rows],
-            fn ($value) => $value !== null
-        );
-    }
-
-    /** A row of fields side by side; see GridContainer on the web for space and each. */
-    protected static function row(array $items, ?int $space = null, ?int $each = null, ?string $label = null, ?array $showIf = null): array
-    {
-        return array_filter([
-            'kind' => 'grid',
-            'items' => $items,
-            'space' => $space,
-            'each' => $each,
-            'label' => $label,
-            'show_if' => $showIf,
-        ], fn ($value) => $value !== null);
-    }
-
-    /** A show_if test for row(): the answer $key is set, or above $than. */
-    protected static function when(string $key, string $test = 'set', int|float $than = 0): array
-    {
-        return ['key' => $key, 'test' => $test, 'than' => $than];
-    }
-
     /** First value that is neither null nor an empty string or list. */
     protected static function firstFilled(mixed ...$values): mixed
     {
@@ -258,27 +229,5 @@ abstract class FormDefinition
             }
         }
         return null;
-    }
-
-    private function resolveRows(array $rows, array $data): array
-    {
-        return array_values(array_filter(array_map(fn ($row) => $this->resolveRow($row, $data), $rows)));
-    }
-
-    private function resolveRow(array|Field $row, array $data): ?array
-    {
-        if (is_array($row) && ($row['kind'] ?? null) === 'group') {
-            return array_merge($row, ['rows' => $this->resolveRows($row['rows'], $data)]);
-        }
-        if ($row instanceof Field) {
-            $field = $row->resolve($data);
-            return $field === null ? null : ['kind' => $field['type']] + $field;
-        }
-
-        $items = array_values(array_filter(array_map(fn (Field $field) => $field->resolve($data), $row['items'])));
-        // A row that only held a button nobody here may press goes; a row
-        // declared empty (a scholar with no supervisors yet) stays, as the
-        // hand-built panels drew it.
-        return $items || !$row['items'] ? array_merge($row, ['items' => $items]) : null;
     }
 }

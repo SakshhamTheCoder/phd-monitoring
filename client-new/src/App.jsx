@@ -47,7 +47,7 @@ const AdminFormManagement = lazy(() => import('./pages/admin/AdminFormManagement
 const AreaOfSpecialization = lazy(() => import('./pages/areaOfSpecialization/AreaOfSpecialization'));
 const StudentCourses = lazy(() => import('./pages/StudentCourses/StudentCourses'));
 const AdminCourseManagement = lazy(() => import('./pages/AdminCourseManagement/AdminCourseManagement'));
-const OutsideExperts = lazy(() => import('./pages/OutsideExperts/OutsideExperts'));
+const ServerListPage = lazy(() => import('./components/serverPage/ServerListPage'));
 const ExternalReview = lazy(() => import('./pages/externalReview/ExternalReview'));
 const SupervisorDoctoralApproval = lazy(() => import('./pages/SupervisorDoctoralApproval/SupervisorDoctoralApproval'));
 const UsersPage = lazy(() => import('./pages/users/UsersPage'));
@@ -274,7 +274,7 @@ const AppContent = () => {
                 <>
                   <Route path="/forms/manage" element={<AdminFormManagement />} />
                   <Route path="/courses/manage" element={<AdminCourseManagement />} />
-                  <Route path="/outside-experts" element={<OutsideExperts />} />
+                  <Route path="/outside-experts" element={<ServerListPage page="outside-experts" />} />
                   <Route path="/logs" element={<Logs />} />
                   <Route path="/users" element={<UsersPage />} />
                   <Route path="/clerk-management" element={<ClerkManagement />} />

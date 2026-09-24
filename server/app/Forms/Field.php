@@ -13,6 +13,8 @@ namespace App\Forms;
  */
 final class Field
 {
+    private const ANYONE = '*';
+
     private array $props;
     private ?string $editableBy = null;
     private bool $lockedAnyway = false;
@@ -261,6 +263,12 @@ final class Field
         return new self('submit', $label);
     }
 
+    /** A dialog's button that closes it without sending anything. */
+    public static function cancel(string $label = 'Cancel'): self
+    {
+        return new self('cancel', $label);
+    }
+
     public function key(string $key): self
     {
         $this->props['key'] = $key;
@@ -375,10 +383,11 @@ final class Field
     }
 
     /**
-     * Drawn only while the answer $key passes: 'set' (truthy) or 'above' $than.
-     * Checked as the reader answers, so a part can follow a choice.
+     * Drawn only while the answer $key passes: 'set' (truthy), 'above' $than,
+     * or 'equals' $than. Checked as the reader answers, so a part can follow a
+     * choice.
      */
-    public function showIf(string $key, string $test = 'set', int|float $than = 0): self
+    public function showIf(string $key, string $test = 'set', int|float|string $than = 0): self
     {
         $this->props['show_if'][] = ['key' => $key, 'test' => $test, 'than' => $than];
         return $this;
@@ -458,6 +467,63 @@ final class Field
         return $this;
     }
 
+    /** Editable by whoever the page is drawn for, as a dialog's fields are. */
+    public function open(): self
+    {
+        $this->editableBy = self::ANYONE;
+        return $this;
+    }
+
+    /** The kind of input: 'email' or 'number' rather than plain text. */
+    public function inputType(string $type): self
+    {
+        $this->props['input_type'] = $type;
+        return $this;
+    }
+
+    /**
+     * Where a dialog opened on a table row takes the value from: the first of
+     * $sources the row fills, each a key or a list of keys read as words
+     * joined by spaces. A dialog opened with no row keeps the field's value.
+     */
+    public function from(string|array ...$sources): self
+    {
+        $this->props['from'] = $sources;
+        return $this;
+    }
+
+    /** What a pick in a search box sets, as answer key => key of the match. */
+    public function picks(array $keys): self
+    {
+        $this->props['picks'] = $keys;
+        return $this;
+    }
+
+    /**
+     * A select whose options are read from $path (GET, the list under
+     * response.data) when it is drawn: each option's value is $value and its
+     * title fills {key} placeholders in $title from the entry.
+     */
+    public function optionsFrom(string $path, string $value, string $title): self
+    {
+        $this->props['options_from'] = ['path' => $path, 'value' => $value, 'title' => $title];
+        return $this;
+    }
+
+    /** A submit that refuses, with $message, while any of $keys is blank once trimmed. */
+    public function requiresFilled(array $keys, string $message): self
+    {
+        $this->props['requires'][] = ['keys' => $keys, 'message' => $message, 'check' => 'filled'];
+        return $this;
+    }
+
+    /** A submit that refuses, with $message, while $key does not read as a number. */
+    public function requiresNumber(string $key, string $message): self
+    {
+        $this->props['requires'][] = ['keys' => [$key], 'message' => $message, 'check' => 'number'];
+        return $this;
+    }
+
     /** Laravel rules for the key, and for each entry when the field is a list. */
     public function rules(string $rules, ?string $itemRules = null): self
     {
@@ -508,6 +574,9 @@ final class Field
             }
         }
 
+        if ($this->props['type'] === 'cancel') {
+            return $this->props;
+        }
         if ($this->props['type'] === 'submit') {
             return $this->isEditable($data) ? $this->props : null;
         }
@@ -528,13 +597,16 @@ final class Field
         if ($this->props['type'] === 'list' && !array_key_exists('addable', $resolved)) {
             // Adding a box is for the step's holder, unless the definition says
             // otherwise.
-            $resolved['addable'] = $this->editableBy !== null && FormDefinition::mayEdit($data, $this->editableBy);
+            $resolved['addable'] = $this->isEditable($data);
         }
         return $resolved;
     }
 
     private function isEditable(array $data): bool
     {
+        if ($this->editableBy === self::ANYONE) {
+            return true;
+        }
         return $this->editableBy !== null && FormDefinition::mayEdit($data, $this->editableBy);
     }
 }
