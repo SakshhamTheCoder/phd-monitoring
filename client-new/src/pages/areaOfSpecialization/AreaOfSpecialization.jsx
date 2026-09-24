@@ -240,6 +240,8 @@ Data Science,CSED`;
       <PagenationTable
         key={refreshKey}
         endpoint="/departments/area-of-specialization/list"
+        filters={filter}
+        search={<FilterBar path="/departments/area-of-specialization" onSearch={handleFilterChange} />}
         enableApproval={false}
         customOpenForm={openForm}
         actions={[

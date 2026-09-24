@@ -4,6 +4,7 @@ import { customFetch, NETWORK_ERROR_MESSAGE } from '../../api/base';
 import { baseURL } from '../../api/urls';
 import { useLoading } from '../../context/LoadingContext';
 import PagenationTable from '../../components/pagenationTable/PagenationTable';
+import FilterBar from '../../components/filterBar/FilterBar';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import Page from '../../components/page/Page';
 import CustomButton from '../../components/forms/fields/CustomButton';
@@ -14,6 +15,7 @@ const EXPERT_CSV_COLUMNS = ['full_name', 'email', 'phone', 'designation', 'depar
 
 const OutsideExperts = () => {
   const [refreshKey, setRefreshKey] = useState(0);
+  const [filters, setFilters] = useState([]);
   const { setLoading } = useLoading();
   const [submitting, setSubmitting] = useState(false);
   
@@ -200,6 +202,8 @@ const OutsideExperts = () => {
       <PagenationTable
         key={refreshKey}
         endpoint="/outside-experts/list"
+        filters={filters}
+        search={<FilterBar path="/outside-experts" onSearch={setFilters} />}
         // No detail page for an expert; editing is in the row menu.
         rowClickable={false}
         enableApproval={false}

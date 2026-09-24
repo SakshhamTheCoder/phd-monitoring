@@ -22,7 +22,9 @@ class OutsideExpertController extends Controller
         try {
             $perPage = $request->input('rows', 15);
             $page = $request->input('page', 1);
-            $filters = $request->input('filters', []);
+            // The table sends its filters as JSON in the query string.
+            $filtersJson = $request->query('filters');
+            $filters = $filtersJson ? json_decode(urldecode($filtersJson), true) : $request->input('filters', []);
 
             $query = OutsideExpert::query();
 
