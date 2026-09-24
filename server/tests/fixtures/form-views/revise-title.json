@@ -38,145 +38,150 @@
             "view": {
                 "version": 1,
                 "title": "Revise title or objectives",
+                "notices": [],
                 "panels": {
-                    "student": [
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Roll number",
-                                    "value": "102203456",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Name",
-                                    "value": "Asha Verma",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Date of revised IRB",
-                                    "format": "date",
-                                    "value": "2025-03-14",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Date of admission",
-                                    "format": "date",
-                                    "value": "2023-08-01",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Department",
-                                    "value": "Chemical Engineering",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Current status",
-                                    "value": "Active",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Address of correspondence",
-                                    "value": "Hostel J, Thapar Institute, Patiala",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Current title of PhD thesis",
-                                    "value": "Catalysts for low-temperature ammonia synthesis",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "table",
-                                    "label": "Current objectives",
-                                    "columns": [
-                                        {
-                                            "key": "objective",
-                                            "title": "Objective"
-                                        }
-                                    ],
-                                    "value": [
-                                        {
-                                            "objective": "Screen ruthenium catalysts"
-                                        },
-                                        {
-                                            "objective": "Model reaction kinetics"
-                                        }
-                                    ]
-                                }
-                            ],
-                            "space": 3
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Revised title of PhD thesis",
-                                    "key": "revised_title",
-                                    "required": true,
-                                    "value": "Catalysts for low-temperature ammonia synthesis",
-                                    "locked": false
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "list",
-                            "type": "list",
-                            "label": "Revised objectives",
-                            "key": "revised_objectives",
-                            "required": true,
-                            "item_label": "Revised objective",
-                            "add_label": "Add objective",
-                            "column": "Objective",
-                            "each": 3,
-                            "note": "Clear a box to drop that objective.",
-                            "value": [
-                                "Screen ruthenium catalysts",
-                                "Model reaction kinetics"
-                            ],
-                            "locked": false
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "submit",
-                                    "label": "Submit revision"
-                                }
-                            ]
-                        }
-                    ]
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of revised IRB",
+                                        "format": "date",
+                                        "value": "2025-03-14",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Current status",
+                                        "value": "Active",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Address of correspondence",
+                                        "value": "Hostel J, Thapar Institute, Patiala",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Current title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "Current objectives",
+                                        "columns": [
+                                            {
+                                                "key": "objective",
+                                                "title": "Objective"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "objective": "Screen ruthenium catalysts"
+                                            },
+                                            {
+                                                "objective": "Model reaction kinetics"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Revised title of PhD thesis",
+                                        "key": "revised_title",
+                                        "required": true,
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Revised objectives",
+                                "key": "revised_objectives",
+                                "required": true,
+                                "item_label": "Revised objective",
+                                "add_label": "Add objective",
+                                "column": "Objective",
+                                "each": 3,
+                                "note": "Clear a box to drop that objective.",
+                                "value": [
+                                    "Screen ruthenium catalysts",
+                                    "Model reaction kinetics"
+                                ],
+                                "locked": false,
+                                "addable": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit revision"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
                 }
             }
         }
@@ -223,145 +228,150 @@
             "view": {
                 "version": 1,
                 "title": "Revise title or objectives",
+                "notices": [],
                 "panels": {
-                    "student": [
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Roll number",
-                                    "value": "102203456",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Name",
-                                    "value": "Asha Verma",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Date of revised IRB",
-                                    "format": "date",
-                                    "value": "2025-03-14",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Date of admission",
-                                    "format": "date",
-                                    "value": "2023-08-01",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Department",
-                                    "value": "Chemical Engineering",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Current status",
-                                    "value": "Active",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Address of correspondence",
-                                    "value": "Hostel J, Thapar Institute, Patiala",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Current title of PhD thesis",
-                                    "value": "Catalysts for low-temperature ammonia synthesis",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "table",
-                                    "label": "Current objectives",
-                                    "columns": [
-                                        {
-                                            "key": "objective",
-                                            "title": "Objective"
-                                        }
-                                    ],
-                                    "value": [
-                                        {
-                                            "objective": "Screen ruthenium catalysts"
-                                        },
-                                        {
-                                            "objective": "Model reaction kinetics"
-                                        }
-                                    ]
-                                }
-                            ],
-                            "space": 3
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Revised title of PhD thesis",
-                                    "key": "revised_title",
-                                    "required": true,
-                                    "value": "Ruthenium catalysts for ammonia synthesis",
-                                    "locked": false
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "list",
-                            "type": "list",
-                            "label": "Revised objectives",
-                            "key": "revised_objectives",
-                            "required": true,
-                            "item_label": "Revised objective",
-                            "add_label": "Add objective",
-                            "column": "Objective",
-                            "each": 3,
-                            "note": "Clear a box to drop that objective.",
-                            "value": [
-                                "Screen ruthenium catalysts",
-                                "Test at pilot scale"
-                            ],
-                            "locked": false
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "submit",
-                                    "label": "Submit revision"
-                                }
-                            ]
-                        }
-                    ]
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of revised IRB",
+                                        "format": "date",
+                                        "value": "2025-03-14",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Current status",
+                                        "value": "Active",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Address of correspondence",
+                                        "value": "Hostel J, Thapar Institute, Patiala",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Current title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "Current objectives",
+                                        "columns": [
+                                            {
+                                                "key": "objective",
+                                                "title": "Objective"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "objective": "Screen ruthenium catalysts"
+                                            },
+                                            {
+                                                "objective": "Model reaction kinetics"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Revised title of PhD thesis",
+                                        "key": "revised_title",
+                                        "required": true,
+                                        "value": "Ruthenium catalysts for ammonia synthesis",
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Revised objectives",
+                                "key": "revised_objectives",
+                                "required": true,
+                                "item_label": "Revised objective",
+                                "add_label": "Add objective",
+                                "column": "Objective",
+                                "each": 3,
+                                "note": "Clear a box to drop that objective.",
+                                "value": [
+                                    "Screen ruthenium catalysts",
+                                    "Test at pilot scale"
+                                ],
+                                "locked": false,
+                                "addable": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit revision"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
                 }
             }
         }
@@ -402,137 +412,142 @@
             "view": {
                 "version": 1,
                 "title": "Revise title or objectives",
+                "notices": [],
                 "panels": {
-                    "student": [
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Roll number",
-                                    "value": "102203456",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Name",
-                                    "value": "Asha Verma",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Date of revised IRB",
-                                    "format": "date",
-                                    "value": "2025-03-14",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Date of admission",
-                                    "format": "date",
-                                    "value": "2023-08-01",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Department",
-                                    "value": "Chemical Engineering",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Current status",
-                                    "value": "Active",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Address of correspondence",
-                                    "value": "Hostel J, Thapar Institute, Patiala",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Current title of PhD thesis",
-                                    "value": null,
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "table",
-                                    "label": "Current objectives",
-                                    "columns": [
-                                        {
-                                            "key": "objective",
-                                            "title": "Objective"
-                                        }
-                                    ],
-                                    "value": []
-                                }
-                            ],
-                            "space": 3
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Revised title of PhD thesis",
-                                    "key": "revised_title",
-                                    "required": true,
-                                    "value": "",
-                                    "locked": false
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "list",
-                            "type": "list",
-                            "label": "Revised objectives",
-                            "key": "revised_objectives",
-                            "required": true,
-                            "item_label": "Revised objective",
-                            "add_label": "Add objective",
-                            "column": "Objective",
-                            "each": 3,
-                            "note": "Clear a box to drop that objective.",
-                            "value": [
-                                ""
-                            ],
-                            "locked": false
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "submit",
-                                    "label": "Submit revision"
-                                }
-                            ]
-                        }
-                    ]
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of revised IRB",
+                                        "format": "date",
+                                        "value": "2025-03-14",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Current status",
+                                        "value": "Active",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Address of correspondence",
+                                        "value": "Hostel J, Thapar Institute, Patiala",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Current title of PhD thesis",
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "Current objectives",
+                                        "columns": [
+                                            {
+                                                "key": "objective",
+                                                "title": "Objective"
+                                            }
+                                        ],
+                                        "value": []
+                                    }
+                                ],
+                                "space": 3
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Revised title of PhD thesis",
+                                        "key": "revised_title",
+                                        "required": true,
+                                        "value": "",
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Revised objectives",
+                                "key": "revised_objectives",
+                                "required": true,
+                                "item_label": "Revised objective",
+                                "add_label": "Add objective",
+                                "column": "Objective",
+                                "each": 3,
+                                "note": "Clear a box to drop that objective.",
+                                "value": [
+                                    ""
+                                ],
+                                "locked": false,
+                                "addable": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit revision"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
                 }
             }
         }
@@ -579,136 +594,141 @@
             "view": {
                 "version": 1,
                 "title": "Revise title or objectives",
+                "notices": [],
                 "panels": {
-                    "student": [
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Roll number",
-                                    "value": "102203456",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Name",
-                                    "value": "Asha Verma",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Date of revised IRB",
-                                    "format": "date",
-                                    "value": "2025-03-14",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Date of admission",
-                                    "format": "date",
-                                    "value": "2023-08-01",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Department",
-                                    "value": "Chemical Engineering",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Current status",
-                                    "value": "Active",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Address of correspondence",
-                                    "value": "Hostel J, Thapar Institute, Patiala",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Current title of PhD thesis",
-                                    "value": "Catalysts for low-temperature ammonia synthesis",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "table",
-                                    "label": "Current objectives",
-                                    "columns": [
-                                        {
-                                            "key": "objective",
-                                            "title": "Objective"
-                                        }
-                                    ],
-                                    "value": [
-                                        {
-                                            "objective": "Screen ruthenium catalysts"
-                                        },
-                                        {
-                                            "objective": "Model reaction kinetics"
-                                        }
-                                    ]
-                                }
-                            ],
-                            "space": 3
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Revised title of PhD thesis",
-                                    "key": "revised_title",
-                                    "required": true,
-                                    "value": "Ruthenium catalysts for ammonia synthesis",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "list",
-                            "type": "list",
-                            "label": "Revised objectives",
-                            "key": "revised_objectives",
-                            "required": true,
-                            "item_label": "Revised objective",
-                            "add_label": "Add objective",
-                            "column": "Objective",
-                            "each": 3,
-                            "note": "Clear a box to drop that objective.",
-                            "value": [
-                                "Screen ruthenium catalysts",
-                                "Test at pilot scale"
-                            ],
-                            "locked": true
-                        }
-                    ]
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of revised IRB",
+                                        "format": "date",
+                                        "value": "2025-03-14",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Current status",
+                                        "value": "Active",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Address of correspondence",
+                                        "value": "Hostel J, Thapar Institute, Patiala",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Current title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "Current objectives",
+                                        "columns": [
+                                            {
+                                                "key": "objective",
+                                                "title": "Objective"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "objective": "Screen ruthenium catalysts"
+                                            },
+                                            {
+                                                "objective": "Model reaction kinetics"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Revised title of PhD thesis",
+                                        "key": "revised_title",
+                                        "required": true,
+                                        "value": "Ruthenium catalysts for ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Revised objectives",
+                                "key": "revised_objectives",
+                                "required": true,
+                                "item_label": "Revised objective",
+                                "add_label": "Add objective",
+                                "column": "Objective",
+                                "each": 3,
+                                "note": "Clear a box to drop that objective.",
+                                "value": [
+                                    "Screen ruthenium catalysts",
+                                    "Test at pilot scale"
+                                ],
+                                "locked": true,
+                                "addable": false
+                            }
+                        ]
+                    }
                 }
             }
         }
@@ -755,136 +775,141 @@
             "view": {
                 "version": 1,
                 "title": "Revise title or objectives",
+                "notices": [],
                 "panels": {
-                    "student": [
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Roll number",
-                                    "value": "102203456",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Name",
-                                    "value": "Asha Verma",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Date of revised IRB",
-                                    "format": "date",
-                                    "value": "2025-03-14",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Date of admission",
-                                    "format": "date",
-                                    "value": "2023-08-01",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Department",
-                                    "value": "Chemical Engineering",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Current status",
-                                    "value": "Active",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Address of correspondence",
-                                    "value": "Hostel J, Thapar Institute, Patiala",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Current title of PhD thesis",
-                                    "value": "Catalysts for low-temperature ammonia synthesis",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "table",
-                                    "label": "Current objectives",
-                                    "columns": [
-                                        {
-                                            "key": "objective",
-                                            "title": "Objective"
-                                        }
-                                    ],
-                                    "value": [
-                                        {
-                                            "objective": "Screen ruthenium catalysts"
-                                        },
-                                        {
-                                            "objective": "Model reaction kinetics"
-                                        }
-                                    ]
-                                }
-                            ],
-                            "space": 3
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Revised title of PhD thesis",
-                                    "key": "revised_title",
-                                    "required": true,
-                                    "value": "Ruthenium catalysts for ammonia synthesis",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "list",
-                            "type": "list",
-                            "label": "Revised objectives",
-                            "key": "revised_objectives",
-                            "required": true,
-                            "item_label": "Revised objective",
-                            "add_label": "Add objective",
-                            "column": "Objective",
-                            "each": 3,
-                            "note": "Clear a box to drop that objective.",
-                            "value": [
-                                "Screen ruthenium catalysts",
-                                "Test at pilot scale"
-                            ],
-                            "locked": true
-                        }
-                    ]
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of revised IRB",
+                                        "format": "date",
+                                        "value": "2025-03-14",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Current status",
+                                        "value": "Active",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Address of correspondence",
+                                        "value": "Hostel J, Thapar Institute, Patiala",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Current title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "Current objectives",
+                                        "columns": [
+                                            {
+                                                "key": "objective",
+                                                "title": "Objective"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "objective": "Screen ruthenium catalysts"
+                                            },
+                                            {
+                                                "objective": "Model reaction kinetics"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Revised title of PhD thesis",
+                                        "key": "revised_title",
+                                        "required": true,
+                                        "value": "Ruthenium catalysts for ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Revised objectives",
+                                "key": "revised_objectives",
+                                "required": true,
+                                "item_label": "Revised objective",
+                                "add_label": "Add objective",
+                                "column": "Objective",
+                                "each": 3,
+                                "note": "Clear a box to drop that objective.",
+                                "value": [
+                                    "Screen ruthenium catalysts",
+                                    "Test at pilot scale"
+                                ],
+                                "locked": true,
+                                "addable": false
+                            }
+                        ]
+                    }
                 }
             }
         }
@@ -928,133 +953,138 @@
             "view": {
                 "version": 1,
                 "title": "Revise title or objectives",
+                "notices": [],
                 "panels": {
-                    "student": [
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Roll number",
-                                    "value": "102203456",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Name",
-                                    "value": "Asha Verma",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Date of revised IRB",
-                                    "format": "date",
-                                    "value": "2025-03-14",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Date of admission",
-                                    "format": "date",
-                                    "value": "2023-08-01",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Department",
-                                    "value": "Chemical Engineering",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Current status",
-                                    "value": "Active",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Address of correspondence",
-                                    "value": "Hostel J, Thapar Institute, Patiala",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Current title of PhD thesis",
-                                    "value": "Catalysts for low-temperature ammonia synthesis",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "table",
-                                    "label": "Current objectives",
-                                    "columns": [
-                                        {
-                                            "key": "objective",
-                                            "title": "Objective"
-                                        }
-                                    ],
-                                    "value": [
-                                        {
-                                            "objective": "Screen ruthenium catalysts"
-                                        },
-                                        {
-                                            "objective": "Model reaction kinetics"
-                                        }
-                                    ]
-                                }
-                            ],
-                            "space": 3
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Revised title of PhD thesis",
-                                    "key": "revised_title",
-                                    "required": true,
-                                    "value": null,
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "list",
-                            "type": "list",
-                            "label": "Revised objectives",
-                            "key": "revised_objectives",
-                            "required": true,
-                            "item_label": "Revised objective",
-                            "add_label": "Add objective",
-                            "column": "Objective",
-                            "each": 3,
-                            "note": "Clear a box to drop that objective.",
-                            "value": [],
-                            "locked": true
-                        }
-                    ]
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of revised IRB",
+                                        "format": "date",
+                                        "value": "2025-03-14",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Current status",
+                                        "value": "Active",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Address of correspondence",
+                                        "value": "Hostel J, Thapar Institute, Patiala",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Current title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "Current objectives",
+                                        "columns": [
+                                            {
+                                                "key": "objective",
+                                                "title": "Objective"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "objective": "Screen ruthenium catalysts"
+                                            },
+                                            {
+                                                "objective": "Model reaction kinetics"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Revised title of PhD thesis",
+                                        "key": "revised_title",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Revised objectives",
+                                "key": "revised_objectives",
+                                "required": true,
+                                "item_label": "Revised objective",
+                                "add_label": "Add objective",
+                                "column": "Objective",
+                                "each": 3,
+                                "note": "Clear a box to drop that objective.",
+                                "value": [],
+                                "locked": true,
+                                "addable": false
+                            }
+                        ]
+                    }
                 }
             }
         }

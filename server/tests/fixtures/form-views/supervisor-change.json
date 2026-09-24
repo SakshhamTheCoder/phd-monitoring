@@ -1,0 +1,2221 @@
+[
+    {
+        "name": "new form, scholar editing",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000744
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000813
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "phd_coordinator": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "student",
+            "steps": [
+                "student",
+                "phd_coordinator",
+                "hod",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "irb_submitted": 1,
+            "date_of_allocation": "2023-09-04T10:15:00.000000Z",
+            "reason": null,
+            "to_change": [],
+            "prefrences": [],
+            "current_supervisors": [],
+            "new_supervisors": [],
+            "view": {
+                "version": 1,
+                "title": "Supervisor change",
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "IRB completed",
+                                        "value": "Yes",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Supervisor 1",
+                                        "value": "Rakesh Gupta",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Supervisor 2",
+                                        "value": "Anika Jain",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of allocation of supervisor",
+                                        "format": "date",
+                                        "value": "2023-09-04T10:15:00.000000Z",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for supervisor change",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "toggles",
+                                "type": "toggles",
+                                "label": "Select supervisors to change",
+                                "options": [
+                                    {
+                                        "value": 1000744,
+                                        "title": "Rakesh Gupta"
+                                    },
+                                    {
+                                        "value": 1000813,
+                                        "title": "Anika Jain"
+                                    }
+                                ],
+                                "key": "to_change",
+                                "value": [],
+                                "locked": false
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Select 3 tentative names of supervisors (in order)",
+                                "key": "prefrences",
+                                "fixed": true,
+                                "item": "suggest",
+                                "item_label": "Preference",
+                                "source": "/suggestions/faculty",
+                                "displays": [
+                                    null,
+                                    null,
+                                    null
+                                ],
+                                "value": [
+                                    null,
+                                    null,
+                                    null
+                                ],
+                                "locked": false,
+                                "addable": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "phd_coordinator": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            }
+                                        ],
+                                        "value": []
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Supervisors allocated by PhD Coordinator"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "sent back, scholar editing",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000744
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000813
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "phd_coordinator": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "student",
+            "steps": [
+                "student",
+                "phd_coordinator",
+                "hod",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "irb_submitted": 1,
+            "date_of_allocation": "2023-09-04T10:15:00.000000Z",
+            "reason": "Moving to a new research area",
+            "to_change": [
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000813
+                }
+            ],
+            "prefrences": [
+                {
+                    "name": "Sanjay Barman",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000840
+                },
+                {
+                    "name": "Ritu Mehta",
+                    "designation": "Associate Professor",
+                    "department": "Biotechnology",
+                    "faculty_code": 1000901
+                },
+                {
+                    "name": "Parminder Singh",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000902
+                }
+            ],
+            "current_supervisors": [],
+            "new_supervisors": [],
+            "view": {
+                "version": 1,
+                "title": "Supervisor change",
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "IRB completed",
+                                        "value": "Yes",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Supervisor 1",
+                                        "value": "Rakesh Gupta",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Supervisor 2",
+                                        "value": "Anika Jain",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of allocation of supervisor",
+                                        "format": "date",
+                                        "value": "2023-09-04T10:15:00.000000Z",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for supervisor change",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": "Moving to a new research area",
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "toggles",
+                                "type": "toggles",
+                                "label": "Select supervisors to change",
+                                "options": [
+                                    {
+                                        "value": 1000744,
+                                        "title": "Rakesh Gupta"
+                                    },
+                                    {
+                                        "value": 1000813,
+                                        "title": "Anika Jain"
+                                    }
+                                ],
+                                "key": "to_change",
+                                "value": [
+                                    1000813
+                                ],
+                                "locked": false
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Select 3 tentative names of supervisors (in order)",
+                                "key": "prefrences",
+                                "fixed": true,
+                                "item": "suggest",
+                                "item_label": "Preference",
+                                "source": "/suggestions/faculty",
+                                "displays": [
+                                    "Sanjay Barman",
+                                    "Ritu Mehta",
+                                    "Parminder Singh"
+                                ],
+                                "value": [
+                                    1000840,
+                                    1000901,
+                                    1000902
+                                ],
+                                "locked": false,
+                                "addable": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "phd_coordinator": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            }
+                                        ],
+                                        "value": []
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Supervisors allocated by PhD Coordinator"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "no IRB yet, nothing on record",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "phd_coordinator": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "student",
+            "steps": [
+                "student",
+                "phd_coordinator",
+                "hod",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "irb_submitted": 0,
+            "date_of_allocation": null,
+            "reason": null,
+            "to_change": [],
+            "prefrences": [],
+            "current_supervisors": [],
+            "new_supervisors": [],
+            "view": {
+                "version": 1,
+                "title": "Supervisor change",
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "IRB completed",
+                                        "value": "No",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": []
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of allocation of supervisor",
+                                        "format": "date",
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for supervisor change",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "toggles",
+                                "type": "toggles",
+                                "label": "Select supervisors to change",
+                                "options": [],
+                                "key": "to_change",
+                                "value": [],
+                                "locked": false
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Select 3 tentative names of supervisors (in order)",
+                                "key": "prefrences",
+                                "fixed": true,
+                                "item": "suggest",
+                                "item_label": "Preference",
+                                "source": "/suggestions/faculty",
+                                "displays": [
+                                    null,
+                                    null,
+                                    null
+                                ],
+                                "value": [
+                                    null,
+                                    null,
+                                    null
+                                ],
+                                "locked": false,
+                                "addable": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "phd_coordinator": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            }
+                                        ],
+                                        "value": []
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Supervisors allocated by PhD Coordinator"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "submitted, scholar reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000744
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000813
+                }
+            ],
+            "stage": "phd_coordinator",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "phd_coordinator": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "student",
+            "steps": [
+                "student",
+                "phd_coordinator",
+                "hod",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "irb_submitted": 1,
+            "date_of_allocation": "2023-09-04T10:15:00.000000Z",
+            "reason": "Moving to a new research area",
+            "to_change": [
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000813
+                }
+            ],
+            "prefrences": [
+                {
+                    "name": "Sanjay Barman",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000840
+                },
+                {
+                    "name": "Ritu Mehta",
+                    "designation": "Associate Professor",
+                    "department": "Biotechnology",
+                    "faculty_code": 1000901
+                },
+                {
+                    "name": "Parminder Singh",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000902
+                }
+            ],
+            "current_supervisors": [],
+            "new_supervisors": [],
+            "view": {
+                "version": 1,
+                "title": "Supervisor change",
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "IRB completed",
+                                        "value": "Yes",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Supervisor 1",
+                                        "value": "Rakesh Gupta",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Supervisor 2",
+                                        "value": "Anika Jain",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of allocation of supervisor",
+                                        "format": "date",
+                                        "value": "2023-09-04T10:15:00.000000Z",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for supervisor change",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": "Moving to a new research area",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Supervisor name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "name": "Anika Jain",
+                                                "designation": "Assistant Professor",
+                                                "department": "Chemical Engineering",
+                                                "faculty_code": 1000813
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Supervisor(s) to be changed"
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Supervisor name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "name": "Sanjay Barman",
+                                                "designation": "Professor",
+                                                "department": "Chemical Engineering",
+                                                "faculty_code": 1000840
+                                            },
+                                            {
+                                                "name": "Ritu Mehta",
+                                                "designation": "Associate Professor",
+                                                "department": "Biotechnology",
+                                                "faculty_code": 1000901
+                                            },
+                                            {
+                                                "name": "Parminder Singh",
+                                                "designation": "Professor",
+                                                "department": "Chemical Engineering",
+                                                "faculty_code": 1000902
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Student preferences"
+                            }
+                        ]
+                    },
+                    "phd_coordinator": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            }
+                                        ],
+                                        "value": []
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Supervisors allocated by PhD Coordinator"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "submitted, coordinator allotting",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000744
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000813
+                }
+            ],
+            "stage": "phd_coordinator",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "phd_coordinator": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "phd_coordinator",
+            "steps": [
+                "student",
+                "phd_coordinator",
+                "hod",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "irb_submitted": 1,
+            "date_of_allocation": "2023-09-04T10:15:00.000000Z",
+            "reason": "Moving to a new research area",
+            "to_change": [
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000813
+                }
+            ],
+            "prefrences": [
+                {
+                    "name": "Sanjay Barman",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000840
+                },
+                {
+                    "name": "Ritu Mehta",
+                    "designation": "Associate Professor",
+                    "department": "Biotechnology",
+                    "faculty_code": 1000901
+                },
+                {
+                    "name": "Parminder Singh",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000902
+                }
+            ],
+            "current_supervisors": [],
+            "new_supervisors": [],
+            "view": {
+                "version": 1,
+                "title": "Supervisor change",
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "IRB completed",
+                                        "value": "Yes",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Supervisor 1",
+                                        "value": "Rakesh Gupta",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Supervisor 2",
+                                        "value": "Anika Jain",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of allocation of supervisor",
+                                        "format": "date",
+                                        "value": "2023-09-04T10:15:00.000000Z",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for supervisor change",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": "Moving to a new research area",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Supervisor name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "name": "Anika Jain",
+                                                "designation": "Assistant Professor",
+                                                "department": "Chemical Engineering",
+                                                "faculty_code": 1000813
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Supervisor(s) to be changed"
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Supervisor name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "name": "Sanjay Barman",
+                                                "designation": "Professor",
+                                                "department": "Chemical Engineering",
+                                                "faculty_code": 1000840
+                                            },
+                                            {
+                                                "name": "Ritu Mehta",
+                                                "designation": "Associate Professor",
+                                                "department": "Biotechnology",
+                                                "faculty_code": 1000901
+                                            },
+                                            {
+                                                "name": "Parminder Singh",
+                                                "designation": "Professor",
+                                                "department": "Chemical Engineering",
+                                                "faculty_code": 1000902
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Student preferences"
+                            }
+                        ]
+                    },
+                    "phd_coordinator": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Allot supervisors",
+                                "key": "new_supervisors",
+                                "item": "suggest",
+                                "item_label": "Supervisor",
+                                "add_label": "Add supervisor",
+                                "source": "/suggestions/faculty",
+                                "displays": [],
+                                "value": [
+                                    null
+                                ],
+                                "locked": false,
+                                "addable": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit",
+                                        "sends": {
+                                            "approval": true
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "sent back to the coordinator with an allotment",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000744
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000813
+                }
+            ],
+            "stage": "phd_coordinator",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "phd_coordinator": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "phd_coordinator",
+            "steps": [
+                "student",
+                "phd_coordinator",
+                "hod",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "irb_submitted": 1,
+            "date_of_allocation": "2023-09-04T10:15:00.000000Z",
+            "reason": "Moving to a new research area",
+            "to_change": [
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000813
+                }
+            ],
+            "prefrences": [
+                {
+                    "name": "Sanjay Barman",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000840
+                },
+                {
+                    "name": "Ritu Mehta",
+                    "designation": "Associate Professor",
+                    "department": "Biotechnology",
+                    "faculty_code": 1000901
+                },
+                {
+                    "name": "Parminder Singh",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000902
+                }
+            ],
+            "current_supervisors": [],
+            "new_supervisors": [
+                {
+                    "name": "Sanjay Barman",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000840
+                }
+            ],
+            "view": {
+                "version": 1,
+                "title": "Supervisor change",
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "IRB completed",
+                                        "value": "Yes",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Supervisor 1",
+                                        "value": "Rakesh Gupta",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Supervisor 2",
+                                        "value": "Anika Jain",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of allocation of supervisor",
+                                        "format": "date",
+                                        "value": "2023-09-04T10:15:00.000000Z",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for supervisor change",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": "Moving to a new research area",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Supervisor name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "name": "Anika Jain",
+                                                "designation": "Assistant Professor",
+                                                "department": "Chemical Engineering",
+                                                "faculty_code": 1000813
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Supervisor(s) to be changed"
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Supervisor name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "name": "Sanjay Barman",
+                                                "designation": "Professor",
+                                                "department": "Chemical Engineering",
+                                                "faculty_code": 1000840
+                                            },
+                                            {
+                                                "name": "Ritu Mehta",
+                                                "designation": "Associate Professor",
+                                                "department": "Biotechnology",
+                                                "faculty_code": 1000901
+                                            },
+                                            {
+                                                "name": "Parminder Singh",
+                                                "designation": "Professor",
+                                                "department": "Chemical Engineering",
+                                                "faculty_code": 1000902
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Student preferences"
+                            }
+                        ]
+                    },
+                    "phd_coordinator": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Allot supervisors",
+                                "key": "new_supervisors",
+                                "item": "suggest",
+                                "item_label": "Supervisor",
+                                "add_label": "Add supervisor",
+                                "source": "/suggestions/faculty",
+                                "displays": [
+                                    "Sanjay Barman"
+                                ],
+                                "value": [
+                                    1000840
+                                ],
+                                "locked": false,
+                                "addable": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit",
+                                        "sends": {
+                                            "approval": true
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "allotted, HOD reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000744
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000813
+                }
+            ],
+            "stage": "hod",
+            "maximum_step": 2,
+            "locks": {
+                "student": true,
+                "phd_coordinator": true
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "hod",
+            "steps": [
+                "student",
+                "phd_coordinator",
+                "hod",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "irb_submitted": 1,
+            "date_of_allocation": "2023-09-04T10:15:00.000000Z",
+            "reason": "Moving to a new research area",
+            "to_change": [
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000813
+                }
+            ],
+            "prefrences": [
+                {
+                    "name": "Sanjay Barman",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000840
+                },
+                {
+                    "name": "Ritu Mehta",
+                    "designation": "Associate Professor",
+                    "department": "Biotechnology",
+                    "faculty_code": 1000901
+                },
+                {
+                    "name": "Parminder Singh",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000902
+                }
+            ],
+            "current_supervisors": [],
+            "new_supervisors": [
+                {
+                    "name": "Sanjay Barman",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000840
+                }
+            ],
+            "view": {
+                "version": 1,
+                "title": "Supervisor change",
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "IRB completed",
+                                        "value": "Yes",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Supervisor 1",
+                                        "value": "Rakesh Gupta",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Supervisor 2",
+                                        "value": "Anika Jain",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of allocation of supervisor",
+                                        "format": "date",
+                                        "value": "2023-09-04T10:15:00.000000Z",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for supervisor change",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": "Moving to a new research area",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Supervisor name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "name": "Anika Jain",
+                                                "designation": "Assistant Professor",
+                                                "department": "Chemical Engineering",
+                                                "faculty_code": 1000813
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Supervisor(s) to be changed"
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Supervisor name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "name": "Sanjay Barman",
+                                                "designation": "Professor",
+                                                "department": "Chemical Engineering",
+                                                "faculty_code": 1000840
+                                            },
+                                            {
+                                                "name": "Ritu Mehta",
+                                                "designation": "Associate Professor",
+                                                "department": "Biotechnology",
+                                                "faculty_code": 1000901
+                                            },
+                                            {
+                                                "name": "Parminder Singh",
+                                                "designation": "Professor",
+                                                "department": "Chemical Engineering",
+                                                "faculty_code": 1000902
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Student preferences"
+                            }
+                        ]
+                    },
+                    "phd_coordinator": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "name": "Sanjay Barman",
+                                                "designation": "Professor",
+                                                "department": "Chemical Engineering",
+                                                "faculty_code": 1000840
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Supervisors allocated by PhD Coordinator"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "unsubmitted, admin reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000744
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000813
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "phd_coordinator": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "admin",
+            "steps": [
+                "student",
+                "phd_coordinator",
+                "hod",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "irb_submitted": 1,
+            "date_of_allocation": "2023-09-04T10:15:00.000000Z",
+            "reason": "Draft",
+            "to_change": [],
+            "prefrences": [],
+            "current_supervisors": [],
+            "new_supervisors": [],
+            "view": {
+                "version": 1,
+                "title": "Supervisor change",
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "IRB completed",
+                                        "value": "Yes",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Supervisor 1",
+                                        "value": "Rakesh Gupta",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Supervisor 2",
+                                        "value": "Anika Jain",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of allocation of supervisor",
+                                        "format": "date",
+                                        "value": "2023-09-04T10:15:00.000000Z",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for supervisor change",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": "Draft",
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Supervisor name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            }
+                                        ],
+                                        "value": []
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Supervisor(s) to be changed"
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Supervisor name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            }
+                                        ],
+                                        "value": []
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Student preferences"
+                            }
+                        ]
+                    },
+                    "phd_coordinator": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            }
+                                        ],
+                                        "value": []
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Supervisors allocated by PhD Coordinator"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+]

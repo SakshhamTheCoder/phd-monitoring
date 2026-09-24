@@ -4,9 +4,11 @@ namespace Tests\Unit;
 
 use App\Forms\FormDefinition;
 use App\Forms\IrbExtensionDefinition;
+use App\Forms\IrbSubmissionDefinition;
 use App\Forms\ReviseTitleDefinition;
 use App\Forms\SemesterOffDefinition;
 use App\Forms\StatusChangeDefinition;
+use App\Forms\SupervisorChangeDefinition;
 use App\Forms\ThesisExtensionDefinition;
 use Tests\TestCase;
 
@@ -27,6 +29,8 @@ class FormViewContractTest extends TestCase
         'thesis-extension' => ThesisExtensionDefinition::class,
         'semester-off' => SemesterOffDefinition::class,
         'status-change' => StatusChangeDefinition::class,
+        'supervisor-change' => SupervisorChangeDefinition::class,
+        'irb-submission' => IrbSubmissionDefinition::class,
     ];
 
     public static function forms(): array
@@ -67,7 +71,7 @@ class FormViewContractTest extends TestCase
         $view = (new $class)->view(['role' => 'student', 'locks' => []]);
         $this->assertSame(FormDefinition::VERSION, $view['version']);
         $this->assertArrayHasKey('student', $view['panels']);
-        $this->assertNotEmpty($view['panels']['student']);
+        $this->assertNotEmpty($view['panels']['student']['rows']);
     }
 
     public function test_revise_title_asks_for_what_it_asked_before(): void
@@ -130,7 +134,7 @@ class FormViewContractTest extends TestCase
     public function test_semester_off_offers_the_terms_the_page_offered(): void
     {
         $view = (new SemesterOffDefinition)->view(['role' => 'student', 'locks' => []]);
-        $select = collect($view['panels']['student'])->flatMap(fn ($row) => $row['items'] ?? [])->firstWhere('type', 'select');
+        $select = collect($view['panels']['student']['rows'])->flatMap(fn ($row) => $row['items'] ?? [])->firstWhere('type', 'select');
         $this->assertSame(
             array_map(fn ($code) => ['value' => $code, 'title' => $code], \App\Support\ReportPeriods::around(0, 1)),
             $select['options']
@@ -142,6 +146,55 @@ class FormViewContractTest extends TestCase
         $this->assertSame(['reason' => 'required|string'], (new StatusChangeDefinition)->rules('student', []));
     }
 
+    public function test_supervisor_change_asks_for_what_it_asked_before(): void
+    {
+        $definition = new SupervisorChangeDefinition;
+        $this->assertEquals([
+            'prefrences' => 'required|array',
+            'to_change' => 'required|array',
+            'reason' => 'required|string',
+        ], $definition->rules('student', []));
+        $this->assertSame(['new_supervisors' => 'required|array'], $definition->rules('phd_coordinator', []));
+    }
+
+    public function test_the_coordinator_allots_only_while_their_step_is_open(): void
+    {
+        $atCoordinator = ['role' => 'phd_coordinator', 'locks' => ['student' => true, 'phd_coordinator' => false]];
+        $kinds = fn ($data) => array_column((new SupervisorChangeDefinition)->view($data)['panels']['phd_coordinator']['rows'], 'kind');
+
+        $this->assertSame(['list', 'grid'], $kinds($atCoordinator));
+        // Once allotted, or for anyone else, it is the table of who was allotted.
+        $this->assertSame(['grid'], $kinds(['locks' => ['phd_coordinator' => true]] + $atCoordinator));
+        $this->assertSame(['grid'], $kinds(['role' => 'hod'] + $atCoordinator));
+        $this->assertFalse((new SupervisorChangeDefinition)->view($atCoordinator)['panels']['phd_coordinator']['wrapped']);
+    }
+
+    public function test_irb_submission_asks_for_what_it_asked_before(): void
+    {
+        $definition = new IrbSubmissionDefinition;
+        $this->assertEquals([
+            'revised_phd_objectives' => 'required|array',
+            'revised_phd_title' => 'required|string',
+            'irb_pdf' => 'required|file|mimes:pdf|max:20480',
+            'date_of_irb' => 'required|string',
+        ], $definition->rules('student', ['revised_irb_pdf' => null]));
+        $this->assertSame('nullable|file|mimes:pdf|max:20480', $definition->rules('student', ['revised_irb_pdf' => 'a.pdf'])['irb_pdf']);
+        // The supervisor's count is checked by the controller, and only on a recommendation.
+        $this->assertSame([], $definition->rules('faculty', []));
+    }
+
+    public function test_only_the_office_may_resend_the_review_while_it_waits_on_the_expert(): void
+    {
+        $notices = fn (array $data) => (new IrbSubmissionDefinition)->view($data + ['form_id' => 9, 'locks' => []])['notices'];
+
+        foreach (\App\Http\Controllers\ExternalReviewController::RESEND_ROLES as $role) {
+            $notice = $notices(['stage' => 'external', 'role' => $role]);
+            $this->assertSame('/irb-submissions/9/resend-external-review', $notice[0]['action']['endpoint'], $role);
+        }
+        $this->assertSame([], $notices(['stage' => 'external', 'role' => 'hod']));
+        $this->assertSame([], $notices(['stage' => 'doctoral', 'role' => 'dordc']));
+    }
+
     public function test_a_locked_or_foreign_reader_gets_no_inputs_and_no_submit(): void
     {
         $base = ['phd_title' => 'Old', 'objectives' => ['One'], 'revised_title' => 'New', 'revised_objectives' => ['Two']];
@@ -151,7 +204,7 @@ class FormViewContractTest extends TestCase
             'admin' => ['role' => 'admin', 'locks' => []],
         ];
         foreach ($readers as $who => $reader) {
-            $rows = (new ReviseTitleDefinition)->view($base + $reader)['panels']['student'];
+            $rows = (new ReviseTitleDefinition)->view($base + $reader)['panels']['student']['rows'];
             $fields = collect($rows)->flatMap(fn ($row) => $row['kind'] === 'grid' ? $row['items'] : [$row]);
             $this->assertFalse($fields->contains('type', 'submit'), $who);
             $this->assertFalse($fields->contains(fn ($field) => ($field['locked'] ?? null) === false), $who);

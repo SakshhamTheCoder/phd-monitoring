@@ -17,9 +17,12 @@ final class Field
     private ?string $editableBy = null;
     private bool $anyReader = false;
     private bool $lockedAnyway = false;
+    /** @var array{0: string, 1: string}|null ['editing'|'reading', step] */
+    private ?array $shownWhile = null;
     private ?string $rules = null;
     private ?string $itemRules = null;
     private mixed $value = null;
+    private bool $hasValue = false;
     private mixed $draft = null;
     private bool $hasDraft = false;
 
@@ -58,6 +61,52 @@ final class Field
         return $field;
     }
 
+    /**
+     * A search box that offers matches from $source (an API path answering
+     * POST {text}) and keeps the id of the one picked.
+     */
+    public static function suggest(string $label, string $source): self
+    {
+        $field = new self('suggest', $label);
+        $field->props['source'] = $source;
+        return $field;
+    }
+
+    /**
+     * A row of buttons, each pressed or not, keeping the values pressed. Drawn
+     * as a row of its own, with the label above it.
+     *
+     * @param array<int, array{value: mixed, title: string}> $options a list,
+     *   not a map: codes like "0101" must reach the client as they are stored
+     */
+    public static function toggles(string $label, array $options): self
+    {
+        $field = new self('toggles', $label);
+        $field->props['options'] = array_values($options);
+        return $field;
+    }
+
+    /** A number stepped with - and + buttons. */
+    public static function counter(string $label): self
+    {
+        return new self('counter', $label);
+    }
+
+    /**
+     * The shared recommendation block (Recommend / Not recommend and remarks)
+     * for $role, drawn inside a panel that has more to ask, so the panel's own
+     * submit sends the choice with its answers. Its value is the choice already
+     * made, or null while the step is unanswered.
+     */
+    public static function recommendation(string $role, bool $allowRejection = false): self
+    {
+        $field = new self('recommendation', '');
+        $field->props['role'] = $role;
+        $field->props['allow_rejection'] = $allowRejection;
+        $field->props['key'] = 'approval';
+        return $field;
+    }
+
     /** An empty cell that keeps a row's columns where they were. */
     public static function blank(): self
     {
@@ -78,8 +127,7 @@ final class Field
             array_keys($columns),
             array_values($columns)
         );
-        $field->value = array_values($rows);
-        return $field;
+        return $field->value(array_values($rows));
     }
 
     /**
@@ -107,6 +155,7 @@ final class Field
     public function value(mixed $value): self
     {
         $this->value = $value;
+        $this->hasValue = true;
         return $this;
     }
 
@@ -148,6 +197,45 @@ final class Field
     public function sentOnlyIfChanged(): self
     {
         $this->props['send'] = 'changed';
+        return $this;
+    }
+
+    /** Text a search box shows for its value before anything is typed. */
+    public function display(?string $text): self
+    {
+        $this->props['display'] = $text;
+        return $this;
+    }
+
+    /** A label the field draws above itself is left off (a row label says it). */
+    public function hideLabel(): self
+    {
+        $this->props['show_label'] = false;
+        return $this;
+    }
+
+    /** A submit that refuses, with $message, while $key has no value. */
+    public function requires(string $key, string $message): self
+    {
+        $this->props['requires'] = ['key' => $key, 'message' => $message];
+        return $this;
+    }
+
+    /** Fixed values a submit button posts with the answers. */
+    public function sends(array $values): self
+    {
+        $this->props['sends'] = $values;
+        return $this;
+    }
+
+    /**
+     * Drawn only while $step's holder may edit it ('editing'), or only while
+     * they may not ('reading'): a form swaps its inputs for a summary once sent.
+     * 'locked' and 'open' ask only whether the step is submitted, whoever reads.
+     */
+    public function onlyWhile(string $mode, string $step): self
+    {
+        $this->shownWhile = [$mode, $step];
         return $this;
     }
 
@@ -213,6 +301,19 @@ final class Field
      */
     public function resolve(array $data): ?array
     {
+        if ($this->shownWhile) {
+            [$mode, $step] = $this->shownWhile;
+            $shown = match ($mode) {
+                'editing' => FormDefinition::mayEdit($data, $step),
+                'reading' => !FormDefinition::mayEdit($data, $step),
+                'locked' => !FormDefinition::mayEdit($data, $step, anyReader: true),
+                'open' => FormDefinition::mayEdit($data, $step, anyReader: true),
+            };
+            if (!$shown) {
+                return null;
+            }
+        }
+
         if ($this->props['type'] === 'submit') {
             return $this->isEditable($data, false) ? $this->props : null;
         }
@@ -220,24 +321,26 @@ final class Field
         $editable = $this->isEditable($data, $this->anyReader) && !$this->lockedAnyway;
 
         $resolved = $this->props;
-        $resolved['value'] = $editable && $this->hasDraft ? $this->draft : $this->value;
+        // A value never given stays out, so a client's own default applies
+        // (a counter starts at 0), as it did when the page read a missing key.
+        if ($editable && $this->hasDraft) {
+            $resolved['value'] = $this->draft;
+        } elseif ($this->hasValue) {
+            $resolved['value'] = $this->value;
+        }
         if ($this->props['type'] !== 'table') {
             $resolved['locked'] = !$editable;
+        }
+        if ($this->props['type'] === 'list') {
+            // Adding a box is for the step's holder only, even where any reader
+            // sees the boxes open.
+            $resolved['addable'] = $this->editableBy !== null && FormDefinition::mayEdit($data, $this->editableBy);
         }
         return $resolved;
     }
 
-    /**
-     * Same rule the web panels applied before the server decided it: the
-     * reader holds the step's role and has not yet submitted it. The supervisor
-     * step is 'faculty' in a chain and 'supervisor' in the locks.
-     */
     private function isEditable(array $data, bool $anyReader): bool
     {
-        if ($this->editableBy === null || (!$anyReader && ($data['role'] ?? null) !== $this->editableBy)) {
-            return false;
-        }
-        $lock = $this->editableBy === 'faculty' ? 'supervisor' : $this->editableBy;
-        return empty($data['locks'][$lock]);
+        return $this->editableBy !== null && FormDefinition::mayEdit($data, $this->editableBy, $anyReader);
     }
 }

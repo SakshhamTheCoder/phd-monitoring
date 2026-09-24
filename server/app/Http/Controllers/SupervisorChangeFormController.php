@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Forms\SupervisorChangeDefinition;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\GeneralFormCreate;
 use App\Http\Controllers\Traits\GeneralFormHandler;
@@ -197,11 +198,7 @@ class SupervisorChangeFormController extends Controller {
             'student',
             'phd_coordinator',
             function ($formInstance) use ($request, $user) {
-                $request->validate([
-                    'prefrences' => 'required|array',
-                    'to_change'=>'required|array',
-                    'reason'=>'required|string'
-                ]);
+                $request->validate((new SupervisorChangeDefinition)->rules('student', $formInstance->fullForm($user)));
                 $to_change = $request->to_change;
                 $reason = $request->reason;
 
@@ -244,9 +241,7 @@ class SupervisorChangeFormController extends Controller {
             'student',
             'hod',
             function ($formInstance) use ($request, $user) {
-                $request->validate([
-                    'new_supervisors' => 'required|array',
-                ]);
+                $request->validate((new SupervisorChangeDefinition)->rules('phd_coordinator', $formInstance->fullForm($user)));
                 $supervisors = $request->new_supervisors;
                 if(count($supervisors)!=count($formInstance->to_change)){
                     throw new \Exception("Number of supervisors to change and new supervisors should be same");

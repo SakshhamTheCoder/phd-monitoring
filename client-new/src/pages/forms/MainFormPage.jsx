@@ -5,11 +5,9 @@ import { useLocation, useParams } from "react-router-dom";
 import { customFetch } from "../../api/base";
 import { baseURL } from "../../api/urls";
 import ConstituteOfIRB from "../../components/forms/constituteOfIRB/ConstituteOfIRB";
-import IRBSubmission from "../../components/forms/irbSubmission/IRBSubmission";
 import PresentationForm from "../../components/forms/presentations/PresentationForm";
 import SynopsisSubmission from "../../components/forms/synopsisSubmission/SynopsisSubmission";
 import ThesisSubmission from "../../components/forms/thesisSubmission/ThesisSubmission";
-import SupervisorChange from "../../components/forms/supervisorChange/SupervisorChange";
 import ListOfExaminers from "../../components/forms/listOfExaminers/ListOfExaminers";
 import ServerForm from "../../components/forms/serverForm/ServerForm";
 import useScholarInPath from "../../hooks/useScholarInPath";
@@ -81,16 +79,12 @@ const MainFormPage = () => {
                 return <SupervisorAllocation formData={formData} />;
               case "irb-constitution":
                 return <ConstituteOfIRB formData={formData} />;
-              case "irb-submission":
-                return <IRBSubmission formData={formData} />;
               case "presentation":
                 return <PresentationForm formData={formData} />;
               case "synopsis-submission":
                 return <SynopsisSubmission formData={formData} />;
               case "thesis-submission":
                 return <ThesisSubmission formData={formData} />;
-              case "supervisor-change":
-                return <SupervisorChange formData={formData}/>
               case "list-of-examiners":
                 return <ListOfExaminers formData={formData}/>
               // The API serves /forms/student-leave/:id, and StudentLeave

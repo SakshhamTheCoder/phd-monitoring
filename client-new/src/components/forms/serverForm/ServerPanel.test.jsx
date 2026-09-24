@@ -21,7 +21,7 @@ const formData = (name, from = cases) => from.find((c) => c.name === name).formD
 const draw = (data) =>
   render(
     <MemoryRouter>
-      <ServerPanel formData={data} rows={data.view.panels.student} />
+      <ServerPanel formData={data} {...data.view.panels.student} />
     </MemoryRouter>
   );
 

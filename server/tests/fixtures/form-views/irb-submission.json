@@ -1,0 +1,2488 @@
+[
+    {
+        "name": "new form, scholar editing",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "supervised_campus": 4,
+                    "supervised_outside": 1
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering",
+                    "supervised_campus": 2,
+                    "supervised_outside": 0
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "supervisor": false,
+                "doctoral": false,
+                "external": false
+            },
+            "approvals": {
+                "supervisor": false,
+                "doctoral": false,
+                "external": false,
+                "phd_coordinator": false,
+                "hod": false,
+                "dra": false,
+                "dordc": false
+            },
+            "comments": {
+                "supervisor": null,
+                "doctoral": null,
+                "external": null
+            },
+            "role": "student",
+            "form_type": "irb-submission",
+            "gender": "Female",
+            "cgpa": "8.4",
+            "created_at": "2025-02-01T08:00:00.000000Z",
+            "steps": [
+                "student",
+                "faculty",
+                "external",
+                "doctoral",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "complete"
+            ],
+            "date_of_irb": null,
+            "revised_phd_title": null,
+            "revised_irb_pdf": null,
+            "revised_phd_objectives": [],
+            "supervisorApprovals": [],
+            "supervisorReviews": [],
+            "view": {
+                "version": 1,
+                "title": "IRB submission",
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Gender",
+                                        "value": "Female",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "CGPA",
+                                        "value": "8.4",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous proposed title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Revised title of PhD thesis",
+                                        "key": "revised_phd_title",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Revised PhD objectives",
+                                "key": "revised_phd_objectives",
+                                "required": true,
+                                "add_label": "Add objective",
+                                "each": 3,
+                                "read_as": "inputs",
+                                "value": [],
+                                "locked": false,
+                                "addable": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "",
+                                        "key": "irb_pdf",
+                                        "required": true,
+                                        "show_label": false,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ],
+                                "label": "Revised IRB PDF file"
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "date",
+                                        "label": "Date of IRB submission",
+                                        "key": "date_of_irb",
+                                        "required": true,
+                                        "format": "date",
+                                        "hint": "Select date...",
+                                        "value": null,
+                                        "locked": false
+                                    },
+                                    {
+                                        "type": "date",
+                                        "label": "Date of IRB revision",
+                                        "format": "date",
+                                        "value": "2025-02-01T08:00:00.000000Z",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 1
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "value": null,
+                                "locked": true
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "sent back, scholar editing",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "supervised_campus": 4,
+                    "supervised_outside": 1
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering",
+                    "supervised_campus": 2,
+                    "supervised_outside": 0
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "supervisor": false,
+                "doctoral": false,
+                "external": false
+            },
+            "approvals": {
+                "supervisor": false,
+                "doctoral": false,
+                "external": false,
+                "phd_coordinator": false,
+                "hod": false,
+                "dra": false,
+                "dordc": false
+            },
+            "comments": {
+                "supervisor": null,
+                "doctoral": null,
+                "external": null
+            },
+            "role": "student",
+            "form_type": "irb-submission",
+            "gender": "Female",
+            "cgpa": "8.4",
+            "created_at": "2025-02-01T08:00:00.000000Z",
+            "steps": [
+                "student",
+                "faculty",
+                "external",
+                "doctoral",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "complete"
+            ],
+            "date_of_irb": "2025-01-20",
+            "revised_phd_title": "Ruthenium catalysts for ammonia synthesis",
+            "revised_irb_pdf": "irb_sub_rev/102203456/irb.pdf",
+            "revised_phd_objectives": [
+                "Screen ruthenium catalysts",
+                "Model reaction kinetics"
+            ],
+            "supervisorApprovals": [],
+            "supervisorReviews": [],
+            "view": {
+                "version": 1,
+                "title": "IRB submission",
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Gender",
+                                        "value": "Female",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "CGPA",
+                                        "value": "8.4",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous proposed title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Revised title of PhD thesis",
+                                        "key": "revised_phd_title",
+                                        "required": true,
+                                        "value": "Ruthenium catalysts for ammonia synthesis",
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Revised PhD objectives",
+                                "key": "revised_phd_objectives",
+                                "required": true,
+                                "add_label": "Add objective",
+                                "each": 3,
+                                "read_as": "inputs",
+                                "value": [
+                                    "Screen ruthenium catalysts",
+                                    "Model reaction kinetics"
+                                ],
+                                "locked": false,
+                                "addable": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "",
+                                        "key": "irb_pdf",
+                                        "show_label": false,
+                                        "value": "irb_sub_rev/102203456/irb.pdf",
+                                        "locked": false
+                                    }
+                                ],
+                                "label": "Revised IRB PDF file"
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "date",
+                                        "label": "Date of IRB submission",
+                                        "key": "date_of_irb",
+                                        "required": true,
+                                        "format": "date",
+                                        "hint": "Select date...",
+                                        "value": "2025-01-20",
+                                        "locked": false
+                                    },
+                                    {
+                                        "type": "date",
+                                        "label": "Date of IRB revision",
+                                        "format": "date",
+                                        "value": "2025-02-01T08:00:00.000000Z",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 1
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "value": null,
+                                "locked": true
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "submitted, scholar reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "supervised_campus": 4,
+                    "supervised_outside": 1
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering",
+                    "supervised_campus": 2,
+                    "supervised_outside": 0
+                }
+            ],
+            "stage": "supervisor",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "supervisor": false,
+                "doctoral": false,
+                "external": false
+            },
+            "approvals": {
+                "supervisor": false,
+                "doctoral": false,
+                "external": false,
+                "phd_coordinator": false,
+                "hod": false,
+                "dra": false,
+                "dordc": false
+            },
+            "comments": {
+                "supervisor": null,
+                "doctoral": null,
+                "external": null
+            },
+            "role": "student",
+            "form_type": "irb-submission",
+            "gender": "Female",
+            "cgpa": "8.4",
+            "created_at": "2025-02-01T08:00:00.000000Z",
+            "steps": [
+                "student",
+                "faculty",
+                "external",
+                "doctoral",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "complete"
+            ],
+            "date_of_irb": "2025-01-20",
+            "revised_phd_title": "Ruthenium catalysts for ammonia synthesis",
+            "revised_irb_pdf": "irb_sub_rev/102203456/irb.pdf",
+            "revised_phd_objectives": [
+                "Screen ruthenium catalysts",
+                "Model reaction kinetics"
+            ],
+            "supervisorApprovals": [],
+            "supervisorReviews": [],
+            "view": {
+                "version": 1,
+                "title": "IRB submission",
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Gender",
+                                        "value": "Female",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "CGPA",
+                                        "value": "8.4",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous proposed title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Revised title of PhD thesis",
+                                        "key": "revised_phd_title",
+                                        "required": true,
+                                        "value": "Ruthenium catalysts for ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Revised PhD objectives",
+                                "key": "revised_phd_objectives",
+                                "required": true,
+                                "add_label": "Add objective",
+                                "each": 3,
+                                "read_as": "inputs",
+                                "value": [
+                                    "Screen ruthenium catalysts",
+                                    "Model reaction kinetics"
+                                ],
+                                "locked": true,
+                                "addable": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "",
+                                        "key": "irb_pdf",
+                                        "show_label": false,
+                                        "value": "irb_sub_rev/102203456/irb.pdf",
+                                        "locked": true
+                                    }
+                                ],
+                                "label": "Revised IRB PDF file"
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "date",
+                                        "label": "Date of IRB submission",
+                                        "key": "date_of_irb",
+                                        "required": true,
+                                        "format": "date",
+                                        "hint": "Select date...",
+                                        "value": "2025-01-20",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "date",
+                                        "label": "Date of IRB revision",
+                                        "format": "date",
+                                        "value": "2025-02-01T08:00:00.000000Z",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 1
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "value": null,
+                                "locked": true
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "unsubmitted, admin reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "supervised_campus": 4,
+                    "supervised_outside": 1
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering",
+                    "supervised_campus": 2,
+                    "supervised_outside": 0
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "supervisor": false,
+                "doctoral": false,
+                "external": false
+            },
+            "approvals": {
+                "supervisor": false,
+                "doctoral": false,
+                "external": false,
+                "phd_coordinator": false,
+                "hod": false,
+                "dra": false,
+                "dordc": false
+            },
+            "comments": {
+                "supervisor": null,
+                "doctoral": null,
+                "external": null
+            },
+            "role": "admin",
+            "form_type": "irb-submission",
+            "gender": "Female",
+            "cgpa": "8.4",
+            "created_at": "2025-02-01T08:00:00.000000Z",
+            "steps": [
+                "student",
+                "faculty",
+                "external",
+                "doctoral",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "complete"
+            ],
+            "date_of_irb": "2025-01-20",
+            "revised_phd_title": "Ruthenium catalysts for ammonia synthesis",
+            "revised_irb_pdf": "irb_sub_rev/102203456/irb.pdf",
+            "revised_phd_objectives": [
+                "Screen ruthenium catalysts",
+                "Model reaction kinetics"
+            ],
+            "supervisorApprovals": [],
+            "supervisorReviews": [],
+            "view": {
+                "version": 1,
+                "title": "IRB submission",
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Gender",
+                                        "value": "Female",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "CGPA",
+                                        "value": "8.4",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous proposed title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Revised title of PhD thesis",
+                                        "key": "revised_phd_title",
+                                        "required": true,
+                                        "value": "Ruthenium catalysts for ammonia synthesis",
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Revised PhD objectives",
+                                "key": "revised_phd_objectives",
+                                "required": true,
+                                "add_label": "Add objective",
+                                "each": 3,
+                                "read_as": "inputs",
+                                "value": [
+                                    "Screen ruthenium catalysts",
+                                    "Model reaction kinetics"
+                                ],
+                                "locked": false,
+                                "addable": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "",
+                                        "key": "irb_pdf",
+                                        "show_label": false,
+                                        "value": "irb_sub_rev/102203456/irb.pdf",
+                                        "locked": false
+                                    }
+                                ],
+                                "label": "Revised IRB PDF file"
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "date",
+                                        "label": "Date of IRB submission",
+                                        "key": "date_of_irb",
+                                        "required": true,
+                                        "format": "date",
+                                        "hint": "Select date...",
+                                        "value": "2025-01-20",
+                                        "locked": false
+                                    },
+                                    {
+                                        "type": "date",
+                                        "label": "Date of IRB revision",
+                                        "format": "date",
+                                        "value": "2025-02-01T08:00:00.000000Z",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 1
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "value": null,
+                                "locked": true
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "at the supervisor, supervisor answering",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "supervised_campus": 4,
+                    "supervised_outside": 1
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering",
+                    "supervised_campus": 2,
+                    "supervised_outside": 0
+                }
+            ],
+            "stage": "supervisor",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "supervisor": false,
+                "doctoral": false,
+                "external": false
+            },
+            "approvals": {
+                "supervisor": false,
+                "doctoral": false,
+                "external": false,
+                "phd_coordinator": false,
+                "hod": false,
+                "dra": false,
+                "dordc": false
+            },
+            "comments": {
+                "supervisor": null,
+                "doctoral": null,
+                "external": null
+            },
+            "role": "faculty",
+            "form_type": "irb-submission",
+            "gender": "Female",
+            "cgpa": "8.4",
+            "created_at": "2025-02-01T08:00:00.000000Z",
+            "steps": [
+                "student",
+                "faculty",
+                "external",
+                "doctoral",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "complete"
+            ],
+            "date_of_irb": "2025-01-20",
+            "revised_phd_title": "Ruthenium catalysts for ammonia synthesis",
+            "revised_irb_pdf": "irb_sub_rev/102203456/irb.pdf",
+            "revised_phd_objectives": [
+                "Screen ruthenium catalysts",
+                "Model reaction kinetics"
+            ],
+            "supervisorApprovals": [],
+            "supervisorReviews": [],
+            "current_supervisor": {
+                "name": "Rakesh Gupta",
+                "designation": "Professor",
+                "department": "Chemical Engineering",
+                "supervised_campus": 4,
+                "supervised_outside": 1
+            },
+            "view": {
+                "version": 1,
+                "title": "IRB submission",
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Gender",
+                                        "value": "Female",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "CGPA",
+                                        "value": "8.4",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous proposed title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Revised title of PhD thesis",
+                                        "key": "revised_phd_title",
+                                        "required": true,
+                                        "value": "Ruthenium catalysts for ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Revised PhD objectives",
+                                "key": "revised_phd_objectives",
+                                "required": true,
+                                "add_label": "Add objective",
+                                "each": 3,
+                                "read_as": "inputs",
+                                "value": [
+                                    "Screen ruthenium catalysts",
+                                    "Model reaction kinetics"
+                                ],
+                                "locked": true,
+                                "addable": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "",
+                                        "key": "irb_pdf",
+                                        "show_label": false,
+                                        "value": "irb_sub_rev/102203456/irb.pdf",
+                                        "locked": true
+                                    }
+                                ],
+                                "label": "Revised IRB PDF file"
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "date",
+                                        "label": "Date of IRB submission",
+                                        "key": "date_of_irb",
+                                        "required": true,
+                                        "format": "date",
+                                        "hint": "Select date...",
+                                        "value": "2025-01-20",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "date",
+                                        "label": "Date of IRB revision",
+                                        "format": "date",
+                                        "value": "2025-02-01T08:00:00.000000Z",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 1
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "value": null,
+                                "locked": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "required": true,
+                                        "value": "Rakesh Gupta",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "required": true,
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Designation",
+                                        "required": true,
+                                        "value": "Professor",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "counter",
+                                        "label": "Inside TIET students",
+                                        "value": 4,
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "counter",
+                                        "label": "Outside TIET students",
+                                        "key": "supervised_outside",
+                                        "value": 1,
+                                        "locked": false
+                                    }
+                                ],
+                                "label": "Total number of students under guidance (including this applicant)"
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit",
+                                        "requires": {
+                                            "key": "approval",
+                                            "message": "Choose Recommend or Not Recommend first."
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "at the supervisor, a committee member reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "supervised_campus": 4,
+                    "supervised_outside": 1
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering",
+                    "supervised_campus": 2,
+                    "supervised_outside": 0
+                }
+            ],
+            "stage": "supervisor",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "supervisor": false,
+                "doctoral": false,
+                "external": false
+            },
+            "approvals": {
+                "supervisor": false,
+                "doctoral": false,
+                "external": false,
+                "phd_coordinator": false,
+                "hod": false,
+                "dra": false,
+                "dordc": false
+            },
+            "comments": {
+                "supervisor": null,
+                "doctoral": null,
+                "external": null
+            },
+            "role": "faculty",
+            "form_type": "irb-submission",
+            "gender": "Female",
+            "cgpa": "8.4",
+            "created_at": "2025-02-01T08:00:00.000000Z",
+            "steps": [
+                "student",
+                "faculty",
+                "external",
+                "doctoral",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "complete"
+            ],
+            "date_of_irb": "2025-01-20",
+            "revised_phd_title": "Ruthenium catalysts for ammonia synthesis",
+            "revised_irb_pdf": "irb_sub_rev/102203456/irb.pdf",
+            "revised_phd_objectives": [
+                "Screen ruthenium catalysts",
+                "Model reaction kinetics"
+            ],
+            "supervisorApprovals": [],
+            "supervisorReviews": [],
+            "view": {
+                "version": 1,
+                "title": "IRB submission",
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Gender",
+                                        "value": "Female",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "CGPA",
+                                        "value": "8.4",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous proposed title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Revised title of PhD thesis",
+                                        "key": "revised_phd_title",
+                                        "required": true,
+                                        "value": "Ruthenium catalysts for ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Revised PhD objectives",
+                                "key": "revised_phd_objectives",
+                                "required": true,
+                                "add_label": "Add objective",
+                                "each": 3,
+                                "read_as": "inputs",
+                                "value": [
+                                    "Screen ruthenium catalysts",
+                                    "Model reaction kinetics"
+                                ],
+                                "locked": true,
+                                "addable": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "",
+                                        "key": "irb_pdf",
+                                        "show_label": false,
+                                        "value": "irb_sub_rev/102203456/irb.pdf",
+                                        "locked": true
+                                    }
+                                ],
+                                "label": "Revised IRB PDF file"
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "date",
+                                        "label": "Date of IRB submission",
+                                        "key": "date_of_irb",
+                                        "required": true,
+                                        "format": "date",
+                                        "hint": "Select date...",
+                                        "value": "2025-01-20",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "date",
+                                        "label": "Date of IRB revision",
+                                        "format": "date",
+                                        "value": "2025-02-01T08:00:00.000000Z",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 1
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "value": null,
+                                "locked": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "required": true,
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "required": true,
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Designation",
+                                        "required": true,
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "counter",
+                                        "label": "Inside TIET students",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "counter",
+                                        "label": "Outside TIET students",
+                                        "key": "supervised_outside",
+                                        "locked": false
+                                    }
+                                ],
+                                "label": "Total number of students under guidance (including this applicant)"
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit",
+                                        "requires": {
+                                            "key": "approval",
+                                            "message": "Choose Recommend or Not Recommend first."
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "answered, supervisor reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "supervised_campus": 4,
+                    "supervised_outside": 1
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering",
+                    "supervised_campus": 2,
+                    "supervised_outside": 0
+                }
+            ],
+            "stage": "external",
+            "maximum_step": 2,
+            "locks": {
+                "student": true,
+                "supervisor": true,
+                "doctoral": false,
+                "external": false
+            },
+            "approvals": {
+                "supervisor": true
+            },
+            "comments": {
+                "supervisor": "Well prepared."
+            },
+            "role": "faculty",
+            "form_type": "irb-submission",
+            "gender": "Female",
+            "cgpa": "8.4",
+            "created_at": "2025-02-01T08:00:00.000000Z",
+            "steps": [
+                "student",
+                "faculty",
+                "external",
+                "doctoral",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "complete"
+            ],
+            "date_of_irb": "2025-01-20",
+            "revised_phd_title": "Ruthenium catalysts for ammonia synthesis",
+            "revised_irb_pdf": "irb_sub_rev/102203456/irb.pdf",
+            "revised_phd_objectives": [
+                "Screen ruthenium catalysts",
+                "Model reaction kinetics"
+            ],
+            "supervisorApprovals": [],
+            "supervisorReviews": [],
+            "current_supervisor": {
+                "name": "Rakesh Gupta",
+                "designation": "Professor",
+                "department": "Chemical Engineering",
+                "supervised_campus": 4,
+                "supervised_outside": 1
+            },
+            "view": {
+                "version": 1,
+                "title": "IRB submission",
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Gender",
+                                        "value": "Female",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "CGPA",
+                                        "value": "8.4",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous proposed title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Revised title of PhD thesis",
+                                        "key": "revised_phd_title",
+                                        "required": true,
+                                        "value": "Ruthenium catalysts for ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Revised PhD objectives",
+                                "key": "revised_phd_objectives",
+                                "required": true,
+                                "add_label": "Add objective",
+                                "each": 3,
+                                "read_as": "inputs",
+                                "value": [
+                                    "Screen ruthenium catalysts",
+                                    "Model reaction kinetics"
+                                ],
+                                "locked": true,
+                                "addable": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "",
+                                        "key": "irb_pdf",
+                                        "show_label": false,
+                                        "value": "irb_sub_rev/102203456/irb.pdf",
+                                        "locked": true
+                                    }
+                                ],
+                                "label": "Revised IRB PDF file"
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "date",
+                                        "label": "Date of IRB submission",
+                                        "key": "date_of_irb",
+                                        "required": true,
+                                        "format": "date",
+                                        "hint": "Select date...",
+                                        "value": "2025-01-20",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "date",
+                                        "label": "Date of IRB revision",
+                                        "format": "date",
+                                        "value": "2025-02-01T08:00:00.000000Z",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 1
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            },
+                                            {
+                                                "key": "designation",
+                                                "title": "Designation"
+                                            },
+                                            {
+                                                "key": "supervised_campus",
+                                                "title": "Supervised campus"
+                                            },
+                                            {
+                                                "key": "supervised_outside",
+                                                "title": "Supervised outside"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "name": "Rakesh Gupta",
+                                                "designation": "Professor",
+                                                "department": "Chemical Engineering",
+                                                "supervised_campus": 4,
+                                                "supervised_outside": 1
+                                            },
+                                            {
+                                                "name": "Anika Jain",
+                                                "designation": "Assistant Professor",
+                                                "department": "Chemical Engineering",
+                                                "supervised_campus": 2,
+                                                "supervised_outside": 0
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Supervisors"
+                            },
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "value": true,
+                                "locked": true
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "awaiting the expert, DoRDC reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "supervised_campus": 4,
+                    "supervised_outside": 1
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering",
+                    "supervised_campus": 2,
+                    "supervised_outside": 0
+                }
+            ],
+            "stage": "external",
+            "maximum_step": 2,
+            "locks": {
+                "student": true,
+                "supervisor": true,
+                "doctoral": false,
+                "external": false
+            },
+            "approvals": {
+                "supervisor": true
+            },
+            "comments": {
+                "supervisor": "Well prepared."
+            },
+            "role": "dordc",
+            "form_type": "irb-submission",
+            "gender": "Female",
+            "cgpa": "8.4",
+            "created_at": "2025-02-01T08:00:00.000000Z",
+            "steps": [
+                "student",
+                "faculty",
+                "external",
+                "doctoral",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "complete"
+            ],
+            "date_of_irb": "2025-01-20",
+            "revised_phd_title": "Ruthenium catalysts for ammonia synthesis",
+            "revised_irb_pdf": "irb_sub_rev/102203456/irb.pdf",
+            "revised_phd_objectives": [
+                "Screen ruthenium catalysts",
+                "Model reaction kinetics"
+            ],
+            "supervisorApprovals": [],
+            "supervisorReviews": [],
+            "view": {
+                "version": 1,
+                "title": "IRB submission",
+                "notices": [
+                    {
+                        "tone": "info",
+                        "text": "This submission is awaiting the outside expert's review.",
+                        "action": {
+                            "label": "Resend review request",
+                            "endpoint": "/irb-submissions/7/resend-external-review",
+                            "done": "Review request resent to the expert.",
+                            "failed": "Could not resend the review request."
+                        }
+                    }
+                ],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Gender",
+                                        "value": "Female",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "CGPA",
+                                        "value": "8.4",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous proposed title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Revised title of PhD thesis",
+                                        "key": "revised_phd_title",
+                                        "required": true,
+                                        "value": "Ruthenium catalysts for ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Revised PhD objectives",
+                                "key": "revised_phd_objectives",
+                                "required": true,
+                                "add_label": "Add objective",
+                                "each": 3,
+                                "read_as": "inputs",
+                                "value": [
+                                    "Screen ruthenium catalysts",
+                                    "Model reaction kinetics"
+                                ],
+                                "locked": true,
+                                "addable": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "",
+                                        "key": "irb_pdf",
+                                        "show_label": false,
+                                        "value": "irb_sub_rev/102203456/irb.pdf",
+                                        "locked": true
+                                    }
+                                ],
+                                "label": "Revised IRB PDF file"
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "date",
+                                        "label": "Date of IRB submission",
+                                        "key": "date_of_irb",
+                                        "required": true,
+                                        "format": "date",
+                                        "hint": "Select date...",
+                                        "value": "2025-01-20",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "date",
+                                        "label": "Date of IRB revision",
+                                        "format": "date",
+                                        "value": "2025-02-01T08:00:00.000000Z",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 1
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            },
+                                            {
+                                                "key": "designation",
+                                                "title": "Designation"
+                                            },
+                                            {
+                                                "key": "supervised_campus",
+                                                "title": "Supervised campus"
+                                            },
+                                            {
+                                                "key": "supervised_outside",
+                                                "title": "Supervised outside"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "name": "Rakesh Gupta",
+                                                "designation": "Professor",
+                                                "department": "Chemical Engineering",
+                                                "supervised_campus": 4,
+                                                "supervised_outside": 1
+                                            },
+                                            {
+                                                "name": "Anika Jain",
+                                                "designation": "Assistant Professor",
+                                                "department": "Chemical Engineering",
+                                                "supervised_campus": 2,
+                                                "supervised_outside": 0
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Supervisors"
+                            },
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "value": true,
+                                "locked": true
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "awaiting the expert, HOD reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "supervised_campus": 4,
+                    "supervised_outside": 1
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering",
+                    "supervised_campus": 2,
+                    "supervised_outside": 0
+                }
+            ],
+            "stage": "external",
+            "maximum_step": 2,
+            "locks": {
+                "student": true,
+                "supervisor": true,
+                "doctoral": false,
+                "external": false
+            },
+            "approvals": {
+                "supervisor": true
+            },
+            "comments": {
+                "supervisor": "Well prepared."
+            },
+            "role": "hod",
+            "form_type": "irb-submission",
+            "gender": "Female",
+            "cgpa": "8.4",
+            "created_at": "2025-02-01T08:00:00.000000Z",
+            "steps": [
+                "student",
+                "faculty",
+                "external",
+                "doctoral",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "complete"
+            ],
+            "date_of_irb": "2025-01-20",
+            "revised_phd_title": "Ruthenium catalysts for ammonia synthesis",
+            "revised_irb_pdf": "irb_sub_rev/102203456/irb.pdf",
+            "revised_phd_objectives": [
+                "Screen ruthenium catalysts",
+                "Model reaction kinetics"
+            ],
+            "supervisorApprovals": [],
+            "supervisorReviews": [],
+            "view": {
+                "version": 1,
+                "title": "IRB submission",
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Gender",
+                                        "value": "Female",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "CGPA",
+                                        "value": "8.4",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Mobile number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous proposed title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Revised title of PhD thesis",
+                                        "key": "revised_phd_title",
+                                        "required": true,
+                                        "value": "Ruthenium catalysts for ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Revised PhD objectives",
+                                "key": "revised_phd_objectives",
+                                "required": true,
+                                "add_label": "Add objective",
+                                "each": 3,
+                                "read_as": "inputs",
+                                "value": [
+                                    "Screen ruthenium catalysts",
+                                    "Model reaction kinetics"
+                                ],
+                                "locked": true,
+                                "addable": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "",
+                                        "key": "irb_pdf",
+                                        "show_label": false,
+                                        "value": "irb_sub_rev/102203456/irb.pdf",
+                                        "locked": true
+                                    }
+                                ],
+                                "label": "Revised IRB PDF file"
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "date",
+                                        "label": "Date of IRB submission",
+                                        "key": "date_of_irb",
+                                        "required": true,
+                                        "format": "date",
+                                        "hint": "Select date...",
+                                        "value": "2025-01-20",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "date",
+                                        "label": "Date of IRB revision",
+                                        "format": "date",
+                                        "value": "2025-02-01T08:00:00.000000Z",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 1
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            },
+                                            {
+                                                "key": "designation",
+                                                "title": "Designation"
+                                            },
+                                            {
+                                                "key": "supervised_campus",
+                                                "title": "Supervised campus"
+                                            },
+                                            {
+                                                "key": "supervised_outside",
+                                                "title": "Supervised outside"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "name": "Rakesh Gupta",
+                                                "designation": "Professor",
+                                                "department": "Chemical Engineering",
+                                                "supervised_campus": 4,
+                                                "supervised_outside": 1
+                                            },
+                                            {
+                                                "name": "Anika Jain",
+                                                "designation": "Assistant Professor",
+                                                "department": "Chemical Engineering",
+                                                "supervised_campus": 2,
+                                                "supervised_outside": 0
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Supervisors"
+                            },
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "value": true,
+                                "locked": true
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+]

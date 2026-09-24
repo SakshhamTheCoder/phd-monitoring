@@ -11,9 +11,12 @@ namespace App\Forms;
  * keep the plain recommendation every chain step already gets.
  *
  * Shape sent to clients (bump VERSION on any change a client must understand):
- *   { version, title, panels: { <step>: [ row, ... ] } }
+ *   { version, title, notices: [ notice, ... ], panels: { <step>: { wrapped, rows: [ row, ... ] } } }
+ *   notice = { tone, text, action?: { label, endpoint, done, failed } }
  *   row = { kind: 'grid', items: [field, ...], space?, each?, label? }
- *       | { kind: 'list', ...list field }
+ *       | { kind: 'list' | 'toggles' | 'recommendation', ...that field }
+ * `wrapped` is whether the panel sits in a block of its own, as most hand-built
+ * panels did; a panel drawn straight into its step says false.
  */
 abstract class FormDefinition
 {
@@ -29,19 +32,38 @@ abstract class FormDefinition
      */
     abstract protected function panels(array $data): array;
 
+    /**
+     * Notices above the form for this reader, each with an optional action
+     * posted to an API path.
+     */
+    protected function notices(array $data): array
+    {
+        return [];
+    }
+
+    /** Steps whose panel is drawn without a block of its own around it. */
+    protected function unwrapped(): array
+    {
+        return [];
+    }
+
     public function view(array $data): array
     {
         $panels = [];
         foreach ($this->panels($data) as $step => $rows) {
-            $panels[$step] = array_values(array_filter(array_map(
-                fn ($row) => $this->resolveRow($row, $data),
-                $rows
-            )));
+            $panels[$step] = [
+                'wrapped' => !in_array($step, $this->unwrapped(), true),
+                'rows' => array_values(array_filter(array_map(
+                    fn ($row) => $this->resolveRow($row, $data),
+                    $rows
+                ))),
+            ];
         }
 
         return [
             'version' => self::VERSION,
             'title' => $this->title(),
+            'notices' => $this->notices($data),
             'panels' => $panels,
         ];
     }
@@ -62,6 +84,38 @@ abstract class FormDefinition
             }
         }
         return $rules;
+    }
+
+    /**
+     * Whether this reader may answer $step now: they hold its role and have not
+     * submitted it yet, the rule the hand-built panels applied. $anyReader drops
+     * the role check (see Field::editableBy). The supervisor step is 'faculty'
+     * in a chain and 'supervisor' in the locks.
+     */
+    public static function mayEdit(array $data, string $step, bool $anyReader = false): bool
+    {
+        if (!$anyReader && ($data['role'] ?? null) !== $step) {
+            return false;
+        }
+        $lock = $step === 'faculty' ? 'supervisor' : $step;
+        return empty($data['locks'][$lock]);
+    }
+
+    /**
+     * Whether $role's step has been answered, so its stored approval is a
+     * choice and not the column's default. Same as stepAnswered on the web.
+     */
+    protected static function stepAnswered(array $data, string $role): bool
+    {
+        if (empty($data['locks'][$role])) {
+            return false;
+        }
+        $step = $role === 'supervisor' ? 'faculty' : $role;
+        $index = array_search($step, $data['steps'] ?? [], true);
+        if ($index === false || !isset($data['maximum_step'])) {
+            return true;
+        }
+        return $index <= (int) $data['maximum_step'];
     }
 
     /** The payload as JSON has it, so dates and models read as a client reads them. */

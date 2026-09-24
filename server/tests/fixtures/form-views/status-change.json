@@ -49,132 +49,136 @@
             "view": {
                 "version": 1,
                 "title": "Application for status change",
+                "notices": [],
                 "panels": {
-                    "student": [
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Roll number",
-                                    "value": "102203456",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Name",
-                                    "value": "Asha Verma",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Date of admission",
-                                    "format": "date",
-                                    "value": "2023-08-01",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Department",
-                                    "value": "Chemical Engineering",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Email",
-                                    "value": "asha.verma@thapar.edu",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Phone number",
-                                    "value": "9876543210",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Title of PhD thesis",
-                                    "value": "Catalysts for low-temperature ammonia synthesis",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Status of student at time of admission",
-                                    "value": "Full time",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Change of status availed (if any earlier)",
-                                    "value": "No",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Required status change",
-                                    "value": "Full time to part time",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Reason for status change",
-                                    "key": "reason",
-                                    "required": true,
-                                    "value": null,
-                                    "locked": false
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "submit",
-                                    "label": "Submit"
-                                }
-                            ]
-                        }
-                    ]
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Phone number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Status of student at time of admission",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Change of status availed (if any earlier)",
+                                        "value": "No",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Required status change",
+                                        "value": "Full time to part time",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for status change",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
                 }
             }
         }
@@ -235,150 +239,154 @@
             "view": {
                 "version": 1,
                 "title": "Application for status change",
+                "notices": [],
                 "panels": {
-                    "student": [
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Roll number",
-                                    "value": "102203456",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Name",
-                                    "value": "Asha Verma",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Date of admission",
-                                    "format": "date",
-                                    "value": "2023-08-01",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Department",
-                                    "value": "Chemical Engineering",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Email",
-                                    "value": "asha.verma@thapar.edu",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Phone number",
-                                    "value": "9876543210",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Title of PhD thesis",
-                                    "value": "Catalysts for low-temperature ammonia synthesis",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Status of student at time of admission",
-                                    "value": "Full time",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Change of status availed (if any earlier)",
-                                    "value": "Yes",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Date of previous extension",
-                                    "value": "2025-03-02T11:20:00.000000Z",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Date of IRB Meeting",
-                                    "format": "date",
-                                    "value": "2024-02-10T00:00:00.000000Z",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Required status change",
-                                    "value": "Full time to part time",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Reason for status change",
-                                    "key": "reason",
-                                    "required": true,
-                                    "value": null,
-                                    "locked": false
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "submit",
-                                    "label": "Submit"
-                                }
-                            ]
-                        }
-                    ]
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Phone number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Status of student at time of admission",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Change of status availed (if any earlier)",
+                                        "value": "Yes",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of previous extension",
+                                        "value": "2025-03-02T11:20:00.000000Z",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of IRB Meeting",
+                                        "format": "date",
+                                        "value": "2024-02-10T00:00:00.000000Z",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Required status change",
+                                        "value": "Full time to part time",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for status change",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
                 }
             }
         }
@@ -438,150 +446,154 @@
             "view": {
                 "version": 1,
                 "title": "Application for status change",
+                "notices": [],
                 "panels": {
-                    "student": [
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Roll number",
-                                    "value": "102203456",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Name",
-                                    "value": "Asha Verma",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Date of admission",
-                                    "format": "date",
-                                    "value": "2023-08-01",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Department",
-                                    "value": "Chemical Engineering",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Email",
-                                    "value": "asha.verma@thapar.edu",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Phone number",
-                                    "value": "9876543210",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Title of PhD thesis",
-                                    "value": "Catalysts for low-temperature ammonia synthesis",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Status of student at time of admission",
-                                    "value": "Full time",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Change of status availed (if any earlier)",
-                                    "value": "Yes",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Date of previous extension",
-                                    "value": "2025-03-02T11:20:00.000000Z",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Date of IRB Meeting",
-                                    "format": "date",
-                                    "value": null,
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Required status change",
-                                    "value": "Full time to part time",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Reason for status change",
-                                    "key": "reason",
-                                    "required": true,
-                                    "value": null,
-                                    "locked": false
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "submit",
-                                    "label": "Submit"
-                                }
-                            ]
-                        }
-                    ]
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Phone number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Status of student at time of admission",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Change of status availed (if any earlier)",
+                                        "value": "Yes",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of previous extension",
+                                        "value": "2025-03-02T11:20:00.000000Z",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of IRB Meeting",
+                                        "format": "date",
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Required status change",
+                                        "value": "Full time to part time",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for status change",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
                 }
             }
         }
@@ -636,123 +648,127 @@
             "view": {
                 "version": 1,
                 "title": "Application for status change",
+                "notices": [],
                 "panels": {
-                    "student": [
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Roll number",
-                                    "value": "102203456",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Name",
-                                    "value": "Asha Verma",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Date of admission",
-                                    "format": "date",
-                                    "value": "2023-08-01",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Department",
-                                    "value": "Chemical Engineering",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Email",
-                                    "value": "asha.verma@thapar.edu",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Phone number",
-                                    "value": "9876543210",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Title of PhD thesis",
-                                    "value": "Catalysts for low-temperature ammonia synthesis",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Status of student at time of admission",
-                                    "value": "Full time",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Change of status availed (if any earlier)",
-                                    "value": "No",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Required status change",
-                                    "value": "Full time to part time",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Reason for status change",
-                                    "key": "reason",
-                                    "required": true,
-                                    "value": "Took up a job",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        }
-                    ]
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Phone number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Status of student at time of admission",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Change of status availed (if any earlier)",
+                                        "value": "No",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Required status change",
+                                        "value": "Full time to part time",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for status change",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": "Took up a job",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            }
+                        ]
+                    }
                 }
             }
         }
@@ -807,123 +823,127 @@
             "view": {
                 "version": 1,
                 "title": "Application for status change",
+                "notices": [],
                 "panels": {
-                    "student": [
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Roll number",
-                                    "value": "102203456",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Name",
-                                    "value": "Asha Verma",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Date of admission",
-                                    "format": "date",
-                                    "value": "2023-08-01",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Department",
-                                    "value": "Chemical Engineering",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Email",
-                                    "value": "asha.verma@thapar.edu",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Phone number",
-                                    "value": "9876543210",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Title of PhD thesis",
-                                    "value": "Catalysts for low-temperature ammonia synthesis",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Status of student at time of admission",
-                                    "value": "Full time",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Change of status availed (if any earlier)",
-                                    "value": "No",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Required status change",
-                                    "value": "Full time to part time",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Reason for status change",
-                                    "key": "reason",
-                                    "required": true,
-                                    "value": "Took up a job",
-                                    "locked": false
-                                }
-                            ],
-                            "space": 2
-                        }
-                    ]
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Phone number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Status of student at time of admission",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Change of status availed (if any earlier)",
+                                        "value": "No",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Required status change",
+                                        "value": "Full time to part time",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for status change",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": "Took up a job",
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2
+                            }
+                        ]
+                    }
                 }
             }
         }
@@ -978,123 +998,127 @@
             "view": {
                 "version": 1,
                 "title": "Application for status change",
+                "notices": [],
                 "panels": {
-                    "student": [
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Roll number",
-                                    "value": "102203456",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Name",
-                                    "value": "Asha Verma",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Date of admission",
-                                    "format": "date",
-                                    "value": "2023-08-01",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Department",
-                                    "value": "Chemical Engineering",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Email",
-                                    "value": "asha.verma@thapar.edu",
-                                    "locked": true
-                                },
-                                {
-                                    "type": "text",
-                                    "label": "Phone number",
-                                    "value": "9876543210",
-                                    "locked": true
-                                }
-                            ]
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Title of PhD thesis",
-                                    "value": "Catalysts for low-temperature ammonia synthesis",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Status of student at time of admission",
-                                    "value": "Full time",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Change of status availed (if any earlier)",
-                                    "value": "No",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Required status change",
-                                    "value": "Full time to part time",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        },
-                        {
-                            "kind": "grid",
-                            "items": [
-                                {
-                                    "type": "text",
-                                    "label": "Reason for status change",
-                                    "key": "reason",
-                                    "required": true,
-                                    "value": "Took up a job",
-                                    "locked": true
-                                }
-                            ],
-                            "space": 2
-                        }
-                    ]
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Phone number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Status of student at time of admission",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Change of status availed (if any earlier)",
+                                        "value": "No",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Required status change",
+                                        "value": "Full time to part time",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for status change",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": "Took up a job",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            }
+                        ]
+                    }
                 }
             }
         }

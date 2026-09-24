@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Forms\SupervisorChangeDefinition;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Traits\ModelCommonFormFields;
@@ -104,7 +105,8 @@ class SupervisorChangeForm extends Model
                 'faculty_code' => $supervisor->faculty_code,
             ];
         });
-     
+        $formData['view'] = (new SupervisorChangeDefinition)->view($formData);
+
         return $formData;
     
  }

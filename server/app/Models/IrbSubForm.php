@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Forms\IrbSubmissionDefinition;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Traits\ModelCommonFormFields;
@@ -109,6 +110,7 @@ class IrbSubForm extends Model
             ];
             }
         }
+        $formData['view'] = (new IrbSubmissionDefinition)->view($formData);
         return $formData;
     }
 

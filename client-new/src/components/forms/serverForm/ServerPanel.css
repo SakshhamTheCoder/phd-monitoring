@@ -1,5 +1,7 @@
-/* A toggle button, so a keyboard reaches it and a screen reader hears whether
-   it is selected. Reset to read as the box it was drawn as. */
+/* A toggle button (a "toggles" row), so a keyboard reaches it and a screen
+   reader hears whether it is pressed. Reset to read as the box it was drawn as.
+   The class keeps the name it had on the supervisor change form, where it was
+   first drawn. */
 .supervisor-box {
     width: 100%;
     min-height: var(--field-height);
