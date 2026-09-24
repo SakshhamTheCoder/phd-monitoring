@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
 import UnifiedBulkImportModal from '../bulkImport/UnifiedBulkImportModal';
+import { forgetKeptLists } from './requests';
 
 // What an import's answer tells the reader, in order. A sticky one stays up
 // long enough to read a list of rows.
@@ -39,6 +40,7 @@ const RowsImportModal = ({ spec, isOpen, onClose, onImported }) => {
       return;
     }
 
+    forgetKeptLists(spec.invalidates);
     showMessages(response.response?.messages);
     reset();
     onClose();

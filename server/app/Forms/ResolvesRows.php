@@ -34,6 +34,12 @@ trait ResolvesRows
         ], fn ($value) => $value !== null);
     }
 
+    /** A heading inside a dialog that names it, as a form of its own would. */
+    protected static function heading(string $text): array
+    {
+        return ['kind' => 'heading', 'text' => $text];
+    }
+
     /** A show_if test for row(): the answer $key is set, or above $than. */
     protected static function when(string $key, string $test = 'set', int|float $than = 0): array
     {
@@ -53,6 +59,10 @@ trait ResolvesRows
         if ($row instanceof Field) {
             $field = $row->resolve($data);
             return $field === null ? null : ['kind' => $field['type']] + $field;
+        }
+        // A row that holds no fields (a heading) is drawn as it is.
+        if (!isset($row['items'])) {
+            return $row;
         }
 
         $items = array_values(array_filter(array_map(fn (Field $field) => $field->resolve($data), $row['items'])));

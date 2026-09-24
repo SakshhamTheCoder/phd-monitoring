@@ -20,12 +20,17 @@ use App\Models\User;
  *     | { navigate }, actions: [ row_action ] }: a paged list from endpoint;
  *     a row opens nothing unless opens says what
  *   row_action = { label, icon, opens?: dialog name, request?: request }
- *   request = { method, path, confirm?, done, failed, failure?: 'message' | 'errors' }:
- *     {key} in path and confirm is that key of the row; failure says whether a
- *     refusal's field errors (errors) or only its message is shown
+ *   request = { method, path, confirm?, done, failed, failure?: 'message' | 'errors',
+ *     done_from_answer?, invalidates? }: {key} in path and confirm is that key of
+ *     the row; failure says whether a refusal's field errors (errors) or only its
+ *     message is shown; done_from_answer shows the answer's own message when it
+ *     has one; invalidates names lists a client keeps that the request changes
+ *     ('departments')
  *   dialog = { title, width?, min_width?, max_width?, min_height?, max_height?,
  *     close_outside, rows, request }: rows as a form's; a field's `from` names
  *     the row key it starts from when the dialog opens on a row
+ *     | { block, width?, ... }: a block each client implements once
+ *       ('department-manager'), opened on a row
  *   import = { kind: 'file', title, columns, note, path }: a CSV file posted as it is
  *     | { kind: 'rows', title, required, rules, sample: { name, csv }, path,
  *         confirm_first?, failed }: the CSV read in the browser and its rows
@@ -67,10 +72,11 @@ abstract class PageDefinition
      * A dialog's closing row: Cancel, then the button that sends it, named or
      * given as a Field::submit carrying the checks it makes first.
      */
-    protected static function buttons(string|Field $submit, string $cancel = 'Cancel'): array
+    protected static function buttons(string|Field $submit, string|Field $cancel = 'Cancel'): array
     {
         $submit = is_string($submit) ? Field::submit($submit) : $submit;
-        return ['kind' => 'actions', 'items' => [Field::cancel($cancel), $submit->open()]];
+        $cancel = is_string($cancel) ? Field::cancel($cancel) : $cancel;
+        return ['kind' => 'actions', 'items' => [$cancel, $submit->open()]];
     }
 
     /** What a view carries whatever the page. */

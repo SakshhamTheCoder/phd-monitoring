@@ -2,6 +2,12 @@ import { toast } from 'react-toastify';
 import { customFetch, NETWORK_ERROR_MESSAGE } from '../../api/base';
 import { baseURL } from '../../api/urls';
 import { fillFromRow } from '../../api/views';
+import { apiDepartmentList } from '../../api/lookups';
+
+// Lists the client keeps between pages, by the name a request says it changes.
+const KEPT_LISTS = { departments: apiDepartmentList };
+
+export const forgetKeptLists = (names = []) => names.forEach((name) => KEPT_LISTS[name]?.invalidate());
 
 // Why a request a page view describes was refused. A refused save answers 422
 // with a bare "Validation failed", so where the view asks for them the field
@@ -24,7 +30,8 @@ export const sendRequest = async (request, row, body, setLoading) => {
   try {
     const result = await customFetch(baseURL + fillFromRow(request.path, row), request.method, body, false);
     if (result.success) {
-      toast.success(request.done);
+      forgetKeptLists(request.invalidates);
+      toast.success((request.done_from_answer && result.response?.message) || request.done);
       return true;
     }
     toast.error(failureMessage(result, request));

@@ -6,6 +6,7 @@ use App\Models\Department;
 use App\Models\Faculty;
 use App\Models\PhdCoordinator;
 use App\Models\Role;
+use App\Support\CsvRow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -656,6 +657,32 @@ class DepartmentController extends Controller
      * calls, so the role demotions and the transactions they already handle are
      * not repeated here.
      */
+    /**
+     * The officer sheet's rows as it has them, read by any of the names each
+     * column goes by. People are matched by their personal address, so an
+     * office address such as adorsp3@thapar.edu is reported rather than guessed
+     * at. A row naming no department is skipped.
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return array<int, array<string, mixed>>
+     */
+    public static function officerRows(array $rows): array
+    {
+        return array_values(array_filter(array_map(fn (array $row) => [
+            'department_code' => CsvRow::column($row, 'Department Code', 'department_code'),
+            'hod_email' => CsvRow::column($row, 'HOD Personal Email', 'HOD Email', 'hod_email'),
+            'hod_office_email' => CsvRow::column($row, 'HOD Office Email', 'hod_office_email'),
+            'adordc_email' => CsvRow::column($row, 'ADORDC Email', 'ADORDC Personal Email', 'adordc_email'),
+            'adordc_office_email' => CsvRow::column($row, 'ADORDC Office Email', 'adordc_office_email'),
+            'coordinator_1_email' => CsvRow::column($row, 'PhD Coordinator 1 Email', 'coordinator_1_email'),
+            'coordinator_2_email' => CsvRow::column($row, 'PhD Coordinator 2 Email', 'coordinator_2_email'),
+            'clerk_name' => CsvRow::column($row, 'Clerk Name', 'clerk_name'),
+            'clerk_email' => CsvRow::column($row, 'Clerk Email', 'clerk_email'),
+            'clerk_phone' => CsvRow::column($row, 'Clerk Phone', 'clerk_phone'),
+            'row_number' => (int) ($row['_rowNumber'] ?? $row['row_number'] ?? 0),
+        ], $rows), fn (array $row) => $row['department_code'] !== ''));
+    }
+
     public function importDepartments(Request $request)
     {
         $user = Auth::user();
@@ -667,15 +694,14 @@ class DepartmentController extends Controller
 
         $request->validate([
             'rows' => 'required|array',
-            'rows.*.department_code' => 'required|string',
-            'rows.*.row_number' => 'required|integer',
+            'rows.*' => 'array',
         ]);
 
         $updated = 0;
         $errors = [];
         $clerkRows = [];
 
-        foreach ($request->rows as $row) {
+        foreach (self::officerRows($request->rows) as $row) {
             $rowNumber = $row['row_number'];
             $code = trim((string) $row['department_code']);
 
@@ -770,6 +796,11 @@ class DepartmentController extends Controller
         return response()->json([
             'success' => true,
             'message' => "Updated {$updated} departments",
+            // What the page tells the reader, in order.
+            'messages' => [
+                ['tone' => 'success', 'text' => "{$updated} departments updated"],
+                ...array_map(fn ($error) => ['tone' => 'warn', 'text' => $error], $errors),
+            ],
             'data' => [
                 'update_count' => $updated,
                 'error_count' => count($errors),

@@ -126,9 +126,13 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
     }));
 
   const growable = new Set(fieldsOf(rows).filter((field) => field.kind === "list" && !field.fixed).map((field) => field.key));
+  const trimmed = new Set(fieldsOf(rows).filter((field) => field.trim).map((field) => field.key));
   const submission = () =>
     Object.fromEntries(
-      Object.entries(values).map(([key, value]) => [key, growable.has(key) ? value.filter((entry) => !isEmpty(entry)) : value])
+      Object.entries(values).map(([key, value]) => [
+        key,
+        growable.has(key) ? value.filter((entry) => !isEmpty(entry)) : trimmed.has(key) ? `${value ?? ""}`.trim() : value,
+      ])
     );
 
   const submit = (field) => {
@@ -319,7 +323,14 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
       case "submit":
         return <CustomButton text={field.label} onClick={() => submit(field)} busy={host.busy} />;
       case "cancel":
-        return <CustomButton text={field.label} variant="quiet" onClick={host.onCancel} />;
+        return (
+          <CustomButton
+            text={field.label}
+            variant="quiet"
+            onClick={host.onCancel}
+            disabled={field.held_while_sending ? !!host.busy : undefined}
+          />
+        );
       // "blank" is an empty cell holding the row's columns in place.
       default:
         return null;
@@ -545,6 +556,8 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
           );
         case "toggles":
           return <React.Fragment key={index}>{renderToggles(row)}</React.Fragment>;
+        case "heading":
+          return <h2 key={index} className="modal-title">{row.text}</h2>;
         // A dialog's closing buttons.
         case "actions":
           return (

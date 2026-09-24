@@ -37,7 +37,6 @@ const FacultyPage = lazy(() => import('./pages/faculty/FacultyPage'));
 const PublicOpenings = lazy(() => import('./pages/publicOpenings/PublicOpenings'));
 const PublicOpeningDetail = lazy(() => import('./pages/publicOpenings/PublicOpeningDetail'));
 const ApplicationStatus = lazy(() => import('./pages/publicOpenings/ApplicationStatus'));
-const DepartmentPage = lazy(() => import('./pages/department/Department'));
 const AllNotificationsPage = lazy(() => import('./components/notificationBox/AllNotificationsPage'));
 const PresentationSemester = lazy(() => import('./pages/presentations/PresentationSemester'));
 const StudentProgressMonitoring = lazy(() => import('./pages/presentations/StudentProgressMonitoring'));
@@ -237,7 +236,7 @@ const AppContent = () => {
               )}
               {may('courseManagement') && <Route path="/courses" element={<ServerListPage page="courses" />} />}
               {/* Matches can_edit_department, which DepartmentController::list requires. */}
-              {may('departments') && <Route path="/departments" element={<DepartmentPage />} />}
+              {may('departments') && <Route path="/departments" element={<ServerListPage page="departments" />} />}
               {/* can_manage_supervisor_changes is granted to dordc and admin on the server. */}
               {may('supervisorApprovals') && (
                 <Route path="/supervisor-doctoral-approvals" element={<SupervisorDoctoralApproval />} />

@@ -3,6 +3,10 @@ import CustomModal from '../forms/modal/CustomModal';
 import ServerPanel from '../forms/serverForm/ServerPanel';
 import { useLoading } from '../../context/LoadingContext';
 import { sendRequest } from './requests';
+import DepartmentManagerBlock from './blocks/DepartmentManagerBlock';
+
+// Dialogs with behaviour of their own, which the server opens by name.
+const BLOCKS = { 'department-manager': DepartmentManagerBlock };
 
 // The first of a field's sources the row fills: a key, or keys read as words.
 const fromRow = (sources, row) => {
@@ -42,6 +46,8 @@ const ServerDialog = ({ dialog, isOpen, row, opened, onClose, onSaved }) => {
     }
   };
 
+  const Block = BLOCKS[dialog.block];
+
   return (
     <CustomModal
       isOpen={isOpen}
@@ -54,12 +60,16 @@ const ServerDialog = ({ dialog, isOpen, row, opened, onClose, onSaved }) => {
       maxHeight={dialog.max_height}
       closeOnOutsideClick={dialog.close_outside}
     >
-      <ServerPanel
-        key={opened}
-        rows={startingFrom(dialog.rows, row)}
-        wrapped={false}
-        host={{ submit, onCancel: onClose, busy }}
-      />
+      {Block ? (
+        <Block key={opened} row={row} onClose={onClose} onChanged={onSaved} />
+      ) : (
+        <ServerPanel
+          key={opened}
+          rows={startingFrom(dialog.rows, row)}
+          wrapped={false}
+          host={{ submit, onCancel: onClose, busy }}
+        />
+      )}
     </CustomModal>
   );
 };

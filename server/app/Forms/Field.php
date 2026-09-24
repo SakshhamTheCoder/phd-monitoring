@@ -269,6 +269,20 @@ final class Field
         return new self('cancel', $label);
     }
 
+    /** A Cancel that cannot be pressed while the dialog's request is in flight. */
+    public function heldWhileSending(): self
+    {
+        $this->props['held_while_sending'] = true;
+        return $this;
+    }
+
+    /** Sent with the spaces around it taken off. */
+    public function trimmed(): self
+    {
+        $this->props['trim'] = true;
+        return $this;
+    }
+
     public function key(string $key): self
     {
         $this->props['key'] = $key;
