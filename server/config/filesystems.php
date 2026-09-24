@@ -34,6 +34,17 @@ return [
             'driver' => 'local',
             'root' => storage_path('app'),
             'throw' => false,
+            // Uploads are written by two users: the web server (www-data) and
+            // the deploy (jenkins, which runs migrations that move files).
+            // Private folders default to 0700, so a folder one of them made was
+            // closed to the other and stored files read as missing. Folders
+            // open to their group instead, and files are readable by anyone who
+            // can reach them, which is only that group: the folders keep
+            // everyone else out.
+            'permissions' => [
+                'file' => ['public' => 0644, 'private' => 0644],
+                'dir' => ['public' => 0755, 'private' => 0770],
+            ],
         ],
 
         'public' => [
