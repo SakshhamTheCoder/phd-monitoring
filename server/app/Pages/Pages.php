@@ -13,6 +13,7 @@ final class Pages
         'departments' => DepartmentsPage::class,
         'faculty' => FacultyPage::class,
         'form-list' => FormListPage::class,
+        'my-attendance' => MyAttendancePage::class,
         'outside-experts' => OutsideExpertsPage::class,
         'presentation-list' => PresentationListPage::class,
         'presentations' => PresentationsPage::class,

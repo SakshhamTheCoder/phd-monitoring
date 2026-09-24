@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseAttendanceQuery, overageOf, formatDays, localDateString, localMonthKey } from './leaveBalance';
+import { parseAttendanceQuery, overageOf, formatDays, localDateString } from './leaveBalance';
 
 describe('parseAttendanceQuery', () => {
   it('reads the tab and leave id a notification link carries', () => {
@@ -70,25 +70,5 @@ describe('localDateString', () => {
 
   it('returns an unparseable value unchanged rather than NaN', () => {
     expect(localDateString('not-a-date')).toBe('not-a-date');
-  });
-});
-
-describe('localMonthKey', () => {
-  it('undoes the UTC-midnight shift so a 1st-of-month record files under the right month', () => {
-    expect(localMonthKey('2024-04-30T18:30:00.000000Z')).toBe('2024-05');
-  });
-
-  it('passes through a plain YYYY-MM-DD truncated to the month', () => {
-    expect(localMonthKey('2024-05-01')).toBe('2024-05');
-  });
-
-  it('returns empty string for null/undefined/empty rather than a formatted Invalid Date', () => {
-    expect(localMonthKey(null)).toBe('');
-    expect(localMonthKey(undefined)).toBe('');
-    expect(localMonthKey('')).toBe('');
-  });
-
-  it('returns an unparseable value unchanged rather than NaN', () => {
-    expect(localMonthKey('not-a-date')).toBe('not-a-date');
   });
 });

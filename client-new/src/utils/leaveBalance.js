@@ -55,13 +55,3 @@ export const localDateString = (value) => {
   if (Number.isNaN(d.getTime())) return value;
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 };
-
-/** Same local-time round trip as localDateString, truncated to the month —
- * for bucketing records by month without a UTC-midnight serialization
- * shifting a 1st-of-month record into the prior month. */
-export const localMonthKey = (value) => {
-  if (value === null || value === undefined || value === '') return '';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}`;
-};
