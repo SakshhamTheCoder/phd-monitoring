@@ -1,0 +1,389 @@
+[
+    {
+        "name": "coordinator allotting",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [],
+            "stage": "phd_coordinator",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "phd_coordinator": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "phd_coordinator",
+            "steps": [
+                "student",
+                "phd_coordinator",
+                "hod",
+                "complete"
+            ],
+            "broad_area_of_research": [
+                "Catalysis",
+                "Reaction engineering",
+                "Process modelling"
+            ],
+            "prefrences": [
+                {
+                    "name": "Raj Kumar Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000744,
+                    "email": "rk@thapar.edu"
+                }
+            ],
+            "view": {
+                "version": 1,
+                "title": "Supervisor allocation",
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "custom": "supervisor-preferences"
+                    },
+                    "phd_coordinator": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Allot supervisors",
+                                "key": "supervisors",
+                                "item": "suggest",
+                                "item_label": "Supervisor",
+                                "add_label": "Add supervisor",
+                                "source": "/suggestions/faculty",
+                                "shows": [
+                                    "name",
+                                    "department"
+                                ],
+                                "displays": [],
+                                "value": [
+                                    null
+                                ],
+                                "locked": false,
+                                "addable": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit",
+                                        "sends": {
+                                            "approval": true
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "sent back to the coordinator with an allotment",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Raj Kumar Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000744,
+                    "supervised_campus": 3,
+                    "supervised_outside": 0
+                },
+                {
+                    "name": "Rajeev Mehta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000813,
+                    "supervised_campus": 5,
+                    "supervised_outside": 1
+                }
+            ],
+            "stage": "phd_coordinator",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "phd_coordinator": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "phd_coordinator",
+            "steps": [
+                "student",
+                "phd_coordinator",
+                "hod",
+                "complete"
+            ],
+            "broad_area_of_research": [
+                "Catalysis",
+                "Reaction engineering",
+                "Process modelling"
+            ],
+            "prefrences": [
+                {
+                    "name": "Raj Kumar Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000744,
+                    "email": "rk@thapar.edu"
+                }
+            ],
+            "view": {
+                "version": 1,
+                "title": "Supervisor allocation",
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "custom": "supervisor-preferences"
+                    },
+                    "phd_coordinator": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "list",
+                                "type": "list",
+                                "label": "Allot supervisors",
+                                "key": "supervisors",
+                                "item": "suggest",
+                                "item_label": "Supervisor",
+                                "add_label": "Add supervisor",
+                                "source": "/suggestions/faculty",
+                                "shows": [
+                                    "name",
+                                    "department"
+                                ],
+                                "displays": [
+                                    "Raj Kumar Gupta",
+                                    "Rajeev Mehta"
+                                ],
+                                "value": [
+                                    1000744,
+                                    1000813
+                                ],
+                                "locked": false,
+                                "addable": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit",
+                                        "sends": {
+                                            "approval": true
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "allotted, HOD reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Raj Kumar Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000744,
+                    "supervised_campus": 3,
+                    "supervised_outside": 0
+                }
+            ],
+            "stage": "hod",
+            "maximum_step": 2,
+            "locks": {
+                "student": true,
+                "phd_coordinator": true
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "hod",
+            "steps": [
+                "student",
+                "phd_coordinator",
+                "hod",
+                "complete"
+            ],
+            "broad_area_of_research": [
+                "Catalysis",
+                "Reaction engineering",
+                "Process modelling"
+            ],
+            "prefrences": [
+                {
+                    "name": "Raj Kumar Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000744,
+                    "email": "rk@thapar.edu"
+                }
+            ],
+            "view": {
+                "version": 1,
+                "title": "Supervisor allocation",
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "custom": "supervisor-preferences"
+                    },
+                    "phd_coordinator": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            },
+                                            {
+                                                "key": "supervised_campus",
+                                                "title": "Students supervised"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "name": "Raj Kumar Gupta",
+                                                "designation": "Professor",
+                                                "department": "Chemical Engineering",
+                                                "faculty_code": 1000744,
+                                                "supervised_campus": 3,
+                                                "supervised_outside": 0
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Supervisors allocated by PhD Coordinator"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "at the coordinator, admin reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [],
+            "stage": "phd_coordinator",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "phd_coordinator": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "admin",
+            "steps": [
+                "student",
+                "phd_coordinator",
+                "hod",
+                "complete"
+            ],
+            "broad_area_of_research": [
+                "Catalysis",
+                "Reaction engineering",
+                "Process modelling"
+            ],
+            "prefrences": [
+                {
+                    "name": "Raj Kumar Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering",
+                    "faculty_code": 1000744,
+                    "email": "rk@thapar.edu"
+                }
+            ],
+            "view": {
+                "version": 1,
+                "title": "Supervisor allocation",
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "custom": "supervisor-preferences"
+                    },
+                    "phd_coordinator": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "",
+                                        "columns": [
+                                            {
+                                                "key": "name",
+                                                "title": "Name"
+                                            },
+                                            {
+                                                "key": "department",
+                                                "title": "Department"
+                                            },
+                                            {
+                                                "key": "supervised_campus",
+                                                "title": "Students supervised"
+                                            }
+                                        ],
+                                        "value": []
+                                    }
+                                ],
+                                "space": 3,
+                                "label": "Supervisors allocated by PhD Coordinator"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+]

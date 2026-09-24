@@ -8,6 +8,7 @@ use App\Forms\IrbSubmissionDefinition;
 use App\Forms\ReviseTitleDefinition;
 use App\Forms\SemesterOffDefinition;
 use App\Forms\StatusChangeDefinition;
+use App\Forms\SupervisorAllocationDefinition;
 use App\Forms\SupervisorChangeDefinition;
 use App\Forms\ThesisExtensionDefinition;
 use Tests\TestCase;
@@ -31,6 +32,7 @@ class FormViewContractTest extends TestCase
         'status-change' => StatusChangeDefinition::class,
         'supervisor-change' => SupervisorChangeDefinition::class,
         'irb-submission' => IrbSubmissionDefinition::class,
+        'supervisor-allocation' => SupervisorAllocationDefinition::class,
     ];
 
     public static function forms(): array
@@ -71,7 +73,8 @@ class FormViewContractTest extends TestCase
         $view = (new $class)->view(['role' => 'student', 'locks' => []]);
         $this->assertSame(FormDefinition::VERSION, $view['version']);
         $this->assertArrayHasKey('student', $view['panels']);
-        $this->assertNotEmpty($view['panels']['student']['rows']);
+        $panel = $view['panels']['student'];
+        $this->assertTrue(!empty($panel['custom']) || !empty($panel['rows']));
     }
 
     public function test_revise_title_asks_for_what_it_asked_before(): void
@@ -193,6 +196,16 @@ class FormViewContractTest extends TestCase
         }
         $this->assertSame([], $notices(['stage' => 'external', 'role' => 'hod']));
         $this->assertSame([], $notices(['stage' => 'doctoral', 'role' => 'dordc']));
+    }
+
+    public function test_supervisor_allocation_names_the_scholars_panel_and_describes_the_coordinators(): void
+    {
+        $definition = new SupervisorAllocationDefinition;
+        $view = $definition->view(['role' => 'phd_coordinator', 'locks' => ['student' => true]]);
+        $this->assertSame(['custom' => 'supervisor-preferences'], $view['panels']['student']);
+        $this->assertSame(['supervisors' => 'required|array'], $definition->rules('phd_coordinator', []));
+        // The scholar's answers are checked by the controller, as before.
+        $this->assertSame([], $definition->rules('student', []));
     }
 
     public function test_a_locked_or_foreign_reader_gets_no_inputs_and_no_submit(): void

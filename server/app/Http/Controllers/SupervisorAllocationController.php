@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Forms\SupervisorAllocationDefinition;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\GeneralFormCreate;
 use App\Http\Controllers\Traits\GeneralFormHandler;
@@ -323,9 +324,7 @@ class SupervisorAllocationController extends Controller
             'student',
             'hod',
             function ($formInstance) use ($request, $user) {
-                $request->validate([
-                    'supervisors' => 'required|array',
-                ]);
+                $request->validate((new SupervisorAllocationDefinition)->rules('phd_coordinator', $formInstance->fullForm($user)));
                 $supervisors = $request->supervisors;
                 if (count($supervisors) != count(array_unique($supervisors))) {
                     throw new \Exception("Please select unique supervisors");

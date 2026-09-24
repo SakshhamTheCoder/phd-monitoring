@@ -11,12 +11,17 @@ namespace App\Forms;
  * keep the plain recommendation every chain step already gets.
  *
  * Shape sent to clients (bump VERSION on any change a client must understand):
- *   { version, title, notices: [ notice, ... ], panels: { <step>: { wrapped, rows: [ row, ... ] } } }
+ *   { version, title, notices: [ notice, ... ], panels: { <step>: panel } }
+ *   panel = { wrapped, rows: [ row, ... ] } | { custom: name }
  *   notice = { tone, text, action?: { label, endpoint, done, failed } }
  *   row = { kind: 'grid', items: [field, ...], space?, each?, label? }
  *       | { kind: 'list' | 'toggles' | 'recommendation', ...that field }
  * `wrapped` is whether the panel sits in a block of its own, as most hand-built
  * panels did; a panel drawn straight into its step says false.
+ *
+ * A custom panel is one too interactive to describe as fields (live
+ * recommendations, pickers that fill each other). Each client draws it by
+ * name; one that does not know the name sends the reader to the website.
  */
 abstract class FormDefinition
 {
@@ -51,6 +56,10 @@ abstract class FormDefinition
     {
         $panels = [];
         foreach ($this->panels($data) as $step => $rows) {
+            if (isset($rows['custom'])) {
+                $panels[$step] = $rows;
+                continue;
+            }
             $panels[$step] = [
                 'wrapped' => !in_array($step, $this->unwrapped(), true),
                 'rows' => array_values(array_filter(array_map(
@@ -77,6 +86,10 @@ abstract class FormDefinition
     {
         $rules = [];
         foreach ($this->panels($data) as $rows) {
+            // A custom panel's controller checks its own answers.
+            if (isset($rows['custom'])) {
+                continue;
+            }
             foreach ($rows as $row) {
                 foreach ($row instanceof Field ? [$row] : $row['items'] as $field) {
                     $rules += $field->rulesFor($step);
@@ -132,6 +145,12 @@ abstract class FormDefinition
             array_values($supervisors),
             array_keys(array_values($supervisors))
         );
+    }
+
+    /** A panel each client draws by name. */
+    protected static function custom(string $name): array
+    {
+        return ['custom' => $name];
     }
 
     /** A row of fields side by side; see GridContainer on the web for space and each. */

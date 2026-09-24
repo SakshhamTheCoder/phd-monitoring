@@ -1,19 +1,24 @@
 import React, { useEffect, useState, useRef } from "react";
-import InputSuggestions from "../../fields/InputSuggestions";
-import { baseURL } from "../../../../api/urls";
-import GridContainer from "../../fields/GridContainer";
-import InputField from "../../fields/InputField";
-import { formatDate } from "../../../../utils/timeParse";
-import TableComponent from "../../table/TableComponent";
-import CustomButton from "../../fields/CustomButton";
+import InputSuggestions from "../fields/InputSuggestions";
+import { baseURL } from "../../../api/urls";
+import GridContainer from "../fields/GridContainer";
+import InputField from "../fields/InputField";
+import { formatDate } from "../../../utils/timeParse";
+import TableComponent from "../table/TableComponent";
+import CustomButton from "../fields/CustomButton";
 
 import { useLocation } from "react-router-dom";
-import { submitForm } from "../../../../api/form";
-import { useLoading } from "../../../../context/LoadingContext";
-import { customFetch } from "../../../../api/base";
+import { submitForm } from "../../../api/form";
+import { useLoading } from "../../../context/LoadingContext";
+import { customFetch } from "../../../api/base";
 import { toast } from "react-toastify";
+import "./SupervisorAllocation.css";
 
-const Student = ({ formData }) => {
+// The scholar's panel of the supervisor allocation form: broad areas, the
+// supervisors recommended for them as they are typed, and six preferences
+// those recommendations fill. Too interactive to describe as fields, so the
+// server names it (SupervisorAllocationDefinition) and each client draws it.
+const SupervisorPreferences = ({ formData }) => {
   const apiUrl_suggestion = baseURL + "/suggestions/faculty";
   // Suggestions, not a list to choose from. The scholar is describing what they
   // hope to work on, so anything they type is valid; the department's curated
@@ -352,4 +357,4 @@ const Student = ({ formData }) => {
   );
 };
 
-export default Student;
+export default SupervisorPreferences;

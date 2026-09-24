@@ -8,6 +8,7 @@ import { customFetch } from "../../../api/base";
 import { baseURL } from "../../../api/urls";
 import useDoneFlash from "../../../hooks/useDoneFlash";
 import ServerPanel from "./ServerPanel";
+import CUSTOM_PANELS from "./customPanels";
 
 // A notice above the form, with the action the server offers this reader.
 const Notice = ({ notice }) => {
@@ -49,8 +50,9 @@ const Notice = ({ notice }) => {
 const ServerForm = ({ formData }) => {
   const { view } = formData;
   const steps = Object.keys(view.panels);
-  const panels = Object.fromEntries(steps.map((step) => [step, ServerPanel]));
-  const stepProps = Object.fromEntries(steps.map((step) => [step, view.panels[step]]));
+  const panelOf = (panel) => (panel.custom ? CUSTOM_PANELS[panel.custom] : ServerPanel);
+  const panels = Object.fromEntries(steps.map((step) => [step, panelOf(view.panels[step])]));
+  const stepProps = Object.fromEntries(steps.map((step) => [step, view.panels[step].custom ? {} : view.panels[step]]));
 
   return (
     <>

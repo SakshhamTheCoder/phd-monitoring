@@ -141,6 +141,7 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
           <InputSuggestions
             label={field.label}
             apiUrl={baseURL + field.source}
+            fields={field.shows}
             initialValue={field.display}
             lock={field.locked}
             onSelect={(picked) => setValue(field.key, picked.id)}
@@ -162,6 +163,7 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
       <InputSuggestions
         label={entryLabel(field, index)}
         apiUrl={baseURL + field.source}
+        fields={field.shows}
         initialValue={field.displays?.[index]}
         lock={false}
         onSelect={(picked) => setEntry(field.key, index, picked.id)}

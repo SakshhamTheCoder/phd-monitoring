@@ -1,5 +1,4 @@
 import React, { Suspense, lazy, useEffect, useState } from "react";
-import SupervisorAllocation from "../../components/forms/supervisorAllocation/SupervisorAllocation";
 import { useLoading } from "../../context/LoadingContext";
 import { useLocation, useParams } from "react-router-dom";
 import { customFetch } from "../../api/base";
@@ -75,8 +74,6 @@ const MainFormPage = () => {
             // A form the server describes draws from that description.
             if (formData.view) return <ServerForm formData={formData} />;
             switch (form_type) {
-              case "supervisor-allocation":
-                return <SupervisorAllocation formData={formData} />;
               case "irb-constitution":
                 return <ConstituteOfIRB formData={formData} />;
               case "presentation":
