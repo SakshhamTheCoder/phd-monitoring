@@ -387,7 +387,12 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
           />
         );
       case "submit":
-        return <CustomButton text={field.label} onClick={() => submit(field)} busy={host.busy} />;
+        // A send button that is only held off while sending shows no spinner.
+        return field.held_while_sending ? (
+          <CustomButton text={field.label} variant={field.variant} onClick={() => submit(field)} disabled={!!host.busy} />
+        ) : (
+          <CustomButton text={field.label} variant={field.variant} onClick={() => submit(field)} busy={host.busy} />
+        );
       case "cancel":
         return (
           <CustomButton
@@ -623,7 +628,18 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
         case "toggles":
           return <React.Fragment key={index}>{renderToggles(row)}</React.Fragment>;
         case "heading":
-          return <h2 key={index} className="modal-title">{row.text}</h2>;
+          return row.level === 3
+            ? <h3 key={index} className="modal-title">{row.text}</h3>
+            : <h2 key={index} className="modal-title">{row.text}</h2>;
+        // What a dialog is about, read from the row it was opened on.
+        case "lines":
+          return (
+            <div key={index} className={row.class_name}>
+              {row.lines.map((line) => (
+                <p key={line.label}><strong>{`${line.label}:`}</strong> {line.value}</p>
+              ))}
+            </div>
+          );
         case "paragraph":
           return <p key={index} className={row.class_name}>{row.text}</p>;
         // A dialog's closing buttons.

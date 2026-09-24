@@ -53,9 +53,9 @@ trait ResolvesRows
     }
 
     /** A heading inside a dialog that names it, as a form of its own would. */
-    protected static function heading(string $text): array
+    protected static function heading(string $text, int $level = 2): array
     {
-        return ['kind' => 'heading', 'text' => $text];
+        return ['kind' => 'heading', 'text' => $text, 'level' => $level];
     }
 
     /** A show_if test for row(): the answer $key is set, above $than, or equals or differs from it. */

@@ -40,7 +40,6 @@ const AdminFormManagement = lazy(() => import('./pages/admin/AdminFormManagement
 const StudentCourses = lazy(() => import('./pages/StudentCourses/StudentCourses'));
 const ServerListPage = lazy(() => import('./components/serverPage/ServerListPage'));
 const ExternalReview = lazy(() => import('./pages/externalReview/ExternalReview'));
-const SupervisorDoctoralApproval = lazy(() => import('./pages/SupervisorDoctoralApproval/SupervisorDoctoralApproval'));
 const AttendanceRoute = lazy(() => import('./pages/attendance/AttendanceRoute'));
 const PrivacyPolicy = lazy(() => import('./pages/privacy/PrivacyPolicy'));
 const Support = lazy(() => import('./pages/support/Support'));
@@ -229,7 +228,7 @@ const AppContent = () => {
               {may('departments') && <Route path="/departments" element={<ServerListPage page="departments" />} />}
               {/* can_manage_supervisor_changes is granted to dordc and admin on the server. */}
               {may('supervisorApprovals') && (
-                <Route path="/supervisor-doctoral-approvals" element={<SupervisorDoctoralApproval />} />
+                <Route path="/supervisor-doctoral-approvals" element={<ServerListPage page="supervisor-approvals" />} />
               )}
               {may('facultyDirectory') && <Route path="/faculty" element={<ServerListPage page="faculty" />} />}
               {/* The server decides what each of them reads, so the routes only

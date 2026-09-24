@@ -83,6 +83,8 @@ class SupervisorDoctoralChangeController extends Controller
                 'faculty_type' => $change->faculty_type,
                 'old_member' => $oldMember,
                 'new_member' => $newMember,
+                // The change in words, as the approvals page shows it.
+                'change' => self::describe($change->change_type, $change->member_type, $change->faculty_type, $oldMember, $newMember),
                 'reason' => $change->reason,
                 'requested_by' => $change->requester->name(),
                 'requested_at' => $change->created_at->format('Y-m-d H:i:s'),
@@ -93,6 +95,21 @@ class SupervisorDoctoralChangeController extends Controller
             'success' => true,
             'data' => $result
         ]);
+    }
+
+    /** "Replace Supervisor: A → B", and the like, for one proposed change. */
+    private static function describe(?string $changeType, ?string $memberType, ?string $facultyType, ?array $old, ?array $new): string
+    {
+        $member = $memberType === 'supervisor' ? 'Supervisor' : 'Doctoral Committee Member';
+        $oldName = $old['name'] ?? 'Unknown';
+        $newName = $new['name'] ?? 'Unknown';
+
+        return match ($changeType) {
+            'add' => "Add {$member}: " . ($new['name'] ?? ($facultyType === 'internal' ? 'Internal Faculty' : 'External Expert')),
+            'remove' => "Remove {$member}: {$oldName}",
+            'replace' => "Replace {$member}: {$oldName} → {$newName}",
+            default => 'Unknown Change',
+        };
     }
 
     /**

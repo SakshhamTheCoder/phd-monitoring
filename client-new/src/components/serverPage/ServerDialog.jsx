@@ -71,6 +71,7 @@ const startingFrom = (rows, row) =>
   !row ? rows : rows.map((entry) => {
     if (entry.rows) return { ...entry, rows: startingFrom(entry.rows, row) };
     if (entry.items) return { ...entry, items: startingFrom(entry.items, row) };
+    if (entry.lines) return { ...entry, lines: entry.lines.map((line) => ({ ...line, value: row[line.key] })) };
     return {
       ...entry,
       ...(entry.from ? { value: fromRow(entry, row) } : {}),
