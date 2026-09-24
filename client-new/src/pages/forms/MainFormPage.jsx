@@ -66,8 +66,9 @@ const MainFormPage = () => {
       {isLoaded && formData && (
         <>
           {(() => {
-            // A form the server describes draws from that description.
-            if (formData.view) return <ServerForm formData={formData} />;
+            // A form the server describes draws from that description; one
+            // laid out in sections (a leave application) keeps its own page.
+            if (formData.view && !formData.view.sections) return <ServerForm formData={formData} />;
             switch (form_type) {
               // The API serves /forms/student-leave/:id, and StudentLeave
               // defaults submitPath to the current location, which is that

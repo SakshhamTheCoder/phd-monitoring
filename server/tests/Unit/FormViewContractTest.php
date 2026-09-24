@@ -42,6 +42,7 @@ class FormViewContractTest extends TestCase
         'synopsis-submission' => SynopsisSubmissionDefinition::class,
         'thesis-submission' => \App\Forms\ThesisSubmissionDefinition::class,
         'presentation' => PresentationDefinition::class,
+        'student-leave' => \App\Forms\StudentLeaveDefinition::class,
     ];
 
     public static function forms(): array
@@ -124,6 +125,12 @@ class FormViewContractTest extends TestCase
         // which asks them whether they recommend their own application.
         $view = (new $class)->view(['role' => 'student', 'locks' => []]);
         $this->assertSame(FormDefinition::VERSION, $view['version']);
+        // A form in sections opens with the scholar's.
+        if (isset($view['sections'])) {
+            $this->assertSame('Student', $view['sections'][0]['title']);
+            $this->assertNotEmpty($view['sections'][0]['rows']);
+            return;
+        }
         // A chain that starts later heads the form with the scholar instead.
         if (isset($view['lead'])) {
             $this->assertNotEmpty($view['lead']['rows']);
@@ -367,6 +374,30 @@ class FormViewContractTest extends TestCase
         $rows = (new PresentationDefinition)->view($reviewing)['panels']['faculty']['rows'];
         $hidden = collect($rows)->firstWhere('kind', 'hidden');
         $this->assertSame(['attendance', 88, false], [$hidden['key'], $hidden['value'], $hidden['locked']]);
+    }
+
+    public function test_only_the_scholar_reads_their_balance_and_deletes_their_draft(): void
+    {
+        $leave = fn (array $data) => (new \App\Forms\StudentLeaveDefinition)->view($data + ['form_id' => 12, 'locks' => ['student' => false]])['sections'][0]['rows'][0];
+        $draft = $leave(['role' => 'student', 'status' => 'draft']);
+        $this->assertSame('/forms/student-leave/balance', $draft['balance_path']);
+        $this->assertTrue($draft['deletable']);
+        $this->assertTrue($draft['editable']);
+        $this->assertFalse($leave(['role' => 'student', 'status' => 'rejected'])['deletable']);
+
+        $hod = $leave(['role' => 'hod', 'status' => 'draft']);
+        $this->assertNull($hod['balance_path']);
+        $this->assertFalse($hod['editable']);
+        $this->assertFalse($hod['deletable']);
+    }
+
+    public function test_the_scholar_sees_the_outcome_and_everyone_else_the_decision(): void
+    {
+        $hodSection = fn (string $role) => (new \App\Forms\StudentLeaveDefinition)->view(['role' => $role, 'status' => 'pending', 'comments' => ['hod' => null], 'locks' => []])['sections'][1]['rows'][0];
+        $this->assertSame('facts', $hodSection('student')['kind']);
+        $this->assertSame('None', $hodSection('student')['facts'][1]['value']);
+        $this->assertSame('recommendation', $hodSection('hod')['kind']);
+        $this->assertTrue($hodSection('admin')['decision']);
     }
 
     public function test_a_locked_or_foreign_reader_gets_no_inputs_and_no_submit(): void

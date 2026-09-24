@@ -191,6 +191,28 @@ final class Field
         return $field;
     }
 
+    /**
+     * A leave application: its type, the dates as a range, the part of a
+     * single day, the reason, and a document for the types that need one, with
+     * the scholar's balance for the type chosen. It posts to the form's own
+     * path and reads the form again after; a draft can be deleted there too.
+     */
+    public static function leave(array $props): self
+    {
+        $field = new self('leave', '');
+        $field->props += $props;
+        return $field;
+    }
+
+    /** Label and value pairs read out in a block, a value optionally as a badge. */
+    public static function facts(array $facts, string $className = ''): self
+    {
+        $field = new self('facts', '');
+        $field->props['facts'] = $facts;
+        $field->props['class_name'] = $className;
+        return $field;
+    }
+
     /** A value posted with the answers as it stands, not drawn. */
     public static function hidden(string $key): self
     {

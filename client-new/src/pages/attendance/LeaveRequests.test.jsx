@@ -19,6 +19,7 @@ vi.mock('../../api/base', () => ({
 }));
 
 import { apiLeaveList, apiLeaveLoad } from '../../api/leave';
+import leaveViews from '../../../../server/tests/fixtures/form-views/student-leave.json';
 import LeaveRequests from './LeaveRequests';
 
 const rows = [
@@ -26,6 +27,10 @@ const rows = [
   { id: 2, name: 'Scholar Two', roll_no: 202, department: 'MED', department_id: 11, leave_type: 'academic', from_date: '2026-09-15', to_date: '2026-09-16', day_part: 'full', status: 'approved', stage: 'complete' },
   { id: 3, name: 'Draft Only', roll_no: 303, department: 'MED', department_id: 11, leave_type: null, from_date: null, to_date: null, day_part: null, status: 'draft', stage: 'student' },
 ];
+
+// The description the server sends with a submitted application, for anyone
+// but the scholar (kept equal to the server by FormViewContractTest).
+const { view } = leaveViews.find((c) => c.name === 'submitted, HOD deciding').formData;
 
 /** The payload loadForm returns, as read by `role`. */
 const application = (role) => ({
@@ -46,6 +51,7 @@ const application = (role) => ({
   locks: { student: true, hod: false },
   approvals: { hod: null },
   comments: { hod: null },
+  view,
 });
 
 const renderAs = (role, props = {}) => {

@@ -12,7 +12,9 @@ namespace App\Forms;
  *
  * Shape sent to clients (bump VERSION on any change a client must understand):
  *   { version, title, notes: [ text, ... ], notices: [ notice, ... ], lead?, panels: { <step>: panel },
- *     step_options?: { <step>: { allow_rejection } }, summary? }
+ *     step_options?: { <step>: { allow_rejection } }, summary?, sections? }
+ *   sections = [ { title, rows }, ... ]: titled sections drawn in place of
+ *     the chain, for a form that is not walked step by step
  *   lead = { title, wrapped, rows }: a section above the chain, for a form
  *     whose chain does not start with the scholar
  *   step_options: how a step's plain recommendation is drawn
@@ -74,6 +76,12 @@ abstract class FormDefinition
         return [];
     }
 
+    /** Titled sections drawn in place of the chain, as [['title' => ..., 'rows' => [...]]], or null. */
+    protected function sections(array $data): ?array
+    {
+        return null;
+    }
+
     /** Drawn instead of the chain, or null to draw the chain. */
     protected function summary(array $data): ?array
     {
@@ -114,6 +122,13 @@ abstract class FormDefinition
         if ($this->stepOptions()) {
             $view['step_options'] = $this->stepOptions();
         }
+        $sections = $this->sections($data);
+        if ($sections !== null) {
+            $view['sections'] = array_map(
+                fn ($section) => ['title' => $section['title'], 'rows' => $this->resolveRows($section['rows'], $data)],
+                $sections
+            );
+        }
         $summary = $this->summary($data);
         if ($summary !== null) {
             $summary['rows'] = $this->resolveRows($summary['rows'], $data);
@@ -130,7 +145,8 @@ abstract class FormDefinition
     public function rules(string $step, array $data = []): array
     {
         $rules = [];
-        foreach ($this->panels($data) as $rows) {
+        $groups = array_merge(array_values($this->panels($data)), array_column($this->sections($data) ?? [], 'rows'));
+        foreach ($groups as $rows) {
             foreach ($this->fieldsIn($rows) as $field) {
                 $rules += $field->rulesFor($step);
             }

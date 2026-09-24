@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { Suspense, lazy, useState } from "react";
 import { useLocation } from "react-router-dom";
 import GridContainer from "../fields/GridContainer";
 import InputField from "../fields/InputField";
@@ -13,6 +13,11 @@ import StatusNotice from "../../common/StatusNotice";
 import PublicationsBlock from "./PublicationsBlock";
 import Recommender from "./Recommender";
 import ExaminerList from "./ExaminerList";
+import { badgeClass } from "../../../data/badges";
+
+// Lazy because it brings react-datepicker and its stylesheet, which no other
+// form needs.
+const LeaveApplication = lazy(() => import("./LeaveApplication"));
 import TableComponent from "../table/TableComponent";
 import CustomButton from "../fields/CustomButton";
 import { formatDate } from "../../../utils/timeParse";
@@ -80,7 +85,9 @@ const shows = (tests = [], values) =>
     test.test === "above" ? parseFloat(values[test.key] || 0) > test.than : !!values[test.key]
   );
 
-const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
+// `host` carries what a page hosting the form adds: a submit path when the form
+// is drawn away from its own route, and what to do after a reload or a delete.
+const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
   const location = useLocation();
   const { setLoading } = useLoading();
   const [values, setValues] = useState(() => editedValues(rows));
@@ -429,6 +436,8 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
       allowRejection={field.allow_rejection}
       moreFields={field.more_fields !== false}
       title={field.title}
+      decision={field.decision}
+      submitPath={host.submitPath}
       isLocked={field.is_locked}
       handleRecommendationChange={(answer) =>
         setValues((now) => ({ ...now, approval: answer.approval, comments: answer.comments }))
@@ -464,6 +473,24 @@ const ServerPanel = ({ formData, rows = [], wrapped = true }) => {
           return <React.Fragment key={index}>{renderList(row)}</React.Fragment>;
         case "hidden":
           return null;
+        case "leave":
+          return (
+            <Suspense key={index} fallback={null}>
+              <LeaveApplication field={row} onReload={host.onReload} onDraftDeleted={host.onDraftDeleted} />
+            </Suspense>
+          );
+        // Label and value pairs read out, a value optionally as a badge.
+        case "facts":
+          return (
+            <div key={index} className={row.class_name}>
+              {row.facts.map((fact) => (
+                <div key={fact.label} className={`${row.class_name}__row`}>
+                  <span>{fact.label}</span>
+                  <span className={fact.badge ? badgeClass(fact.value) : undefined}>{fact.value}</span>
+                </div>
+              ))}
+            </div>
+          );
         case "examiners": {
           const listOf = (key) => (row.locked ? recorded[key] : values[key]) || [];
           return (
