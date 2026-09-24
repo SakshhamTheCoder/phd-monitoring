@@ -1074,6 +1074,11 @@ class StudentController extends Controller {
             'is_self' => $this->isSelf($student),
             'can_edit' => $this->canEditProfile($student),
             'can_manage' => $this->canManageStudents(),
+            // Who may tag and remove courses (StudentCourseController); a HoD or
+            // coordinator does so without can_manage_students, held to their
+            // own department there.
+            'can_tag_courses' => $this->canManageStudents()
+                || in_array(Auth::user()?->current_role?->role, ['hod', 'phd_coordinator'], true),
         ];
     }
 

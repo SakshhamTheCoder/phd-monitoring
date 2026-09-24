@@ -76,7 +76,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
   const [loading, setLoading] = useState(!profile);
   // What this viewer may do with this profile is the server's answer, not a
   // guess from the role in local storage.
-  const [permissions, setPermissions] = useState({ is_self: false, can_edit: false, can_manage: false });
+  const [permissions, setPermissions] = useState({ is_self: false, can_edit: false, can_manage: false, can_tag_courses: false });
 
   const profileUrl = roll_no ? `${baseURL}/students/${roll_no}` : `${baseURL}/students/me`;
 
@@ -87,6 +87,7 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
           is_self: !!res.response.is_self,
           can_edit: !!res.response.can_edit,
           can_manage: !!res.response.can_manage,
+          can_tag_courses: !!res.response.can_tag_courses,
         });
         // A profile handed in by the caller is already on screen; only the
         // permissions still have to be fetched.
@@ -405,8 +406,8 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
 
     // A course tagged by mistake can be taken off again by whoever may tag one:
     // those who manage students, and a HOD or coordinator for their own
-    // department. The server holds each to their scope.
-    const mayRemoveCourses = can("can_manage_students") || ["hod", "phd_coordinator"].includes(role);
+    // department. The server says who, and holds each to their scope.
+    const mayRemoveCourses = permissions.can_tag_courses;
     const removeCourse = async (course) => {
       if (!window.confirm(`Remove ${course.course_code} from this scholar's courses?`)) return;
       const response = await customFetch(`${baseURL}/courses/student/remove/${course.id}`, "DELETE");
@@ -426,18 +427,18 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
 
     // Page actions first, then the profile's own edit controls. One filled
     // button: View forms for someone reading another scholar's profile, Save
-    // for a scholar editing their own. The two never show together.
+    // while editing, when View forms steps back to secondary.
     const pageActions = (
       <>
         {!permissions.is_self && (<>
-          <CustomButton text="View forms" onClick={navigateToForms} />
+          <CustomButton text="View forms" variant={isEditingInline ? "secondary" : undefined} onClick={navigateToForms} />
           <CustomButton
             text="View progress monitoring"
             variant="secondary"
             onClick={navigateToProgress}
           />
         </>)}
-        {permissions.can_manage && (
+        {permissions.can_tag_courses && (
           <CustomButton text="Tag course" variant="secondary" onClick={() => {
             fetchAllCourses();
             setIsTagModalOpen(true);
@@ -453,7 +454,9 @@ const ProfileCard = ({ dataIP = null, link = false }) => {
         {may('admin') && !permissions.is_self && (
           <CustomButton text="Manage forms" variant="secondary" onClick={() => navigate(`/forms/manage?roll_no=${profile.roll_no}`)} />
         )}
-        {permissions.can_edit && permissions.is_self && (
+        {/* can_edit covers a scholar's own profile and those who manage
+            scholars, as the save endpoint does. */}
+        {permissions.can_edit && (
           isEditingInline ? (
             <>
               <CustomButton text="Save" onClick={handleInlineSave} disabled={savingProfile} />
