@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Forms\ReviseTitleDefinition;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\GeneralFormCreate;
 use App\Http\Controllers\Traits\GeneralFormHandler;
@@ -171,11 +172,7 @@ class ReviseTitleController extends Controller
             'student',
             'faculty',
             function ($formInstance) use ($request) {
-                $request->validate([
-                    'revised_title' => 'required|string|max:1000',
-                    'revised_objectives' => 'required|array|min:1',
-                    'revised_objectives.*' => 'required|string|max:2000',
-                ]);
+                $request->validate((new ReviseTitleDefinition)->rules('student'));
                 $formInstance->revised_title = trim($request->revised_title);
                 $formInstance->revised_objectives = array_values(array_map('trim', $request->revised_objectives));
             }

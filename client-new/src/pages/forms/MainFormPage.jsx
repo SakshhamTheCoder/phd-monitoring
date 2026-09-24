@@ -14,8 +14,8 @@ import StatusChange from "../../components/forms/statusChange/StatusChange";
 import IrbExtention from "../../components/forms/irbExtention/IrbExtention";
 import SupervisorChange from "../../components/forms/supervisorChange/SupervisorChange";
 import ListOfExaminers from "../../components/forms/listOfExaminers/ListOfExaminers";
-import ReviseTitle from "../../components/forms/reviseTitle/ReviseTitle";
 import ThesisExtention from "../../components/forms/thesisExtention/ThesisExtention";
+import ServerForm from "../../components/forms/serverForm/ServerForm";
 import useScholarInPath from "../../hooks/useScholarInPath";
 import Loader from "../../components/loader/loader";
 import LoadError from "../../components/common/LoadError";
@@ -78,6 +78,8 @@ const MainFormPage = () => {
       {isLoaded && formData && (
         <>
           {(() => {
+            // A form the server describes draws from that description.
+            if (formData.view) return <ServerForm formData={formData} />;
             switch (form_type) {
               case "supervisor-allocation":
                 return <SupervisorAllocation formData={formData} />;
@@ -103,8 +105,6 @@ const MainFormPage = () => {
                 return <ListOfExaminers formData={formData}/>
               case "thesis-extension":
                 return <ThesisExtention formData={formData} />
-              case "revise-title":
-                return <ReviseTitle formData={formData}/>
               // The API serves /forms/student-leave/:id, and StudentLeave
               // defaults submitPath to the current location, which is that
               // endpoint. Without this the canonical URL fell through to the
