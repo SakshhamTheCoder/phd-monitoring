@@ -263,6 +263,12 @@ class CourseController extends Controller
      */
     public function getAllCourses(Request $request)
     {
+        // Course managers, and whoever tags scholars with courses from a profile.
+        $user = $request->user();
+        if (!\App\Support\Navigation::allows($user, 'courseManagement') && !$user->may('can_manage_students')) {
+            return response()->json(['message' => 'You are not authorized to access this resource'], 403);
+        }
+
         try {
             $departmentId = $request->query('department_id');
             

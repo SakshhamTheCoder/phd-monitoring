@@ -5,9 +5,9 @@ use App\Http\Controllers\StudentCourseController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->group(function () {
-    // Course management (Admin/HOD/Coordinator)
-    Route::get('/list', [CourseController::class, 'list']);
-    Route::get('/filters', [CourseController::class, 'listFilters']);
+    // Course management (Admin/HOD/Coordinator), who alone may read the list.
+    Route::get('/list', [CourseController::class, 'list'])->middleware('area:courseManagement');
+    Route::get('/filters', [CourseController::class, 'listFilters'])->middleware('area:courseManagement');
     Route::post('/add', [CourseController::class, 'add']);
     Route::put('/update/{id}', [CourseController::class, 'update']);
     Route::delete('/delete/{id}', [CourseController::class, 'delete']);

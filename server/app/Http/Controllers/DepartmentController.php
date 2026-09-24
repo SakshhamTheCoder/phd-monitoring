@@ -558,8 +558,10 @@ class DepartmentController extends Controller
     /**
      * Refuse an area write unless this user may write to every department it
      * touches. HoD and PhD coordinator write only their own department, and
-     * one whose department cannot be resolved writes none. Everyone else needs
-     * can_add_department, which covers every department.
+     * one whose department cannot be resolved writes none. Anyone else must be
+     * a role offered the page (config/navigation.php), which covers every
+     * department; the DoRDC, DRA and Director, who could write here without
+     * being offered the page, no longer can.
      */
     private function denyAreaWrite($user, array $departmentIds, string $message)
     {
@@ -576,7 +578,7 @@ class DepartmentController extends Controller
             return $allowedDepartmentId ? null : $this->refuse($message);
         }
 
-        return $user->may('can_add_department')
+        return \App\Support\Navigation::allows($user, 'areasOfSpecialization')
             ? null
             : $this->refuse('You do not have permission to manage areas of specialization. Contact your administrator if you believe this is a mistake.');
     }

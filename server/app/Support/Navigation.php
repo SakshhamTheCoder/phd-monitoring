@@ -78,6 +78,13 @@ final class Navigation
         ];
     }
 
+    /** Whether this user's acting role may reach an area of the portal. */
+    public static function allows($user, string $area): bool
+    {
+        $role = $user?->current_role?->role;
+        return $role !== null && in_array($role, config("navigation.areas.$area", []), true);
+    }
+
     /** Everything GET /me answers for a signed-in user. */
     public static function me(User $user): array
     {
