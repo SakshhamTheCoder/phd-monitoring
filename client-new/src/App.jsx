@@ -45,7 +45,7 @@ const AttendanceRoute = lazy(() => import('./pages/attendance/AttendanceRoute'))
 const PrivacyPolicy = lazy(() => import('./pages/privacy/PrivacyPolicy'));
 const Support = lazy(() => import('./pages/support/Support'));
 const ResearchProfile = lazy(() => import('./pages/admin/ResearchProfile'));
-const Configuration = lazy(() => import('./pages/admin/Configuration'));
+const ServerSectionsPage = lazy(() => import('./components/serverPage/ServerSectionsPage'));
 const ProjectsOverview = lazy(() => import('./pages/projects/ProjectsOverview'));
 const CreateProject = lazy(() => import('./pages/projects/CreateProject'));
 const ProjectDetails = lazy(() => import('./pages/projects/ProjectDetails'));
@@ -266,7 +266,7 @@ const AppContent = () => {
                   <Route path="/users" element={<ServerListPage page="users" />} />
                   <Route path="/clerk-management" element={<ServerListPage page="clerks" />} />
                   <Route path="/clerks" element={<ServerListPage page="clerks" />} />
-                  <Route path="/configuration" element={<Configuration />} />
+                  <Route path="/configuration" element={<ServerSectionsPage page="configuration" />} />
                 </>
               )}
               {/* Signed in, a miss (often a page this role has no route for)
