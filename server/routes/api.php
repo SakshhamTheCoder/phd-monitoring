@@ -85,7 +85,7 @@ Route::post('/login', function (Request $request) {
     return response()->json([
         'error' => 'Invalid Credentials'
     ], 401);
-});
+})->middleware('throttle:login');
 
 // Clearing the client's storage alone leaves the token usable until it expires.
 Route::post('/logout', function (Request $request) {
@@ -130,7 +130,7 @@ Route::post('/forgot-password', function (Request $request) {
         'success' => false,
         'error' => __($status),
     ], 500);
-});
+})->middleware('throttle:auth-email');
 
 /**
  * Asks for the current password, except where there is none to give: a Google
@@ -212,7 +212,7 @@ Route::post('/reset-password', function (Request $request) {
         'success' => false,
         'error' => __($status)
     ], 500);
-});
+})->middleware('throttle:auth-email');
 
 // available_roles otherwise reaches the client only at login, so a role granted
 // mid-session stays invisible until the user logs out and back in.
