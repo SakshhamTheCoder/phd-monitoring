@@ -35,7 +35,10 @@ export const sendRequest = async (request, row, body, setLoading) => {
     const result = await customFetch(baseURL + fillFromRow(request.path, row), request.method, body, reportsItself);
     if (result.success) {
       forgetKeptLists(request.invalidates);
-      toast.success((request.done_from_answer && result.response?.message) || request.done);
+      const answer = result.response || {};
+      const says = (request.answer_says || []).find((said) => answer[said.key]);
+      toast.success(says ? fillFromRow(says.text, answer) : (request.done_from_answer && answer.message) || request.done);
+      (request.warnings_from ? answer[request.warnings_from] || [] : []).forEach((warning) => toast.warn(warning, { autoClose: 10000 }));
       return true;
     }
     if (!reportsItself) toast.error(failureMessage(result, request));

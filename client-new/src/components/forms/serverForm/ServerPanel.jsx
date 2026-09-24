@@ -87,10 +87,17 @@ const passes = (checks = [], values, files, answers = values) => {
       if (check.check === "truthy") return !values[key];
       if (check.check === "filled") return !`${values[key] ?? ""}`.trim();
       if (check.check === "number") return isNaN(Number(values[key]));
+      if (check.check === "named") return !`${values[key] ?? ""}`.trim();
       return values[key] === null || values[key] === undefined;
     });
   });
-  if (failed) toast.error(failed.message);
+  if (failed?.check === "named") {
+    // Names every field left blank, not only the first.
+    const missing = failed.keys.filter((key) => !`${values[key] ?? ""}`.trim()).map((key) => failed.names[key]);
+    toast.error(failed.message + missing.join(", "));
+  } else if (failed) {
+    toast.error(failed.message);
+  }
   return !failed;
 };
 
@@ -131,12 +138,19 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
 
   const growable = new Set(fieldsOf(rows).filter((field) => field.kind === "list" && !field.fixed).map((field) => field.key));
   const trimmed = new Set(fieldsOf(rows).filter((field) => field.trim).map((field) => field.key));
+  const sending = Object.fromEntries(fieldsOf(rows).filter((field) => field.key && field.send).map((field) => [field.key, field.send]));
   const submission = () =>
     Object.fromEntries(
-      Object.entries(values).map(([key, value]) => [
-        key,
-        growable.has(key) ? value.filter((entry) => !isEmpty(entry)) : trimmed.has(key) ? `${value ?? ""}`.trim() : value,
-      ])
+      Object.entries(values)
+        // An optional value left empty is left out.
+        .filter(([key, value]) => !(sending[key] === "filled" && !value))
+        .map(([key, value]) => [
+          key,
+          growable.has(key) ? value.filter((entry) => !isEmpty(entry))
+            : trimmed.has(key) ? `${value ?? ""}`.trim()
+            : sending[key] === "null_if_empty" ? value || null
+            : value,
+        ])
     );
 
   const submit = (field) => {
@@ -252,6 +266,27 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
       }
       case "notice":
         return <StatusNotice tone={field.tone}>{field.text}</StatusNotice>;
+      // A tick box per option, keeping the values ticked.
+      case "checks": {
+        const ticked = values[field.key] || [];
+        return (
+          <div className={field.grid_class}>
+            {field.options.length === 0 ? (
+              <span className={field.empty_class}>{field.empty}</span>
+            ) : (
+              field.options.map((option) => {
+                const chosen = ticked.includes(option.value);
+                return (
+                  <label key={option.value} className={`${field.class_name}${chosen ? " is-chosen" : ""}`}>
+                    <input type="checkbox" checked={chosen} onChange={() => toggle(field.key, option.value)} />
+                    <span>{option.parts ? option.parts.flatMap((part, at) => (at ? [" ", part] : [part])) : option.title}</span>
+                  </label>
+                );
+              })
+            )}
+          </div>
+        );
+      }
       case "publications":
         return <PublicationsBlock formData={formData} field={field} />;
       case "date":
@@ -578,6 +613,8 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
           return <React.Fragment key={index}>{renderToggles(row)}</React.Fragment>;
         case "heading":
           return <h2 key={index} className="modal-title">{row.text}</h2>;
+        case "paragraph":
+          return <p key={index} className={row.class_name}>{row.text}</p>;
         // A dialog's closing buttons.
         case "actions":
           return (

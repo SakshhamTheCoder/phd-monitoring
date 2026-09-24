@@ -3,6 +3,7 @@ import CustomModal from '../forms/modal/CustomModal';
 import ServerPanel from '../forms/serverForm/ServerPanel';
 import { useLoading } from '../../context/LoadingContext';
 import { sendRequest } from './requests';
+import { fillFromRow } from '../../api/views';
 import DepartmentManagerBlock from './blocks/DepartmentManagerBlock';
 
 // Dialogs with behaviour of their own, which the server opens by name.
@@ -14,6 +15,7 @@ const readSource = (source, row) => {
   if (Array.isArray(source)) return source.map((key) => `${row[key] ?? ''}`.trim()).filter(Boolean).join(' ');
   if (source && typeof source === 'object') {
     const value = row[source.key];
+    if (source.pluck) return (value || []).map((entry) => entry[source.pluck]);
     return Array.isArray(value) ? value.join(source.join) : value;
   }
   return row[source];
@@ -66,7 +68,7 @@ const ServerDialog = ({ dialog, isOpen, row, opened, onClose, onSaved }) => {
     <CustomModal
       isOpen={isOpen}
       onClose={onClose}
-      title={dialog.title}
+      title={dialog.title && row ? fillFromRow(dialog.title, row) : dialog.title}
       width={dialog.width}
       minWidth={dialog.min_width}
       maxWidth={dialog.max_width}

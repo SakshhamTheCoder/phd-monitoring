@@ -10,6 +10,7 @@ use App\Models\Role;
 use App\Models\Student;
 use App\Models\StudentLeaveForm;
 use App\Support\AttendanceSummary;
+use App\Support\CsvRow;
 use App\Support\DepartmentScope;
 use App\Support\LeaveBalance;
 use App\Support\LeaveWindow;
@@ -917,9 +918,41 @@ class ClerkController extends Controller
         return response()->json(['message' => 'Department removed from clerk'], 200);
     }
 
+    /**
+     * The clerk sheet's rows as it has them. The template's own column names
+     * are read as they are; a sheet that splits the name gives it back whole.
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return array<int, array<string, mixed>>
+     */
+    public static function clerkRows(array $rows): array
+    {
+        return array_map(function (array $row) {
+            $read = [];
+            foreach (['email', 'phone'] as $key) {
+                if (array_key_exists($key, $row)) {
+                    $read[$key] = $row[$key];
+                }
+            }
+            $read['full_name'] = CsvRow::fallback(
+                (string) ($row['full_name'] ?? ''),
+                CsvRow::words((string) ($row['first_name'] ?? ''), (string) ($row['last_name'] ?? ''))
+            );
+            if (array_key_exists('department_codes', $row)) {
+                $read['department_codes'] = $row['department_codes'];
+            }
+            return $read;
+        }, $rows);
+    }
+
     public function bulkUpdate(Request $request)
     {
         if ($response = $this->authorizeAdmin()) return $response;
+        // The page posts the sheet's rows as they are; read here into the
+        // clerks the rules below check.
+        if ($request->has('rows')) {
+            $request->merge(['clerks' => self::clerkRows((array) $request->input('rows'))]);
+        }
         $request->validate([
             'clerks' => 'required|array',
             'clerks.*.email' => 'required|email',

@@ -34,3 +34,13 @@
     font-weight: 400;
     color: var(--text-muted);
 }
+
+/* A note that sits right under a dialog's heading. */
+.modal-note--flush { margin-top: 0; }
+
+/* A line of help under a field. */
+.field-help {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: var(--space-1);
+}

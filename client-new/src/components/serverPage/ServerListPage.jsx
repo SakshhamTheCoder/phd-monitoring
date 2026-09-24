@@ -11,6 +11,7 @@ import { sendRequest } from './requests';
 import ServerDialog from './ServerDialog';
 import FileImportModal from './FileImportModal';
 import RowsImportModal from './RowsImportModal';
+import LocalTable from './LocalTable';
 
 const IMPORTS = { file: FileImportModal, rows: RowsImportModal };
 
@@ -71,27 +72,31 @@ const ServerListPage = ({ page }) => {
         </>
       ) : null}
     >
-      <PagenationTable
-        key={refreshKey}
-        endpoint={table.endpoint}
-        filters={filters}
-        search={table.search && (
-          <FilterBar
-            path={table.search.path}
-            placeholder={table.search.placeholder}
-            exclude={table.search.exclude}
-            onSearch={setFilters}
-          />
-        )}
-        rowClickable={!!table.opens}
-        customOpenForm={table.opens ? opensRow : undefined}
-        enableApproval={false}
-        actions={table.actions.map((action) => ({
-          icon: <i className={action.icon}></i>,
-          tooltip: action.label,
-          onClick: (row) => runRowAction(action, row),
-        }))}
-      />
+      {table.kind === 'local' ? (
+        <LocalTable table={table} refreshKey={refreshKey} onRowAction={runRowAction} />
+      ) : (
+        <PagenationTable
+          key={refreshKey}
+          endpoint={table.endpoint}
+          filters={filters}
+          search={table.search && (
+            <FilterBar
+              path={table.search.path}
+              placeholder={table.search.placeholder}
+              exclude={table.search.exclude}
+              onSearch={setFilters}
+            />
+          )}
+          rowClickable={!!table.opens}
+          customOpenForm={table.opens ? opensRow : undefined}
+          enableApproval={false}
+          actions={table.actions.map((action) => ({
+            icon: <i className={action.icon}></i>,
+            tooltip: action.label,
+            onClick: (row) => runRowAction(action, row),
+          }))}
+        />
+      )}
 
       {Object.entries(view.dialogs).map(([name, spec]) => (
         <ServerDialog

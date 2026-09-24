@@ -48,7 +48,6 @@ const ExternalReview = lazy(() => import('./pages/externalReview/ExternalReview'
 const SupervisorDoctoralApproval = lazy(() => import('./pages/SupervisorDoctoralApproval/SupervisorDoctoralApproval'));
 const UsersPage = lazy(() => import('./pages/users/UsersPage'));
 const AttendanceRoute = lazy(() => import('./pages/attendance/AttendanceRoute'));
-const ClerkManagement = lazy(() => import('./pages/admin/ClerkManagement'));
 const PrivacyPolicy = lazy(() => import('./pages/privacy/PrivacyPolicy'));
 const Support = lazy(() => import('./pages/support/Support'));
 const ResearchProfile = lazy(() => import('./pages/admin/ResearchProfile'));
@@ -273,8 +272,8 @@ const AppContent = () => {
                   <Route path="/outside-experts" element={<ServerListPage page="outside-experts" />} />
                   <Route path="/logs" element={<Logs />} />
                   <Route path="/users" element={<UsersPage />} />
-                  <Route path="/clerk-management" element={<ClerkManagement />} />
-                  <Route path="/clerks" element={<ClerkManagement />} />
+                  <Route path="/clerk-management" element={<ServerListPage page="clerks" />} />
+                  <Route path="/clerks" element={<ServerListPage page="clerks" />} />
                   <Route path="/configuration" element={<Configuration />} />
                 </>
               )}

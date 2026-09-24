@@ -7,6 +7,7 @@ final class Pages
 {
     private const PAGES = [
         'areas-of-specialization' => AreasPage::class,
+        'clerks' => ClerksPage::class,
         'courses' => CoursesPage::class,
         'departments' => DepartmentsPage::class,
         'faculty' => FacultyPage::class,

@@ -35,6 +35,12 @@ trait ResolvesRows
         ], fn ($value) => $value !== null);
     }
 
+    /** A paragraph of plain text between rows, in the given classes. */
+    protected static function paragraph(string $text, string $className): array
+    {
+        return ['kind' => 'paragraph', 'text' => $text, 'class_name' => $className];
+    }
+
     /** A heading inside a dialog that names it, as a form of its own would. */
     protected static function heading(string $text): array
     {

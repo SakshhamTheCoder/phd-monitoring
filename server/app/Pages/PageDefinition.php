@@ -19,13 +19,21 @@ use App\Models\User;
  *   table = { endpoint, search?: { path?, placeholder?, exclude? }, opens?: { dialog }
  *     | { navigate }, actions: [ row_action ] }: a paged list from endpoint;
  *     a row opens nothing unless opens says what
+ *     | { kind: 'local', endpoint, search, class_prefix, loading, failed, empty,
+ *         no_match, columns: [ { key, title, list_of? } ], lists?, actions }: a
+ *       small list read whole and filtered in the browser; lists maps a filter
+ *       key to a list on the row (department.name => departments[].name)
  *   row_action = { label, icon, opens?: dialog name, request?: request }
  *   request = { method, path, confirm?, done, failed, failure?: 'message' | 'errors',
- *     done_from_answer?, invalidates? }: {key} in path and confirm is that key of
- *     the row; failure says whether a refusal's field errors (errors) or only its
- *     message is shown; done_from_answer shows the answer's own message when it
- *     has one; invalidates names lists a client keeps that the request changes
- *     ('departments')
+ *     done_from_answer?, answer_says?, warnings_from?, invalidates?, loader? }:
+ *     {key} in path, confirm and a dialog's title is that key of the row; failure
+ *     says whether a refusal's field errors (errors), only its message, or the
+ *     request's own report (fetch) is shown; done_from_answer shows the answer's
+ *     own message when it has one; answer_says is [ { key, text } ], the first
+ *     whose key the answer fills saying {key} filled from it; warnings_from names
+ *     the answer's list of warnings, each shown; invalidates names lists a client
+ *     keeps that the request changes ('departments'); loader false keeps the
+ *     page's loader off
  *   dialog = { title, width?, min_width?, max_width?, min_height?, max_height?,
  *     close_outside, rows, request }: rows as a form's; a field's `from` names
  *     the row key it starts from when the dialog opens on a row
@@ -72,11 +80,11 @@ abstract class PageDefinition
      * A dialog's closing row: Cancel, then the button that sends it, named or
      * given as a Field::submit carrying the checks it makes first.
      */
-    protected static function buttons(string|Field $submit, string|Field $cancel = 'Cancel'): array
+    protected static function buttons(string|Field $submit, string|Field|null $cancel = 'Cancel'): array
     {
         $submit = is_string($submit) ? Field::submit($submit) : $submit;
         $cancel = is_string($cancel) ? Field::cancel($cancel) : $cancel;
-        return ['kind' => 'actions', 'items' => [$cancel, $submit->open()]];
+        return ['kind' => 'actions', 'items' => array_values(array_filter([$cancel, $submit->open()]))];
     }
 
     /** What a view carries whatever the page. */

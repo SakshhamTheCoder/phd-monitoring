@@ -1,4 +1,4 @@
-/* Clerk management: the search head, the list's states and the department picker. */
+/* Lists read whole (clerks): the search head, the states, and the department picker. */
 
 /* Sized as PagenationTable sizes its search; .table-search strips the
    FilterBar's own box, since the panel is the box here. */

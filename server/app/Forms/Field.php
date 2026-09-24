@@ -421,6 +421,53 @@ final class Field
         return $this;
     }
 
+    /**
+     * A tick box per option, keeping the values ticked, drawn as a grid of
+     * labelled boxes (class_name on each, grid_class on the grid; empty is
+     * said, in empty_class, when there are no options).
+     *
+     * @param array<int, array{value: mixed, title: string}> $options
+     */
+    public static function checks(string $label, array $options): self
+    {
+        $field = new self('checks', $label);
+        $field->props['options'] = array_values($options);
+        return $field;
+    }
+
+    /** Like from(), for a row value that is a list of records, read as each one's $key. */
+    public function fromPlucked(string $key, string $pluck): self
+    {
+        $this->props['from'][] = ['key' => $key, 'pluck' => $pluck];
+        return $this;
+    }
+
+    /** Sent as null while left empty, as a "not stated" rather than a blank. */
+    public function nullIfEmpty(): self
+    {
+        $this->props['send'] = 'null_if_empty';
+        return $this;
+    }
+
+    /** Left out of what is sent while empty: an optional password. */
+    public function sentOnlyIfFilled(): self
+    {
+        $this->props['send'] = 'filled';
+        return $this;
+    }
+
+    /**
+     * A submit that refuses while any of $labels' keys is blank once trimmed,
+     * naming every one missing: "$prefix" followed by their labels.
+     *
+     * @param array<string, string> $labels key => label
+     */
+    public function requiresNamed(array $labels, string $prefix): self
+    {
+        $this->props['requires'][] = ['keys' => array_keys($labels), 'names' => $labels, 'message' => $prefix, 'check' => 'named'];
+        return $this;
+    }
+
     /** A label the field draws above itself is left off (a row label says it). */
     public function hideLabel(): self
     {
