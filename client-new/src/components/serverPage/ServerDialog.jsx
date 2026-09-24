@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import CustomModal from '../forms/modal/CustomModal';
 import ServerPanel from '../forms/serverForm/ServerPanel';
+import CustomButton from '../forms/fields/CustomButton';
 import { useLoading } from '../../context/LoadingContext';
 import { sendRequest } from './requests';
 import { fillFromRow } from '../../api/views';
@@ -103,6 +104,17 @@ const ServerDialog = ({ dialog, isOpen, row, opened, onClose, onSaved, onChoose 
 
   const Block = BLOCKS[dialog.block];
 
+  // A decision confirmed before it is sent, since it tells people about it.
+  const confirm = async () => {
+    setBusy(true);
+    const done = await sendRequest(dialog.request, row, dialog.request.body || {}, setLoading);
+    setBusy(false);
+    if (done) {
+      onClose();
+      onSaved();
+    }
+  };
+
   return (
     <CustomModal
       isOpen={isOpen}
@@ -115,7 +127,19 @@ const ServerDialog = ({ dialog, isOpen, row, opened, onClose, onSaved, onChoose 
       maxHeight={dialog.max_height}
       closeOnOutsideClick={dialog.close_outside}
     >
-      {dialog.kind === 'choice' ? (
+      {dialog.kind === 'confirm' ? (
+        <>
+          <p>
+            {dialog.text.map((part, index) => (
+              <React.Fragment key={index}>{typeof part === 'string' ? part : <strong>{part.strong}</strong>}</React.Fragment>
+            ))}
+          </p>
+          <div className="modal-actions">
+            <CustomButton text="Cancel" variant="quiet" onClick={onClose} />
+            <CustomButton text={dialog.button} onClick={confirm} busy={busy} />
+          </div>
+        </>
+      ) : dialog.kind === 'choice' ? (
         <ChoiceDialog dialog={dialog} onChoose={onChoose} onCancel={onClose} />
       ) : Block ? (
         <Block key={opened} row={row} props={dialog.props} onClose={onClose} onChanged={onSaved} />

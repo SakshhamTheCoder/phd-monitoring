@@ -7,28 +7,7 @@ import RecommendationField from '../forms/fields/RecommendationField';
 import { apiUrfDecide } from '../../api/urf';
 import './UrfForms.css';
 
-const STEP_NAMES = {
-  student: 'the student',
-  mentor: 'the faculty mentor',
-  adordc: 'the ADORDC',
-  dordc: 'the DORDC',
-  complete: 'nobody, it is through',
-};
-
 const ROLE_LABELS = { mentor: 'Faculty Mentor', adordc: 'ADORDC', dordc: 'DORDC' };
-
-// A complete form was not always approved: the DORDC may have rejected it, or
-// the office decided it (an import among them). The last history entry is the
-// one that closed it.
-export const stageLine = (form) => {
-  if (form?.stage !== 'complete') return `Waiting on ${STEP_NAMES[form?.stage] || 'the student'}.`;
-  const last = (form.history || []).slice(-1)[0];
-  if (last?.step === 'office') {
-    return [`${last.decision === 'rejected' ? 'Rejected' : 'Selected'} by the office.`, last.comments].filter(Boolean).join(' ');
-  }
-  if (last?.decision === 'reject') return `Rejected by ${STEP_NAMES[last.step] || 'the DORDC'}.`;
-  return 'Approved by the mentor, the ADORDC and the DORDC.';
-};
 
 // The radio field answers with { approval, rejected }.
 const decisionFrom = ({ approval, rejected }) => {

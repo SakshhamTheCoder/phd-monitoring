@@ -3,13 +3,8 @@ import '../profileCard/ProfileCard.css';
 import GridContainer from '../forms/fields/GridContainer';
 import TableComponent from '../forms/table/TableComponent';
 import { facultyNameCell } from '../facultyLink/FacultyLink';
-import { openStoredFile } from '../../api/fileAccess';
-import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
-import { stageLine } from './UrfApproval';
-import FormGrid from '../forms/formGrid/FormGrid';
-import Page from '../page/Page';
+import { EMPTY_VALUE } from '../../utils/timeParse';
 import Panel from '../panel/Panel';
-import CustomButton from '../forms/fields/CustomButton';
 
 export const URF_STATUSES = ['applied', 'selected', 'rejected'];
 export const REPORT_TYPES = { half_yearly: 'Half-yearly Progress Report', final: 'Final Report' };
@@ -128,88 +123,3 @@ export const OtherProjects = ({ record }) => {
     />
   );
 };
-
-/**
- * The project's forms, each opening its own page. The project page holds the
- * project; what a form asked, and what each step of the chain said about it,
- * belongs to that form.
- *
- * Offered on the URF pages, which a student has no route to. Their own forms
- * are on /forms, where they can still be filled in.
- */
-const UrfForms = ({ record }) => {
-  const forms = [
-    {
-      form_type: 'urf-application',
-      form_name: 'URF Application Form',
-      path: `/urf/urf-application/${record.id}`,
-      action_required: record.awaiting_me,
-    },
-    // A fellow row a reader is not entitled to is left out of the payload, so
-    // the card for it is not offered either.
-    ...(record.fellows || []).map((fellow) => ({
-      form_type: 'urf-additional-info',
-      form_name: 'Additional Information Form',
-      path: `/urf/urf-additional-info/${fellow.id}`,
-      action_required: fellow.awaiting_me,
-    })),
-    ...(record.reports || []).map((report) => ({
-      form_type: report.type === 'final' ? 'urf-final-report' : 'urf-half-yearly-report',
-      form_name: REPORT_TYPES[report.type] || 'Report',
-      path: `/urf/${report.type === 'final' ? 'urf-final-report' : 'urf-half-yearly-report'}/${report.id}`,
-      action_required: report.awaiting_me,
-    })),
-  ];
-
-  return <FormGrid forms={forms} title="Forms" />;
-};
-
-/**
- * The project, and one card per form it holds. What each form contains is on
- * that form's own page: the stipend details are masked there for an approver
- * and whole for the office, and a report carries its file and its publications
- * there. Rendering all three here put nine identity and bank fields on a page
- * every mentor opens, and left the reader scrolling past them to find out
- * whether a report was in.
- */
-const UrfRecord = ({ record, actions = null }) => {
-  const facts = [
-    ['Status', <StatusText status={record.status} />],
-    ['Session', record.session && `URF ${record.session}`],
-    ['Applied on', formatDate(record.applied_on)],
-    ['Approval', stageLine(record)],
-    // Beside the facts, not with the decisions, so it never reads as one of them.
-    ['Proposal', record.proposal && (
-      <CustomButton
-        text="View proposal"
-        variant="secondary"
-        size="sm"
-        onClick={() => openStoredFile(record.proposal)}
-      />
-    )],
-  ];
-
-  return (
-    <Page title={record.project_title} actions={actions}>
-      <Panel title="Project">
-        <dl className="facts">
-          {facts.map(([label, value]) => (
-            <div key={label}>
-              <dt>{label}</dt>
-              <dd>{value || EMPTY_VALUE}</dd>
-            </div>
-          ))}
-        </dl>
-      </Panel>
-
-      <UrfForms record={record} />
-
-      <Panel>
-        <TeamTables record={record} />
-        <OtherProjects record={record} />
-      </Panel>
-    </Page>
-  );
-};
-
-export default UrfRecord;

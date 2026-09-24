@@ -50,7 +50,7 @@ const CreateProject = lazy(() => import('./pages/projects/CreateProject'));
 const ProjectDetails = lazy(() => import('./pages/projects/ProjectDetails'));
 const ProjectRecruitment = lazy(() => import('./pages/projects/ProjectRecruitment'));
 const Openings = lazy(() => import('./pages/projects/Openings'));
-const UrfDetails = lazy(() => import('./pages/urf/UrfDetails'));
+const ServerRecordPage = lazy(() => import('./components/serverPage/ServerRecordPage'));
 const UrfFormRecord = lazy(() => import('./pages/urf/UrfFormRecord'));
 const UrfFormsPage = lazy(() => import('./pages/urf/UrfStudentForms').then(m => ({ default: m.UrfFormsPage })));
 const UrfFormPage = lazy(() => import('./pages/urf/UrfStudentForms').then(m => ({ default: m.UrfFormPage })));
@@ -251,7 +251,7 @@ const AppContent = () => {
                   <Route path="/urf/urf-additional-info/:id" element={<UrfFormRecord />} />
                   <Route path="/urf/urf-half-yearly-report/:id" element={<UrfFormRecord />} />
                   <Route path="/urf/urf-final-report/:id" element={<UrfFormRecord />} />
-                  <Route path="/urf/:id" element={<UrfDetails />} />
+                  <Route path="/urf/:id" element={<ServerRecordPage page="urf-record" failedMessage="Could not load this URF project. Check your connection and try again." />} />
                 </>
               )}
               {may('attendance') && <Route path="/attendance" element={<AttendanceRoute />} />}
