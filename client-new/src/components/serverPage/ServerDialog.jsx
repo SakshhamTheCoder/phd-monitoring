@@ -25,6 +25,9 @@ import DepartmentManagerBlock from './blocks/DepartmentManagerBlock';
 import UserEditorBlock from './blocks/UserEditorBlock';
 import SignInLinksBlock from './blocks/SignInLinksBlock';
 import SupervisorDoctoralBlock from './blocks/SupervisorDoctoralBlock';
+import SemesterEditorBlock from './blocks/SemesterEditorBlock';
+import BulkAllocateBlock from './blocks/BulkAllocateBlock';
+import ExaminerInitiatorBlock from './blocks/ExaminerInitiatorBlock';
 import ChoiceDialog from './ChoiceDialog';
 
 // Dialogs with behaviour of their own, which the server opens by name.
@@ -33,6 +36,9 @@ const BLOCKS = {
   'user-editor': UserEditorBlock,
   'sign-in-links': SignInLinksBlock,
   'supervisor-doctoral-manager': SupervisorDoctoralBlock,
+  'semester-editor': SemesterEditorBlock,
+  'bulk-allocate': BulkAllocateBlock,
+  'examiner-initiator': ExaminerInitiatorBlock,
 };
 
 // What one of a field's sources reads from the row: a key, keys read as

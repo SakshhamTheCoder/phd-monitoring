@@ -11,13 +11,22 @@ final class Pages
         'courses' => CoursesPage::class,
         'departments' => DepartmentsPage::class,
         'faculty' => FacultyPage::class,
+        'form-list' => FormListPage::class,
         'outside-experts' => OutsideExpertsPage::class,
+        'presentation-list' => PresentationListPage::class,
+        'presentations' => PresentationsPage::class,
+        'student-progress' => StudentProgressPage::class,
         'students' => StudentsPage::class,
         'users' => UsersPage::class,
     ];
 
     public static function find(string $name): ?PageDefinition
     {
+        // Each URF form's list is one page, named after the form.
+        if (isset(UrfFormListPage::FORMS[$name])) {
+            return new UrfFormListPage($name);
+        }
+
         $class = self::PAGES[$name] ?? null;
         return $class ? new $class() : null;
     }

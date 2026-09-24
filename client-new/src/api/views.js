@@ -8,8 +8,9 @@ import { currentRole } from '../auth/access';
 // read once per role and page and kept for the rest of the session.
 const views = new Map();
 
-export const useView = (page) => {
-  const key = `${currentRole()}:${page}`;
+export const useView = (page, params = {}) => {
+  const query = new URLSearchParams(params).toString();
+  const key = `${currentRole()}:${page}?${query}`;
   const [answer, setAnswer] = useState(() => ({ key, view: views.get(key) ?? null, failed: false }));
   const [attempt, setAttempt] = useState(0);
 
@@ -19,13 +20,13 @@ export const useView = (page) => {
   useEffect(() => {
     if (views.has(key)) return undefined;
     let cancelled = false;
-    customFetch(`${baseURL}/views/${page}`, 'GET', {}, false).then((res) => {
+    customFetch(`${baseURL}/views/${page}${query ? `?${query}` : ''}`, 'GET', {}, false).then((res) => {
       if (cancelled) return;
       if (res?.success) views.set(key, res.response);
       setAnswer({ key, view: res?.success ? res.response : null, failed: !res?.success });
     });
     return () => { cancelled = true; };
-  }, [key, page, attempt]);
+  }, [key, page, query, attempt]);
 
   return {
     view: answer.key === key ? answer.view : null,

@@ -21,14 +21,12 @@ const LoginPage = lazy(() => import('./pages/login/Login'));
 const SignupPage = lazy(() => import('./pages/signup/SignupPage'));
 const GoogleCallback = lazy(() => import('./pages/login/GoogleCallback'));
 const FormsPage = lazy(() => import('./pages/forms/FormsPage'));
-const FormListPage = lazy(() => import('./pages/forms/FormListPage'));
 const MainFormPage = lazy(() => import('./pages/forms/MainFormPage'));
 const StudentProfile = lazy(() => import('./pages/students/StudentProfile'));
 const NotFound = lazy(() => import('./pages/404/NotFound'));
 const FacultyFormsPage = lazy(() => import('./pages/forms/FacultyFormsPage'));
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'));
 const Publications = lazy(() => import('./pages/publications/Publications'));
-const PresentationListPage = lazy(() => import('./pages/presentations/PresentationListPage'));
 const Presentation = lazy(() => import('./pages/presentations/PresentationForm'));
 const ForgotPasswordPage = lazy(() => import('./pages/forgot-password/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/reset-password/ResetPasswordPage'));
@@ -36,8 +34,6 @@ const PublicOpenings = lazy(() => import('./pages/publicOpenings/PublicOpenings'
 const PublicOpeningDetail = lazy(() => import('./pages/publicOpenings/PublicOpeningDetail'));
 const ApplicationStatus = lazy(() => import('./pages/publicOpenings/ApplicationStatus'));
 const AllNotificationsPage = lazy(() => import('./components/notificationBox/AllNotificationsPage'));
-const PresentationSemester = lazy(() => import('./pages/presentations/PresentationSemester'));
-const StudentProgressMonitoring = lazy(() => import('./pages/presentations/StudentProgressMonitoring'));
 const Logs = lazy(() => import('./pages/logs/Logs'));
 const Team = lazy(() => import('./pages/team/Team'));
 const AdminFormManagement = lazy(() => import('./pages/admin/AdminFormManagement'));
@@ -57,7 +53,6 @@ const ProjectRecruitment = lazy(() => import('./pages/projects/ProjectRecruitmen
 const Openings = lazy(() => import('./pages/projects/Openings'));
 const UrfList = lazy(() => import('./pages/urf/UrfList'));
 const UrfDetails = lazy(() => import('./pages/urf/UrfDetails'));
-const UrfFormList = lazy(() => import('./pages/urf/UrfFormList'));
 const UrfFormRecord = lazy(() => import('./pages/urf/UrfFormRecord'));
 const UrfFormsPage = lazy(() => import('./pages/urf/UrfStudentForms').then(m => ({ default: m.UrfFormsPage })));
 const UrfFormPage = lazy(() => import('./pages/urf/UrfStudentForms').then(m => ({ default: m.UrfFormPage })));
@@ -202,16 +197,16 @@ const AppContent = () => {
                   (who have no sidebar link for it) can't land on the page either. */}
               {may('presentations') && (
                 <>
-                  <Route path="/presentation" element={<PresentationSemester />} />
+                  <Route path="/presentation" element={<ServerListPage page="presentations" />} />
                   <Route path="/presentation/semester" element={<Navigate to="/presentation" replace />} />
                   {/* The semester and form pages sit under the same gate, so a role
                       kept off the landing page cannot reach them by deep link. */}
-                  <Route path="/presentation/semester/:semester_id" element={<PresentationListPage />} />
+                  <Route path="/presentation/semester/:semester_id" element={<ServerListPage page="presentation-list" />} />
                   <Route path="/presentation/semester/:semester_id/:id" element={<Presentation />} />
                 </>
               )}
 
-              <Route path="/forms/:form_type" element={<FormListPage />} />
+              <Route path="/forms/:form_type" element={<ServerListPage page="form-list" />} />
               <Route path="/forms/:form_type/:id" element={<MainFormPage />} />
               {may('scholars') && (
                 <>
@@ -223,10 +218,10 @@ const AppContent = () => {
                       pages read the path back as their API endpoint, and the
                       scholar-scoped endpoints already exist under
                       /students/{id}/forms/presentation. */}
-                  <Route path="/students/:roll_no/forms/presentation" element={<StudentProgressMonitoring />} />
-                  <Route path="/students/:roll_no/forms/presentation/semester/:semester_id" element={<PresentationListPage />} />
+                  <Route path="/students/:roll_no/forms/presentation" element={<ServerListPage page="student-progress" />} />
+                  <Route path="/students/:roll_no/forms/presentation/semester/:semester_id" element={<ServerListPage page="presentation-list" />} />
                   <Route path="/students/:roll_no/forms/presentation/semester/:semester_id/:id" element={<Presentation />} />
-                  <Route path="/students/:roll_no/forms/:form_type" element={<FormListPage />} />
+                  <Route path="/students/:roll_no/forms/:form_type" element={<ServerListPage page="form-list" />} />
                   <Route path="/students/:roll_no/forms/:form_type/:id" element={<MainFormPage />} />
                 </>
               )}
@@ -248,10 +243,10 @@ const AppContent = () => {
                       are not all the admin role, and a form card opening for them
                       fell through to /urf/:id and drew the project page instead.
                       The server refuses anyone without can_manage_urf. */}
-                  <Route path="/urf/urf-application" element={<UrfFormList />} />
-                  <Route path="/urf/urf-additional-info" element={<UrfFormList />} />
-                  <Route path="/urf/urf-half-yearly-report" element={<UrfFormList />} />
-                  <Route path="/urf/urf-final-report" element={<UrfFormList />} />
+                  <Route path="/urf/urf-application" element={<ServerListPage page="urf-application" />} />
+                  <Route path="/urf/urf-additional-info" element={<ServerListPage page="urf-additional-info" />} />
+                  <Route path="/urf/urf-half-yearly-report" element={<ServerListPage page="urf-half-yearly-report" />} />
+                  <Route path="/urf/urf-final-report" element={<ServerListPage page="urf-final-report" />} />
                   {/* One submission of one form, with its own chain, as a PhD
                       form page has. The API path is the page path. */}
                   <Route path="/urf/urf-application/:id" element={<UrfFormRecord />} />
