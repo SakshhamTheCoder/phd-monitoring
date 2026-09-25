@@ -14,7 +14,6 @@ import StatusNotice from '../common/StatusNotice';
 import ShowPublications from '../publications/ShowPublications';
 import FacultyLink, { facultyNameCell } from '../facultyLink/FacultyLink';
 import { HeaderLine, StatusText } from '../urf/UrfRecord';
-import { signedInUser } from '../urf/UrfForms';
 import { openStoredFile } from '../../api/fileAccess';
 import { useView } from '../../api/views';
 import { EMPTY_VALUE, formatDate } from '../../utils/timeParse';
@@ -28,6 +27,15 @@ import './ResearchProfile.css';
 const BLOCKS = { 'research-publications': ResearchPublicationsBlock };
 
 const noLoader = () => {};
+
+// The account stored at sign-in, which the header reads its name from.
+const signedInUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem('user')) || {};
+  } catch {
+    return {};
+  }
+};
 
 // Faculty named in a line, each linking to their research profile.
 const FacultyLinks = ({ faculty }) => faculty.map((member, index) => (

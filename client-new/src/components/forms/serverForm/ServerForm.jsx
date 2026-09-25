@@ -68,9 +68,13 @@ const ServerForm = ({ formData }) => {
   const steps = Object.keys(view.panels);
   const panels = Object.fromEntries(steps.map((step) => [step, ServerPanel]));
   const stepProps = {
-    // How a step's plain recommendation is drawn (the Director may reject).
+    // How a step's plain recommendation is drawn (the Director may reject),
+    // and where it posts when not to the form itself (a URF form's decision).
     ...Object.fromEntries(
-      Object.entries(view.step_options || {}).map(([step, options]) => [step, { allowRejection: options.allow_rejection }])
+      Object.entries(view.step_options || {}).map(([step, options]) => [step, {
+        allowRejection: options.allow_rejection,
+        ...(options.submit_path ? { submitPath: options.submit_path } : {}),
+      }])
     ),
     ...Object.fromEntries(steps.map((step) => [step, view.panels[step]])),
   };

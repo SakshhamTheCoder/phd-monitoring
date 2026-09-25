@@ -36,7 +36,6 @@ const AllNotificationsPage = lazy(() => import('./components/notificationBox/All
 const Logs = lazy(() => import('./pages/logs/Logs'));
 const Team = lazy(() => import('./pages/team/Team'));
 const AdminFormManagement = lazy(() => import('./pages/admin/AdminFormManagement'));
-const StudentCourses = lazy(() => import('./pages/StudentCourses/StudentCourses'));
 const ServerListPage = lazy(() => import('./components/serverPage/ServerListPage'));
 const ExternalReview = lazy(() => import('./pages/externalReview/ExternalReview'));
 const AttendanceRoute = lazy(() => import('./pages/attendance/AttendanceRoute'));
@@ -172,7 +171,7 @@ const AppContent = () => {
               {role === 'student' && (
                 <>
                   <Route path="/forms" element={<FormsPage />} />
-                  <Route path="/courses" element={<StudentCourses />} />
+                  <Route path="/courses" element={<ServerListPage page="my-courses" />} />
                 </>
               )}
               {role === 'ug_student' && (

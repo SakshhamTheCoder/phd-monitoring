@@ -23,7 +23,22 @@ export const failureMessage = (result, request) => {
 
 // Sends a request a page view describes, on a row where it has one, and says
 // how it went. Resolves true when it went through.
-export const sendRequest = async (request, row, body, setLoading) => {
+// Uploads go as multipart, the answers beside them as fields: a null left
+// out (FormData would send the text "null"), a yes or no as 1 or 0 (which
+// Laravel's boolean rule takes), a list as key[] entries.
+const asFormData = (body, files) => {
+  const data = new FormData();
+  Object.entries(body).forEach(([key, value]) => {
+    if (value === null || value === undefined) return;
+    if (Array.isArray(value)) value.forEach((item) => data.append(`${key}[]`, item));
+    else if (typeof value === 'boolean') data.append(key, value ? '1' : '0');
+    else data.append(key, value);
+  });
+  Object.entries(files).forEach(([key, file]) => data.append(key, file));
+  return data;
+};
+
+export const sendRequest = async (request, row, body, setLoading, files = null) => {
   if (request.confirm && !window.confirm(fillFromRow(request.confirm, row))) return false;
 
   // A request may keep the page's loader off, as a dialog that shows its own
@@ -33,7 +48,14 @@ export const sendRequest = async (request, row, body, setLoading) => {
   const reportsItself = request.failure === 'fetch' || request.failure === 'both';
   if (loader) setLoading(true);
   try {
-    const result = await customFetch(baseURL + fillFromRow(request.path, row), request.method, body, reportsItself);
+    const withFiles = files && Object.keys(files).length > 0;
+    const result = await customFetch(
+      baseURL + fillFromRow(request.path, row),
+      request.method,
+      withFiles ? asFormData(body, files) : body,
+      reportsItself,
+      withFiles,
+    );
     if (result.success) {
       forgetKeptLists(request.invalidates);
       const answer = result.response || {};

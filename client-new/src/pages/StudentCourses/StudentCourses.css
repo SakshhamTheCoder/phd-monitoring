@@ -1,8 +1,0 @@
-/* One panel per course. The panels sit side by side as far as the width
-   allows, and stack on a phone. */
-.sc-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
-  gap: var(--space-4);
-  align-items: start;
-}

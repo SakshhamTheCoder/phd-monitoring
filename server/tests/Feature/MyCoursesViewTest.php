@@ -31,5 +31,8 @@ class MyCoursesViewTest extends TestCase
         $this->assertSame('/courses/student/my-courses?status=completed', $past['table']['endpoint']);
         $this->assertNotContains('grade', array_column($ongoing['table']['columns'], 'key'));
         $this->assertContains('grade', array_column($past['table']['columns'], 'key'));
+        // Each tab says how many it holds; a reader with no courses has none.
+        $this->assertSame('Ongoing courses (0)', $ongoing['label']);
+        $this->assertSame('Past courses (0)', $past['label']);
     }
 }

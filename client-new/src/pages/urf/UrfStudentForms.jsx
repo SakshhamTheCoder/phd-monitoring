@@ -7,7 +7,9 @@ import FormGrid from '../../components/forms/formGrid/FormGrid';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import UrfFormShell from '../../components/urf/UrfFormShell';
 import LoadError from '../../components/common/LoadError';
-import { ApplyForm, FellowForm, ReportForm } from '../../components/urf/UrfForms';
+import ServerPanel from '../../components/forms/serverForm/ServerPanel';
+import { sendRequest } from '../../components/serverPage/requests';
+import { useLoading } from '../../context/LoadingContext';
 import { useView } from '../../api/views';
 import { formatDate } from '../../utils/timeParse';
 import '../../components/urf/UrfForms.css';
@@ -76,6 +78,8 @@ export const UrfFormPage = ({ type }) => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { view, failed, retry, reload } = useView('urf-form', id ? { type, id } : { type }, { kept: false });
+  const { setLoading } = useLoading();
+  const [sending, setSending] = useState(false);
   // Every answer remounts the form, so it opens with what was just saved.
   const [version, setVersion] = useState(0);
   useEffect(() => { setVersion((v) => v + 1); }, [view]);
@@ -84,12 +88,22 @@ export const UrfFormPage = ({ type }) => {
   let content = null;
   if (!view) {
     content = <Pending failed={failed} onRetry={retry} />;
-  } else if (body.kind === 'apply') {
-    content = <ApplyForm initial={body.initial} student={body.student} onSaved={type === 'new' ? () => navigate('/forms') : reload} />;
-  } else if (body.kind === 'fellow') {
-    content = <FellowForm applicationId={body.application_id} initial={body.initial} prefill={body.prefill} onSaved={reload} />;
-  } else if (body.kind === 'report') {
-    content = <ReportForm application={body.application} type={body.type} filed={body.filed} onSaved={reload} />;
+  } else if (body.rows) {
+    // The application, the fellowship details or a report, as the server
+    // describes them (App\Pages\UrfStudentFormRows), the same rows the app draws.
+    const submit = async (values, files) => {
+      setSending(true);
+      const sent = await sendRequest(body.request, {}, values, setLoading, files);
+      setSending(false);
+      if (!sent) return;
+      if (body.after === 'forms') navigate('/forms');
+      else reload();
+    };
+    content = (
+      <Panel>
+        <ServerPanel rows={body.rows} wrapped={false} host={{ submit, busy: sending }} />
+      </Panel>
+    );
   } else if (body.kind === 'shell') {
     content = <UrfFormShell path={body.path} />;
   } else {

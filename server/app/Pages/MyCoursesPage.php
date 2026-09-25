@@ -2,6 +2,7 @@
 
 namespace App\Pages;
 
+use App\Models\StudentCourse;
 use App\Models\User;
 
 /**
@@ -26,10 +27,15 @@ final class MyCoursesPage extends PageDefinition
 
     public function view(User $user, array $params = []): array
     {
+        // Each tab names how many it holds, as the page always has. The view is
+        // checked again on every visit, so a course tagged since shows next time.
+        $counts = StudentCourse::where('student_id', $user->student?->roll_no ?? 0)
+            ->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
+
         return self::page('My courses', null, [
             'tabs' => [
-                ['value' => 'ongoing', 'label' => 'Ongoing courses', 'table' => self::table('enrolled', 'No ongoing courses', self::COLUMNS)],
-                ['value' => 'past', 'label' => 'Past courses', 'table' => self::table('completed', 'No past courses', [
+                ['value' => 'ongoing', 'label' => 'Ongoing courses (' . ($counts['enrolled'] ?? 0) . ')', 'table' => self::table('enrolled', 'No ongoing courses', self::COLUMNS)],
+                ['value' => 'past', 'label' => 'Past courses (' . ($counts['completed'] ?? 0) . ')', 'table' => self::table('completed', 'No past courses', [
                     ...self::COLUMNS,
                     ['key' => 'grade', 'title' => 'Grade', 'empty' => 'N/A'],
                 ])],

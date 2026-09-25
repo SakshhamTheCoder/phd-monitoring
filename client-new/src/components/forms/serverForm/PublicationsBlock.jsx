@@ -93,6 +93,7 @@ const PublicationsBlock = ({ formData, field }) => {
         elements={[
           <ShowPublications
             formData={linked}
+            highlightNames={field.highlight}
             enableEdit={field.editable}
             enableDelete={field.editable}
             canAdd={field.editable}

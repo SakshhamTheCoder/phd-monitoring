@@ -130,7 +130,9 @@ final class UrfFormDefinition extends FormDefinition
             ]),
             self::row([Field::file($this->name)->value($filled['report'] ?? null)], space: 3),
             // Read from the answer's top level, where formShow puts the report's lists.
-            Field::publications('Publications', self::PUBLICATION_LISTS, 'library', false),
+            // The project's students in bold among the authors, not the reader.
+            Field::publications('Publications', self::PUBLICATION_LISTS, 'library', false)
+                ->with(['highlight' => array_values(array_filter([$application['student1_name'] ?? null, $application['student2_name'] ?? null]))]),
         ];
     }
 
