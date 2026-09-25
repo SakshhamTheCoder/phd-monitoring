@@ -394,27 +394,29 @@ Route::middleware('feature:job_openings')->group(function () {
         Route::get('/{id}', [\App\Http\Controllers\PublicOpeningController::class, 'show']);
         Route::get('/{id}/advertisement', [\App\Http\Controllers\PublicOpeningController::class, 'advertisement']);
         Route::post('/{id}/apply', [\App\Http\Controllers\PublicOpeningController::class, 'apply'])
-            ->middleware('throttle:5,60');
+            ->middleware('throttle:5,60,opening-apply');
     });
     Route::prefix('public/applications')->group(function () {
         // An applicant may refresh this a handful of times while waiting on a decision.
         Route::get('/{token}', [\App\Http\Controllers\PublicOpeningController::class, 'status'])
-            ->middleware('throttle:30,60');
+            ->middleware('throttle:30,60,application-status');
         Route::post('/{token}/verify', [\App\Http\Controllers\PublicOpeningController::class, 'verify'])
-            ->middleware('throttle:10,60');
+            ->middleware('throttle:10,60,application-verify');
     });
 });
 
 // Secure external-expert review (public, token-authenticated, the token is the credential).
+// Each throttle names its own counter: unnamed ones share one per IP, so a
+// reviewer's page and PDF loads used up the five submits before they were made.
 Route::prefix('external-review')->group(function () {
     // A reviewer reloads the page and re-fetches the PDF repeatedly while reading it.
     Route::get('/{token}', [\App\Http\Controllers\ExternalReviewController::class, 'show'])
-        ->middleware('throttle:60,60');
+        ->middleware('throttle:60,60,external-review-show');
     Route::get('/{token}/pdf', [\App\Http\Controllers\ExternalReviewController::class, 'pdf'])
-        ->middleware('throttle:60,60');
+        ->middleware('throttle:60,60,external-review-pdf');
     // The decision is submitted once, so this stays as tight as the sibling /apply route.
     Route::post('/{token}', [\App\Http\Controllers\ExternalReviewController::class, 'submit'])
-        ->middleware('throttle:5,60');
+        ->middleware('throttle:5,60,external-review-submit');
 });
 Route::post('irb-submissions/{id}/resend-external-review', [\App\Http\Controllers\ExternalReviewController::class, 'resend'])
     ->middleware('auth:sanctum');
