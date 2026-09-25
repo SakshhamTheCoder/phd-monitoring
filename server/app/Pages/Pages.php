@@ -2,6 +2,10 @@
 
 namespace App\Pages;
 
+use App\Http\Controllers\AdminFormController;
+use App\Models\User;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+
 /** Every page described by the server, by the name GET /views/{page} takes. */
 final class Pages
 {
@@ -28,6 +32,39 @@ final class Pages
         'urf-record' => UrfRecordPage::class,
         'users' => UsersPage::class,
     ];
+
+    // Lists opened without route parameters, answered together after sign-in
+    // so each opens without first waiting for its own description.
+    private const PREFETCHED = [
+        'areas-of-specialization', 'clerks', 'configuration', 'courses', 'departments', 'faculty',
+        'outside-experts', 'presentations', 'students', 'supervisor-approvals', 'urf', 'users',
+    ];
+
+    /**
+     * Every list this reader may open that needs no route parameters, each
+     * keyed as the client asks for it: the page name, then its query.
+     */
+    public static function prefetched(User $user): array
+    {
+        $wanted = array_map(fn ($name) => [$name, []], [...self::PREFETCHED, ...array_keys(UrfFormListPage::FORMS)]);
+        foreach (array_keys(app(AdminFormController::class)->formMetadata) as $type) {
+            $wanted[] = ['form-list', ['form_type' => $type]];
+        }
+
+        $views = [];
+        foreach ($wanted as [$name, $params]) {
+            $page = self::find($name);
+            if (!$page || !$page->allows($user)) {
+                continue;
+            }
+            try {
+                $views[$name . '?' . http_build_query($params)] = $page->view($user, $params);
+            } catch (HttpException) {
+                // Refused for this reader after all; the page asks for itself if opened.
+            }
+        }
+        return $views;
+    }
 
     public static function find(string $name): ?PageDefinition
     {

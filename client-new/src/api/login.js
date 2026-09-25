@@ -1,5 +1,6 @@
 import { customFetch } from "./base"
 import { ENDPOINTS, baseURL } from "./urls"
+import { forgetViews } from "./views"
 
 export const loginAPI = async (email, password, captchaToken) => {
     const result = await customFetch(ENDPOINTS.LOGIN,"POST",{
@@ -46,5 +47,6 @@ export const logoutAPI = async () => {
     // previous role's menu for whoever signs in next on this browser.
     localStorage.removeItem("capabilities");
     localStorage.removeItem("features");
+    forgetViews();
     return true;
 }

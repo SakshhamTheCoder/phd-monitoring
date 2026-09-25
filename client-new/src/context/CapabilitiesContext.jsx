@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import { baseURL } from '../api/urls';
 import { customFetch } from '../api/base';
 import { currentRole } from '../auth/access';
+import { prefetchViews } from '../api/views';
 
 // What the acting role may do and reach, from GET /me (server:
 // App\Support\Navigation and config/navigation.php): its capabilities, which
@@ -53,6 +54,9 @@ export const CapabilitiesProvider = ({ children }) => {
             }
             localStorage.setItem(CACHE_KEY, JSON.stringify(data.response));
             setAccess(data.response);
+            // The lists this role may open, described ahead of the first visit
+            // to each. After a pause, so the page being opened asks first.
+            setTimeout(prefetchViews, 1000);
         });
 
         return () => {

@@ -226,6 +226,9 @@ Route::get('/me', $me)->middleware('auth:sanctum');
 // A page described for the reader: header, table, dialogs and imports
 // (App\Pages). The web and the app draw it from this rather than each keeping
 // its own copy.
+// Every list the reader may open without route parameters, at once.
+Route::get('/views', fn () => response()->json(['views' => \App\Pages\Pages::prefetched(Auth::user())]))->middleware('auth:sanctum');
+
 Route::get('/views/{page}', function (string $page) {
     $definition = \App\Pages\Pages::find($page);
     abort_if($definition === null, 404);
