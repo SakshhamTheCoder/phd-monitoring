@@ -19,6 +19,7 @@ final class Pages
         'form-list' => FormListPage::class,
         'forms-menu' => FormsMenuPage::class,
         'my-attendance' => MyAttendancePage::class,
+        'my-courses' => MyCoursesPage::class,
         'openings' => OpeningsPage::class,
         'outside-experts' => OutsideExpertsPage::class,
         'presentation-list' => PresentationListPage::class,

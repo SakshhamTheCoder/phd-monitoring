@@ -101,4 +101,46 @@ class UrfStudentFormViewTest extends TestCase
         $this->mine($this->project(['status' => 'applied']));
         $this->assertSame([], (new UrfStudentFormsPage())->view($this->user())['actions']);
     }
+
+    /** Every field of a body's rows, grids and groups opened, by key. */
+    private static function fields(array $rows): array
+    {
+        $fields = [];
+        foreach ($rows as $row) {
+            foreach ($row['kind'] === 'grid' ? $row['items'] : ($row['kind'] === 'group' ? self::fields($row['rows']) : [$row]) as $field) {
+                if (isset($field['key'])) {
+                    $fields[$field['key']] = $field;
+                }
+            }
+        }
+        return $fields;
+    }
+
+    public function test_the_application_is_described_as_rows_posting_what_the_server_validates(): void
+    {
+        $user = $this->user()->forceFill(['first_name' => 'Ug', 'last_name' => 'One', 'phone' => '9876500000', 'gender' => 'Male']);
+        $this->mine($this->project(['status' => 'applied', 'stage' => 'student']));
+        $body = (new UrfStudentFormPage())->view($user, ['type' => 'application', 'id' => 1])['body'];
+
+        $this->assertSame(['method' => 'POST', 'path' => '/urf'], array_intersect_key($body['request'], array_flip(['method', 'path'])));
+        $this->assertSame('reload', $body['after']);
+        $fields = self::fields($body['rows']);
+        foreach (['project_title', 'student1_name', 'student1_year', 'student2_name', 'has_teammate', 'mentor1_faculty_code', 'mentor2_faculty_code', 'proposal'] as $key) {
+            $this->assertArrayHasKey($key, $fields, $key);
+        }
+        // What the account knows is locked and still sent; the year stays open.
+        $this->assertTrue($fields['student1_phone']['locked']);
+        $this->assertSame('always', $fields['student1_phone']['send']);
+        $this->assertFalse($fields['student1_year']['locked']);
+    }
+
+    public function test_a_report_posts_its_type_and_picks_to_the_project(): void
+    {
+        $body = $this->body('half_yearly', $this->project());
+
+        $this->assertSame('/urf/1/reports', $body['request']['path']);
+        $fields = self::fields($body['rows']);
+        $this->assertSame('half_yearly', $fields['type']['value']);
+        $this->assertArrayHasKey('report', $fields);
+    }
 }

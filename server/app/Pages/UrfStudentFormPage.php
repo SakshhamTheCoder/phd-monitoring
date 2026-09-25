@@ -11,7 +11,10 @@ use App\Models\User;
  * where there is none. The forms themselves are drawn by the client.
  *
  * `body.kind` is one of apply, fellow, report, shell (read the filed form at
- * `path`) or notice (runs of text, a date as {date}).
+ * `path`) or notice (runs of text, a date as {date}). An apply, fellow or
+ * report body also carries `rows`, `request` and `after` (reload, or forms
+ * to go back to the forms), for a client that draws the form from the server
+ * (UrfStudentFormRows).
  */
 final class UrfStudentFormPage extends PageDefinition
 {
@@ -52,7 +55,7 @@ final class UrfStudentFormPage extends PageDefinition
     {
         if ($type === 'new') {
             return UrfStudentFormsPage::canApply($mine)
-                ? ['kind' => 'apply', 'student' => $mine['student']]
+                ? ['kind' => 'apply', 'student' => $mine['student']] + UrfStudentFormRows::apply($user, $mine['student'], null)
                 : self::notice($mine['applications_open'] ? "You have already applied for URF {$mine['session']}." : 'URF applications are closed right now.');
         }
         if (!$application) {
@@ -69,7 +72,7 @@ final class UrfStudentFormPage extends PageDefinition
                 && $application['session'] === $mine['session']
                 && strtolower((string) ($application['student2_email'] ?? '')) !== strtolower((string) $user->email);
             return $editable
-                ? ['kind' => 'apply', 'initial' => $application, 'student' => $mine['student']]
+                ? ['kind' => 'apply', 'initial' => $application, 'student' => $mine['student']] + UrfStudentFormRows::apply($user, $mine['student'], $application)
                 : ['kind' => 'shell', 'path' => "/urf/urf-application/{$application['id']}"];
         }
 
@@ -89,7 +92,8 @@ final class UrfStudentFormPage extends PageDefinition
                     break;
                 }
             }
-            return ['kind' => 'fellow', 'application_id' => $application['id'], 'initial' => $fellow, 'prefill' => $previous];
+            return ['kind' => 'fellow', 'application_id' => $application['id'], 'initial' => $fellow, 'prefill' => $previous]
+                + UrfStudentFormRows::fellow((int) $application['id'], $fellow, $previous);
         }
 
         if (isset(UrfStudentFormsPage::REPORT_TYPES[$type])) {
@@ -103,7 +107,8 @@ final class UrfStudentFormPage extends PageDefinition
             }
             $round = UrfStudentFormsPage::windowFor($mine['report_windows'], $application, $type);
             if ($round['is_open'] ?? false) {
-                return ['kind' => 'report', 'application' => $application, 'type' => $type, 'filed' => $filed];
+                return ['kind' => 'report', 'application' => $application, 'type' => $type, 'filed' => $filed]
+                    + UrfStudentFormRows::report($user, $application, $type, $filed);
             }
             // Which round it is, rather than a form the server would refuse.
             return self::notice(match (true) {
