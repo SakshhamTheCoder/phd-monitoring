@@ -1,0 +1,715 @@
+[
+    {
+        "name": "new draft, scholar applying",
+        "formData": {
+            "form_id": 12,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "hod": false
+            },
+            "approvals": {
+                "hod": false
+            },
+            "comments": {
+                "hod": null
+            },
+            "role": "student",
+            "steps": [
+                "student",
+                "hod",
+                "complete"
+            ],
+            "status": "draft",
+            "leave_type": null,
+            "from_date": null,
+            "to_date": null,
+            "day_part": null,
+            "reason": null,
+            "supporting_document": null,
+            "view": {
+                "version": 1,
+                "title": "Leave application",
+                "notes": [],
+                "notices": [],
+                "panels": [],
+                "sections": [
+                    {
+                        "title": "Student",
+                        "rows": [
+                            {
+                                "kind": "leave",
+                                "type": "leave",
+                                "label": "",
+                                "editable": true,
+                                "types": [
+                                    {
+                                        "value": "casual",
+                                        "title": "Casual"
+                                    },
+                                    {
+                                        "value": "academic",
+                                        "title": "Academic"
+                                    }
+                                ],
+                                "default_type": "casual",
+                                "document_types": [
+                                    "academic"
+                                ],
+                                "day_parts": [
+                                    {
+                                        "value": "full",
+                                        "label": "Full day"
+                                    },
+                                    {
+                                        "value": "first_half",
+                                        "label": "First half"
+                                    },
+                                    {
+                                        "value": "second_half",
+                                        "label": "Second half"
+                                    }
+                                ],
+                                "reason_max": 1000,
+                                "reason_hint": "Why you need this leave (max 1000 characters)",
+                                "half_day_hint": "A half day applies to a single date only.",
+                                "balance_path": "/forms/student-leave/balance",
+                                "form_path": "/forms/student-leave/12",
+                                "deletable": true,
+                                "answers": {
+                                    "leave_type": null,
+                                    "from_date": null,
+                                    "to_date": null,
+                                    "day_part": null,
+                                    "reason": null,
+                                    "supporting_document": null
+                                },
+                                "messages": {
+                                    "dates": "Select the from and to dates",
+                                    "reason": "A reason is required",
+                                    "document": "Attach a supporting PDF for an academic leave",
+                                    "submitted": "Leave application submitted",
+                                    "completed": "Form completed successfully",
+                                    "over": "{days} day(s) over your {type} quota. This can still be submitted.",
+                                    "delete": "Delete this draft application?"
+                                },
+                                "locked": true
+                            }
+                        ]
+                    },
+                    {
+                        "title": "HOD",
+                        "rows": [
+                            {
+                                "kind": "facts",
+                                "type": "facts",
+                                "label": "",
+                                "facts": [
+                                    {
+                                        "label": "Status",
+                                        "value": "draft",
+                                        "badge": true
+                                    },
+                                    {
+                                        "label": "HOD remarks",
+                                        "value": "None"
+                                    }
+                                ],
+                                "class_name": "leave-outcome",
+                                "locked": true
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "name": "sent back, academic with a document",
+        "formData": {
+            "form_id": 12,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "hod": false
+            },
+            "approvals": {
+                "hod": false
+            },
+            "comments": {
+                "hod": "Attach the invitation."
+            },
+            "role": "student",
+            "steps": [
+                "student",
+                "hod",
+                "complete"
+            ],
+            "status": "rejected",
+            "leave_type": "academic",
+            "from_date": "2026-10-05",
+            "to_date": "2026-10-05",
+            "day_part": "first_half",
+            "reason": "Conference talk",
+            "supporting_document": "student_leave/102203456/letter.pdf",
+            "view": {
+                "version": 1,
+                "title": "Leave application",
+                "notes": [],
+                "notices": [],
+                "panels": [],
+                "sections": [
+                    {
+                        "title": "Student",
+                        "rows": [
+                            {
+                                "kind": "leave",
+                                "type": "leave",
+                                "label": "",
+                                "editable": true,
+                                "types": [
+                                    {
+                                        "value": "casual",
+                                        "title": "Casual"
+                                    },
+                                    {
+                                        "value": "academic",
+                                        "title": "Academic"
+                                    }
+                                ],
+                                "default_type": "casual",
+                                "document_types": [
+                                    "academic"
+                                ],
+                                "day_parts": [
+                                    {
+                                        "value": "full",
+                                        "label": "Full day"
+                                    },
+                                    {
+                                        "value": "first_half",
+                                        "label": "First half"
+                                    },
+                                    {
+                                        "value": "second_half",
+                                        "label": "Second half"
+                                    }
+                                ],
+                                "reason_max": 1000,
+                                "reason_hint": "Why you need this leave (max 1000 characters)",
+                                "half_day_hint": "A half day applies to a single date only.",
+                                "balance_path": "/forms/student-leave/balance",
+                                "form_path": "/forms/student-leave/12",
+                                "deletable": false,
+                                "answers": {
+                                    "leave_type": "academic",
+                                    "from_date": "2026-10-05",
+                                    "to_date": "2026-10-05",
+                                    "day_part": "first_half",
+                                    "reason": "Conference talk",
+                                    "supporting_document": "student_leave/102203456/letter.pdf"
+                                },
+                                "messages": {
+                                    "dates": "Select the from and to dates",
+                                    "reason": "A reason is required",
+                                    "document": "Attach a supporting PDF for an academic leave",
+                                    "submitted": "Leave application submitted",
+                                    "completed": "Form completed successfully",
+                                    "over": "{days} day(s) over your {type} quota. This can still be submitted.",
+                                    "delete": "Delete this draft application?"
+                                },
+                                "locked": true
+                            }
+                        ]
+                    },
+                    {
+                        "title": "HOD",
+                        "rows": [
+                            {
+                                "kind": "facts",
+                                "type": "facts",
+                                "label": "",
+                                "facts": [
+                                    {
+                                        "label": "Status",
+                                        "value": "rejected",
+                                        "badge": true
+                                    },
+                                    {
+                                        "label": "HOD remarks",
+                                        "value": "Attach the invitation."
+                                    }
+                                ],
+                                "class_name": "leave-outcome",
+                                "locked": true
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "name": "submitted, scholar reading",
+        "formData": {
+            "form_id": 12,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "hod",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "hod": false
+            },
+            "approvals": {
+                "hod": false
+            },
+            "comments": {
+                "hod": null
+            },
+            "role": "student",
+            "steps": [
+                "student",
+                "hod",
+                "complete"
+            ],
+            "status": "pending",
+            "leave_type": "casual",
+            "from_date": "2026-10-05",
+            "to_date": "2026-10-07",
+            "day_part": "full",
+            "reason": "Family function",
+            "supporting_document": null,
+            "view": {
+                "version": 1,
+                "title": "Leave application",
+                "notes": [],
+                "notices": [],
+                "panels": [],
+                "sections": [
+                    {
+                        "title": "Student",
+                        "rows": [
+                            {
+                                "kind": "leave",
+                                "type": "leave",
+                                "label": "",
+                                "editable": false,
+                                "types": [
+                                    {
+                                        "value": "casual",
+                                        "title": "Casual"
+                                    },
+                                    {
+                                        "value": "academic",
+                                        "title": "Academic"
+                                    }
+                                ],
+                                "default_type": "casual",
+                                "document_types": [
+                                    "academic"
+                                ],
+                                "day_parts": [
+                                    {
+                                        "value": "full",
+                                        "label": "Full day"
+                                    },
+                                    {
+                                        "value": "first_half",
+                                        "label": "First half"
+                                    },
+                                    {
+                                        "value": "second_half",
+                                        "label": "Second half"
+                                    }
+                                ],
+                                "reason_max": 1000,
+                                "reason_hint": "Why you need this leave (max 1000 characters)",
+                                "half_day_hint": "A half day applies to a single date only.",
+                                "balance_path": "/forms/student-leave/balance",
+                                "form_path": "/forms/student-leave/12",
+                                "deletable": false,
+                                "answers": {
+                                    "leave_type": "casual",
+                                    "from_date": "2026-10-05",
+                                    "to_date": "2026-10-07",
+                                    "day_part": "full",
+                                    "reason": "Family function",
+                                    "supporting_document": null
+                                },
+                                "messages": {
+                                    "dates": "Select the from and to dates",
+                                    "reason": "A reason is required",
+                                    "document": "Attach a supporting PDF for an academic leave",
+                                    "submitted": "Leave application submitted",
+                                    "completed": "Form completed successfully",
+                                    "over": "{days} day(s) over your {type} quota. This can still be submitted.",
+                                    "delete": "Delete this draft application?"
+                                },
+                                "locked": true
+                            }
+                        ]
+                    },
+                    {
+                        "title": "HOD",
+                        "rows": [
+                            {
+                                "kind": "facts",
+                                "type": "facts",
+                                "label": "",
+                                "facts": [
+                                    {
+                                        "label": "Status",
+                                        "value": "pending",
+                                        "badge": true
+                                    },
+                                    {
+                                        "label": "HOD remarks",
+                                        "value": "None"
+                                    }
+                                ],
+                                "class_name": "leave-outcome",
+                                "locked": true
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "name": "submitted, HOD deciding",
+        "formData": {
+            "form_id": 12,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "hod",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "hod": false
+            },
+            "approvals": {
+                "hod": false
+            },
+            "comments": {
+                "hod": null
+            },
+            "role": "hod",
+            "steps": [
+                "student",
+                "hod",
+                "complete"
+            ],
+            "status": "pending",
+            "leave_type": "casual",
+            "from_date": "2026-10-05",
+            "to_date": "2026-10-07",
+            "day_part": "full",
+            "reason": "Family function",
+            "supporting_document": null,
+            "view": {
+                "version": 1,
+                "title": "Leave application",
+                "notes": [],
+                "notices": [],
+                "panels": [],
+                "sections": [
+                    {
+                        "title": "Student",
+                        "rows": [
+                            {
+                                "kind": "leave",
+                                "type": "leave",
+                                "label": "",
+                                "editable": false,
+                                "types": [
+                                    {
+                                        "value": "casual",
+                                        "title": "Casual"
+                                    },
+                                    {
+                                        "value": "academic",
+                                        "title": "Academic"
+                                    }
+                                ],
+                                "default_type": "casual",
+                                "document_types": [
+                                    "academic"
+                                ],
+                                "day_parts": [
+                                    {
+                                        "value": "full",
+                                        "label": "Full day"
+                                    },
+                                    {
+                                        "value": "first_half",
+                                        "label": "First half"
+                                    },
+                                    {
+                                        "value": "second_half",
+                                        "label": "Second half"
+                                    }
+                                ],
+                                "reason_max": 1000,
+                                "reason_hint": "Why you need this leave (max 1000 characters)",
+                                "half_day_hint": "A half day applies to a single date only.",
+                                "balance_path": null,
+                                "form_path": "/forms/student-leave/12",
+                                "deletable": false,
+                                "answers": {
+                                    "leave_type": "casual",
+                                    "from_date": "2026-10-05",
+                                    "to_date": "2026-10-07",
+                                    "day_part": "full",
+                                    "reason": "Family function",
+                                    "supporting_document": null
+                                },
+                                "messages": {
+                                    "dates": "Select the from and to dates",
+                                    "reason": "A reason is required",
+                                    "document": "Attach a supporting PDF for an academic leave",
+                                    "submitted": "Leave application submitted",
+                                    "completed": "Form completed successfully",
+                                    "over": "{days} day(s) over your {type} quota. This can still be submitted.",
+                                    "delete": "Delete this draft application?"
+                                },
+                                "locked": true
+                            }
+                        ]
+                    },
+                    {
+                        "title": "HOD",
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "hod",
+                                "allow_rejection": true,
+                                "key": "approval",
+                                "more_fields": false,
+                                "decision": true,
+                                "title": "Decision:",
+                                "locked": true
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "name": "decided, admin reading",
+        "formData": {
+            "form_id": 12,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "complete",
+            "maximum_step": 2,
+            "locks": {
+                "student": true,
+                "hod": true
+            },
+            "approvals": {
+                "hod": true
+            },
+            "comments": {
+                "hod": "Approved."
+            },
+            "role": "admin",
+            "steps": [
+                "student",
+                "hod",
+                "complete"
+            ],
+            "status": "approved",
+            "leave_type": "casual",
+            "from_date": "2026-10-05",
+            "to_date": "2026-10-07",
+            "day_part": "full",
+            "reason": "Family function",
+            "supporting_document": null,
+            "view": {
+                "version": 1,
+                "title": "Leave application",
+                "notes": [],
+                "notices": [],
+                "panels": [],
+                "sections": [
+                    {
+                        "title": "Student",
+                        "rows": [
+                            {
+                                "kind": "leave",
+                                "type": "leave",
+                                "label": "",
+                                "editable": false,
+                                "types": [
+                                    {
+                                        "value": "casual",
+                                        "title": "Casual"
+                                    },
+                                    {
+                                        "value": "academic",
+                                        "title": "Academic"
+                                    }
+                                ],
+                                "default_type": "casual",
+                                "document_types": [
+                                    "academic"
+                                ],
+                                "day_parts": [
+                                    {
+                                        "value": "full",
+                                        "label": "Full day"
+                                    },
+                                    {
+                                        "value": "first_half",
+                                        "label": "First half"
+                                    },
+                                    {
+                                        "value": "second_half",
+                                        "label": "Second half"
+                                    }
+                                ],
+                                "reason_max": 1000,
+                                "reason_hint": "Why you need this leave (max 1000 characters)",
+                                "half_day_hint": "A half day applies to a single date only.",
+                                "balance_path": null,
+                                "form_path": "/forms/student-leave/12",
+                                "deletable": false,
+                                "answers": {
+                                    "leave_type": "casual",
+                                    "from_date": "2026-10-05",
+                                    "to_date": "2026-10-07",
+                                    "day_part": "full",
+                                    "reason": "Family function",
+                                    "supporting_document": null
+                                },
+                                "messages": {
+                                    "dates": "Select the from and to dates",
+                                    "reason": "A reason is required",
+                                    "document": "Attach a supporting PDF for an academic leave",
+                                    "submitted": "Leave application submitted",
+                                    "completed": "Form completed successfully",
+                                    "over": "{days} day(s) over your {type} quota. This can still be submitted.",
+                                    "delete": "Delete this draft application?"
+                                },
+                                "locked": true
+                            }
+                        ]
+                    },
+                    {
+                        "title": "HOD",
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "hod",
+                                "allow_rejection": true,
+                                "key": "approval",
+                                "more_fields": false,
+                                "decision": true,
+                                "title": "Decision:",
+                                "locked": true
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    }
+]

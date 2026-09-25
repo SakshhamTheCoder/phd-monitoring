@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Forms\SynopsisSubmissionDefinition;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Traits\ModelCommonFormFields;
@@ -102,6 +103,7 @@ class SynopsisSubmission extends Model
             $extraData['student_publications']=$ret;
         }
         $formData=array_merge($formData,$extraData);
+        $formData['view'] = (new SynopsisSubmissionDefinition)->view($formData);
 
         return $formData;
     }

@@ -5,10 +5,11 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { LoadingProvider, useLoading } from './context/LoadingContext';
 import { FeaturesProvider, useFeatures } from './context/FeaturesContext';
-import { CapabilitiesProvider } from './context/CapabilitiesContext';
+import { CapabilitiesProvider, useAccess } from './context/CapabilitiesContext';
 import Loader from './components/loader/loader';
+import LoadError from './components/common/LoadError';
 import ErrorBoundary from './components/common/ErrorBoundary';
-import { ACCESS, currentRole } from './auth/access';
+import { currentRole } from './auth/access';
 
 // Every page is split out of the entry chunk. A student signing in should not
 // download the admin surface to see their own forms.
@@ -20,50 +21,33 @@ const LoginPage = lazy(() => import('./pages/login/Login'));
 const SignupPage = lazy(() => import('./pages/signup/SignupPage'));
 const GoogleCallback = lazy(() => import('./pages/login/GoogleCallback'));
 const FormsPage = lazy(() => import('./pages/forms/FormsPage'));
-const FormListPage = lazy(() => import('./pages/forms/FormListPage'));
 const MainFormPage = lazy(() => import('./pages/forms/MainFormPage'));
-const StudentsPage = lazy(() => import('./pages/students/StudentsPage'));
-const StudentProfile = lazy(() => import('./pages/students/StudentProfile'));
 const NotFound = lazy(() => import('./pages/404/NotFound'));
 const FacultyFormsPage = lazy(() => import('./pages/forms/FacultyFormsPage'));
 const Dashboard = lazy(() => import('./pages/dashboard/Dashboard'));
 const Publications = lazy(() => import('./pages/publications/Publications'));
-const PresentationListPage = lazy(() => import('./pages/presentations/PresentationListPage'));
 const Presentation = lazy(() => import('./pages/presentations/PresentationForm'));
 const ForgotPasswordPage = lazy(() => import('./pages/forgot-password/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/reset-password/ResetPasswordPage'));
-const FacultyPage = lazy(() => import('./pages/faculty/FacultyPage'));
 const PublicOpenings = lazy(() => import('./pages/publicOpenings/PublicOpenings'));
 const PublicOpeningDetail = lazy(() => import('./pages/publicOpenings/PublicOpeningDetail'));
 const ApplicationStatus = lazy(() => import('./pages/publicOpenings/ApplicationStatus'));
-const DepartmentPage = lazy(() => import('./pages/department/Department'));
 const AllNotificationsPage = lazy(() => import('./components/notificationBox/AllNotificationsPage'));
-const PresentationSemester = lazy(() => import('./pages/presentations/PresentationSemester'));
-const StudentProgressMonitoring = lazy(() => import('./pages/presentations/StudentProgressMonitoring'));
 const Logs = lazy(() => import('./pages/logs/Logs'));
 const Team = lazy(() => import('./pages/team/Team'));
 const AdminFormManagement = lazy(() => import('./pages/admin/AdminFormManagement'));
-const AreaOfSpecialization = lazy(() => import('./pages/areaOfSpecialization/AreaOfSpecialization'));
-const StudentCourses = lazy(() => import('./pages/StudentCourses/StudentCourses'));
-const AdminCourseManagement = lazy(() => import('./pages/AdminCourseManagement/AdminCourseManagement'));
-const OutsideExperts = lazy(() => import('./pages/OutsideExperts/OutsideExperts'));
+const ServerListPage = lazy(() => import('./components/serverPage/ServerListPage'));
 const ExternalReview = lazy(() => import('./pages/externalReview/ExternalReview'));
-const SupervisorDoctoralApproval = lazy(() => import('./pages/SupervisorDoctoralApproval/SupervisorDoctoralApproval'));
-const UsersPage = lazy(() => import('./pages/users/UsersPage'));
 const AttendanceRoute = lazy(() => import('./pages/attendance/AttendanceRoute'));
-const ClerkManagement = lazy(() => import('./pages/admin/ClerkManagement'));
 const PrivacyPolicy = lazy(() => import('./pages/privacy/PrivacyPolicy'));
 const Support = lazy(() => import('./pages/support/Support'));
-const ResearchProfile = lazy(() => import('./pages/admin/ResearchProfile'));
-const Configuration = lazy(() => import('./pages/admin/Configuration'));
+const ServerSectionsPage = lazy(() => import('./components/serverPage/ServerSectionsPage'));
 const ProjectsOverview = lazy(() => import('./pages/projects/ProjectsOverview'));
 const CreateProject = lazy(() => import('./pages/projects/CreateProject'));
 const ProjectDetails = lazy(() => import('./pages/projects/ProjectDetails'));
 const ProjectRecruitment = lazy(() => import('./pages/projects/ProjectRecruitment'));
 const Openings = lazy(() => import('./pages/projects/Openings'));
-const UrfList = lazy(() => import('./pages/urf/UrfList'));
-const UrfDetails = lazy(() => import('./pages/urf/UrfDetails'));
-const UrfFormList = lazy(() => import('./pages/urf/UrfFormList'));
+const ServerRecordPage = lazy(() => import('./components/serverPage/ServerRecordPage'));
 const UrfFormRecord = lazy(() => import('./pages/urf/UrfFormRecord'));
 const UrfFormsPage = lazy(() => import('./pages/urf/UrfStudentForms').then(m => ({ default: m.UrfFormsPage })));
 const UrfFormPage = lazy(() => import('./pages/urf/UrfStudentForms').then(m => ({ default: m.UrfFormPage })));
@@ -108,8 +92,9 @@ const AppContent = () => {
   // A switched-off module leaves no route behind, so its address falls through
   // to the 404 page rather than rendering against an API that answers 404.
   const features = useFeatures();
-  // Route gates read the same lists the sidebar does, from src/auth/access.js.
-  const may = (area) => ACCESS[area].includes(role);
+  // Route gates read the same answer the sidebar does: which areas this role
+  // may reach, from the server (GET /me).
+  const { may, known, failed } = useAccess();
 
   // Signed out, a protected address has no route at all and fell through to
   // "Not found". Send the visitor to sign in and back to where they were going.
@@ -119,6 +104,12 @@ const AppContent = () => {
     window.location.replace(`/login?next=${encodeURIComponent(pathname + search)}`);
     return null;
   }
+  // Signed in, the routes wait for what this role may reach; it is cached, so
+  // this is only the first page after signing in or switching role.
+  if (signedIn && failed) {
+    return <LoadError message="Could not load your menu. Check your connection and try again." onRetry={() => window.location.reload()} />;
+  }
+  if (signedIn && !known) return <Loader scope="app" />;
   return (
     <>
       {loading && <Loader scope="app" />}
@@ -180,7 +171,7 @@ const AppContent = () => {
               {role === 'student' && (
                 <>
                   <Route path="/forms" element={<FormsPage />} />
-                  <Route path="/courses" element={<StudentCourses />} />
+                  <Route path="/courses" element={<ServerListPage page="my-courses" />} />
                 </>
               )}
               {role === 'ug_student' && (
@@ -196,82 +187,82 @@ const AppContent = () => {
               )}
               {may('publications') && <Route path="/publications" element={<Publications />} />}
               <Route path="/notifications" element={<AllNotificationsPage />} />
-              <Route path="/faculty/:facultyCode/profile" element={<ResearchProfile />} />
+              <Route path="/faculty/:facultyCode/profile" element={<ServerRecordPage page="research-profile" loadingTitle="Loading profile" failedMessage="Could not load this research profile. Check your connection and try again." />} />
               {/* Matches the sidebar's Progress Monitoring entry, so clerk and external
                   (who have no sidebar link for it) can't land on the page either. */}
               {may('presentations') && (
                 <>
-                  <Route path="/presentation" element={<PresentationSemester />} />
+                  <Route path="/presentation" element={<ServerListPage page="presentations" />} />
                   <Route path="/presentation/semester" element={<Navigate to="/presentation" replace />} />
                   {/* The semester and form pages sit under the same gate, so a role
                       kept off the landing page cannot reach them by deep link. */}
-                  <Route path="/presentation/semester/:semester_id" element={<PresentationListPage />} />
+                  <Route path="/presentation/semester/:semester_id" element={<ServerListPage page="presentation-list" />} />
                   <Route path="/presentation/semester/:semester_id/:id" element={<Presentation />} />
                 </>
               )}
 
-              <Route path="/forms/:form_type" element={<FormListPage />} />
+              <Route path="/forms/:form_type" element={<ServerListPage page="form-list" />} />
               <Route path="/forms/:form_type/:id" element={<MainFormPage />} />
               {may('scholars') && (
                 <>
                   <Route path="/forms" element={<FacultyFormsPage />} />
-                  <Route path="/students" element={<StudentsPage />} />
-                  <Route path="/students/:roll_no" element={<StudentProfile />} />
+                  <Route path="/students" element={<ServerListPage page="students" />} />
+                  <Route path="/students/:roll_no" element={<ServerRecordPage page="student-profile" loadingTitle="Loading profile" failedMessage="Could not load this profile. Check your connection and try again." />} />
                   <Route path="/students/:roll_no/forms" element={<FormsPage />} />
                   {/* Progress Monitoring for one scholar, from their profile. The
                       pages read the path back as their API endpoint, and the
                       scholar-scoped endpoints already exist under
                       /students/{id}/forms/presentation. */}
-                  <Route path="/students/:roll_no/forms/presentation" element={<StudentProgressMonitoring />} />
-                  <Route path="/students/:roll_no/forms/presentation/semester/:semester_id" element={<PresentationListPage />} />
+                  <Route path="/students/:roll_no/forms/presentation" element={<ServerListPage page="student-progress" />} />
+                  <Route path="/students/:roll_no/forms/presentation/semester/:semester_id" element={<ServerListPage page="presentation-list" />} />
                   <Route path="/students/:roll_no/forms/presentation/semester/:semester_id/:id" element={<Presentation />} />
-                  <Route path="/students/:roll_no/forms/:form_type" element={<FormListPage />} />
+                  <Route path="/students/:roll_no/forms/:form_type" element={<ServerListPage page="form-list" />} />
                   <Route path="/students/:roll_no/forms/:form_type/:id" element={<MainFormPage />} />
                 </>
               )}
-              {may('courseManagement') && <Route path="/courses" element={<AdminCourseManagement />} />}
+              {may('courseManagement') && <Route path="/courses" element={<ServerListPage page="courses" />} />}
               {/* Matches can_edit_department, which DepartmentController::list requires. */}
-              {may('departments') && <Route path="/departments" element={<DepartmentPage />} />}
+              {may('departments') && <Route path="/departments" element={<ServerListPage page="departments" />} />}
               {/* can_manage_supervisor_changes is granted to dordc and admin on the server. */}
               {may('supervisorApprovals') && (
-                <Route path="/supervisor-doctoral-approvals" element={<SupervisorDoctoralApproval />} />
+                <Route path="/supervisor-doctoral-approvals" element={<ServerListPage page="supervisor-approvals" />} />
               )}
-              {may('facultyDirectory') && <Route path="/faculty" element={<FacultyPage />} />}
+              {may('facultyDirectory') && <Route path="/faculty" element={<ServerListPage page="faculty" />} />}
               {/* The server decides what each of them reads, so the routes only
                   have to be reachable. */}
               {may('urf') && (
                 <>
-                  <Route path="/urf" element={<UrfList />} />
+                  <Route path="/urf" element={<ServerListPage page="urf" />} />
                   {/* Each form's own submissions. These sit beside /urf rather
                       than with the admin routes: the office roles that manage URF
                       are not all the admin role, and a form card opening for them
                       fell through to /urf/:id and drew the project page instead.
                       The server refuses anyone without can_manage_urf. */}
-                  <Route path="/urf/urf-application" element={<UrfFormList />} />
-                  <Route path="/urf/urf-additional-info" element={<UrfFormList />} />
-                  <Route path="/urf/urf-half-yearly-report" element={<UrfFormList />} />
-                  <Route path="/urf/urf-final-report" element={<UrfFormList />} />
+                  <Route path="/urf/urf-application" element={<ServerListPage page="urf-application" />} />
+                  <Route path="/urf/urf-additional-info" element={<ServerListPage page="urf-additional-info" />} />
+                  <Route path="/urf/urf-half-yearly-report" element={<ServerListPage page="urf-half-yearly-report" />} />
+                  <Route path="/urf/urf-final-report" element={<ServerListPage page="urf-final-report" />} />
                   {/* One submission of one form, with its own chain, as a PhD
                       form page has. The API path is the page path. */}
                   <Route path="/urf/urf-application/:id" element={<UrfFormRecord />} />
                   <Route path="/urf/urf-additional-info/:id" element={<UrfFormRecord />} />
                   <Route path="/urf/urf-half-yearly-report/:id" element={<UrfFormRecord />} />
                   <Route path="/urf/urf-final-report/:id" element={<UrfFormRecord />} />
-                  <Route path="/urf/:id" element={<UrfDetails />} />
+                  <Route path="/urf/:id" element={<ServerRecordPage page="urf-record" failedMessage="Could not load this URF project. Check your connection and try again." />} />
                 </>
               )}
               {may('attendance') && <Route path="/attendance" element={<AttendanceRoute />} />}
-              {may('areasOfSpecialization') && <Route path="/areasOfSpecialization" element={<AreaOfSpecialization />} />}
+              {may('areasOfSpecialization') && <Route path="/areasOfSpecialization" element={<ServerListPage page="areas-of-specialization" />} />}
               {may('admin') && (
                 <>
                   <Route path="/forms/manage" element={<AdminFormManagement />} />
-                  <Route path="/courses/manage" element={<AdminCourseManagement />} />
-                  <Route path="/outside-experts" element={<OutsideExperts />} />
+                  <Route path="/courses/manage" element={<ServerListPage page="courses" />} />
+                  <Route path="/outside-experts" element={<ServerListPage page="outside-experts" />} />
                   <Route path="/logs" element={<Logs />} />
-                  <Route path="/users" element={<UsersPage />} />
-                  <Route path="/clerk-management" element={<ClerkManagement />} />
-                  <Route path="/clerks" element={<ClerkManagement />} />
-                  <Route path="/configuration" element={<Configuration />} />
+                  <Route path="/users" element={<ServerListPage page="users" />} />
+                  <Route path="/clerk-management" element={<ServerListPage page="clerks" />} />
+                  <Route path="/clerks" element={<ServerListPage page="clerks" />} />
+                  <Route path="/configuration" element={<ServerSectionsPage page="configuration" />} />
                 </>
               )}
               {/* Signed in, a miss (often a page this role has no route for)

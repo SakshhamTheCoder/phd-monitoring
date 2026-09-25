@@ -1,35 +1,43 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { baseURL } from '../api/urls';
 import { customFetch } from '../api/base';
+import { currentRole } from '../auth/access';
+import { prefetchViews } from '../api/views';
 
-// What the acting role may do, from GET /my-roles.
+// What the acting role may do and reach, from GET /me (server:
+// App\Support\Navigation and config/navigation.php): its capabilities, which
+// areas of the portal it may open, and the sidebar, page names and home tiles
+// to draw for it. The app reads the same answer, so the two cannot drift.
 //
-// Used only to decide whether the UI offers an action. The API enforces the same
-// capabilities on every request, so a stale or missing answer here costs a
-// button, never access.
+// The API still enforces everything on every request; this decides what the
+// UI offers. One provider, so the sidebar and every page share one request.
 //
-// One provider rather than a hook each page called for itself: the sidebar is
-// always mounted and asks, and so did every page that wanted a capability, so
-// /students and /users each made two identical requests on load.
-//
-// Cached in localStorage because the answer only changes when the role does;
-// SwitchRole clears it.
-const CACHE_KEY = 'capabilities';
+// Cached in localStorage with the role it was for, because it changes only
+// when the role does; SwitchRole clears it. A cached answer for another role
+// is never used.
+const CACHE_KEY = 'access';
 
 const readCache = () => {
     try {
-        return JSON.parse(localStorage.getItem(CACHE_KEY)) || null;
+        const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
+        return cached && cached.current_role === currentRole() ? cached : null;
     } catch {
         return null;
     }
 };
 
-export const clearCapabilities = () => localStorage.removeItem(CACHE_KEY);
+export const clearCapabilities = () => {
+    localStorage.removeItem(CACHE_KEY);
+    // The key the capabilities alone were kept under before /me.
+    localStorage.removeItem('capabilities');
+};
 
 const CapabilitiesContext = createContext(null);
+const AccessFailedContext = createContext(false);
 
 export const CapabilitiesProvider = ({ children }) => {
-    const [capabilities, setCapabilities] = useState(readCache);
+    const [access, setAccess] = useState(readCache);
+    const [failed, setFailed] = useState(false);
 
     useEffect(() => {
         let cancelled = false;
@@ -38,11 +46,17 @@ export const CapabilitiesProvider = ({ children }) => {
         // 401 handler sent the login page to /login, which mounted this again.
         if (!localStorage.getItem('token')) return undefined;
 
-        customFetch(`${baseURL}/my-roles`, 'GET', {}, false).then((data) => {
-            if (cancelled || !data?.success) return;
-            const fresh = data.response.capabilities || {};
-            localStorage.setItem(CACHE_KEY, JSON.stringify(fresh));
-            setCapabilities(fresh);
+        customFetch(`${baseURL}/me`, 'GET', {}, false).then((data) => {
+            if (cancelled) return;
+            if (!data?.success) {
+                setFailed(true);
+                return;
+            }
+            localStorage.setItem(CACHE_KEY, JSON.stringify(data.response));
+            setAccess(data.response);
+            // The lists this role may open, described ahead of the first visit
+            // to each. After a pause, so the page being opened asks first.
+            setTimeout(prefetchViews, 1000);
         });
 
         return () => {
@@ -51,8 +65,10 @@ export const CapabilitiesProvider = ({ children }) => {
     }, []);
 
     return (
-        <CapabilitiesContext.Provider value={capabilities}>
+        <CapabilitiesContext.Provider value={access}>
+            <AccessFailedContext.Provider value={failed}>
             {children}
+            </AccessFailedContext.Provider>
         </CapabilitiesContext.Provider>
     );
 };
@@ -60,16 +76,33 @@ export const CapabilitiesProvider = ({ children }) => {
 // Returns a stable `can(name)`. Unknown reads as false, so the UI stays closed
 // until the answer arrives.
 export const useCapabilities = () => {
-    const capabilities = useContext(CapabilitiesContext);
+    const access = useContext(CapabilitiesContext);
 
     return useCallback(
-        (name) => Boolean(capabilities?.[name]),
-        [capabilities]
+        (name) => Boolean(access?.capabilities?.[name]),
+        [access]
     );
 };
 
 // False until the answer has arrived at least once, for a page that must pick
 // between two fetches rather than just hide a button.
 export const useCapabilitiesKnown = () => useContext(CapabilitiesContext) !== null;
+
+// Areas, sidebar, page names and home tiles for the acting role. `known` is
+// false until the answer for this role has arrived.
+export const useAccess = () => {
+    const access = useContext(CapabilitiesContext);
+    const failed = useContext(AccessFailedContext);
+
+    return useMemo(() => ({
+        known: access !== null,
+        // No answer could be had and none was cached.
+        failed: access === null && failed,
+        may: (area) => Boolean(access?.areas?.[area]),
+        nav: access?.nav || [],
+        labels: access?.labels || {},
+        tiles: access?.tiles || [],
+    }), [access, failed]);
+};
 
 export default useCapabilities;

@@ -1,0 +1,83 @@
+{
+  "sheet": [
+    {
+      "_rowNumber": 2,
+      "Department Code": "CSED",
+      "HOD Name": "Hod One",
+      "HOD Email": "hod.one@thapar.edu",
+      "HOD Office Email": "hcsed@thapar.edu",
+      "ADORDC Name": "Adordc",
+      "ADORDC Personal Email": "adordc.one@thapar.edu",
+      "ADORDC Office Email": "N/A",
+      "PhD Coordinator 1 Name": "C1",
+      "PhD Coordinator 1 Email": "c1@thapar.edu",
+      "PhD Coordinator 2 Name": "C2",
+      "PhD Coordinator 2 Email": "-",
+      "Clerk Name": "Clerk One",
+      "Clerk Email": "clerk.one@thapar.edu",
+      "Clerk Phone (10 digits)": "9800000031"
+    },
+    {
+      "_rowNumber": 3,
+      "Department Code": "",
+      "HOD Name": "Nobody",
+      "HOD Email": "skip@thapar.edu",
+      "HOD Office Email": "",
+      "ADORDC Name": "",
+      "ADORDC Personal Email": "",
+      "ADORDC Office Email": "",
+      "PhD Coordinator 1 Name": "",
+      "PhD Coordinator 1 Email": "",
+      "PhD Coordinator 2 Name": "",
+      "PhD Coordinator 2 Email": "",
+      "Clerk Name": "",
+      "Clerk Email": "",
+      "Clerk Phone (10 digits)": ""
+    },
+    {
+      "_rowNumber": 4,
+      "Department Code": "CHED",
+      "HOD Name": "",
+      "HOD Email": "#N/A",
+      "HOD Office Email": "",
+      "ADORDC Name": "",
+      "ADORDC Personal Email": "",
+      "ADORDC Office Email": "",
+      "PhD Coordinator 1 Name": "",
+      "PhD Coordinator 1 Email": "",
+      "PhD Coordinator 2 Name": "",
+      "PhD Coordinator 2 Email": "",
+      "Clerk Name": "",
+      "Clerk Email": "",
+      "Clerk Phone (10 digits)": ""
+    }
+  ],
+  "read": [
+    {
+      "row_number": 2,
+      "department_code": "CSED",
+      "hod_email": "hod.one@thapar.edu",
+      "hod_office_email": "hcsed@thapar.edu",
+      "adordc_email": "adordc.one@thapar.edu",
+      "adordc_office_email": "",
+      "coordinator_1_email": "c1@thapar.edu",
+      "coordinator_2_email": "",
+      "clerk_name": "Clerk One",
+      "clerk_email": "clerk.one@thapar.edu",
+      "clerk_phone": "9800000031"
+    },
+    {
+      "row_number": 4,
+      "department_code": "CHED",
+      "hod_email": "",
+      "hod_office_email": "",
+      "adordc_email": "",
+      "adordc_office_email": "",
+      "coordinator_1_email": "",
+      "coordinator_2_email": "",
+      "clerk_name": "",
+      "clerk_email": "",
+      "clerk_phone": ""
+    }
+  ]
+}

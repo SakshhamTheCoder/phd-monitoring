@@ -361,7 +361,8 @@ class StudentCourseController extends Controller
             $errors = [];
 
             foreach ($request->rows as $data) {
-                $rowNumber = $data['row_number'] ?? '?';
+                // The sheet's own row number, as the import dialog numbers it.
+                $rowNumber = $data['row_number'] ?? $data['_rowNumber'] ?? '?';
 
                 try {
                     $rollNumber = $this->cell($data, 'Registration Number', 'Roll Number', 'roll_number');
@@ -446,6 +447,11 @@ class StudentCourseController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => "Import completed: {$successCount} rows, {$errorCount} errors",
+                // What the page tells the reader, in order.
+                'messages' => [
+                    ['tone' => 'success', 'text' => "{$successCount} enrolments imported"],
+                    ...array_map(fn ($error) => ['tone' => 'warn', 'text' => $error], $errors),
+                ],
                 'data' => [
                     'success_count' => $successCount,
                     'error_count' => $errorCount,

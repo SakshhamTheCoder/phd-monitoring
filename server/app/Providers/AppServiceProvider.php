@@ -3,7 +3,10 @@
 namespace App\Providers;
 
 use App\Models\User;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Mail\Events\MessageSending;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
@@ -56,5 +59,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::before(function (User $user, string $ability) {
             return str_starts_with($ability, 'can_') ? $user->may($ability) : null;
         });
+
+        // Password guessing and reset-mail flooding. Keyed by email and IP, not
+        // IP alone: the campus sits behind NAT, so one address is many people.
+        RateLimiter::for('login', fn (Request $request) => Limit::perMinute(10)->by($request->input('email') . '|' . $request->ip()));
+        RateLimiter::for('auth-email', fn (Request $request) => Limit::perMinute(3)->by($request->input('email') . '|' . $request->ip()));
     }
 }

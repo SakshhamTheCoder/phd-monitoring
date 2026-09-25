@@ -1,0 +1,1364 @@
+[
+    {
+        "name": "first request, scholar editing",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "student",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "previous_approval_pdf": null,
+            "semester_off_required": null,
+            "proof_pdf": null,
+            "reason": null,
+            "previous_off": [],
+            "view": {
+                "version": 1,
+                "title": "Application for semester off",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Phone number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Semester off (if any earlier)",
+                                        "value": "N/A",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "blank",
+                                        "label": "",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "select",
+                                        "label": "Semester off required",
+                                        "options": [
+                                            {
+                                                "value": "2526EVEN",
+                                                "title": "2526EVEN"
+                                            },
+                                            {
+                                                "value": "2627ODD",
+                                                "title": "2627ODD"
+                                            }
+                                        ],
+                                        "key": "semester_off_required",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    },
+                                    {
+                                        "type": "file",
+                                        "label": "Attach proof (if any)",
+                                        "key": "proof_pdf",
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for semester off",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "repeat request, earlier approval not uploaded",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "student",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "previous_approval_pdf": null,
+            "semester_off_required": null,
+            "proof_pdf": null,
+            "reason": null,
+            "previous_off": [
+                {
+                    "id": 1,
+                    "student_id": "102203456",
+                    "semester_off_required": "2425EVEN"
+                }
+            ],
+            "view": {
+                "version": 1,
+                "title": "Application for semester off",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Phone number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Semester off (if any earlier)",
+                                        "value": "2425EVEN",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "file",
+                                        "label": "Attach previous approval",
+                                        "key": "previous_approval_pdf",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "select",
+                                        "label": "Semester off required",
+                                        "options": [
+                                            {
+                                                "value": "2526EVEN",
+                                                "title": "2526EVEN"
+                                            },
+                                            {
+                                                "value": "2627ODD",
+                                                "title": "2627ODD"
+                                            }
+                                        ],
+                                        "key": "semester_off_required",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    },
+                                    {
+                                        "type": "file",
+                                        "label": "Attach proof (if any)",
+                                        "key": "proof_pdf",
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for semester off",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "sent back with every answer stored",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "student",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "previous_approval_pdf": "semester_off/102203456/prev.pdf",
+            "semester_off_required": "2526EVEN",
+            "proof_pdf": "semester_off/102203456/proof.pdf",
+            "reason": "Medical leave",
+            "previous_off": [
+                {
+                    "id": 1,
+                    "semester_off_required": "2425EVEN"
+                }
+            ],
+            "view": {
+                "version": 1,
+                "title": "Application for semester off",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Phone number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Semester off (if any earlier)",
+                                        "value": "2425EVEN",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "file",
+                                        "label": "Attach previous approval",
+                                        "key": "previous_approval_pdf",
+                                        "value": "semester_off/102203456/prev.pdf",
+                                        "locked": false
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "select",
+                                        "label": "Semester off required",
+                                        "options": [
+                                            {
+                                                "value": "2526EVEN",
+                                                "title": "2526EVEN"
+                                            },
+                                            {
+                                                "value": "2627ODD",
+                                                "title": "2627ODD"
+                                            }
+                                        ],
+                                        "key": "semester_off_required",
+                                        "required": true,
+                                        "value": "2526EVEN",
+                                        "locked": false
+                                    },
+                                    {
+                                        "type": "file",
+                                        "label": "Attach proof (if any)",
+                                        "key": "proof_pdf",
+                                        "value": "semester_off/102203456/proof.pdf",
+                                        "locked": false
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for semester off",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": "Medical leave",
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "a semester no longer offered",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "student",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "previous_approval_pdf": null,
+            "semester_off_required": "2223ODD",
+            "proof_pdf": null,
+            "reason": null,
+            "previous_off": [],
+            "view": {
+                "version": 1,
+                "title": "Application for semester off",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Phone number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Semester off (if any earlier)",
+                                        "value": "N/A",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "blank",
+                                        "label": "",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "select",
+                                        "label": "Semester off required",
+                                        "options": [
+                                            {
+                                                "value": "2526EVEN",
+                                                "title": "2526EVEN"
+                                            },
+                                            {
+                                                "value": "2627ODD",
+                                                "title": "2627ODD"
+                                            }
+                                        ],
+                                        "key": "semester_off_required",
+                                        "required": true,
+                                        "value": "2223ODD",
+                                        "locked": false
+                                    },
+                                    {
+                                        "type": "file",
+                                        "label": "Attach proof (if any)",
+                                        "key": "proof_pdf",
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for semester off",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "submitted, scholar reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "supervisor",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "student",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "previous_approval_pdf": null,
+            "semester_off_required": "2526EVEN",
+            "proof_pdf": "semester_off/102203456/proof.pdf",
+            "reason": "Medical leave",
+            "previous_off": [],
+            "view": {
+                "version": 1,
+                "title": "Application for semester off",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Phone number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Semester off (if any earlier)",
+                                        "value": "N/A",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "blank",
+                                        "label": "",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "select",
+                                        "label": "Semester off required",
+                                        "options": [
+                                            {
+                                                "value": "2526EVEN",
+                                                "title": "2526EVEN"
+                                            },
+                                            {
+                                                "value": "2627ODD",
+                                                "title": "2627ODD"
+                                            }
+                                        ],
+                                        "key": "semester_off_required",
+                                        "required": true,
+                                        "value": "2526EVEN",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "file",
+                                        "label": "Attach proof (if any)",
+                                        "key": "proof_pdf",
+                                        "value": "semester_off/102203456/proof.pdf",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for semester off",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": "Medical leave",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "unsubmitted, admin reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "admin",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "previous_approval_pdf": null,
+            "semester_off_required": null,
+            "proof_pdf": null,
+            "reason": null,
+            "previous_off": [
+                {
+                    "id": 1,
+                    "semester_off_required": "2425EVEN"
+                }
+            ],
+            "view": {
+                "version": 1,
+                "title": "Application for semester off",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Phone number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Semester off (if any earlier)",
+                                        "value": "2425EVEN",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "file",
+                                        "label": "Attach previous approval",
+                                        "key": "previous_approval_pdf",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "select",
+                                        "label": "Semester off required",
+                                        "options": [
+                                            {
+                                                "value": "2526EVEN",
+                                                "title": "2526EVEN"
+                                            },
+                                            {
+                                                "value": "2627ODD",
+                                                "title": "2627ODD"
+                                            }
+                                        ],
+                                        "key": "semester_off_required",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "file",
+                                        "label": "Attach proof (if any)",
+                                        "key": "proof_pdf",
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for semester off",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "submitted, supervisor reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "supervisor",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "faculty",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "previous_approval_pdf": null,
+            "semester_off_required": "2526EVEN",
+            "proof_pdf": null,
+            "reason": "Medical leave",
+            "previous_off": [],
+            "view": {
+                "version": 1,
+                "title": "Application for semester off",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Phone number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Semester off (if any earlier)",
+                                        "value": "N/A",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "blank",
+                                        "label": "",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "select",
+                                        "label": "Semester off required",
+                                        "options": [
+                                            {
+                                                "value": "2526EVEN",
+                                                "title": "2526EVEN"
+                                            },
+                                            {
+                                                "value": "2627ODD",
+                                                "title": "2627ODD"
+                                            }
+                                        ],
+                                        "key": "semester_off_required",
+                                        "required": true,
+                                        "value": "2526EVEN",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "file",
+                                        "label": "Attach proof (if any)",
+                                        "key": "proof_pdf",
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for semester off",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": "Medical leave",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+]

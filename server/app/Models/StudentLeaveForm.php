@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Forms\StudentLeaveDefinition;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Traits\ModelCommonFormFields;
@@ -41,7 +42,7 @@ class StudentLeaveForm extends Model
     public function fullForm($user)
     {
         $commonJSON = $this->fullCommonForm($user);
-        return array_merge($commonJSON, [
+        $data = array_merge($commonJSON, [
             'leave_type' => $this->leave_type,
             'from_date' => $this->from_date,
             'to_date' => $this->to_date,
@@ -49,6 +50,8 @@ class StudentLeaveForm extends Model
             'reason' => $this->reason,
             'supporting_document' => $this->supporting_document,
         ]);
+        $data['view'] = (new StudentLeaveDefinition)->view($data);
+        return $data;
     }
 
     public function scopeApproved($query)

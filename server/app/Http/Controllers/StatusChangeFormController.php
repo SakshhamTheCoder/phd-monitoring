@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Forms\StatusChangeDefinition;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\GeneralFormCreate;
 use App\Http\Controllers\Traits\GeneralFormHandler;
@@ -14,6 +15,9 @@ use App\Models\StudentStatusChangeForms;
 
 class StatusChangeFormController extends Controller
 {
+    /** Who may approve several of these at once; the list page offers it to the same. */
+    public const BULK_APPROVERS = ['hod', 'phd_coordinator', 'dra', 'dordc', 'director'];
+
     use GeneralFormHandler;
     use GeneralFormSubmitter;
     use SaveFile;
@@ -150,9 +154,7 @@ class StatusChangeFormController extends Controller
         $model = StudentStatusChangeForms::class;
         return $this->submitForm($user, $request, $form_id, $model, 'student', 'student', 'faculty',
         function ($formInstance) use ($request, $user) {
-            $request->validate([
-                'reason' => 'required|string',
-            ]);
+            $request->validate((new StatusChangeDefinition)->rules('student', $formInstance->fullForm($user)));
             $formInstance->reason = $request->reason;
             $prevStatusChanges = $user->student->statusChanges();
             if ($prevStatusChanges->count() > 2) {
@@ -167,8 +169,7 @@ class StatusChangeFormController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
         $model = StudentStatusChangeForms::class;
-        $allowedRoles = ['hod', 'phd_coordinator', 'dra', 'dordc', 'director'];
-        if (!in_array($role->role, $allowedRoles)) {
+        if (!in_array($user->current_role->role, self::BULK_APPROVERS, true)) {
             return $this->refuse();
         }
         $request->validate([

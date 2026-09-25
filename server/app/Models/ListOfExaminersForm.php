@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Forms\ListOfExaminersDefinition;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Traits\ModelCommonFormFields;
@@ -45,7 +46,7 @@ class ListOfExaminersForm extends Model
     {
         // Use the common form data and merge with specific form data
         $commonJSON = $this->fullCommonForm($user);
-        return array_merge($commonJSON, [
+        $data = array_merge($commonJSON, [
             'status' => $this->status,
             'history' => $this->history,
             // Flattened, not the raw rows: the screens read an examiner's name
@@ -54,6 +55,8 @@ class ListOfExaminersForm extends Model
             'national' => $this->nationalExaminersRecommendations->map->toFormRow()->values(),
             'international' => $this->internationalExaminersRecommendations->map->toFormRow()->values(),
         ]);
+        $data['view'] = (new ListOfExaminersDefinition)->view($data);
+        return $data;
     }
     public function nationalExaminersRecommendations()
     {

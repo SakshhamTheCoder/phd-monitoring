@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Forms\SemesterOffDefinition;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\GeneralFormCreate;
 use Illuminate\Http\Request;
@@ -22,6 +23,9 @@ use App\Models\ThesisSubmission;
 
 class StudentSemesterOffFormController extends Controller
 {
+    /** Who may approve several of these at once; the list page offers it to the same. */
+    public const BULK_APPROVERS = ['hod', 'phd_coordinator', 'dra', 'dordc', 'director'];
+
     
     use GeneralFormHandler;
     use GeneralFormSubmitter;
@@ -153,17 +157,9 @@ class StudentSemesterOffFormController extends Controller
             'student',
             'faculty',
             function ($formInstance) use ($request, $user) {
-                $request->validate([
-                   'reason' => 'required|string',
-                   'semester_off_required' => 'required|string',
-                   'proof_pdf' => 'file|mimes:pdf|max:20480',
-                ]);
+                $request->validate((new SemesterOffDefinition)->rules('student', $formInstance->fullForm($user)));
                 $prev_semester_off=StudentSemesterOff::where('student_id',$user->student->roll_no);
                 if ($prev_semester_off->count() > 0) {
-                    $request->validate([
-                        // A resubmission after a send-back keeps the stored PDF unless a new one comes.
-                        'previous_approval_pdf' => ($formInstance->previous_approval_pdf ? 'nullable' : 'required').'|file|mimes:pdf|max:20480',
-                    ]);
                     if($request->hasFile('previous_approval_pdf')){
                         $link=$this->replaceUploadedFile($formInstance->previous_approval_pdf, $request->file('previous_approval_pdf'), 'semester_off', $user->student->roll_no);
                         $formInstance->previous_approval_pdf = $link;
@@ -196,8 +192,7 @@ class StudentSemesterOffFormController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
         $form_ids = $request->input('form_ids', []);
-        $allowedRoles = ['hod', 'phd_coordinator', 'dra', 'dordc', 'director'];
-        if (!in_array($role->role, $allowedRoles)) {
+        if (!in_array($user->current_role->role, self::BULK_APPROVERS, true)) {
             return $this->refuse();
         }
         if (empty($form_ids)) {

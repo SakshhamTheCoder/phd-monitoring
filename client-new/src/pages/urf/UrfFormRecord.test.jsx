@@ -9,7 +9,6 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 // chain up to the reader's own.
 const fetched = [];
 vi.mock('../../components/dashboard/layout', () => ({ default: ({ children }) => <div>{children}</div> }));
-vi.mock('../../components/urf/UrfFilled', () => ({ default: () => <p>What the student filled in</p> }));
 vi.mock('../../context/LoadingContext', () => ({ useLoading: () => ({ setLoading: () => {} }) }));
 vi.mock('../../api/base', () => ({
   customFetch: (url) => {
@@ -47,6 +46,20 @@ const formAt = (stage, role) => ({
   history: [{ timestamp: '2026-09-15T10:00:00+05:30', action: 'Submitted by Asha Rao (the student)', comment: null }],
   awaiting_me: stage === role,
   may_reject: false,
+  // As App\Forms\UrfFormDefinition describes it.
+  view: {
+    version: 1,
+    title: 'URF Application Form',
+    notes: ['URF 2026 · Soil sensors'],
+    notices: [],
+    panels: {
+      student: { wrapped: true, rows: [{ kind: 'grid', items: [{ type: 'text', label: 'Title of Project', value: 'Soil sensors', locked: true }] }] },
+    },
+    step_options: Object.fromEntries(['mentor', 'adordc', 'dordc'].map((step) => [step, {
+      allow_rejection: false,
+      submit_path: '/urf/urf-application/12/decision',
+    }])),
+  },
 });
 
 // The panels name their step from an effect, so the assertions on them wait
@@ -88,7 +101,9 @@ describe('UrfFormRecord', () => {
   it('shows a reader what was filled in and the steps up to their own', async () => {
     await renderPage(formAt('adordc', 'mentor'));
 
-    expect(screen.getByText('What the student filled in')).toBeTruthy();
+    // What the student filed, locked, from the server's description.
+    expect(screen.getByDisplayValue('Soil sensors')).toBeTruthy();
+    expect(screen.getByText('URF 2026 · Soil sensors')).toBeTruthy();
     await screen.findByText('Recommendation of Faculty Mentor:');
     // A mentor does not read the steps above them, as on a PhD form.
     expect(screen.queryByText('Recommendation of ADORDC:')).toBeNull();

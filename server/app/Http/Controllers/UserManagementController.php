@@ -399,8 +399,36 @@ class UserManagementController extends Controller
         return response()->json(['message' => 'Failed to send password reset email'], 500);
     }
 
+    /**
+     * The users sheet's rows as it has them, read by the template's own column
+     * names; a sheet that splits the name gives it back whole.
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return array<int, array<string, mixed>>
+     */
+    public static function userRows(array $rows): array
+    {
+        $cell = fn (array $row, string $key) => (string) ($row[$key] ?? '');
+        return array_map(fn (array $row) => [
+            'full_name' => \App\Support\CsvRow::fallback($cell($row, 'full_name'), \App\Support\CsvRow::words($cell($row, 'first_name'), $cell($row, 'last_name'))),
+            'email' => $cell($row, 'email'),
+            'phone' => $cell($row, 'phone'),
+            'gender' => $cell($row, 'gender'),
+            'role' => $cell($row, 'role'),
+            'available_roles' => $cell($row, 'available_roles'),
+            'status' => \App\Support\CsvRow::fallback($cell($row, 'status'), 'active'),
+            'row_number' => $row['_rowNumber'] ?? $row['row_number'] ?? null,
+        ], $rows);
+    }
+
     public function bulkImport(Request $request)
     {
+        // The page posts the sheet's rows as they are; read here into the
+        // batch the rules below check.
+        if ($request->has('rows')) {
+            $request->merge(['batch_data' => self::userRows((array) $request->input('rows'))]);
+        }
+
         $request->validate([
             'batch_data' => 'required|array',
             'batch_data.*.full_name' => 'nullable|string',

@@ -1,0 +1,34 @@
+{
+  "sheet": [
+    {
+      "_rowNumber": 2,
+      "email": "clerk.one@demo.invalid",
+      "phone": "9800000031",
+      "department_codes": "CSED, CHED",
+      "first_name": "Anita",
+      "last_name": "Desai"
+    },
+    {
+      "_rowNumber": 3,
+      "email": "clerk.two@demo.invalid",
+      "phone": "",
+      "department_codes": "",
+      "first_name": "",
+      "last_name": ""
+    }
+  ],
+  "read": [
+    {
+      "email": "clerk.one@demo.invalid",
+      "phone": "9800000031",
+      "full_name": "Anita Desai",
+      "department_codes": "CSED, CHED"
+    },
+    {
+      "email": "clerk.two@demo.invalid",
+      "phone": "",
+      "full_name": "",
+      "department_codes": ""
+    }
+  ]
+}

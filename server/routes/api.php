@@ -85,7 +85,7 @@ Route::post('/login', function (Request $request) {
     return response()->json([
         'error' => 'Invalid Credentials'
     ], 401);
-});
+})->middleware('throttle:login');
 
 // Clearing the client's storage alone leaves the token usable until it expires.
 Route::post('/logout', function (Request $request) {
@@ -130,7 +130,7 @@ Route::post('/forgot-password', function (Request $request) {
         'success' => false,
         'error' => __($status),
     ], 500);
-});
+})->middleware('throttle:auth-email');
 
 /**
  * Asks for the current password, except where there is none to give: a Google
@@ -212,32 +212,30 @@ Route::post('/reset-password', function (Request $request) {
         'success' => false,
         'error' => __($status)
     ], 500);
-});
+})->middleware('throttle:auth-email');
 
 // available_roles otherwise reaches the client only at login, so a role granted
 // mid-session stays invisible until the user logs out and back in.
-Route::get('/my-roles', function () {
-    $user = Auth::user();
+// Who the user is acting as, what that role may do, and the menus and page
+// access to draw for it (App\Support\Navigation). /me is the same answer; the
+// web reads it for its routes and sidebar, and the app for its own.
+$me = fn () => response()->json(\App\Support\Navigation::me(Auth::user()));
+Route::get('/my-roles', $me)->middleware('auth:sanctum');
+Route::get('/me', $me)->middleware('auth:sanctum');
 
-    // Capabilities of the role being acted as, so the client can hide actions
-    // the API would refuse. The API still refuses them; this only stops the UI
-    // offering a button that cannot work.
-    $capabilities = collect((array) ($user->current_role?->getAttributes() ?? []))
-        ->filter(fn ($value, $key) => str_starts_with($key, 'can_'))
-        ->map(fn ($value) => $value === 'true')
-        ->all();
+// A page described for the reader: header, table, dialogs and imports
+// (App\Pages). The web and the app draw it from this rather than each keeping
+// its own copy.
+// Every list the reader may open without route parameters, at once.
+Route::get('/views', fn () => response()->json(['views' => \App\Pages\Pages::prefetched(Auth::user())]))->middleware('auth:sanctum');
 
-    // Mentoring is a fact about the person, not the role: true only while they
-    // mentor something, so the nav item stays off everyone else's screen.
-    $capabilities['can_read_urf_mentees'] = !empty($capabilities['can_manage_urf'])
-        || (!empty($capabilities['can_read_urf_mentees'])
-            && \App\Models\UrfApplication::mentoredBy($user->faculty?->faculty_code)->exists());
+Route::get('/views/{page}', function (string $page) {
+    $definition = \App\Pages\Pages::find($page);
+    abort_if($definition === null, 404);
+    abort_unless($definition->allows(Auth::user()), 403);
 
-    return response()->json([
-        'available_roles' => $user->availableRoles(),
-        'current_role' => $user->current_role?->role,
-        'capabilities' => $capabilities,
-    ]);
+    // A page opened on a route with parameters (a form type, a scholar) is told them.
+    return response()->json($definition->view(Auth::user(), request()->query()));
 })->middleware('auth:sanctum');
 
 Route::post('/switch-role', function (Request $request) {
@@ -396,27 +394,29 @@ Route::middleware('feature:job_openings')->group(function () {
         Route::get('/{id}', [\App\Http\Controllers\PublicOpeningController::class, 'show']);
         Route::get('/{id}/advertisement', [\App\Http\Controllers\PublicOpeningController::class, 'advertisement']);
         Route::post('/{id}/apply', [\App\Http\Controllers\PublicOpeningController::class, 'apply'])
-            ->middleware('throttle:5,60');
+            ->middleware('throttle:5,60,opening-apply');
     });
     Route::prefix('public/applications')->group(function () {
         // An applicant may refresh this a handful of times while waiting on a decision.
         Route::get('/{token}', [\App\Http\Controllers\PublicOpeningController::class, 'status'])
-            ->middleware('throttle:30,60');
+            ->middleware('throttle:30,60,application-status');
         Route::post('/{token}/verify', [\App\Http\Controllers\PublicOpeningController::class, 'verify'])
-            ->middleware('throttle:10,60');
+            ->middleware('throttle:10,60,application-verify');
     });
 });
 
 // Secure external-expert review (public, token-authenticated, the token is the credential).
+// Each throttle names its own counter: unnamed ones share one per IP, so a
+// reviewer's page and PDF loads used up the five submits before they were made.
 Route::prefix('external-review')->group(function () {
     // A reviewer reloads the page and re-fetches the PDF repeatedly while reading it.
     Route::get('/{token}', [\App\Http\Controllers\ExternalReviewController::class, 'show'])
-        ->middleware('throttle:60,60');
+        ->middleware('throttle:60,60,external-review-show');
     Route::get('/{token}/pdf', [\App\Http\Controllers\ExternalReviewController::class, 'pdf'])
-        ->middleware('throttle:60,60');
+        ->middleware('throttle:60,60,external-review-pdf');
     // The decision is submitted once, so this stays as tight as the sibling /apply route.
     Route::post('/{token}', [\App\Http\Controllers\ExternalReviewController::class, 'submit'])
-        ->middleware('throttle:5,60');
+        ->middleware('throttle:5,60,external-review-submit');
 });
 Route::post('irb-submissions/{id}/resend-external-review', [\App\Http\Controllers\ExternalReviewController::class, 'resend'])
     ->middleware('auth:sanctum');

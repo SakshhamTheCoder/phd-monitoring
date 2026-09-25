@@ -1,0 +1,1288 @@
+[
+    {
+        "name": "new form, scholar editing",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "student",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "complete"
+            ],
+            "gender": "Female",
+            "address": "Hostel J, Patiala",
+            "initial_status": "Full time",
+            "current_status": "full-time",
+            "date_of_irb": "2024-03-12",
+            "previous_extension_date": "NA",
+            "date_of_synopsis": "2025-11-20",
+            "reciept_no": null,
+            "date_of_fee_submission": null,
+            "thesis_pdf": null,
+            "fee_receipt": null,
+            "sci": [
+                {
+                    "id": 41,
+                    "authors": "A. Verma, R. Gupta",
+                    "year": 2025,
+                    "title": "Ruthenium on ceria",
+                    "name": "J. Catal.",
+                    "volume": "12",
+                    "page": "1-9",
+                    "doi_link": null
+                }
+            ],
+            "non_sci": [],
+            "national": [],
+            "international": [],
+            "book": [],
+            "patents": [],
+            "student_publications": {
+                "sci": [],
+                "non_sci": [],
+                "patents": []
+            },
+            "view": {
+                "version": 1,
+                "title": "Thesis submission",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of revised IRB",
+                                        "format": "date",
+                                        "value": "2024-03-12",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Gender",
+                                        "value": "Female",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Address of correspondence",
+                                        "value": "Hostel J, Patiala",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Status of student at time of admission",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Current status",
+                                        "value": "Full Time",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of change of status",
+                                        "value": "NA",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "date",
+                                        "label": "Date of synopsis presentation",
+                                        "key": "date_of_synopsis",
+                                        "required": true,
+                                        "value": "2025-11-20",
+                                        "locked": false
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Receipt number",
+                                        "key": "reciept_no",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    },
+                                    {
+                                        "type": "date",
+                                        "label": "Date of fee submission",
+                                        "key": "date_of_fee_submission",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "publications",
+                                "type": "publications",
+                                "label": "Publications",
+                                "lists": [
+                                    "sci",
+                                    "non_sci",
+                                    "patents",
+                                    "book",
+                                    "national",
+                                    "international"
+                                ],
+                                "library": "student_publications",
+                                "editable": true,
+                                "add_label": "Add publications",
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload thesis PDF",
+                                        "key": "thesis_pdf",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    },
+                                    {
+                                        "type": "file",
+                                        "label": "Upload fee receipt",
+                                        "key": "fee_receipt",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "sent back with files, part time after a change",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "student",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "complete"
+            ],
+            "gender": "Female",
+            "address": "Hostel J, Patiala",
+            "initial_status": "Full time",
+            "current_status": "part-time",
+            "date_of_irb": "2024-03-12",
+            "previous_extension_date": "2025-06-01T10:00:00.000000Z",
+            "date_of_synopsis": "2025-11-20",
+            "reciept_no": "TR-2291",
+            "date_of_fee_submission": "2026-01-10",
+            "thesis_pdf": "thesis/102203456/t.pdf",
+            "fee_receipt": "fee_receipt/102203456/r.pdf",
+            "sci": [
+                {
+                    "id": 41,
+                    "authors": "A. Verma, R. Gupta",
+                    "year": 2025,
+                    "title": "Ruthenium on ceria",
+                    "name": "J. Catal.",
+                    "volume": "12",
+                    "page": "1-9",
+                    "doi_link": null
+                }
+            ],
+            "non_sci": [],
+            "national": [],
+            "international": [],
+            "book": [],
+            "patents": [],
+            "student_publications": {
+                "sci": [],
+                "non_sci": [],
+                "patents": []
+            },
+            "view": {
+                "version": 1,
+                "title": "Thesis submission",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of revised IRB",
+                                        "format": "date",
+                                        "value": "2024-03-12",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Gender",
+                                        "value": "Female",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Address of correspondence",
+                                        "value": "Hostel J, Patiala",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Status of student at time of admission",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Current status",
+                                        "value": "Part Time",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of change of status",
+                                        "format": "date",
+                                        "value": "2025-06-01T10:00:00.000000Z",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "date",
+                                        "label": "Date of synopsis presentation",
+                                        "key": "date_of_synopsis",
+                                        "required": true,
+                                        "value": "2025-11-20",
+                                        "locked": false
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Receipt number",
+                                        "key": "reciept_no",
+                                        "required": true,
+                                        "value": "TR-2291",
+                                        "locked": false
+                                    },
+                                    {
+                                        "type": "date",
+                                        "label": "Date of fee submission",
+                                        "key": "date_of_fee_submission",
+                                        "required": true,
+                                        "value": "2026-01-10",
+                                        "locked": false
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "publications",
+                                "type": "publications",
+                                "label": "Publications",
+                                "lists": [
+                                    "sci",
+                                    "non_sci",
+                                    "patents",
+                                    "book",
+                                    "national",
+                                    "international"
+                                ],
+                                "library": "student_publications",
+                                "editable": true,
+                                "add_label": "Add publications",
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload thesis PDF",
+                                        "key": "thesis_pdf",
+                                        "value": "thesis/102203456/t.pdf",
+                                        "locked": false
+                                    },
+                                    {
+                                        "type": "file",
+                                        "label": "Upload fee receipt",
+                                        "key": "fee_receipt",
+                                        "value": "fee_receipt/102203456/r.pdf",
+                                        "locked": false
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "submitted, scholar reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "supervisor",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "student",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "complete"
+            ],
+            "gender": "Female",
+            "address": "Hostel J, Patiala",
+            "initial_status": "Full time",
+            "current_status": "full-time",
+            "date_of_irb": "2024-03-12",
+            "previous_extension_date": "NA",
+            "date_of_synopsis": "2025-11-20",
+            "reciept_no": "TR-2291",
+            "date_of_fee_submission": "2026-01-10",
+            "thesis_pdf": "thesis/102203456/t.pdf",
+            "fee_receipt": "fee_receipt/102203456/r.pdf",
+            "sci": [
+                {
+                    "id": 41,
+                    "authors": "A. Verma, R. Gupta",
+                    "year": 2025,
+                    "title": "Ruthenium on ceria",
+                    "name": "J. Catal.",
+                    "volume": "12",
+                    "page": "1-9",
+                    "doi_link": null
+                }
+            ],
+            "non_sci": [],
+            "national": [],
+            "international": [],
+            "book": [],
+            "patents": [],
+            "student_publications": null,
+            "view": {
+                "version": 1,
+                "title": "Thesis submission",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of revised IRB",
+                                        "format": "date",
+                                        "value": "2024-03-12",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Gender",
+                                        "value": "Female",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Address of correspondence",
+                                        "value": "Hostel J, Patiala",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Status of student at time of admission",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Current status",
+                                        "value": "Full Time",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of change of status",
+                                        "value": "NA",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "date",
+                                        "label": "Date of synopsis presentation",
+                                        "key": "date_of_synopsis",
+                                        "required": true,
+                                        "value": "2025-11-20",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Receipt number",
+                                        "key": "reciept_no",
+                                        "required": true,
+                                        "value": "TR-2291",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "date",
+                                        "label": "Date of fee submission",
+                                        "key": "date_of_fee_submission",
+                                        "required": true,
+                                        "value": "2026-01-10",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "publications",
+                                "type": "publications",
+                                "label": "Publications",
+                                "lists": [
+                                    "sci",
+                                    "non_sci",
+                                    "patents",
+                                    "book",
+                                    "national",
+                                    "international"
+                                ],
+                                "library": "student_publications",
+                                "editable": false,
+                                "add_label": "Add publications",
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload thesis PDF",
+                                        "key": "thesis_pdf",
+                                        "value": "thesis/102203456/t.pdf",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "file",
+                                        "label": "Upload fee receipt",
+                                        "key": "fee_receipt",
+                                        "value": "fee_receipt/102203456/r.pdf",
+                                        "locked": true
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "submitted, supervisor reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "supervisor",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "faculty",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "complete"
+            ],
+            "gender": "Female",
+            "address": "Hostel J, Patiala",
+            "initial_status": "Full time",
+            "current_status": "full-time",
+            "date_of_irb": "2024-03-12",
+            "previous_extension_date": "NA",
+            "date_of_synopsis": "2025-11-20",
+            "reciept_no": "TR-2291",
+            "date_of_fee_submission": "2026-01-10",
+            "thesis_pdf": "thesis/102203456/t.pdf",
+            "fee_receipt": "fee_receipt/102203456/r.pdf",
+            "sci": [
+                {
+                    "id": 41,
+                    "authors": "A. Verma, R. Gupta",
+                    "year": 2025,
+                    "title": "Ruthenium on ceria",
+                    "name": "J. Catal.",
+                    "volume": "12",
+                    "page": "1-9",
+                    "doi_link": null
+                }
+            ],
+            "non_sci": [],
+            "national": [],
+            "international": [],
+            "book": [],
+            "patents": [],
+            "student_publications": null,
+            "view": {
+                "version": 1,
+                "title": "Thesis submission",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of revised IRB",
+                                        "format": "date",
+                                        "value": "2024-03-12",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Gender",
+                                        "value": "Female",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Address of correspondence",
+                                        "value": "Hostel J, Patiala",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Status of student at time of admission",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Current status",
+                                        "value": "Full Time",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of change of status",
+                                        "value": "NA",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "date",
+                                        "label": "Date of synopsis presentation",
+                                        "key": "date_of_synopsis",
+                                        "required": true,
+                                        "value": "2025-11-20",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Receipt number",
+                                        "key": "reciept_no",
+                                        "required": true,
+                                        "value": "TR-2291",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "date",
+                                        "label": "Date of fee submission",
+                                        "key": "date_of_fee_submission",
+                                        "required": true,
+                                        "value": "2026-01-10",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "publications",
+                                "type": "publications",
+                                "label": "Publications",
+                                "lists": [
+                                    "sci",
+                                    "non_sci",
+                                    "patents",
+                                    "book",
+                                    "national",
+                                    "international"
+                                ],
+                                "library": "student_publications",
+                                "editable": false,
+                                "add_label": "Add publications",
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload thesis PDF",
+                                        "key": "thesis_pdf",
+                                        "value": "thesis/102203456/t.pdf",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "file",
+                                        "label": "Upload fee receipt",
+                                        "key": "fee_receipt",
+                                        "value": "fee_receipt/102203456/r.pdf",
+                                        "locked": true
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "unsubmitted, admin reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "admin",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "complete"
+            ],
+            "gender": "Female",
+            "address": "Hostel J, Patiala",
+            "initial_status": "Full time",
+            "current_status": "full-time",
+            "date_of_irb": "2024-03-12",
+            "previous_extension_date": "NA",
+            "date_of_synopsis": "2025-11-20",
+            "reciept_no": null,
+            "date_of_fee_submission": null,
+            "thesis_pdf": null,
+            "fee_receipt": null,
+            "sci": [
+                {
+                    "id": 41,
+                    "authors": "A. Verma, R. Gupta",
+                    "year": 2025,
+                    "title": "Ruthenium on ceria",
+                    "name": "J. Catal.",
+                    "volume": "12",
+                    "page": "1-9",
+                    "doi_link": null
+                }
+            ],
+            "non_sci": [],
+            "national": [],
+            "international": [],
+            "book": [],
+            "patents": [],
+            "student_publications": null,
+            "view": {
+                "version": 1,
+                "title": "Thesis submission",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of revised IRB",
+                                        "format": "date",
+                                        "value": "2024-03-12",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Gender",
+                                        "value": "Female",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Address of correspondence",
+                                        "value": "Hostel J, Patiala",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Status of student at time of admission",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Current status",
+                                        "value": "Full Time",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of change of status",
+                                        "value": "NA",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "date",
+                                        "label": "Date of synopsis presentation",
+                                        "key": "date_of_synopsis",
+                                        "required": true,
+                                        "value": "2025-11-20",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Receipt number",
+                                        "key": "reciept_no",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "date",
+                                        "label": "Date of fee submission",
+                                        "key": "date_of_fee_submission",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "publications",
+                                "type": "publications",
+                                "label": "Publications",
+                                "lists": [
+                                    "sci",
+                                    "non_sci",
+                                    "patents",
+                                    "book",
+                                    "national",
+                                    "international"
+                                ],
+                                "library": "student_publications",
+                                "editable": false,
+                                "add_label": "Add publications",
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload thesis PDF",
+                                        "key": "thesis_pdf",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "file",
+                                        "label": "Upload fee receipt",
+                                        "key": "fee_receipt",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+]

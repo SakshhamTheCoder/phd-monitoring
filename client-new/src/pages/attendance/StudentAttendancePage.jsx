@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import Page from '../../components/page/Page';
 import Panel from '../../components/panel/Panel';
@@ -6,69 +6,35 @@ import Tabs from '../../components/tabs/Tabs';
 import CustomButton from '../../components/forms/fields/CustomButton';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import StudentLeave from '../../components/forms/studentLeave/StudentLeave';
-import LeaveBalancePanel from './LeaveBalancePanel';
 import AttendanceSummary from './AttendanceSummary';
-import { baseURL } from '../../api/urls';
-import { customFetch } from '../../api/base';
 import { apiLeaveCreate, apiLeaveLoad, apiLeaveDelete } from '../../api/leave';
+import { useView } from '../../api/views';
 import { badgeClass } from '../../data/badges';
-import { parseAttendanceQuery, localDateString, localMonthKey } from '../../utils/leaveBalance';
-import { EMPTY_VALUE } from '../../utils/timeParse';
+import { parseAttendanceQuery } from '../../utils/leaveBalance';
 import './AttendancePage.css';
 
-const DAY_PART_LABEL = { full: 'Full day', first_half: 'First half', second_half: 'Second half' };
+const FAILED = 'Could not load your attendance records. Please try again later.';
 
 /**
- * A scholar's own attendance: Monthly and Sessions here, Leaves in Task 11.
- * Unlike AttendancePage (a clerk marking many students across departments),
- * this page has exactly one student: the signed-in scholar.
+ * A scholar's own attendance: by month, by session, and their leave. Unlike
+ * AttendancePage (a clerk marking many students across departments), this
+ * page has exactly one student: the signed-in scholar. Every figure and label
+ * is the server's (App\Pages\MyAttendancePage); applying for leave and
+ * reading an application are this page's own.
  */
 const StudentAttendancePage = () => {
   const location = useLocation();
   const opened = useMemo(() => parseAttendanceQuery(location.search), [location.search]);
   const [activeTab, setActiveTab] = useState(opened.tab === 'leaves' ? 'leaves' : 'monthly');
-  const [data, setData] = useState(null);
-  // Starts true: there is always at least the roll-number lookup in flight
-  // between mount and the first render, and the tables must not read as
-  // "no records" during that window.
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [rollNo, setRollNo] = useState(null);
+  const { view, failed, reload } = useView('my-attendance', {}, { kept: false });
+  // The tables must not read as "no records" before the first answer.
+  const loading = !view && !failed;
+  const error = failed ? FAILED : view?.error ?? null;
+  // What the page shows once the records could be read.
+  const data = view && !view.error ? view : null;
   const [openForm, setOpenForm] = useState(null); // full fullForm() json, or null
   const [applying, setApplying] = useState(false);
   const highlightRef = useRef(null);
-
-  // localStorage holds no roll_no for a scholar. GET /students/me answers with
-  // the caller's own record, the same endpoint ProfileCard reads.
-  useEffect(() => {
-    customFetch(`${baseURL}/students/me`, 'GET', {}, true, false).then((res) => {
-      const rn = res?.success ? res.response.profile?.roll_no ?? null : null;
-      if (rn) {
-        setRollNo(rn);
-      } else {
-        // Nothing will fetch attendance without a roll_no, so this is a dead
-        // end, not just "still loading" — say so rather than falling through
-        // to an empty-records table.
-        setError('Could not load your student record. Please try again later.');
-        setLoading(false);
-      }
-    });
-  }, []);
-
-  const loadData = useCallback(() => {
-    if (!rollNo) return;
-    setLoading(true);
-    customFetch(`${baseURL}/clerks/attendance/student/${rollNo}`, 'GET', {}, true)
-      .then((res) => {
-        if (res?.success) {
-          setData(res.response);
-          setError(null);
-        } else setError('Could not load your attendance records. Please try again later.');
-      })
-      .finally(() => setLoading(false));
-  }, [rollNo]);
-
-  useEffect(() => { loadData(); }, [loadData]);
 
   // Scroll the row a notification link named (?tab=leaves&leave=42) into view
   // once the leaves have actually loaded — the ref only attaches once that
@@ -101,26 +67,11 @@ const StudentAttendancePage = () => {
   // threading a callback through StudentLeave/Student.
   const handleCloseForm = () => {
     setOpenForm(null);
-    loadData();
+    reload();
   };
 
-  // Monthly: group the scholar's own records by local YYYY-MM and count each
-  // bucket. Records come back date-cast by Laravel under APP_TIMEZONE=Asia/Kolkata,
-  // so a record stored as "2024-05-01" serializes as "2024-04-30T18:30:00.000000Z" —
-  // localMonthKey (see client-new/src/utils/leaveBalance.js) undoes that shift
-  // instead of slicing the raw string, which would file it under April.
-  const months = useMemo(() => {
-    const out = {};
-    for (const r of (data?.records || [])) {
-      const key = localMonthKey(r.date);
-      out[key] ??= { month: key, present: 0, absent: 0, total: 0 };
-      if (r.status === 'present' || r.status === 'absent') out[key][r.status] += 1;
-      out[key].total += 1;
-    }
-    return Object.values(out).sort((a, b) => b.month.localeCompare(a.month));
-  }, [data]);
-
-  const records = data?.records || [];
+  const months = data?.months || [];
+  const records = data?.sessions || [];
   const leaveRows = data?.leaves || [];
 
   // Any application can be opened: a draft to finish it, a decided one to read
@@ -135,7 +86,7 @@ const StudentAttendancePage = () => {
   const deleteDraft = async (id) => {
     if (!window.confirm('Delete this draft application?')) return;
     const res = await apiLeaveDelete(id);
-    if (res.success) loadData();
+    if (res.success) reload();
   };
 
   return (
@@ -163,18 +114,7 @@ const StudentAttendancePage = () => {
         />
       }
     >
-      {data && (
-        <AttendanceSummary
-          title="Summary"
-          caption={`${data.current_month?.label ? `${data.current_month.label} · ` : ''}All-time figures for ${data.student?.name || 'you'}`}
-          stats={[
-            { label: 'Sessions', value: data.summary.total },
-            { label: 'Present', tone: 'present', value: data.summary.present },
-            { label: 'Absent', tone: 'absent', value: data.summary.absent },
-            { label: 'Attendance', value: data.summary.percent != null ? `${data.summary.percent}%` : EMPTY_VALUE },
-          ]}
-        />
-      )}
+      {data && <AttendanceSummary title={data.summary.title} caption={data.summary.caption} stats={data.summary.stats} />}
 
       {activeTab === 'monthly' && (
         <Panel flush title="By month">
@@ -196,11 +136,7 @@ const StudentAttendancePage = () => {
                     <td className="attendance-status-present">{m.present}</td>
                     <td className="attendance-status-absent">{m.absent}</td>
                     <td>{m.total}</td>
-                    {/* A bucket only exists here when a record created it, so m.total is
-                        always >= 1; unlike the backend's AttendanceSummary (which can see
-                        a genuinely zero-session set and prints '-' for it), there is no
-                        zero-session case to guard against on this table. */}
-                    <td>{Math.round((m.present / m.total) * 100)}%</td>
+                    <td>{m.percent}</td>
                   </tr>
                 ))}
               </tbody>
@@ -224,15 +160,12 @@ const StudentAttendancePage = () => {
                 ) : records.length === 0 ? (
                   <tr><td colSpan={3} className="no-data-cell">No sessions recorded yet.</td></tr>
                 ) : records.map((r) => (
-                  <tr key={`${r.date}-${r.lecture_id}`}>
-                    {/* localDateString undoes the same UTC-midnight shift as localMonthKey
-                        above: r.date is not a plain YYYY-MM-DD string, it's a Laravel
-                        date-cast timestamp (see the comment on the months useMemo). */}
-                    <td>{localDateString(r.date)}</td>
-                    <td>{r.lecture_id === 0 ? 'Full day' : `Session ${r.lecture_id}`}</td>
+                  <tr key={r.key}>
+                    <td>{r.date}</td>
+                    <td>{r.session}</td>
                     <td>
-                      <span className={`badge ${r.status === 'present' ? 'badge--success' : 'badge--danger'}`}>
-                        {r.status === 'present' ? 'Present' : 'Absent'}
+                      <span className={`badge ${r.present ? 'badge--success' : 'badge--danger'}`}>
+                        {r.status}
                       </span>
                     </td>
                   </tr>
@@ -245,7 +178,16 @@ const StudentAttendancePage = () => {
 
       {activeTab === 'leaves' && (
         <>
-          <LeaveBalancePanel balance={data?.balance} />
+          {data?.balance && (
+            <AttendanceSummary
+              title={data.balance.title}
+              caption={data.balance.caption ?? undefined}
+              stats={data.balance.stats.map((stat) => ({
+                ...stat,
+                note: <span className={`badge badge--${stat.note.tone}`}>{stat.note.text}</span>,
+              }))}
+            />
+          )}
 
           <Panel flush title="Leave applications">
             <div className="data-table-wrap">
@@ -274,14 +216,12 @@ const StudentAttendancePage = () => {
                         }
                       }}
                     >
-                      <td className="attendance-capitalize">{l.leave_type || EMPTY_VALUE}</td>
-                      {/* l.from_date/to_date are Laravel date-cast timestamps, same as
-                          r.date above; localDateString undoes the UTC-midnight shift. */}
-                      <td>{localDateString(l.from_date) || EMPTY_VALUE}</td>
-                      <td>{localDateString(l.to_date) || EMPTY_VALUE}</td>
-                      <td>{DAY_PART_LABEL[l.day_part] || l.day_part || EMPTY_VALUE}</td>
+                      <td className="attendance-capitalize">{l.type}</td>
+                      <td>{l.from}</td>
+                      <td>{l.to}</td>
+                      <td>{l.part}</td>
                       <td><span className={badgeClass(l.status)}>{l.status}</span></td>
-                      <td>{l.hod_comments || EMPTY_VALUE}</td>
+                      <td>{l.hod_comments}</td>
                       <td>
                         {l.status === 'draft' && (
                           <button

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Forms\PresentationDefinition;
 use App\Http\Controllers\Traits\FilterLogicTrait;
+use App\Support\CsvRow;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Traits\GeneralFormHandler;
 use App\Http\Controllers\Traits\GeneralFormList;
@@ -23,6 +25,9 @@ use Carbon\Carbon;
 
 class PresentationController extends Controller
 {
+    /** Who may approve several of these at once; the list page offers it to the same. */
+    public const BULK_APPROVERS = ['hod', 'dordc', 'doctoral'];
+
     use GeneralFormHandler;
     use GeneralFormSubmitter;
     use GeneralFormList;
@@ -384,8 +389,32 @@ class PresentationController extends Controller
      * and a semester the scholar already has a presentation for is left to its
      * own workflow, so re-running the same file changes nothing.
      */
+    /**
+     * The progress sheet's rows as it has them, read by either wording of each
+     * column. A row naming no scholar or semester is left out.
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return array<int, array<string, mixed>>
+     */
+    public static function progressRows(array $rows): array
+    {
+        return array_values(array_filter(array_map(fn (array $row) => [
+            'roll_no' => CsvRow::column($row, 'Registration Number', 'roll_no'),
+            'semester' => CsvRow::column($row, 'Progress for AY', 'Academic Year', 'semester'),
+            'date' => CsvRow::column($row, 'Date of progress', 'Date', 'date'),
+            'total_progress' => CsvRow::column($row, 'Total Progress %', 'Total Progress', 'total_progress'),
+            'row_number' => $row['_rowNumber'] ?? $row['row_number'] ?? null,
+        ], $rows), fn (array $row) => $row['roll_no'] !== '' && $row['semester'] !== ''));
+    }
+
     public function importProgress(Request $request)
     {
+        // The page posts the sheet's rows as they are; read here into the rows
+        // the rules below check.
+        if ($request->has('rows') && collect($request->input('rows'))->contains(fn ($row) => array_key_exists('_rowNumber', (array) $row))) {
+            $request->merge(['rows' => self::progressRows((array) $request->input('rows'))]);
+        }
+
         $user = Auth::user();
         $role = $user->current_role->role;
 
@@ -499,6 +528,11 @@ class PresentationController extends Controller
         return response()->json([
             'success' => true,
             'message' => "Imported {$imported} evaluations, skipped {$skipped}",
+            // What the page tells the reader, in order.
+            'messages' => [
+                ['tone' => 'success', 'text' => "{$imported} evaluations imported, {$skipped} skipped"],
+                ...array_map(fn ($error) => ['tone' => 'warn', 'text' => $error], $errors),
+            ],
             'data' => [
                 'success_count' => $imported,
                 'skipped_count' => $skipped,
@@ -837,8 +871,7 @@ class PresentationController extends Controller
     {
         $user = Auth::user();
         $role = $user->current_role;
-        $allowedRoles = ['hod', 'dordc', 'doctoral'];
-        if (!in_array($role->role, $allowedRoles)) {
+        if (!in_array($user->current_role->role, self::BULK_APPROVERS, true)) {
             return $this->refuse();
         }
         $request->validate([
@@ -960,11 +993,8 @@ class PresentationController extends Controller
             'student',
             'faculty',
             function ($formInstance) use ($request, $user) {
-                $request->validate([
-                    'teaching_work' => 'required| in:UG,PG,Both,None',
-                    // A resubmission after a send-back keeps the stored PDF unless a new one comes.
-                    'presentation_pdf' => ($formInstance->presentation_pdf ? 'nullable' : 'required').'|file|mimes:pdf|max:20480',
-                ]);
+                // A resubmission keeps the stored PDF unless a new one comes.
+                $request->validate((new PresentationDefinition)->rules('student', $formInstance->fullForm($user)));
 
 
                 $formInstance->teaching_work = $request->teaching_work;

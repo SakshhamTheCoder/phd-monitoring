@@ -1,0 +1,3596 @@
+[
+    {
+        "name": "new form, scholar editing",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "supervisor": false,
+                "doctoral": false,
+                "phd_coordinator": false,
+                "hod": false,
+                "dordc": false
+            },
+            "approvals": {
+                "supervisor": false,
+                "doctoral": false,
+                "phd_coordinator": false,
+                "hod": false,
+                "dordc": false
+            },
+            "comments": {
+                "supervisor": null,
+                "doctoral": null,
+                "phd_coordinator": null
+            },
+            "role": "student",
+            "steps": [
+                "student",
+                "faculty",
+                "doctoral",
+                "phd_coordinator",
+                "hod",
+                "dordc",
+                "complete"
+            ],
+            "round": 1,
+            "date_of_irb": "2024-03-12",
+            "current_status": "Full time",
+            "address": "Hostel J, Patiala",
+            "objectives": [
+                "Screen ruthenium catalysts",
+                "Model reaction kinetics"
+            ],
+            "revised_objectives": [],
+            "synopsis_pdf": null,
+            "viva_minutes_pdf": null,
+            "current_progress": null,
+            "total_progress": null,
+            "previous_progress": 55,
+            "checklist_option_id": null,
+            "checklist_options": [],
+            "checklist_choice": null,
+            "sci": [
+                {
+                    "id": 41,
+                    "authors": "A. Verma, R. Gupta",
+                    "year": 2025,
+                    "title": "Ruthenium on ceria",
+                    "name": "J. Catal.",
+                    "volume": "12",
+                    "page": "1-9",
+                    "doi_link": null
+                }
+            ],
+            "non_sci": [],
+            "national": [],
+            "international": [],
+            "book": [],
+            "patents": [],
+            "student_publications": {
+                "sci": [
+                    {
+                        "id": 42,
+                        "authors": "A. Verma",
+                        "year": 2026,
+                        "title": "Kinetics of ammonia",
+                        "name": "Chem. Eng. J.",
+                        "volume": "3",
+                        "page": "10-20",
+                        "doi_link": null
+                    }
+                ],
+                "non_sci": [],
+                "patents": []
+            },
+            "view": {
+                "version": 1,
+                "title": "Synopsis submission",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of revised IRB",
+                                        "format": "date",
+                                        "value": "2024-03-12",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Current status",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Address of correspondence",
+                                        "value": "Hostel J, Patiala",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "Objectives of research",
+                                        "columns": [
+                                            {
+                                                "key": "objective",
+                                                "title": "Objective"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "objective": "Screen ruthenium catalysts"
+                                            },
+                                            {
+                                                "objective": "Model reaction kinetics"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3
+                            },
+                            {
+                                "kind": "publications",
+                                "type": "publications",
+                                "label": "Publications",
+                                "lists": [
+                                    "sci",
+                                    "non_sci",
+                                    "patents",
+                                    "book",
+                                    "national",
+                                    "international"
+                                ],
+                                "library": "student_publications",
+                                "editable": true,
+                                "add_label": "Add publications",
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload PDF",
+                                        "key": "synopsis_pdf",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "value": null,
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous quantum progress percentage",
+                                        "value": 55,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Increase in quantum progress percentage",
+                                        "key": "current_progress",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "notice",
+                                        "label": "",
+                                        "text": "Supervisor has marked progress of student more than 20%",
+                                        "tone": "warning",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    },
+                                    {
+                                        "key": "current_progress",
+                                        "test": "above",
+                                        "than": 20
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Total quantum progress percentage",
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "submitted, scholar reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "supervisor",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "supervisor": false,
+                "doctoral": false,
+                "phd_coordinator": false,
+                "hod": false,
+                "dordc": false
+            },
+            "approvals": {
+                "supervisor": false,
+                "doctoral": false,
+                "phd_coordinator": false,
+                "hod": false,
+                "dordc": false
+            },
+            "comments": {
+                "supervisor": null,
+                "doctoral": null,
+                "phd_coordinator": null
+            },
+            "role": "student",
+            "steps": [
+                "student",
+                "faculty",
+                "doctoral",
+                "phd_coordinator",
+                "hod",
+                "dordc",
+                "complete"
+            ],
+            "round": 1,
+            "date_of_irb": "2024-03-12",
+            "current_status": "Full time",
+            "address": "Hostel J, Patiala",
+            "objectives": [
+                "Screen ruthenium catalysts",
+                "Model reaction kinetics"
+            ],
+            "revised_objectives": [],
+            "synopsis_pdf": "synopsis/102203456/s.pdf",
+            "viva_minutes_pdf": null,
+            "current_progress": null,
+            "total_progress": null,
+            "previous_progress": 55,
+            "checklist_option_id": null,
+            "checklist_options": [],
+            "checklist_choice": null,
+            "sci": [
+                {
+                    "id": 41,
+                    "authors": "A. Verma, R. Gupta",
+                    "year": 2025,
+                    "title": "Ruthenium on ceria",
+                    "name": "J. Catal.",
+                    "volume": "12",
+                    "page": "1-9",
+                    "doi_link": null
+                }
+            ],
+            "non_sci": [],
+            "national": [],
+            "international": [],
+            "book": [],
+            "patents": [],
+            "student_publications": null,
+            "view": {
+                "version": 1,
+                "title": "Synopsis submission",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of revised IRB",
+                                        "format": "date",
+                                        "value": "2024-03-12",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Current status",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Address of correspondence",
+                                        "value": "Hostel J, Patiala",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "Objectives of research",
+                                        "columns": [
+                                            {
+                                                "key": "objective",
+                                                "title": "Objective"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "objective": "Screen ruthenium catalysts"
+                                            },
+                                            {
+                                                "objective": "Model reaction kinetics"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3
+                            },
+                            {
+                                "kind": "publications",
+                                "type": "publications",
+                                "label": "Publications",
+                                "lists": [
+                                    "sci",
+                                    "non_sci",
+                                    "patents",
+                                    "book",
+                                    "national",
+                                    "international"
+                                ],
+                                "library": "student_publications",
+                                "editable": false,
+                                "add_label": "Add publications",
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload PDF",
+                                        "key": "synopsis_pdf",
+                                        "value": "synopsis/102203456/s.pdf",
+                                        "locked": true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "value": null,
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous quantum progress percentage",
+                                        "value": 55,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Increase in quantum progress percentage",
+                                        "key": "current_progress",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "notice",
+                                        "label": "",
+                                        "text": "Supervisor has marked progress of student more than 20%",
+                                        "tone": "warning",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    },
+                                    {
+                                        "key": "current_progress",
+                                        "test": "above",
+                                        "than": 20
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Total quantum progress percentage",
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "at the supervisor, supervisor scoring",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "supervisor",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "supervisor": false,
+                "doctoral": false,
+                "phd_coordinator": false,
+                "hod": false,
+                "dordc": false
+            },
+            "approvals": {
+                "supervisor": false,
+                "doctoral": false,
+                "phd_coordinator": false,
+                "hod": false,
+                "dordc": false
+            },
+            "comments": {
+                "supervisor": null,
+                "doctoral": null,
+                "phd_coordinator": null
+            },
+            "role": "faculty",
+            "steps": [
+                "student",
+                "faculty",
+                "doctoral",
+                "phd_coordinator",
+                "hod",
+                "dordc",
+                "complete"
+            ],
+            "round": 1,
+            "date_of_irb": "2024-03-12",
+            "current_status": "Full time",
+            "address": "Hostel J, Patiala",
+            "objectives": [
+                "Screen ruthenium catalysts",
+                "Model reaction kinetics"
+            ],
+            "revised_objectives": [],
+            "synopsis_pdf": "synopsis/102203456/s.pdf",
+            "viva_minutes_pdf": null,
+            "current_progress": null,
+            "total_progress": null,
+            "previous_progress": 55,
+            "checklist_option_id": null,
+            "checklist_options": [],
+            "checklist_choice": null,
+            "sci": [
+                {
+                    "id": 41,
+                    "authors": "A. Verma, R. Gupta",
+                    "year": 2025,
+                    "title": "Ruthenium on ceria",
+                    "name": "J. Catal.",
+                    "volume": "12",
+                    "page": "1-9",
+                    "doi_link": null
+                }
+            ],
+            "non_sci": [],
+            "national": [],
+            "international": [],
+            "book": [],
+            "patents": [],
+            "student_publications": null,
+            "view": {
+                "version": 1,
+                "title": "Synopsis submission",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of revised IRB",
+                                        "format": "date",
+                                        "value": "2024-03-12",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Current status",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Address of correspondence",
+                                        "value": "Hostel J, Patiala",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "Objectives of research",
+                                        "columns": [
+                                            {
+                                                "key": "objective",
+                                                "title": "Objective"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "objective": "Screen ruthenium catalysts"
+                                            },
+                                            {
+                                                "objective": "Model reaction kinetics"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3
+                            },
+                            {
+                                "kind": "publications",
+                                "type": "publications",
+                                "label": "Publications",
+                                "lists": [
+                                    "sci",
+                                    "non_sci",
+                                    "patents",
+                                    "book",
+                                    "national",
+                                    "international"
+                                ],
+                                "library": "student_publications",
+                                "editable": false,
+                                "add_label": "Add publications",
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload PDF",
+                                        "key": "synopsis_pdf",
+                                        "value": "synopsis/102203456/s.pdf",
+                                        "locked": true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "value": null,
+                                "locked": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous quantum progress percentage",
+                                        "value": 55,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Increase in quantum progress percentage",
+                                        "key": "current_progress",
+                                        "required": true,
+                                        "max": 45,
+                                        "max_message": "Total progress cannot exceed 100%",
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "notice",
+                                        "label": "",
+                                        "text": "Supervisor has marked progress of student more than 20%",
+                                        "tone": "warning",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    },
+                                    {
+                                        "key": "current_progress",
+                                        "test": "above",
+                                        "than": 20
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Total quantum progress percentage",
+                                        "total_of": {
+                                            "base": 55,
+                                            "key": "current_progress"
+                                        },
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit",
+                                        "requires": [
+                                            {
+                                                "keys": [
+                                                    "approval"
+                                                ],
+                                                "message": "Choose Recommend or Not Recommend first.",
+                                                "check": "set"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "at the supervisor, with categories to declare",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "supervisor",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "supervisor": false,
+                "doctoral": false,
+                "phd_coordinator": false,
+                "hod": false,
+                "dordc": false
+            },
+            "approvals": {
+                "supervisor": false,
+                "doctoral": false,
+                "phd_coordinator": false,
+                "hod": false,
+                "dordc": false
+            },
+            "comments": {
+                "supervisor": null,
+                "doctoral": null,
+                "phd_coordinator": null
+            },
+            "role": "faculty",
+            "steps": [
+                "student",
+                "faculty",
+                "doctoral",
+                "phd_coordinator",
+                "hod",
+                "dordc",
+                "complete"
+            ],
+            "round": 1,
+            "date_of_irb": "2024-03-12",
+            "current_status": "Full time",
+            "address": "Hostel J, Patiala",
+            "objectives": [
+                "Screen ruthenium catalysts",
+                "Model reaction kinetics"
+            ],
+            "revised_objectives": [],
+            "synopsis_pdf": "synopsis/102203456/s.pdf",
+            "viva_minutes_pdf": null,
+            "current_progress": null,
+            "total_progress": null,
+            "previous_progress": 55,
+            "checklist_option_id": null,
+            "checklist_options": [
+                {
+                    "id": 1,
+                    "label": "Two SCI journal papers"
+                },
+                {
+                    "id": 2,
+                    "label": "One SCI paper and one patent"
+                }
+            ],
+            "checklist_choice": null,
+            "sci": [
+                {
+                    "id": 41,
+                    "authors": "A. Verma, R. Gupta",
+                    "year": 2025,
+                    "title": "Ruthenium on ceria",
+                    "name": "J. Catal.",
+                    "volume": "12",
+                    "page": "1-9",
+                    "doi_link": null
+                }
+            ],
+            "non_sci": [],
+            "national": [],
+            "international": [],
+            "book": [],
+            "patents": [],
+            "student_publications": null,
+            "view": {
+                "version": 1,
+                "title": "Synopsis submission",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of revised IRB",
+                                        "format": "date",
+                                        "value": "2024-03-12",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Current status",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Address of correspondence",
+                                        "value": "Hostel J, Patiala",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "Objectives of research",
+                                        "columns": [
+                                            {
+                                                "key": "objective",
+                                                "title": "Objective"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "objective": "Screen ruthenium catalysts"
+                                            },
+                                            {
+                                                "objective": "Model reaction kinetics"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3
+                            },
+                            {
+                                "kind": "publications",
+                                "type": "publications",
+                                "label": "Publications",
+                                "lists": [
+                                    "sci",
+                                    "non_sci",
+                                    "patents",
+                                    "book",
+                                    "national",
+                                    "international"
+                                ],
+                                "library": "student_publications",
+                                "editable": false,
+                                "add_label": "Add publications",
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload PDF",
+                                        "key": "synopsis_pdf",
+                                        "value": "synopsis/102203456/s.pdf",
+                                        "locked": true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "value": null,
+                                "locked": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous quantum progress percentage",
+                                        "value": 55,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Increase in quantum progress percentage",
+                                        "key": "current_progress",
+                                        "required": true,
+                                        "max": 45,
+                                        "max_message": "Total progress cannot exceed 100%",
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "notice",
+                                        "label": "",
+                                        "text": "Supervisor has marked progress of student more than 20%",
+                                        "tone": "warning",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    },
+                                    {
+                                        "key": "current_progress",
+                                        "test": "above",
+                                        "than": 20
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Total quantum progress percentage",
+                                        "total_of": {
+                                            "base": 55,
+                                            "key": "current_progress"
+                                        },
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "radio",
+                                        "label": "",
+                                        "name": "synopsis-checklist",
+                                        "options": [
+                                            {
+                                                "value": 1,
+                                                "title": "Two SCI journal papers"
+                                            },
+                                            {
+                                                "value": 2,
+                                                "title": "One SCI paper and one patent"
+                                            }
+                                        ],
+                                        "key": "checklist_option_id",
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2,
+                                "label": "Publication category met",
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit",
+                                        "requires": [
+                                            {
+                                                "keys": [
+                                                    "approval"
+                                                ],
+                                                "message": "Choose Recommend or Not Recommend first.",
+                                                "check": "set"
+                                            },
+                                            {
+                                                "keys": [
+                                                    "checklist_option_id"
+                                                ],
+                                                "when": "approval",
+                                                "message": "Choose the publication category the scholar has met.",
+                                                "check": "truthy"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "scored above 20%, HOD reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "doctoral",
+            "maximum_step": 2,
+            "locks": {
+                "student": true,
+                "supervisor": true,
+                "doctoral": false,
+                "phd_coordinator": false,
+                "hod": false,
+                "dordc": false
+            },
+            "approvals": {
+                "supervisor": true,
+                "doctoral": false,
+                "phd_coordinator": false
+            },
+            "comments": {
+                "supervisor": "Good progress."
+            },
+            "role": "hod",
+            "steps": [
+                "student",
+                "faculty",
+                "doctoral",
+                "phd_coordinator",
+                "hod",
+                "dordc",
+                "complete"
+            ],
+            "round": 1,
+            "date_of_irb": "2024-03-12",
+            "current_status": "Full time",
+            "address": "Hostel J, Patiala",
+            "objectives": [
+                "Screen ruthenium catalysts",
+                "Model reaction kinetics"
+            ],
+            "revised_objectives": [],
+            "synopsis_pdf": "synopsis/102203456/s.pdf",
+            "viva_minutes_pdf": null,
+            "current_progress": 25,
+            "total_progress": 80,
+            "previous_progress": 55,
+            "checklist_option_id": 1,
+            "checklist_options": [
+                {
+                    "id": 1,
+                    "label": "Two SCI journal papers"
+                },
+                {
+                    "id": 2,
+                    "label": "One SCI paper and one patent"
+                }
+            ],
+            "checklist_choice": "Two SCI journal papers",
+            "sci": [
+                {
+                    "id": 41,
+                    "authors": "A. Verma, R. Gupta",
+                    "year": 2025,
+                    "title": "Ruthenium on ceria",
+                    "name": "J. Catal.",
+                    "volume": "12",
+                    "page": "1-9",
+                    "doi_link": null
+                }
+            ],
+            "non_sci": [],
+            "national": [],
+            "international": [],
+            "book": [],
+            "patents": [],
+            "student_publications": null,
+            "view": {
+                "version": 1,
+                "title": "Synopsis submission",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of revised IRB",
+                                        "format": "date",
+                                        "value": "2024-03-12",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Current status",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Address of correspondence",
+                                        "value": "Hostel J, Patiala",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "Objectives of research",
+                                        "columns": [
+                                            {
+                                                "key": "objective",
+                                                "title": "Objective"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "objective": "Screen ruthenium catalysts"
+                                            },
+                                            {
+                                                "objective": "Model reaction kinetics"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3
+                            },
+                            {
+                                "kind": "publications",
+                                "type": "publications",
+                                "label": "Publications",
+                                "lists": [
+                                    "sci",
+                                    "non_sci",
+                                    "patents",
+                                    "book",
+                                    "national",
+                                    "international"
+                                ],
+                                "library": "student_publications",
+                                "editable": false,
+                                "add_label": "Add publications",
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Declared by the supervisor",
+                                        "value": "Two SCI journal papers",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "label": "Publication category"
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload PDF",
+                                        "key": "synopsis_pdf",
+                                        "value": "synopsis/102203456/s.pdf",
+                                        "locked": true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "value": true,
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous quantum progress percentage",
+                                        "value": 55,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Increase in quantum progress percentage",
+                                        "key": "current_progress",
+                                        "required": true,
+                                        "value": 25,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "notice",
+                                        "label": "",
+                                        "text": "Supervisor has marked progress of student more than 20%",
+                                        "tone": "warning",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    },
+                                    {
+                                        "key": "current_progress",
+                                        "test": "above",
+                                        "than": 20
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Total quantum progress percentage",
+                                        "value": 80,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Declared",
+                                        "value": "Two SCI journal papers",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "label": "Publication category met",
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "scored, scholar reading the category",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "doctoral",
+            "maximum_step": 2,
+            "locks": {
+                "student": true,
+                "supervisor": true,
+                "doctoral": false,
+                "phd_coordinator": false,
+                "hod": false,
+                "dordc": false
+            },
+            "approvals": {
+                "supervisor": true,
+                "doctoral": false,
+                "phd_coordinator": false
+            },
+            "comments": {
+                "supervisor": "Good progress."
+            },
+            "role": "student",
+            "steps": [
+                "student",
+                "faculty",
+                "doctoral",
+                "phd_coordinator",
+                "hod",
+                "dordc",
+                "complete"
+            ],
+            "round": 1,
+            "date_of_irb": "2024-03-12",
+            "current_status": "Full time",
+            "address": "Hostel J, Patiala",
+            "objectives": [
+                "Screen ruthenium catalysts",
+                "Model reaction kinetics"
+            ],
+            "revised_objectives": [],
+            "synopsis_pdf": "synopsis/102203456/s.pdf",
+            "viva_minutes_pdf": null,
+            "current_progress": 25,
+            "total_progress": 80,
+            "previous_progress": 55,
+            "checklist_option_id": 1,
+            "checklist_options": [
+                {
+                    "id": 1,
+                    "label": "Two SCI journal papers"
+                },
+                {
+                    "id": 2,
+                    "label": "One SCI paper and one patent"
+                }
+            ],
+            "checklist_choice": "Two SCI journal papers",
+            "sci": [
+                {
+                    "id": 41,
+                    "authors": "A. Verma, R. Gupta",
+                    "year": 2025,
+                    "title": "Ruthenium on ceria",
+                    "name": "J. Catal.",
+                    "volume": "12",
+                    "page": "1-9",
+                    "doi_link": null
+                }
+            ],
+            "non_sci": [],
+            "national": [],
+            "international": [],
+            "book": [],
+            "patents": [],
+            "student_publications": null,
+            "view": {
+                "version": 1,
+                "title": "Synopsis submission",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of revised IRB",
+                                        "format": "date",
+                                        "value": "2024-03-12",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Current status",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Address of correspondence",
+                                        "value": "Hostel J, Patiala",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "Objectives of research",
+                                        "columns": [
+                                            {
+                                                "key": "objective",
+                                                "title": "Objective"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "objective": "Screen ruthenium catalysts"
+                                            },
+                                            {
+                                                "objective": "Model reaction kinetics"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3
+                            },
+                            {
+                                "kind": "publications",
+                                "type": "publications",
+                                "label": "Publications",
+                                "lists": [
+                                    "sci",
+                                    "non_sci",
+                                    "patents",
+                                    "book",
+                                    "national",
+                                    "international"
+                                ],
+                                "library": "student_publications",
+                                "editable": false,
+                                "add_label": "Add publications",
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Declared by the supervisor",
+                                        "value": "Two SCI journal papers",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "label": "Publication category"
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload PDF",
+                                        "key": "synopsis_pdf",
+                                        "value": "synopsis/102203456/s.pdf",
+                                        "locked": true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "value": true,
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous quantum progress percentage",
+                                        "value": 55,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Increase in quantum progress percentage",
+                                        "key": "current_progress",
+                                        "required": true,
+                                        "value": 25,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "notice",
+                                        "label": "",
+                                        "text": "Supervisor has marked progress of student more than 20%",
+                                        "tone": "warning",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    },
+                                    {
+                                        "key": "current_progress",
+                                        "test": "above",
+                                        "than": 20
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Total quantum progress percentage",
+                                        "value": 80,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Declared",
+                                        "value": "Two SCI journal papers",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "label": "Publication category met",
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "viva round, coordinator uploading minutes",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "phd_coordinator",
+            "maximum_step": 3,
+            "locks": {
+                "student": true,
+                "supervisor": true,
+                "doctoral": true,
+                "phd_coordinator": false,
+                "hod": false,
+                "dordc": false
+            },
+            "approvals": {
+                "supervisor": true,
+                "doctoral": false,
+                "phd_coordinator": false
+            },
+            "comments": {
+                "supervisor": "Good progress."
+            },
+            "role": "phd_coordinator",
+            "steps": [
+                "student",
+                "faculty",
+                "doctoral",
+                "phd_coordinator",
+                "hod",
+                "dordc",
+                "complete"
+            ],
+            "round": 2,
+            "date_of_irb": "2024-03-12",
+            "current_status": "Full time",
+            "address": "Hostel J, Patiala",
+            "objectives": [
+                "Screen ruthenium catalysts",
+                "Model reaction kinetics"
+            ],
+            "revised_objectives": [],
+            "synopsis_pdf": "synopsis/102203456/s.pdf",
+            "viva_minutes_pdf": null,
+            "current_progress": 25,
+            "total_progress": 80,
+            "previous_progress": 55,
+            "checklist_option_id": 1,
+            "checklist_options": [],
+            "checklist_choice": "Two SCI journal papers",
+            "sci": [
+                {
+                    "id": 41,
+                    "authors": "A. Verma, R. Gupta",
+                    "year": 2025,
+                    "title": "Ruthenium on ceria",
+                    "name": "J. Catal.",
+                    "volume": "12",
+                    "page": "1-9",
+                    "doi_link": null
+                }
+            ],
+            "non_sci": [],
+            "national": [],
+            "international": [],
+            "book": [],
+            "patents": [],
+            "student_publications": null,
+            "view": {
+                "version": 1,
+                "title": "Synopsis submission",
+                "notes": [
+                    "The written synopsis has been approved. This round confirms the viva, and starts with the PhD Coordinator uploading its minutes."
+                ],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of revised IRB",
+                                        "format": "date",
+                                        "value": "2024-03-12",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Current status",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Address of correspondence",
+                                        "value": "Hostel J, Patiala",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "Objectives of research",
+                                        "columns": [
+                                            {
+                                                "key": "objective",
+                                                "title": "Objective"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "objective": "Screen ruthenium catalysts"
+                                            },
+                                            {
+                                                "objective": "Model reaction kinetics"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3
+                            },
+                            {
+                                "kind": "publications",
+                                "type": "publications",
+                                "label": "Publications",
+                                "lists": [
+                                    "sci",
+                                    "non_sci",
+                                    "patents",
+                                    "book",
+                                    "national",
+                                    "international"
+                                ],
+                                "library": "student_publications",
+                                "editable": false,
+                                "add_label": "Add publications",
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Declared by the supervisor",
+                                        "value": "Two SCI journal papers",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "label": "Publication category"
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload PDF",
+                                        "key": "synopsis_pdf",
+                                        "value": "synopsis/102203456/s.pdf",
+                                        "locked": true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "value": true,
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous quantum progress percentage",
+                                        "value": 55,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Increase in quantum progress percentage",
+                                        "key": "current_progress",
+                                        "value": 25,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Total quantum progress percentage",
+                                        "value": 80,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "phd_coordinator": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "phd_coordinator",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "more_fields": true,
+                                "title": "Recommendation of PhD Coordinator, after the viva:",
+                                "locked": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Minutes of the viva",
+                                        "key": "viva_minutes_pdf",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit",
+                                        "requires": [
+                                            {
+                                                "keys": [
+                                                    "approval"
+                                                ],
+                                                "message": "Choose Recommend or Not Recommend first.",
+                                                "check": "set"
+                                            },
+                                            {
+                                                "keys": [
+                                                    "viva_minutes_pdf"
+                                                ],
+                                                "message": "Upload the minutes of the viva first.",
+                                                "check": "file"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "viva round, minutes in, admin reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "faculty",
+            "maximum_step": 3,
+            "locks": {
+                "student": true,
+                "supervisor": false,
+                "doctoral": false,
+                "phd_coordinator": true,
+                "hod": false,
+                "dordc": false
+            },
+            "approvals": {
+                "supervisor": true,
+                "doctoral": false,
+                "phd_coordinator": false
+            },
+            "comments": {
+                "supervisor": "Good progress."
+            },
+            "role": "admin",
+            "steps": [
+                "student",
+                "faculty",
+                "doctoral",
+                "phd_coordinator",
+                "hod",
+                "dordc",
+                "complete"
+            ],
+            "round": 2,
+            "date_of_irb": "2024-03-12",
+            "current_status": "Full time",
+            "address": "Hostel J, Patiala",
+            "objectives": [
+                "Screen ruthenium catalysts",
+                "Model reaction kinetics"
+            ],
+            "revised_objectives": [],
+            "synopsis_pdf": "synopsis/102203456/s.pdf",
+            "viva_minutes_pdf": "synopsis/102203456/minutes.pdf",
+            "current_progress": 25,
+            "total_progress": 80,
+            "previous_progress": 55,
+            "checklist_option_id": 1,
+            "checklist_options": [],
+            "checklist_choice": "Two SCI journal papers",
+            "sci": [
+                {
+                    "id": 41,
+                    "authors": "A. Verma, R. Gupta",
+                    "year": 2025,
+                    "title": "Ruthenium on ceria",
+                    "name": "J. Catal.",
+                    "volume": "12",
+                    "page": "1-9",
+                    "doi_link": null
+                }
+            ],
+            "non_sci": [],
+            "national": [],
+            "international": [],
+            "book": [],
+            "patents": [],
+            "student_publications": null,
+            "view": {
+                "version": 1,
+                "title": "Synopsis submission",
+                "notes": [
+                    "The written synopsis has been approved. This round confirms the viva, and starts with the PhD Coordinator uploading its minutes."
+                ],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of revised IRB",
+                                        "format": "date",
+                                        "value": "2024-03-12",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Current status",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Address of correspondence",
+                                        "value": "Hostel J, Patiala",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "Objectives of research",
+                                        "columns": [
+                                            {
+                                                "key": "objective",
+                                                "title": "Objective"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "objective": "Screen ruthenium catalysts"
+                                            },
+                                            {
+                                                "objective": "Model reaction kinetics"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3
+                            },
+                            {
+                                "kind": "publications",
+                                "type": "publications",
+                                "label": "Publications",
+                                "lists": [
+                                    "sci",
+                                    "non_sci",
+                                    "patents",
+                                    "book",
+                                    "national",
+                                    "international"
+                                ],
+                                "library": "student_publications",
+                                "editable": false,
+                                "add_label": "Add publications",
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Declared by the supervisor",
+                                        "value": "Two SCI journal papers",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "label": "Publication category"
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload PDF",
+                                        "key": "synopsis_pdf",
+                                        "value": "synopsis/102203456/s.pdf",
+                                        "locked": true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "value": null,
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous quantum progress percentage",
+                                        "value": 55,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Increase in quantum progress percentage",
+                                        "key": "current_progress",
+                                        "value": 25,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Total quantum progress percentage",
+                                        "value": 80,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "phd_coordinator": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "phd_coordinator",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "more_fields": false,
+                                "title": "Recommendation of PhD Coordinator, after the viva:",
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Minutes of the viva",
+                                        "key": "viva_minutes_pdf",
+                                        "required": true,
+                                        "value": "synopsis/102203456/minutes.pdf",
+                                        "locked": true
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "viva round, supervisor confirming",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "supervisor",
+            "maximum_step": 3,
+            "locks": {
+                "student": true,
+                "supervisor": false,
+                "doctoral": false,
+                "phd_coordinator": true,
+                "hod": false,
+                "dordc": false
+            },
+            "approvals": {
+                "supervisor": true,
+                "doctoral": false,
+                "phd_coordinator": false
+            },
+            "comments": {
+                "supervisor": "Good progress."
+            },
+            "role": "faculty",
+            "steps": [
+                "student",
+                "faculty",
+                "doctoral",
+                "phd_coordinator",
+                "hod",
+                "dordc",
+                "complete"
+            ],
+            "round": 2,
+            "date_of_irb": "2024-03-12",
+            "current_status": "Full time",
+            "address": "Hostel J, Patiala",
+            "objectives": [
+                "Screen ruthenium catalysts",
+                "Model reaction kinetics"
+            ],
+            "revised_objectives": [],
+            "synopsis_pdf": "synopsis/102203456/s.pdf",
+            "viva_minutes_pdf": "synopsis/102203456/minutes.pdf",
+            "current_progress": 25,
+            "total_progress": 80,
+            "previous_progress": 55,
+            "checklist_option_id": 1,
+            "checklist_options": [
+                {
+                    "id": 1,
+                    "label": "Two SCI journal papers"
+                },
+                {
+                    "id": 2,
+                    "label": "One SCI paper and one patent"
+                }
+            ],
+            "checklist_choice": "Two SCI journal papers",
+            "sci": [
+                {
+                    "id": 41,
+                    "authors": "A. Verma, R. Gupta",
+                    "year": 2025,
+                    "title": "Ruthenium on ceria",
+                    "name": "J. Catal.",
+                    "volume": "12",
+                    "page": "1-9",
+                    "doi_link": null
+                }
+            ],
+            "non_sci": [],
+            "national": [],
+            "international": [],
+            "book": [],
+            "patents": [],
+            "student_publications": null,
+            "view": {
+                "version": 1,
+                "title": "Synopsis submission",
+                "notes": [
+                    "The written synopsis has been approved. This round confirms the viva, and starts with the PhD Coordinator uploading its minutes."
+                ],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of revised IRB",
+                                        "format": "date",
+                                        "value": "2024-03-12",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Current status",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Address of correspondence",
+                                        "value": "Hostel J, Patiala",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "Objectives of research",
+                                        "columns": [
+                                            {
+                                                "key": "objective",
+                                                "title": "Objective"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "objective": "Screen ruthenium catalysts"
+                                            },
+                                            {
+                                                "objective": "Model reaction kinetics"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3
+                            },
+                            {
+                                "kind": "publications",
+                                "type": "publications",
+                                "label": "Publications",
+                                "lists": [
+                                    "sci",
+                                    "non_sci",
+                                    "patents",
+                                    "book",
+                                    "national",
+                                    "international"
+                                ],
+                                "library": "student_publications",
+                                "editable": false,
+                                "add_label": "Add publications",
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Declared by the supervisor",
+                                        "value": "Two SCI journal papers",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "label": "Publication category"
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload PDF",
+                                        "key": "synopsis_pdf",
+                                        "value": "synopsis/102203456/s.pdf",
+                                        "locked": true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "value": null,
+                                "locked": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous quantum progress percentage",
+                                        "value": 55,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Increase in quantum progress percentage",
+                                        "key": "current_progress",
+                                        "value": 25,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Total quantum progress percentage",
+                                        "value": 80,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit",
+                                        "requires": [
+                                            {
+                                                "keys": [
+                                                    "approval"
+                                                ],
+                                                "message": "Choose Recommend or Not Recommend first.",
+                                                "check": "set"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "phd_coordinator": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "phd_coordinator",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "more_fields": false,
+                                "title": "Recommendation of PhD Coordinator, after the viva:",
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Minutes of the viva",
+                                        "key": "viva_minutes_pdf",
+                                        "required": true,
+                                        "value": "synopsis/102203456/minutes.pdf",
+                                        "locked": true
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "viva round, coordinator before their turn",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 3,
+            "locks": {
+                "student": false,
+                "supervisor": true,
+                "doctoral": true,
+                "phd_coordinator": false,
+                "hod": false,
+                "dordc": false
+            },
+            "approvals": {
+                "supervisor": true,
+                "doctoral": false,
+                "phd_coordinator": false
+            },
+            "comments": {
+                "supervisor": "Good progress."
+            },
+            "role": "phd_coordinator",
+            "steps": [
+                "student",
+                "faculty",
+                "doctoral",
+                "phd_coordinator",
+                "hod",
+                "dordc",
+                "complete"
+            ],
+            "round": 2,
+            "date_of_irb": "2024-03-12",
+            "current_status": "Full time",
+            "address": "Hostel J, Patiala",
+            "objectives": [
+                "Screen ruthenium catalysts",
+                "Model reaction kinetics"
+            ],
+            "revised_objectives": [],
+            "synopsis_pdf": "synopsis/102203456/s.pdf",
+            "viva_minutes_pdf": null,
+            "current_progress": 25,
+            "total_progress": 80,
+            "previous_progress": 55,
+            "checklist_option_id": 1,
+            "checklist_options": [],
+            "checklist_choice": "Two SCI journal papers",
+            "sci": [
+                {
+                    "id": 41,
+                    "authors": "A. Verma, R. Gupta",
+                    "year": 2025,
+                    "title": "Ruthenium on ceria",
+                    "name": "J. Catal.",
+                    "volume": "12",
+                    "page": "1-9",
+                    "doi_link": null
+                }
+            ],
+            "non_sci": [],
+            "national": [],
+            "international": [],
+            "book": [],
+            "patents": [],
+            "student_publications": null,
+            "view": {
+                "version": 1,
+                "title": "Synopsis submission",
+                "notes": [
+                    "The written synopsis has been approved. This round confirms the viva, and starts with the PhD Coordinator uploading its minutes."
+                ],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Date of revised IRB",
+                                        "format": "date",
+                                        "value": "2024-03-12",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Current status",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Address of correspondence",
+                                        "value": "Hostel J, Patiala",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "table",
+                                        "label": "Objectives of research",
+                                        "columns": [
+                                            {
+                                                "key": "objective",
+                                                "title": "Objective"
+                                            }
+                                        ],
+                                        "value": [
+                                            {
+                                                "objective": "Screen ruthenium catalysts"
+                                            },
+                                            {
+                                                "objective": "Model reaction kinetics"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "space": 3
+                            },
+                            {
+                                "kind": "publications",
+                                "type": "publications",
+                                "label": "Publications",
+                                "lists": [
+                                    "sci",
+                                    "non_sci",
+                                    "patents",
+                                    "book",
+                                    "national",
+                                    "international"
+                                ],
+                                "library": "student_publications",
+                                "editable": false,
+                                "add_label": "Add publications",
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Declared by the supervisor",
+                                        "value": "Two SCI journal papers",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "label": "Publication category"
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload PDF",
+                                        "key": "synopsis_pdf",
+                                        "value": "synopsis/102203456/s.pdf",
+                                        "locked": true
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "faculty": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "supervisor",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "value": true,
+                                "locked": true
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Previous quantum progress percentage",
+                                        "value": 55,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Increase in quantum progress percentage",
+                                        "key": "current_progress",
+                                        "value": 25,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Total quantum progress percentage",
+                                        "value": 80,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2,
+                                "show_if": [
+                                    {
+                                        "key": "approval",
+                                        "test": "set",
+                                        "than": 0
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "phd_coordinator": {
+                        "wrapped": false,
+                        "rows": [
+                            {
+                                "kind": "recommendation",
+                                "type": "recommendation",
+                                "label": "",
+                                "role": "phd_coordinator",
+                                "allow_rejection": false,
+                                "key": "approval",
+                                "more_fields": false,
+                                "title": "Recommendation of PhD Coordinator, after the viva:",
+                                "locked": false
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Minutes of the viva",
+                                        "key": "viva_minutes_pdf",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+]

@@ -1,0 +1,1165 @@
+[
+    {
+        "name": "new form, scholar editing",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "student",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "initial_status": "Full time",
+            "reason": null,
+            "research_pdf": null,
+            "researchExtentions": [],
+            "view": {
+                "version": 1,
+                "title": "Extension for submission of research proposal",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Phone number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Tentative title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Status of student at time of admission",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Supervisor 1",
+                                        "value": "Rakesh Gupta",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Supervisor 2",
+                                        "value": "Anika Jain",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Extension availed if any earlier (for submission of research proposal)",
+                                        "value": "N/A",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for extension",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload research proposal",
+                                        "key": "research_pdf",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "sent back with a stored proposal and an earlier extension",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "student",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "initial_status": "Full time",
+            "reason": "Lab closed for renovation",
+            "research_pdf": "research_extentions/102203456/proposal.pdf",
+            "researchExtentions": [
+                {
+                    "period_of_extension": 6,
+                    "reason": "Instrument repair"
+                }
+            ],
+            "view": {
+                "version": 1,
+                "title": "Extension for submission of research proposal",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Phone number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Tentative title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Status of student at time of admission",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Supervisor 1",
+                                        "value": "Rakesh Gupta",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Supervisor 2",
+                                        "value": "Anika Jain",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Extension availed if any earlier (for submission of research proposal)",
+                                        "value": 6,
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for extension",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": "Lab closed for renovation",
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload research proposal",
+                                        "key": "research_pdf",
+                                        "value": "research_extentions/102203456/proposal.pdf",
+                                        "locked": false
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "submitted, scholar reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "supervisor",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "student",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "initial_status": "Full time",
+            "reason": "Lab closed for renovation",
+            "research_pdf": "research_extentions/102203456/proposal.pdf",
+            "researchExtentions": [],
+            "view": {
+                "version": 1,
+                "title": "Extension for submission of research proposal",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Phone number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Tentative title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Status of student at time of admission",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Supervisor 1",
+                                        "value": "Rakesh Gupta",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Supervisor 2",
+                                        "value": "Anika Jain",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Extension availed if any earlier (for submission of research proposal)",
+                                        "value": "N/A",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for extension",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": "Lab closed for renovation",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload research proposal",
+                                        "key": "research_pdf",
+                                        "value": "research_extentions/102203456/proposal.pdf",
+                                        "locked": true
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "unsubmitted, admin reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "admin",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "initial_status": "Full time",
+            "reason": "Draft reason",
+            "research_pdf": null,
+            "researchExtentions": [],
+            "view": {
+                "version": 1,
+                "title": "Extension for submission of research proposal",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Phone number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Tentative title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Status of student at time of admission",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Supervisor 1",
+                                        "value": "Rakesh Gupta",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Supervisor 2",
+                                        "value": "Anika Jain",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Extension availed if any earlier (for submission of research proposal)",
+                                        "value": "N/A",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for extension",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": "Draft reason",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload research proposal",
+                                        "key": "research_pdf",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": true
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "submitted, supervisor reading",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [
+                {
+                    "name": "Rakesh Gupta",
+                    "designation": "Professor",
+                    "department": "Chemical Engineering"
+                },
+                {
+                    "name": "Anika Jain",
+                    "designation": "Assistant Professor",
+                    "department": "Chemical Engineering"
+                }
+            ],
+            "stage": "supervisor",
+            "maximum_step": 1,
+            "locks": {
+                "student": true,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "faculty",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "initial_status": "Full time",
+            "reason": "Lab closed for renovation",
+            "research_pdf": "research_extentions/102203456/proposal.pdf",
+            "researchExtentions": [],
+            "view": {
+                "version": 1,
+                "title": "Extension for submission of research proposal",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Phone number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Tentative title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Status of student at time of admission",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Supervisor 1",
+                                        "value": "Rakesh Gupta",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Supervisor 2",
+                                        "value": "Anika Jain",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Extension availed if any earlier (for submission of research proposal)",
+                                        "value": "N/A",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for extension",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": "Lab closed for renovation",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload research proposal",
+                                        "key": "research_pdf",
+                                        "value": "research_extentions/102203456/proposal.pdf",
+                                        "locked": true
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    {
+        "name": "no supervisors yet",
+        "formData": {
+            "form_id": 7,
+            "roll_no": "102203456",
+            "name": "Asha Verma",
+            "email": "asha.verma@thapar.edu",
+            "phone": "9876543210",
+            "department": "Chemical Engineering",
+            "date_of_registration": "2023-08-01",
+            "phd_title": "Catalysts for low-temperature ammonia synthesis",
+            "supervisors": [],
+            "stage": "student",
+            "maximum_step": 0,
+            "locks": {
+                "student": false,
+                "supervisor": false
+            },
+            "approvals": [],
+            "comments": [],
+            "role": "student",
+            "steps": [
+                "student",
+                "faculty",
+                "phd_coordinator",
+                "hod",
+                "dra",
+                "dordc",
+                "director",
+                "complete"
+            ],
+            "initial_status": "Full time",
+            "reason": null,
+            "research_pdf": null,
+            "researchExtentions": [],
+            "view": {
+                "version": 1,
+                "title": "Extension for submission of research proposal",
+                "notes": [],
+                "notices": [],
+                "panels": {
+                    "student": {
+                        "wrapped": true,
+                        "rows": [
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Roll number",
+                                        "value": "102203456",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Name",
+                                        "value": "Asha Verma",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Date of admission",
+                                        "format": "date",
+                                        "value": "2023-08-01",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Department",
+                                        "value": "Chemical Engineering",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Email",
+                                        "value": "asha.verma@thapar.edu",
+                                        "locked": true
+                                    },
+                                    {
+                                        "type": "text",
+                                        "label": "Phone number",
+                                        "value": "9876543210",
+                                        "locked": true
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Tentative title of PhD thesis",
+                                        "value": "Catalysts for low-temperature ammonia synthesis",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Status of student at time of admission",
+                                        "value": "Full time",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": []
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Extension availed if any earlier (for submission of research proposal)",
+                                        "value": "N/A",
+                                        "locked": true
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "text",
+                                        "label": "Reason for extension",
+                                        "key": "reason",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ],
+                                "space": 2
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "file",
+                                        "label": "Upload research proposal",
+                                        "key": "research_pdf",
+                                        "required": true,
+                                        "value": null,
+                                        "locked": false
+                                    }
+                                ]
+                            },
+                            {
+                                "kind": "grid",
+                                "items": [
+                                    {
+                                        "type": "submit",
+                                        "label": "Submit"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+]

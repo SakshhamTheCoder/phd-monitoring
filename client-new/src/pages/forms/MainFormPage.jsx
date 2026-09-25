@@ -1,21 +1,9 @@
 import React, { Suspense, lazy, useEffect, useState } from "react";
-import SupervisorAllocation from "../../components/forms/supervisorAllocation/SupervisorAllocation";
 import { useLoading } from "../../context/LoadingContext";
 import { useLocation, useParams } from "react-router-dom";
 import { customFetch } from "../../api/base";
 import { baseURL } from "../../api/urls";
-import ConstituteOfIRB from "../../components/forms/constituteOfIRB/ConstituteOfIRB";
-import IRBSubmission from "../../components/forms/irbSubmission/IRBSubmission";
-import PresentationForm from "../../components/forms/presentations/PresentationForm";
-import SynopsisSubmission from "../../components/forms/synopsisSubmission/SynopsisSubmission";
-import ThesisSubmission from "../../components/forms/thesisSubmission/ThesisSubmission";
-import SemesterOff from "../../components/forms/semesterOff/SemesterOff";
-import StatusChange from "../../components/forms/statusChange/StatusChange";
-import IrbExtention from "../../components/forms/irbExtention/IrbExtention";
-import SupervisorChange from "../../components/forms/supervisorChange/SupervisorChange";
-import ListOfExaminers from "../../components/forms/listOfExaminers/ListOfExaminers";
-import ReviseTitle from "../../components/forms/reviseTitle/ReviseTitle";
-import ThesisExtention from "../../components/forms/thesisExtention/ThesisExtention";
+import ServerForm from "../../components/forms/serverForm/ServerForm";
 import useScholarInPath from "../../hooks/useScholarInPath";
 import Loader from "../../components/loader/loader";
 import LoadError from "../../components/common/LoadError";
@@ -78,33 +66,10 @@ const MainFormPage = () => {
       {isLoaded && formData && (
         <>
           {(() => {
+            // A form the server describes draws from that description; one
+            // laid out in sections (a leave application) keeps its own page.
+            if (formData.view && !formData.view.sections) return <ServerForm formData={formData} />;
             switch (form_type) {
-              case "supervisor-allocation":
-                return <SupervisorAllocation formData={formData} />;
-              case "irb-constitution":
-                return <ConstituteOfIRB formData={formData} />;
-              case "irb-submission":
-                return <IRBSubmission formData={formData} />;
-              case "presentation":
-                return <PresentationForm formData={formData} />;
-              case "synopsis-submission":
-                return <SynopsisSubmission formData={formData} />;
-              case "thesis-submission":
-                return <ThesisSubmission formData={formData} />;
-              case "semester-off":
-                return <SemesterOff formData={formData} />;
-                case "status-change":
-                  return <StatusChange formData={formData} />;
-              case "irb-extension":
-                return <IrbExtention formData={formData}/>
-              case "supervisor-change":
-                return <SupervisorChange formData={formData}/>
-              case "list-of-examiners":
-                return <ListOfExaminers formData={formData}/>
-              case "thesis-extension":
-                return <ThesisExtention formData={formData} />
-              case "revise-title":
-                return <ReviseTitle formData={formData}/>
               // The API serves /forms/student-leave/:id, and StudentLeave
               // defaults submitPath to the current location, which is that
               // endpoint. Without this the canonical URL fell through to the

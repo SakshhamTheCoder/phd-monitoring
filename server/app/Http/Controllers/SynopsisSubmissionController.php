@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Forms\SynopsisSubmissionDefinition;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\GeneralFormCreate;
 use Illuminate\Http\Request;
@@ -19,6 +20,9 @@ use App\Models\SynopsisSubmission;
 
 class SynopsisSubmissionController extends Controller
 {
+    /** Who may approve several of these at once; the list page offers it to the same. */
+    public const BULK_APPROVERS = ['hod', 'phd_coordinator', 'dordc'];
+
     
     use GeneralFormHandler;
     use GeneralFormSubmitter;
@@ -268,8 +272,7 @@ class SynopsisSubmissionController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
        
-        $allowedRoles = ['hod', 'phd_coordinator', 'dordc'];
-        if (!in_array($role->role, $allowedRoles)) {
+        if (!in_array($user->current_role->role, self::BULK_APPROVERS, true)) {
             return $this->refuse();
         }
         $request->validate([
@@ -386,11 +389,12 @@ class SynopsisSubmissionController extends Controller
             $form_id,
             'student',
             function ($formInstance) use ($request, $user) {
-                // A resubmission after a send-back keeps the stored PDF unless a new one comes.
-                $request->validate([
-                   'revised_title' => 'nullable|string',
-                   'synopsis_pdf' => ($formInstance->synopsis_pdf ? 'nullable' : 'required').'|file|mimes:pdf|max:20480',
-                ]);
+                // A resubmission keeps the stored PDF unless a new one comes.
+                $request->validate(array_merge(
+                    (new SynopsisSubmissionDefinition)->rules('student', $formInstance->fullForm($user)),
+                    // Not asked on the form.
+                    ['revised_title' => 'nullable|string']
+                ));
                 // The student form does not offer a revised title; writing an
                 // absent one would blank the scholar's PhD title on completion.
                 if ($request->filled('revised_title')) {

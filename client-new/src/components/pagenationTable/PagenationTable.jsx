@@ -13,7 +13,9 @@ import { cellClass, isStatusKey, statusTone } from "../../utils/tableCell";
 const PagenationTable = ({
   endpoint,
   filters,
-  enableApproval = false,
+  // Where bulk approval belongs on this page; the list's answer
+  // (can_bulk_approve) says whether this reader may use it.
+  enableApproval: approvalWanted = false,
   customOpenForm, // function(id)
   rowClickable = true,
   linkField = null, // a column that opens something of its own, not the row
@@ -30,6 +32,10 @@ const PagenationTable = ({
   tableTitle="",
   search = null, // the page's <FilterBar>, drawn in the table's own head
 }) => {
+  // The server's answer to whether this reader may bulk-approve; undefined for
+  // a list that does not say, which leaves the page's own choice.
+  const [bulkAllowed, setBulkAllowed] = useState(undefined);
+  const enableApproval = approvalWanted && bulkAllowed !== false;
   const [forms, setForms] = useState([]);
   const [fields, setFields] = useState(["name", "roll_no"]);
   const [fieldsTitle, setFieldsTitle] = useState(["name", "roll_no"]);
@@ -101,6 +107,7 @@ const PagenationTable = ({
         // Approving rows can empty the last page; step back to one that exists.
         if (page > pageCount) setCurrentPage(pageCount);
         setRole(data.response.role || "student");
+        setBulkAllowed(data.response.can_bulk_approve);
         setLoadFailed(false);
       } else if (isCurrent()) {
         setForms([]);

@@ -1,19 +1,11 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { buttonConfig } from '../navbar/CustomNavBar';
+import { useAccess } from '../../context/CapabilitiesContext';
 import './RouteBar.css';
-import { currentRole } from '../../auth/access';
 
-// Page names come from the nav config, so a route is labelled once. Segments the
-// nav does not know about (an id, a form type) are title-cased from the URL.
-// Read for the current role, since one path can carry a different name per role.
-const navLabels = (role) => buttonConfig
-  .filter((item) => item.roles.includes(role))
-  .reduce((map, item) => {
-    map[item.path] = item.text;
-    return map;
-  }, {});
-
+// Page names come from the server's menu for this role (GET /me), so a route is
+// labelled once. Segments it does not know (an id, a form type) are title-cased
+// from the URL.
 const EXTRA_LABELS = {
   '/projects/create': 'New Project',
   '/forms/manage': 'Manage Forms',
@@ -49,7 +41,7 @@ const labelFor = (labels, path, segment) =>
 
 const RouteBar = () => {
   const { pathname } = useLocation();
-  const labels = navLabels(currentRole());
+  const { labels } = useAccess();
   const segments = pathname.split('/').filter(Boolean);
 
   const crumbs = segments.map((segment, i) => {

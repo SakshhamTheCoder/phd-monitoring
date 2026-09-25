@@ -152,6 +152,7 @@ class UrfFlowTest extends TestCase
 
         // The admin sees everything; a student sees only their own stipend details.
         $this->actingAs($admin, 'sanctum')->getJson("/api/urf/{$id}")->assertOk()
+            ->assertJsonPath('can_decide', true)
             ->assertJsonPath('fellows.0.pan', 'ABCDE1234F')
             ->assertJsonCount(2, 'reports')
             ->assertJsonPath('reports.1.publications.international.0.funding', 'TIET seed grant')
@@ -246,6 +247,8 @@ class UrfFlowTest extends TestCase
         $this->actingAs($mentorAccount, 'sanctum')->getJson("/api/urf/{$id}")
             ->assertOk()
             ->assertJsonPath('id', $id)
+            // A mentor reads the project; selecting it is the office's.
+            ->assertJsonPath('can_decide', false)
             // Bank details are the student's own, whoever else is reading.
             ->assertJsonCount(0, 'fellows')
             // The mentor reviews every member's reports.

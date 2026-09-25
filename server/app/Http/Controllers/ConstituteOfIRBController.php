@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Forms\IrbConstitutionDefinition;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\GeneralFormCreate;
 use App\Http\Controllers\Traits\GeneralFormHandler;
@@ -29,6 +30,9 @@ use App\Models\PHDObjective;
 
 class ConstituteOfIRBController extends Controller
 {
+    /** Who may approve several of these at once; the list page offers it to the same. */
+    public const BULK_APPROVERS = ['dra'];
+
     use GeneralFormHandler;
     use GeneralFormSubmitter;
     use GeneralFormList;
@@ -148,7 +152,7 @@ class ConstituteOfIRBController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
         $form_id = $request->form_id;
-        if($role->role != 'dra'){
+        if (!in_array($user->current_role->role, self::BULK_APPROVERS, true)) {
             return $this->refuse();
         }
         $request->validate([
@@ -163,36 +167,15 @@ class ConstituteOfIRBController extends Controller
 
     private function studentSubmit($user, Request $request, $form_id)
     {
-        $request->validate([
-            'semester' => 'integer',
-            'gender' => 'nullable|string|in:Male,Female',
-            'cgpa' => 'nullable|numeric',
-            'objectives' => 'required|array',
-            'title' => 'required|string',
-            'irb_pdf' => 'nullable|file|mimes:pdf|max:20480',
-            'address' => 'required|string',
-            'broad_area_of_research' => 'nullable|string|max:255',
-            'subdomains' => 'nullable|array',
-            'subdomains.*' => 'string',
-        ]);
+        // CGPA and gender are required only while the profile lacks them, and
+        // the upload only while none is stored; the definition reads both.
+        $request->validate(array_merge(
+            (new IrbConstitutionDefinition)->rules('student', ConstituteOfIRB::find($form_id)?->fullForm($user) ?? []),
+            // Not asked on the form.
+            ['semester' => 'integer']
+        ));
         return $this->submitForm($user,$request, $form_id, ConstituteOfIRB::class, 'student','student','faculty',  function ($formInstance) use ($request, $user) {
-            // Each is asked for only when the profile lacks it. Gender lives on
-            // the user, not the student.
-            if(!$formInstance->student->cgpa) {
-                $request->validate([
-                    'cgpa' => 'required|numeric',
-                ]);
-            }
-            if(!$formInstance->student->user?->gender) {
-                $request->validate([
-                    'gender' => 'required|string|in:Male,Female'
-                ]);}
-            // A resubmission after a send-back keeps the stored PDF unless a new one comes.
-            if(!$formInstance->irb_pdf) {
-                $request->validate([
-                    'irb_pdf' => 'required|file|mimes:pdf|max:20480',
-                ]);
-            }
+            // Gender lives on the user, not the student.
             $formInstance->update([
                 'semester' => $request->semester,
             ]);
@@ -208,10 +191,6 @@ class ConstituteOfIRBController extends Controller
                     'cgpa' => $cgpa,
                 ]);
             } 
-            $request->validate([
-                'address' => 'required|string',
-            ]);
-            
             //save objectives
             $objectives = $request->objectives;
             $formInstance->student->objectives()->where('type', 'draft')->delete();

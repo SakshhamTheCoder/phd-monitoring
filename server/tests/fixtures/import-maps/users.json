@@ -1,0 +1,46 @@
+{
+  "sheet": [
+    {
+      "_rowNumber": 2,
+      "full_name": "Khalid Bashir",
+      "email": "khalid.b@demo.invalid",
+      "phone": "9800000021",
+      "gender": "male",
+      "role": "faculty",
+      "available_roles": "faculty,doctoral",
+      "status": ""
+    },
+    {
+      "_rowNumber": 3,
+      "full_name": "",
+      "email": "x@demo.invalid",
+      "phone": "",
+      "gender": "",
+      "role": "",
+      "available_roles": "",
+      "status": "inactive"
+    }
+  ],
+  "read": [
+    {
+      "full_name": "Khalid Bashir",
+      "email": "khalid.b@demo.invalid",
+      "phone": "9800000021",
+      "gender": "male",
+      "role": "faculty",
+      "available_roles": "faculty,doctoral",
+      "status": "active",
+      "row_number": 2
+    },
+    {
+      "full_name": "",
+      "email": "x@demo.invalid",
+      "phone": "",
+      "gender": "",
+      "role": "",
+      "available_roles": "",
+      "status": "inactive",
+      "row_number": 3
+    }
+  ]
+}

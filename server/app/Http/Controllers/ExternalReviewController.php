@@ -15,8 +15,8 @@ use Illuminate\Http\Request;
  */
 class ExternalReviewController extends Controller
 {
-    /** Roles allowed to resend a review request. */
-    private const RESEND_ROLES = ['dordc', 'phd_coordinator', 'admin'];
+    /** Roles allowed to resend a review request. The form's view offers it to the same. */
+    public const RESEND_ROLES = ['dordc', 'phd_coordinator', 'admin'];
 
     /** GET /api/external-review/{token} — whitelisted details + current state. Read-only. */
     public function show($token)

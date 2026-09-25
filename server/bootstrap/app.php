@@ -36,6 +36,9 @@ return Application::configure(basePath: dirname(__DIR__))
             // Used as feature:research_profile / feature:project_management /
             // feature:job_openings on the route groups those modules own.
             'feature' => \App\Http\Middleware\EnsureFeatureEnabled::class,
+            // area:courseManagement: the acting role may reach that area of the
+            // portal (config/navigation.php), as its menu says.
+            'area' => \App\Http\Middleware\EnsureArea::class,
         ]);
 
         // The auth middleware resolves its guest redirect eagerly, and the

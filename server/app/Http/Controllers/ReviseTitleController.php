@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Forms\ReviseTitleDefinition;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\GeneralFormCreate;
 use App\Http\Controllers\Traits\GeneralFormHandler;
@@ -22,6 +23,9 @@ use Illuminate\Support\Facades\DB;
  */
 class ReviseTitleController extends Controller
 {
+    /** Who may approve several of these at once; the list page offers it to the same. */
+    public const BULK_APPROVERS = ['hod', 'phd_coordinator', 'dordc'];
+
     use GeneralFormHandler;
     use GeneralFormSubmitter;
     use GeneralFormList;
@@ -152,7 +156,7 @@ class ReviseTitleController extends Controller
     public function bulkSubmit(Request $request)
     {
         $user = Auth::user();
-        if (!in_array($user->current_role->role, ['hod', 'phd_coordinator', 'dordc'])) {
+        if (!in_array($user->current_role->role, self::BULK_APPROVERS, true)) {
             return $this->refuse();
         }
         $request->validate([
@@ -171,11 +175,7 @@ class ReviseTitleController extends Controller
             'student',
             'faculty',
             function ($formInstance) use ($request) {
-                $request->validate([
-                    'revised_title' => 'required|string|max:1000',
-                    'revised_objectives' => 'required|array|min:1',
-                    'revised_objectives.*' => 'required|string|max:2000',
-                ]);
+                $request->validate((new ReviseTitleDefinition)->rules('student'));
                 $formInstance->revised_title = trim($request->revised_title);
                 $formInstance->revised_objectives = array_values(array_map('trim', $request->revised_objectives));
             }

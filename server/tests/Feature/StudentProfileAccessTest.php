@@ -93,7 +93,7 @@ class StudentProfileAccessTest extends TestCase
         $this->getJson("/api/students/{$student->roll_no}")
             ->assertStatus(200)
             // A committee member reads the record; they do not write it.
-            ->assertJson(['is_self' => false, 'can_edit' => false, 'can_manage' => false]);
+            ->assertJson(['is_self' => false, 'can_edit' => false, 'can_manage' => false, 'can_tag_courses' => false]);
     }
 
     /** A role that provisions students may write any of them. */
@@ -104,7 +104,7 @@ class StudentProfileAccessTest extends TestCase
 
         $this->getJson("/api/students/{$student->roll_no}")
             ->assertStatus(200)
-            ->assertJson(['can_edit' => true, 'can_manage' => true]);
+            ->assertJson(['can_edit' => true, 'can_manage' => true, 'can_tag_courses' => true]);
     }
 
     /** The soft write is addressed by roll number, like the faculty one. */
@@ -134,6 +134,6 @@ class StudentProfileAccessTest extends TestCase
         $this->getJson('/api/students/me')
             ->assertStatus(200)
             ->assertJsonPath('profile.roll_no', $student->roll_no)
-            ->assertJson(['is_self' => true, 'can_edit' => true, 'can_manage' => false]);
+            ->assertJson(['is_self' => true, 'can_edit' => true, 'can_manage' => false, 'can_tag_courses' => false]);
     }
 }

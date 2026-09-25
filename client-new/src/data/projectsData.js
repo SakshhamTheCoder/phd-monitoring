@@ -1,33 +1,5 @@
 // Shared constants and helpers for the Projects module.
 
-// The four the projects table allows. A new project starts Pending.
-export const statusOptions = ['Pending', 'Active', 'On Hold', 'Completed'];
-
-export const categoryOptions = [
-  'In-house', 'Research', 'Consultancy', 'Industry', 'International', 'Other'
-];
-
-export const roleOptions = ['PI', 'Co-PI'];
-
-export const milestoneStatusOptions = ['Not Started', 'In Progress', 'Completed', 'Delayed'];
-
-export const positionTypes = [
-  'JRF', 'SRF', 'Research Associate', 'Research Intern', 'UG Intern', 'PG Intern'
-];
-
-export const formatCurrency = (amount) => {
-  const value = Number(amount) || 0;
-  if (value >= 10000000) return `₹${(value / 10000000).toFixed(2)} Cr`;
-  if (value >= 100000) return `₹${(value / 100000).toFixed(2)} L`;
-  return `₹${value.toLocaleString('en-IN')}`;
-};
-
-export const getMilestoneProgress = (milestones) => {
-  if (!milestones || milestones.length === 0) return 0;
-  const completed = milestones.filter(m => m.status === 'Completed').length;
-  return Math.round((completed / milestones.length) * 100);
-};
-
 // Budget sub-items live under a reserved key: budget.__subitems[year][head][sub].
 // Travel still uses the sub-item mechanism (Domestic / International).
 export const subVal = (b, year, head, sub) =>
@@ -154,17 +126,6 @@ export const yearTotal = (b, year, heads) =>
 // than a duration-derived window.
 export const grandTotal = (b, heads, years) =>
   (years || budgetYears(b)).reduce((s, y) => s + yearTotal(b, y, heads), 0);
-
-export const emptyBudget = (years = ['year1', 'year2', 'year3']) => {
-  const b = { [KEY_SUBITEMS]: {}, [KEY_MANPOWER]: {}, [KEY_EQUIPMENT]: {}, [KEY_OTHER]: {}, [KEY_HEADAMT]: {} };
-  years.forEach((y) => {
-    b[y] = {};
-    b[KEY_MANPOWER][y] = [];
-    b[KEY_EQUIPMENT][y] = [];
-    b[KEY_OTHER][y] = [];
-  });
-  return b;
-};
 
 // Immutable line editing, shared by the wizard and the details page so both
 // mutate the budget the same way.

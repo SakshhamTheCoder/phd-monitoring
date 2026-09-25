@@ -6,6 +6,7 @@ use App\Models\Department;
 use App\Models\Faculty;
 use App\Models\PhdCoordinator;
 use App\Models\Role;
+use App\Support\CsvRow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -387,6 +388,17 @@ class DepartmentController extends Controller
                 'rows.*' => 'array',
             ]);
 
+            // Asked first, before anything is written: importing deletes each
+            // covered department's unused areas the sheet leaves out, so the
+            // page says which departments before it does.
+            if ($request->boolean('preview')) {
+                $covered = $this->departmentsInSheet($request->rows);
+                return response()->json([
+                    'confirm' => 'Importing replaces the research areas of ' . ($covered ? implode(', ', $covered) : 'the departments in this sheet') . '. '
+                        . 'Any area of theirs that is not in the sheet is deleted, unless a scholar or faculty member uses it. Continue?',
+                ]);
+            }
+
             $areasByDepartment = $this->readAreaRows($request->rows, $errors, $ignoredColumns);
 
             $allowedDepartmentId = $this->areaWriteDepartmentId($loggedInUser);
@@ -433,6 +445,13 @@ class DepartmentController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => "Added {$created} areas, removed {$removed} unused areas",
+                // What the page tells the reader, in order.
+                'messages' => [
+                    ['tone' => 'success', 'text' => "{$created} areas added, {$removed} unused areas removed"],
+                    ...($ignoredColumns ? [['tone' => 'warn', 'text' => 'No department matches these columns, so they were skipped: ' . implode(', ', $ignoredColumns)]] : []),
+                    ...array_map(fn ($area) => ['tone' => 'info', 'text' => "{$area} is in use, so it was kept"], $kept),
+                    ...array_map(fn ($error) => ['tone' => 'warn', 'text' => $error], $errors),
+                ],
                 'imported_count' => $created,
                 'removed_count' => $removed,
                 'kept_in_use' => $kept,
@@ -444,6 +463,22 @@ class DepartmentController extends Controller
                 'message' => 'An error occurred: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * The department codes a sheet covers, as written: the template names one
+     * per row, the institute's matrix one per column after the first.
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return array<int, string>
+     */
+    private function departmentsInSheet(array $rows): array
+    {
+        $headers = array_values(array_filter(array_keys(reset($rows) ?: []), fn ($column) => $column !== '_rowNumber'));
+        $isLongTemplate = (bool) array_filter($headers, fn ($column) => strtolower(trim((string) $column)) === 'name');
+        $codes = $isLongTemplate ? array_map(fn ($row) => $row['department_code'] ?? '', $rows) : array_slice($headers, 1);
+
+        return array_values(array_unique(array_filter(array_map(fn ($code) => trim((string) $code), $codes), fn ($code) => $code !== '')));
     }
 
     /**
@@ -534,7 +569,7 @@ class DepartmentController extends Controller
      * The one department this user may write areas for, or null for a role that
      * may write any.
      */
-    private function areaWriteDepartmentId($user): ?int
+    public static function areaWriteDepartmentId($user): ?int
     {
         $role = $user->current_role->role;
 
@@ -558,8 +593,10 @@ class DepartmentController extends Controller
     /**
      * Refuse an area write unless this user may write to every department it
      * touches. HoD and PhD coordinator write only their own department, and
-     * one whose department cannot be resolved writes none. Everyone else needs
-     * can_add_department, which covers every department.
+     * one whose department cannot be resolved writes none. Anyone else must be
+     * a role offered the page (config/navigation.php), which covers every
+     * department; the DoRDC, DRA and Director, who could write here without
+     * being offered the page, no longer can.
      */
     private function denyAreaWrite($user, array $departmentIds, string $message)
     {
@@ -576,7 +613,7 @@ class DepartmentController extends Controller
             return $allowedDepartmentId ? null : $this->refuse($message);
         }
 
-        return $user->may('can_add_department')
+        return \App\Support\Navigation::allows($user, 'areasOfSpecialization')
             ? null
             : $this->refuse('You do not have permission to manage areas of specialization. Contact your administrator if you believe this is a mistake.');
     }
@@ -620,6 +657,32 @@ class DepartmentController extends Controller
      * calls, so the role demotions and the transactions they already handle are
      * not repeated here.
      */
+    /**
+     * The officer sheet's rows as it has them, read by any of the names each
+     * column goes by. People are matched by their personal address, so an
+     * office address such as adorsp3@thapar.edu is reported rather than guessed
+     * at. A row naming no department is skipped.
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return array<int, array<string, mixed>>
+     */
+    public static function officerRows(array $rows): array
+    {
+        return array_values(array_filter(array_map(fn (array $row) => [
+            'department_code' => CsvRow::column($row, 'Department Code', 'department_code'),
+            'hod_email' => CsvRow::column($row, 'HOD Personal Email', 'HOD Email', 'hod_email'),
+            'hod_office_email' => CsvRow::column($row, 'HOD Office Email', 'hod_office_email'),
+            'adordc_email' => CsvRow::column($row, 'ADORDC Email', 'ADORDC Personal Email', 'adordc_email'),
+            'adordc_office_email' => CsvRow::column($row, 'ADORDC Office Email', 'adordc_office_email'),
+            'coordinator_1_email' => CsvRow::column($row, 'PhD Coordinator 1 Email', 'coordinator_1_email'),
+            'coordinator_2_email' => CsvRow::column($row, 'PhD Coordinator 2 Email', 'coordinator_2_email'),
+            'clerk_name' => CsvRow::column($row, 'Clerk Name', 'clerk_name'),
+            'clerk_email' => CsvRow::column($row, 'Clerk Email', 'clerk_email'),
+            'clerk_phone' => CsvRow::column($row, 'Clerk Phone', 'clerk_phone'),
+            'row_number' => (int) ($row['_rowNumber'] ?? $row['row_number'] ?? 0),
+        ], $rows), fn (array $row) => $row['department_code'] !== ''));
+    }
+
     public function importDepartments(Request $request)
     {
         $user = Auth::user();
@@ -631,15 +694,14 @@ class DepartmentController extends Controller
 
         $request->validate([
             'rows' => 'required|array',
-            'rows.*.department_code' => 'required|string',
-            'rows.*.row_number' => 'required|integer',
+            'rows.*' => 'array',
         ]);
 
         $updated = 0;
         $errors = [];
         $clerkRows = [];
 
-        foreach ($request->rows as $row) {
+        foreach (self::officerRows($request->rows) as $row) {
             $rowNumber = $row['row_number'];
             $code = trim((string) $row['department_code']);
 
@@ -734,6 +796,11 @@ class DepartmentController extends Controller
         return response()->json([
             'success' => true,
             'message' => "Updated {$updated} departments",
+            // What the page tells the reader, in order.
+            'messages' => [
+                ['tone' => 'success', 'text' => "{$updated} departments updated"],
+                ...array_map(fn ($error) => ['tone' => 'warn', 'text' => $error], $errors),
+            ],
             'data' => [
                 'update_count' => $updated,
                 'error_count' => count($errors),

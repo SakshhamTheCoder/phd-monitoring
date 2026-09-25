@@ -1,12 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import './Dashboard.css';
 import { useLoading } from '../../context/LoadingContext';
-import ProfileCard from '../../components/profileCard/ProfileCard';
 import { customFetch } from '../../api/base';
 import { baseURL } from '../../api/urls';
-import FacultyProfile from '../admin/ResearchProfile';
 import AdminHome from '../../components/profileCard/AdminHome';
-import UgProfile from '../../components/urf/UgProfile';
+import ServerRecordPage from '../../components/serverPage/ServerRecordPage';
 import { currentRole } from '../../auth/access';
 import LoadError from '../../components/common/LoadError';
 
@@ -68,17 +66,16 @@ const Dashboard = () => {
           {failed ? (
             <LoadError message="Could not load your home page. Check your connection and try again." onRetry={fetchData} />
           ) : view === 'student' ? (
-            // /home sends a thinner profile than /students/me, and ProfileCard
-            // needs that endpoint for its permissions anyway, so it loads its own.
-            <ProfileCard />
+            // /home sends a thinner profile than the profile page reads, so it loads its own.
+            <ServerRecordPage page="student-profile" loadingTitle="Loading profile" failedMessage="Could not load this profile. Check your connection and try again." />
           ) : view === 'ug_student' ? (
-            <UgProfile />
+            <ServerRecordPage page="ug-profile" failedMessage="Could not load your profile. Check your connection and try again." />
           ) : view === 'admin' ? (
             <AdminHome data={data} />
           ) : (
             // The faculty profile is one page; the dashboard shows the
             // signed-in faculty's own.
-            <FacultyProfile facultyCode={data?.faculty_code} />
+            <ServerRecordPage page="research-profile" params={{ facultyCode: data?.faculty_code }} loadingTitle="Loading profile" failedMessage="Could not load this research profile. Check your connection and try again." />
           )}
         </>
       )}

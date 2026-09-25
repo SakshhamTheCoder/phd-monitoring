@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Forms\UrfFormDefinition;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\NotificationManager;
 use App\Http\Controllers\Traits\SaveFile;
@@ -239,7 +240,7 @@ class UrfController extends Controller
             ->mapWithKeys(fn ($approver) => [$approver => $instance->{$approver . '_' . $key}])
             ->all();
 
-        return response()->json([
+        $answer = [
             'form' => $form,
             'form_id' => $instance->id,
             'form_name' => self::FORM_NAMES[$form],
@@ -272,7 +273,16 @@ class UrfController extends Controller
             'may_reject' => $instance->awaits($user) && $step === 'dordc' && $instance instanceof UrfApplication,
             'filled' => $this->filledIn($form, $instance, $application, $office),
             'application' => $this->payload($application->load(self::DETAIL), $user),
-        ]);
+        ];
+        // A report's publications, where the form's publications row reads them.
+        foreach ($answer['filled']['publications'] ?? [] as $list => $rows) {
+            $answer[$list] = $rows;
+        }
+        // The form as the clients draw it, one description for the web and the app.
+        $answer['view'] = (new UrfFormDefinition($form, self::FORM_NAMES[$form], $instance->id, $answer['may_reject']))
+            ->view(json_decode(json_encode($answer), true));
+
+        return response()->json($answer);
     }
 
     private function formRow(string $form, $id)
@@ -528,6 +538,15 @@ class UrfController extends Controller
             return response()->json(['message' => 'This application has been submitted. You can change it only if a reviewer sends it back to you.'], 422);
         }
 
+        // A client drawing the form from the server switches the team member
+        // and the second mentor off rather than emptying each box; what was
+        // typed for them then goes.
+        if ($request->has('has_teammate') && !$request->boolean('has_teammate')) {
+            $request->merge(array_fill_keys(array_map(fn ($f) => "student2_$f", ['name', 'roll_no', 'branch_id', 'year', 'gender', 'email', 'phone']), null));
+        }
+        if ($request->has('has_mentor2') && !$request->boolean('has_mentor2')) {
+            $request->merge(['mentor2_faculty_code' => null]);
+        }
         $second = 'required_with:student2_name|nullable';
         // Mentors are institute faculty, not outside members of the directory.
         $internalFaculty = Rule::exists('faculty', 'faculty_code')->where('type', 'internal');
@@ -704,6 +723,11 @@ class UrfController extends Controller
             'added' => $added,
             'updated' => $updated,
             'errors' => $errors,
+            // What the page tells the reader, in order; a row's error stays up long enough to read.
+            'messages' => [
+                ['tone' => 'success', 'text' => "{$added} projects added, {$updated} updated"],
+                ...array_map(fn ($error) => ['tone' => 'warn', 'text' => $error, 'sticky' => true], $errors),
+            ],
         ]);
     }
 
@@ -977,6 +1001,8 @@ class UrfController extends Controller
         $data['applied_on'] = $this->submittedOn($application)?->toIso8601String();
         $data['awaiting_me'] = $application->awaits($user);
         $data['may_reject'] = $application->awaits($user) && $application->stepFor($user) === 'dordc';
+        // Select or reject, as setStatus allows: a mentor reads the record only.
+        $data['can_decide'] = $user->may('can_manage_urf');
         foreach ($application->reports as $i => $report) {
             $data['reports'][$i]['awaiting_me'] = $report->awaits($user);
         }

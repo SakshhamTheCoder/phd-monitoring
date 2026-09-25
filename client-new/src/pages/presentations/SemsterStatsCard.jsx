@@ -2,6 +2,7 @@ import React, { Suspense, lazy, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { customFetch } from "../../api/base";
 import { baseURL } from "../../api/urls";
+import { useView } from "../../api/views";
 import "./SemesterStatsCard.css";
 import CustomButton from "../../components/forms/fields/CustomButton";
 import CustomModal from "../../components/forms/modal/CustomModal";
@@ -17,7 +18,6 @@ import SchedulePresentation from "../../components/forms/presentations/ScheduleP
 import FileUploadField from "../../components/forms/fields/FileUploadField";
 // import FilterBar from "../../components/filterBar/FilterBar";
 import { formatDate, toDateValue } from '../../utils/timeParse';
-import { currentRole } from '../../auth/access';
 import Loader from "../../components/loader/loader";
 import LoadError from "../../components/common/LoadError";
 import Panel from "../../components/panel/Panel";
@@ -43,12 +43,11 @@ const blankCreateForm = () => ({
 // The list page owns whether its filter bar shows; this card only offers the
 // toggle. Owning a copy here as well let the two disagree, so the first press
 // could appear to do nothing.
+//
+// What the card shows, and which actions this role has on it, is the
+// server's (App\Pages\SemesterCardPage), read afresh each time it mounts.
 const SemesterStatsCard = ({ semesterName = null, filtersEnabled = false, setFilters = null }) => {
-  const [semesterStats, setSemesterStats] = useState(null);
-  // null stats meant both "still loading" and "there is no semester", so the
-  // card told DoRDC to create the first semester while the real one loaded.
-  const [statsLoaded, setStatsLoaded] = useState(false);
-  const [loadError, setLoadError] = useState(false);
+  const { view, failed, retry, reload } = useView("semester-card", semesterName ? { semester: semesterName } : {}, { kept: false });
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openCreateModal, setOpenCreateModal] = useState(false);
   const [body, setBody] = useState({});
@@ -65,7 +64,6 @@ const SemesterStatsCard = ({ semesterName = null, filtersEnabled = false, setFil
   const [open, setOpen] = useState(false);
   const [tabIndex, setTabIndex] = useState(0);
 
-  const role = currentRole() || "student";
   const [createForm, setCreateForm] = useState(blankCreateForm);
   const navigate = useNavigate();
 
@@ -79,7 +77,7 @@ const SemesterStatsCard = ({ semesterName = null, filtersEnabled = false, setFil
   // The refetch puts the saved dates back into the edit form.
   const closeEditModal = () => {
     setOpenEditModal(false);
-    fetchSemesterStats();
+    reload();
   };
 
   const openModal = () => {
@@ -91,7 +89,6 @@ const SemesterStatsCard = ({ semesterName = null, filtersEnabled = false, setFil
   };
 
   useEffect(() => {
-    fetchSemesterStats();
     const periods = generateReportPeriods(2, 1, true);
     const pp = [];
     periods.forEach((period) => {
@@ -103,39 +100,19 @@ const SemesterStatsCard = ({ semesterName = null, filtersEnabled = false, setFil
     setReportPeriods(pp);
   }, []);
 
-  const fetchSemesterStats = async () => {
-    let url = baseURL + "/semester/recent";
-    if (semesterName) {
-      url = baseURL + "/semester/" + semesterName;
-    }
-    const res = await customFetch(url, "GET", {}, false);
-    // The server says there is no semester with a 404. Any other failure is no
-    // answer at all, and offering to create the first semester then invites a
-    // duplicate of the one that failed to load.
-    const noSemester = !res.success && res.status === 404;
-    const data = res.success ? res.response?.data : null;
-    setLoadError(!res.success && !noSemester);
-    setSemesterStats(data || null);
-    if (data) {
-      setEditForm({
-        semester_name: data.semester_name,
-        start_date: new Date(data.start_date),
-        end_date: new Date(data.end_date),
-        notification: data.notification,
-        ppt_file: data.ppt_file || null,
-      });
-    }
-    setStatsLoaded(true);
-  };
-
-  const currentDate = new Date();
-  const isInSemester =
-    semesterStats &&
-    currentDate >= new Date(semesterStats.start_date) &&
-    currentDate <= new Date(semesterStats.end_date);
-
-  const isBeforeSemester =
-    semesterStats && currentDate < new Date(semesterStats.start_date);
+  // Each answer puts the semester's saved values back into the edit form.
+  const editValues = view?.edit_values;
+  useEffect(() => {
+    if (!editValues) return;
+    setEditForm({
+      semester_name: view.semester_name,
+      start_date: new Date(editValues.start_date),
+      end_date: new Date(editValues.end_date),
+      notification: editValues.notification,
+      ppt_file: editValues.ppt_file || null,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editValues]);
 
   const handleEditSubmit = async () => {
     try {
@@ -170,7 +147,7 @@ const SemesterStatsCard = ({ semesterName = null, filtersEnabled = false, setFil
       toast.success("Semester updated.");
 
       setOpenEditModal(false);
-      fetchSemesterStats();
+      reload();
     } catch (err) {
       console.error("PUT error:", err);
     }
@@ -201,123 +178,119 @@ const SemesterStatsCard = ({ semesterName = null, filtersEnabled = false, setFil
       if (!result.success) return;
       toast.success("Semester created.");
       setOpenCreateModal(false);
-      fetchSemesterStats();
+      reload();
     } catch (err) {
       console.error("POST error:", err);
     }
   };
 
-  if (!statsLoaded) {
-    return <Panel><StatusNotice tone="loading" title="Loading semester" /></Panel>;
-  }
-
-  if (loadError) {
+  // A failure is no answer at all, and offering to create the first semester
+  // then would invite a duplicate of the one that failed to load.
+  if (failed) {
     return (
       <Panel>
         <LoadError
           message="Could not load the evaluation semester. Check your connection and try again."
-          onRetry={fetchSemesterStats}
+          onRetry={retry}
         />
       </Panel>
     );
   }
 
-  if (!semesterStats) {
-    // No semesters exist - show create option for admin/dordc
-    if (role === "admin" || role === "dordc") {
-      return (
-        <>
-          <Panel
-            className="reveal"
-            title="No evaluation semester found"
-            actions={<CustomButton text="Create first evaluation semester" onClick={() => setOpenCreateModal(true)} />}
-          >
-            <p className="semester-note">
-              No evaluation semester has been created yet. Create the first semester to start scheduling presentations.
-            </p>
-          </Panel>
-
-          <CustomModal
-            isOpen={openCreateModal}
-            onClose={closeCreateModal}
-            title="Create new semester progress monitoring"
-            minWidth="300px"
-            minHeight="300px"
-          >
-            <GridContainer
-              elements={[
-                <DropdownField
-                  label="Period of report"
-                  options={reportPeriods}
-                  onChange={(value) =>
-                    setCreateForm((prev) => ({ ...prev, semester_name: value }))
-                  }
-                />,
-              ]}
-              space={2}
-            />
-
-            <Suspense fallback={<Loader scope="content" />}>
-            <label className="input-label" htmlFor="semster-stats-card-evaluation-start-date">Evaluation start date</label>
-            <DatePicker id="semster-stats-card-evaluation-start-date"
-              selected={createForm.start_date}
-              onChange={(date) =>
-                setCreateForm({ ...createForm, start_date: date })
-              }
-              className="input-field"
-            />
-
-            <label className="input-label" htmlFor="semster-stats-card-evaluation-end-date">Evaluation end date</label>
-            <DatePicker id="semster-stats-card-evaluation-end-date"
-              selected={createForm.end_date}
-              onChange={(date) =>
-                setCreateForm({ ...createForm, end_date: date })
-              }
-              className="input-field"
-            />
-
-            <label className="input-label">Notification</label>
-            <ToggleSwitch
-              isOn={createForm.notification}
-              onToggle={() =>
-                setCreateForm((prev) => ({
-                  ...prev,
-                  notification: !prev.notification,
-                }))
-              }
-            />
-
-            <FileUploadField
-              label="Sample PPT template (optional)"
-              initialValue={createForm.ppt_file}
-              isLocked={false}
-              onChange={(file) => setCreateForm({ ...createForm, ppt_file: file })}
-              showLabel={true}
-              acceptedTypes=".ppt,.pptx"
-              maxSizeMB={15}
-              fileTypeLabel="PPT/PPTX"
-            />
-
-            <div className="modal-actions">
-              <CustomButton onClick={handleCreateSubmit} text="Create" />
-            </div>
-            </Suspense>
-          </CustomModal>
-        </>
-      );
-    }
-    // For non-admin users, show nothing when no semesters exist
-    return null;
+  if (!view) {
+    return <Panel><StatusNotice tone="loading" title="Loading semester" /></Panel>;
   }
 
-  const { semester_name, start_date, end_date, leave, scheduled, unscheduled } =
-    semesterStats;
+  if (view.state === "hidden") return null;
 
-  const isSemesterCompleted = new Date(end_date) < currentDate;
+  if (view.state === "none") {
+    // No semesters exist: the office is asked to create the first.
+    return (
+      <>
+        <Panel
+          className="reveal"
+          title="No evaluation semester found"
+          actions={<CustomButton text="Create first evaluation semester" onClick={() => setOpenCreateModal(true)} />}
+        >
+          <p className="semester-note">
+            No evaluation semester has been created yet. Create the first semester to start scheduling presentations.
+          </p>
+        </Panel>
 
-  // If semester is completed AND we're not viewing a specific past semester, show only the create new semester prompt
-  // If semesterName is provided, it means we're viewing a specific past semester, so show full stats
-  if (isSemesterCompleted && !semesterName && (role === "admin" || role === "dordc")) {
+        <CustomModal
+          isOpen={openCreateModal}
+          onClose={closeCreateModal}
+          title="Create new semester progress monitoring"
+          minWidth="300px"
+          minHeight="300px"
+        >
+          <GridContainer
+            elements={[
+              <DropdownField
+                label="Period of report"
+                options={reportPeriods}
+                onChange={(value) =>
+                  setCreateForm((prev) => ({ ...prev, semester_name: value }))
+                }
+              />,
+            ]}
+            space={2}
+          />
+
+          <Suspense fallback={<Loader scope="content" />}>
+          <label className="input-label" htmlFor="semster-stats-card-evaluation-start-date">Evaluation start date</label>
+          <DatePicker id="semster-stats-card-evaluation-start-date"
+            selected={createForm.start_date}
+            onChange={(date) =>
+              setCreateForm({ ...createForm, start_date: date })
+            }
+            className="input-field"
+          />
+
+          <label className="input-label" htmlFor="semster-stats-card-evaluation-end-date">Evaluation end date</label>
+          <DatePicker id="semster-stats-card-evaluation-end-date"
+            selected={createForm.end_date}
+            onChange={(date) =>
+              setCreateForm({ ...createForm, end_date: date })
+            }
+            className="input-field"
+          />
+
+          <label className="input-label">Notification</label>
+          <ToggleSwitch
+            isOn={createForm.notification}
+            onToggle={() =>
+              setCreateForm((prev) => ({
+                ...prev,
+                notification: !prev.notification,
+              }))
+            }
+          />
+
+          <FileUploadField
+            label="Sample PPT template (optional)"
+            initialValue={createForm.ppt_file}
+            isLocked={false}
+            onChange={(file) => setCreateForm({ ...createForm, ppt_file: file })}
+            showLabel={true}
+            acceptedTypes=".ppt,.pptx"
+            maxSizeMB={15}
+            fileTypeLabel="PPT/PPTX"
+          />
+
+          <div className="modal-actions">
+            <CustomButton onClick={handleCreateSubmit} text="Create" />
+          </div>
+          </Suspense>
+        </CustomModal>
+      </>
+    );
+  }
+
+  const { semester_name } = view;
+
+  // The latest semester is over: the office is asked to create the next.
+  if (view.state === "completed") {
     return (
       <>
         <Panel
@@ -400,14 +373,11 @@ const SemesterStatsCard = ({ semesterName = null, filtersEnabled = false, setFil
     );
   }
 
-  // If semester is completed and user is not admin/dordc, and not viewing specific semester, show nothing
-  if (isSemesterCompleted && !semesterName) {
-    return null;
-  }
-
-  const readsCounts = role === "admin" || role === "hod" || role === "dordc" || role === "phd_coordinator";
-  const schedules = (isInSemester || isBeforeSemester) && (role === "faculty" || role === "phd_coordinator");
-  const edits = (isInSemester || isBeforeSemester) && (role === "admin" || role === "dordc");
+  const runAction = (action) => {
+    if (action.navigate_below) navigate(location + action.navigate_below);
+    else if (action.opens === "schedule") openModal();
+    else setOpenEditModal(true);
+  };
 
   // One filled button: scheduling or editing the semester, whichever this
   // role has. Opening the semester and the filter toggle sit beside it.
@@ -417,46 +387,31 @@ const SemesterStatsCard = ({ semesterName = null, filtersEnabled = false, setFil
         className="reveal"
         title={
           <>
-            {semester_name} semester stats
-            {isInSemester && <span className="badge badge--success semester-badge">Active</span>}
-            {isBeforeSemester && <span className="badge badge--info semester-badge">Upcoming</span>}
+            {view.title_parts.map((part) => <React.Fragment key={part}>{part}</React.Fragment>)}
+            {view.badge && <span className={`badge badge--${view.badge.tone} semester-badge`}>{view.badge.text}</span>}
           </>
         }
         actions={
           <>
-            {isInSemester && !semesterName && (
-              <CustomButton
-                onClick={() => navigate(location + `/semester/${semester_name}`)}
-                text="View current semester details"
-                variant="secondary"
-              />
-            )}
-            {setFilters && (role === "admin" || role === "dordc" || role === "faculty" || role === "phd_coordinator") && (
-              <CustomButton
-                onClick={() => setFilters(!filtersEnabled)}
-                text={filtersEnabled ? "Disable advanced filters" : "Enable advanced filters"}
-                variant="secondary"
-              />
-            )}
-            {schedules && (
-              <CustomButton onClick={openModal} text="Schedule progress monitoring" />
-            )}
-            {edits && (
-              <CustomButton text="Edit evaluation semester" onClick={() => setOpenEditModal(true)} />
-            )}
+            {view.actions.map((action) => (action.toggles_filters ? (
+              setFilters && (
+                <CustomButton
+                  key="filters"
+                  onClick={() => setFilters(!filtersEnabled)}
+                  text={filtersEnabled ? "Disable advanced filters" : "Enable advanced filters"}
+                  variant="secondary"
+                />
+              )
+            ) : (
+              <CustomButton key={action.label} onClick={() => runAction(action)} text={action.label} variant={action.variant} />
+            )))}
           </>
         }
       >
         <dl className="facts">
-          <div><dt>Start date</dt><dd>{formatDate(start_date)}</dd></div>
-          <div><dt>End date</dt><dd>{formatDate(end_date)}</dd></div>
-          {readsCounts && (
-            <>
-              <div><dt>Leaves scheduled</dt><dd>{leave}</dd></div>
-              <div><dt>Scheduled</dt><dd>{scheduled}</dd></div>
-              <div><dt>Unscheduled</dt><dd>{unscheduled}</dd></div>
-            </>
-          )}
+          {view.facts.map((fact) => (
+            <div key={fact.label}><dt>{fact.label}</dt><dd>{"date" in fact ? formatDate(fact.date) : fact.text}</dd></div>
+          ))}
         </dl>
       </Panel>
 
@@ -486,7 +441,7 @@ const SemesterStatsCard = ({ semesterName = null, filtersEnabled = false, setFil
             semester={semester_name}
             close={() => {
               closeModal();
-              fetchSemesterStats();
+              reload();
             }}
           />
         </div>
@@ -496,7 +451,7 @@ const SemesterStatsCard = ({ semesterName = null, filtersEnabled = false, setFil
       </>
     </CustomModal>
 
-      {(role === "admin" || role === "dordc") && (
+      {view.edits && (
         <CustomModal
           isOpen={openEditModal}
           onClose={closeEditModal}

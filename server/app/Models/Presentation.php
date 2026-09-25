@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Forms\PresentationDefinition;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Traits\ModelCommonFormFields;
@@ -162,6 +163,7 @@ class Presentation extends Model
         if($this->student->checkSupervises($fac_id)){
             $formData['current_review'] = $this->supervisorReviews->where('faculty_id', $fac_id)->first();
         }
+        $formData['view'] = (new PresentationDefinition)->view($formData);
 
         return $formData;
     }

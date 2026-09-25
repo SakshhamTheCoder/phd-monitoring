@@ -3,6 +3,7 @@
 
 namespace App\Models;
 
+use App\Forms\SupervisorAllocationDefinition;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Traits\ModelCommonFormFields;
@@ -37,7 +38,7 @@ class SupervisorAllocation extends Model
         public function fullForm($user)
         {
             $commonJSON = $this->fullCommonForm($user);
-            return array_merge($commonJSON, [
+            $data = array_merge($commonJSON, [
                 'broad_area_of_research' => $this->student->areaPreferences->pluck('broad_area'),
                 'prefrences' => collect($this->prefrences)->map(function ($prefrence) {
                     $faculty = Faculty::where('faculty_code', $prefrence)->first();
@@ -61,6 +62,8 @@ class SupervisorAllocation extends Model
                     ];
                 }),
             ]);
+            $data['view'] = (new SupervisorAllocationDefinition)->view($data);
+            return $data;
         }
         
 }

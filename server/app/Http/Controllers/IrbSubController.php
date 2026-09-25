@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Forms\IrbSubmissionDefinition;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\GeneralFormCreate;
 use App\Http\Controllers\Traits\GeneralFormHandler;
@@ -28,6 +29,9 @@ use App\Support\FormLadder;
 
 class IrbSubController extends Controller
 {
+    /** Who may approve several of these at once; the list page offers it to the same. */
+    public const BULK_APPROVERS = ['phd_coordinator', 'hod', 'dra', 'dordc'];
+
     use GeneralFormHandler;
     use GeneralFormSubmitter;
     use GeneralFormList;
@@ -174,8 +178,7 @@ class IrbSubController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
         $form_ids = $request->input('form_ids');
-        $allowed_roles = ['phd_coordinator', 'hod', 'dra', 'dordc'];
-        if (!in_array($role->role, $allowed_roles)) {
+        if (!in_array($user->current_role->role, self::BULK_APPROVERS, true)) {
             return $this->refuse();
         }
         $request->validate([
@@ -192,21 +195,14 @@ class IrbSubController extends Controller
 
     private function studentSubmit($user, $request, $form_id)
     {
-        $request->validate([
-            'revised_phd_objectives' => 'required|array',
-            'revised_phd_title' => 'required|string',
-            'irb_pdf' => 'nullable|file|mimes:pdf|max:20480',
-            'date_of_irb' => 'required|string',
-        ]);
+        // The upload is required only while none is stored: a resubmission
+        // after a send-back keeps the stored PDF unless a new one comes.
+        $request->validate((new IrbSubmissionDefinition)->rules('student', IrbSubForm::find($form_id)?->fullForm($user) ?? []));
 
         $model = IrbSubForm::class;
 
         return $this->submitForm($user, $request, $form_id, $model,'student', 'student','faculty',
         function ($formInstance) use ($request, $user) {
-            // A resubmission after a send-back keeps the stored PDF unless a new one comes.
-            if (!$formInstance->revised_irb_pdf) {
-                $request->validate(['irb_pdf' => 'required|file|mimes:pdf|max:20480']);
-            }
             $link = $request->hasFile('irb_pdf')
                 ? $this->replaceUploadedFile($formInstance->revised_irb_pdf, $request->file('irb_pdf'), 'irb_sub_rev', $user->student->roll_no)
                 : $formInstance->revised_irb_pdf;

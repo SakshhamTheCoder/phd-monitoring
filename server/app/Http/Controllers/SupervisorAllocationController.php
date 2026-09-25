@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Forms\SupervisorAllocationDefinition;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\GeneralFormCreate;
 use App\Http\Controllers\Traits\GeneralFormHandler;
@@ -20,6 +21,9 @@ use App\Support\FormLadder;
 
 class SupervisorAllocationController extends Controller
 {
+    /** Who may approve several of these at once; the list page offers it to the same. */
+    public const BULK_APPROVERS = ['hod'];
+
     use GeneralFormHandler;
     use GeneralFormSubmitter;
     use GeneralFormList;
@@ -147,7 +151,7 @@ class SupervisorAllocationController extends Controller
         $request->validate([
             'form_ids' => 'array|required',
         ]);
-        if ($role->role != 'hod') {
+        if (!in_array($user->current_role->role, self::BULK_APPROVERS, true)) {
             return $this->refuse();
         }
         $request->merge(['approval' => true]);
@@ -269,14 +273,9 @@ class SupervisorAllocationController extends Controller
             'student',
             'phd_coordinator',
             function ($formInstance) use ($request, $user) {
-                $request->validate([
-                    'prefrences' => 'required|array',
-                    // Faculty codes. Anything else reached array_unique() below and
-                    // surfaced as "Array to string conversion".
-                    'prefrences.*' => 'nullable|integer',
-                    'broad_area_of_research' => 'required|array',
-                    'broad_area_of_research.*' => 'nullable|string|max:255',
-                ]);
+                // Faculty codes only: anything else reached array_unique() below
+                // and surfaced as "Array to string conversion".
+                $request->validate((new SupervisorAllocationDefinition)->rules('student', $formInstance->fullForm($user)));
                 $prefrences = array_values(array_filter($request->prefrences, fn ($code) => $code !== null));
                 if (count($prefrences) != 6 || count(array_unique($prefrences)) != 6) {
                     throw new \Exception("Please choose six different supervisors.");
@@ -323,9 +322,7 @@ class SupervisorAllocationController extends Controller
             'student',
             'hod',
             function ($formInstance) use ($request, $user) {
-                $request->validate([
-                    'supervisors' => 'required|array',
-                ]);
+                $request->validate((new SupervisorAllocationDefinition)->rules('phd_coordinator', $formInstance->fullForm($user)));
                 $supervisors = $request->supervisors;
                 if (count($supervisors) != count(array_unique($supervisors))) {
                     throw new \Exception("Please select unique supervisors");

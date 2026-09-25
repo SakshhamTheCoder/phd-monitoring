@@ -9,9 +9,9 @@ use Illuminate\Support\Facades\Route;
 // Sign-up and the branch list it offers: nobody is logged in yet. Everything
 // below needs a session.
 Route::get('/branches', [UrfController::class, 'branches']);
-Route::post('/signup', [UgSignupController::class, 'signup'])->middleware('throttle:10,1');
+Route::post('/signup', [UgSignupController::class, 'signup'])->middleware('throttle:10,1,urf-signup');
 Route::get('/verify-email/{id}', [UgSignupController::class, 'verify'])->name('urf.verify-email')->middleware('signed');
-Route::post('/resend-verification', [UgSignupController::class, 'resend'])->middleware('throttle:6,1');
+Route::post('/resend-verification', [UgSignupController::class, 'resend'])->middleware('throttle:6,1,urf-resend-verification');
 
 // Undergraduate Research Fellowship. The controller checks who may do what.
 Route::middleware('auth:sanctum')->group(function () {

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Forms\ReviseTitleDefinition;
 use App\Models\Traits\ModelCommonFormFields;
 
 class ReviseTitleForm extends Model
@@ -32,7 +33,7 @@ class ReviseTitleForm extends Model
 
     public function fullForm($user)
     {
-        return array_merge($this->fullCommonForm($user), [
+        $data = array_merge($this->fullCommonForm($user), [
             'revised_title' => $this->revised_title,
             'revised_objectives' => $this->revised_objectives ?? [],
             // What the revision replaces: the objectives the IRB submission
@@ -42,5 +43,7 @@ class ReviseTitleForm extends Model
             'current_status' => $this->student->current_status,
             'address' => $this->student->user->address,
         ]);
+        $data['view'] = (new ReviseTitleDefinition)->view($data);
+        return $data;
     }
 }

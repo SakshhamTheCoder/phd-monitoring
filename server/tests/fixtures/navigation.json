@@ -1,0 +1,4389 @@
+[
+    {
+        "role": "admin",
+        "capabilities": {
+            "can_read_all_students": true,
+            "can_read_all_faculties": true,
+            "can_read_supervised_students": false,
+            "can_read_department_students": false,
+            "can_read_department_faculties": false,
+            "can_edit_all_students": true,
+            "can_edit_all_faculties": true,
+            "can_edit_department_students": true,
+            "can_edit_department_faculties": true,
+            "can_edit_own_profile": true,
+            "can_edit_phd_title": true,
+            "can_add_department_students": true,
+            "can_add_department_faculties": true,
+            "can_manage_faculties": true,
+            "can_manage_students": true,
+            "can_read_supervisors": true,
+            "can_read_doctoral_committee": true,
+            "can_read_external": false,
+            "can_edit_external": false,
+            "can_edit_supervisors": true,
+            "can_edit_doctoral_committee": true,
+            "can_delete_department_students": true,
+            "can_delete_department_faculties": true,
+            "can_delete_faculties": true,
+            "can_delete_students": true,
+            "can_manage_roles": true,
+            "can_edit_department": true,
+            "can_add_department": true,
+            "can_read_committee_students": false,
+            "can_manage_users": true,
+            "can_manage_form_levels": true,
+            "can_manage_supervisor_records": true,
+            "can_manage_clerks": true,
+            "can_mark_attendance": true,
+            "can_read_own_clerk_departments": false,
+            "can_read_leave_reason": true,
+            "can_manage_app_settings": true,
+            "can_read_leave_settings": true,
+            "can_resend_external_review": true,
+            "can_propose_supervisor_changes": true,
+            "can_manage_supervisor_changes": true,
+            "can_manage_projects": true,
+            "can_manage_all_projects": true,
+            "can_manage_own_publications": false,
+            "can_edit_own_student_profile": false,
+            "can_read_own_leave_balance": false,
+            "can_apply_for_leave": false,
+            "can_suggest_examiners": false,
+            "can_read_faculty_directory": true,
+            "can_read_faculty_supervision": true,
+            "can_read_faculty_phone": true,
+            "can_apply_for_urf": false,
+            "can_manage_urf": true,
+            "can_read_urf_mentees": true
+        },
+        "features": {
+            "project_management": true,
+            "job_openings": true
+        },
+        "me": {
+            "areas": {
+                "home": true,
+                "notifications": true,
+                "projects": true,
+                "presentations": true,
+                "scholars": true,
+                "facultyDirectory": true,
+                "departments": true,
+                "supervisorApprovals": true,
+                "urf": true,
+                "attendance": true,
+                "courses": true,
+                "courseManagement": true,
+                "areasOfSpecialization": true,
+                "publications": false,
+                "openings": false,
+                "admin": true
+            },
+            "nav": [
+                {
+                    "path": "\/home",
+                    "label": "Home",
+                    "icon": "home"
+                },
+                {
+                    "path": "\/projects",
+                    "label": "Projects",
+                    "icon": "briefcase"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap"
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/clerks",
+                    "label": "Clerks",
+                    "icon": "id-card-o"
+                },
+                {
+                    "path": "\/departments",
+                    "label": "Departments",
+                    "icon": "building"
+                },
+                {
+                    "path": "\/supervisor-doctoral-approvals",
+                    "label": "Supervisor Approvals",
+                    "icon": "user-plus"
+                },
+                {
+                    "path": "\/attendance",
+                    "label": "Attendance",
+                    "icon": "calendar-check-o"
+                },
+                {
+                    "path": "\/configuration",
+                    "label": "Configuration",
+                    "icon": "sliders"
+                },
+                {
+                    "path": "\/logs",
+                    "label": "Logs",
+                    "icon": "history"
+                },
+                {
+                    "path": "\/users",
+                    "label": "Manage Users",
+                    "icon": "cogs"
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell"
+                },
+                {
+                    "path": "\/areasOfSpecialization",
+                    "label": "Areas of Specialization",
+                    "icon": "list"
+                },
+                {
+                    "path": "\/outside-experts",
+                    "label": "Outside Experts",
+                    "icon": "user-o"
+                }
+            ],
+            "labels": {
+                "\/home": "Home",
+                "\/projects": "Projects",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring",
+                "\/urf": "URF",
+                "\/courses": "Courses",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/clerks": "Clerks",
+                "\/departments": "Departments",
+                "\/supervisor-doctoral-approvals": "Supervisor Approvals",
+                "\/attendance": "Attendance",
+                "\/configuration": "Configuration",
+                "\/logs": "Logs",
+                "\/users": "Manage Users",
+                "\/notifications": "Notifications",
+                "\/areasOfSpecialization": "Areas of Specialization",
+                "\/outside-experts": "Outside Experts"
+            },
+            "tiles": [
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/departments",
+                    "label": "Departments",
+                    "icon": "building"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Presentations",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap"
+                },
+                {
+                    "path": "\/projects",
+                    "label": "Projects",
+                    "icon": "briefcase"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                },
+                {
+                    "path": "\/attendance",
+                    "label": "Mark attendance",
+                    "icon": "calendar-check-o"
+                },
+                {
+                    "path": "\/supervisor-doctoral-approvals",
+                    "label": "Supervisor approvals",
+                    "icon": "user-plus"
+                },
+                {
+                    "path": "\/clerks",
+                    "label": "Clerks",
+                    "icon": "id-card-o"
+                },
+                {
+                    "path": "\/configuration",
+                    "label": "Configuration",
+                    "icon": "sliders"
+                },
+                {
+                    "path": "\/users",
+                    "label": "Manage users",
+                    "icon": "cogs"
+                },
+                {
+                    "path": "\/areasOfSpecialization",
+                    "label": "Areas of specialization",
+                    "icon": "list"
+                },
+                {
+                    "path": "\/outside-experts",
+                    "label": "Outside experts",
+                    "icon": "user-o"
+                },
+                {
+                    "path": "\/logs",
+                    "label": "Activity logs",
+                    "icon": "history"
+                },
+                {
+                    "path": "\/forms\/manage",
+                    "label": "Manage forms",
+                    "icon": "pencil-square-o"
+                }
+            ]
+        }
+    },
+    {
+        "role": "admin",
+        "capabilities": {
+            "can_read_all_students": true,
+            "can_read_all_faculties": true,
+            "can_read_supervised_students": false,
+            "can_read_department_students": false,
+            "can_read_department_faculties": false,
+            "can_edit_all_students": true,
+            "can_edit_all_faculties": true,
+            "can_edit_department_students": true,
+            "can_edit_department_faculties": true,
+            "can_edit_own_profile": true,
+            "can_edit_phd_title": true,
+            "can_add_department_students": true,
+            "can_add_department_faculties": true,
+            "can_manage_faculties": true,
+            "can_manage_students": true,
+            "can_read_supervisors": true,
+            "can_read_doctoral_committee": true,
+            "can_read_external": false,
+            "can_edit_external": false,
+            "can_edit_supervisors": true,
+            "can_edit_doctoral_committee": true,
+            "can_delete_department_students": true,
+            "can_delete_department_faculties": true,
+            "can_delete_faculties": true,
+            "can_delete_students": true,
+            "can_manage_roles": true,
+            "can_edit_department": true,
+            "can_add_department": true,
+            "can_read_committee_students": false,
+            "can_manage_users": true,
+            "can_manage_form_levels": true,
+            "can_manage_supervisor_records": true,
+            "can_manage_clerks": true,
+            "can_mark_attendance": true,
+            "can_read_own_clerk_departments": false,
+            "can_read_leave_reason": true,
+            "can_manage_app_settings": true,
+            "can_read_leave_settings": true,
+            "can_resend_external_review": true,
+            "can_propose_supervisor_changes": true,
+            "can_manage_supervisor_changes": true,
+            "can_manage_projects": true,
+            "can_manage_all_projects": true,
+            "can_manage_own_publications": false,
+            "can_edit_own_student_profile": false,
+            "can_read_own_leave_balance": false,
+            "can_apply_for_leave": false,
+            "can_suggest_examiners": false,
+            "can_read_faculty_directory": true,
+            "can_read_faculty_supervision": true,
+            "can_read_faculty_phone": true,
+            "can_apply_for_urf": false,
+            "can_manage_urf": true,
+            "can_read_urf_mentees": true
+        },
+        "features": {
+            "project_management": false,
+            "job_openings": false
+        },
+        "me": {
+            "areas": {
+                "home": true,
+                "notifications": true,
+                "projects": true,
+                "presentations": true,
+                "scholars": true,
+                "facultyDirectory": true,
+                "departments": true,
+                "supervisorApprovals": true,
+                "urf": true,
+                "attendance": true,
+                "courses": true,
+                "courseManagement": true,
+                "areasOfSpecialization": true,
+                "publications": false,
+                "openings": false,
+                "admin": true
+            },
+            "nav": [
+                {
+                    "path": "\/home",
+                    "label": "Home",
+                    "icon": "home"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap"
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/clerks",
+                    "label": "Clerks",
+                    "icon": "id-card-o"
+                },
+                {
+                    "path": "\/departments",
+                    "label": "Departments",
+                    "icon": "building"
+                },
+                {
+                    "path": "\/supervisor-doctoral-approvals",
+                    "label": "Supervisor Approvals",
+                    "icon": "user-plus"
+                },
+                {
+                    "path": "\/attendance",
+                    "label": "Attendance",
+                    "icon": "calendar-check-o"
+                },
+                {
+                    "path": "\/configuration",
+                    "label": "Configuration",
+                    "icon": "sliders"
+                },
+                {
+                    "path": "\/logs",
+                    "label": "Logs",
+                    "icon": "history"
+                },
+                {
+                    "path": "\/users",
+                    "label": "Manage Users",
+                    "icon": "cogs"
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell"
+                },
+                {
+                    "path": "\/areasOfSpecialization",
+                    "label": "Areas of Specialization",
+                    "icon": "list"
+                },
+                {
+                    "path": "\/outside-experts",
+                    "label": "Outside Experts",
+                    "icon": "user-o"
+                }
+            ],
+            "labels": {
+                "\/home": "Home",
+                "\/projects": "Projects",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring",
+                "\/urf": "URF",
+                "\/courses": "Courses",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/clerks": "Clerks",
+                "\/departments": "Departments",
+                "\/supervisor-doctoral-approvals": "Supervisor Approvals",
+                "\/attendance": "Attendance",
+                "\/configuration": "Configuration",
+                "\/logs": "Logs",
+                "\/users": "Manage Users",
+                "\/notifications": "Notifications",
+                "\/areasOfSpecialization": "Areas of Specialization",
+                "\/outside-experts": "Outside Experts"
+            },
+            "tiles": [
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/departments",
+                    "label": "Departments",
+                    "icon": "building"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Presentations",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                },
+                {
+                    "path": "\/attendance",
+                    "label": "Mark attendance",
+                    "icon": "calendar-check-o"
+                },
+                {
+                    "path": "\/supervisor-doctoral-approvals",
+                    "label": "Supervisor approvals",
+                    "icon": "user-plus"
+                },
+                {
+                    "path": "\/clerks",
+                    "label": "Clerks",
+                    "icon": "id-card-o"
+                },
+                {
+                    "path": "\/configuration",
+                    "label": "Configuration",
+                    "icon": "sliders"
+                },
+                {
+                    "path": "\/users",
+                    "label": "Manage users",
+                    "icon": "cogs"
+                },
+                {
+                    "path": "\/areasOfSpecialization",
+                    "label": "Areas of specialization",
+                    "icon": "list"
+                },
+                {
+                    "path": "\/outside-experts",
+                    "label": "Outside experts",
+                    "icon": "user-o"
+                },
+                {
+                    "path": "\/logs",
+                    "label": "Activity logs",
+                    "icon": "history"
+                },
+                {
+                    "path": "\/forms\/manage",
+                    "label": "Manage forms",
+                    "icon": "pencil-square-o"
+                }
+            ]
+        }
+    },
+    {
+        "role": "phd_coordinator",
+        "capabilities": {
+            "can_read_all_students": false,
+            "can_read_all_faculties": false,
+            "can_read_supervised_students": false,
+            "can_read_department_students": true,
+            "can_read_department_faculties": true,
+            "can_edit_all_students": false,
+            "can_edit_all_faculties": false,
+            "can_edit_department_students": false,
+            "can_edit_department_faculties": false,
+            "can_edit_own_profile": true,
+            "can_edit_phd_title": false,
+            "can_add_department_students": false,
+            "can_add_department_faculties": false,
+            "can_manage_faculties": true,
+            "can_manage_students": false,
+            "can_read_supervisors": true,
+            "can_read_doctoral_committee": true,
+            "can_read_external": false,
+            "can_edit_external": false,
+            "can_edit_supervisors": false,
+            "can_edit_doctoral_committee": false,
+            "can_delete_department_students": false,
+            "can_delete_department_faculties": false,
+            "can_delete_faculties": false,
+            "can_delete_students": false,
+            "can_manage_roles": false,
+            "can_edit_department": false,
+            "can_add_department": false,
+            "can_read_committee_students": false,
+            "can_manage_users": false,
+            "can_manage_form_levels": false,
+            "can_manage_supervisor_records": false,
+            "can_manage_clerks": false,
+            "can_mark_attendance": false,
+            "can_read_own_clerk_departments": false,
+            "can_read_leave_reason": false,
+            "can_manage_app_settings": false,
+            "can_read_leave_settings": false,
+            "can_resend_external_review": true,
+            "can_propose_supervisor_changes": true,
+            "can_manage_supervisor_changes": false,
+            "can_manage_projects": true,
+            "can_manage_all_projects": false,
+            "can_manage_own_publications": false,
+            "can_edit_own_student_profile": false,
+            "can_read_own_leave_balance": false,
+            "can_apply_for_leave": false,
+            "can_suggest_examiners": false,
+            "can_read_faculty_directory": true,
+            "can_read_faculty_supervision": true,
+            "can_read_faculty_phone": true,
+            "can_apply_for_urf": false,
+            "can_manage_urf": false,
+            "can_read_urf_mentees": true
+        },
+        "features": {
+            "project_management": true,
+            "job_openings": true
+        },
+        "me": {
+            "areas": {
+                "home": true,
+                "notifications": true,
+                "projects": true,
+                "presentations": true,
+                "scholars": true,
+                "facultyDirectory": true,
+                "departments": false,
+                "supervisorApprovals": false,
+                "urf": true,
+                "attendance": false,
+                "courses": true,
+                "courseManagement": true,
+                "areasOfSpecialization": true,
+                "publications": false,
+                "openings": false,
+                "admin": false
+            },
+            "nav": [
+                {
+                    "path": "\/home",
+                    "label": "Home",
+                    "icon": "home"
+                },
+                {
+                    "path": "\/projects",
+                    "label": "Projects",
+                    "icon": "briefcase"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap"
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell"
+                },
+                {
+                    "path": "\/areasOfSpecialization",
+                    "label": "Areas of Specialization",
+                    "icon": "list"
+                }
+            ],
+            "labels": {
+                "\/home": "Home",
+                "\/projects": "Projects",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring",
+                "\/urf": "URF",
+                "\/courses": "Courses",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/notifications": "Notifications",
+                "\/areasOfSpecialization": "Areas of Specialization"
+            },
+            "tiles": [
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Presentations",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap"
+                },
+                {
+                    "path": "\/projects",
+                    "label": "Projects",
+                    "icon": "briefcase"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                },
+                {
+                    "path": "\/areasOfSpecialization",
+                    "label": "Areas of specialization",
+                    "icon": "list"
+                }
+            ]
+        }
+    },
+    {
+        "role": "phd_coordinator",
+        "capabilities": {
+            "can_read_all_students": false,
+            "can_read_all_faculties": false,
+            "can_read_supervised_students": false,
+            "can_read_department_students": true,
+            "can_read_department_faculties": true,
+            "can_edit_all_students": false,
+            "can_edit_all_faculties": false,
+            "can_edit_department_students": false,
+            "can_edit_department_faculties": false,
+            "can_edit_own_profile": true,
+            "can_edit_phd_title": false,
+            "can_add_department_students": false,
+            "can_add_department_faculties": false,
+            "can_manage_faculties": true,
+            "can_manage_students": false,
+            "can_read_supervisors": true,
+            "can_read_doctoral_committee": true,
+            "can_read_external": false,
+            "can_edit_external": false,
+            "can_edit_supervisors": false,
+            "can_edit_doctoral_committee": false,
+            "can_delete_department_students": false,
+            "can_delete_department_faculties": false,
+            "can_delete_faculties": false,
+            "can_delete_students": false,
+            "can_manage_roles": false,
+            "can_edit_department": false,
+            "can_add_department": false,
+            "can_read_committee_students": false,
+            "can_manage_users": false,
+            "can_manage_form_levels": false,
+            "can_manage_supervisor_records": false,
+            "can_manage_clerks": false,
+            "can_mark_attendance": false,
+            "can_read_own_clerk_departments": false,
+            "can_read_leave_reason": false,
+            "can_manage_app_settings": false,
+            "can_read_leave_settings": false,
+            "can_resend_external_review": true,
+            "can_propose_supervisor_changes": true,
+            "can_manage_supervisor_changes": false,
+            "can_manage_projects": true,
+            "can_manage_all_projects": false,
+            "can_manage_own_publications": false,
+            "can_edit_own_student_profile": false,
+            "can_read_own_leave_balance": false,
+            "can_apply_for_leave": false,
+            "can_suggest_examiners": false,
+            "can_read_faculty_directory": true,
+            "can_read_faculty_supervision": true,
+            "can_read_faculty_phone": true,
+            "can_apply_for_urf": false,
+            "can_manage_urf": false,
+            "can_read_urf_mentees": true
+        },
+        "features": {
+            "project_management": false,
+            "job_openings": false
+        },
+        "me": {
+            "areas": {
+                "home": true,
+                "notifications": true,
+                "projects": true,
+                "presentations": true,
+                "scholars": true,
+                "facultyDirectory": true,
+                "departments": false,
+                "supervisorApprovals": false,
+                "urf": true,
+                "attendance": false,
+                "courses": true,
+                "courseManagement": true,
+                "areasOfSpecialization": true,
+                "publications": false,
+                "openings": false,
+                "admin": false
+            },
+            "nav": [
+                {
+                    "path": "\/home",
+                    "label": "Home",
+                    "icon": "home"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap"
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell"
+                },
+                {
+                    "path": "\/areasOfSpecialization",
+                    "label": "Areas of Specialization",
+                    "icon": "list"
+                }
+            ],
+            "labels": {
+                "\/home": "Home",
+                "\/projects": "Projects",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring",
+                "\/urf": "URF",
+                "\/courses": "Courses",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/notifications": "Notifications",
+                "\/areasOfSpecialization": "Areas of Specialization"
+            },
+            "tiles": [
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Presentations",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                },
+                {
+                    "path": "\/areasOfSpecialization",
+                    "label": "Areas of specialization",
+                    "icon": "list"
+                }
+            ]
+        }
+    },
+    {
+        "role": "hod",
+        "capabilities": {
+            "can_read_all_students": false,
+            "can_read_all_faculties": false,
+            "can_read_supervised_students": false,
+            "can_read_department_students": true,
+            "can_read_department_faculties": true,
+            "can_edit_all_students": false,
+            "can_edit_all_faculties": false,
+            "can_edit_department_students": false,
+            "can_edit_department_faculties": false,
+            "can_edit_own_profile": true,
+            "can_edit_phd_title": false,
+            "can_add_department_students": false,
+            "can_add_department_faculties": false,
+            "can_manage_faculties": false,
+            "can_manage_students": false,
+            "can_read_supervisors": true,
+            "can_read_doctoral_committee": true,
+            "can_read_external": true,
+            "can_edit_external": true,
+            "can_edit_supervisors": false,
+            "can_edit_doctoral_committee": false,
+            "can_delete_department_students": false,
+            "can_delete_department_faculties": false,
+            "can_delete_faculties": false,
+            "can_delete_students": false,
+            "can_manage_roles": false,
+            "can_edit_department": false,
+            "can_add_department": false,
+            "can_read_committee_students": false,
+            "can_manage_users": false,
+            "can_manage_form_levels": false,
+            "can_manage_supervisor_records": false,
+            "can_manage_clerks": false,
+            "can_mark_attendance": false,
+            "can_read_own_clerk_departments": false,
+            "can_read_leave_reason": true,
+            "can_manage_app_settings": false,
+            "can_read_leave_settings": true,
+            "can_resend_external_review": false,
+            "can_propose_supervisor_changes": true,
+            "can_manage_supervisor_changes": false,
+            "can_manage_projects": true,
+            "can_manage_all_projects": false,
+            "can_manage_own_publications": false,
+            "can_edit_own_student_profile": false,
+            "can_read_own_leave_balance": false,
+            "can_apply_for_leave": false,
+            "can_suggest_examiners": false,
+            "can_read_faculty_directory": true,
+            "can_read_faculty_supervision": true,
+            "can_read_faculty_phone": true,
+            "can_apply_for_urf": false,
+            "can_manage_urf": false,
+            "can_read_urf_mentees": true
+        },
+        "features": {
+            "project_management": true,
+            "job_openings": true
+        },
+        "me": {
+            "areas": {
+                "home": true,
+                "notifications": true,
+                "projects": true,
+                "presentations": true,
+                "scholars": true,
+                "facultyDirectory": true,
+                "departments": false,
+                "supervisorApprovals": false,
+                "urf": true,
+                "attendance": true,
+                "courses": true,
+                "courseManagement": true,
+                "areasOfSpecialization": true,
+                "publications": false,
+                "openings": false,
+                "admin": false
+            },
+            "nav": [
+                {
+                    "path": "\/home",
+                    "label": "Home",
+                    "icon": "home"
+                },
+                {
+                    "path": "\/projects",
+                    "label": "Projects",
+                    "icon": "briefcase"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap"
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/attendance",
+                    "label": "Attendance",
+                    "icon": "calendar-check-o"
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell"
+                },
+                {
+                    "path": "\/areasOfSpecialization",
+                    "label": "Areas of Specialization",
+                    "icon": "list"
+                }
+            ],
+            "labels": {
+                "\/home": "Home",
+                "\/projects": "Projects",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring",
+                "\/urf": "URF",
+                "\/courses": "Courses",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/attendance": "Attendance",
+                "\/notifications": "Notifications",
+                "\/areasOfSpecialization": "Areas of Specialization"
+            },
+            "tiles": [
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Presentations",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap"
+                },
+                {
+                    "path": "\/projects",
+                    "label": "Projects",
+                    "icon": "briefcase"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                },
+                {
+                    "path": "\/attendance",
+                    "label": "Mark attendance",
+                    "icon": "calendar-check-o"
+                },
+                {
+                    "path": "\/areasOfSpecialization",
+                    "label": "Areas of specialization",
+                    "icon": "list"
+                }
+            ]
+        }
+    },
+    {
+        "role": "hod",
+        "capabilities": {
+            "can_read_all_students": false,
+            "can_read_all_faculties": false,
+            "can_read_supervised_students": false,
+            "can_read_department_students": true,
+            "can_read_department_faculties": true,
+            "can_edit_all_students": false,
+            "can_edit_all_faculties": false,
+            "can_edit_department_students": false,
+            "can_edit_department_faculties": false,
+            "can_edit_own_profile": true,
+            "can_edit_phd_title": false,
+            "can_add_department_students": false,
+            "can_add_department_faculties": false,
+            "can_manage_faculties": false,
+            "can_manage_students": false,
+            "can_read_supervisors": true,
+            "can_read_doctoral_committee": true,
+            "can_read_external": true,
+            "can_edit_external": true,
+            "can_edit_supervisors": false,
+            "can_edit_doctoral_committee": false,
+            "can_delete_department_students": false,
+            "can_delete_department_faculties": false,
+            "can_delete_faculties": false,
+            "can_delete_students": false,
+            "can_manage_roles": false,
+            "can_edit_department": false,
+            "can_add_department": false,
+            "can_read_committee_students": false,
+            "can_manage_users": false,
+            "can_manage_form_levels": false,
+            "can_manage_supervisor_records": false,
+            "can_manage_clerks": false,
+            "can_mark_attendance": false,
+            "can_read_own_clerk_departments": false,
+            "can_read_leave_reason": true,
+            "can_manage_app_settings": false,
+            "can_read_leave_settings": true,
+            "can_resend_external_review": false,
+            "can_propose_supervisor_changes": true,
+            "can_manage_supervisor_changes": false,
+            "can_manage_projects": true,
+            "can_manage_all_projects": false,
+            "can_manage_own_publications": false,
+            "can_edit_own_student_profile": false,
+            "can_read_own_leave_balance": false,
+            "can_apply_for_leave": false,
+            "can_suggest_examiners": false,
+            "can_read_faculty_directory": true,
+            "can_read_faculty_supervision": true,
+            "can_read_faculty_phone": true,
+            "can_apply_for_urf": false,
+            "can_manage_urf": false,
+            "can_read_urf_mentees": true
+        },
+        "features": {
+            "project_management": false,
+            "job_openings": false
+        },
+        "me": {
+            "areas": {
+                "home": true,
+                "notifications": true,
+                "projects": true,
+                "presentations": true,
+                "scholars": true,
+                "facultyDirectory": true,
+                "departments": false,
+                "supervisorApprovals": false,
+                "urf": true,
+                "attendance": true,
+                "courses": true,
+                "courseManagement": true,
+                "areasOfSpecialization": true,
+                "publications": false,
+                "openings": false,
+                "admin": false
+            },
+            "nav": [
+                {
+                    "path": "\/home",
+                    "label": "Home",
+                    "icon": "home"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap"
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/attendance",
+                    "label": "Attendance",
+                    "icon": "calendar-check-o"
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell"
+                },
+                {
+                    "path": "\/areasOfSpecialization",
+                    "label": "Areas of Specialization",
+                    "icon": "list"
+                }
+            ],
+            "labels": {
+                "\/home": "Home",
+                "\/projects": "Projects",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring",
+                "\/urf": "URF",
+                "\/courses": "Courses",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/attendance": "Attendance",
+                "\/notifications": "Notifications",
+                "\/areasOfSpecialization": "Areas of Specialization"
+            },
+            "tiles": [
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Presentations",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                },
+                {
+                    "path": "\/attendance",
+                    "label": "Mark attendance",
+                    "icon": "calendar-check-o"
+                },
+                {
+                    "path": "\/areasOfSpecialization",
+                    "label": "Areas of specialization",
+                    "icon": "list"
+                }
+            ]
+        }
+    },
+    {
+        "role": "faculty",
+        "capabilities": {
+            "can_read_all_students": false,
+            "can_read_all_faculties": false,
+            "can_read_supervised_students": true,
+            "can_read_department_students": false,
+            "can_read_department_faculties": false,
+            "can_edit_all_students": false,
+            "can_edit_all_faculties": false,
+            "can_edit_department_students": false,
+            "can_edit_department_faculties": false,
+            "can_edit_own_profile": true,
+            "can_edit_phd_title": false,
+            "can_add_department_students": false,
+            "can_add_department_faculties": false,
+            "can_manage_faculties": false,
+            "can_manage_students": false,
+            "can_read_supervisors": true,
+            "can_read_doctoral_committee": false,
+            "can_read_external": false,
+            "can_edit_external": false,
+            "can_edit_supervisors": false,
+            "can_edit_doctoral_committee": false,
+            "can_delete_department_students": false,
+            "can_delete_department_faculties": false,
+            "can_delete_faculties": false,
+            "can_delete_students": false,
+            "can_manage_roles": false,
+            "can_edit_department": false,
+            "can_add_department": false,
+            "can_read_committee_students": false,
+            "can_manage_users": false,
+            "can_manage_form_levels": false,
+            "can_manage_supervisor_records": false,
+            "can_manage_clerks": false,
+            "can_mark_attendance": false,
+            "can_read_own_clerk_departments": false,
+            "can_read_leave_reason": false,
+            "can_manage_app_settings": false,
+            "can_read_leave_settings": false,
+            "can_resend_external_review": false,
+            "can_propose_supervisor_changes": false,
+            "can_manage_supervisor_changes": false,
+            "can_manage_projects": true,
+            "can_manage_all_projects": false,
+            "can_manage_own_publications": false,
+            "can_edit_own_student_profile": false,
+            "can_read_own_leave_balance": false,
+            "can_apply_for_leave": false,
+            "can_suggest_examiners": true,
+            "can_read_faculty_directory": true,
+            "can_read_faculty_supervision": false,
+            "can_read_faculty_phone": true,
+            "can_apply_for_urf": false,
+            "can_manage_urf": false,
+            "can_read_urf_mentees": true
+        },
+        "features": {
+            "project_management": true,
+            "job_openings": true
+        },
+        "me": {
+            "areas": {
+                "home": true,
+                "notifications": true,
+                "projects": true,
+                "presentations": true,
+                "scholars": true,
+                "facultyDirectory": true,
+                "departments": false,
+                "supervisorApprovals": false,
+                "urf": true,
+                "attendance": false,
+                "courses": false,
+                "courseManagement": false,
+                "areasOfSpecialization": false,
+                "publications": false,
+                "openings": false,
+                "admin": false
+            },
+            "nav": [
+                {
+                    "path": "\/home",
+                    "label": "Home",
+                    "icon": "home"
+                },
+                {
+                    "path": "\/projects",
+                    "label": "Projects",
+                    "icon": "briefcase"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell"
+                }
+            ],
+            "labels": {
+                "\/home": "Home",
+                "\/projects": "Projects",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring",
+                "\/urf": "URF",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/notifications": "Notifications"
+            },
+            "tiles": [
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Presentations",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/projects",
+                    "label": "Projects",
+                    "icon": "briefcase"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                }
+            ]
+        }
+    },
+    {
+        "role": "faculty",
+        "capabilities": {
+            "can_read_all_students": false,
+            "can_read_all_faculties": false,
+            "can_read_supervised_students": true,
+            "can_read_department_students": false,
+            "can_read_department_faculties": false,
+            "can_edit_all_students": false,
+            "can_edit_all_faculties": false,
+            "can_edit_department_students": false,
+            "can_edit_department_faculties": false,
+            "can_edit_own_profile": true,
+            "can_edit_phd_title": false,
+            "can_add_department_students": false,
+            "can_add_department_faculties": false,
+            "can_manage_faculties": false,
+            "can_manage_students": false,
+            "can_read_supervisors": true,
+            "can_read_doctoral_committee": false,
+            "can_read_external": false,
+            "can_edit_external": false,
+            "can_edit_supervisors": false,
+            "can_edit_doctoral_committee": false,
+            "can_delete_department_students": false,
+            "can_delete_department_faculties": false,
+            "can_delete_faculties": false,
+            "can_delete_students": false,
+            "can_manage_roles": false,
+            "can_edit_department": false,
+            "can_add_department": false,
+            "can_read_committee_students": false,
+            "can_manage_users": false,
+            "can_manage_form_levels": false,
+            "can_manage_supervisor_records": false,
+            "can_manage_clerks": false,
+            "can_mark_attendance": false,
+            "can_read_own_clerk_departments": false,
+            "can_read_leave_reason": false,
+            "can_manage_app_settings": false,
+            "can_read_leave_settings": false,
+            "can_resend_external_review": false,
+            "can_propose_supervisor_changes": false,
+            "can_manage_supervisor_changes": false,
+            "can_manage_projects": true,
+            "can_manage_all_projects": false,
+            "can_manage_own_publications": false,
+            "can_edit_own_student_profile": false,
+            "can_read_own_leave_balance": false,
+            "can_apply_for_leave": false,
+            "can_suggest_examiners": true,
+            "can_read_faculty_directory": true,
+            "can_read_faculty_supervision": false,
+            "can_read_faculty_phone": true,
+            "can_apply_for_urf": false,
+            "can_manage_urf": false,
+            "can_read_urf_mentees": true
+        },
+        "features": {
+            "project_management": false,
+            "job_openings": false
+        },
+        "me": {
+            "areas": {
+                "home": true,
+                "notifications": true,
+                "projects": true,
+                "presentations": true,
+                "scholars": true,
+                "facultyDirectory": true,
+                "departments": false,
+                "supervisorApprovals": false,
+                "urf": true,
+                "attendance": false,
+                "courses": false,
+                "courseManagement": false,
+                "areasOfSpecialization": false,
+                "publications": false,
+                "openings": false,
+                "admin": false
+            },
+            "nav": [
+                {
+                    "path": "\/home",
+                    "label": "Home",
+                    "icon": "home"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell"
+                }
+            ],
+            "labels": {
+                "\/home": "Home",
+                "\/projects": "Projects",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring",
+                "\/urf": "URF",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/notifications": "Notifications"
+            },
+            "tiles": [
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Presentations",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                }
+            ]
+        }
+    },
+    {
+        "role": "student",
+        "capabilities": {
+            "can_read_all_students": false,
+            "can_read_all_faculties": false,
+            "can_read_supervised_students": false,
+            "can_read_department_students": false,
+            "can_read_department_faculties": false,
+            "can_edit_all_students": false,
+            "can_edit_all_faculties": false,
+            "can_edit_department_students": false,
+            "can_edit_department_faculties": false,
+            "can_edit_own_profile": true,
+            "can_edit_phd_title": false,
+            "can_add_department_students": false,
+            "can_add_department_faculties": false,
+            "can_manage_faculties": false,
+            "can_manage_students": false,
+            "can_read_supervisors": true,
+            "can_read_doctoral_committee": false,
+            "can_read_external": false,
+            "can_edit_external": false,
+            "can_edit_supervisors": false,
+            "can_edit_doctoral_committee": false,
+            "can_delete_department_students": false,
+            "can_delete_department_faculties": false,
+            "can_delete_faculties": false,
+            "can_delete_students": false,
+            "can_manage_roles": false,
+            "can_edit_department": false,
+            "can_add_department": false,
+            "can_read_committee_students": false,
+            "can_manage_users": false,
+            "can_manage_form_levels": false,
+            "can_manage_supervisor_records": false,
+            "can_manage_clerks": false,
+            "can_mark_attendance": false,
+            "can_read_own_clerk_departments": false,
+            "can_read_leave_reason": true,
+            "can_manage_app_settings": false,
+            "can_read_leave_settings": true,
+            "can_resend_external_review": false,
+            "can_propose_supervisor_changes": false,
+            "can_manage_supervisor_changes": false,
+            "can_manage_projects": false,
+            "can_manage_all_projects": false,
+            "can_manage_own_publications": true,
+            "can_edit_own_student_profile": true,
+            "can_read_own_leave_balance": true,
+            "can_apply_for_leave": true,
+            "can_suggest_examiners": false,
+            "can_read_faculty_directory": true,
+            "can_read_faculty_supervision": false,
+            "can_read_faculty_phone": false,
+            "can_apply_for_urf": false,
+            "can_manage_urf": false,
+            "can_read_urf_mentees": false
+        },
+        "features": {
+            "project_management": true,
+            "job_openings": true
+        },
+        "me": {
+            "areas": {
+                "home": true,
+                "notifications": true,
+                "projects": false,
+                "presentations": true,
+                "scholars": false,
+                "facultyDirectory": true,
+                "departments": false,
+                "supervisorApprovals": false,
+                "urf": false,
+                "attendance": true,
+                "courses": true,
+                "courseManagement": false,
+                "areasOfSpecialization": false,
+                "publications": true,
+                "openings": true,
+                "admin": false
+            },
+            "nav": [
+                {
+                    "path": "\/home",
+                    "label": "Home",
+                    "icon": "home"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/publications",
+                    "label": "Publications",
+                    "icon": "book"
+                },
+                {
+                    "path": "\/openings",
+                    "label": "Openings",
+                    "icon": "bullhorn"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/attendance",
+                    "label": "Attendance",
+                    "icon": "calendar-check-o"
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell"
+                }
+            ],
+            "labels": {
+                "\/home": "Home",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring",
+                "\/publications": "Publications",
+                "\/openings": "Openings",
+                "\/courses": "Courses",
+                "\/faculty": "Faculty",
+                "\/attendance": "Attendance",
+                "\/notifications": "Notifications"
+            },
+            "tiles": [
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Presentations",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap"
+                },
+                {
+                    "path": "\/publications",
+                    "label": "Publications",
+                    "icon": "book"
+                },
+                {
+                    "path": "\/attendance",
+                    "label": "Mark attendance",
+                    "icon": "calendar-check-o"
+                }
+            ]
+        }
+    },
+    {
+        "role": "student",
+        "capabilities": {
+            "can_read_all_students": false,
+            "can_read_all_faculties": false,
+            "can_read_supervised_students": false,
+            "can_read_department_students": false,
+            "can_read_department_faculties": false,
+            "can_edit_all_students": false,
+            "can_edit_all_faculties": false,
+            "can_edit_department_students": false,
+            "can_edit_department_faculties": false,
+            "can_edit_own_profile": true,
+            "can_edit_phd_title": false,
+            "can_add_department_students": false,
+            "can_add_department_faculties": false,
+            "can_manage_faculties": false,
+            "can_manage_students": false,
+            "can_read_supervisors": true,
+            "can_read_doctoral_committee": false,
+            "can_read_external": false,
+            "can_edit_external": false,
+            "can_edit_supervisors": false,
+            "can_edit_doctoral_committee": false,
+            "can_delete_department_students": false,
+            "can_delete_department_faculties": false,
+            "can_delete_faculties": false,
+            "can_delete_students": false,
+            "can_manage_roles": false,
+            "can_edit_department": false,
+            "can_add_department": false,
+            "can_read_committee_students": false,
+            "can_manage_users": false,
+            "can_manage_form_levels": false,
+            "can_manage_supervisor_records": false,
+            "can_manage_clerks": false,
+            "can_mark_attendance": false,
+            "can_read_own_clerk_departments": false,
+            "can_read_leave_reason": true,
+            "can_manage_app_settings": false,
+            "can_read_leave_settings": true,
+            "can_resend_external_review": false,
+            "can_propose_supervisor_changes": false,
+            "can_manage_supervisor_changes": false,
+            "can_manage_projects": false,
+            "can_manage_all_projects": false,
+            "can_manage_own_publications": true,
+            "can_edit_own_student_profile": true,
+            "can_read_own_leave_balance": true,
+            "can_apply_for_leave": true,
+            "can_suggest_examiners": false,
+            "can_read_faculty_directory": true,
+            "can_read_faculty_supervision": false,
+            "can_read_faculty_phone": false,
+            "can_apply_for_urf": false,
+            "can_manage_urf": false,
+            "can_read_urf_mentees": false
+        },
+        "features": {
+            "project_management": false,
+            "job_openings": false
+        },
+        "me": {
+            "areas": {
+                "home": true,
+                "notifications": true,
+                "projects": false,
+                "presentations": true,
+                "scholars": false,
+                "facultyDirectory": true,
+                "departments": false,
+                "supervisorApprovals": false,
+                "urf": false,
+                "attendance": true,
+                "courses": true,
+                "courseManagement": false,
+                "areasOfSpecialization": false,
+                "publications": true,
+                "openings": true,
+                "admin": false
+            },
+            "nav": [
+                {
+                    "path": "\/home",
+                    "label": "Home",
+                    "icon": "home"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/publications",
+                    "label": "Publications",
+                    "icon": "book"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/attendance",
+                    "label": "Attendance",
+                    "icon": "calendar-check-o"
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell"
+                }
+            ],
+            "labels": {
+                "\/home": "Home",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring",
+                "\/publications": "Publications",
+                "\/openings": "Openings",
+                "\/courses": "Courses",
+                "\/faculty": "Faculty",
+                "\/attendance": "Attendance",
+                "\/notifications": "Notifications"
+            },
+            "tiles": [
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Presentations",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap"
+                },
+                {
+                    "path": "\/publications",
+                    "label": "Publications",
+                    "icon": "book"
+                },
+                {
+                    "path": "\/attendance",
+                    "label": "Mark attendance",
+                    "icon": "calendar-check-o"
+                }
+            ]
+        }
+    },
+    {
+        "role": "dra",
+        "capabilities": {
+            "can_read_all_students": true,
+            "can_read_all_faculties": true,
+            "can_read_supervised_students": false,
+            "can_read_department_students": false,
+            "can_read_department_faculties": false,
+            "can_edit_all_students": true,
+            "can_edit_all_faculties": true,
+            "can_edit_department_students": true,
+            "can_edit_department_faculties": true,
+            "can_edit_own_profile": true,
+            "can_edit_phd_title": true,
+            "can_add_department_students": true,
+            "can_add_department_faculties": true,
+            "can_manage_faculties": true,
+            "can_manage_students": true,
+            "can_read_supervisors": true,
+            "can_read_doctoral_committee": false,
+            "can_read_external": false,
+            "can_edit_external": false,
+            "can_edit_supervisors": false,
+            "can_edit_doctoral_committee": false,
+            "can_delete_department_students": true,
+            "can_delete_department_faculties": true,
+            "can_delete_faculties": true,
+            "can_delete_students": true,
+            "can_manage_roles": true,
+            "can_edit_department": true,
+            "can_add_department": true,
+            "can_read_committee_students": false,
+            "can_manage_users": false,
+            "can_manage_form_levels": false,
+            "can_manage_supervisor_records": false,
+            "can_manage_clerks": false,
+            "can_mark_attendance": false,
+            "can_read_own_clerk_departments": false,
+            "can_read_leave_reason": false,
+            "can_manage_app_settings": false,
+            "can_read_leave_settings": false,
+            "can_resend_external_review": false,
+            "can_propose_supervisor_changes": false,
+            "can_manage_supervisor_changes": false,
+            "can_manage_projects": true,
+            "can_manage_all_projects": true,
+            "can_manage_own_publications": false,
+            "can_edit_own_student_profile": false,
+            "can_read_own_leave_balance": false,
+            "can_apply_for_leave": false,
+            "can_suggest_examiners": false,
+            "can_read_faculty_directory": true,
+            "can_read_faculty_supervision": true,
+            "can_read_faculty_phone": true,
+            "can_apply_for_urf": false,
+            "can_manage_urf": false,
+            "can_read_urf_mentees": true
+        },
+        "features": {
+            "project_management": true,
+            "job_openings": true
+        },
+        "me": {
+            "areas": {
+                "home": true,
+                "notifications": true,
+                "projects": true,
+                "presentations": true,
+                "scholars": true,
+                "facultyDirectory": true,
+                "departments": true,
+                "supervisorApprovals": false,
+                "urf": true,
+                "attendance": false,
+                "courses": false,
+                "courseManagement": false,
+                "areasOfSpecialization": false,
+                "publications": false,
+                "openings": false,
+                "admin": false
+            },
+            "nav": [
+                {
+                    "path": "\/home",
+                    "label": "Home",
+                    "icon": "home"
+                },
+                {
+                    "path": "\/projects",
+                    "label": "Projects",
+                    "icon": "briefcase"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/departments",
+                    "label": "Departments",
+                    "icon": "building"
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell"
+                }
+            ],
+            "labels": {
+                "\/home": "Home",
+                "\/projects": "Projects",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring",
+                "\/urf": "URF",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/departments": "Departments",
+                "\/notifications": "Notifications"
+            },
+            "tiles": [
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/departments",
+                    "label": "Departments",
+                    "icon": "building"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Presentations",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/projects",
+                    "label": "Projects",
+                    "icon": "briefcase"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                }
+            ]
+        }
+    },
+    {
+        "role": "dra",
+        "capabilities": {
+            "can_read_all_students": true,
+            "can_read_all_faculties": true,
+            "can_read_supervised_students": false,
+            "can_read_department_students": false,
+            "can_read_department_faculties": false,
+            "can_edit_all_students": true,
+            "can_edit_all_faculties": true,
+            "can_edit_department_students": true,
+            "can_edit_department_faculties": true,
+            "can_edit_own_profile": true,
+            "can_edit_phd_title": true,
+            "can_add_department_students": true,
+            "can_add_department_faculties": true,
+            "can_manage_faculties": true,
+            "can_manage_students": true,
+            "can_read_supervisors": true,
+            "can_read_doctoral_committee": false,
+            "can_read_external": false,
+            "can_edit_external": false,
+            "can_edit_supervisors": false,
+            "can_edit_doctoral_committee": false,
+            "can_delete_department_students": true,
+            "can_delete_department_faculties": true,
+            "can_delete_faculties": true,
+            "can_delete_students": true,
+            "can_manage_roles": true,
+            "can_edit_department": true,
+            "can_add_department": true,
+            "can_read_committee_students": false,
+            "can_manage_users": false,
+            "can_manage_form_levels": false,
+            "can_manage_supervisor_records": false,
+            "can_manage_clerks": false,
+            "can_mark_attendance": false,
+            "can_read_own_clerk_departments": false,
+            "can_read_leave_reason": false,
+            "can_manage_app_settings": false,
+            "can_read_leave_settings": false,
+            "can_resend_external_review": false,
+            "can_propose_supervisor_changes": false,
+            "can_manage_supervisor_changes": false,
+            "can_manage_projects": true,
+            "can_manage_all_projects": true,
+            "can_manage_own_publications": false,
+            "can_edit_own_student_profile": false,
+            "can_read_own_leave_balance": false,
+            "can_apply_for_leave": false,
+            "can_suggest_examiners": false,
+            "can_read_faculty_directory": true,
+            "can_read_faculty_supervision": true,
+            "can_read_faculty_phone": true,
+            "can_apply_for_urf": false,
+            "can_manage_urf": false,
+            "can_read_urf_mentees": true
+        },
+        "features": {
+            "project_management": false,
+            "job_openings": false
+        },
+        "me": {
+            "areas": {
+                "home": true,
+                "notifications": true,
+                "projects": true,
+                "presentations": true,
+                "scholars": true,
+                "facultyDirectory": true,
+                "departments": true,
+                "supervisorApprovals": false,
+                "urf": true,
+                "attendance": false,
+                "courses": false,
+                "courseManagement": false,
+                "areasOfSpecialization": false,
+                "publications": false,
+                "openings": false,
+                "admin": false
+            },
+            "nav": [
+                {
+                    "path": "\/home",
+                    "label": "Home",
+                    "icon": "home"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/departments",
+                    "label": "Departments",
+                    "icon": "building"
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell"
+                }
+            ],
+            "labels": {
+                "\/home": "Home",
+                "\/projects": "Projects",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring",
+                "\/urf": "URF",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/departments": "Departments",
+                "\/notifications": "Notifications"
+            },
+            "tiles": [
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/departments",
+                    "label": "Departments",
+                    "icon": "building"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Presentations",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                }
+            ]
+        }
+    },
+    {
+        "role": "dordc",
+        "capabilities": {
+            "can_read_all_students": true,
+            "can_read_all_faculties": true,
+            "can_read_supervised_students": false,
+            "can_read_department_students": false,
+            "can_read_department_faculties": false,
+            "can_edit_all_students": true,
+            "can_edit_all_faculties": true,
+            "can_edit_department_students": true,
+            "can_edit_department_faculties": true,
+            "can_edit_own_profile": true,
+            "can_edit_phd_title": true,
+            "can_add_department_students": true,
+            "can_add_department_faculties": true,
+            "can_manage_faculties": true,
+            "can_manage_students": true,
+            "can_read_supervisors": true,
+            "can_read_doctoral_committee": true,
+            "can_read_external": false,
+            "can_edit_external": false,
+            "can_edit_supervisors": true,
+            "can_edit_doctoral_committee": true,
+            "can_delete_department_students": true,
+            "can_delete_department_faculties": true,
+            "can_delete_faculties": true,
+            "can_delete_students": true,
+            "can_manage_roles": true,
+            "can_edit_department": true,
+            "can_add_department": true,
+            "can_read_committee_students": false,
+            "can_manage_users": false,
+            "can_manage_form_levels": false,
+            "can_manage_supervisor_records": false,
+            "can_manage_clerks": false,
+            "can_mark_attendance": false,
+            "can_read_own_clerk_departments": false,
+            "can_read_leave_reason": false,
+            "can_manage_app_settings": false,
+            "can_read_leave_settings": false,
+            "can_resend_external_review": true,
+            "can_propose_supervisor_changes": true,
+            "can_manage_supervisor_changes": true,
+            "can_manage_projects": true,
+            "can_manage_all_projects": true,
+            "can_manage_own_publications": false,
+            "can_edit_own_student_profile": false,
+            "can_read_own_leave_balance": false,
+            "can_apply_for_leave": false,
+            "can_suggest_examiners": false,
+            "can_read_faculty_directory": true,
+            "can_read_faculty_supervision": true,
+            "can_read_faculty_phone": true,
+            "can_apply_for_urf": false,
+            "can_manage_urf": false,
+            "can_read_urf_mentees": true
+        },
+        "features": {
+            "project_management": true,
+            "job_openings": true
+        },
+        "me": {
+            "areas": {
+                "home": true,
+                "notifications": true,
+                "projects": true,
+                "presentations": true,
+                "scholars": true,
+                "facultyDirectory": true,
+                "departments": true,
+                "supervisorApprovals": true,
+                "urf": true,
+                "attendance": false,
+                "courses": false,
+                "courseManagement": false,
+                "areasOfSpecialization": false,
+                "publications": false,
+                "openings": false,
+                "admin": false
+            },
+            "nav": [
+                {
+                    "path": "\/home",
+                    "label": "Home",
+                    "icon": "home"
+                },
+                {
+                    "path": "\/projects",
+                    "label": "Projects",
+                    "icon": "briefcase"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/departments",
+                    "label": "Departments",
+                    "icon": "building"
+                },
+                {
+                    "path": "\/supervisor-doctoral-approvals",
+                    "label": "Supervisor Approvals",
+                    "icon": "user-plus"
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell"
+                }
+            ],
+            "labels": {
+                "\/home": "Home",
+                "\/projects": "Projects",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring",
+                "\/urf": "URF",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/departments": "Departments",
+                "\/supervisor-doctoral-approvals": "Supervisor Approvals",
+                "\/notifications": "Notifications"
+            },
+            "tiles": [
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/departments",
+                    "label": "Departments",
+                    "icon": "building"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Presentations",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/projects",
+                    "label": "Projects",
+                    "icon": "briefcase"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                },
+                {
+                    "path": "\/supervisor-doctoral-approvals",
+                    "label": "Supervisor approvals",
+                    "icon": "user-plus"
+                }
+            ]
+        }
+    },
+    {
+        "role": "dordc",
+        "capabilities": {
+            "can_read_all_students": true,
+            "can_read_all_faculties": true,
+            "can_read_supervised_students": false,
+            "can_read_department_students": false,
+            "can_read_department_faculties": false,
+            "can_edit_all_students": true,
+            "can_edit_all_faculties": true,
+            "can_edit_department_students": true,
+            "can_edit_department_faculties": true,
+            "can_edit_own_profile": true,
+            "can_edit_phd_title": true,
+            "can_add_department_students": true,
+            "can_add_department_faculties": true,
+            "can_manage_faculties": true,
+            "can_manage_students": true,
+            "can_read_supervisors": true,
+            "can_read_doctoral_committee": true,
+            "can_read_external": false,
+            "can_edit_external": false,
+            "can_edit_supervisors": true,
+            "can_edit_doctoral_committee": true,
+            "can_delete_department_students": true,
+            "can_delete_department_faculties": true,
+            "can_delete_faculties": true,
+            "can_delete_students": true,
+            "can_manage_roles": true,
+            "can_edit_department": true,
+            "can_add_department": true,
+            "can_read_committee_students": false,
+            "can_manage_users": false,
+            "can_manage_form_levels": false,
+            "can_manage_supervisor_records": false,
+            "can_manage_clerks": false,
+            "can_mark_attendance": false,
+            "can_read_own_clerk_departments": false,
+            "can_read_leave_reason": false,
+            "can_manage_app_settings": false,
+            "can_read_leave_settings": false,
+            "can_resend_external_review": true,
+            "can_propose_supervisor_changes": true,
+            "can_manage_supervisor_changes": true,
+            "can_manage_projects": true,
+            "can_manage_all_projects": true,
+            "can_manage_own_publications": false,
+            "can_edit_own_student_profile": false,
+            "can_read_own_leave_balance": false,
+            "can_apply_for_leave": false,
+            "can_suggest_examiners": false,
+            "can_read_faculty_directory": true,
+            "can_read_faculty_supervision": true,
+            "can_read_faculty_phone": true,
+            "can_apply_for_urf": false,
+            "can_manage_urf": false,
+            "can_read_urf_mentees": true
+        },
+        "features": {
+            "project_management": false,
+            "job_openings": false
+        },
+        "me": {
+            "areas": {
+                "home": true,
+                "notifications": true,
+                "projects": true,
+                "presentations": true,
+                "scholars": true,
+                "facultyDirectory": true,
+                "departments": true,
+                "supervisorApprovals": true,
+                "urf": true,
+                "attendance": false,
+                "courses": false,
+                "courseManagement": false,
+                "areasOfSpecialization": false,
+                "publications": false,
+                "openings": false,
+                "admin": false
+            },
+            "nav": [
+                {
+                    "path": "\/home",
+                    "label": "Home",
+                    "icon": "home"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/departments",
+                    "label": "Departments",
+                    "icon": "building"
+                },
+                {
+                    "path": "\/supervisor-doctoral-approvals",
+                    "label": "Supervisor Approvals",
+                    "icon": "user-plus"
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell"
+                }
+            ],
+            "labels": {
+                "\/home": "Home",
+                "\/projects": "Projects",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring",
+                "\/urf": "URF",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/departments": "Departments",
+                "\/supervisor-doctoral-approvals": "Supervisor Approvals",
+                "\/notifications": "Notifications"
+            },
+            "tiles": [
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/departments",
+                    "label": "Departments",
+                    "icon": "building"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Presentations",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                },
+                {
+                    "path": "\/supervisor-doctoral-approvals",
+                    "label": "Supervisor approvals",
+                    "icon": "user-plus"
+                }
+            ]
+        }
+    },
+    {
+        "role": "director",
+        "capabilities": {
+            "can_read_all_students": true,
+            "can_read_all_faculties": true,
+            "can_read_supervised_students": false,
+            "can_read_department_students": false,
+            "can_read_department_faculties": false,
+            "can_edit_all_students": true,
+            "can_edit_all_faculties": true,
+            "can_edit_department_students": true,
+            "can_edit_department_faculties": true,
+            "can_edit_own_profile": true,
+            "can_edit_phd_title": true,
+            "can_add_department_students": true,
+            "can_add_department_faculties": true,
+            "can_manage_faculties": true,
+            "can_manage_students": true,
+            "can_read_supervisors": true,
+            "can_read_doctoral_committee": false,
+            "can_read_external": false,
+            "can_edit_external": false,
+            "can_edit_supervisors": false,
+            "can_edit_doctoral_committee": false,
+            "can_delete_department_students": true,
+            "can_delete_department_faculties": true,
+            "can_delete_faculties": true,
+            "can_delete_students": true,
+            "can_manage_roles": true,
+            "can_edit_department": true,
+            "can_add_department": true,
+            "can_read_committee_students": false,
+            "can_manage_users": false,
+            "can_manage_form_levels": false,
+            "can_manage_supervisor_records": false,
+            "can_manage_clerks": false,
+            "can_mark_attendance": false,
+            "can_read_own_clerk_departments": false,
+            "can_read_leave_reason": false,
+            "can_manage_app_settings": false,
+            "can_read_leave_settings": false,
+            "can_resend_external_review": false,
+            "can_propose_supervisor_changes": false,
+            "can_manage_supervisor_changes": false,
+            "can_manage_projects": true,
+            "can_manage_all_projects": true,
+            "can_manage_own_publications": false,
+            "can_edit_own_student_profile": false,
+            "can_read_own_leave_balance": false,
+            "can_apply_for_leave": false,
+            "can_suggest_examiners": false,
+            "can_read_faculty_directory": true,
+            "can_read_faculty_supervision": true,
+            "can_read_faculty_phone": true,
+            "can_apply_for_urf": false,
+            "can_manage_urf": false,
+            "can_read_urf_mentees": true
+        },
+        "features": {
+            "project_management": true,
+            "job_openings": true
+        },
+        "me": {
+            "areas": {
+                "home": true,
+                "notifications": true,
+                "projects": true,
+                "presentations": true,
+                "scholars": true,
+                "facultyDirectory": true,
+                "departments": true,
+                "supervisorApprovals": false,
+                "urf": true,
+                "attendance": false,
+                "courses": false,
+                "courseManagement": false,
+                "areasOfSpecialization": false,
+                "publications": false,
+                "openings": false,
+                "admin": false
+            },
+            "nav": [
+                {
+                    "path": "\/home",
+                    "label": "Home",
+                    "icon": "home"
+                },
+                {
+                    "path": "\/projects",
+                    "label": "Projects",
+                    "icon": "briefcase"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/departments",
+                    "label": "Departments",
+                    "icon": "building"
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell"
+                }
+            ],
+            "labels": {
+                "\/home": "Home",
+                "\/projects": "Projects",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring",
+                "\/urf": "URF",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/departments": "Departments",
+                "\/notifications": "Notifications"
+            },
+            "tiles": [
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/departments",
+                    "label": "Departments",
+                    "icon": "building"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Presentations",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/projects",
+                    "label": "Projects",
+                    "icon": "briefcase"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                }
+            ]
+        }
+    },
+    {
+        "role": "director",
+        "capabilities": {
+            "can_read_all_students": true,
+            "can_read_all_faculties": true,
+            "can_read_supervised_students": false,
+            "can_read_department_students": false,
+            "can_read_department_faculties": false,
+            "can_edit_all_students": true,
+            "can_edit_all_faculties": true,
+            "can_edit_department_students": true,
+            "can_edit_department_faculties": true,
+            "can_edit_own_profile": true,
+            "can_edit_phd_title": true,
+            "can_add_department_students": true,
+            "can_add_department_faculties": true,
+            "can_manage_faculties": true,
+            "can_manage_students": true,
+            "can_read_supervisors": true,
+            "can_read_doctoral_committee": false,
+            "can_read_external": false,
+            "can_edit_external": false,
+            "can_edit_supervisors": false,
+            "can_edit_doctoral_committee": false,
+            "can_delete_department_students": true,
+            "can_delete_department_faculties": true,
+            "can_delete_faculties": true,
+            "can_delete_students": true,
+            "can_manage_roles": true,
+            "can_edit_department": true,
+            "can_add_department": true,
+            "can_read_committee_students": false,
+            "can_manage_users": false,
+            "can_manage_form_levels": false,
+            "can_manage_supervisor_records": false,
+            "can_manage_clerks": false,
+            "can_mark_attendance": false,
+            "can_read_own_clerk_departments": false,
+            "can_read_leave_reason": false,
+            "can_manage_app_settings": false,
+            "can_read_leave_settings": false,
+            "can_resend_external_review": false,
+            "can_propose_supervisor_changes": false,
+            "can_manage_supervisor_changes": false,
+            "can_manage_projects": true,
+            "can_manage_all_projects": true,
+            "can_manage_own_publications": false,
+            "can_edit_own_student_profile": false,
+            "can_read_own_leave_balance": false,
+            "can_apply_for_leave": false,
+            "can_suggest_examiners": false,
+            "can_read_faculty_directory": true,
+            "can_read_faculty_supervision": true,
+            "can_read_faculty_phone": true,
+            "can_apply_for_urf": false,
+            "can_manage_urf": false,
+            "can_read_urf_mentees": true
+        },
+        "features": {
+            "project_management": false,
+            "job_openings": false
+        },
+        "me": {
+            "areas": {
+                "home": true,
+                "notifications": true,
+                "projects": true,
+                "presentations": true,
+                "scholars": true,
+                "facultyDirectory": true,
+                "departments": true,
+                "supervisorApprovals": false,
+                "urf": true,
+                "attendance": false,
+                "courses": false,
+                "courseManagement": false,
+                "areasOfSpecialization": false,
+                "publications": false,
+                "openings": false,
+                "admin": false
+            },
+            "nav": [
+                {
+                    "path": "\/home",
+                    "label": "Home",
+                    "icon": "home"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/departments",
+                    "label": "Departments",
+                    "icon": "building"
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell"
+                }
+            ],
+            "labels": {
+                "\/home": "Home",
+                "\/projects": "Projects",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring",
+                "\/urf": "URF",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/departments": "Departments",
+                "\/notifications": "Notifications"
+            },
+            "tiles": [
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/departments",
+                    "label": "Departments",
+                    "icon": "building"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Presentations",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                }
+            ]
+        }
+    },
+    {
+        "role": "external",
+        "capabilities": {
+            "can_read_all_students": false,
+            "can_read_all_faculties": false,
+            "can_read_supervised_students": false,
+            "can_read_department_students": false,
+            "can_read_department_faculties": false,
+            "can_edit_all_students": true,
+            "can_edit_all_faculties": true,
+            "can_edit_department_students": true,
+            "can_edit_department_faculties": true,
+            "can_edit_own_profile": true,
+            "can_edit_phd_title": true,
+            "can_add_department_students": true,
+            "can_add_department_faculties": true,
+            "can_manage_faculties": false,
+            "can_manage_students": false,
+            "can_read_supervisors": true,
+            "can_read_doctoral_committee": false,
+            "can_read_external": false,
+            "can_edit_external": false,
+            "can_edit_supervisors": false,
+            "can_edit_doctoral_committee": false,
+            "can_delete_department_students": true,
+            "can_delete_department_faculties": true,
+            "can_delete_faculties": true,
+            "can_delete_students": true,
+            "can_manage_roles": true,
+            "can_edit_department": false,
+            "can_add_department": false,
+            "can_read_committee_students": true,
+            "can_manage_users": false,
+            "can_manage_form_levels": false,
+            "can_manage_supervisor_records": false,
+            "can_manage_clerks": false,
+            "can_mark_attendance": false,
+            "can_read_own_clerk_departments": false,
+            "can_read_leave_reason": false,
+            "can_manage_app_settings": false,
+            "can_read_leave_settings": false,
+            "can_resend_external_review": false,
+            "can_propose_supervisor_changes": false,
+            "can_manage_supervisor_changes": false,
+            "can_manage_projects": false,
+            "can_manage_all_projects": false,
+            "can_manage_own_publications": false,
+            "can_edit_own_student_profile": false,
+            "can_read_own_leave_balance": false,
+            "can_apply_for_leave": false,
+            "can_suggest_examiners": false,
+            "can_read_faculty_directory": true,
+            "can_read_faculty_supervision": false,
+            "can_read_faculty_phone": true,
+            "can_apply_for_urf": false,
+            "can_manage_urf": false,
+            "can_read_urf_mentees": false
+        },
+        "features": {
+            "project_management": true,
+            "job_openings": true
+        },
+        "me": {
+            "areas": {
+                "home": true,
+                "notifications": true,
+                "projects": false,
+                "presentations": false,
+                "scholars": true,
+                "facultyDirectory": true,
+                "departments": false,
+                "supervisorApprovals": false,
+                "urf": false,
+                "attendance": false,
+                "courses": false,
+                "courseManagement": false,
+                "areasOfSpecialization": false,
+                "publications": false,
+                "openings": false,
+                "admin": false
+            },
+            "nav": [
+                {
+                    "path": "\/home",
+                    "label": "Home",
+                    "icon": "home"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell"
+                }
+            ],
+            "labels": {
+                "\/home": "Home",
+                "\/forms": "Forms",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/notifications": "Notifications"
+            },
+            "tiles": [
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                }
+            ]
+        }
+    },
+    {
+        "role": "external",
+        "capabilities": {
+            "can_read_all_students": false,
+            "can_read_all_faculties": false,
+            "can_read_supervised_students": false,
+            "can_read_department_students": false,
+            "can_read_department_faculties": false,
+            "can_edit_all_students": true,
+            "can_edit_all_faculties": true,
+            "can_edit_department_students": true,
+            "can_edit_department_faculties": true,
+            "can_edit_own_profile": true,
+            "can_edit_phd_title": true,
+            "can_add_department_students": true,
+            "can_add_department_faculties": true,
+            "can_manage_faculties": false,
+            "can_manage_students": false,
+            "can_read_supervisors": true,
+            "can_read_doctoral_committee": false,
+            "can_read_external": false,
+            "can_edit_external": false,
+            "can_edit_supervisors": false,
+            "can_edit_doctoral_committee": false,
+            "can_delete_department_students": true,
+            "can_delete_department_faculties": true,
+            "can_delete_faculties": true,
+            "can_delete_students": true,
+            "can_manage_roles": true,
+            "can_edit_department": false,
+            "can_add_department": false,
+            "can_read_committee_students": true,
+            "can_manage_users": false,
+            "can_manage_form_levels": false,
+            "can_manage_supervisor_records": false,
+            "can_manage_clerks": false,
+            "can_mark_attendance": false,
+            "can_read_own_clerk_departments": false,
+            "can_read_leave_reason": false,
+            "can_manage_app_settings": false,
+            "can_read_leave_settings": false,
+            "can_resend_external_review": false,
+            "can_propose_supervisor_changes": false,
+            "can_manage_supervisor_changes": false,
+            "can_manage_projects": false,
+            "can_manage_all_projects": false,
+            "can_manage_own_publications": false,
+            "can_edit_own_student_profile": false,
+            "can_read_own_leave_balance": false,
+            "can_apply_for_leave": false,
+            "can_suggest_examiners": false,
+            "can_read_faculty_directory": true,
+            "can_read_faculty_supervision": false,
+            "can_read_faculty_phone": true,
+            "can_apply_for_urf": false,
+            "can_manage_urf": false,
+            "can_read_urf_mentees": false
+        },
+        "features": {
+            "project_management": false,
+            "job_openings": false
+        },
+        "me": {
+            "areas": {
+                "home": true,
+                "notifications": true,
+                "projects": false,
+                "presentations": false,
+                "scholars": true,
+                "facultyDirectory": true,
+                "departments": false,
+                "supervisorApprovals": false,
+                "urf": false,
+                "attendance": false,
+                "courses": false,
+                "courseManagement": false,
+                "areasOfSpecialization": false,
+                "publications": false,
+                "openings": false,
+                "admin": false
+            },
+            "nav": [
+                {
+                    "path": "\/home",
+                    "label": "Home",
+                    "icon": "home"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell"
+                }
+            ],
+            "labels": {
+                "\/home": "Home",
+                "\/forms": "Forms",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/notifications": "Notifications"
+            },
+            "tiles": [
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                }
+            ]
+        }
+    },
+    {
+        "role": "doctoral",
+        "capabilities": {
+            "can_read_all_students": false,
+            "can_read_all_faculties": false,
+            "can_read_supervised_students": false,
+            "can_read_department_students": false,
+            "can_read_department_faculties": false,
+            "can_edit_all_students": true,
+            "can_edit_all_faculties": true,
+            "can_edit_department_students": true,
+            "can_edit_department_faculties": true,
+            "can_edit_own_profile": true,
+            "can_edit_phd_title": true,
+            "can_add_department_students": true,
+            "can_add_department_faculties": true,
+            "can_manage_faculties": false,
+            "can_manage_students": false,
+            "can_read_supervisors": true,
+            "can_read_doctoral_committee": true,
+            "can_read_external": false,
+            "can_edit_external": false,
+            "can_edit_supervisors": false,
+            "can_edit_doctoral_committee": true,
+            "can_delete_department_students": true,
+            "can_delete_department_faculties": true,
+            "can_delete_faculties": true,
+            "can_delete_students": true,
+            "can_manage_roles": true,
+            "can_edit_department": false,
+            "can_add_department": false,
+            "can_read_committee_students": true,
+            "can_manage_users": false,
+            "can_manage_form_levels": false,
+            "can_manage_supervisor_records": false,
+            "can_manage_clerks": false,
+            "can_mark_attendance": false,
+            "can_read_own_clerk_departments": false,
+            "can_read_leave_reason": false,
+            "can_manage_app_settings": false,
+            "can_read_leave_settings": false,
+            "can_resend_external_review": false,
+            "can_propose_supervisor_changes": true,
+            "can_manage_supervisor_changes": false,
+            "can_manage_projects": false,
+            "can_manage_all_projects": false,
+            "can_manage_own_publications": false,
+            "can_edit_own_student_profile": false,
+            "can_read_own_leave_balance": false,
+            "can_apply_for_leave": false,
+            "can_suggest_examiners": false,
+            "can_read_faculty_directory": true,
+            "can_read_faculty_supervision": false,
+            "can_read_faculty_phone": true,
+            "can_apply_for_urf": false,
+            "can_manage_urf": false,
+            "can_read_urf_mentees": false
+        },
+        "features": {
+            "project_management": true,
+            "job_openings": true
+        },
+        "me": {
+            "areas": {
+                "home": true,
+                "notifications": true,
+                "projects": false,
+                "presentations": true,
+                "scholars": true,
+                "facultyDirectory": true,
+                "departments": false,
+                "supervisorApprovals": false,
+                "urf": false,
+                "attendance": false,
+                "courses": false,
+                "courseManagement": false,
+                "areasOfSpecialization": false,
+                "publications": false,
+                "openings": false,
+                "admin": false
+            },
+            "nav": [
+                {
+                    "path": "\/home",
+                    "label": "Home",
+                    "icon": "home"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell"
+                }
+            ],
+            "labels": {
+                "\/home": "Home",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/notifications": "Notifications"
+            },
+            "tiles": [
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Presentations",
+                    "icon": "tasks"
+                }
+            ]
+        }
+    },
+    {
+        "role": "doctoral",
+        "capabilities": {
+            "can_read_all_students": false,
+            "can_read_all_faculties": false,
+            "can_read_supervised_students": false,
+            "can_read_department_students": false,
+            "can_read_department_faculties": false,
+            "can_edit_all_students": true,
+            "can_edit_all_faculties": true,
+            "can_edit_department_students": true,
+            "can_edit_department_faculties": true,
+            "can_edit_own_profile": true,
+            "can_edit_phd_title": true,
+            "can_add_department_students": true,
+            "can_add_department_faculties": true,
+            "can_manage_faculties": false,
+            "can_manage_students": false,
+            "can_read_supervisors": true,
+            "can_read_doctoral_committee": true,
+            "can_read_external": false,
+            "can_edit_external": false,
+            "can_edit_supervisors": false,
+            "can_edit_doctoral_committee": true,
+            "can_delete_department_students": true,
+            "can_delete_department_faculties": true,
+            "can_delete_faculties": true,
+            "can_delete_students": true,
+            "can_manage_roles": true,
+            "can_edit_department": false,
+            "can_add_department": false,
+            "can_read_committee_students": true,
+            "can_manage_users": false,
+            "can_manage_form_levels": false,
+            "can_manage_supervisor_records": false,
+            "can_manage_clerks": false,
+            "can_mark_attendance": false,
+            "can_read_own_clerk_departments": false,
+            "can_read_leave_reason": false,
+            "can_manage_app_settings": false,
+            "can_read_leave_settings": false,
+            "can_resend_external_review": false,
+            "can_propose_supervisor_changes": true,
+            "can_manage_supervisor_changes": false,
+            "can_manage_projects": false,
+            "can_manage_all_projects": false,
+            "can_manage_own_publications": false,
+            "can_edit_own_student_profile": false,
+            "can_read_own_leave_balance": false,
+            "can_apply_for_leave": false,
+            "can_suggest_examiners": false,
+            "can_read_faculty_directory": true,
+            "can_read_faculty_supervision": false,
+            "can_read_faculty_phone": true,
+            "can_apply_for_urf": false,
+            "can_manage_urf": false,
+            "can_read_urf_mentees": false
+        },
+        "features": {
+            "project_management": false,
+            "job_openings": false
+        },
+        "me": {
+            "areas": {
+                "home": true,
+                "notifications": true,
+                "projects": false,
+                "presentations": true,
+                "scholars": true,
+                "facultyDirectory": true,
+                "departments": false,
+                "supervisorApprovals": false,
+                "urf": false,
+                "attendance": false,
+                "courses": false,
+                "courseManagement": false,
+                "areasOfSpecialization": false,
+                "publications": false,
+                "openings": false,
+                "admin": false
+            },
+            "nav": [
+                {
+                    "path": "\/home",
+                    "label": "Home",
+                    "icon": "home"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell"
+                }
+            ],
+            "labels": {
+                "\/home": "Home",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/notifications": "Notifications"
+            },
+            "tiles": [
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Presentations",
+                    "icon": "tasks"
+                }
+            ]
+        }
+    },
+    {
+        "role": "adordc",
+        "capabilities": {
+            "can_read_all_students": false,
+            "can_read_all_faculties": false,
+            "can_read_supervised_students": false,
+            "can_read_department_students": true,
+            "can_read_department_faculties": true,
+            "can_edit_all_students": true,
+            "can_edit_all_faculties": true,
+            "can_edit_department_students": true,
+            "can_edit_department_faculties": true,
+            "can_edit_own_profile": true,
+            "can_edit_phd_title": true,
+            "can_add_department_students": true,
+            "can_add_department_faculties": true,
+            "can_manage_faculties": true,
+            "can_manage_students": true,
+            "can_read_supervisors": true,
+            "can_read_doctoral_committee": false,
+            "can_read_external": false,
+            "can_edit_external": false,
+            "can_edit_supervisors": false,
+            "can_edit_doctoral_committee": false,
+            "can_delete_department_students": true,
+            "can_delete_department_faculties": true,
+            "can_delete_faculties": true,
+            "can_delete_students": true,
+            "can_manage_roles": true,
+            "can_edit_department": false,
+            "can_add_department": false,
+            "can_read_committee_students": false,
+            "can_manage_users": false,
+            "can_manage_form_levels": false,
+            "can_manage_supervisor_records": false,
+            "can_manage_clerks": false,
+            "can_mark_attendance": false,
+            "can_read_own_clerk_departments": false,
+            "can_read_leave_reason": false,
+            "can_manage_app_settings": false,
+            "can_read_leave_settings": false,
+            "can_resend_external_review": false,
+            "can_propose_supervisor_changes": false,
+            "can_manage_supervisor_changes": false,
+            "can_manage_projects": true,
+            "can_manage_all_projects": true,
+            "can_manage_own_publications": false,
+            "can_edit_own_student_profile": false,
+            "can_read_own_leave_balance": false,
+            "can_apply_for_leave": false,
+            "can_suggest_examiners": false,
+            "can_read_faculty_directory": true,
+            "can_read_faculty_supervision": true,
+            "can_read_faculty_phone": true,
+            "can_apply_for_urf": false,
+            "can_manage_urf": false,
+            "can_read_urf_mentees": true
+        },
+        "features": {
+            "project_management": true,
+            "job_openings": true
+        },
+        "me": {
+            "areas": {
+                "home": true,
+                "notifications": true,
+                "projects": true,
+                "presentations": true,
+                "scholars": true,
+                "facultyDirectory": true,
+                "departments": false,
+                "supervisorApprovals": false,
+                "urf": true,
+                "attendance": false,
+                "courses": false,
+                "courseManagement": false,
+                "areasOfSpecialization": false,
+                "publications": false,
+                "openings": false,
+                "admin": false
+            },
+            "nav": [
+                {
+                    "path": "\/home",
+                    "label": "Home",
+                    "icon": "home"
+                },
+                {
+                    "path": "\/projects",
+                    "label": "Projects",
+                    "icon": "briefcase"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell"
+                }
+            ],
+            "labels": {
+                "\/home": "Home",
+                "\/projects": "Projects",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring",
+                "\/urf": "URF",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/notifications": "Notifications"
+            },
+            "tiles": [
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Presentations",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/projects",
+                    "label": "Projects",
+                    "icon": "briefcase"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                }
+            ]
+        }
+    },
+    {
+        "role": "adordc",
+        "capabilities": {
+            "can_read_all_students": false,
+            "can_read_all_faculties": false,
+            "can_read_supervised_students": false,
+            "can_read_department_students": true,
+            "can_read_department_faculties": true,
+            "can_edit_all_students": true,
+            "can_edit_all_faculties": true,
+            "can_edit_department_students": true,
+            "can_edit_department_faculties": true,
+            "can_edit_own_profile": true,
+            "can_edit_phd_title": true,
+            "can_add_department_students": true,
+            "can_add_department_faculties": true,
+            "can_manage_faculties": true,
+            "can_manage_students": true,
+            "can_read_supervisors": true,
+            "can_read_doctoral_committee": false,
+            "can_read_external": false,
+            "can_edit_external": false,
+            "can_edit_supervisors": false,
+            "can_edit_doctoral_committee": false,
+            "can_delete_department_students": true,
+            "can_delete_department_faculties": true,
+            "can_delete_faculties": true,
+            "can_delete_students": true,
+            "can_manage_roles": true,
+            "can_edit_department": false,
+            "can_add_department": false,
+            "can_read_committee_students": false,
+            "can_manage_users": false,
+            "can_manage_form_levels": false,
+            "can_manage_supervisor_records": false,
+            "can_manage_clerks": false,
+            "can_mark_attendance": false,
+            "can_read_own_clerk_departments": false,
+            "can_read_leave_reason": false,
+            "can_manage_app_settings": false,
+            "can_read_leave_settings": false,
+            "can_resend_external_review": false,
+            "can_propose_supervisor_changes": false,
+            "can_manage_supervisor_changes": false,
+            "can_manage_projects": true,
+            "can_manage_all_projects": true,
+            "can_manage_own_publications": false,
+            "can_edit_own_student_profile": false,
+            "can_read_own_leave_balance": false,
+            "can_apply_for_leave": false,
+            "can_suggest_examiners": false,
+            "can_read_faculty_directory": true,
+            "can_read_faculty_supervision": true,
+            "can_read_faculty_phone": true,
+            "can_apply_for_urf": false,
+            "can_manage_urf": false,
+            "can_read_urf_mentees": true
+        },
+        "features": {
+            "project_management": false,
+            "job_openings": false
+        },
+        "me": {
+            "areas": {
+                "home": true,
+                "notifications": true,
+                "projects": true,
+                "presentations": true,
+                "scholars": true,
+                "facultyDirectory": true,
+                "departments": false,
+                "supervisorApprovals": false,
+                "urf": true,
+                "attendance": false,
+                "courses": false,
+                "courseManagement": false,
+                "areasOfSpecialization": false,
+                "publications": false,
+                "openings": false,
+                "admin": false
+            },
+            "nav": [
+                {
+                    "path": "\/home",
+                    "label": "Home",
+                    "icon": "home"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Progress Monitoring",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                },
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell"
+                }
+            ],
+            "labels": {
+                "\/home": "Home",
+                "\/projects": "Projects",
+                "\/forms": "Forms",
+                "\/presentation": "Progress Monitoring",
+                "\/urf": "URF",
+                "\/students": "Students",
+                "\/faculty": "Faculty",
+                "\/notifications": "Notifications"
+            },
+            "tiles": [
+                {
+                    "path": "\/students",
+                    "label": "Students",
+                    "icon": "users"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/presentation",
+                    "label": "Presentations",
+                    "icon": "tasks"
+                },
+                {
+                    "path": "\/urf",
+                    "label": "URF",
+                    "icon": "flask"
+                }
+            ]
+        }
+    },
+    {
+        "role": "clerk",
+        "capabilities": {
+            "can_read_all_students": false,
+            "can_read_all_faculties": false,
+            "can_read_supervised_students": false,
+            "can_read_department_students": false,
+            "can_read_department_faculties": false,
+            "can_edit_all_students": false,
+            "can_edit_all_faculties": false,
+            "can_edit_department_students": false,
+            "can_edit_department_faculties": false,
+            "can_edit_own_profile": false,
+            "can_edit_phd_title": false,
+            "can_add_department_students": false,
+            "can_add_department_faculties": false,
+            "can_manage_faculties": false,
+            "can_manage_students": false,
+            "can_read_supervisors": false,
+            "can_read_doctoral_committee": false,
+            "can_read_external": false,
+            "can_edit_external": false,
+            "can_edit_supervisors": false,
+            "can_edit_doctoral_committee": false,
+            "can_delete_department_students": false,
+            "can_delete_department_faculties": false,
+            "can_delete_faculties": false,
+            "can_delete_students": false,
+            "can_manage_roles": false,
+            "can_edit_department": false,
+            "can_add_department": false,
+            "can_read_committee_students": false,
+            "can_manage_users": false,
+            "can_manage_form_levels": false,
+            "can_manage_supervisor_records": false,
+            "can_manage_clerks": false,
+            "can_mark_attendance": true,
+            "can_read_own_clerk_departments": true,
+            "can_read_leave_reason": false,
+            "can_manage_app_settings": false,
+            "can_read_leave_settings": true,
+            "can_resend_external_review": false,
+            "can_propose_supervisor_changes": false,
+            "can_manage_supervisor_changes": false,
+            "can_manage_projects": false,
+            "can_manage_all_projects": false,
+            "can_manage_own_publications": false,
+            "can_edit_own_student_profile": false,
+            "can_read_own_leave_balance": false,
+            "can_apply_for_leave": false,
+            "can_suggest_examiners": false,
+            "can_read_faculty_directory": false,
+            "can_read_faculty_supervision": false,
+            "can_read_faculty_phone": false,
+            "can_apply_for_urf": false,
+            "can_manage_urf": false,
+            "can_read_urf_mentees": false
+        },
+        "features": {
+            "project_management": true,
+            "job_openings": true
+        },
+        "me": {
+            "areas": {
+                "home": false,
+                "notifications": false,
+                "projects": false,
+                "presentations": false,
+                "scholars": false,
+                "facultyDirectory": false,
+                "departments": false,
+                "supervisorApprovals": false,
+                "urf": false,
+                "attendance": true,
+                "courses": false,
+                "courseManagement": false,
+                "areasOfSpecialization": false,
+                "publications": false,
+                "openings": false,
+                "admin": false
+            },
+            "nav": [
+                {
+                    "path": "\/attendance",
+                    "label": "Attendance",
+                    "icon": "calendar-check-o"
+                }
+            ],
+            "labels": {
+                "\/attendance": "Attendance"
+            },
+            "tiles": [
+                {
+                    "path": "\/attendance",
+                    "label": "Mark attendance",
+                    "icon": "calendar-check-o"
+                }
+            ]
+        }
+    },
+    {
+        "role": "clerk",
+        "capabilities": {
+            "can_read_all_students": false,
+            "can_read_all_faculties": false,
+            "can_read_supervised_students": false,
+            "can_read_department_students": false,
+            "can_read_department_faculties": false,
+            "can_edit_all_students": false,
+            "can_edit_all_faculties": false,
+            "can_edit_department_students": false,
+            "can_edit_department_faculties": false,
+            "can_edit_own_profile": false,
+            "can_edit_phd_title": false,
+            "can_add_department_students": false,
+            "can_add_department_faculties": false,
+            "can_manage_faculties": false,
+            "can_manage_students": false,
+            "can_read_supervisors": false,
+            "can_read_doctoral_committee": false,
+            "can_read_external": false,
+            "can_edit_external": false,
+            "can_edit_supervisors": false,
+            "can_edit_doctoral_committee": false,
+            "can_delete_department_students": false,
+            "can_delete_department_faculties": false,
+            "can_delete_faculties": false,
+            "can_delete_students": false,
+            "can_manage_roles": false,
+            "can_edit_department": false,
+            "can_add_department": false,
+            "can_read_committee_students": false,
+            "can_manage_users": false,
+            "can_manage_form_levels": false,
+            "can_manage_supervisor_records": false,
+            "can_manage_clerks": false,
+            "can_mark_attendance": true,
+            "can_read_own_clerk_departments": true,
+            "can_read_leave_reason": false,
+            "can_manage_app_settings": false,
+            "can_read_leave_settings": true,
+            "can_resend_external_review": false,
+            "can_propose_supervisor_changes": false,
+            "can_manage_supervisor_changes": false,
+            "can_manage_projects": false,
+            "can_manage_all_projects": false,
+            "can_manage_own_publications": false,
+            "can_edit_own_student_profile": false,
+            "can_read_own_leave_balance": false,
+            "can_apply_for_leave": false,
+            "can_suggest_examiners": false,
+            "can_read_faculty_directory": false,
+            "can_read_faculty_supervision": false,
+            "can_read_faculty_phone": false,
+            "can_apply_for_urf": false,
+            "can_manage_urf": false,
+            "can_read_urf_mentees": false
+        },
+        "features": {
+            "project_management": false,
+            "job_openings": false
+        },
+        "me": {
+            "areas": {
+                "home": false,
+                "notifications": false,
+                "projects": false,
+                "presentations": false,
+                "scholars": false,
+                "facultyDirectory": false,
+                "departments": false,
+                "supervisorApprovals": false,
+                "urf": false,
+                "attendance": true,
+                "courses": false,
+                "courseManagement": false,
+                "areasOfSpecialization": false,
+                "publications": false,
+                "openings": false,
+                "admin": false
+            },
+            "nav": [
+                {
+                    "path": "\/attendance",
+                    "label": "Attendance",
+                    "icon": "calendar-check-o"
+                }
+            ],
+            "labels": {
+                "\/attendance": "Attendance"
+            },
+            "tiles": [
+                {
+                    "path": "\/attendance",
+                    "label": "Mark attendance",
+                    "icon": "calendar-check-o"
+                }
+            ]
+        }
+    },
+    {
+        "role": "ug_student",
+        "capabilities": {
+            "can_read_all_students": false,
+            "can_read_all_faculties": false,
+            "can_read_supervised_students": false,
+            "can_read_department_students": false,
+            "can_read_department_faculties": false,
+            "can_edit_all_students": false,
+            "can_edit_all_faculties": false,
+            "can_edit_department_students": false,
+            "can_edit_department_faculties": false,
+            "can_edit_own_profile": false,
+            "can_edit_phd_title": false,
+            "can_add_department_students": false,
+            "can_add_department_faculties": false,
+            "can_manage_faculties": false,
+            "can_manage_students": false,
+            "can_read_supervisors": false,
+            "can_read_doctoral_committee": false,
+            "can_read_external": false,
+            "can_edit_external": false,
+            "can_edit_supervisors": false,
+            "can_edit_doctoral_committee": false,
+            "can_delete_department_students": false,
+            "can_delete_department_faculties": false,
+            "can_delete_faculties": false,
+            "can_delete_students": false,
+            "can_manage_roles": false,
+            "can_edit_department": false,
+            "can_add_department": false,
+            "can_read_committee_students": false,
+            "can_manage_users": false,
+            "can_manage_form_levels": false,
+            "can_manage_supervisor_records": false,
+            "can_manage_clerks": false,
+            "can_mark_attendance": false,
+            "can_read_own_clerk_departments": false,
+            "can_read_leave_reason": false,
+            "can_manage_app_settings": false,
+            "can_read_leave_settings": false,
+            "can_resend_external_review": false,
+            "can_propose_supervisor_changes": false,
+            "can_manage_supervisor_changes": false,
+            "can_manage_projects": false,
+            "can_manage_all_projects": false,
+            "can_manage_own_publications": true,
+            "can_edit_own_student_profile": false,
+            "can_read_own_leave_balance": false,
+            "can_apply_for_leave": false,
+            "can_suggest_examiners": false,
+            "can_read_faculty_directory": true,
+            "can_read_faculty_supervision": false,
+            "can_read_faculty_phone": false,
+            "can_apply_for_urf": true,
+            "can_manage_urf": false,
+            "can_read_urf_mentees": false
+        },
+        "features": {
+            "project_management": true,
+            "job_openings": true
+        },
+        "me": {
+            "areas": {
+                "home": true,
+                "notifications": true,
+                "projects": false,
+                "presentations": false,
+                "scholars": false,
+                "facultyDirectory": true,
+                "departments": false,
+                "supervisorApprovals": false,
+                "urf": false,
+                "attendance": false,
+                "courses": false,
+                "courseManagement": false,
+                "areasOfSpecialization": false,
+                "publications": true,
+                "openings": false,
+                "admin": false
+            },
+            "nav": [
+                {
+                    "path": "\/home",
+                    "label": "Profile",
+                    "icon": "user"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/publications",
+                    "label": "Publications",
+                    "icon": "book"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell"
+                }
+            ],
+            "labels": {
+                "\/home": "Profile",
+                "\/forms": "Forms",
+                "\/publications": "Publications",
+                "\/faculty": "Faculty",
+                "\/notifications": "Notifications"
+            },
+            "tiles": [
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/publications",
+                    "label": "Publications",
+                    "icon": "book"
+                }
+            ]
+        }
+    },
+    {
+        "role": "ug_student",
+        "capabilities": {
+            "can_read_all_students": false,
+            "can_read_all_faculties": false,
+            "can_read_supervised_students": false,
+            "can_read_department_students": false,
+            "can_read_department_faculties": false,
+            "can_edit_all_students": false,
+            "can_edit_all_faculties": false,
+            "can_edit_department_students": false,
+            "can_edit_department_faculties": false,
+            "can_edit_own_profile": false,
+            "can_edit_phd_title": false,
+            "can_add_department_students": false,
+            "can_add_department_faculties": false,
+            "can_manage_faculties": false,
+            "can_manage_students": false,
+            "can_read_supervisors": false,
+            "can_read_doctoral_committee": false,
+            "can_read_external": false,
+            "can_edit_external": false,
+            "can_edit_supervisors": false,
+            "can_edit_doctoral_committee": false,
+            "can_delete_department_students": false,
+            "can_delete_department_faculties": false,
+            "can_delete_faculties": false,
+            "can_delete_students": false,
+            "can_manage_roles": false,
+            "can_edit_department": false,
+            "can_add_department": false,
+            "can_read_committee_students": false,
+            "can_manage_users": false,
+            "can_manage_form_levels": false,
+            "can_manage_supervisor_records": false,
+            "can_manage_clerks": false,
+            "can_mark_attendance": false,
+            "can_read_own_clerk_departments": false,
+            "can_read_leave_reason": false,
+            "can_manage_app_settings": false,
+            "can_read_leave_settings": false,
+            "can_resend_external_review": false,
+            "can_propose_supervisor_changes": false,
+            "can_manage_supervisor_changes": false,
+            "can_manage_projects": false,
+            "can_manage_all_projects": false,
+            "can_manage_own_publications": true,
+            "can_edit_own_student_profile": false,
+            "can_read_own_leave_balance": false,
+            "can_apply_for_leave": false,
+            "can_suggest_examiners": false,
+            "can_read_faculty_directory": true,
+            "can_read_faculty_supervision": false,
+            "can_read_faculty_phone": false,
+            "can_apply_for_urf": true,
+            "can_manage_urf": false,
+            "can_read_urf_mentees": false
+        },
+        "features": {
+            "project_management": false,
+            "job_openings": false
+        },
+        "me": {
+            "areas": {
+                "home": true,
+                "notifications": true,
+                "projects": false,
+                "presentations": false,
+                "scholars": false,
+                "facultyDirectory": true,
+                "departments": false,
+                "supervisorApprovals": false,
+                "urf": false,
+                "attendance": false,
+                "courses": false,
+                "courseManagement": false,
+                "areasOfSpecialization": false,
+                "publications": true,
+                "openings": false,
+                "admin": false
+            },
+            "nav": [
+                {
+                    "path": "\/home",
+                    "label": "Profile",
+                    "icon": "user"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/publications",
+                    "label": "Publications",
+                    "icon": "book"
+                },
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/notifications",
+                    "label": "Notifications",
+                    "icon": "bell"
+                }
+            ],
+            "labels": {
+                "\/home": "Profile",
+                "\/forms": "Forms",
+                "\/publications": "Publications",
+                "\/faculty": "Faculty",
+                "\/notifications": "Notifications"
+            },
+            "tiles": [
+                {
+                    "path": "\/faculty",
+                    "label": "Faculty",
+                    "icon": "id-badge"
+                },
+                {
+                    "path": "\/forms",
+                    "label": "Forms",
+                    "icon": "file-text"
+                },
+                {
+                    "path": "\/publications",
+                    "label": "Publications",
+                    "icon": "book"
+                }
+            ]
+        }
+    }
+]

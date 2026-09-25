@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Forms\SupervisorChangeDefinition;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\GeneralFormCreate;
 use App\Http\Controllers\Traits\GeneralFormHandler;
@@ -17,6 +18,9 @@ use App\Models\Supervisor;
 use App\Models\SupervisorChangeForm;
 
 class SupervisorChangeFormController extends Controller {
+    /** Who may approve several of these at once; the list page offers it to the same. */
+    public const BULK_APPROVERS = ['hod', 'phd_coordinator', 'dordc', 'director'];
+
     use GeneralFormHandler;
     use GeneralFormSubmitter;
     use GeneralFormList;
@@ -172,8 +176,7 @@ class SupervisorChangeFormController extends Controller {
         $user = Auth::user();
         $role = $user->current_role;
 
-        $allowedRoles = ['hod', 'phd_coordinator', 'dordc', 'director'];
-        if (!in_array($role->role, $allowedRoles)) {
+        if (!in_array($user->current_role->role, self::BULK_APPROVERS, true)) {
             return $this->refuse();
         }
         $request->validate([
@@ -197,11 +200,7 @@ class SupervisorChangeFormController extends Controller {
             'student',
             'phd_coordinator',
             function ($formInstance) use ($request, $user) {
-                $request->validate([
-                    'prefrences' => 'required|array',
-                    'to_change'=>'required|array',
-                    'reason'=>'required|string'
-                ]);
+                $request->validate((new SupervisorChangeDefinition)->rules('student', $formInstance->fullForm($user)));
                 $to_change = $request->to_change;
                 $reason = $request->reason;
 
@@ -244,9 +243,7 @@ class SupervisorChangeFormController extends Controller {
             'student',
             'hod',
             function ($formInstance) use ($request, $user) {
-                $request->validate([
-                    'new_supervisors' => 'required|array',
-                ]);
+                $request->validate((new SupervisorChangeDefinition)->rules('phd_coordinator', $formInstance->fullForm($user)));
                 $supervisors = $request->new_supervisors;
                 if(count($supervisors)!=count($formInstance->to_change)){
                     throw new \Exception("Number of supervisors to change and new supervisors should be same");
