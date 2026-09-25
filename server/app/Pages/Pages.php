@@ -17,6 +17,7 @@ final class Pages
         'departments' => DepartmentsPage::class,
         'faculty' => FacultyPage::class,
         'form-list' => FormListPage::class,
+        'forms-menu' => FormsMenuPage::class,
         'my-attendance' => MyAttendancePage::class,
         'openings' => OpeningsPage::class,
         'outside-experts' => OutsideExpertsPage::class,
@@ -41,7 +42,7 @@ final class Pages
     // Lists opened without route parameters, answered together after sign-in
     // so each opens without first waiting for its own description.
     private const PREFETCHED = [
-        'areas-of-specialization', 'clerks', 'configuration', 'courses', 'departments', 'faculty',
+        'areas-of-specialization', 'clerks', 'configuration', 'courses', 'departments', 'faculty', 'forms-menu',
         'openings', 'outside-experts', 'presentations', 'projects', 'students', 'supervisor-approvals', 'urf', 'users',
     ];
 
