@@ -70,7 +70,7 @@ const fromRow = (field, row) => {
 };
 
 // The dialog's rows with each field starting from the row it was opened on.
-const startingFrom = (rows, row) =>
+export const startingFrom = (rows, row) =>
   !row ? rows : rows.map((entry) => {
     if (entry.rows) return { ...entry, rows: startingFrom(entry.rows, row) };
     if (entry.items) return { ...entry, items: startingFrom(entry.items, row) };

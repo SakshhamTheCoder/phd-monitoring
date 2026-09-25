@@ -27,6 +27,7 @@ final class Pages
         'project-recruitment' => ProjectRecruitmentPage::class,
         'project-wizard' => ProjectWizardPage::class,
         'projects' => ProjectsPage::class,
+        'publication-form' => PublicationFormPage::class,
         'research-profile' => ResearchProfilePage::class,
         'semester-card' => SemesterCardPage::class,
         'student-profile' => StudentProfilePage::class,
@@ -45,7 +46,7 @@ final class Pages
     // so each opens without first waiting for its own description.
     private const PREFETCHED = [
         'areas-of-specialization', 'clerks', 'configuration', 'courses', 'departments', 'faculty', 'forms-menu',
-        'openings', 'outside-experts', 'presentations', 'projects', 'students', 'supervisor-approvals', 'urf', 'users',
+        'openings', 'outside-experts', 'presentations', 'projects', 'publication-form', 'students', 'supervisor-approvals', 'urf', 'users',
     ];
 
     /**
@@ -58,6 +59,8 @@ final class Pages
         foreach (array_keys(app(AdminFormController::class)->formMetadata) as $type) {
             $wanted[] = ['form-list', ['form_type' => $type]];
         }
+        // The publication form a faculty member's own record uses asks fewer fields.
+        $wanted[] = ['publication-form', ['faculty' => 1]];
 
         $views = [];
         foreach ($wanted as [$name, $params]) {

@@ -1,131 +1,78 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import DropdownField from "../forms/fields/DropdownField";
-import SCIJournal from "./SCIJournal";
-import Patents from "./Patents";
-import Conference from "./Conference";
-import Book from "./Book";
 import GridContainer from "../forms/fields/GridContainer";
+import ServerPanel from "../forms/serverForm/ServerPanel";
+import { startingFrom } from "../serverPage/ServerDialog";
+import { useView } from "../../api/views";
 import { APIaddPublication, APIupdatePublication } from "../../api/publication";
 
-// onSave lets a caller send the record somewhere other than the student
-// publication endpoints; the field forms below stay the same either way.
+/**
+ * Adds or edits a publication. The kinds offered and the fields each asks for
+ * are the server's (GET /views/publication-form, App\Pages\PublicationFormPage),
+ * drawn by the server form renderer; a record being edited fills them.
+ *
+ * onSave lets a caller send the record somewhere other than the student
+ * publication endpoints; a faculty member's own record asks fewer fields.
+ */
 const AddPublication = ({ close, editData = null, onSave = null }) => {
+  const { view } = useView("publication-form", onSave ? { faculty: 1 } : {});
   // The faculty profile stores a patent as the singular 'patent'; the form
   // below is keyed on 'patents', and apiUpdateFacultyPublication maps it back.
-  const [body, setBody] = useState(
+  const [kind, setKind] = useState(
     editData?.publication_type === "patent" ? { ...editData, publication_type: "patents" } : editData || {}
   );
   const [saving, setSaving] = useState(false);
 
-  // Only offered while adding. A new type starts a new body: merging kept the
-  // last type's fields, and they were posted with this one.
-  const handleSelect = (value) => {
-    setBody(JSON.parse(value));
-  };
+  // The dialog names itself by its heading as it opens, so the heading is
+  // there before the form's description is, in the place the no-kind heading
+  // takes below, so it stays the same element (and keeps the name) after.
+  if (!view) return <>{false}<h1 className="modal-title">Choose a publication type</h1></>;
 
-  // Submit stays disabled until the save answers, so a second click cannot
-  // post the same publication twice.
-  const callback = async () => {
+  // Submit stays held until the save answers, so a second click cannot post
+  // the same publication twice.
+  const save = async (values, files) => {
     if (saving) return;
+    const body = { ...kind, ...values, ...(files.first_page ? { first_page: files.first_page } : {}) };
     setSaving(true);
     try {
       if (onSave) {
         await onSave(body);
       } else if (editData && editData.id) {
-        if (body.publication_type === "patents") {
-          await APIupdatePublication(editData.id, body, close, "/patents");
-        } else {
-          await APIupdatePublication(editData.id, body, close);
-        }
-      } else if (body.publication_type === "patents") {
-        await APIaddPublication(body, close, "/patents");
+        await APIupdatePublication(editData.id, body, close, body.publication_type === "patents" ? "/patents" : false);
       } else {
-        await APIaddPublication(body, close);
+        await APIaddPublication(body, close, body.publication_type === "patents" ? "/patents" : false);
       }
     } finally {
       setSaving(false);
     }
   };
 
-  const updateValue = (newData) => {
-    setBody((prev) => ({
-      ...prev,
-      ...newData,
-    }));
-  };
+  const rows = kind.publication_type ? view.forms[kind.publication_type] : null;
 
   return (
     <>
-        {body.label && (<h1 className="modal-title">{body.label}</h1>)}
-        {!body.label && (<h1 className="modal-title">{"Choose a publication type"}</h1>)}
+        {/* Two headings rather than one retitled: the dialog names itself by the
+            first, and the chosen kind's heading is a new one. */}
+        {kind.label && (<h1 className="modal-title">{kind.label}</h1>)}
+        {!kind.label && (<h1 className="modal-title">{view.title}</h1>)}
         {!editData && (
           <GridContainer
             elements={[
               <DropdownField
-                label={"Publication Type"}
-                options={[
-                  {
-                    value: JSON.stringify({
-                      publication_type: "journal",
-                      type: "sci",
-                      label: "Papers in SCI/SCIE/SSCI/ABDC/AHCI Journal",
-                    }),
-                    title: "Papers in SCI/SCIE/SSCI/ABDC/AHCI Journal",
-                  },
-                  {
-                    value: JSON.stringify({
-                      publication_type: "journal",
-                      type: "non-sci",
-                      label: "Papers in Scopus Journal",
-                    }),
-                    title: "Papers in Scopus Journal",
-                  },
-                  {
-                    value: JSON.stringify({
-                      publication_type: "book",
-                      label: "Book Chapters",
-                    }),
-                    title: "Book Chapters",
-                  },
-                  {
-                    value: JSON.stringify({
-                      publication_type: "conference",
-                      label: "Papers in Conference",
-                    }),
-                    title: "Papers in Conference",
-                  },
-                  {
-                    value: JSON.stringify({
-                      publication_type: "patents",
-                      label: "Patents",
-                    }),
-                    title: "Patents",
-                  },
-                ]}
-                onChange={handleSelect}
+                label={view.choose}
+                options={view.kinds.map((each) => ({ value: JSON.stringify(each), title: each.label }))}
+                // A new kind starts a new form: the last kind's answers are not posted with this one.
+                onChange={(value) => setKind(JSON.parse(value))}
               />,
             ]}
             space={2}
           />
         )}
 
-        {/* Keyed on the type so its form remounts empty, matching the body. */}
-        {/* The faculty profile (onSave) keeps no status, mode, funding or first
-            page, so those inputs are hidden there rather than silently dropped. */}
-        <div className="add-publication-box" key={body.label}>
-          {body.label || editData ? (
-            <>
-              {body.publication_type === "journal" && (
-                <SCIJournal callback={callback} disabled={saving} updateValue={updateValue} data={body} facultyRecord={!!onSave} />
-              )}
-              {body.publication_type === "book" && <Book callback={callback} disabled={saving} updateValue={updateValue} data={body} facultyRecord={!!onSave} />}
-              {body.publication_type === "conference" && (
-                <Conference callback={callback} disabled={saving} updateValue={updateValue} data={body} facultyRecord={!!onSave} />
-              )}
-              {body.publication_type === "patents" && (
-                <Patents callback={callback} disabled={saving} updateValue={updateValue} data={body} facultyRecord={!!onSave} />
-              )}
-            </>
+        {/* Keyed on the kind so its form remounts empty. */}
+        <div className="add-publication-box" key={kind.label}>
+          {rows && (kind.label || editData) ? (
+            <ServerPanel rows={startingFrom(rows, editData || {})} wrapped={false} host={{ submit: save, busy: saving }} />
           ) : null}
         </div>
     </>

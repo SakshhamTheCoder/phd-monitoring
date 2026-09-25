@@ -369,7 +369,8 @@ const ServerPanel = ({ formData, rows = [], wrapped = true, host = {} }) => {
             label={field.label}
             apiUrl={baseURL + field.source}
             fields={field.shows}
-            body={field.params}
+            // A search narrowed by what is answered above it (a state by its country).
+            body={field.params_from_answers ? answers : field.params}
             hint={field.hint}
             suggestionManadatory={!field.free}
             initialValue={field.display}
