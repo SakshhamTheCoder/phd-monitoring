@@ -21,6 +21,7 @@ final class Pages
         'outside-experts' => OutsideExpertsPage::class,
         'presentation-list' => PresentationListPage::class,
         'presentations' => PresentationsPage::class,
+        'project-wizard' => ProjectWizardPage::class,
         'research-profile' => ResearchProfilePage::class,
         'semester-card' => SemesterCardPage::class,
         'student-profile' => StudentProfilePage::class,
