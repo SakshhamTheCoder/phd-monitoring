@@ -4,6 +4,7 @@ namespace App\Projects;
 
 use App\Support\ProjectBudget;
 use App\Support\ProjectDuration;
+use App\Support\Rupees;
 
 /**
  * What the project proposal wizard asks, step by step, and what its review
@@ -278,11 +279,11 @@ final class ProjectWizard
             )],
             ['title' => 'Funding', 'rows' => array_merge(
                 [
-                    $row('Sanctioned', '₹' . self::rupees((int) ($values['sanctionAmount'] ?? 0))),
-                    $row('TIET share', ($values['tietShare'] ?? '') === '' ? self::EMPTY : '₹' . self::rupees((int) $values['tietShare'])),
+                    $row('Sanctioned', '₹' . Rupees::grouped((int) ($values['sanctionAmount'] ?? 0))),
+                    $row('TIET share', ($values['tietShare'] ?? '') === '' ? self::EMPTY : '₹' . Rupees::grouped((int) $values['tietShare'])),
                 ],
-                array_map(fn ($year, $i) => $row('Year ' . ($i + 1) . ' budget', '₹' . self::rupees($yearTotal($year))), $budgetYears, array_keys($budgetYears)),
-                [$row('Total budget', '₹' . self::rupees(array_sum(array_map($yearTotal, $budgetYears))))],
+                array_map(fn ($year, $i) => $row('Year ' . ($i + 1) . ' budget', '₹' . Rupees::grouped($yearTotal($year))), $budgetYears, array_keys($budgetYears)),
+                [$row('Total budget', '₹' . Rupees::grouped(array_sum(array_map($yearTotal, $budgetYears))))],
             )],
             ['title' => 'Objectives', 'rows' => [
                 $row('Objectives', count(array_filter($values['objectives'] ?? [], fn ($o) => trim((string) $o) !== '')) . ' listed'),
@@ -305,18 +306,5 @@ final class ProjectWizard
         }
         $done = count(array_filter($milestones, fn ($m) => ($m['status'] ?? '') === 'Completed'));
         return (int) round($done / count($milestones) * 100);
-    }
-
-    /** Rupees grouped the Indian way: 48,50,000. */
-    public static function rupees(int $amount): string
-    {
-        $sign = $amount < 0 ? '-' : '';
-        $digits = (string) abs($amount);
-        if (strlen($digits) <= 3) {
-            return $sign . $digits;
-        }
-        $last = substr($digits, -3);
-        $rest = substr($digits, 0, -3);
-        return $sign . ltrim(strrev(implode(',', str_split(strrev($rest), 2))), ',') . ',' . $last;
     }
 }

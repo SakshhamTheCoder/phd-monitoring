@@ -65,17 +65,6 @@ export const mapProject = (p) => (p ? {
 } : null);
 
 // ---- projects CRUD ----
-// null on failure, so a list that could not load is not read as an empty one.
-export const apiListProjects = async (filters) => {
-  const qs = filters ? `?filters=${encodeURIComponent(JSON.stringify(filters))}` : '';
-  const { success, response } = await customFetch(`${baseURL}/projects${qs}`, 'GET', {}, false);
-  return success ? (response || []).map(mapProject) : null;
-};
-export const apiProjectStats = async () => {
-  const { success, response } = await customFetch(`${baseURL}/projects/stats`, 'GET', {}, false);
-  return success ? response : { active: 0, completed: 0, totalFunding: 0, consultancy: 0, industry: 0, international: 0 };
-};
-
 // Option lists come from the backend so the wizard cannot drift from the
 // validation. Cached for the life of the page — these change with a deploy,
 // not with a click. A failure is not kept, or the wizard would stay without
@@ -101,7 +90,6 @@ export const apiGetProject = async (id) => {
 export const apiUpdateProject = async (id, body, isFormData = false) => {
   return customFetch(`${baseURL}/projects/${id}`, 'POST', body, true, isFormData);
 };
-export const apiDeleteProject = async (id) => customFetch(`${baseURL}/projects/${id}`, 'DELETE');
 
 // ---- milestones ----
 export const apiAddMilestone = (projectId, m) => customFetch(`${baseURL}/projects/${projectId}/milestones`, 'POST',
