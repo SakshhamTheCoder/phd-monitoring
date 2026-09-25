@@ -1,34 +1,8 @@
-// API layer for the Projects module. Wraps customFetch and maps between the
-// backend's snake_case shape and the camelCase shape the React pages expect.
+// The Projects module's changes: a project, its milestones, files, positions
+// and decisions. What the pages show is described by the server (App\Pages).
 import { baseURL } from './urls';
 import { customFetch } from './base';
 
-// ---- mappers: backend -> frontend ----
-export const mapPosition = (p) => ({
-  id: p.id, type: p.type, title: p.title, openings: p.openings, stipend: p.stipend,
-  status: p.status || 'Open',
-  deadline: p.deadline, eligibility: p.eligibility, skills: p.skills, cgpa: p.min_cgpa,
-  description: p.description, advertisementPath: p.advertisement_path,
-  applicants: p.applications_count ?? p.applicants ?? 0,
-  shortlisted: p.shortlisted_count ?? p.shortlisted ?? 0,
-  selected: p.selected_count ?? p.selected ?? 0,
-  projectId: p.project_id, projectTitle: p.project ? p.project.title : p.project_title,
-  posKey: p.id,
-});
-export const mapApplication = (a) => ({
-  id: a.id, name: a.name, email: a.email, phone: a.phone, degree: a.degree, institute: a.institute,
-  cgpa: a.cgpa, research: a.research, skills: a.skills || [], coverNote: a.cover_note,
-  status: a.status, appliedDate: a.applied_date,
-  applicantType: a.applicant_type || 'internal',
-  verified: a.email_verified_at !== null && a.email_verified_at !== undefined,
-  resume: a.resume_path ? a.resume_path.split('/').pop() : '',
-  resumePath: a.resume_path || '',
-  position: a.position ? a.position.type : a.position_type,
-  positionTitle: a.position ? a.position.title : a.position_title,
-  projectId: a.project_id,
-  projectTitle: a.position && a.position.project ? a.position.project.title : a.project_title,
-  posKey: a.position_id,
-});
 // ---- projects CRUD ----
 export const apiUpdateProject = async (id, body, isFormData = false) => {
   return customFetch(`${baseURL}/projects/${id}`, 'POST', body, true, isFormData);

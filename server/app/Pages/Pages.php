@@ -18,6 +18,7 @@ final class Pages
         'faculty' => FacultyPage::class,
         'form-list' => FormListPage::class,
         'my-attendance' => MyAttendancePage::class,
+        'openings' => OpeningsPage::class,
         'outside-experts' => OutsideExpertsPage::class,
         'presentation-list' => PresentationListPage::class,
         'presentations' => PresentationsPage::class,
@@ -41,7 +42,7 @@ final class Pages
     // so each opens without first waiting for its own description.
     private const PREFETCHED = [
         'areas-of-specialization', 'clerks', 'configuration', 'courses', 'departments', 'faculty',
-        'outside-experts', 'presentations', 'projects', 'students', 'supervisor-approvals', 'urf', 'users',
+        'openings', 'outside-experts', 'presentations', 'projects', 'students', 'supervisor-approvals', 'urf', 'users',
     ];
 
     /**
