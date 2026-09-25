@@ -4,14 +4,6 @@ import { baseURL } from './urls';
 import { customFetch } from './base';
 
 // ---- mappers: backend -> frontend ----
-export const mapMilestone = (m) => ({
-  id: m.id, name: m.name, deliverable: m.deliverable, dueDate: m.due_date, status: m.status,
-});
-export const mapDocument = (d) => ({
-  id: d.id, name: d.name, type: d.type, date: d.doc_date,
-  // A stored file or an external link; open it with openStoredFile.
-  url: d.file_path || d.link, file_path: d.file_path, link: d.link,
-});
 export const mapPosition = (p) => ({
   id: p.id, type: p.type, title: p.title, openings: p.openings, stipend: p.stipend,
   status: p.status || 'Open',
@@ -37,41 +29,7 @@ export const mapApplication = (a) => ({
   projectTitle: a.position && a.position.project ? a.position.project.title : a.project_title,
   posKey: a.position_id,
 });
-export const mapProject = (p) => (p ? {
-  id: p.id,
-  title: p.title, category: p.category, role: p.role, status: p.status,
-  amount: p.amount, description: p.description,
-  canEdit: p.can_edit !== false,
-  // Only the list sends it: how the viewer stands on the project.
-  viewerRole: p.viewer_role,
-  fundingAgency: p.funding_agency, tietShare: p.tiet_share,
-  startDate: p.start_date, endDate: p.end_date,
-  durationYears: p.duration_years, durationMonths: p.duration_months,
-  focusArea: p.focus_area, grantType: p.grant_type,
-  coPIs: p.co_pis || [], objectives: p.objectives || [], budget: p.budget || {},
-  sdgs: p.sdgs || [],
-  ganttChartName: p.gantt_chart_name || '',
-  ganttChartPath: p.gantt_chart_path || '',
-  sanctionLetterLink: p.sanction_letter_link, sanctionLetterName: p.sanction_letter_name,
-  pi: p.pi ? {
-    code: p.pi.faculty_code,
-    name: p.pi.user ? `${p.pi.user.first_name || ''} ${p.pi.user.last_name || ''}`.trim() : '',
-    department: p.pi.department ? p.pi.department.name : '',
-    designation: p.pi.designation || '',
-  } : null,
-  milestones: (p.milestones || []).map(mapMilestone),
-  documents: (p.documents || []).map(mapDocument),
-  positions: (p.positions || []).map(mapPosition),
-} : null);
-
 // ---- projects CRUD ----
-// `failed` means the request got no answer, so the project may still exist and
-// a retry can help; no project without it means the server refused or has none.
-export const apiGetProject = async (id) => {
-  const { success, response, status } = await customFetch(`${baseURL}/projects/${id}`, 'GET', {}, false);
-  // A 404 or 403 means there is no project to show; anything else is worth a retry.
-  return { project: success ? mapProject(response) : null, failed: !success && status !== 404 && status !== 403 };
-};
 export const apiUpdateProject = async (id, body, isFormData = false) => {
   return customFetch(`${baseURL}/projects/${id}`, 'POST', body, true, isFormData);
 };
@@ -81,35 +39,22 @@ export const apiAddMilestone = (projectId, m) => customFetch(`${baseURL}/project
   { name: m.name, deliverable: m.deliverable, due_date: m.dueDate || null, status: m.status }, true);
 export const apiUpdateMilestone = (projectId, milestoneId, m) => customFetch(`${baseURL}/projects/${projectId}/milestones/${milestoneId}`, 'POST',
   { name: m.name, deliverable: m.deliverable, due_date: m.dueDate || null, status: m.status }, true);
-export const apiDeleteMilestone = (projectId, milestoneId) => customFetch(`${baseURL}/projects/${projectId}/milestones/${milestoneId}`, 'DELETE');
-
 // ---- Gantt chart ----
 export const apiUploadGanttChart = (projectId, file) => {
   const body = new FormData();
   body.append('gantt_chart', file);
   return customFetch(`${baseURL}/projects/${projectId}`, 'POST', body, true, true);
 };
-export const apiRemoveGanttChart = (projectId) =>
-  customFetch(`${baseURL}/projects/${projectId}`, 'POST', { remove_gantt_chart: 1 }, true);
-
 // ---- documents ----
 export const apiAddDocument = (projectId, formData) => customFetch(`${baseURL}/projects/${projectId}/documents`, 'POST', formData, true, true);
 export const apiUpdateDocument = (projectId, documentId, formData) => customFetch(`${baseURL}/projects/${projectId}/documents/${documentId}`, 'POST', formData, true, true);
 export const apiDeleteDocument = (projectId, documentId) => customFetch(`${baseURL}/projects/${projectId}/documents/${documentId}`, 'DELETE');
 
 // ---- positions ----
-export const apiListPositions = async (projectId) => {
-  const { success, response } = await customFetch(`${baseURL}/projects/${projectId}/positions`, 'GET', {}, false);
-  return success ? (response || []).map(mapPosition) : [];
-};
 const isForm = (body) => body instanceof FormData;
 export const apiAddPosition = (projectId, body) => customFetch(`${baseURL}/projects/${projectId}/positions`, 'POST', body, true, isForm(body));
 export const apiUpdatePosition = (projectId, positionId, body) => customFetch(`${baseURL}/projects/${projectId}/positions/${positionId}`, 'POST', body, true, isForm(body));
 export const apiDeletePosition = (projectId, positionId) => customFetch(`${baseURL}/projects/${projectId}/positions/${positionId}`, 'DELETE');
 
 // ---- applications (faculty) ----
-export const apiListApplications = async (projectId) => {
-  const { success, response } = await customFetch(`${baseURL}/projects/${projectId}/applications`, 'GET', {}, false);
-  return success ? (response || []).map(mapApplication) : [];
-};
 export const apiSetApplicationStatus = (applicationId, status) => customFetch(`${baseURL}/applications/${applicationId}/status`, 'POST', { status }, true);

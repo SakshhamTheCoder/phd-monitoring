@@ -1,9 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { positionTypes } from '../../data/projectsData';
-import { formatDate, EMPTY_VALUE } from '../../utils/timeParse';
-import { badgeClass } from '../../data/badges';
-import { apiGetProject, apiListPositions, apiAddPosition, apiUpdatePosition, apiDeletePosition, apiListApplications, apiSetApplicationStatus } from '../../api/projects';
+import { formatDate } from '../../utils/timeParse';
+import { apiAddPosition, apiUpdatePosition, apiDeletePosition, apiSetApplicationStatus } from '../../api/projects';
+import { useView } from '../../api/views';
 import { storedFileUrl, storedFileClick } from '../../api/fileAccess';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import CustomButton from '../../components/forms/fields/CustomButton';
@@ -15,13 +14,15 @@ import Panel from '../../components/panel/Panel';
 import useDoneFlash from '../../hooks/useDoneFlash';
 import './ProjectRecruitment.css';
 
+const Badge = ({ badge }) => <span className={`badge badge--${badge.tone}`}>{badge.text}</span>;
+
 const emptyPos = {
   type: '', title: '', openings: 1, status: 'Open', eligibility: '', skills: '',
   cgpa: '', stipend: '', deadline: '', description: '',
   advertisementFile: null, advertisementName: '',
 };
 
-// Map the post-opening form to the backend position body.
+// The post-opening form as the position endpoint takes it.
 const toPositionBody = (f) => ({
   type: f.type, title: f.title, openings: Number(f.openings) || 1,
   status: f.status || 'Open',
@@ -40,75 +41,48 @@ const toPositionForm = (f) => {
   return fd;
 };
 
-const ProjectRecruitment = () => {
-  const { id } = useParams();
+/**
+ * A project's recruitment (GET /views/project-recruitment, server:
+ * App\Pages\ProjectRecruitmentPage): its positions and, for the PI, the
+ * applications to each, every figure and decision the server's. Posting,
+ * closing and deciding go to the endpoints, and the page is read again.
+ */
+const Recruitment = ({ view, reload }) => {
   const navigate = useNavigate();
-  const [project, setProject] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [loadAttempt, setLoadAttempt] = useState(0);
   const [publishing, setPublishing] = useState(false);
-  const [selectedPosition, setSelectedPosition] = useState(null);
+  // Held by id, so each answer from the server shows the same position and applicant.
+  const [selectedPositionId, setSelectedPositionId] = useState(null);
   const [showPostForm, setShowPostForm] = useState(false);
   const [editingPosIdx, setEditingPosIdx] = useState(null);
-  const [selectedApplicant, setSelectedApplicant] = useState(null);
+  const [selectedApplicantId, setSelectedApplicantId] = useState(null);
   const [posForm, setPosForm] = useState(emptyPos);
-  const [positions, setPositions] = useState([]);
-  const [applications, setApplications] = useState([]);
   const adRef = useRef(null);
   const [decided, flashDecided] = useDoneFlash();
+  const { positions, applications } = view;
+  const canEdit = view.can_edit;
+  const selectedPosition = positions.find((p) => p.id === selectedPositionId) || null;
+  const selectedApplicant = applications.find((a) => a.id === selectedApplicantId) || null;
 
   const handleAdvertisement = (e) => {
     const file = e.target.files && e.target.files[0];
-    if (file) setPosForm(prev => ({ ...prev, advertisementFile: file, advertisementName: file.name }));
+    if (file) setPosForm((prev) => ({ ...prev, advertisementFile: file, advertisementName: file.name }));
   };
 
-  useEffect(() => {
-    let cancelled = false;
-    // Another project starts clean, so the last one's positions and open
-    // forms neither show nor save under this id.
-    setLoading(true);
-    setLoadFailed(false);
-    setProject(null);
-    setSelectedPosition(null);
-    setShowPostForm(false);
-    setEditingPosIdx(null);
-    setSelectedApplicant(null);
-    setPosForm(emptyPos);
-    Promise.all([apiGetProject(id), apiListPositions(id), apiListApplications(id)]).then(([{ project: p, failed }, pos, apps]) => {
-      if (cancelled) return;
-      setProject(p); setLoadFailed(failed); setPositions(pos); setApplications(apps); setLoading(false);
-    });
-    return () => { cancelled = true; };
-  }, [id, loadAttempt]);
-
-  if (loading) {
-    return <StatusNotice tone="loading" title="Loading recruitment" />;
-  }
-  if (loadFailed) {
-    return <LoadError message="Could not load this project's recruitment. Check your connection and try again." onRetry={() => setLoadAttempt((n) => n + 1)} />;
-  }
-  if (!project) {
-    return <StatusNotice tone="empty" title="Project not found." />;
-  }
-
-  const canEdit = project.canEdit;
-
   // Applications for the currently-opened position.
-  const posApps = selectedPosition ? applications.filter(a => a.posKey === selectedPosition.id) : [];
+  const posApps = selectedPosition ? applications.filter((a) => a.position_id === selectedPosition.id) : [];
   const appStats = {
     total: posApps.length,
-    shortlisted: posApps.filter(a => a.status === 'Shortlisted').length,
-    interview: posApps.filter(a => a.status === 'Interview Scheduled').length,
-    selected: posApps.filter(a => a.status === 'Selected').length,
+    shortlisted: posApps.filter((a) => a.status === 'Shortlisted').length,
+    interview: posApps.filter((a) => a.status === 'Interview Scheduled').length,
+    selected: posApps.filter((a) => a.status === 'Selected').length,
   };
 
   // ---- Position CRUD ----
   const clearAdInput = () => { if (adRef.current) adRef.current.value = ''; };
-  const openAddPos = () => { setSelectedPosition(null); setEditingPosIdx(null); setPosForm(emptyPos); clearAdInput(); setShowPostForm(true); };
+  const openAddPos = () => { setSelectedPositionId(null); setEditingPosIdx(null); setPosForm(emptyPos); clearAdInput(); setShowPostForm(true); };
   const openEditPos = (i) => {
     setEditingPosIdx(i);
-    setPosForm({ ...emptyPos, ...positions[i] });
+    setPosForm({ ...emptyPos, ...positions[i].form });
     clearAdInput();
     setShowPostForm(true);
   };
@@ -121,42 +95,37 @@ const ProjectRecruitment = () => {
     setPublishing(true);
     const body = posForm.advertisementFile ? toPositionForm(posForm) : toPositionBody(posForm);
     const res = editingPosIdx !== null
-      ? await apiUpdatePosition(project.id, positions[editingPosIdx].id, body)
-      : await apiAddPosition(project.id, body);
+      ? await apiUpdatePosition(view.id, positions[editingPosIdx].id, body)
+      : await apiAddPosition(view.id, body);
     setPublishing(false);
     if (res.success) {
-      setPositions(await apiListPositions(project.id));
       toast.success(editingPosIdx !== null ? 'Position updated.' : 'Position published.');
       closePostForm();
+      reload();
     }
   };
   const togglePositionStatus = async (i) => {
-    const pos = positions[i];
-    const status = pos.status === 'Closed' ? 'Open' : 'Closed';
-    const res = await apiUpdatePosition(project.id, pos.id, { status });
+    const { toggle } = positions[i];
+    const res = await apiUpdatePosition(view.id, positions[i].id, { status: toggle.status });
     if (res.success) {
-      setPositions(prev => prev.map((p, idx) => (idx === i ? { ...p, status } : p)));
-      toast.success(status === 'Closed' ? 'Position closed to new applications.' : 'Position reopened.');
+      toast.success(toggle.done);
+      reload();
     }
   };
 
   const deletePosition = async (i) => {
-    const pos = positions[i];
-    const count = pos.applicants ?? 0;
-    const apps = count ? ` and its ${count === 1 ? '1 application' : `${count} applications`}` : '';
-    if (!window.confirm(`Delete the position "${pos.title}"${apps}? This cannot be undone.`)) return;
-    const res = await apiDeletePosition(project.id, positions[i].id);
-    if (res.success) { setPositions(prev => prev.filter((_, idx) => idx !== i)); toast.success('Position deleted.'); }
+    if (!window.confirm(positions[i].delete)) return;
+    const res = await apiDeletePosition(view.id, positions[i].id);
+    if (res.success) { toast.success('Position deleted.'); reload(); }
   };
 
   // ---- Application decisions ----
   const setAppStatus = async (newStatus) => {
     const res = await apiSetApplicationStatus(selectedApplicant.id, newStatus);
     if (res.success) {
-      setApplications(prev => prev.map(a => (a.id === selectedApplicant.id ? { ...a, status: newStatus } : a)));
-      setSelectedApplicant({ ...selectedApplicant, status: newStatus });
       flashDecided();
       toast.success(`Marked as ${newStatus}.`);
+      reload();
     }
   };
 
@@ -164,16 +133,16 @@ const ProjectRecruitment = () => {
 
   return (
     <>
-      <button type="button" className="page-back-link pr-back" onClick={() => navigate(`/projects/${id}`)}>
-        <i className="fa fa-arrow-left" aria-hidden="true"></i> Back to project
+      <button type="button" className="page-back-link pr-back" onClick={() => navigate(view.back.path)}>
+        <i className="fa fa-arrow-left" aria-hidden="true"></i> {view.back.label}
       </button>
       <Page
-        className="reveal"
-        title={`Recruitment: ${project.title.length > 50 ? project.title.slice(0, 50) + '...' : project.title}`}
-        description="Manage positions and applications for this project."
+        className={view.page_class}
+        title={view.title}
+        description={view.description}
         actions={canEdit && (
           // While the form is open its Publish is the filled button.
-          <CustomButton text="Post opening" variant={showPostForm ? 'secondary' : undefined} onClick={() => (showPostForm ? closePostForm() : openAddPos())} />
+          <CustomButton text={view.post} variant={showPostForm ? 'secondary' : undefined} onClick={() => (showPostForm ? closePostForm() : openAddPos())} />
         )}
       >
         {/* Post / Edit Opening Form */}
@@ -182,28 +151,28 @@ const ProjectRecruitment = () => {
             <div className="pr-form-grid">
               <div className="pr-field">
                 <label htmlFor="project-recruitment-position-type">Position type {required}</label>
-                <select id="project-recruitment-position-type" aria-required="true" value={posForm.type} onChange={e => setPosForm({...posForm, type: e.target.value})}>
+                <select id="project-recruitment-position-type" aria-required="true" value={posForm.type} onChange={(e) => setPosForm({ ...posForm, type: e.target.value })}>
                   <option value="">Select type</option>
-                  {positionTypes.map(p => <option key={p} value={p}>{p}</option>)}
+                  {view.position_types.map((p) => <option key={p} value={p}>{p}</option>)}
                 </select>
               </div>
               <div className="pr-field">
                 <label htmlFor="project-recruitment-position-title">Position title {required}</label>
-                <input id="project-recruitment-position-title" type="text" aria-required="true" value={posForm.title} onChange={e => setPosForm({...posForm, title: e.target.value})} placeholder="e.g. Junior Research Fellow, NAS Project" />
+                <input id="project-recruitment-position-title" type="text" aria-required="true" value={posForm.title} onChange={(e) => setPosForm({ ...posForm, title: e.target.value })} placeholder="e.g. Junior Research Fellow, NAS Project" />
               </div>
-              <div className="pr-field"><label htmlFor="project-recruitment-number-of-openings">Number of openings</label><input id="project-recruitment-number-of-openings" type="number" min="1" value={posForm.openings} onChange={e => setPosForm({...posForm, openings: e.target.value})} /></div>
+              <div className="pr-field"><label htmlFor="project-recruitment-number-of-openings">Number of openings</label><input id="project-recruitment-number-of-openings" type="number" min="1" value={posForm.openings} onChange={(e) => setPosForm({ ...posForm, openings: e.target.value })} /></div>
               <div className="pr-field">
                 <label htmlFor="project-recruitment-status">Status</label>
-                <select id="project-recruitment-status" value={posForm.status} onChange={e => setPosForm({...posForm, status: e.target.value})}>
+                <select id="project-recruitment-status" value={posForm.status} onChange={(e) => setPosForm({ ...posForm, status: e.target.value })}>
                   <option value="Open">Open</option>
                   <option value="Closed">Closed</option>
                 </select>
               </div>
-              <div className="pr-field"><label htmlFor="project-recruitment-eligibility">Eligibility</label><input id="project-recruitment-eligibility" type="text" value={posForm.eligibility} onChange={e => setPosForm({...posForm, eligibility: e.target.value})} placeholder="e.g. M.Tech in CS/ECE" /></div>
-              <div className="pr-field"><label htmlFor="project-recruitment-required-skills">Required skills</label><input id="project-recruitment-required-skills" type="text" value={posForm.skills} onChange={e => setPosForm({...posForm, skills: e.target.value})} placeholder="e.g. Python, PyTorch, ML" /></div>
-              <div className="pr-field"><label htmlFor="project-recruitment-min-cgpa">Min CGPA</label><input id="project-recruitment-min-cgpa" type="text" value={posForm.cgpa} onChange={e => setPosForm({...posForm, cgpa: e.target.value})} placeholder="e.g. 7.5" /></div>
-              <div className="pr-field"><label htmlFor="project-recruitment-stipend">Stipend</label><input id="project-recruitment-stipend" type="text" value={posForm.stipend} onChange={e => setPosForm({...posForm, stipend: e.target.value})} placeholder="e.g. ₹31,000/month" /></div>
-              <div className="pr-field"><label htmlFor="project-recruitment-application-deadline">Application deadline</label><input id="project-recruitment-application-deadline" type="date" value={posForm.deadline} onChange={e => setPosForm({...posForm, deadline: e.target.value})} /></div>
+              <div className="pr-field"><label htmlFor="project-recruitment-eligibility">Eligibility</label><input id="project-recruitment-eligibility" type="text" value={posForm.eligibility} onChange={(e) => setPosForm({ ...posForm, eligibility: e.target.value })} placeholder="e.g. M.Tech in CS/ECE" /></div>
+              <div className="pr-field"><label htmlFor="project-recruitment-required-skills">Required skills</label><input id="project-recruitment-required-skills" type="text" value={posForm.skills} onChange={(e) => setPosForm({ ...posForm, skills: e.target.value })} placeholder="e.g. Python, PyTorch, ML" /></div>
+              <div className="pr-field"><label htmlFor="project-recruitment-min-cgpa">Min CGPA</label><input id="project-recruitment-min-cgpa" type="text" value={posForm.cgpa} onChange={(e) => setPosForm({ ...posForm, cgpa: e.target.value })} placeholder="e.g. 7.5" /></div>
+              <div className="pr-field"><label htmlFor="project-recruitment-stipend">Stipend</label><input id="project-recruitment-stipend" type="text" value={posForm.stipend} onChange={(e) => setPosForm({ ...posForm, stipend: e.target.value })} placeholder="e.g. ₹31,000/month" /></div>
+              <div className="pr-field"><label htmlFor="project-recruitment-application-deadline">Application deadline</label><input id="project-recruitment-application-deadline" type="date" value={posForm.deadline} onChange={(e) => setPosForm({ ...posForm, deadline: e.target.value })} /></div>
               <div className="pr-field">
                 <label htmlFor="project-recruitment-advertisement-pdf">Advertisement PDF</label>
                 <input id="project-recruitment-advertisement-pdf" type="file" accept=".pdf" ref={adRef} onChange={handleAdvertisement} />
@@ -211,7 +180,7 @@ const ProjectRecruitment = () => {
                   ? <span className="pr-field-hint"><i className="fa fa-paperclip" aria-hidden="true"></i> {posForm.advertisementName}</span>
                   : posForm.advertisementPath && <a className="pr-field-hint" href={storedFileUrl(posForm.advertisementPath)} target="_blank" rel="noopener noreferrer" onClick={storedFileClick(posForm.advertisementPath)}><i className="fa fa-file-pdf-o" aria-hidden="true"></i> Current advertisement</a>}
               </div>
-              <div className="pr-field full"><label htmlFor="project-recruitment-job-description">Job description</label><textarea id="project-recruitment-job-description" rows="4" value={posForm.description} onChange={e => setPosForm({...posForm, description: e.target.value})} placeholder="Describe the role, responsibilities, and what the candidate will work on. This is shown to students on the Openings portal." /></div>
+              <div className="pr-field full"><label htmlFor="project-recruitment-job-description">Job description</label><textarea id="project-recruitment-job-description" rows="4" value={posForm.description} onChange={(e) => setPosForm({ ...posForm, description: e.target.value })} placeholder="Describe the role, responsibilities, and what the candidate will work on. This is shown to students on the Openings portal." /></div>
             </div>
             <div className="pr-form-actions">
               <CustomButton text={editingPosIdx !== null ? 'Save changes' : 'Publish opening'} onClick={publishPosition} busy={publishing} />
@@ -230,10 +199,10 @@ const ProjectRecruitment = () => {
                 <div
                   key={i}
                   className={`panel-section pr-position${canEdit ? ' pr-position-clickable' : ''}`}
-                  onClick={canEdit ? () => setSelectedPosition(pos) : undefined}
+                  onClick={canEdit ? () => setSelectedPositionId(pos.id) : undefined}
                   onKeyDown={canEdit ? (e) => {
                     if (e.target !== e.currentTarget) return;
-                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedPosition(pos); }
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedPositionId(pos.id); }
                   } : undefined}
                   role={canEdit ? 'button' : undefined}
                   tabIndex={canEdit ? 0 : undefined}
@@ -244,12 +213,12 @@ const ProjectRecruitment = () => {
                       <h3 className="pr-pos-title">{pos.title}</h3>
                     </div>
                     <div className="pr-pos-top-right">
-                      <span className={badgeClass(pos.status)}>{pos.status}</span>
+                      <Badge badge={pos.badge} />
                       <span className="pr-pos-deadline"><i className="fa fa-calendar" aria-hidden="true"></i> Deadline: {formatDate(pos.deadline)}</span>
                       {canEdit && (
                         <div className="pr-pos-actions">
-                          <button type="button" className="pr-icon-btn" onClick={(e) => { e.stopPropagation(); togglePositionStatus(i); }} title={pos.status === 'Closed' ? 'Reopen position' : 'Close position'} aria-label={pos.status === 'Closed' ? 'Reopen position' : 'Close position'}>
-                            <i className={`fa ${pos.status === 'Closed' ? 'fa-unlock' : 'fa-lock'}`} aria-hidden="true"></i>
+                          <button type="button" className="pr-icon-btn" onClick={(e) => { e.stopPropagation(); togglePositionStatus(i); }} title={pos.toggle.label} aria-label={pos.toggle.label}>
+                            <i className={`fa ${pos.toggle.icon}`} aria-hidden="true"></i>
                           </button>
                           <button type="button" className="pr-icon-btn" onClick={(e) => { e.stopPropagation(); openEditPos(i); }} title="Edit position" aria-label="Edit position"><i className="fa fa-pencil" aria-hidden="true"></i></button>
                           <button type="button" className="pr-icon-btn danger" onClick={(e) => { e.stopPropagation(); deletePosition(i); }} title="Delete position" aria-label="Delete position"><i className="fa fa-trash" aria-hidden="true"></i></button>
@@ -258,10 +227,9 @@ const ProjectRecruitment = () => {
                     </div>
                   </div>
                   <dl className="facts pr-pos-stats">
-                    <div><dt>Filled</dt><dd>{pos.selected ?? 0} / {pos.openings}</dd></div>
-                    <div><dt>Stipend</dt><dd>{pos.stipend || EMPTY_VALUE}</dd></div>
-                    <div><dt>Applicants</dt><dd>{pos.applicants ?? 0}</dd></div>
-                    <div><dt>Shortlisted</dt><dd>{pos.shortlisted ?? 0}</dd></div>
+                    {pos.stats.map((stat) => (
+                      <div key={stat.label}><dt>{stat.label}</dt><dd>{stat.value.map((part, index) => <React.Fragment key={index}>{part}</React.Fragment>)}</dd></div>
+                    ))}
                   </dl>
                   {canEdit && (
                     <div className="pr-pos-view-hint">View applications <i className="fa fa-arrow-right" aria-hidden="true"></i></div>
@@ -269,8 +237,8 @@ const ProjectRecruitment = () => {
                 </div>
               ))
             ) : (
-              <StatusNotice tone="empty" title="No positions posted yet.">
-                {canEdit ? 'Click "Post opening" to create one.' : null}
+              <StatusNotice tone="empty" title={view.none.title}>
+                {view.none.hint}
               </StatusNotice>
             )}
           </Panel>
@@ -281,7 +249,7 @@ const ProjectRecruitment = () => {
           <Panel
             flush
             title={`Applications: ${selectedPosition.title}`}
-            actions={<CustomButton text="Back to positions" variant="quiet" size="sm" onClick={() => setSelectedPosition(null)} />}
+            actions={<CustomButton text="Back to positions" variant="quiet" size="sm" onClick={() => setSelectedPositionId(null)} />}
           >
             <dl className="facts pr-app-stats">
               <div><dt>Total applications</dt><dd>{appStats.total}</dd></div>
@@ -296,19 +264,17 @@ const ProjectRecruitment = () => {
                     <tr><th>Applicant name</th><th>Institute</th><th>CGPA</th><th>Status</th><th>Actions</th></tr>
                   </thead>
                   <tbody>
-                    {posApps.map(app => (
+                    {posApps.map((app) => (
                       <tr key={app.id}>
                         <td>
                           {app.name}
-                          {!app.verified && <span className="badge badge--neutral pr-app-flag">Unconfirmed email</span>}
+                          {app.unconfirmed && <span className="badge badge--neutral pr-app-flag">{app.unconfirmed}</span>}
                         </td>
                         <td>{app.institute}</td>
                         <td>{app.cgpa}</td>
+                        <td><Badge badge={app.badge} /></td>
                         <td>
-                          <span className={badgeClass(app.status)}>{app.status}</span>
-                        </td>
-                        <td>
-                          <CustomButton text="View" variant="quiet" size="sm" onClick={() => setSelectedApplicant(app)} />
+                          <CustomButton text="View" variant="quiet" size="sm" onClick={() => setSelectedApplicantId(app.id)} />
                         </td>
                       </tr>
                     ))}
@@ -326,39 +292,35 @@ const ProjectRecruitment = () => {
         {/* Applicant Detail Modal */}
         <CustomModal
           isOpen={!!selectedApplicant}
-          onClose={() => setSelectedApplicant(null)}
+          onClose={() => setSelectedApplicantId(null)}
           maxWidth="520px"
           minHeight="auto"
         >
           {selectedApplicant && (
             <>
               <div className="pr-modal-header">
-                <div className="pr-modal-avatar" aria-hidden="true">{selectedApplicant.name.split(' ').map(n => n[0]).join('')}</div>
+                <div className="pr-modal-avatar" aria-hidden="true">{selectedApplicant.initials}</div>
                 <div>
                   <h2 className="pr-modal-name">{selectedApplicant.name}</h2>
                   <p>{selectedApplicant.degree} · {selectedApplicant.institute}</p>
                   {/* Keyed so a new decision remounts the badge and replays its pop. */}
-                  <span key={selectedApplicant.status} className={badgeClass(selectedApplicant.status)}>{selectedApplicant.status}</span>
+                  <span key={selectedApplicant.status} className={`badge badge--${selectedApplicant.badge.tone}`}>{selectedApplicant.status}</span>
                 </div>
               </div>
               <dl className="facts pr-modal-facts">
-                <div><dt>Email</dt><dd>{selectedApplicant.email || EMPTY_VALUE}</dd></div>
-                <div><dt>Phone</dt><dd>{selectedApplicant.phone || EMPTY_VALUE}</dd></div>
-                <div><dt>Applied for</dt><dd>{selectedApplicant.position}</dd></div>
-                <div><dt>CGPA</dt><dd>{selectedApplicant.cgpa}</dd></div>
-                <div><dt>Degree</dt><dd>{selectedApplicant.degree}</dd></div>
-                <div><dt>Institute</dt><dd>{selectedApplicant.institute}</dd></div>
-                <div><dt>Applied on</dt><dd>{formatDate(selectedApplicant.appliedDate)}</dd></div>
-                <div className="full"><dt>Research interest</dt><dd>{selectedApplicant.research}</dd></div>
-                <div className="full"><dt>Skills</dt><dd>{(selectedApplicant.skills || []).join(', ')}</dd></div>
-                {selectedApplicant.coverNote && <div className="full"><dt>Cover note</dt><dd className="pr-cover-note">{selectedApplicant.coverNote}</dd></div>}
+                {selectedApplicant.facts.map((fact) => (
+                  <div key={fact.label} className={fact.full ? 'full' : undefined}>
+                    <dt>{fact.label}</dt>
+                    <dd className={fact.class}>{'date' in fact ? formatDate(fact.date) : fact.value}</dd>
+                  </div>
+                ))}
               </dl>
               <div className="pr-modal-resume">
-                <div className="pr-resume-info"><i className="fa fa-file-pdf-o" aria-hidden="true"></i> <span>{selectedApplicant.resume || 'No resume attached'}</span></div>
+                <div className="pr-resume-info"><i className="fa fa-file-pdf-o" aria-hidden="true"></i> <span>{selectedApplicant.resume ? selectedApplicant.resume.name : 'No resume attached'}</span></div>
                 {selectedApplicant.resume && (
                   <div className="pr-resume-btns">
-                    <a className="custom-button custom-button--secondary custom-button--sm" href={storedFileUrl(selectedApplicant.resumePath)} target="_blank" rel="noopener noreferrer" onClick={storedFileClick(selectedApplicant.resumePath)}>View resume</a>
-                    <a className="custom-button custom-button--quiet custom-button--sm" href={storedFileUrl(selectedApplicant.resumePath)} download target="_blank" rel="noopener noreferrer" onClick={storedFileClick(selectedApplicant.resumePath, { download: true })}>Download</a>
+                    <a className="custom-button custom-button--secondary custom-button--sm" href={storedFileUrl(selectedApplicant.resume.path)} target="_blank" rel="noopener noreferrer" onClick={storedFileClick(selectedApplicant.resume.path)}>View resume</a>
+                    <a className="custom-button custom-button--quiet custom-button--sm" href={storedFileUrl(selectedApplicant.resume.path)} download target="_blank" rel="noopener noreferrer" onClick={storedFileClick(selectedApplicant.resume.path, { download: true })}>Download</a>
                   </div>
                 )}
               </div>
@@ -366,10 +328,16 @@ const ProjectRecruitment = () => {
                 <div className="modal-actions pr-decisions">
                   {/* The applicant's status is now the decision just made, so it
                       names the button to check. */}
-                  <CustomButton text="Shortlist" variant="secondary" size="sm" done={decided && selectedApplicant.status === 'Shortlisted'} onClick={() => setAppStatus('Shortlisted')} />
-                  <CustomButton text="Interview" variant="secondary" size="sm" done={decided && selectedApplicant.status === 'Interview Scheduled'} onClick={() => setAppStatus('Interview Scheduled')} />
-                  <CustomButton text="Select" variant="success" size="sm" done={decided && selectedApplicant.status === 'Selected'} onClick={() => setAppStatus('Selected')} />
-                  <CustomButton text="Reject" variant="danger-outline" size="sm" done={decided && selectedApplicant.status === 'Rejected'} onClick={() => setAppStatus('Rejected')} />
+                  {view.decisions.map((decision) => (
+                    <CustomButton
+                      key={decision.status}
+                      text={decision.label}
+                      variant={decision.variant}
+                      size="sm"
+                      done={decided && selectedApplicant.status === decision.status}
+                      onClick={() => setAppStatus(decision.status)}
+                    />
+                  ))}
                 </div>
               )}
             </>
@@ -378,6 +346,19 @@ const ProjectRecruitment = () => {
       </Page>
     </>
   );
+};
+
+const ProjectRecruitment = () => {
+  const { id } = useParams();
+  const { view, failed, retry, reload } = useView('project-recruitment', { id }, { kept: false });
+
+  if (failed) {
+    return <LoadError message="Could not load this project's recruitment. Check your connection and try again." onRetry={retry} />;
+  }
+  if (!view) return <StatusNotice tone="loading" title="Loading recruitment" />;
+  if (!view.id) return <StatusNotice tone="empty" title="Project not found." />;
+  // Another project starts clean, so the last one's open forms neither show nor save here.
+  return <Recruitment key={id} view={view} reload={reload} />;
 };
 
 export default ProjectRecruitment;

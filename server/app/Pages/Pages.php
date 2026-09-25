@@ -22,6 +22,7 @@ final class Pages
         'presentation-list' => PresentationListPage::class,
         'presentations' => PresentationsPage::class,
         'project' => ProjectPage::class,
+        'project-recruitment' => ProjectRecruitmentPage::class,
         'project-wizard' => ProjectWizardPage::class,
         'projects' => ProjectsPage::class,
         'research-profile' => ResearchProfilePage::class,

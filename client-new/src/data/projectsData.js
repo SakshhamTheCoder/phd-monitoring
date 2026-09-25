@@ -1,9 +1,5 @@
 // Shared constants and helpers for the Projects module.
 
-export const positionTypes = [
-  'JRF', 'SRF', 'Research Associate', 'Research Intern', 'UG Intern', 'PG Intern'
-];
-
 // Budget sub-items live under a reserved key: budget.__subitems[year][head][sub].
 // Travel still uses the sub-item mechanism (Domestic / International).
 export const subVal = (b, year, head, sub) =>
