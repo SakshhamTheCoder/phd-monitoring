@@ -35,6 +35,8 @@ final class Pages
         'supervisor-approvals' => SupervisorApprovalsPage::class,
         'urf' => UrfPage::class,
         'ug-profile' => UgProfilePage::class,
+        'urf-form' => UrfStudentFormPage::class,
+        'urf-forms' => UrfStudentFormsPage::class,
         'urf-record' => UrfRecordPage::class,
         'users' => UsersPage::class,
     ];
