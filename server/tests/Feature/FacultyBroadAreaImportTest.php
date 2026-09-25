@@ -111,6 +111,44 @@ class FacultyBroadAreaImportTest extends TestCase
     }
 
     /**
+     * The matrix writes an area around the wording the staff sheet uses.
+     *
+     * "Experimental nuclear physics in fusion and transfer" is one area, and
+     * the physicist under it writes "Nuclear Physics". Matching only whole
+     * entries or comma parts left people with no area over a phrasing.
+     */
+    public function test_an_area_written_around_the_wording_is_found(): void
+    {
+        $this->admin();
+        $faculty = $this->internalFaculty();
+
+        $area = AreaOfSpecialization::create([
+            'department_id' => $faculty->department_id,
+            'name' => 'Experimental nuclear physics in fusion and quasi-fission',
+        ]);
+
+        $this->import($this->row($faculty, ['broad_area' => 'Nuclear Physics']))->assertStatus(200);
+
+        $this->assertSame($area->id, $faculty->fresh()->area_of_specialization_id);
+    }
+
+    /** One word is too loose: "organic" must not claim "bioorganic chemistry". */
+    public function test_a_single_word_does_not_claim_a_longer_area(): void
+    {
+        $this->admin();
+        $faculty = $this->internalFaculty();
+
+        AreaOfSpecialization::create([
+            'department_id' => $faculty->department_id,
+            'name' => 'Bioorganic chemistry and biotransformation',
+        ]);
+
+        $this->import($this->row($faculty, ['broad_area' => 'Organic']))->assertStatus(200);
+
+        $this->assertNull($faculty->fresh()->area_of_specialization_id);
+    }
+
+    /**
      * Sheets leave a phone as #N/A or blank, and users.phone is unique.
      *
      * Stored as an empty string, the first such row took '' and every row

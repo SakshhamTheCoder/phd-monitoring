@@ -830,6 +830,22 @@ class FacultyController extends Controller
             }
         }
 
+        // An area written around the wording rather than as it: the matrix says
+        // "Experimental nuclear physics in fusion, transfer and quasi-fission"
+        // and the staff sheet says "Nuclear Physics". Two words or more, on
+        // word boundaries, so "organic" does not claim "bioorganic".
+        foreach ($wanted as $candidate) {
+            if (str_word_count($candidate) < 2) {
+                continue;
+            }
+
+            foreach ($areas as $area) {
+                if (preg_match('/(?<![a-z0-9])' . preg_quote($candidate, '/') . '(?![a-z0-9])/', $normalise($area->name))) {
+                    return $area->id;
+                }
+            }
+        }
+
         return null;
     }
 }
