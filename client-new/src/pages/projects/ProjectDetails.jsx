@@ -1,14 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  formatCurrency,
-  getMilestoneProgress,
-  milestoneStatusOptions,
-  formatDuration,
-} from '../../data/projectsData';
-import { formatDate, EMPTY_VALUE } from '../../utils/timeParse';
-import { badgeClass } from '../../data/badges';
-import { apiGetProject, apiUpdateProject, apiAddMilestone, apiUpdateMilestone, apiAddDocument, apiUpdateDocument, apiDeleteDocument, mapMilestone, mapDocument, apiProjectMeta, apiUploadGanttChart } from '../../api/projects';
+import { formatDate } from '../../utils/timeParse';
+import { apiUpdateProject, apiAddMilestone, apiUpdateMilestone, apiAddDocument, apiUpdateDocument, apiDeleteDocument, apiUploadGanttChart } from '../../api/projects';
+import { useView } from '../../api/views';
 import InputSuggestions from '../../components/forms/fields/InputSuggestions';
 import CustomModal from '../../components/forms/modal/CustomModal';
 import Tabs from '../../components/tabs/Tabs';
@@ -23,27 +17,29 @@ import StatusNotice from '../../components/common/StatusNotice';
 import Page from '../../components/page/Page';
 import Panel, { PanelSection } from '../../components/panel/Panel';
 import './ProjectDetails.css';
-import { useFeatures } from '../../context/FeaturesContext';
 import useDoneFlash from '../../hooks/useDoneFlash';
 
-// Build the sanction-letter display object from a loaded project.
-const sanctionFromProject = (p) => {
-  if (!p || !p.sanctionLetterLink || p.sanctionLetterLink === '#') return null;
-  const isLink = /^https?:\/\//i.test(p.sanctionLetterLink);
-  return { name: p.sanctionLetterName || 'Sanction Letter', url: p.sanctionLetterLink, isLink };
-};
+const Badge = ({ badge, className = '' }) => <span className={`badge badge--${badge.tone}${className}`}>{badge.text}</span>;
+// A value the server phrased, drawn as the runs of text it sent (a list is
+// one run), its dates printed on the reader's calendar.
+const piece = (part) => (typeof part === 'string' ? part : formatDate(part.date));
+const phrased = (parts) => parts.map((part, index) => (
+  <React.Fragment key={index}>{Array.isArray(part) ? part.map(piece).join('') : piece(part)}</React.Fragment>
+));
+const initials = (name) => name.split(' ').map((n) => n[0]).join('').slice(0, 2);
+const blankMilestone = { name: '', deliverable: '', dueDate: '', status: 'Not Started' };
+const emptyCopi = { name: '', type: 'internal', faculty_code: null, department: '', institute: '', designation: '' };
+const emptyDocForm = { name: '', type: '', file: null, fileName: '', currentLabel: '' };
 
-const TABS = ['Overview', 'Funding and budget', 'Milestones', 'Project team', 'Documents'];
-
-const ProjectDetails = () => {
+/**
+ * One project (GET /views/project, server: App\Pages\ProjectPage): every
+ * figure, badge and permission on it is the server's. The changes it offers
+ * go to the project endpoints, and the page is read again after each.
+ */
+const Project = ({ view, reload }) => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const features = useFeatures();
-  const [activeTab, setActiveTab] = useState('Overview');
-  const [project, setProject] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [loadFailed, setLoadFailed] = useState(false);
-  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [activeTab, setActiveTab] = useState(view.tabs[0]);
   // One flag for the add and upload saves below: a second click while the
   // first was on its way posted a second milestone or document.
   const [saving, setSaving] = useState(false);
@@ -52,60 +48,52 @@ const ProjectDetails = () => {
     setSaving(true);
     try { await task(); } finally { setSaving(false); }
   };
-  const [milestones, setMilestones] = useState([]);
+  const milestones = view.milestones;
   const [editingIdx, setEditingIdx] = useState(null);
-  const [editForm, setEditForm] = useState({ name: '', deliverable: '', dueDate: '', status: 'Not Started' });
+  const [editForm, setEditForm] = useState(blankMilestone);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newMs, setNewMs] = useState({ name: '', deliverable: '', dueDate: '', status: 'Not Started' });
-  // Declared with the rest of the state, because manpowerCats reads it a few
-  // hundred lines above where it used to sit. A const is in scope for the whole
-  // function but unreadable until its declaration runs, so every render threw
-  // "Cannot access 'meta' before initialization" and the page never drew.
-  const [meta, setMeta] = useState({ sdgs: [], manpowerCategories: [], budgetHeads: [], duration: { years: [1, 2, 3, 4, 5], maxMonths: 11 } });
-  useEffect(() => { apiProjectMeta().then(setMeta); }, []);
+  const [newMs, setNewMs] = useState(blankMilestone);
+  // The budget card's last save shows until the page is read again.
+  const [budgetData, setBudgetData] = useState(view.funding.budget);
+  useEffect(() => { setBudgetData(view.funding.budget); }, [view]);
 
   const validateMilestone = (m) => {
-    if (!m.name.trim()) { toast.error('Milestone name is required.'); return false; }
-    if (!m.deliverable.trim()) { toast.error('Deliverable is required.'); return false; }
-    if (!m.dueDate) { toast.error('Due date is required.'); return false; }
-    return true;
+    const missing = view.milestone_checks.find((check) => !String(m[check.key] ?? '').trim());
+    if (missing) toast.error(missing.message);
+    return !missing;
   };
-  const startEdit = (i) => { setEditingIdx(i); setEditForm({ ...milestones[i] }); };
+  const startEdit = (i) => { setEditingIdx(i); setEditForm({ ...blankMilestone, ...milestones[i], dueDate: milestones[i].due }); };
   const cancelEdit = () => { setEditingIdx(null); };
   const saveEdit = async () => {
     if (!validateMilestone(editForm)) return;
-    const res = await apiUpdateMilestone(project.id, milestones[editingIdx].id, editForm);
+    const res = await apiUpdateMilestone(view.id, milestones[editingIdx].id, editForm);
     if (res.success) {
-      setMilestones(prev => prev.map((x, i) => (i === editingIdx ? { ...x, ...editForm } : x)));
       setEditingIdx(null);
       toast.success('Milestone updated.');
+      reload();
     }
   };
   const addMilestone = async () => {
     if (!validateMilestone(newMs)) return;
     await whileSaving(async () => {
-      const res = await apiAddMilestone(project.id, newMs);
+      const res = await apiAddMilestone(view.id, newMs);
       if (res.success) {
-        setMilestones(prev => [...prev, mapMilestone(res.response)]);
-        setNewMs({ name: '', deliverable: '', dueDate: '', status: 'Not Started' });
+        setNewMs(blankMilestone);
         setShowAddForm(false);
         toast.success('Milestone added.');
+        reload();
       }
     });
   };
 
-  // Budget breakdown inline editing (heads + sub-items, kept reconciled).
-  // Sub-item amounts live under a reserved `__subitems` key: budget.__subitems[year][head][sub].
-  const [budgetData, setBudgetData] = useState({});
-  const emptyCopi = { name: '', type: 'internal', faculty_code: null, department: '', institute: '', designation: '' };
   const pickInternal = (setter) => (fac) => {
     if (!fac || !fac.id) return;
-    setter(prev => ({
+    setter((prev) => ({
       ...prev, type: 'internal', faculty_code: fac.id,
       name: fac.name, department: fac.department, designation: fac.designation,
     }));
   };
-  const [coPIs, setCoPIs] = useState([]);
+  const coPIs = view.co_pis;
   const [showCopiForm, setShowCopiForm] = useState(false);
   const [newCopi, setNewCopi] = useState(emptyCopi);
   const invalidCopi = (c) => {
@@ -113,17 +101,17 @@ const ProjectDetails = () => {
     if (!c.name.trim()) { toast.error('A name is required.'); return true; }
     return false;
   };
+  const saveCopis = async (updated, done) => {
+    const res = await apiUpdateProject(view.id, { co_pis: updated });
+    if (res.success) { done(); reload(); }
+  };
   const addCopi = async () => {
     if (invalidCopi(newCopi)) return;
-    const updated = [...coPIs, { ...newCopi }];
-    const res = await apiUpdateProject(project.id, { co_pis: updated });
-    if (res.success) { setCoPIs(updated); setNewCopi(emptyCopi); setShowCopiForm(false); toast.success('Co-PI added.'); }
+    await saveCopis([...coPIs, { ...newCopi }], () => { setNewCopi(emptyCopi); setShowCopiForm(false); toast.success('Co-PI added.'); });
   };
   const removeCopi = async (i) => {
     if (!window.confirm('Are you sure you want to remove this Co-PI?')) return;
-    const updated = coPIs.filter((_, idx) => idx !== i);
-    const res = await apiUpdateProject(project.id, { co_pis: updated });
-    if (res.success) { setCoPIs(updated); toast.success('Co-PI removed.'); }
+    await saveCopis(coPIs.filter((_, idx) => idx !== i), () => toast.success('Co-PI removed.'));
   };
   const [editingCopiIdx, setEditingCopiIdx] = useState(null);
   const [copiEditForm, setCopiEditForm] = useState(emptyCopi);
@@ -131,14 +119,11 @@ const ProjectDetails = () => {
   const cancelCopiEdit = () => setEditingCopiIdx(null);
   const saveCopiEdit = async () => {
     if (invalidCopi(copiEditForm)) return;
-    const updated = coPIs.map((c, idx) => (idx === editingCopiIdx ? { ...copiEditForm } : c));
-    const res = await apiUpdateProject(project.id, { co_pis: updated });
-    if (res.success) { setCoPIs(updated); setEditingCopiIdx(null); toast.success('Co-PI updated.'); }
+    await saveCopis(coPIs.map((c, idx) => (idx === editingCopiIdx ? { ...copiEditForm } : c)), () => { setEditingCopiIdx(null); toast.success('Co-PI updated.'); });
   };
 
-  // Documents management (backend has no update endpoint -> edit = delete + re-upload)
-  const emptyDocForm = { name: '', type: '', file: null, fileName: '', currentLabel: '' };
-  const [documents, setDocuments] = useState([]);
+  // Documents: an edit replaces the file or keeps it.
+  const documents = view.documents;
   const [showDocModal, setShowDocModal] = useState(false);
   const [editingDocIdx, setEditingDocIdx] = useState(null);
   const [docForm, setDocForm] = useState(emptyDocForm);
@@ -157,7 +142,7 @@ const ProjectDetails = () => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
     const ext = file.name.includes('.') ? file.name.split('.').pop().toUpperCase() : 'FILE';
-    setDocForm(prev => ({ ...prev, file, fileName: file.name, type: ext, name: prev.name.trim() ? prev.name : file.name.replace(/\.[^.]+$/, '') }));
+    setDocForm((prev) => ({ ...prev, file, fileName: file.name, type: ext, name: prev.name.trim() ? prev.name : file.name.replace(/\.[^.]+$/, '') }));
     e.target.value = '';
   };
   const saveDoc = async () => {
@@ -168,32 +153,31 @@ const ProjectDetails = () => {
     if (docForm.file) fd.append('file', docForm.file);
     await whileSaving(async () => {
       const res = editingDocIdx !== null
-        ? await apiUpdateDocument(project.id, documents[editingDocIdx].id, fd)
-        : await apiAddDocument(project.id, fd);
+        ? await apiUpdateDocument(view.id, documents[editingDocIdx].id, fd)
+        : await apiAddDocument(view.id, fd);
       if (res.success) {
-        const doc = mapDocument((res.response && res.response.document) || res.response);
-        setDocuments(prev => (editingDocIdx !== null ? prev.map((d, i) => (i === editingDocIdx ? doc : d)) : [...prev, doc]));
         setShowDocModal(false);
         toast.success(editingDocIdx !== null ? 'Document updated.' : 'Document uploaded.');
+        reload();
       }
     });
   };
   const removeDoc = async (i) => {
     const d = documents[i];
     if (!window.confirm(`Delete "${d.name || 'this document'}"? This cannot be undone.`)) return;
-    const res = await apiDeleteDocument(project.id, d.id);
-    if (res.success) { setDocuments(prev => prev.filter((_, idx) => idx !== i)); toast.success('Document deleted.'); }
+    const res = await apiDeleteDocument(view.id, d.id);
+    if (res.success) { toast.success('Document deleted.'); reload(); }
   };
 
   // Sanction letter (file or link)
-  const [sanctionDoc, setSanctionDoc] = useState(null);
+  const sanctionDoc = view.funding.sanction;
   const sanctionInputRef = useRef(null);
   const [showSanctionModal, setShowSanctionModal] = useState(false);
   const [sanctionMode, setSanctionMode] = useState('file');
   const [sanctionLinkInput, setSanctionLinkInput] = useState('');
   const [sanctionFileSel, setSanctionFileSel] = useState(null);
   const openSanctionModal = () => {
-    const isLink = !!(sanctionDoc && sanctionDoc.isLink);
+    const isLink = !!(sanctionDoc && sanctionDoc.is_link);
     setSanctionMode(isLink ? 'link' : 'file');
     setSanctionLinkInput(isLink ? sanctionDoc.url : '');
     setSanctionFileSel(null);
@@ -206,30 +190,23 @@ const ProjectDetails = () => {
     e.target.value = '';
   };
   const saveSanctionModal = async () => {
+    let body;
     if (sanctionMode === 'file') {
       if (!sanctionFileSel || !sanctionFileSel.file) { toast.error('Please select a file.'); return; }
-      const fd = new FormData();
-      fd.append('sanction_letter', sanctionFileSel.file);
-      await whileSaving(async () => {
-        const res = await apiUpdateProject(project.id, fd, true);
-        if (res.success) {
-          const { project: p } = await apiGetProject(id);
-          if (p) setSanctionDoc(sanctionFromProject(p));
-          setShowSanctionModal(false);
-          toast.success('Sanction letter updated.');
-        }
-      });
+      body = new FormData();
+      body.append('sanction_letter', sanctionFileSel.file);
     } else {
       if (!sanctionLinkInput.trim()) { toast.error('Please enter a link.'); return; }
-      await whileSaving(async () => {
-        const res = await apiUpdateProject(project.id, { sanction_letter_link: sanctionLinkInput.trim(), sanction_letter_name: 'Sanction Letter' });
-        if (res.success) {
-          setSanctionDoc({ name: 'Sanction Letter', url: sanctionLinkInput.trim(), isLink: true });
-          setShowSanctionModal(false);
-          toast.success('Sanction letter updated.');
-        }
-      });
+      body = { sanction_letter_link: sanctionLinkInput.trim(), sanction_letter_name: 'Sanction Letter' };
     }
+    await whileSaving(async () => {
+      const res = await apiUpdateProject(view.id, body, sanctionMode === 'file');
+      if (res.success) {
+        setShowSanctionModal(false);
+        toast.success('Sanction letter updated.');
+        reload();
+      }
+    });
   };
 
   const ganttInputRef = useRef(null);
@@ -239,76 +216,17 @@ const ProjectDetails = () => {
     // Cleared so picking the same file again still fires a change.
     e.target.value = '';
     if (!file) return;
-    const res = await apiUploadGanttChart(project.id, file);
-    if (res.success) { toast.success('Gantt chart uploaded.'); flashGanttUploaded(); refreshProject(); }
+    const res = await apiUploadGanttChart(view.id, file);
+    if (res.success) { toast.success('Gantt chart uploaded.'); flashGanttUploaded(); reload(); }
   };
-
-  // Sync all sub-states from a loaded project.
-  const applyProject = (p) => {
-    setProject(p);
-    setMilestones(p.milestones || []);
-    setBudgetData(p.budget || {});
-    setCoPIs(p.coPIs || []);
-    setDocuments(p.documents || []);
-    setSanctionDoc(sanctionFromProject(p));
-  };
-  const refreshProject = async () => {
-    const { project: p } = await apiGetProject(id);
-    if (p) applyProject(p);
-  };
-
-  useEffect(() => {
-    let cancelled = false;
-    // Another project starts clean: the last one's data and half-made edits
-    // would otherwise show, and save, under this id.
-    setLoading(true);
-    setLoadFailed(false);
-    setProject(null);
-    setEditingIdx(null);
-    setShowAddForm(false);
-    setEditingCopiIdx(null);
-    setShowCopiForm(false);
-    setShowDocModal(false);
-    setShowSanctionModal(false);
-    apiGetProject(id).then(({ project: p, failed }) => {
-      if (cancelled) return;
-      if (p) applyProject(p);
-      setLoadFailed(failed);
-      setLoading(false);
-    });
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, loadAttempt]);
-
-  if (loading) {
-    return <StatusNotice tone="loading" title="Loading project" />;
-  }
-  if (loadFailed) {
-    return <LoadError message="Could not load this project. Check your connection and try again." onRetry={() => setLoadAttempt((n) => n + 1)} />;
-  }
-  if (!project) {
-    return (
-      <StatusNotice
-        tone="empty"
-        title="Project not found."
-        action={<CustomButton text="Go back" variant="quiet" onClick={() => navigate('/projects')} />}
-      />
-    );
-  }
 
   // A HOD or coordinator reads every project in their department but writes
   // only their own, so every write control below is behind this.
-  const canEdit = project.canEdit;
-
-  const openPositions = (project.positions || []).filter((p) => p.status === 'Open');
-
-  const progress = getMilestoneProgress(milestones);
-  const completedMilestones = milestones.filter(m => m.status === 'Completed').length;
-  // The badge beside each milestone names the status; the icon only helps the
-  // eye run down the timeline.
-  const msIcons = { Completed: 'fa-check', 'In Progress': 'fa-hourglass-half', 'Not Started': 'fa-circle-o', Delayed: 'fa-exclamation' };
-
+  const canEdit = view.can_edit;
+  const { progress } = view;
   const required = <span className="req" aria-hidden="true">*</span>;
+
+  const statusOptions = view.options.milestoneStatuses.map((s) => <option key={s} value={s}>{s}</option>);
 
   const renderTab = () => {
     switch (activeTab) {
@@ -316,38 +234,32 @@ const ProjectDetails = () => {
         <div className="panel-columns" role="tabpanel">
           <div className="panel-stack">
             <Panel title="Project objectives">
-              {(project.objectives || []).length === 0 ? (
-                <StatusNotice tone="empty" title="No objectives recorded." />
+              {view.overview.objectives.length === 0 ? (
+                <StatusNotice tone="empty" title={view.overview.no_objectives} />
               ) : (
                 <ol className="pd-obj-list">
-                  {project.objectives.map((obj, i) => (
-                    <li key={i}>{typeof obj === 'string' ? obj : [obj.title, obj.description].filter(Boolean).join(': ')}</li>
-                  ))}
+                  {view.overview.objectives.map((obj, i) => <li key={i}>{obj}</li>)}
                 </ol>
               )}
             </Panel>
             <Panel title="Detailed description">
-              <p className="pd-description">{project.description || 'No description added.'}</p>
+              <p className="pd-description">{view.overview.description}</p>
             </Panel>
           </div>
           <div className="panel-stack">
             <Panel title="Project metadata">
               <dl className="kv">
-                <div><dt>Primary category</dt><dd>{project.category}</dd></div>
-                <div><dt>Focus area</dt><dd>{project.focusArea || EMPTY_VALUE}</dd></div>
-                <div><dt>Grant type</dt><dd>{project.grantType || EMPTY_VALUE}</dd></div>
-                <div><dt>Project status</dt><dd><span className={badgeClass(project.status)}>{project.status}</span></dd></div>
+                {view.overview.metadata.map((row) => (
+                  <div key={row.label}><dt>{row.label}</dt><dd>{row.badge ? <Badge badge={row.badge} /> : row.value}</dd></div>
+                ))}
               </dl>
             </Panel>
             <Panel title="Sustainable development goals">
-              {(project.sdgs || []).length === 0 ? (
-                <p className="pd-muted">None selected</p>
+              {view.overview.sdgs.length === 0 ? (
+                <p className="pd-muted">{view.overview.no_sdgs}</p>
               ) : (
                 <div className="pd-sdg-badges">
-                  {project.sdgs.map(id => {
-                    const g = (meta.sdgs || []).find(s => s.id === id);
-                    return g ? <span key={id} className="badge badge--accent" title={`SDG ${g.id}`}>{g.id}. {g.label}</span> : null;
-                  })}
+                  {view.overview.sdgs.map((g) => <span key={g.id} className="badge badge--accent" title={`SDG ${g.id}`}>{phrased(g.text)}</span>)}
                 </div>
               )}
             </Panel>
@@ -362,7 +274,7 @@ const ProjectDetails = () => {
             actions={canEdit && (
               <>
                 <CustomButton
-                  text={project.ganttChartName ? 'Replace Gantt chart' : 'Upload Gantt chart'}
+                  text={view.gantt.upload}
                   variant="secondary"
                   size="sm"
                   done={ganttUploaded}
@@ -372,20 +284,20 @@ const ProjectDetails = () => {
               </>
             )}
           >
-            {project.ganttChartPath ? (
-              <a className="pd-doc-link" href={storedFileUrl(project.ganttChartPath)} target="_blank" rel="noreferrer" onClick={storedFileClick(project.ganttChartPath)}>
-                <i className="fa fa-file-o" aria-hidden="true"></i> {project.ganttChartName || 'Gantt chart'}
+            {view.gantt.path ? (
+              <a className="pd-doc-link" href={storedFileUrl(view.gantt.path)} target="_blank" rel="noreferrer" onClick={storedFileClick(view.gantt.path)}>
+                <i className="fa fa-file-o" aria-hidden="true"></i> {view.gantt.name}
               </a>
             ) : (
-              <p className="pd-muted">No Gantt chart uploaded yet.</p>
+              <p className="pd-muted">{view.gantt.none}</p>
             )}
           </Panel>
           <Panel
             title="Project milestones"
             actions={<>
               <div className="pd-ms-progress">
-                <span className="pd-ms-pct">{progress}%</span>
-                <div className="pd-progress-track" aria-hidden="true"><div className="pd-progress-fill" style={{ width: `${progress}%` }}></div></div>
+                <span className="pd-ms-pct">{progress.percent}%</span>
+                <div className="pd-progress-track" aria-hidden="true"><div className="pd-progress-fill" style={{ width: `${progress.percent}%` }}></div></div>
               </div>
               {canEdit && (
                 <CustomButton text="Add milestone" variant="secondary" size="sm" onClick={() => setShowAddForm(!showAddForm)} />
@@ -395,12 +307,12 @@ const ProjectDetails = () => {
             {showAddForm && (
               <PanelSection title="New milestone">
                 <div className="pd-ms-form-grid">
-                  <div className="pd-ms-field"><label htmlFor="project-details-milestone-name">Milestone name {required}</label><input id="project-details-milestone-name" type="text" aria-required="true" value={newMs.name} onChange={e => setNewMs({...newMs, name: e.target.value})} placeholder="e.g. Prototype Delivery" /></div>
-                  <div className="pd-ms-field"><label htmlFor="project-details-deliverable">Deliverable {required}</label><input id="project-details-deliverable" type="text" aria-required="true" value={newMs.deliverable} onChange={e => setNewMs({...newMs, deliverable: e.target.value})} placeholder="e.g. Working demo" /></div>
-                  <div className="pd-ms-field"><label htmlFor="project-details-due-date">Due date {required}</label><input id="project-details-due-date" type="date" aria-required="true" value={newMs.dueDate} onChange={e => setNewMs({...newMs, dueDate: e.target.value})} /></div>
+                  <div className="pd-ms-field"><label htmlFor="project-details-milestone-name">Milestone name {required}</label><input id="project-details-milestone-name" type="text" aria-required="true" value={newMs.name} onChange={(e) => setNewMs({ ...newMs, name: e.target.value })} placeholder="e.g. Prototype Delivery" /></div>
+                  <div className="pd-ms-field"><label htmlFor="project-details-deliverable">Deliverable {required}</label><input id="project-details-deliverable" type="text" aria-required="true" value={newMs.deliverable} onChange={(e) => setNewMs({ ...newMs, deliverable: e.target.value })} placeholder="e.g. Working demo" /></div>
+                  <div className="pd-ms-field"><label htmlFor="project-details-due-date">Due date {required}</label><input id="project-details-due-date" type="date" aria-required="true" value={newMs.dueDate} onChange={(e) => setNewMs({ ...newMs, dueDate: e.target.value })} /></div>
                   <div className="pd-ms-field"><label htmlFor="project-details-status">Status</label>
-                    <select id="project-details-status" value={newMs.status} onChange={e => setNewMs({...newMs, status: e.target.value})}>
-                      {milestoneStatusOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                    <select id="project-details-status" value={newMs.status} onChange={(e) => setNewMs({ ...newMs, status: e.target.value })}>
+                      {statusOptions}
                     </select>
                   </div>
                 </div>
@@ -414,18 +326,18 @@ const ProjectDetails = () => {
             <div className={showAddForm ? 'panel-section' : undefined}>
               <div className="pd-timeline">
                 {milestones.map((m, i) => (
-                  <div key={i} className={`pd-tl-item ${m.status.toLowerCase().replace(' ', '-')}`}>
-                    <div className="pd-tl-icon" aria-hidden="true"><i className={`fa ${msIcons[m.status] || 'fa-circle-o'}`}></i></div>
+                  <div key={i} className={`pd-tl-item ${m.class}`}>
+                    <div className="pd-tl-icon" aria-hidden="true"><i className={`fa ${m.icon}`}></i></div>
                     <div className="pd-tl-content">
                       {editingIdx === i ? (
                         <div>
                           <div className="pd-ms-form-grid">
-                            <div className="pd-ms-field"><label htmlFor="project-details-name">Name {required}</label><input id="project-details-name" type="text" aria-required="true" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} /></div>
-                            <div className="pd-ms-field"><label htmlFor="project-details-deliverable-2">Deliverable {required}</label><input id="project-details-deliverable-2" type="text" aria-required="true" value={editForm.deliverable} onChange={e => setEditForm({...editForm, deliverable: e.target.value})} /></div>
-                            <div className="pd-ms-field"><label htmlFor="project-details-due-date-2">Due date {required}</label><input id="project-details-due-date-2" type="date" aria-required="true" value={editForm.dueDate} onChange={e => setEditForm({...editForm, dueDate: e.target.value})} /></div>
+                            <div className="pd-ms-field"><label htmlFor="project-details-name">Name {required}</label><input id="project-details-name" type="text" aria-required="true" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} /></div>
+                            <div className="pd-ms-field"><label htmlFor="project-details-deliverable-2">Deliverable {required}</label><input id="project-details-deliverable-2" type="text" aria-required="true" value={editForm.deliverable} onChange={(e) => setEditForm({ ...editForm, deliverable: e.target.value })} /></div>
+                            <div className="pd-ms-field"><label htmlFor="project-details-due-date-2">Due date {required}</label><input id="project-details-due-date-2" type="date" aria-required="true" value={editForm.dueDate} onChange={(e) => setEditForm({ ...editForm, dueDate: e.target.value })} /></div>
                             <div className="pd-ms-field"><label htmlFor="project-details-status-2">Status</label>
-                              <select id="project-details-status-2" value={editForm.status} onChange={e => setEditForm({...editForm, status: e.target.value})}>
-                                {milestoneStatusOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                              <select id="project-details-status-2" value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}>
+                                {statusOptions}
                               </select>
                             </div>
                           </div>
@@ -439,12 +351,12 @@ const ProjectDetails = () => {
                           <div className="pd-tl-top">
                             <h3 className="pd-tl-name">{m.name}</h3>
                             <div className="pd-tl-actions">
-                              <span className={badgeClass(m.status)}>{m.status}</span>
+                              <Badge badge={m.badge} />
                               {canEdit && <button type="button" className="pd-icon-btn" onClick={() => startEdit(i)} title="Edit milestone" aria-label="Edit milestone"><i className="fa fa-pencil" aria-hidden="true"></i></button>}
                             </div>
                           </div>
                           <p className="pd-tl-deliverable">{m.deliverable}</p>
-                          <span className="pd-tl-date"><i className="fa fa-calendar" aria-hidden="true"></i> Due: {formatDate(m.dueDate)}</span>
+                          <span className="pd-tl-date"><i className="fa fa-calendar" aria-hidden="true"></i> Due: {formatDate(m.due)}</span>
                         </>
                       )}
                     </div>
@@ -459,13 +371,13 @@ const ProjectDetails = () => {
       case 'Project team': return (
         <div className="pd-tab-panel" role="tabpanel">
           <Panel title="Principal investigator">
-            {project.pi ? (
+            {view.pi ? (
               <div className="pd-team-row">
-                <div className="pd-team-avatar" aria-hidden="true">{project.pi.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</div>
+                <div className="pd-team-avatar" aria-hidden="true">{initials(view.pi.name)}</div>
                 <div className="pd-team-info">
-                  <p className="pd-team-name"><FacultyLink code={project.pi.code} name={project.pi.name} /></p>
-                  <p className="pd-team-dept">{project.pi.department}</p>
-                  <p className="pd-team-meta">{project.pi.designation}</p>
+                  <p className="pd-team-name"><FacultyLink code={view.pi.code} name={view.pi.name} /></p>
+                  <p className="pd-team-dept">{view.pi.department}</p>
+                  <p className="pd-team-meta">{view.pi.designation}</p>
                 </div>
                 <span className="badge badge--accent pd-team-role">PI</span>
               </div>
@@ -483,7 +395,7 @@ const ProjectDetails = () => {
               <PanelSection title="New Co-PI">
                 <div className="pd-ms-form-grid">
                   <div className="pd-ms-field"><label htmlFor="project-details-type">Type</label>
-                    <select id="project-details-type" value={newCopi.type} onChange={e => setNewCopi({ ...emptyCopi, type: e.target.value })}>
+                    <select id="project-details-type" value={newCopi.type} onChange={(e) => setNewCopi({ ...emptyCopi, type: e.target.value })}>
                       <option value="internal">Internal</option>
                       <option value="external">External</option>
                     </select>
@@ -500,7 +412,7 @@ const ProjectDetails = () => {
                       />
                     </div>
                   ) : (
-                    <div className="pd-ms-field"><label htmlFor="project-details-full-name">Full name {required}</label><input id="project-details-full-name" type="text" aria-required="true" value={newCopi.name} onChange={e => setNewCopi({ ...newCopi, name: e.target.value })} placeholder="e.g. Dr. Robert Chen" /></div>
+                    <div className="pd-ms-field"><label htmlFor="project-details-full-name">Full name {required}</label><input id="project-details-full-name" type="text" aria-required="true" value={newCopi.name} onChange={(e) => setNewCopi({ ...newCopi, name: e.target.value })} placeholder="e.g. Dr. Robert Chen" /></div>
                   )}
                   <div className="pd-ms-field input-field-container"><label htmlFor="project-details-institute">{newCopi.type === 'internal' ? 'Department' : 'Institute'}</label>
                     <input id="project-details-institute"
@@ -508,11 +420,11 @@ const ProjectDetails = () => {
                       readOnly={newCopi.type === 'internal'}
                       className={newCopi.type === 'internal' ? 'field-readonly' : undefined}
                       value={newCopi.type === 'internal' ? newCopi.department : newCopi.institute}
-                      onChange={e => setNewCopi(newCopi.type === 'internal' ? { ...newCopi, department: e.target.value } : { ...newCopi, institute: e.target.value })}
+                      onChange={(e) => setNewCopi(newCopi.type === 'internal' ? { ...newCopi, department: e.target.value } : { ...newCopi, institute: e.target.value })}
                       placeholder={newCopi.type === 'internal' ? 'Filled from the selected faculty' : 'e.g. MIT CSAIL'}
                     />
                   </div>
-                  <div className="pd-ms-field input-field-container"><label htmlFor="project-details-designation">Designation</label><input id="project-details-designation" type="text" readOnly={newCopi.type === 'internal'} className={newCopi.type === 'internal' ? 'field-readonly' : undefined} value={newCopi.designation} onChange={e => setNewCopi({ ...newCopi, designation: e.target.value })} placeholder="e.g. Professor" /></div>
+                  <div className="pd-ms-field input-field-container"><label htmlFor="project-details-designation">Designation</label><input id="project-details-designation" type="text" readOnly={newCopi.type === 'internal'} className={newCopi.type === 'internal' ? 'field-readonly' : undefined} value={newCopi.designation} onChange={(e) => setNewCopi({ ...newCopi, designation: e.target.value })} placeholder="e.g. Professor" /></div>
                 </div>
                 <div className="pd-form-actions">
                   <CustomButton text="Add Co-PI" variant="secondary" size="sm" onClick={addCopi} />
@@ -528,7 +440,7 @@ const ProjectDetails = () => {
                     <h3 className="panel-section-title pd-team-edit-title">Edit Co-PI</h3>
                     <div className="pd-ms-form-grid">
                       <div className="pd-ms-field"><label htmlFor="project-details-type-2">Type</label>
-                        <select id="project-details-type-2" value={copiEditForm.type} onChange={e => setCopiEditForm({ ...emptyCopi, type: e.target.value })}>
+                        <select id="project-details-type-2" value={copiEditForm.type} onChange={(e) => setCopiEditForm({ ...emptyCopi, type: e.target.value })}>
                           <option value="internal">Internal</option>
                           <option value="external">External</option>
                         </select>
@@ -546,7 +458,7 @@ const ProjectDetails = () => {
                           />
                         </div>
                       ) : (
-                        <div className="pd-ms-field"><label htmlFor="project-details-full-name-2">Full name {required}</label><input id="project-details-full-name-2" type="text" aria-required="true" value={copiEditForm.name} onChange={e => setCopiEditForm({ ...copiEditForm, name: e.target.value })} /></div>
+                        <div className="pd-ms-field"><label htmlFor="project-details-full-name-2">Full name {required}</label><input id="project-details-full-name-2" type="text" aria-required="true" value={copiEditForm.name} onChange={(e) => setCopiEditForm({ ...copiEditForm, name: e.target.value })} /></div>
                       )}
                       <div className="pd-ms-field input-field-container"><label htmlFor="project-details-institute-2">{copiEditForm.type === 'internal' ? 'Department' : 'Institute'}</label>
                         <input id="project-details-institute-2"
@@ -554,10 +466,10 @@ const ProjectDetails = () => {
                           readOnly={copiEditForm.type === 'internal'}
                           className={copiEditForm.type === 'internal' ? 'field-readonly' : undefined}
                           value={copiEditForm.type === 'internal' ? (copiEditForm.department || '') : (copiEditForm.institute || '')}
-                          onChange={e => setCopiEditForm(copiEditForm.type === 'internal' ? { ...copiEditForm, department: e.target.value } : { ...copiEditForm, institute: e.target.value })}
+                          onChange={(e) => setCopiEditForm(copiEditForm.type === 'internal' ? { ...copiEditForm, department: e.target.value } : { ...copiEditForm, institute: e.target.value })}
                         />
                       </div>
-                      <div className="pd-ms-field input-field-container"><label htmlFor="project-details-designation-2">Designation</label><input id="project-details-designation-2" type="text" readOnly={copiEditForm.type === 'internal'} className={copiEditForm.type === 'internal' ? 'field-readonly' : undefined} value={copiEditForm.designation || ''} onChange={e => setCopiEditForm({ ...copiEditForm, designation: e.target.value })} /></div>
+                      <div className="pd-ms-field input-field-container"><label htmlFor="project-details-designation-2">Designation</label><input id="project-details-designation-2" type="text" readOnly={copiEditForm.type === 'internal'} className={copiEditForm.type === 'internal' ? 'field-readonly' : undefined} value={copiEditForm.designation || ''} onChange={(e) => setCopiEditForm({ ...copiEditForm, designation: e.target.value })} /></div>
                     </div>
                     <div className="pd-form-actions">
                       <CustomButton text="Save" variant="secondary" size="sm" onClick={saveCopiEdit} />
@@ -566,7 +478,7 @@ const ProjectDetails = () => {
                   </div>
                 ) : (
                   <div key={i} className="pd-team-row">
-                    <div className="pd-team-avatar co" aria-hidden="true">{c.name.split(' ').map(n => n[0]).join('').slice(0, 2)}</div>
+                    <div className="pd-team-avatar co" aria-hidden="true">{initials(c.name)}</div>
                     <div className="pd-team-info">
                       <p className="pd-team-name"><FacultyLink code={c.faculty_code} name={c.name} /></p>
                       <p className="pd-team-dept">{c.type === 'internal' ? c.department : c.institute}</p>
@@ -624,44 +536,37 @@ const ProjectDetails = () => {
     }
   };
 
+  const runAction = (action) => {
+    if (action.edits) navigate('/projects/create', { state: { editProject: { id: action.edits } } });
+    else navigate(action.navigate);
+  };
+
   return (
     <>
       <button type="button" className="page-back-link pd-back" onClick={() => navigate('/projects')}>
-        <i className="fa fa-arrow-left" aria-hidden="true"></i> Back to projects
+        <i className="fa fa-arrow-left" aria-hidden="true"></i> {view.back}
       </button>
       <Page
-        className="reveal"
-        title={project.title}
-        meta={<>
-          <span className={badgeClass(project.category)}>{project.category}</span>
-          <span className={badgeClass(project.status)}>{project.status}</span>
+        className={view.page_class}
+        title={view.title}
+        meta={<>{view.badges.map((badge) => <Badge key={badge.text} badge={badge} />)}</>}
+        actions={view.actions.length > 0 && <>
+          {view.actions.map((action) => (
+            <CustomButton key={action.label} text={action.label} variant={action.variant} onClick={() => runAction(action)} />
+          ))}
         </>}
-        actions={canEdit && <>
-          <CustomButton text="Edit project" variant="secondary" onClick={() => navigate('/projects/create', { state: { editProject: project } })} />
-          {features.job_openings && (
-            <CustomButton text={openPositions.length ? 'Manage recruitment' : 'Post an opening'} onClick={() => navigate(`/projects/${id}/recruit`)} />
-          )}
-        </>}
-        tabs={<Tabs items={TABS} value={activeTab} onChange={setActiveTab} label="Project sections" />}
+        tabs={<Tabs items={view.tabs} value={activeTab} onChange={setActiveTab} label="Project sections" />}
       >
         <Panel>
           <dl className="facts">
-            <div><dt>Funding agency</dt><dd>{project.fundingAgency || EMPTY_VALUE}</dd></div>
-            <div><dt>Sanctioned amount</dt><dd>₹ {Number(project.amount || 0).toLocaleString('en-IN')}</dd></div>
+            {view.facts.map((fact) => (
+              <div key={fact.label}><dt>{fact.label}</dt><dd>{phrased(fact.value)}</dd></div>
+            ))}
             <div>
-              <dt>Duration</dt>
-              <dd>
-                {formatDuration(project.durationYears, project.durationMonths)}
-                {project.startDate ? ` · ${formatDate(project.startDate)} to ${formatDate(project.endDate)}` : ''}
-              </dd>
-            </div>
-            <div>
-              <dt>Current progress</dt>
-              <dd>{progress}%</dd>
-              <dd className="pd-progress-track" aria-hidden="true"><div className="pd-progress-fill" style={{ width: `${progress}%` }}></div></dd>
-              {milestones.length > 0 && (
-                <dd className="pd-progress-note">{completedMilestones} of {milestones.length} milestones completed</dd>
-              )}
+              <dt>{progress.label}</dt>
+              <dd>{progress.percent}%</dd>
+              <dd className="pd-progress-track" aria-hidden="true"><div className="pd-progress-fill" style={{ width: `${progress.percent}%` }}></div></dd>
+              {progress.note && <dd className="pd-progress-note">{phrased(progress.note)}</dd>}
             </div>
           </dl>
         </Panel>
@@ -673,13 +578,12 @@ const ProjectDetails = () => {
         <div className="pd-tab-panel" role="tabpanel" hidden={activeTab !== 'Funding and budget'}>
           <Panel title="Funding summary">
             <dl className="facts">
-              <div><dt>Total sanctioned</dt><dd>{formatCurrency(project.amount)}</dd></div>
-              <div><dt>TIET share</dt><dd>{project.tietShare == null ? EMPTY_VALUE : formatCurrency(project.tietShare)}</dd></div>
+              {view.funding.facts.map((fact) => <div key={fact.label}><dt>{fact.label}</dt><dd>{fact.value}</dd></div>)}
               <div>
                 <dt>Sanction letter</dt>
                 <dd className="pd-sanction-view">
                   {sanctionDoc ? (
-                    <a href={storedFileUrl(sanctionDoc.url)} target="_blank" rel="noopener noreferrer" onClick={storedFileClick(sanctionDoc.url)}><i className={`fa ${sanctionDoc.isLink ? 'fa-link' : 'fa-file-pdf-o'}`} aria-hidden="true"></i> {sanctionDoc.name}</a>
+                    <a href={storedFileUrl(sanctionDoc.url)} target="_blank" rel="noopener noreferrer" onClick={storedFileClick(sanctionDoc.url)}><i className={`fa ${sanctionDoc.is_link ? 'fa-link' : 'fa-file-pdf-o'}`} aria-hidden="true"></i> {sanctionDoc.name}</a>
                   ) : (
                     <span className="pd-muted">Not uploaded</span>
                   )}
@@ -698,7 +602,7 @@ const ProjectDetails = () => {
               </div>
             </dl>
           </Panel>
-          <ProjectBudgetCard key={project.id} projectId={project.id} budget={budgetData} meta={meta} canEdit={canEdit} onSaved={setBudgetData} />
+          <ProjectBudgetCard key={id} projectId={view.id} budget={budgetData} meta={view.options} canEdit={canEdit} onSaved={setBudgetData} />
         </div>
 
         {/* Add / Edit Document Modal */}
@@ -716,7 +620,7 @@ const ProjectDetails = () => {
                 type="text"
                 aria-required="true"
                 value={docForm.name}
-                onChange={e => setDocForm({ ...docForm, name: e.target.value })}
+                onChange={(e) => setDocForm({ ...docForm, name: e.target.value })}
                 placeholder="e.g. Year 1 Progress Report"
               />
             </div>
@@ -779,7 +683,7 @@ const ProjectDetails = () => {
             ) : (
               <div className="pd-modal-field">
                 <label htmlFor="project-details-document-link">Document link</label>
-                <input id="project-details-document-link" type="url" value={sanctionLinkInput} onChange={e => setSanctionLinkInput(e.target.value)} placeholder="https://… link to sanction letter" />
+                <input id="project-details-document-link" type="url" value={sanctionLinkInput} onChange={(e) => setSanctionLinkInput(e.target.value)} placeholder="https://… link to sanction letter" />
               </div>
             )}
             <div className="modal-actions">
@@ -791,6 +695,28 @@ const ProjectDetails = () => {
       </Page>
     </>
   );
+};
+
+const ProjectDetails = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { view, failed, retry, reload } = useView('project', { id }, { kept: false });
+
+  if (failed) {
+    return <LoadError message="Could not load this project. Check your connection and try again." onRetry={retry} />;
+  }
+  if (!view) return <StatusNotice tone="loading" title="Loading project" />;
+  if (!view.id) {
+    return (
+      <StatusNotice
+        tone="empty"
+        title="Project not found."
+        action={<CustomButton text="Go back" variant="quiet" onClick={() => navigate('/projects')} />}
+      />
+    );
+  }
+  // Another project starts clean: the last one's half-made edits stay behind.
+  return <Project key={id} view={view} reload={reload} />;
 };
 
 export default ProjectDetails;

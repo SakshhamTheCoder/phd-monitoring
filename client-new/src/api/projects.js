@@ -65,21 +65,6 @@ export const mapProject = (p) => (p ? {
 } : null);
 
 // ---- projects CRUD ----
-// Option lists come from the backend so the wizard cannot drift from the
-// validation. Cached for the life of the page — these change with a deploy,
-// not with a click. A failure is not kept, or the wizard would stay without
-// SDGs and budget heads until a reload.
-let metaRequest = null;
-export const apiProjectMeta = () => {
-  if (!metaRequest) {
-    metaRequest = customFetch(`${baseURL}/projects/meta`, 'GET', {}, false).then(({ success, response }) => {
-      if (success) return response;
-      metaRequest = null;
-      return { sdgs: [], manpowerCategories: [], budgetHeads: [], duration: { years: [0, 1, 2, 3, 4, 5], maxMonths: 11 } };
-    });
-  }
-  return metaRequest;
-};
 // `failed` means the request got no answer, so the project may still exist and
 // a retry can help; no project without it means the server refused or has none.
 export const apiGetProject = async (id) => {

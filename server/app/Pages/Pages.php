@@ -21,6 +21,7 @@ final class Pages
         'outside-experts' => OutsideExpertsPage::class,
         'presentation-list' => PresentationListPage::class,
         'presentations' => PresentationsPage::class,
+        'project' => ProjectPage::class,
         'project-wizard' => ProjectWizardPage::class,
         'projects' => ProjectsPage::class,
         'research-profile' => ResearchProfilePage::class,

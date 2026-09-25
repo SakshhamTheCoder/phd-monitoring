@@ -1,23 +1,8 @@
 // Shared constants and helpers for the Projects module.
 
-export const milestoneStatusOptions = ['Not Started', 'In Progress', 'Completed', 'Delayed'];
-
 export const positionTypes = [
   'JRF', 'SRF', 'Research Associate', 'Research Intern', 'UG Intern', 'PG Intern'
 ];
-
-export const formatCurrency = (amount) => {
-  const value = Number(amount) || 0;
-  if (value >= 10000000) return `₹${(value / 10000000).toFixed(2)} Cr`;
-  if (value >= 100000) return `₹${(value / 100000).toFixed(2)} L`;
-  return `₹${value.toLocaleString('en-IN')}`;
-};
-
-export const getMilestoneProgress = (milestones) => {
-  if (!milestones || milestones.length === 0) return 0;
-  const completed = milestones.filter(m => m.status === 'Completed').length;
-  return Math.round((completed / milestones.length) * 100);
-};
 
 // Budget sub-items live under a reserved key: budget.__subitems[year][head][sub].
 // Travel still uses the sub-item mechanism (Domestic / International).
