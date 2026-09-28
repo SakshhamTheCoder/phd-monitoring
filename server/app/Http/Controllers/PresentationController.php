@@ -581,8 +581,24 @@ class PresentationController extends Controller
                         . "so it will not appear under Past Semesters until they are set";
                 }
 
-                if (Presentation::where('student_id', $student->roll_no)
-                    ->where('semester_id', $semester->id)->exists()) {
+                $already = Presentation::where('student_id', $student->roll_no)
+                    ->where('semester_id', $semester->id)->first();
+
+                if ($already) {
+                    // Half the sheet's rows carry no date, or a word where one
+                    // belongs, so the evaluation is imported without it. When
+                    // the office fills the date in later and sends the sheet
+                    // again, that is the one thing worth taking from the row:
+                    // everything else about the evaluation is already settled.
+                    if (!$already->date && $row['date'] !== '') {
+                        $already->date = $row['date'];
+                        $already->save();
+                        $already->addHistoryEntry('Date filled from the progress sheet', $user->first_name);
+                        $errors[] = "Row {$rowNumber}: {$rollNumber}'s {$semesterCode} evaluation had no date, filled with {$row['date']}";
+                        $imported++;
+                        continue;
+                    }
+
                     $errors[] = "Row {$rowNumber}: {$rollNumber} already has a presentation for {$semesterCode}";
                     $skipped++;
                     continue;
