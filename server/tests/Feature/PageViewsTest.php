@@ -98,7 +98,7 @@ class PageViewsTest extends TestCase
     {
         $sections = $this->actingAs($this->account('admin'))->getJson('/api/views/configuration')->assertOk()->json('sections');
 
-        $this->assertSame(['leave', 'thesis', 'supervision', 'branches', 'checklist'], array_column($sections, 'value'));
+        $this->assertSame(['leave', 'thesis', 'supervision', 'branches', 'coursework', 'checklist'], array_column($sections, 'value'));
         $this->assertSame('Leave quota settings saved', $sections[0]['section']['done']);
         $this->actingAs($this->account('student'))->getJson('/api/views/configuration')->assertForbidden();
     }

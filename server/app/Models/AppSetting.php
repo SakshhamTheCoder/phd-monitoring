@@ -70,6 +70,38 @@ class AppSetting extends Model
             // so only the page that edits these numbers has to read them.
             'readers' => ['admin'],
         ],
+        // The credits a scholar must have passed before the synopsis can be
+        // raised. The institute sets these by school and by when the scholar was
+        // admitted, so the bands are fixed in App\Support\CourseworkRequirement
+        // and the figures live here, where the office can correct one when the
+        // regulations move.
+        //
+        // Where the institute writes a range, the lower figure is what is
+        // stored: the gate asks for a minimum.
+        'coursework' => [
+            'defaults' => [
+                'min_credits_before_july_2020' => 11,
+                'min_credits_july_2020_to_june_2024' => 14,
+                'min_credits_from_july_2024' => 36,
+                'min_credits_management_before_july_2024' => 48,
+                'min_credits_management_from_july_2024' => 36,
+                'min_credits_liberal_arts' => 45,
+                'min_credits_executive' => 12,
+            ],
+            'rules' => [
+                'min_credits_before_july_2020' => 'required|integer|min:0|max:100',
+                'min_credits_july_2020_to_june_2024' => 'required|integer|min:0|max:100',
+                'min_credits_from_july_2024' => 'required|integer|min:0|max:100',
+                'min_credits_management_before_july_2024' => 'required|integer|min:0|max:100',
+                'min_credits_management_from_july_2024' => 'required|integer|min:0|max:100',
+                'min_credits_liberal_arts' => 'required|integer|min:0|max:100',
+                'min_credits_executive' => 'required|integer|min:0|max:100',
+            ],
+            // The scholar is told what they still owe, and every role that reads
+            // their coursework is shown the same total they are measured against.
+            'readers' => ['admin', 'student', 'faculty', 'doctoral', 'phd_coordinator', 'hod', 'dra', 'dordc', 'adordc', 'director'],
+        ],
+
         'urf' => [
             // 1 while the URF application window is open.
             'defaults' => [

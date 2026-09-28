@@ -1,11 +1,12 @@
 <?php
 
-namespace Tests\Unit\Support;
+namespace Tests\Feature;
 
 use App\Models\Department;
 use App\Models\Student;
 use App\Support\CourseworkRequirement;
-use PHPUnit\Framework\TestCase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Tests\TestCase;
 
 /**
  * The institute's own table of credits, which goes by school and admission
@@ -13,6 +14,8 @@ use PHPUnit\Framework\TestCase;
  */
 class CourseworkRequirementTest extends TestCase
 {
+    use DatabaseTransactions;
+
     private function scholar(string $departmentCode, ?string $admitted, string $status = 'full-time'): Student
     {
         $department = new Department(['code' => $departmentCode]);
@@ -44,6 +47,13 @@ class CourseworkRequirementTest extends TestCase
         ];
     }
 
+    /** Settings are read live, so a figure changed in one test must not leak. */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        \App\Models\AppSetting::forgetCache();
+    }
+
     /** @dataProvider cohorts */
     public function test_a_cohort_is_measured_against_its_own_figure(string $code, string $admitted, int $expected): void
     {
@@ -70,5 +80,14 @@ class CourseworkRequirementTest extends TestCase
     {
         $this->assertSame(14, CourseworkRequirement::for($this->scholar('CSED', null)));
         $this->assertSame(45, CourseworkRequirement::for($this->scholar('TSLAS', null)), 'liberal arts is one figure regardless');
+    }
+    /** The office can correct a figure when the regulation moves. */
+    public function test_a_figure_corrected_in_settings_is_what_the_gate_uses(): void
+    {
+        $scholar = $this->scholar('CSED', '2025-08-07');
+        $this->assertSame(36, CourseworkRequirement::for($scholar));
+
+        \App\Models\AppSetting::put('coursework', 'min_credits_from_july_2024', 30);
+        $this->assertSame(30, CourseworkRequirement::for($scholar));
     }
 }

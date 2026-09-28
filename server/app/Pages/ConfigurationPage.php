@@ -102,6 +102,31 @@ final class ConfigurationPage extends PageDefinition
                     'save_needs_load' => true,
                 ]],
                 ['value' => 'branches', 'label' => 'UG branches', 'section' => ['block' => 'ug-branches']],
+                ['value' => 'coursework', 'label' => 'Coursework credits', 'section' => [
+                    'kind' => 'settings',
+                    'group' => 'coursework',
+                    'fields' => $numbers([
+                        'min_credits_before_july_2020' => 'Admitted before July 2020',
+                        'min_credits_july_2020_to_june_2024' => 'Admitted July 2020 to June 2024',
+                        'min_credits_from_july_2024' => 'Admitted July 2024 onwards',
+                        'min_credits_management_before_july_2024' => 'LMTSM, admitted before July 2024',
+                        'min_credits_management_from_july_2024' => 'LMTSM, admitted July 2024 onwards',
+                        'min_credits_liberal_arts' => 'TSLAS, any year',
+                        'min_credits_executive' => 'Executive programme, any school',
+                    ], 0, 100, '200', [
+                        'min_credits_before_july_2020' => 'Engineering, humanities and sciences.',
+                        'min_credits_july_2020_to_june_2024' => 'Engineering, humanities and sciences.',
+                        'min_credits_from_july_2024' => 'Engineering, humanities and sciences.',
+                    ]),
+                    'checks' => [
+                        ['keys' => ['min_credits_before_july_2020', 'min_credits_july_2020_to_june_2024', 'min_credits_from_july_2024', 'min_credits_management_before_july_2024', 'min_credits_management_from_july_2024', 'min_credits_liberal_arts', 'min_credits_executive'], 'filled' => true, 'message' => 'Fill in every field before saving.'],
+                        ['keys' => ['min_credits_before_july_2020', 'min_credits_july_2020_to_june_2024', 'min_credits_from_july_2024', 'min_credits_management_before_july_2024', 'min_credits_management_from_july_2024', 'min_credits_liberal_arts', 'min_credits_executive'], 'integer' => true, 'min' => 0, 'max' => 100, 'message' => 'Every requirement must be a whole number between 0 and 100.'],
+                    ],
+                    'done' => 'Coursework requirements saved',
+                    'note' => "The institute sets these by school and by when the scholar was admitted, so which figure a scholar is measured against follows their cohort, not their status. Where the regulation gives a range, the lower figure is what belongs here: the synopsis opens once a scholar reaches it. A scholar's total is the credits of the courses marked complete on their profile.",
+                    'load_failed' => 'Could not load the coursework requirements. Check your connection and try again.',
+                    'save_needs_load' => true,
+                ]],
                 ['value' => 'checklist', 'label' => 'Synopsis checklist', 'section' => ['block' => 'synopsis-checklist']],
             ],
         ]);

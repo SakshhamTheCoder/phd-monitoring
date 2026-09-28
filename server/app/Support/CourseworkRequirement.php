@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\AppSetting;
 use App\Models\Student;
 
 /**
@@ -11,6 +12,10 @@ use App\Models\Student;
  * school they are in, and when they were admitted. It was one configurable
  * number per status, which could not express any of that and left a 2019
  * engineering scholar measured against the same figure as a 2025 one.
+ *
+ * The bands are here because they are the regulation's shape; the figures are
+ * in settings, where the office can correct one when the regulation moves,
+ * on Configuration, Coursework credits.
  *
  * Where the institute writes a range (14 to 16 credits, 12 to 16 for the
  * executive programme), the lower figure is what is required, because this is
@@ -34,8 +39,8 @@ class CourseworkRequirement
     private const JULY_2020 = '2020-07-01';
     private const JULY_2024 = '2024-07-01';
 
-    /** A scholar whose admission date is missing, measured against the long-standing figure. */
-    private const WITHOUT_AN_ADMISSION_DATE = 14;
+    /** A scholar with no admission date has no cohort; the middle band is the long-standing figure. */
+    private const WITHOUT_AN_ADMISSION_DATE = 'min_credits_july_2020_to_june_2024';
 
     public static function for(Student $student): int
     {
@@ -43,7 +48,7 @@ class CourseworkRequirement
         // the school. What a particular executive candidate owes on top of it
         // depends on their degree and percentage, which nobody has recorded.
         if ($student->current_status === 'executive') {
-            return 12;
+            return self::credits('min_credits_executive');
         }
 
         $code = strtoupper((string) ($student->department->code ?? ''));
@@ -52,22 +57,31 @@ class CourseworkRequirement
             : null;
 
         if (in_array($code, self::LIBERAL_ARTS, true)) {
-            return 45;
+            return self::credits('min_credits_liberal_arts');
         }
 
         if ($admitted === null) {
-            return self::WITHOUT_AN_ADMISSION_DATE;
+            return self::credits(self::WITHOUT_AN_ADMISSION_DATE);
         }
 
         if (in_array($code, self::MANAGEMENT, true)) {
-            return $admitted >= self::JULY_2024 ? 36 : 48;
+            return self::credits($admitted >= self::JULY_2024
+                ? 'min_credits_management_from_july_2024'
+                : 'min_credits_management_before_july_2024');
         }
 
         // Engineering, humanities and sciences: everything else.
         if ($admitted >= self::JULY_2024) {
-            return 36;
+            return self::credits('min_credits_from_july_2024');
         }
 
-        return $admitted >= self::JULY_2020 ? 14 : 11;
+        return self::credits($admitted >= self::JULY_2020
+            ? 'min_credits_july_2020_to_june_2024'
+            : 'min_credits_before_july_2020');
+    }
+
+    private static function credits(string $key): int
+    {
+        return AppSetting::value('coursework', $key);
     }
 }
