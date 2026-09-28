@@ -256,8 +256,10 @@ class StudentController extends Controller {
 
                     $guides = \App\Support\SupervisionCapacity::currentLoad($faculty);
                     $limit = \App\Support\SupervisionCapacity::limitFor($faculty->designation);
+                    // "a Assistant Professor" is how this read on 30 rows of one run.
+                    $article = preg_match('/^[aeiou]/i', (string) $faculty->designation) ? 'an' : 'a';
                     $errors[] = "Row {$rowNumber}: {$faculty->user?->name()} now guides {$guides} scholars, "
-                        . "and {$limit} is the limit for a {$faculty->designation}";
+                        . "and {$limit} is the limit for {$article} {$faculty->designation}";
                 }
             }
         }
