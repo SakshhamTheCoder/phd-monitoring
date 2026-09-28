@@ -651,13 +651,17 @@ class StudentController extends Controller {
     }
 
     /**
-     * The scholars nobody is recorded as supervising.
+     * The scholars whose supervisor is missing rather than not yet chosen.
      *
-     * The institute's sheet names a good number of supervisors without an
-     * address, and the seat is left empty rather than given to a guess. These
-     * are the scholars that left behind, in the columns the scholars import
-     * reads, so the office can fill the two supervisor cells and send the file
-     * back through the same dialog.
+     * A scholar admitted this session has no supervisor because they have not
+     * been allotted one yet: their allocation form is open and the ordinary
+     * flow will fill it, so listing them would bury the real gaps. What is left
+     * is a scholar the portal has history for, whose sheet row named a
+     * supervisor with no address, or who was admitted in an earlier session and
+     * was never allotted anybody.
+     *
+     * Given in the columns the scholars import reads, so the office fills the
+     * two supervisor cells and sends the same file back through that dialog.
      */
     public function scholarsWithoutASupervisor()
     {
@@ -667,6 +671,14 @@ class StudentController extends Controller {
 
         $rows = Student::with(['user', 'department'])
             ->whereNotIn('roll_no', \App\Models\Supervisor::query()->select('student_id'))
+            ->where(function ($query) {
+                // Anything already behind them says the allocation happened
+                // elsewhere, whatever the sheet managed to say about it.
+                $query->whereNotNull('date_of_irb')
+                    ->orWhereNotNull('date_of_synopsis')
+                    ->orWhereNotNull('date_of_thesis')
+                    ->orWhere('date_of_registration', '<', self::sessionStart());
+            })
             ->orderBy('roll_no')
             ->get()
             ->map(fn (Student $student) => [
@@ -683,6 +695,22 @@ class StudentController extends Controller {
             'rows' => $rows,
             'count' => $rows->count(),
         ]);
+    }
+
+    /**
+     * The first day of the session running now.
+     *
+     * The institute admits in July and in January, so a scholar registered on
+     * or after the current session's first day is still being allotted their
+     * supervisor through the form, not missing one.
+     */
+    private static function sessionStart(): string
+    {
+        $now = now();
+
+        return $now->month >= 7
+            ? $now->format('Y') . '-07-01'
+            : $now->format('Y') . '-01-01';
     }
 
     public function bulkUpload(Request $request)

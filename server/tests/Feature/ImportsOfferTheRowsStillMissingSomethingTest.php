@@ -55,6 +55,36 @@ class ImportsOfferTheRowsStillMissingSomethingTest extends TestCase
         $this->assertSame(['', ''], [$row[4], $row[5]], 'the supervisor columns are the empty ones to fill');
     }
 
+    /**
+     * A scholar admitted this session has no supervisor because the allocation
+     * form has not run yet, which is the ordinary flow and not a gap.
+     */
+    public function test_a_scholar_admitted_this_session_is_left_out(): void
+    {
+        $this->actAs('admin');
+
+        $fresh = Student::whereNotIn('roll_no', Supervisor::query()->select('student_id'))->first();
+        if (!$fresh) {
+            $this->markTestSkipped('Every scholar has a supervisor.');
+        }
+
+        $fresh->forceFill([
+            'date_of_registration' => now()->month >= 7 ? now()->format('Y-07-15') : now()->format('Y-01-15'),
+            'date_of_irb' => null,
+            'date_of_synopsis' => null,
+            'date_of_thesis' => null,
+        ])->save();
+
+        $rolls = collect($this->getJson('/api/students/without-a-supervisor')->json('rows'))->pluck(0);
+        $this->assertNotContains((string) $fresh->roll_no, $rolls);
+
+        // The same scholar with an IRB behind them is a gap, whenever they were admitted.
+        $fresh->forceFill(['date_of_irb' => now()->subMonth()->format('Y-m-d')])->save();
+
+        $rolls = collect($this->getJson('/api/students/without-a-supervisor')->json('rows'))->pluck(0);
+        $this->assertContains((string) $fresh->roll_no, $rolls);
+    }
+
     public function test_a_scholar_who_has_a_supervisor_is_not_in_that_file(): void
     {
         $this->actAs('admin');
