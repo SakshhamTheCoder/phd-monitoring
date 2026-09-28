@@ -178,6 +178,40 @@ class ProgressHistoryImportTest extends TestCase
         $this->assertNotNull($semester->end_date);
     }
 
+    /**
+     * The round trip the office actually wants: take away the rows that still
+     * need something, fill the one empty column, send the same file back.
+     */
+    public function test_the_evaluations_missing_a_date_can_be_taken_away_as_a_file(): void
+    {
+        $this->actAs('admin');
+        $student = $this->freshScholar();
+
+        $undated = $this->row($student, '2324ODD', 20, 2);
+        $undated['date'] = '';
+        $this->import([$undated])->assertStatus(200);
+
+        $answer = $this->getJson('/api/presentation/progress/missing-dates')->assertStatus(200);
+
+        $this->assertSame(
+            ['Registration Number', 'Student name', 'Progress for AY', 'Date of progress', 'Total Progress %'],
+            $answer->json('headers'),
+            'the file is in the shape the import reads'
+        );
+
+        $mine = collect($answer->json('rows'))->firstWhere(0, (string) $student->roll_no);
+        $this->assertNotNull($mine);
+        $this->assertSame('2324ODD', $mine[2]);
+        $this->assertSame('', $mine[3], 'the date column is the empty one to fill');
+    }
+
+    public function test_a_supervisor_cannot_read_the_evaluations_missing_a_date(): void
+    {
+        $this->actAs('faculty');
+
+        $this->getJson('/api/presentation/progress/missing-dates')->assertStatus(403);
+    }
+
     public function test_a_supervisor_cannot_import_progress(): void
     {
         $this->actAs('faculty');

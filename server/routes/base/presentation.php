@@ -15,6 +15,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // per past semester. The bulk schedule above is for the current one.
     Route::post('/import-progress', [PresentationController::class, 'importProgress']);
 
+    // The evaluations the sheet left dateless, in the shape the import
+    // reads: fill the date column and send the same file back.
+    Route::get('/progress/missing-dates', [PresentationController::class, 'progressMissingDates']);
+
     // Filters
     Route::get('/filters', [PresentationController::class, 'listFilters']);
     Route::get('/form/filters', [PresentationController::class, 'listFilters']);

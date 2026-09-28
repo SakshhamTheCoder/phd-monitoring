@@ -497,6 +497,40 @@ class PresentationController extends Controller
         return '';
     }
 
+    /**
+     * The evaluations that came in from the sheet without a date.
+     *
+     * Half the progress sheet's date cells hold a word or nothing, so those
+     * evaluations exist with the date empty. This hands them back in the shape
+     * the import reads: fill the one empty column in a spreadsheet, upload the
+     * same file, and each date lands on the evaluation it belongs to.
+     */
+    public function progressMissingDates()
+    {
+        $user = Auth::user();
+        if (!in_array($user->current_role->role, ['admin', 'dordc'], true)) {
+            return response()->json(['message' => 'You do not have permission to read this'], 403);
+        }
+
+        $rows = Presentation::with(['student.user'])
+            ->whereNull('date')
+            ->orderBy('student_id')
+            ->get()
+            ->map(fn (Presentation $presentation) => [
+                (string) $presentation->student_id,
+                optional(optional($presentation->student)->user)->name() ?? '',
+                (string) $presentation->period_of_report,
+                '',
+                (string) $presentation->total_progress,
+            ]);
+
+        return response()->json([
+            'headers' => ['Registration Number', 'Student name', 'Progress for AY', 'Date of progress', 'Total Progress %'],
+            'rows' => $rows,
+            'count' => $rows->count(),
+        ]);
+    }
+
     public function importProgress(Request $request)
     {
         // The page posts the sheet's rows as they are; read here into the rows

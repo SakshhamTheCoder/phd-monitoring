@@ -65,6 +65,24 @@ abstract class PageDefinition
     }
 
     /**
+     * A header button that downloads what $path answers as a CSV.
+     *
+     * For the round trip an office actually wants: take away the rows that
+     * still need something, fill the empty column in a spreadsheet, and send
+     * the same file back through the import the page already has. The endpoint
+     * answers {headers, rows}, and the file it writes is in the shape that
+     * import reads, so nothing has to be re-typed or re-ordered.
+     */
+    protected static function download(string $label, string $path, string $filename, ?string $variant = null): array
+    {
+        return array_filter([
+            'label' => $label,
+            'variant' => $variant,
+            'downloads' => ['path' => $path, 'filename' => $filename],
+        ], fn ($value) => $value !== null);
+    }
+
+    /**
      * A dialog: $props are its title, sizes and whether a click outside closes
      * it (close_outside); $request is where its submit sends the answers.
      */
