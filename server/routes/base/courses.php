@@ -19,6 +19,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/my-courses', [StudentCourseController::class, 'getStudentCourses']);
         Route::post('/tag', [StudentCourseController::class, 'tagStudentWithCourse']);
         Route::post('/bulk-import', [StudentCourseController::class, 'bulkImportFromCSV']);
+
+        // The rows whose course is worth nothing, in the import's own
+        // columns: fill the credits and send the same file back.
+        Route::get('/without-credits', [StudentCourseController::class, 'coursesWithoutCredits']);
         Route::put('/grade/{id}', [StudentCourseController::class, 'updateGrade']);
         Route::get('/courses/{studentId}', [StudentCourseController::class, 'getCoursesForStudent']);
         Route::delete('/remove/{id}', [StudentCourseController::class, 'removeStudentFromCourse']);

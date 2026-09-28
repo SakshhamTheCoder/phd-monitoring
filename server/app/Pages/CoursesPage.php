@@ -80,6 +80,11 @@ final class CoursesPage extends PageDefinition
                         '900011,Scholar One,scholar.one@thapar.edu,2425EVEN,PCS102,Advanced Algorithms,3,',
                     ])],
                     'path' => '/courses/student/bulk-import',
+                    'download' => self::fixList(
+                        'Courses with no credits',
+                        '/courses/student/without-credits',
+                        'courses_with_no_credits.csv'
+                    ),
                     'failed' => 'Failed to import',
                 ],
             ] : (object) [],
