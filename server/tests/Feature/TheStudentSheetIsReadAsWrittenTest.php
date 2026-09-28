@@ -314,4 +314,41 @@ class TheStudentSheetIsReadAsWrittenTest extends TestCase
             Student::where('roll_no', 995102)->firstOrFail()->date_of_irb->toDateString()
         );
     }
+    /**
+     * A scholar the sheet has no phone number for.
+     *
+     * Nobody is matched on a phone, so a blank one, or the spreadsheet's own
+     * #N/A, is no reason to keep the scholar out. It used to be one of six
+     * fields a new row was refused without.
+     */
+    public function test_a_scholar_with_no_phone_number_is_still_created(): void
+    {
+        $response = $this->importSheetRow(['Phone' => ''])->assertStatus(200);
+
+        $this->assertSame(1, $response->json('data.success_count'), $this->said($response));
+        $this->assertNull(Student::where('roll_no', 995101)->firstOrFail()->user->phone);
+
+        $response = $this->importSheetRow([
+            'Registration Number' => '995103',
+            'Email' => 'na.phone@thapar.test',
+            'Phone' => '#N/A',
+        ])->assertStatus(200);
+
+        $this->assertSame(1, $response->json('data.success_count'), $this->said($response));
+        $this->assertNull(Student::where('roll_no', 995103)->firstOrFail()->user->phone);
+    }
+
+    /** What a row cannot be created without is named by the sheet's own headings. */
+    public function test_a_row_missing_its_registration_number_says_which_cells_are_empty(): void
+    {
+        $response = $this->importSheetRow([
+            'Registration Number' => '',
+            'Email' => 'no.number@thapar.test',
+            'Enrollment Type' => '',
+        ])->assertStatus(200);
+
+        $said = $this->said($response);
+        $this->assertStringContainsString('these cells are empty: Registration Number, Enrollment Type', $said);
+        $this->assertStringNotContainsString('Full Name', $said);
+    }
 }

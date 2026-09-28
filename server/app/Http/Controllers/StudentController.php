@@ -850,6 +850,15 @@ class StudentController extends Controller {
                                 $studentData[$field] = null;
                             }
                         }
+
+                        // A phone the sheet leaves blank, or fills with the
+                        // spreadsheet's own #N/A, is nobody's number. People are
+                        // found by registration number and email, so a missing
+                        // one is no reason to keep a scholar out.
+                        $phone = strtoupper(trim((string) ($studentData['phone'] ?? '')));
+                        if ($phone === '' || $phone === '#N/A' || $phone === 'NA') {
+                            $studentData['phone'] = null;
+                        }
                         // Find department by code, accepting superseded codes so
                         // spreadsheets saved before the codes were corrected still
                         // import cleanly. Only validate if code was provided — partial updates may omit it.
@@ -940,9 +949,19 @@ class StudentController extends Controller {
                         // exists with no scholar record behind it is given one here
                         // rather than refused: the person is already in the portal,
                         // and what the sheet adds is the degree.
+                        // Named by the sheet's own column headings, and only the
+                        // ones actually empty, so the office reads which cells to
+                        // go and fill rather than a list of six possibilities.
                         $name = PersonName::fromRow($studentData);
-                        if ($name === null || empty($studentData['phone']) || empty($studentData['roll_no']) || empty($studentData['department_code']) || empty($studentData['date_of_registration']) || empty($studentData['current_status'])) {
-                            $errors[] = "Row " . $rowNumber . ": missing required fields for new student (full_name, phone, roll_no, department_code, date_of_registration, current_status)";
+                        $missing = [];
+                        if ($name === null) $missing[] = 'Full Name';
+                        if (empty($studentData['roll_no'])) $missing[] = 'Registration Number';
+                        if (empty($studentData['department_code'])) $missing[] = 'Department Code';
+                        if (empty($studentData['date_of_registration'])) $missing[] = 'Date of Admission';
+                        if (empty($studentData['current_status'])) $missing[] = 'Enrollment Type';
+
+                        if ($missing) {
+                            $errors[] = "Row {$rowNumber}: no scholar created, these cells are empty: " . implode(', ', $missing);
                             $failed++; return;
                         }
                         if ($this->outsideWritableDepartments($department->id)) {
@@ -956,7 +975,7 @@ class StudentController extends Controller {
                         $user = $existingUser ?: new \App\Models\User();
                         $user->first_name = $name['first'];
                         $user->last_name = $name['last'];
-                        $user->phone = $studentData['phone'];
+                        $user->phone = $studentData['phone'] ?? null;
                         $user->email = $studentData['email'];
                         if (!$existingUser) {
                             $user->password = bcrypt($password);

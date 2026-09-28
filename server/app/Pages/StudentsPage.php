@@ -98,7 +98,7 @@ final class StudentsPage extends PageDefinition
                 ...($managesStudents ? ['import' => [
                     'kind' => 'rows',
                     'title' => 'Bulk import students',
-                    'required' => ['Registration Number', 'Full Name', 'Email', 'Phone', 'Department Code', 'Date of Admission', 'Enrollment Type'],
+                    'required' => ['Registration Number', 'Full Name', 'Email', 'Department Code', 'Date of Admission', 'Enrollment Type'],
                     'rules' => [
                         'Matched by registration number, then email. Both must belong to the same scholar.',
                         "A blank cell never clears a stored value. Clear one on the scholar's profile.",
