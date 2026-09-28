@@ -31,6 +31,10 @@ const UnifiedBulkImportModal = ({
   // should mail the people it creates. Rendered beside the actions rather than
   // grown into another prop per question.
   extraControls = null,
+  // A button beside the sample that takes away the records still missing
+  // something, in this import's own columns: fill the empty column and send
+  // the same file back through this dialog.
+  fixList = null,
 }) => {
   const [csvFile, setCsvFile] = useState(null);
   const [csvPreview, setCsvPreview] = useState(null);
@@ -138,6 +142,9 @@ const UnifiedBulkImportModal = ({
 
         <div className="csv-import-file">
           <CustomButton text="Download sample CSV" variant="secondary" onClick={downloadSampleCSV} />
+          {fixList && (
+            <CustomButton text={fixList.label} variant="secondary" onClick={fixList.onClick} />
+          )}
           <input
             ref={fileInputRef}
             type="file"

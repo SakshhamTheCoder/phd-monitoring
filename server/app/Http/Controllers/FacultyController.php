@@ -442,6 +442,43 @@ class FacultyController extends Controller
         ], $rows);
     }
 
+    /**
+     * The staff filed under no research area.
+     *
+     * A broad area the department's own list does not carry leaves the person
+     * without one, which keeps them out of every search by area. These are
+     * those people, in the columns the faculty import reads, so the area can
+     * be written beside each name and the file sent back through the same
+     * dialog.
+     */
+    public function facultyWithoutAnArea()
+    {
+        if (!Auth::user()->may('can_manage_faculties')) {
+            return response()->json(['message' => 'You do not have permission to read this'], 403);
+        }
+
+        $rows = Faculty::with(['user', 'department'])
+            ->whereNull('area_of_specialization_id')
+            ->where('type', 'internal')
+            ->orderBy('department_id')
+            ->get()
+            ->filter(fn (Faculty $faculty) => $faculty->user)
+            ->map(fn (Faculty $faculty) => [
+                (string) $faculty->faculty_code,
+                $faculty->user->name(),
+                $faculty->user->email,
+                optional($faculty->department)->code ?? '',
+                '',
+            ])
+            ->values();
+
+        return response()->json([
+            'headers' => ['Emp id', 'Full Name', 'Email', 'Department Code', 'Broad Area of Expertise'],
+            'rows' => $rows,
+            'count' => $rows->count(),
+        ]);
+    }
+
     public function upload(Request $request)
     {
         $user = Auth::user();

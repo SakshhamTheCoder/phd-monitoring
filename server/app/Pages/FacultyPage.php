@@ -73,6 +73,11 @@ final class FacultyPage extends PageDefinition
                         '10002,Khalid Bashir,khalid.bashir@demo.invalid,9800000002,Assistant Professor,ECED,Signal Processing,"Speech Processing",0,0',
                     ])],
                     'path' => '/faculty/bulk-import',
+                    'download' => self::fixList(
+                        'Staff with no research area',
+                        '/faculty/without-an-area',
+                        'staff_with_no_research_area.csv'
+                    ),
                     // One id for the run, so Send sign-in links on Manage Users can
                     // mail exactly the people this import brought in.
                     'batch' => self::STAFF_IMPORT + ['run_id' => true],

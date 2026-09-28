@@ -26,15 +26,7 @@ final class PresentationsPage extends PageDefinition
                 'title' => 'Past semesters',
                 'select' => false,
                 'opens' => ['navigate' => '{path}/semester/{semester_name}'],
-                'toolbar' => $office ? [
-                    self::download(
-                        'Evaluations missing a date',
-                        '/presentation/progress/missing-dates',
-                        'evaluations_missing_a_date.csv',
-                        'secondary'
-                    ),
-                    self::action('Import progress history', 'import', 'secondary'),
-                ] : [],
+                'toolbar' => $office ? [self::action('Import progress history', 'import', 'secondary')] : [],
                 'actions' => $office ? [['label' => 'Edit semester', 'icon' => 'fa fa-pencil-square-o', 'opens' => 'semester']] : [],
             ],
             'dialogs' => $office ? [
@@ -65,6 +57,11 @@ final class PresentationsPage extends PageDefinition
                         '900011,2425ODD,2024-11-06,55',
                     ])],
                     'path' => '/presentation/import-progress',
+                    'download' => self::fixList(
+                        'Evaluations missing a date',
+                        '/presentation/progress/missing-dates',
+                        'evaluations_missing_a_date.csv'
+                    ),
                     'failed' => 'Import failed',
                 ],
             ],

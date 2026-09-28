@@ -650,6 +650,41 @@ class StudentController extends Controller {
         return mb_substr($answer, 0, 40);
     }
 
+    /**
+     * The scholars nobody is recorded as supervising.
+     *
+     * The institute's sheet names a good number of supervisors without an
+     * address, and the seat is left empty rather than given to a guess. These
+     * are the scholars that left behind, in the columns the scholars import
+     * reads, so the office can fill the two supervisor cells and send the file
+     * back through the same dialog.
+     */
+    public function scholarsWithoutASupervisor()
+    {
+        if (!Auth::user()->may('can_manage_students')) {
+            return response()->json(['message' => 'You do not have permission to read this'], 403);
+        }
+
+        $rows = Student::with(['user', 'department'])
+            ->whereNotIn('roll_no', \App\Models\Supervisor::query()->select('student_id'))
+            ->orderBy('roll_no')
+            ->get()
+            ->map(fn (Student $student) => [
+                (string) $student->roll_no,
+                optional($student->user)->name() ?? '',
+                optional($student->user)->email ?? '',
+                optional($student->department)->code ?? '',
+                '',
+                '',
+            ]);
+
+        return response()->json([
+            'headers' => ['Registration Number', 'Full Name', 'Email', 'Department Code', 'Supervisor 1 Name', 'Supervisor 1 Email'],
+            'rows' => $rows,
+            'count' => $rows->count(),
+        ]);
+    }
+
     public function bulkUpload(Request $request)
     {
         // The page posts the sheet's rows as they are; read here into the

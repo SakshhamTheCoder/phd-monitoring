@@ -204,14 +204,9 @@ const ServerListPageFor = ({ page }) => {
     <Tabs value={shownTab.value} onChange={chooseTab} items={view.tabs.map(({ value, label }) => ({ value, label }))} />
   );
 
-  // A header button opens a dialog or an import, downloads what an endpoint
-  // answers, or sends a request (raising a new form), after which the page may
-  // be read again whole.
+  // A header button opens a dialog or an import, or sends a request (raising
+  // a new form), after which the page may be read again whole.
   const press = async (action) => {
-    if (action.downloads) {
-      await download(action.downloads);
-      return;
-    }
     if (!action.request) {
       open(action.opens);
       return;
@@ -223,33 +218,6 @@ const ServerListPageFor = ({ page }) => {
     // What the page says changed with it (applications opened or closed).
     if (request.reload_view) reload();
   };
-  // The rows an endpoint says still need something, as a CSV in the shape the
-  // page's own import reads: fill the empty column in a spreadsheet and send
-  // the same file back.
-  const download = async ({ path, filename }) => {
-    const answer = await customFetch(baseURL + fillFromPage(path, context), 'GET', {}, false);
-    const { headers, rows } = answer?.response ?? {};
-
-    if (!answer?.success || !headers) {
-      toast.error('Could not prepare that file. Try again.');
-      return;
-    }
-
-    if (!rows.length) {
-      toast.info('Nothing to download: every row is complete.');
-      return;
-    }
-
-    const quote = (cell) => `"${String(cell ?? '').replace(/"/g, '""')}"`;
-    const csv = [headers, ...rows].map((row) => row.map(quote).join(',')).join('\n');
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
   const buttons = (list) => list.map((action) => (
     <CustomButton
       key={action.label}
