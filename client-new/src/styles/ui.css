@@ -574,6 +574,33 @@
     color: var(--text-muted);
 }
 
+/* A column or a row the office is leaving out of this import: still readable,
+   plainly not going in. Struck through as well as faded, since faded alone is
+   a colour difference and not everybody sees it. */
+.csv-preview-pick {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: inherit;
+}
+
+.csv-preview-skipped {
+    color: var(--text-muted);
+    text-decoration: line-through;
+    background: var(--canvas);
+}
+
+.csv-import-linkish {
+    border: 0;
+    background: none;
+    padding: 0;
+    color: var(--primary-color);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 /* Fields stacked in a column, the common shape inside a dialog. */
 .field-stack {
     display: flex;

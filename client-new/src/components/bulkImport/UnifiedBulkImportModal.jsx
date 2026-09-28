@@ -38,6 +38,12 @@ const UnifiedBulkImportModal = ({
 }) => {
   const [csvFile, setCsvFile] = useState(null);
   const [csvPreview, setCsvPreview] = useState(null);
+  // Columns and rows the office has ticked off in the preview. A sheet often
+  // carries one column that is not ready, or a handful of rows somebody is
+  // still checking, and the answer to that was editing the file outside the
+  // portal and losing track of which copy was which.
+  const [skippedColumns, setSkippedColumns] = useState([]);
+  const [skippedRows, setSkippedRows] = useState([]);
   const fileInputRef = useRef(null);
 
   const columns = sampleCsvContent ? parseCsv(sampleCsvContent)[0] || [] : [];
@@ -46,6 +52,8 @@ const UnifiedBulkImportModal = ({
   const resetState = () => {
     setCsvFile(null);
     setCsvPreview(null);
+    setSkippedColumns([]);
+    setSkippedRows([]);
     // Otherwise picking the same file again fires no change and loads nothing.
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -104,12 +112,27 @@ const UnifiedBulkImportModal = ({
     reader.readAsText(file);
   };
 
+  const toggle = (list, value) =>
+    (list.includes(value) ? list.filter((each) => each !== value) : [...list, value]);
+
+  // What the import is actually sent: the ticked-off columns are dropped from
+  // every row, which reads to the server exactly as a sheet that never had
+  // them, and the ticked-off rows are left behind entirely.
+  const chosen = csvPreview && {
+    headers: csvPreview.headers.filter((header) => !skippedColumns.includes(header)),
+    data: csvPreview.data
+      .filter((row) => !skippedRows.includes(row._rowNumber))
+      .map((row) => Object.fromEntries(
+        Object.entries(row).filter(([key]) => key === '_rowNumber' || !skippedColumns.includes(key))
+      )),
+  };
+
   const handleConfirm = () => {
-    if (!csvFile || !csvPreview || csvPreview.data.length === 0) {
-      toast.error('Please select a valid CSV file with data');
+    if (!csvFile || !chosen || chosen.data.length === 0) {
+      toast.error(csvPreview ? 'Every row is left out, so there is nothing to import' : 'Please select a valid CSV file with data');
       return;
     }
-    onImport(csvPreview, resetState);
+    onImport(chosen, resetState);
   };
 
   return (
@@ -159,6 +182,18 @@ const UnifiedBulkImportModal = ({
           <div className="csv-import-preview">
             <div className="csv-import-preview-head">
               Preview: {csvPreview.data.length} row(s) found
+              {(skippedColumns.length > 0 || skippedRows.length > 0) && (
+                <span className="csv-import-note">
+                  {' '}Leaving out {skippedColumns.length > 0 && `${skippedColumns.length} column(s)`}
+                  {skippedColumns.length > 0 && skippedRows.length > 0 && ' and '}
+                  {skippedRows.length > 0 && `${skippedRows.length} row(s)`}
+                  {', so '}{chosen.data.length} row(s) will be imported.
+                  {' '}
+                  <button type="button" className="csv-import-linkish" onClick={() => { setSkippedColumns([]); setSkippedRows([]); }}>
+                    Put them back
+                  </button>
+                </span>
+              )}
             </div>
             <div className="csv-preview-wrap">
               <table className="csv-preview">
@@ -166,16 +201,36 @@ const UnifiedBulkImportModal = ({
                   <tr>
                     <th>Row</th>
                     {csvPreview.headers.map((header, i) => (
-                      <th key={i}>{header}</th>
+                      <th key={i} className={skippedColumns.includes(header) ? 'csv-preview-skipped' : undefined}>
+                        <label className="csv-preview-pick">
+                          <input
+                            type="checkbox"
+                            checked={!skippedColumns.includes(header)}
+                            onChange={() => setSkippedColumns((now) => toggle(now, header))}
+                            aria-label={`Import the ${header} column`}
+                          />
+                          {header}
+                        </label>
+                      </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {csvPreview.data.map((row, i) => (
-                    <tr key={i}>
-                      <td className="csv-rownum">{row._rowNumber}</td>
+                    <tr key={i} className={skippedRows.includes(row._rowNumber) ? 'csv-preview-skipped' : undefined}>
+                      <td className="csv-rownum">
+                        <label className="csv-preview-pick">
+                          <input
+                            type="checkbox"
+                            checked={!skippedRows.includes(row._rowNumber)}
+                            onChange={() => setSkippedRows((now) => toggle(now, row._rowNumber))}
+                            aria-label={`Import row ${row._rowNumber}`}
+                          />
+                          {row._rowNumber}
+                        </label>
+                      </td>
                       {csvPreview.headers.map((header, j) => (
-                        <td key={j}>
+                        <td key={j} className={skippedColumns.includes(header) ? 'csv-preview-skipped' : undefined}>
                           {row[header] || <span className="csv-import-empty">empty</span>}
                         </td>
                       ))}
