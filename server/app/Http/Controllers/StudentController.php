@@ -822,15 +822,33 @@ class StudentController extends Controller {
                         // straight through, anything but the last shape was refused
                         // by the database and cost the row every other correction
                         // it carried.
+                        // An empty cell and a cell holding a word both mean no
+                        // date, and both have to arrive as null. A date column
+                        // refuses an empty string, which refused the whole row
+                        // for every new scholar who has no IRB date yet. On the
+                        // update path a null reads as "not supplied", which is
+                        // what an empty cell means there.
                         foreach (self::DATE_FIELDS as $field) {
                             $written = trim((string) ($studentData[$field] ?? ''));
-                            if ($written === '') continue;
-
                             $read = SheetDate::parse($written);
-                            if ($read === '') {
+
+                            if ($written !== '' && $read === '') {
                                 $errors[] = "Row {$rowNumber}: {$field} reads '{$written}', which is not a date, so it was left as it was";
                             }
-                            $studentData[$field] = $read;
+
+                            $studentData[$field] = $read === '' ? null : $read;
+                        }
+
+                        // Same for the other cells a spreadsheet leaves blank on
+                        // every row. A double column refuses '' and so does the
+                        // gender enum, and writing 0 into progress would wipe
+                        // what the DoRDC had already approved. Null means nobody
+                        // said, which both the create and update paths read
+                        // correctly.
+                        foreach (['cgpa', 'overall_progress', 'gender'] as $field) {
+                            if (isset($studentData[$field]) && trim((string) $studentData[$field]) === '') {
+                                $studentData[$field] = null;
+                            }
                         }
                         // Find department by code, accepting superseded codes so
                         // spreadsheets saved before the codes were corrected still

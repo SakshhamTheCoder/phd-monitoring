@@ -231,4 +231,87 @@ class TheStudentSheetIsReadAsWrittenTest extends TestCase
         $this->assertSame(1, $response->json('data.error_count'), $this->said($response));
         $this->assertSame(0, User::where('email', 'half.written@thapar.test')->count());
     }
+    /**
+     * The sheet as the browser posts it: the office's own column names, every
+     * column present on every row, and an empty string wherever a cell is
+     * blank. The pre-mapped payload the other tests use never carries those
+     * empty cells, which is how a new scholar with no IRB date yet reached the
+     * database as '' and had the whole row refused.
+     *
+     * @param  array<string, string>  $cells
+     */
+    private function importSheetRow(array $cells)
+    {
+        $row = array_merge([
+            '_rowNumber' => 709,
+            'Registration Number' => '995101',
+            'Full Name' => 'Sheet Row Scholar',
+            'Email' => 'sheet.row@thapar.test',
+            'Phone' => '9800000704',
+            'Department Code' => 'SHET',
+            'Date of Admission' => '14-08-2020',
+            'Enrollment Type' => 'Part Time',
+            'Date of IRB' => '',
+            'Date of Synopsis' => '',
+            'Date of Thesis' => '',
+            'Date of thesis awarded' => '',
+            'PhD Title' => '',
+            'Father Name' => 'Narinder Singh',
+            'Permanent Address' => '',
+            'CGPA' => '',
+            'JRF?' => '',
+            'NET/Gate' => 'NA',
+            'Overall Progress' => '',
+        ], $cells);
+
+        return $this->actingAs($this->office, 'sanctum')
+            ->postJson('/api/students/bulk-upload', ['rows' => [$row]]);
+    }
+
+    /**
+     * A new scholar whose journey has not started yet. Every date cell on the
+     * row is blank, which is the ordinary case for two thirds of the sheet.
+     */
+    public function test_a_new_scholar_with_every_date_cell_blank_is_created(): void
+    {
+        $response = $this->importSheetRow([])->assertStatus(200);
+
+        $this->assertSame(1, $response->json('data.success_count'), $this->said($response));
+        $this->assertSame(0, $response->json('data.error_count'), $this->said($response));
+
+        $scholar = Student::where('roll_no', 995101)->firstOrFail();
+        $this->assertNull($scholar->date_of_irb);
+        $this->assertNull($scholar->date_of_synopsis);
+        $this->assertNull($scholar->cgpa);
+        $this->assertSame('2020-08-14', $scholar->date_of_registration->toDateString());
+        $this->assertSame('part-time', $scholar->current_status);
+    }
+
+    /** An IRB date with no synopsis yet: the one date lands, the rest stay empty. */
+    public function test_one_filled_date_cell_among_blanks_lands(): void
+    {
+        $response = $this->importSheetRow(['Date of IRB' => '28-05-2024'])->assertStatus(200);
+
+        $this->assertSame(0, $response->json('data.error_count'), $this->said($response));
+        $scholar = Student::where('roll_no', 995101)->firstOrFail();
+        $this->assertSame('2024-05-28', $scholar->date_of_irb->toDateString());
+        $this->assertNull($scholar->date_of_synopsis);
+    }
+
+    /** The sheet writes some months out in full, and September as Sept. */
+    public function test_a_month_written_out_in_full_is_read(): void
+    {
+        $this->importSheetRow(['Date of IRB' => '11-Sept-2025'])->assertStatus(200);
+        $this->assertSame(
+            '2025-09-11',
+            Student::where('roll_no', 995101)->firstOrFail()->date_of_irb->toDateString()
+        );
+
+        $this->importSheetRow(['Registration Number' => '995102', 'Email' => 'full.month@thapar.test', 'Date of IRB' => '17-July-2026'])
+            ->assertStatus(200);
+        $this->assertSame(
+            '2026-07-17',
+            Student::where('roll_no', 995102)->firstOrFail()->date_of_irb->toDateString()
+        );
+    }
 }
