@@ -351,4 +351,42 @@ class TheStudentSheetIsReadAsWrittenTest extends TestCase
         $this->assertStringContainsString('these cells are empty: Registration Number, Enrollment Type', $said);
         $this->assertStringNotContainsString('Full Name', $said);
     }
+    /**
+     * A supervisor at or past their ceiling is reported with both numbers, and
+     * the scholar is still attached to them.
+     *
+     * The sheet describes supervisions that already exist, so refusing one
+     * would leave the portal disagreeing with the institute. The office needs
+     * to be able to tell a full supervisor from an overloaded one, which
+     * "is now over their supervision limit" did not say.
+     */
+    public function test_a_supervisor_past_their_limit_is_reported_with_the_numbers(): void
+    {
+        $staff = $this->userAs('faculty', [], 'busy.professor@thapar.test');
+        $professor = Faculty::create([
+            'faculty_code' => 995200,
+            'user_id' => $staff->id,
+            'designation' => 'Professor',
+            'department_id' => $this->department->id,
+            'type' => 'internal',
+            // Guiding more outside TIET than the ceiling allows on its own, so
+            // the row about to arrive lands on somebody already full.
+            'supervised_outside' => 9,
+        ]);
+
+        $response = $this->importSheetRow([
+            'Supervisor 1 Email' => 'busy.professor@thapar.test',
+        ])->assertStatus(200);
+
+        $said = $this->said($response);
+        $this->assertStringContainsString('now guides 10 scholars', $said);
+        $this->assertStringContainsString('8 is the limit for a Professor', $said);
+
+        $scholar = Student::where('roll_no', 995101)->firstOrFail();
+        $this->assertSame(
+            [$professor->faculty_code],
+            $scholar->supervisors()->pluck('faculty_code')->map(fn ($code) => (int) $code)->all(),
+            'the scholar is attached to them regardless'
+        );
+    }
 }

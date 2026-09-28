@@ -243,12 +243,21 @@ class StudentController extends Controller {
                 ]);
             }
 
+            // Said with both numbers in it. "Over their limit" read as a
+            // refusal and covered two different situations: a supervisor exactly
+            // at their ceiling, which is normal, and one past it, which the
+            // office has to look at. The scholar is attached either way, above.
             if ($key === 'supervisors') {
                 foreach ($facultyCodes as $facultyCode) {
                     $faculty = Faculty::where('faculty_code', $facultyCode)->first();
-                    if ($faculty && \App\Support\SupervisionCapacity::remaining($faculty) <= 0) {
-                        $errors[] = "Row {$rowNumber}: {$faculty->user?->name()} is now over their supervision limit";
+                    if (!$faculty || \App\Support\SupervisionCapacity::remaining($faculty) > 0) {
+                        continue;
                     }
+
+                    $guides = \App\Support\SupervisionCapacity::currentLoad($faculty);
+                    $limit = \App\Support\SupervisionCapacity::limitFor($faculty->designation);
+                    $errors[] = "Row {$rowNumber}: {$faculty->user?->name()} now guides {$guides} scholars, "
+                        . "and {$limit} is the limit for a {$faculty->designation}";
                 }
             }
         }
