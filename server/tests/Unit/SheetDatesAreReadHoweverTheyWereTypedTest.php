@@ -26,6 +26,8 @@ class SheetDatesAreReadHoweverTheyWereTypedTest extends TestCase
             'short month with dots' => ['24.Feb.2025', '2025-02-24'],
             'stray space beside the dash' => ['11- Mar-2026', '2026-03-11'],
             'spaces either side' => ['22 - July - 2026', '2026-07-22'],
+            'no leading zero' => ['9/8/2025', '2025-08-09'],
+            'two digit year' => ['1-Jan-26', '2026-01-01'],
         ];
     }
 

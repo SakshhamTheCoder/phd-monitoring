@@ -33,11 +33,15 @@ class SheetDate
         // not a shape of its own, so a space beside a separator goes.
         $value = preg_replace('/\s*([-\/.])\s*/', '$1', $value);
 
+        // The j and n formats are the same shapes with the leading zero left
+        // off, which is what a spreadsheet shows when the cell is text.
         foreach ([
-            'd-m-Y', 'd/m/Y', 'd.m.Y',
-            'd-M-Y', 'd/M/Y', 'd.M.Y', 'd M Y', 'd-M-y',
-            'd-F-Y', 'd/F/Y', 'd.F.Y', 'd F Y',
-            'j-M-Y', 'Y-m-d', 'Y/m/d',
+            'd-m-Y', 'd/m/Y', 'd.m.Y', 'j-n-Y', 'j/n/Y', 'j.n.Y',
+            'd-m-y', 'j-n-y',
+            'd-M-Y', 'd/M/Y', 'd.M.Y', 'd M Y', 'j-M-Y', 'j/M/Y', 'j.M.Y', 'j M Y',
+            'd-M-y', 'j-M-y',
+            'd-F-Y', 'd/F/Y', 'd.F.Y', 'd F Y', 'j-F-Y', 'j/F/Y', 'j.F.Y', 'j F Y',
+            'Y-m-d', 'Y/m/d',
         ] as $format) {
             $date = \DateTime::createFromFormat('!' . $format, $value);
             if ($date && $date->format($format) === $value) {
