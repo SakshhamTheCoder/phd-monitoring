@@ -7,6 +7,7 @@ use App\Models\Faculty;
 use App\Services\FacultyRecommendationService;
 use App\Support\PersonName;
 use App\Support\CsvRow;
+use App\Support\FacultyCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\Role;
@@ -675,12 +676,10 @@ class FacultyController extends Controller
                         // faculty_code is an app-wide join key. An external
                         // faculty's code is auto-generated (777xxxxxx); never
                         // let a CSV row rewrite it.
-                        // The sheet carries a second numbering scheme for some
-                        // staff, so this is also a renumbering. The code is a
-                        // join key: committees, supervisions and coordinator
-                        // seats all point at it, and the database refuses to
-                        // move one that is in use. Keeping the portal's number
-                        // is the harmless half of that, said out loud.
+                        // The sheet carries a second numbering scheme for
+                        // some staff, so this is also a renumbering, and the
+                        // sheet is the newer record. Everything pointing at
+                        // the code moves with it.
                         $previousCode = $existingFaculty->faculty_code;
                         if ($facultyCode && $existingFaculty->type === 'internal') {
                             $existingFaculty->faculty_code = $facultyCode;
@@ -699,6 +698,14 @@ class FacultyController extends Controller
 
                         try {
                             $existingFaculty->save();
+
+                            // Committees, supervisions and coordinator seats
+                            // follow the code themselves, because their keys
+                            // cascade on update. The forms that store a code
+                            // in a list do not, so they are moved here.
+                            if ((int) $existingFaculty->faculty_code !== (int) $previousCode) {
+                                FacultyCode::retag((int) $previousCode, (int) $existingFaculty->faculty_code);
+                            }
                         } catch (\Illuminate\Database\QueryException $e) {
                             if (!str_contains($e->getMessage(), 'foreign key constraint')) {
                                 throw $e;
