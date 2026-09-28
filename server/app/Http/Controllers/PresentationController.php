@@ -432,37 +432,7 @@ class PresentationController extends Controller
      */
     public static function semesterCode(string $value): string
     {
-        // A trailing comma or full stop is punctuation, not part of the period.
-        $value = trim($value, " 	
- .,;:-");
-        if ($value === '') {
-            return '';
-        }
-
-        if (preg_match('/^(\d{2})(\d{2})\s*(ODD|EVEN)/i', $value, $matches)) {
-            return strtoupper($matches[1] . $matches[2] . $matches[3]);
-        }
-
-        // "January 2023 to June 2023" and "July 2022 to Dec. 2022" name a year
-        // twice; the one that decides the semester is the one beside the first
-        // month, so the first month and the first year are what is read.
-        if (!preg_match('/([a-z]+)\D*?((?:19|20)\d{2}|\d{2})(?!\d)/i', $value, $matches)) {
-            return '';
-        }
-
-        $month = strtolower(substr($matches[1], 0, 3));
-        $year = (int) $matches[2];
-        $year += $year < 100 ? 2000 : 0;
-
-        if (in_array($month, ['jan', 'feb', 'mar', 'apr', 'may', 'jun'], true)) {
-            return sprintf('%02d%02dEVEN', ($year - 1) % 100, $year % 100);
-        }
-
-        if (in_array($month, ['jul', 'aug', 'sep', 'oct', 'nov', 'dec'], true)) {
-            return sprintf('%02d%02dODD', $year % 100, ($year + 1) % 100);
-        }
-
-        return '';
+        return \App\Support\SemesterCode::of($value);
     }
 
     /**

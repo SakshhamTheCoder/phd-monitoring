@@ -381,60 +381,84 @@ class CourseController extends Controller
 
         $created = 0;
         $updated = 0;
+        // Rows that made no subject. Counted apart from $errors, which also
+        // carries notes about rows that did land, so the number the office
+        // reads is how many records were actually lost.
+        $failed = 0;
         $errors = [];
 
         foreach ($request->rows as $row) {
             $rowNumber = $row['row_number'] ?? '?';
             $code = $row['course_code'];
-            $course = Course::where('course_code', $code)->first();
 
-            // A head or coordinator files every course under their own
-            // department; for the office the sheet says whose it is.
-            $department = null;
-            if ($scope) {
-                $department = $scope;
-            } elseif ($row['department_code'] !== '') {
-                $department = optional(\App\Support\DepartmentCodes::resolve($row['department_code']))->id;
-                if (!$department) {
-                    $errors[] = "Row {$rowNumber}: no department with the code '{$row['department_code']}'";
+            // The catalogue arrives in one file. Without this, one cell the
+            // database refuses, a subject name past 255 characters say, ends
+            // the request with a 500 and the office is told nothing about the
+            // hundreds of rows that did land before it.
+            try {
+                $course = Course::where('course_code', $code)->first();
+
+                // A head or coordinator files every course under their own
+                // department; for the office the sheet says whose it is.
+                $department = null;
+                if ($scope) {
+                    $department = $scope;
+                } elseif ($row['department_code'] !== '') {
+                    $department = optional(\App\Support\DepartmentCodes::resolve($row['department_code']))->id;
+                    if (!$department) {
+                        $errors[] = "Row {$rowNumber}: no department with the code '{$row['department_code']}'";
+                        $failed++;
+                        continue;
+                    }
+                }
+
+                if (!$course && $row['course_name'] === '') {
+                    $errors[] = "Row {$rowNumber}: '{$code}' is new, so the row needs the subject name";
+                    $failed++;
                     continue;
                 }
-            }
 
-            if (!$course && $row['course_name'] === '') {
-                $errors[] = "Row {$rowNumber}: '{$code}' is new, so the row needs the subject name";
-                continue;
-            }
+                if ($course && $scope && (int) $course->department_id !== $scope && $course->department_id !== null) {
+                    $errors[] = "Row {$rowNumber}: '{$code}' belongs to another department";
+                    $failed++;
+                    continue;
+                }
 
-            if ($course && $scope && (int) $course->department_id !== $scope && $course->department_id !== null) {
-                $errors[] = "Row {$rowNumber}: '{$code}' belongs to another department";
-                continue;
-            }
+                // credits has no default in the table, so a new subject starts at
+                // nothing and says so below rather than refusing the row.
+                $course ??= new Course(['course_code' => $code, 'credits' => 0]);
+                $isNew = !$course->exists;
 
-            // credits has no default in the table, so a new subject starts at
-            // nothing and says so below rather than refusing the row.
-            $course ??= new Course(['course_code' => $code, 'credits' => 0]);
-            $isNew = !$course->exists;
+                if ($row['course_name'] !== '') {
+                    $course->course_name = $row['course_name'];
+                }
+                // A blank cell is not a statement that the subject is worth
+                // nothing, so it leaves what is stored alone. Neither is a cell
+                // holding a word: (float) 'Audit' is 0.0, which would have quietly
+                // rewritten a subject that was worth four credits as worth none.
+                if ($row['credits'] !== '') {
+                    if (is_numeric(trim($row['credits']))) {
+                        $course->credits = (float) $row['credits'];
+                    } else {
+                        $errors[] = "Row {$rowNumber}: credits read '{$row['credits']}', "
+                            . "which is not a number, so the credits were left as they were";
+                    }
+                }
+                if ($department) {
+                    $course->department_id = $department;
+                }
+                $course->save();
 
-            if ($row['course_name'] !== '') {
-                $course->course_name = $row['course_name'];
-            }
-            // A blank cell is not a statement that the subject is worth
-            // nothing, so it leaves what is stored alone.
-            if ($row['credits'] !== '') {
-                $course->credits = (float) $row['credits'];
-            }
-            if ($department) {
-                $course->department_id = $department;
-            }
-            $course->save();
+                if ($isNew && (float) $course->credits === 0.0) {
+                    $errors[] = "Row {$rowNumber}: '{$code}' was added worth 0 credits, "
+                        . "since the row gives none";
+                }
 
-            if ($isNew && (float) $course->credits === 0.0) {
-                $errors[] = "Row {$rowNumber}: '{$code}' was added worth 0 credits, "
-                    . "since the row gives none";
+                $isNew ? $created++ : $updated++;
+            } catch (\Throwable $e) {
+                $errors[] = "Row {$rowNumber}: '{$code}' was not saved. " . $e->getMessage();
+                $failed++;
             }
-
-            $isNew ? $created++ : $updated++;
         }
 
         return response()->json([
@@ -449,7 +473,7 @@ class CourseController extends Controller
             'data' => [
                 'success_count' => $created,
                 'update_count' => $updated,
-                'error_count' => count($errors),
+                'error_count' => $failed,
                 'errors' => $errors,
             ],
         ], 200);

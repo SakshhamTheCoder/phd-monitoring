@@ -407,7 +407,13 @@ class StudentCourseController extends Controller
                 try {
                     $rollNumber = $this->cell($data, 'Registration Number', 'Roll Number', 'roll_number');
                     $courseCode = $this->cell($data, 'Subject Code', 'Course Code', 'course_code');
-                    $semester = $this->cell($data, 'Academic Year', 'Semester', 'semester');
+                    // The sheet carries both the academic year (2425) and the
+                    // semester within it (2425EVESEM). The portal stores the
+                    // semester, the same code the progress import and the forms
+                    // use, so that is preferred and read into that shape. A
+                    // sheet with only the year keeps tagging by year.
+                    $written = $this->cell($data, 'Semester', 'Academic Year', 'semester');
+                    $semester = \App\Support\SemesterCode::of($written) ?: $written;
                     $grade = $this->cell($data, 'Grade Earned', 'Grade', 'grade');
 
                     $student = Student::where('roll_no', $rollNumber)->first();

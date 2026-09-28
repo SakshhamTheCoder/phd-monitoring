@@ -124,6 +124,20 @@ final class CoursesPage extends PageDefinition
                         'subjects_missing_details.csv'
                     ),
                     'failed' => 'Failed to import',
+                    // The catalogue is one long file. Sent whole it is a single
+                    // request to time out, with nothing said about the rows that
+                    // did land; in batches the office watches it go and reads
+                    // one summary at the end.
+                    'batch' => [
+                        'size' => 50,
+                        'loader' => false,
+                        'reports_failures' => true,
+                        'summary' => '{created} subjects added, {updated} updated, {errors} errors',
+                        'done' => 'Import completed: {summary}',
+                        'none' => 'Nothing was imported: {summary}',
+                        'failed' => 'Batch {n} failed',
+                        'crashed' => 'Failed to import CSV',
+                    ],
                 ],
             ] : (object) [],
         ]);

@@ -194,4 +194,43 @@ class CourseworkImportTest extends TestCase
         $this->import([$this->row($student)])->assertStatus(403);
         $this->assertFalse(Course::where('course_code', 'ZZTEST101')->exists());
     }
+    /**
+     * The institute's own sheet carries both the academic year (2425) and the
+     * semester within it, written 2425EVESEM or 2122ODDSEM. The portal stores
+     * the semester, in the shape the progress import and the forms use, so a
+     * scholar's coursework and their evaluations name the same period.
+     */
+    public function test_the_sheets_semester_token_is_stored_as_the_portals_code(): void
+    {
+        $this->actAs('admin');
+        $student = $this->scholar();
+
+        $this->import([$this->row($student, [
+            'Academic Year' => '2425',
+            'Semester' => '2425EVESEM',
+        ])])->assertStatus(200)->assertJsonPath('data.success_count', 1);
+
+        $course = Course::where('course_code', 'ZZTEST101')->firstOrFail();
+        $this->assertSame(
+            '2425EVEN',
+            StudentCourse::where('student_id', $student->roll_no)->where('course_id', $course->id)->value('semester')
+        );
+    }
+
+    /** A sheet that names only the academic year still tags by that year. */
+    public function test_a_sheet_with_only_the_academic_year_still_tags(): void
+    {
+        $this->actAs('admin');
+        $student = $this->scholar();
+
+        $this->import([$this->row($student, ['Academic Year' => '809'])])
+            ->assertStatus(200)
+            ->assertJsonPath('data.success_count', 1);
+
+        $course = Course::where('course_code', 'ZZTEST101')->firstOrFail();
+        $this->assertSame(
+            '809',
+            StudentCourse::where('student_id', $student->roll_no)->where('course_id', $course->id)->value('semester')
+        );
+    }
 }
