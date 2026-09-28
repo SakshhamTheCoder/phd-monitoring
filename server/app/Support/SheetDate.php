@@ -29,6 +29,10 @@ class SheetDate
         // three letter month PHP reads nor the whole word.
         $value = preg_replace('/\bSept\b/i', 'Sep', $value);
 
+        // A cell typed as "11- Mar-2026" is one date with a stray space in it,
+        // not a shape of its own, so a space beside a separator goes.
+        $value = preg_replace('/\s*([-\/.])\s*/', '$1', $value);
+
         foreach ([
             'd-m-Y', 'd/m/Y', 'd.m.Y',
             'd-M-Y', 'd/M/Y', 'd.M.Y', 'd M Y', 'd-M-y',

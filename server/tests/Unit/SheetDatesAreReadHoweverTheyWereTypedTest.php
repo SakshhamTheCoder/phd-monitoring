@@ -18,11 +18,14 @@ class SheetDatesAreReadHoweverTheyWereTypedTest extends TestCase
             'day first with slashes' => ['27/06/2023', '2023-06-27'],
             'day first with dots' => ['18.03.2025', '2025-03-18'],
             'short month' => ['23-Feb-2026', '2026-02-23'],
-            'short month with dots' => ['18.Mar.2025', '2025-03-18'],
+            'dotted short month' => ['18.Mar.2025', '2025-03-18'],
             'september spelt Sept' => ['11-Sept-2025', '2025-09-11'],
             'month written out' => ['17-July-2026', '2026-07-17'],
             'already stored shape' => ['2024-01-10', '2024-01-10'],
             'month and year only' => ['Sep-25', '2025-09-01'],
+            'short month with dots' => ['24.Feb.2025', '2025-02-24'],
+            'stray space beside the dash' => ['11- Mar-2026', '2026-03-11'],
+            'spaces either side' => ['22 - July - 2026', '2026-07-22'],
         ];
     }
 
