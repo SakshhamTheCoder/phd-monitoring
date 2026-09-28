@@ -29,7 +29,12 @@ class SheetDate
         // three letter month PHP reads nor the whole word.
         $value = preg_replace('/\bSept\b/i', 'Sep', $value);
 
-        foreach (['d-m-Y', 'd/m/Y', 'd.m.Y', 'd-M-Y', 'd F Y', 'd-F-Y', 'd/F/Y', 'd M Y', 'd-M-y', 'j-M-Y', 'Y-m-d', 'Y/m/d'] as $format) {
+        foreach ([
+            'd-m-Y', 'd/m/Y', 'd.m.Y',
+            'd-M-Y', 'd/M/Y', 'd.M.Y', 'd M Y', 'd-M-y',
+            'd-F-Y', 'd/F/Y', 'd.F.Y', 'd F Y',
+            'j-M-Y', 'Y-m-d', 'Y/m/d',
+        ] as $format) {
             $date = \DateTime::createFromFormat('!' . $format, $value);
             if ($date && $date->format($format) === $value) {
                 return $date->format('Y-m-d');
