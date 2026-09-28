@@ -954,6 +954,11 @@ class ClerkController extends Controller
             $request->merge(['clerks' => self::clerkRows((array) $request->input('rows'))]);
         }
         $request->validate([
+            // One id for the whole run, chosen by the screen and repeated on
+            // every batch, so an office's import is one group however many
+            // requests it took. Send sign-in links reads it to mail exactly
+            // the people one import brought in.
+            'import_batch' => 'nullable|string|max:64',
             'clerks' => 'required|array',
             'clerks.*.email' => 'required|email',
             'clerks.*.department_codes' => 'nullable|string',
@@ -962,58 +967,72 @@ class ClerkController extends Controller
             'clerks.*.first_name' => 'nullable|string',
             'clerks.*.last_name' => 'nullable|string',
         ]);
+        $batch = $request->input('import_batch') ?: (string) \Illuminate\Support\Str::uuid();
+        $importedAt = now();
         $updated = 0; $failed = 0; $errors = [];
         $created = 0;
         DB::beginTransaction();
         try {
             foreach ($request->clerks as $idx => $row) {
                 try {
-                    $user = \App\Models\User::where('email', $row['email'])->first();
-                    if (!$user) {
-                        // Unified create-or-update: create clerk if missing (consistent with faculty/student)
-                        $role = \App\Models\Role::where('role','clerk')->first();
-                        if (!$role) throw new \Exception('Clerk role not found');
-                        $name = \App\Support\PersonName::fromRow($row);
-                        $user = new \App\Models\User();
-                        $user->first_name = $name['first'] ?? explode('@', $row['email'])[0];
-                        $user->last_name = $name['last'] ?? \App\Support\PersonName::NO_SURNAME;
-                        $user->email = $row['email'];
-                        $user->phone = $row['phone'] ?? null;
-                        $user->password = bcrypt(\Illuminate\Support\Str::password(8, true, true, true, false));
-                        $user->role_id = $role->id;
-                        $user->current_role_id = $role->id;
-                        $user->save();
-                        $created++;
-                    } else {
-                        $name = \App\Support\PersonName::fromRow($row);
-                        if ($name !== null) {
-                            $user->first_name = $name['first'];
-                            $user->last_name = $name['last'];
-                        }
-                        if (!empty($row['phone'])) { $user->phone = $row['phone']; $user->save(); } else { $user->save(); }
-                        // ensure clerk role is available for existing non-clerk users
-                        $clerkRole = \App\Models\Role::where('role','clerk')->first();
-                        if ($clerkRole && $user->role_id !== $clerkRole->id) {
-                            $avail = $user->available_roles ?? [];
-                            if (!in_array('clerk', $avail, true)) {
-                                $avail[] = 'clerk';
-                                $user->available_roles = $avail;
-                                $user->save();
+                    // Its own savepoint, so a row that fails after saving its
+                    // user (on a bad department code, say) does not leave that
+                    // user committed without the rest of the row behind it.
+                    // A later import then reads it as a mismatch nobody can place.
+                    DB::transaction(function () use ($row, $batch, $importedAt, &$created, &$updated) {
+                        $user = \App\Models\User::where('email', $row['email'])->first();
+                        if (!$user) {
+                            // Unified create-or-update: create clerk if missing (consistent with faculty/student)
+                            $role = \App\Models\Role::where('role','clerk')->first();
+                            if (!$role) throw new \Exception('Clerk role not found');
+                            $name = \App\Support\PersonName::fromRow($row);
+                            $user = new \App\Models\User();
+                            $user->first_name = $name['first'] ?? explode('@', $row['email'])[0];
+                            $user->last_name = $name['last'] ?? \App\Support\PersonName::NO_SURNAME;
+                            $user->email = $row['email'];
+                            $user->phone = $row['phone'] ?? null;
+                            $user->password = bcrypt(\Illuminate\Support\Str::password(8, true, true, true, false));
+                            $user->role_id = $role->id;
+                            $user->current_role_id = $role->id;
+                            // import_batch is not mass-assignable, set directly.
+                            $user->import_batch = $batch;
+                            $user->imported_at = $importedAt;
+                            $user->save();
+                            $created++;
+                        } else {
+                            $name = \App\Support\PersonName::fromRow($row);
+                            if ($name !== null) {
+                                $user->first_name = $name['first'];
+                                $user->last_name = $name['last'];
+                            }
+                            if (!empty($row['phone'])) { $user->phone = $row['phone']; }
+                            $user->import_batch = $batch;
+                            $user->imported_at = $importedAt;
+                            $user->save();
+                            // ensure clerk role is available for existing non-clerk users
+                            $clerkRole = \App\Models\Role::where('role','clerk')->first();
+                            if ($clerkRole && $user->role_id !== $clerkRole->id) {
+                                $avail = $user->available_roles ?? [];
+                                if (!in_array('clerk', $avail, true)) {
+                                    $avail[] = 'clerk';
+                                    $user->available_roles = $avail;
+                                    $user->save();
+                                }
                             }
                         }
-                    }
-                    if (array_key_exists('department_codes', $row) && $row['department_codes'] !== null && $row['department_codes'] !== '') {
-                        $codes = array_filter(array_map('trim', explode(',', $row['department_codes'])));
-                        $deptIds = [];
-                        foreach ($codes as $code) {
-                            $dept = \App\Support\DepartmentCodes::resolve($code);
-                            if (!$dept) { throw new \Exception("Department code {$code} not found"); }
-                            $deptIds[] = $dept->id;
+                        if (array_key_exists('department_codes', $row) && $row['department_codes'] !== null && $row['department_codes'] !== '') {
+                            $codes = array_filter(array_map('trim', explode(',', $row['department_codes'])));
+                            $deptIds = [];
+                            foreach ($codes as $code) {
+                                $dept = \App\Support\DepartmentCodes::resolve($code);
+                                if (!$dept) { throw new \Exception("Department code {$code} not found"); }
+                                $deptIds[] = $dept->id;
+                            }
+                            ClerkDepartment::where('user_id', $user->id)->whereNotIn('department_id', $deptIds)->delete();
+                            foreach ($deptIds as $did) ClerkDepartment::firstOrCreate(['user_id'=>$user->id,'department_id'=>$did]);
                         }
-                        ClerkDepartment::where('user_id', $user->id)->whereNotIn('department_id', $deptIds)->delete();
-                        foreach ($deptIds as $did) ClerkDepartment::firstOrCreate(['user_id'=>$user->id,'department_id'=>$did]);
-                    }
-                    $updated++;
+                        $updated++;
+                    });
                 } catch (\Exception $e) { $errors[] = "Row ".($idx+1).": ".$e->getMessage(); $failed++; }
             }
             DB::commit();

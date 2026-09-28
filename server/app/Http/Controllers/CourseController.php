@@ -7,6 +7,7 @@ use App\Http\Controllers\Traits\PagenationTrait;
 use App\Models\Course;
 use App\Models\Department;
 use App\Support\CsvRow;
+use App\Support\ImportReport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -439,6 +440,12 @@ class CourseController extends Controller
         return response()->json([
             'success' => true,
             'message' => "{$created} courses added, {$updated} updated",
+            // What the page tells the reader, in order. Capped at three row
+            // warnings, since a bad sheet can carry hundreds.
+            'messages' => ImportReport::withRowErrors(
+                [['tone' => 'success', 'text' => "{$created} courses added, {$updated} updated"]],
+                $errors
+            ),
             'data' => [
                 'success_count' => $created,
                 'update_count' => $updated,

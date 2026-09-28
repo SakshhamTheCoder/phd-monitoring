@@ -7,6 +7,7 @@ use App\Models\Faculty;
 use App\Models\PhdCoordinator;
 use App\Models\Role;
 use App\Support\CsvRow;
+use App\Support\ImportReport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -446,12 +447,11 @@ class DepartmentController extends Controller
                 'success' => true,
                 'message' => "Added {$created} areas, removed {$removed} unused areas",
                 // What the page tells the reader, in order.
-                'messages' => [
+                'messages' => ImportReport::withRowErrors([
                     ['tone' => 'success', 'text' => "{$created} areas added, {$removed} unused areas removed"],
                     ...($ignoredColumns ? [['tone' => 'warn', 'text' => 'No department matches these columns, so they were skipped: ' . implode(', ', $ignoredColumns)]] : []),
                     ...array_map(fn ($area) => ['tone' => 'info', 'text' => "{$area} is in use, so it was kept"], $kept),
-                    ...array_map(fn ($error) => ['tone' => 'warn', 'text' => $error], $errors),
-                ],
+                ], $errors),
                 'imported_count' => $created,
                 'removed_count' => $removed,
                 'kept_in_use' => $kept,
@@ -797,10 +797,9 @@ class DepartmentController extends Controller
             'success' => true,
             'message' => "Updated {$updated} departments",
             // What the page tells the reader, in order.
-            'messages' => [
+            'messages' => ImportReport::withRowErrors([
                 ['tone' => 'success', 'text' => "{$updated} departments updated"],
-                ...array_map(fn ($error) => ['tone' => 'warn', 'text' => $error], $errors),
-            ],
+            ], $errors),
             'data' => [
                 'update_count' => $updated,
                 'error_count' => count($errors),

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\PagenationTrait;
 use App\Models\OutsideExpert;
+use App\Support\CsvRow;
 use App\Support\PersonName;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -219,124 +220,131 @@ class OutsideExpertController extends Controller
     }
 
     /**
-     * Bulk import outside experts from CSV
-     * CSV Format: full_name,email,phone,designation,department,institution,area_of_expertise,website
+     * The experts sheet's rows as it has them. full_name is what the page's own
+     * template asks for; the legacy first_name/last_name pair is still read so a
+     * copy saved before the change still imports. Each column also answers to
+     * the obvious Title Case spelling a sheet built outside the portal is likely
+     * to use.
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return array<int, array<string, mixed>>
+     */
+    public static function expertRows(array $rows): array
+    {
+        $column = fn (array $row, string ...$aliases) => CsvRow::column($row, ...$aliases);
+
+        return array_map(fn (array $row) => [
+            // The row's place in the sheet, so a refusal names the line the
+            // office has to look at rather than its place in the request.
+            'row_number' => $row['_rowNumber'] ?? $row['row_number'] ?? null,
+            'full_name' => CsvRow::fallback(
+                $column($row, 'Full Name', 'full_name', 'Name'),
+                CsvRow::words($column($row, 'First Name', 'first_name'), $column($row, 'Last Name', 'last_name'))
+            ),
+            'email' => $column($row, 'Email', 'email'),
+            'phone' => $column($row, 'Phone', 'phone', 'Phone Number'),
+            'designation' => $column($row, 'Designation', 'designation'),
+            'department' => $column($row, 'Department', 'department'),
+            'institution' => $column($row, 'Institution', 'institution', 'Institute'),
+            'area_of_expertise' => $column($row, 'Area of Expertise', 'area_of_expertise', 'Expertise'),
+            'website' => $column($row, 'Website', 'website'),
+        ], $rows);
+    }
+
+    /**
+     * Bulk import outside experts from the sheet's rows.
+     * Columns: full_name, email, phone, designation, department, institution,
+     * area_of_expertise, website. Phone, area_of_expertise and website are
+     * optional. Matched by email: a row whose email already exists updates that
+     * expert instead of adding a second one.
      */
     public function bulkImportFromCSV(Request $request)
     {
         try {
-            $request->validate([
-                'file' => 'required|file|mimes:csv,txt',
-            ]);
+            // The page posts the sheet's rows as they are; read here into the
+            // experts the checks below validate.
+            if ($request->has('rows')) {
+                $request->merge(['rows' => self::expertRows((array) $request->input('rows'))]);
+            }
 
-            $file = $request->file('file');
-            $csvData = array_map('str_getcsv', file($file->getRealPath()));
-            $header = array_map(fn ($h) => trim((string) $h), array_shift($csvData));
+            $request->validate([
+                'rows' => 'required|array',
+            ]);
 
             $successCount = 0;
             $updateCount = 0;
             $errorCount = 0;
             $errors = [];
 
-            foreach ($csvData as $index => $row) {
+            foreach ($request->input('rows') as $index => $data) {
+                $rowNumber = $data['row_number'] ?? ($index + 1);
+
                 try {
-                    // A blank line (trailing newline, stray gap) parses to
-                    // [null] or [''] via str_getcsv — skip it rather than
-                    // reporting a spurious "full_name is required" row.
-                    if (count($row) === 0 || (count($row) === 1 && trim((string) ($row[0] ?? '')) === '')) {
-                        continue;
-                    }
-
-                    if (count($row) < 1) {
-                        $errors[] = "Row " . ($index + 2) . ": Insufficient columns";
-                        $errorCount++;
-                        continue;
-                    }
-
-                    // Keyed by header rather than a fixed position, so a CSV
-                    // saved with the legacy first_name/last_name pair still
-                    // reads correctly through PersonName::fromRow below.
-                    // Pad short rows and truncate long ones so a row with a
-                    // different cell count than the header never reaches
-                    // array_combine (which throws a ValueError on mismatch).
-                    $row = array_slice(array_pad($row, count($header), null), 0, count($header));
-                    $data = array_combine($header, $row);
-
                     $name = PersonName::fromRow($data);
                     $email = trim((string) ($data['email'] ?? ''));
-                    $phone = isset($data['phone']) && trim((string) $data['phone']) !== '' ? trim((string) $data['phone']) : null;
+                    $phone = trim((string) ($data['phone'] ?? '')) !== '' ? trim((string) $data['phone']) : null;
                     $designation = trim((string) ($data['designation'] ?? ''));
                     $department = trim((string) ($data['department'] ?? ''));
                     $institution = trim((string) ($data['institution'] ?? ''));
-                    $areaOfExpertise = isset($data['area_of_expertise']) && trim((string) $data['area_of_expertise']) !== '' ? trim((string) $data['area_of_expertise']) : null;
-                    $website = isset($data['website']) && trim((string) $data['website']) !== '' ? trim((string) $data['website']) : null;
+                    $areaOfExpertise = trim((string) ($data['area_of_expertise'] ?? '')) !== '' ? trim((string) $data['area_of_expertise']) : null;
+                    $website = trim((string) ($data['website'] ?? '')) !== '' ? trim((string) $data['website']) : null;
 
                     // outside_experts.first_name/last_name are NOT NULL, so a
                     // row with no name at all must be rejected rather than
                     // written with an empty string.
                     if ($name === null) {
-                        $errors[] = "Row " . ($index + 2) . ": full_name is required";
+                        $errors[] = "Row {$rowNumber}: full_name is required";
                         $errorCount++;
                         continue;
                     }
-                    $firstName = $name['first'];
-                    $lastName = $name['last'];
 
-                    // Validate required fields
                     if (empty($email) || empty($designation) || empty($department) || empty($institution)) {
-                        $errors[] = "Row " . ($index + 2) . ": Missing required fields";
+                        $errors[] = "Row {$rowNumber}: email, designation, department and institution are required";
                         $errorCount++;
                         continue;
                     }
 
-                    // Validate email
                     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                        $errors[] = "Row " . ($index + 2) . ": Invalid email format";
+                        $errors[] = "Row {$rowNumber}: '{$email}' is not a valid email address";
                         $errorCount++;
                         continue;
                     }
 
-                    // Check if already exists
-                    $existing = OutsideExpert::where('email', $email)->first();
+                    $attributes = [
+                        'first_name' => $name['first'],
+                        'last_name' => $name['last'],
+                        'phone' => $phone,
+                        'designation' => $designation,
+                        'department' => $department,
+                        'institution' => $institution,
+                        'area_of_expertise' => $areaOfExpertise,
+                        'website' => $website,
+                    ];
 
+                    $existing = OutsideExpert::where('email', $email)->first();
                     if ($existing) {
-                        // Update existing record
-                        $existing->update([
-                            'first_name' => $firstName,
-                            'last_name' => $lastName,
-                            'phone' => $phone,
-                            'designation' => $designation,
-                            'department' => $department,
-                            'institution' => $institution,
-                            'area_of_expertise' => $areaOfExpertise,
-                            'website' => $website,
-                        ]);
+                        $existing->update($attributes);
                         $updateCount++;
                     } else {
-                        // Create new record
-                        OutsideExpert::create([
-                            'first_name' => $firstName,
-                            'last_name' => $lastName,
-                            'email' => $email,
-                            'phone' => $phone,
-                            'designation' => $designation,
-                            'department' => $department,
-                            'institution' => $institution,
-                            'area_of_expertise' => $areaOfExpertise,
-                            'website' => $website,
-                        ]);
+                        OutsideExpert::create($attributes + ['email' => $email]);
+                        $successCount++;
                     }
-
-                    $successCount++;
                 } catch (\Exception $e) {
-                    $errors[] = "Row " . ($index + 2) . ": " . $e->getMessage();
+                    $errors[] = "Row {$rowNumber}: " . $e->getMessage();
                     $errorCount++;
                 }
             }
 
             return response()->json([
                 'success' => true,
-                'message' => "Import completed: {$successCount} successful, {$errorCount} errors",
+                'message' => "Import completed: {$successCount} added, {$updateCount} updated, {$errorCount} errors",
+                // What the page tells the reader, in order. Capped at three row
+                // warnings, since a bad sheet can carry hundreds.
+                'messages' => [
+                    ['tone' => 'success', 'text' => "{$successCount} experts added, {$updateCount} updated"],
+                    ...array_map(fn ($error) => ['tone' => 'warn', 'text' => $error], array_slice($errors, 0, 3)),
+                    ...(count($errors) > 3 ? [['tone' => 'warn', 'text' => (count($errors) - 3) . ' more rows need checking']] : []),
+                ],
                 'data' => [
                     'success_count' => $successCount,
                     'update_count' => $updateCount,

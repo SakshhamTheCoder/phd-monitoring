@@ -15,7 +15,6 @@ import { baseURL } from '../../api/urls';
 import { fillFromRow, useView } from '../../api/views';
 import { sendRequest } from './requests';
 import ServerDialog from './ServerDialog';
-import FileImportModal from './FileImportModal';
 import RowsImportModal from './RowsImportModal';
 import LocalTable from './LocalTable';
 import SemesterStatsBlock from './blocks/SemesterStatsBlock';
@@ -28,7 +27,7 @@ import UrfProjectsBlock from './blocks/UrfProjectsBlock';
 // The session picker and the URF projects' stage bar.
 import './Urf.css';
 
-const IMPORTS = { file: FileImportModal, rows: RowsImportModal };
+const IMPORTS = { rows: RowsImportModal };
 
 // Parts of a page above its list, which the server places by name.
 const ABOVE = {

@@ -208,4 +208,27 @@ class TheStudentSheetIsReadAsWrittenTest extends TestCase
         $this->assertSame('no.record@thapar.test', $scholar->user->email);
         $this->assertSame('2024-04-02', $scholar->date_of_registration->toDateString());
     }
+    /**
+     * A row that fails after its account was saved leaves nothing behind.
+     *
+     * The account is written before the scholar, because the scholar needs a
+     * user id. MySQL does not undo a statement on error, so a row that failed
+     * on the scholar insert used to leave the account, and every later import
+     * reported that person as a mismatch: an address the portal knew with no
+     * degree behind it. The registration number here is past what the column
+     * can hold, which is refused at the second insert, not the first.
+     */
+    public function test_a_row_that_fails_halfway_leaves_no_account_behind(): void
+    {
+        $response = $this->import([
+            'email' => 'half.written@thapar.test',
+            'roll_no' => '99999999999',
+            'phone' => '9800000703',
+            'date_of_registration' => '2021-07-31',
+            'current_status' => 'full-time',
+        ])->assertStatus(200);
+
+        $this->assertSame(1, $response->json('data.error_count'), $this->said($response));
+        $this->assertSame(0, User::where('email', 'half.written@thapar.test')->count());
+    }
 }

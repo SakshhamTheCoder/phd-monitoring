@@ -802,179 +802,189 @@ class StudentController extends Controller {
         $importedAt = now();
 
         DB::beginTransaction();
-        
+
         try {
             foreach ($request->students as $index => $studentData) {
+                $rowNumber = $studentData['row_number'] ?? ($index + 1);
+
                 try {
-                    $rowNumber = $studentData['row_number'] ?? ($index + 1);
+                    // Each row gets its own savepoint: DB::transaction() inside an
+                    // already-open transaction issues a SAVEPOINT and rolls back to
+                    // it on failure. Without this a row that saved its user record
+                    // and then failed on the student insert left the account behind,
+                    // and the batch commit at the end kept it.
+                    DB::transaction(function () use (
+                        $request, $studentData, $index, $rowNumber, $role_id, $batch, $importedAt,
+                        &$errors, &$failed, &$createCount, &$updateCount
+                    ) {
+                        // The same column arrives as 23-Feb-2026, 10-01-2024 or
+                        // 2024-01-10 depending on the machine that typed it. Written
+                        // straight through, anything but the last shape was refused
+                        // by the database and cost the row every other correction
+                        // it carried.
+                        foreach (self::DATE_FIELDS as $field) {
+                            $written = trim((string) ($studentData[$field] ?? ''));
+                            if ($written === '') continue;
 
-                    // The same column arrives as 23-Feb-2026, 10-01-2024 or
-                    // 2024-01-10 depending on the machine that typed it. Written
-                    // straight through, anything but the last shape was refused
-                    // by the database and cost the row every other correction
-                    // it carried.
-                    foreach (self::DATE_FIELDS as $field) {
-                        $written = trim((string) ($studentData[$field] ?? ''));
-                        if ($written === '') continue;
-
-                        $read = SheetDate::parse($written);
-                        if ($read === '') {
-                            $errors[] = "Row {$rowNumber}: {$field} reads '{$written}', which is not a date, so it was left as it was";
-                        }
-                        $studentData[$field] = $read;
-                    }
-                    // Find department by code, accepting superseded codes so
-                    // spreadsheets saved before the codes were corrected still
-                    // import cleanly. Only validate if code was provided — partial updates may omit it.
-                    $department = !empty($studentData['department_code']) ? \App\Support\DepartmentCodes::resolve($studentData['department_code']) : null;
-                    if (!empty($studentData['department_code']) && !$department) {
-                        $errors[] = "Row " . $rowNumber . ": Department code '{$studentData['department_code']}' not found";
-                        $failed++;
-                        continue;
-                    }
-
-                    // Unified: if email or roll exists, update existing (partial) else create
-                    $existingUser = \App\Models\User::where('email', $studentData['email'])->first();
-                    $existingStudent = null;
-                    if (!empty($studentData['roll_no'])) $existingStudent = Student::where('roll_no', $studentData['roll_no'])->first();
-                    if (!$existingStudent && $existingUser) $existingStudent = Student::where('user_id', $existingUser->id)->first();
-
-                    // The roll number and the email have to name the same
-                    // person. Matching them separately let a row with one
-                    // scholar's email and another's roll number write the name
-                    // and phone onto the first while writing everything else
-                    // onto the second.
-                    if ($existingUser && $existingStudent && $existingStudent->user_id !== $existingUser->id) {
-                        $errors[] = "Row " . $rowNumber . ": the email and the registration number belong to different scholars";
-                        $failed++; continue;
-                    }
-
-                    // The registration number is here, the address on the row
-                    // is not. The sheet is the institute's newer record of how
-                    // to reach a scholar, and refusing the row over it threw
-                    // away every other correction the row carried, which is
-                    // what happened to most of the sheet. Nobody else holds
-                    // this address: a row whose address belongs to a different
-                    // person is refused further up.
-                    if (!$existingUser && $existingStudent) {
-                        $wasReachedAt = $existingStudent->user->email;
-                        $existingUser = $existingStudent->user;
-                        $existingUser->email = $studentData['email'];
-                        $errors[] = "Row {$rowNumber}: sign-in address changed from {$wasReachedAt} to {$studentData['email']}, which is what the sheet says";
-                    }
-
-                    if ($existingUser && $existingStudent) {
-                        if ($this->outsideWritableDepartments($existingStudent->department_id)
-                            || ($department && $this->outsideWritableDepartments($department->id))) {
-                            $errors[] = "Row " . $rowNumber . ": this scholar or department is outside your departments";
-                            $failed++; continue;
-                        }
-                        // A blank cell means "not supplied", never "clear this".
-                        // A spreadsheet carries every column on every row, so
-                        // treating a present-but-empty cell as a value emptied
-                        // the title, address, CGPA and IRB date of every scholar
-                        // whose row only meant to correct a phone number, and
-                        // zeroed the progress the DoRDC had approved.
-                        // Clearing a field is done on the profile screen.
-                        $name = PersonName::fromRow($studentData);
-                        if ($name !== null) {
-                            $existingUser->first_name = $name['first'];
-                            $existingUser->last_name = $name['last'];
-                        }
-                        if (!empty($studentData['phone'])) $existingUser->phone = $studentData['phone'];
-                        if (!empty($studentData['gender'])) $existingUser->gender = $studentData['gender'];
-                        $existingUser->save();
-                        if (!empty($studentData['department_code']) && $department) $existingStudent->department_id = $department->id;
-                        foreach (self::OPTIONAL_STUDENT_FIELDS as $field) {
-                            if (isset($studentData[$field]) && $studentData[$field] !== '') {
-                                $existingStudent->$field = $studentData[$field];
+                            $read = SheetDate::parse($written);
+                            if ($read === '') {
+                                $errors[] = "Row {$rowNumber}: {$field} reads '{$written}', which is not a date, so it was left as it was";
                             }
+                            $studentData[$field] = $read;
                         }
-                        $existingStudent->import_batch = $batch;
-                        $existingStudent->imported_at = $importedAt;
-                        $existingStudent->save();
+                        // Find department by code, accepting superseded codes so
+                        // spreadsheets saved before the codes were corrected still
+                        // import cleanly. Only validate if code was provided — partial updates may omit it.
+                        $department = !empty($studentData['department_code']) ? \App\Support\DepartmentCodes::resolve($studentData['department_code']) : null;
+                        if (!empty($studentData['department_code']) && !$department) {
+                            $errors[] = "Row " . $rowNumber . ": Department code '{$studentData['department_code']}' not found";
+                            $failed++;
+                            return;
+                        }
+
+                        // Unified: if email or roll exists, update existing (partial) else create
+                        $existingUser = \App\Models\User::where('email', $studentData['email'])->first();
+                        $existingStudent = null;
+                        if (!empty($studentData['roll_no'])) $existingStudent = Student::where('roll_no', $studentData['roll_no'])->first();
+                        if (!$existingStudent && $existingUser) $existingStudent = Student::where('user_id', $existingUser->id)->first();
+
+                        // The roll number and the email have to name the same
+                        // person. Matching them separately let a row with one
+                        // scholar's email and another's roll number write the name
+                        // and phone onto the first while writing everything else
+                        // onto the second.
+                        if ($existingUser && $existingStudent && $existingStudent->user_id !== $existingUser->id) {
+                            $errors[] = "Row " . $rowNumber . ": the email and the registration number belong to different scholars";
+                            $failed++; return;
+                        }
+
+                        // The registration number is here, the address on the row
+                        // is not. The sheet is the institute's newer record of how
+                        // to reach a scholar, and refusing the row over it threw
+                        // away every other correction the row carried, which is
+                        // what happened to most of the sheet. Nobody else holds
+                        // this address: a row whose address belongs to a different
+                        // person is refused further up.
+                        if (!$existingUser && $existingStudent) {
+                            $wasReachedAt = $existingStudent->user->email;
+                            $existingUser = $existingStudent->user;
+                            $existingUser->email = $studentData['email'];
+                            $errors[] = "Row {$rowNumber}: sign-in address changed from {$wasReachedAt} to {$studentData['email']}, which is what the sheet says";
+                        }
+
+                        if ($existingUser && $existingStudent) {
+                            if ($this->outsideWritableDepartments($existingStudent->department_id)
+                                || ($department && $this->outsideWritableDepartments($department->id))) {
+                                $errors[] = "Row " . $rowNumber . ": this scholar or department is outside your departments";
+                                $failed++; return;
+                            }
+                            // A blank cell means "not supplied", never "clear this".
+                            // A spreadsheet carries every column on every row, so
+                            // treating a present-but-empty cell as a value emptied
+                            // the title, address, CGPA and IRB date of every scholar
+                            // whose row only meant to correct a phone number, and
+                            // zeroed the progress the DoRDC had approved.
+                            // Clearing a field is done on the profile screen.
+                            $name = PersonName::fromRow($studentData);
+                            if ($name !== null) {
+                                $existingUser->first_name = $name['first'];
+                                $existingUser->last_name = $name['last'];
+                            }
+                            if (!empty($studentData['phone'])) $existingUser->phone = $studentData['phone'];
+                            if (!empty($studentData['gender'])) $existingUser->gender = $studentData['gender'];
+                            $existingUser->save();
+                            if (!empty($studentData['department_code']) && $department) $existingStudent->department_id = $department->id;
+                            foreach (self::OPTIONAL_STUDENT_FIELDS as $field) {
+                                if (isset($studentData[$field]) && $studentData[$field] !== '') {
+                                    $existingStudent->$field = $studentData[$field];
+                                }
+                            }
+                            $existingStudent->import_batch = $batch;
+                            $existingStudent->imported_at = $importedAt;
+                            $existingStudent->save();
+
+                            $errors = array_merge(
+                                $errors,
+                                $this->backfillMilestones($existingStudent, $studentData, $rowNumber)
+                            );
+
+                            $updateCount++;
+                            return;
+                        }
+                        // An address the portal knows as a member of staff is
+                        // not a scholar's, whatever column it was typed into.
+                        if ($existingUser && $existingUser->faculty) {
+                            $errors[] = "Row {$rowNumber}: {$studentData['email']} is a faculty member's address, so no scholar was created for it";
+                            $failed++; return;
+                        }
+
+                        // Create new - require minimal fields. An account that
+                        // exists with no scholar record behind it is given one here
+                        // rather than refused: the person is already in the portal,
+                        // and what the sheet adds is the degree.
+                        $name = PersonName::fromRow($studentData);
+                        if ($name === null || empty($studentData['phone']) || empty($studentData['roll_no']) || empty($studentData['department_code']) || empty($studentData['date_of_registration']) || empty($studentData['current_status'])) {
+                            $errors[] = "Row " . $rowNumber . ": missing required fields for new student (full_name, phone, roll_no, department_code, date_of_registration, current_status)";
+                            $failed++; return;
+                        }
+                        if ($this->outsideWritableDepartments($department->id)) {
+                            $errors[] = "Row " . $rowNumber . ": department '{$studentData['department_code']}' is outside your departments";
+                            $failed++; return;
+                        }
+                        // Generated, never shown: the row is mailed a link below.
+                        $password = Str::password(8, true, true, true, false);
+
+                        // Create user (address lives on Student only)
+                        $user = $existingUser ?: new \App\Models\User();
+                        $user->first_name = $name['first'];
+                        $user->last_name = $name['last'];
+                        $user->phone = $studentData['phone'];
+                        $user->email = $studentData['email'];
+                        if (!$existingUser) {
+                            $user->password = bcrypt($password);
+                            $user->role_id = $role_id;
+                            $user->current_role_id = $role_id;
+                        }
+                        $user->gender = $studentData['gender'] ?? null;
+                        $user->save();
+
+                        // Create student
+                        $student = new Student();
+                        $student->user_id = $user->id;
+                        $student->roll_no = $studentData['roll_no'];
+                        $student->department_id = $department->id;
+                        $student->date_of_registration = $studentData['date_of_registration'];
+                        $student->date_of_irb = $studentData['date_of_irb'] ?? null;
+                        $student->date_of_synopsis = $studentData['date_of_synopsis'] ?? null;
+                        $student->date_of_thesis = $studentData['date_of_thesis'] ?? null;
+                        $student->date_of_thesis_awarded = $studentData['date_of_thesis_awarded'] ?? null;
+                        $student->phd_title = $studentData['phd_title'] ?? null;
+                        $student->fathers_name = $studentData['fathers_name'] ?? null;
+                        $student->current_status = $studentData['current_status'];
+                        $student->address = $studentData['address'] ?? null;
+                        $student->cgpa = $studentData['cgpa'] ?? null;
+                        $student->is_jrf = $studentData['is_jrf'] ?? null;
+                        $student->net_gate = $studentData['net_gate'] ?? null;
+                        $student->overall_progress = $studentData['overall_progress'] ?? 0.0;
+                        $student->import_batch = $batch;
+                        $student->imported_at = $importedAt;
+                        $student->save();
+
+                        if ($request->boolean('send_invites') && !$existingUser) {
+                            $user->inviteToSetPassword();
+                        }
+
+                        // The first form of the ladder. A row that names supervisors
+                        // has it carried over complete a moment later instead.
+                        FormLadder::openOne($student, 'supervisor-allocation');
 
                         $errors = array_merge(
                             $errors,
-                            $this->backfillMilestones($existingStudent, $studentData, $index + 1)
+                            $this->backfillMilestones($student, $studentData, $rowNumber)
                         );
 
-                        $updateCount++;
-                        continue;
-                    }
-                    // An address the portal knows as a member of staff is
-                    // not a scholar's, whatever column it was typed into.
-                    if ($existingUser && $existingUser->faculty) {
-                        $errors[] = "Row {$rowNumber}: {$studentData['email']} is a faculty member's address, so no scholar was created for it";
-                        $failed++; continue;
-                    }
-
-                    // Create new - require minimal fields. An account that
-                    // exists with no scholar record behind it is given one here
-                    // rather than refused: the person is already in the portal,
-                    // and what the sheet adds is the degree.
-                    $name = PersonName::fromRow($studentData);
-                    if ($name === null || empty($studentData['phone']) || empty($studentData['roll_no']) || empty($studentData['department_code']) || empty($studentData['date_of_registration']) || empty($studentData['current_status'])) {
-                        $errors[] = "Row " . $rowNumber . ": missing required fields for new student (full_name, phone, roll_no, department_code, date_of_registration, current_status)";
-                        $failed++; continue;
-                    }
-                    if ($this->outsideWritableDepartments($department->id)) {
-                        $errors[] = "Row " . $rowNumber . ": department '{$studentData['department_code']}' is outside your departments";
-                        $failed++; continue;
-                    }
-                    // Generated, never shown: the row is mailed a link below.
-                    $password = Str::password(8, true, true, true, false);
-
-                    // Create user (address lives on Student only)
-                    $user = $existingUser ?: new \App\Models\User();
-                    $user->first_name = $name['first'];
-                    $user->last_name = $name['last'];
-                    $user->phone = $studentData['phone'];
-                    $user->email = $studentData['email'];
-                    if (!$existingUser) {
-                        $user->password = bcrypt($password);
-                        $user->role_id = $role_id;
-                        $user->current_role_id = $role_id;
-                    }
-                    $user->gender = $studentData['gender'] ?? null;
-                    $user->save();
-
-                    // Create student
-                    $student = new Student();
-                    $student->user_id = $user->id;
-                    $student->roll_no = $studentData['roll_no'];
-                    $student->department_id = $department->id;
-                    $student->date_of_registration = $studentData['date_of_registration'];
-                    $student->date_of_irb = $studentData['date_of_irb'] ?? null;
-                    $student->date_of_synopsis = $studentData['date_of_synopsis'] ?? null;
-                    $student->date_of_thesis = $studentData['date_of_thesis'] ?? null;
-                    $student->date_of_thesis_awarded = $studentData['date_of_thesis_awarded'] ?? null;
-                    $student->phd_title = $studentData['phd_title'] ?? null;
-                    $student->fathers_name = $studentData['fathers_name'] ?? null;
-                    $student->current_status = $studentData['current_status'];
-                    $student->address = $studentData['address'] ?? null;
-                    $student->cgpa = $studentData['cgpa'] ?? null;
-                    $student->is_jrf = $studentData['is_jrf'] ?? null;
-                    $student->net_gate = $studentData['net_gate'] ?? null;
-                    $student->overall_progress = $studentData['overall_progress'] ?? 0.0;
-                    $student->import_batch = $batch;
-                    $student->imported_at = $importedAt;
-                    $student->save();
-
-                    if ($request->boolean('send_invites') && !$existingUser) {
-                        $user->inviteToSetPassword();
-                    }
-
-                    // The first form of the ladder. A row that names supervisors
-                    // has it carried over complete a moment later instead.
-                    FormLadder::openOne($student, 'supervisor-allocation');
-
-                    $errors = array_merge(
-                        $errors,
-                        $this->backfillMilestones($student, $studentData, $index + 1)
-                    );
-
-                    $createCount++;
+                        $createCount++;
+                    });
 
                 } catch (\Exception $e) {
                     $errors[] = "Row " . $rowNumber . ": " . $e->getMessage();
@@ -1013,6 +1023,7 @@ class StudentController extends Controller {
         }
         $request->validate([
             'students' => 'required|array',
+            'students.*.row_number' => 'nullable|integer',
             'students.*.email' => 'required|email',
             'students.*.roll_no' => 'nullable|string',
             'students.*.full_name' => 'nullable|string',
@@ -1032,17 +1043,18 @@ class StudentController extends Controller {
         DB::beginTransaction();
         try {
             foreach ($request->students as $index => $data) {
+                $rowNumber = $data['row_number'] ?? ($index + 1);
                 try {
                     $user = \App\Models\User::where('email', $data['email'])->first();
                     $student = null;
                     if (!empty($data['roll_no'])) $student = Student::where('roll_no', $data['roll_no'])->first();
-                    if (!$user && !$student) { $errors[] = "Row ".($index+1).": no matching student for email {$data['email']} or roll {$data['roll_no']}"; $failed++; continue; }
+                    if (!$user && !$student) { $errors[] = "Row ".$rowNumber.": no matching student for email {$data['email']} or roll {$data['roll_no']}"; $failed++; continue; }
                     // Found before anything is written, so a scholar outside the
                     // caller's departments is refused untouched.
                     $target = $student ?? Student::where('user_id', $user->id)->first();
-                    if (!$target) { $errors[] = "Row ".($index+1).": student record not found"; $failed++; continue; }
+                    if (!$target) { $errors[] = "Row ".$rowNumber.": student record not found"; $failed++; continue; }
                     if ($this->outsideWritableDepartments($target->department_id)) {
-                        $errors[] = "Row ".($index+1).": this scholar is outside your departments"; $failed++; continue;
+                        $errors[] = "Row ".$rowNumber.": this scholar is outside your departments"; $failed++; continue;
                     }
                     if ($user) {
                         $name = PersonName::fromRow($data);
@@ -1055,9 +1067,9 @@ class StudentController extends Controller {
                     }
                     if (!empty($data['department_code'])) {
                         $dept = \App\Support\DepartmentCodes::resolve($data['department_code']);
-                        if (!$dept) { $errors[] = "Row ".($index+1).": department code '{$data['department_code']}' not found"; $failed++; continue; }
+                        if (!$dept) { $errors[] = "Row ".$rowNumber.": department code '{$data['department_code']}' not found"; $failed++; continue; }
                         if ($this->outsideWritableDepartments($dept->id)) {
-                            $errors[] = "Row ".($index+1).": department '{$data['department_code']}' is outside your departments"; $failed++; continue;
+                            $errors[] = "Row ".$rowNumber.": department '{$data['department_code']}' is outside your departments"; $failed++; continue;
                         }
                         $target->department_id = $dept->id;
                     }
@@ -1071,7 +1083,7 @@ class StudentController extends Controller {
                     if (array_key_exists('date_of_irb', $data)) $target->date_of_irb = $data['date_of_irb'];
                     $target->save();
                     $updated++;
-                } catch (\Exception $e) { $errors[] = "Row ".($index+1).": ".$e->getMessage(); $failed++; }
+                } catch (\Exception $e) { $errors[] = "Row ".$rowNumber.": ".$e->getMessage(); $failed++; }
             }
             DB::commit();
             return response()->json([

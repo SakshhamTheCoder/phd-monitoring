@@ -25,9 +25,10 @@ class UserManagementController extends Controller
      * email_verified_at is stamped the first time they sign in with Google,
      * which is a way in that never sets a password.
      *
-     * $batch narrows it to the people one import run brought in, scholars or
-     * staff. Without it the answer is every unclaimed account, which is the
-     * clerks a departments import created as much as anybody else.
+     * $batch narrows it to the people one import run brought in, scholars,
+     * staff, or a user the users or clerks import created directly. Without
+     * it the answer is every unclaimed account, which is the clerks a
+     * departments import created as much as anybody else.
      */
     private function whoCannotSignIn(?string $batch = null)
     {
@@ -37,7 +38,8 @@ class UserManagementController extends Controller
 
         if ($batch !== null) {
             $users->where(function ($query) use ($batch) {
-                $query->whereIn('id', \App\Models\Student::query()->select('user_id')->where('import_batch', $batch))
+                $query->where('import_batch', $batch)
+                    ->orWhereIn('id', \App\Models\Student::query()->select('user_id')->where('import_batch', $batch))
                     ->orWhereIn('id', \App\Models\Faculty::query()->select('user_id')->where('import_batch', $batch));
             });
         }
@@ -56,7 +58,10 @@ class UserManagementController extends Controller
     {
         $runs = collect();
 
-        foreach ([[\App\Models\Student::class, 'scholars'], [\App\Models\Faculty::class, 'staff']] as [$model, $of]) {
+        // Users carries the users import and the clerks import, neither of
+        // which is a scholar. The sign-in links screen only tells scholars
+        // from staff apart, so these are labelled 'staff' too.
+        foreach ([[\App\Models\Student::class, 'scholars'], [\App\Models\Faculty::class, 'staff'], [User::class, 'staff']] as [$model, $of]) {
             $model::query()
                 ->whereNotNull('import_batch')
                 ->selectRaw('import_batch, MAX(imported_at) as imported_at')
@@ -76,7 +81,9 @@ class UserManagementController extends Controller
                 });
         }
 
-        return $runs->sortByDesc('imported_at')->values();
+        // Each model above is scanned on its own, so the same batch id would
+        // be pushed twice if a run ever stamped more than one table.
+        return $runs->unique('batch')->sortByDesc('imported_at')->values();
     }
 
     public function pendingSignInLinks()
@@ -430,6 +437,11 @@ class UserManagementController extends Controller
         }
 
         $request->validate([
+            // One id for the whole run, chosen by the screen and repeated on
+            // every batch, so an office's import is one group however many
+            // requests it took. Send sign-in links reads it to mail exactly
+            // the people one import brought in.
+            'import_batch' => 'nullable|string|max:64',
             'batch_data' => 'required|array',
             'batch_data.*.full_name' => 'nullable|string',
             'batch_data.*.first_name' => 'nullable|string',
@@ -443,6 +455,8 @@ class UserManagementController extends Controller
             'batch_data.*.row_number' => 'required|integer',
         ]);
 
+        $batch = $request->input('import_batch') ?: (string) Str::uuid();
+        $importedAt = now();
         $batchData = $request->batch_data;
         $successCount = 0;
         $updateCount = 0;
@@ -491,6 +505,10 @@ class UserManagementController extends Controller
                     if ($role) $existingUser->role_id = $role->id;
                     if ($availableRoles !== null) $existingUser->available_roles = $availableRoles;
                     if (!empty($data['status'])) $existingUser->status = strtolower(trim($data['status']));
+                    // import_batch is not mass-assignable, set directly so an
+                    // update this run touched is traceable to it too.
+                    $existingUser->import_batch = $batch;
+                    $existingUser->imported_at = $importedAt;
                     $existingUser->save();
                     $updateCount++;
                 } else {
@@ -518,6 +536,10 @@ class UserManagementController extends Controller
                         'available_roles' => $availableRoles ?? [],
                         'status' => !empty($data['status']) ? strtolower(trim($data['status'])) : 'active',
                     ]);
+                    // import_batch is not mass-assignable, set directly.
+                    $created->import_batch = $batch;
+                    $created->imported_at = $importedAt;
+                    $created->save();
                     $created->inviteToSetPassword();
                     $successCount++;
                 }

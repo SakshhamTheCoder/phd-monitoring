@@ -12,7 +12,8 @@ final class FacultyPage extends PageDefinition
     /** How a batched staff import (faculty, users) reports, in the pages' words. */
     public const STAFF_IMPORT = [
         'size' => 50,
-        'loader' => true,
+        // False, not omitted: the app-wide overlay would cover the dialog's own progress bar.
+        'loader' => false,
         'summary' => '{created} created, {updated} updated, {errors} errors',
         'done' => 'Import completed: {summary}',
         'none' => 'Nothing was imported: {summary}',
@@ -78,6 +79,10 @@ final class FacultyPage extends PageDefinition
                         '/faculty/without-an-area',
                         'staff_with_no_research_area.csv'
                     ),
+                    'extra' => [[
+                        'key' => 'send_invites',
+                        'label' => 'Email each new faculty member their sign-in link now. The link lasts 24 hours, so leave this off until they have been told the portal exists.',
+                    ]],
                     // One id for the run, so Send sign-in links on Manage Users can
                     // mail exactly the people this import brought in.
                     'batch' => self::STAFF_IMPORT + ['run_id' => true],

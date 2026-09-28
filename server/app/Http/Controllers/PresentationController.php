@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Forms\PresentationDefinition;
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Support\CsvRow;
+use App\Support\ImportReport;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Traits\GeneralFormHandler;
 use App\Http\Controllers\Traits\GeneralFormList;
@@ -649,10 +650,9 @@ class PresentationController extends Controller
             'success' => true,
             'message' => "Imported {$imported} evaluations, skipped {$skipped}",
             // What the page tells the reader, in order.
-            'messages' => [
+            'messages' => ImportReport::withRowErrors([
                 ['tone' => 'success', 'text' => "{$imported} evaluations imported, {$skipped} skipped"],
-                ...array_map(fn ($error) => ['tone' => 'warn', 'text' => $error], $errors),
-            ],
+            ], $errors),
             'data' => [
                 'success_count' => $imported,
                 'skipped_count' => $skipped,

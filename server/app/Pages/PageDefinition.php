@@ -39,8 +39,7 @@ use App\Models\User;
  *     the row key it starts from when the dialog opens on a row
  *     | { block, width?, ... }: a block each client implements once
  *       ('department-manager'), opened on a row
- *   import = { kind: 'file', title, columns, note, path }: a CSV file posted as it is
- *     | { kind: 'rows', title, required, rules, sample: { name, csv }, path,
+ *   import = { kind: 'rows', title, required, rules, sample: { name, csv }, path,
  *         confirm_first?, failed }: the CSV read in the browser and its rows
  *       posted as { rows }; the answer's messages ([ { tone, text } ]) are shown
  *       in order. With confirm_first the rows are posted with preview first,

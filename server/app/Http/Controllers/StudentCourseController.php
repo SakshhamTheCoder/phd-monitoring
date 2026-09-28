@@ -7,6 +7,7 @@ use App\Models\Student;
 use App\Models\Course;
 use App\Models\Department;
 use App\Models\PhdCoordinator;
+use App\Support\ImportReport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -503,10 +504,9 @@ class StudentCourseController extends Controller
                 'success' => true,
                 'message' => "Import completed: {$successCount} rows, {$errorCount} errors",
                 // What the page tells the reader, in order.
-                'messages' => [
+                'messages' => ImportReport::withRowErrors([
                     ['tone' => 'success', 'text' => "{$successCount} enrolments imported"],
-                    ...array_map(fn ($error) => ['tone' => 'warn', 'text' => $error], $errors),
-                ],
+                ], $errors),
                 'data' => [
                     'success_count' => $successCount,
                     'error_count' => $errorCount,

@@ -8,6 +8,7 @@ use App\Models\UgBranch;
 use App\Models\UgStudent;
 use App\Models\UrfApplication;
 use App\Models\User;
+use App\Support\ImportReport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -231,10 +232,9 @@ class UgStudentController extends Controller
             'updated' => $updated,
             'errors' => $errors,
             // What the page tells the reader, in order; a row's error stays up long enough to read.
-            'messages' => [
+            'messages' => ImportReport::withRowErrors([
                 ['tone' => 'success', 'text' => "{$added} students added, {$updated} updated"],
-                ...array_map(fn ($error) => ['tone' => 'warn', 'text' => $error, 'sticky' => true], $errors),
-            ],
+            ], $errors, sticky: true),
         ]);
     }
 

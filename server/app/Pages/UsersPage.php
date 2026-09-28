@@ -94,7 +94,9 @@ final class UsersPage extends PageDefinition
                     ],
                     'sample' => ['name' => 'users_bulk_import_sample.csv', 'csv' => "full_name,email,phone,gender,role,available_roles,status\nKhalid Bashir,khalid.bashir.user@demo.invalid,9800000021,male,faculty,\"faculty,doctoral\",active"],
                     'path' => '/users/bulk-import',
-                    'batch' => FacultyPage::STAFF_IMPORT,
+                    // One id for the run, so Send sign-in links on Manage Users can
+                    // mail exactly the people this import brought in.
+                    'batch' => FacultyPage::STAFF_IMPORT + ['run_id' => true],
                 ],
             ] : (object) [],
         ]);

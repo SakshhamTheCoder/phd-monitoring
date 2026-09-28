@@ -51,11 +51,19 @@ final class OutsideExpertsPage extends PageDefinition
             ],
             'imports' => [
                 'import' => [
-                    'kind' => 'file',
+                    'kind' => 'rows',
                     'title' => 'Import outside experts from CSV',
-                    'columns' => ['full_name', 'email', 'phone', 'designation', 'department', 'institution', 'area_of_expertise', 'website'],
-                    'note' => 'Note: Phone, area_of_expertise, and website are optional. If an expert with the same email exists, their record will be updated.',
+                    'required' => ['full_name', 'email', 'designation', 'department', 'institution'],
+                    'rules' => [
+                        'Matched by email. An outside expert is created when the email is not found, and updated when it is.',
+                        'Phone, area_of_expertise and website are optional.',
+                    ],
+                    'sample' => ['name' => 'outside_experts_sample.csv', 'csv' => implode("\n", [
+                        'full_name,email,phone,designation,department,institution,area_of_expertise,website',
+                        'Dr. Priya Sharma,priya.sharma@demo.invalid,9800000041,Professor,Computer Science,Demo Institute of Technology,Machine learning,https://demo.invalid/priya-sharma',
+                    ])],
                     'path' => '/outside-experts/bulk-import',
+                    'failed' => 'Failed to import outside experts',
                 ],
             ],
         ]);

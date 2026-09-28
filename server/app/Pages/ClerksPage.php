@@ -89,6 +89,9 @@ final class ClerksPage extends PageDefinition
                     'path' => '/clerks/bulk-update',
                     'batch' => [
                         'size' => 50,
+                        // One id for the run, so Send sign-in links on Manage Users can
+                        // mail exactly the people this import brought in.
+                        'run_id' => true,
                         'loader' => false,
                         'reports_failures' => true,
                         'summary' => '{created} created, {updated} updated, {errors} errors.',
