@@ -28,7 +28,11 @@ final class CoursesPage extends PageDefinition
 
         return self::page('Course management', 'Add courses, tag scholars to them and import coursework.', [
             'actions' => [
-                ...($tags ? [self::action('Tag student', 'tag', 'secondary'), self::action('Import from CSV', 'import', 'secondary')] : []),
+                ...($tags ? [
+                    self::action('Tag student', 'tag', 'secondary'),
+                    self::action('Import coursework', 'import', 'secondary'),
+                    self::action('Import course details', 'courses', 'secondary'),
+                ] : []),
                 self::action('Add course', 'add'),
             ],
             'table' => [
@@ -80,10 +84,29 @@ final class CoursesPage extends PageDefinition
                         '900011,Scholar One,scholar.one@thapar.edu,2425EVEN,PCS102,Advanced Algorithms,3,',
                     ])],
                     'path' => '/courses/student/bulk-import',
+                    'failed' => 'Failed to import',
+                ],
+                'courses' => [
+                    'kind' => 'rows',
+                    'title' => 'Import course details',
+                    'required' => ['Course Code'],
+                    'rules' => [
+                        'One row per subject, not per scholar.',
+                        'Matched on the course code, so sending a corrected file again fixes the subject rather than adding a second one.',
+                        'A blank cell leaves what is stored alone, so a file may carry only the column being fixed.',
+                        'Department Code is the code from the Departments page, for example CSED.',
+                    ],
+                    'sample' => ['name' => 'courses_sample.csv', 'csv' => implode("
+", [
+                        'Course Code,Course Name,Credits,Department Code',
+                        'PCS101,Research Methodology,4,CSED',
+                        'DMC017,Topics of Differential Equations,3,DOM',
+                    ])],
+                    'path' => '/courses/import',
                     'download' => self::fixList(
-                        'Courses with no credits',
-                        '/courses/student/without-credits',
-                        'courses_with_no_credits.csv'
+                        'Subjects with no credits or department',
+                        '/courses/missing-details',
+                        'subjects_missing_details.csv'
                     ),
                     'failed' => 'Failed to import',
                 ],

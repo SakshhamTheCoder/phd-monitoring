@@ -14,6 +14,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/all', [CourseController::class, 'getAllCourses']);
     Route::post('/import', [CourseController::class, 'importCoursesFromCSV']);
 
+    // The subjects with no credits or no department, in the shape the
+    // course import reads: fill them in and send the same file back.
+    Route::get('/missing-details', [CourseController::class, 'coursesMissingDetails']);
+
     // Student-Course management
     Route::prefix('student')->group(function () {
         Route::get('/my-courses', [StudentCourseController::class, 'getStudentCourses']);
