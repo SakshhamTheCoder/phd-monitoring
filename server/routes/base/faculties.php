@@ -12,6 +12,10 @@ Route::post('/recommend', [FacultyController::class, 'recommend'])->middleware('
 Route::post('/add', [FacultyController::class, 'add'])->middleware('auth:sanctum');
 Route::put('/update/{id}', [FacultyController::class, 'update'])->middleware('auth:sanctum');
 Route::post('/bulk-import', [FacultyController::class, 'upload'])->middleware('auth:sanctum');
+
+// The staff the import could not file under a research area, in its own
+// columns: write the area beside each name and send the file back.
+Route::get('/without-an-area', [FacultyController::class, 'facultyWithoutAnArea'])->middleware('auth:sanctum');
 Route::get('/filters', [FacultyController::class, 'listFilters']);
 
 // The faculty profile and its publications.

@@ -6,6 +6,7 @@ use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Http\Controllers\Traits\PagenationTrait;
 use App\Models\Course;
 use App\Models\Department;
+use App\Support\CsvRow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -299,60 +300,152 @@ class CourseController extends Controller
     }
 
     /**
-     * Import courses from CSV
+     * The course catalogue, as the office keeps it.
+     *
+     * One row per subject, not per scholar: the code, its name, what it is
+     * worth and whose department teaches it. The coursework import creates a
+     * subject it has never seen from a scholar's row, which gets the name and
+     * credits but no department, since a scholar's row does not say who teaches
+     * the subject. This is where that is filled in.
+     *
+     * Read by column name, like every other import, and matched on the code, so
+     * sending a corrected file again fixes the subject rather than adding a
+     * second one under the same code.
      */
+    public static function courseRows(array $rows): array
+    {
+        return array_values(array_filter(array_map(fn (array $row) => [
+            'course_code' => CsvRow::column($row, 'Course Code', 'Subject Code', 'course_code'),
+            'course_name' => CsvRow::column($row, 'Course Name', 'Subject Name', 'Subject', 'course_name'),
+            'credits' => CsvRow::column($row, 'Credits', 'credits'),
+            'department_code' => CsvRow::column($row, 'Department Code', 'Department', 'department_code'),
+            'row_number' => $row['_rowNumber'] ?? $row['row_number'] ?? null,
+        ], $rows), fn (array $row) => $row['course_code'] !== ''));
+    }
+
+    /**
+     * The subjects nobody has said what they are worth.
+     *
+     * A subject the coursework import met on a scholar's row was created from
+     * what that row knew, which is a name and sometimes not even credits. This
+     * is the catalogue's own gap list, in the columns this import reads: fill
+     * the credits and the department and send the same file back.
+     */
+    public function coursesMissingDetails()
+    {
+        if (!$this->managesCourses()) {
+            return $this->refuse();
+        }
+
+        $scope = $this->departmentScope();
+
+        $rows = Course::with('department')
+            ->where(fn ($query) => $query->where('credits', 0)->orWhereNull('department_id'))
+            ->when($scope, fn ($query) => $query->where('department_id', $scope))
+            ->orderBy('course_code')
+            ->get()
+            ->map(fn (Course $course) => [
+                $course->course_code,
+                $course->course_name,
+                (float) $course->credits > 0 ? (string) $course->credits : '',
+                optional($course->department)->code ?? '',
+            ]);
+
+        return response()->json([
+            'headers' => ['Course Code', 'Course Name', 'Credits', 'Department Code'],
+            'rows' => $rows,
+            'count' => $rows->count(),
+        ]);
+    }
+
     public function importCoursesFromCSV(Request $request)
     {
         if (!$this->managesCourses()) {
             return $this->refuse();
         }
+
         $scope = $this->departmentScope();
         if ($scope === 0) {
             return $this->refuse('You are not attached to a department.');
         }
-        try {
-            $request->validate([
-                'csv_file' => 'required|file|mimes:csv,txt',
-            ]);
 
-            $file = $request->file('csv_file');
-            $csvData = array_map('str_getcsv', file($file->getRealPath()));
-            $header = array_shift($csvData);
+        if ($request->has('rows')) {
+            $request->merge(['rows' => self::courseRows((array) $request->input('rows'))]);
+        }
 
-            // Expected columns: course_code, course_name, credits, department_id
-            $errors = [];
-            $imported = 0;
+        $request->validate([
+            'rows' => 'required|array',
+            'rows.*.course_code' => 'required|string',
+        ]);
 
-            foreach ($csvData as $index => $row) {
-                try {
-                    if (count($row) < 4) {
-                        $errors[] = "Row " . ($index + 2) . ": Insufficient columns";
-                        continue;
-                    }
+        $created = 0;
+        $updated = 0;
+        $errors = [];
 
-                    $course = new Course();
-                    $course->course_code = trim($row[0]);
-                    $course->course_name = trim($row[1]);
-                    $course->credits = floatval(trim($row[2]));
-                    $course->department_id = $scope ?: intval(trim($row[3]));
-                    $course->save();
-                    $imported++;
-                } catch (\Exception $e) {
-                    $errors[] = "Row " . ($index + 2) . ": " . $e->getMessage();
+        foreach ($request->rows as $row) {
+            $rowNumber = $row['row_number'] ?? '?';
+            $code = $row['course_code'];
+            $course = Course::where('course_code', $code)->first();
+
+            // A head or coordinator files every course under their own
+            // department; for the office the sheet says whose it is.
+            $department = null;
+            if ($scope) {
+                $department = $scope;
+            } elseif ($row['department_code'] !== '') {
+                $department = optional(\App\Support\DepartmentCodes::resolve($row['department_code']))->id;
+                if (!$department) {
+                    $errors[] = "Row {$rowNumber}: no department with the code '{$row['department_code']}'";
+                    continue;
                 }
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => "$imported courses imported successfully",
-                'imported_count' => $imported,
-                'errors' => $errors
-            ], 200);
-        } catch (\Exception $e) {
-            Log::error('Error importing courses: ' . $e->getMessage());
-            return response()->json([
-                'message' => 'An error occurred: ' . $e->getMessage()
-            ], 500);
+            if (!$course && $row['course_name'] === '') {
+                $errors[] = "Row {$rowNumber}: '{$code}' is new, so the row needs the subject name";
+                continue;
+            }
+
+            if ($course && $scope && (int) $course->department_id !== $scope && $course->department_id !== null) {
+                $errors[] = "Row {$rowNumber}: '{$code}' belongs to another department";
+                continue;
+            }
+
+            // credits has no default in the table, so a new subject starts at
+            // nothing and says so below rather than refusing the row.
+            $course ??= new Course(['course_code' => $code, 'credits' => 0]);
+            $isNew = !$course->exists;
+
+            if ($row['course_name'] !== '') {
+                $course->course_name = $row['course_name'];
+            }
+            // A blank cell is not a statement that the subject is worth
+            // nothing, so it leaves what is stored alone.
+            if ($row['credits'] !== '') {
+                $course->credits = (float) $row['credits'];
+            }
+            if ($department) {
+                $course->department_id = $department;
+            }
+            $course->save();
+
+            if ($isNew && (float) $course->credits === 0.0) {
+                $errors[] = "Row {$rowNumber}: '{$code}' was added worth 0 credits, "
+                    . "since the row gives none";
+            }
+
+            $isNew ? $created++ : $updated++;
         }
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$created} courses added, {$updated} updated",
+            'data' => [
+                'success_count' => $created,
+                'update_count' => $updated,
+                'error_count' => count($errors),
+                'errors' => $errors,
+            ],
+        ], 200);
     }
+
 }

@@ -135,6 +135,57 @@ class CourseworkImportTest extends TestCase
         );
     }
 
+    /**
+     * A subject the sheet introduces without credits is worth nothing towards
+     * the scholar's requirement, so the row says so, and the same download,
+     * fill, upload round trip the other imports have fills it in.
+     */
+    public function test_a_subject_with_no_credits_is_reported_and_can_be_filled_later(): void
+    {
+        $this->actAs('admin');
+        $scholar = $this->scholar();
+
+        Course::where('course_code', 'ZZCRED101')->delete();
+
+        $answer = $this->import([$this->row($scholar, ['Subject Code' => 'ZZCRED101', 'Credits' => ''])])
+            ->assertStatus(200);
+
+        $this->assertStringContainsString(
+            "'ZZCRED101' is new and the row gives no credits",
+            json_encode($answer->json('data.errors'))
+        );
+        $this->assertSame(0.0, (float) Course::where('course_code', 'ZZCRED101')->value('credits'));
+
+        // The file comes back with the credits filled in.
+        $answer = $this->import([$this->row($scholar, ['Subject Code' => 'ZZCRED101', 'Credits' => '4'])])
+            ->assertStatus(200);
+
+        $this->assertSame(4.0, (float) Course::where('course_code', 'ZZCRED101')->value('credits'));
+        $this->assertStringContainsString("had no credits, now worth 4", json_encode($answer->json('data.errors')));
+    }
+
+    /** The rows whose subject is worth nothing, in the shape this import reads. */
+    public function test_the_import_offers_the_rows_whose_subject_has_no_credits(): void
+    {
+        $this->actAs('admin');
+        $scholar = $this->scholar();
+
+        Course::where('course_code', 'ZZCRED202')->delete();
+        $this->import([$this->row($scholar, ['Subject Code' => 'ZZCRED202', 'Credits' => ''])])->assertStatus(200);
+
+        $answer = $this->getJson('/api/courses/student/without-credits')->assertStatus(200);
+
+        $this->assertSame(
+            ['Registration Number', 'Full Name', 'Academic Year', 'Subject Code', 'Subject Name',
+             'Credits', 'Grade Earned (Leave Blank If Enrolled But Not Cleared Yet)'],
+            $answer->json('headers')
+        );
+
+        $row = collect($answer->json('rows'))->firstWhere(3, 'ZZCRED202');
+        $this->assertNotNull($row);
+        $this->assertSame('', $row[5], 'the credits column is the empty one to fill');
+    }
+
     public function test_a_scholar_cannot_import_coursework(): void
     {
         $this->actAs('student');

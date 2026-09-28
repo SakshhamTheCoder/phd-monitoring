@@ -17,6 +17,10 @@ Route::get('/me', [StudentController::class, 'me'])->middleware('auth:sanctum');
 
 Route::post('/add', [StudentController::class, 'add'])->middleware('auth:sanctum');
 Route::post('/bulk-upload', [StudentController::class, 'bulkUpload'])->middleware('auth:sanctum');
+
+// The scholars nobody is recorded as supervising, in the import's own
+// columns: fill the two supervisor cells and send the file back.
+Route::get('/without-a-supervisor', [StudentController::class, 'scholarsWithoutASupervisor'])->middleware('auth:sanctum');
 Route::post('/bulk-update', [StudentController::class, 'bulkUpdate'])->middleware('auth:sanctum');
 
 Route::get('/filters', [StudentController::class, 'listFilters'])->middleware('auth:sanctum');

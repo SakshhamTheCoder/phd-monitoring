@@ -57,6 +57,11 @@ final class PresentationsPage extends PageDefinition
                         '900011,2425ODD,2024-11-06,55',
                     ])],
                     'path' => '/presentation/import-progress',
+                    'download' => self::fixList(
+                        'Evaluations missing a date',
+                        '/presentation/progress/missing-dates',
+                        'evaluations_missing_a_date.csv'
+                    ),
                     'failed' => 'Import failed',
                 ],
             ],

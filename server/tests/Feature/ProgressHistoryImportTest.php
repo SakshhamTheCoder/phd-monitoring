@@ -103,6 +103,48 @@ class ProgressHistoryImportTest extends TestCase
         $this->assertSame(1, Presentation::where('student_id', $student->roll_no)->count());
     }
 
+    /**
+     * Half the sheet's rows carry no date, or a word where one belongs, so the
+     * evaluation lands without one. The office fills the dates in later and
+     * sends the file again; that is the one thing worth taking from a row for
+     * an evaluation that already exists.
+     */
+    public function test_a_later_file_fills_a_date_the_first_one_did_not_have(): void
+    {
+        $this->actAs('admin');
+        $student = $this->freshScholar();
+
+        $undated = $this->row($student, '2324ODD', 20, 2);
+        $undated['date'] = '';
+        $this->import([$undated])->assertStatus(200);
+
+        $presentation = Presentation::where('student_id', $student->roll_no)->firstOrFail();
+        $this->assertNull($presentation->date);
+
+        $this->import([$this->row($student, '2324ODD', 20, 2)])->assertStatus(200);
+
+        $this->assertSame('2024-11-04', substr((string) $presentation->fresh()->date, 0, 10));
+        $this->assertSame(1, Presentation::where('student_id', $student->roll_no)->count());
+    }
+
+    /** A date already recorded is the portal's, and a re-import leaves it alone. */
+    public function test_a_date_already_recorded_is_not_overwritten(): void
+    {
+        $this->actAs('admin');
+        $student = $this->freshScholar();
+
+        $this->import([$this->row($student, '2324ODD', 20, 2)])->assertStatus(200);
+
+        $later = $this->row($student, '2324ODD', 20, 2);
+        $later['date'] = '2025-01-01';
+        $this->import([$later])->assertStatus(200);
+
+        $this->assertSame(
+            '2024-11-04',
+            substr((string) Presentation::where('student_id', $student->roll_no)->firstOrFail()->date, 0, 10)
+        );
+    }
+
     public function test_a_blank_total_is_skipped_and_a_falling_total_is_refused(): void
     {
         $this->actAs('admin');
@@ -134,6 +176,40 @@ class ProgressHistoryImportTest extends TestCase
         // The Past Semesters table filters on end_date < now, so a semester
         // created without one would never be listed.
         $this->assertNotNull($semester->end_date);
+    }
+
+    /**
+     * The round trip the office actually wants: take away the rows that still
+     * need something, fill the one empty column, send the same file back.
+     */
+    public function test_the_evaluations_missing_a_date_can_be_taken_away_as_a_file(): void
+    {
+        $this->actAs('admin');
+        $student = $this->freshScholar();
+
+        $undated = $this->row($student, '2324ODD', 20, 2);
+        $undated['date'] = '';
+        $this->import([$undated])->assertStatus(200);
+
+        $answer = $this->getJson('/api/presentation/progress/missing-dates')->assertStatus(200);
+
+        $this->assertSame(
+            ['Registration Number', 'Student name', 'Progress for AY', 'Date of progress', 'Total Progress %'],
+            $answer->json('headers'),
+            'the file is in the shape the import reads'
+        );
+
+        $mine = collect($answer->json('rows'))->firstWhere(0, (string) $student->roll_no);
+        $this->assertNotNull($mine);
+        $this->assertSame('2324ODD', $mine[2]);
+        $this->assertSame('', $mine[3], 'the date column is the empty one to fill');
+    }
+
+    public function test_a_supervisor_cannot_read_the_evaluations_missing_a_date(): void
+    {
+        $this->actAs('faculty');
+
+        $this->getJson('/api/presentation/progress/missing-dates')->assertStatus(403);
     }
 
     public function test_a_supervisor_cannot_import_progress(): void

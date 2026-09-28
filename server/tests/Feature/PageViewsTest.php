@@ -46,7 +46,7 @@ class PageViewsTest extends TestCase
     public function test_course_management_offers_what_each_reader_may_do(): void
     {
         $admin = $this->actingAs($this->account('admin'))->getJson('/api/views/courses')->assertOk();
-        $this->assertSame(['Tag student', 'Import from CSV', 'Add course'], array_column($admin->json('actions'), 'label'));
+        $this->assertSame(['Tag student', 'Import coursework', 'Import course details', 'Add course'], array_column($admin->json('actions'), 'label'));
         // Only admin picks the department; the others post it empty for the server to fill.
         $this->assertSame('select', $admin->json('dialogs.add.rows.0.rows.3.type'));
 

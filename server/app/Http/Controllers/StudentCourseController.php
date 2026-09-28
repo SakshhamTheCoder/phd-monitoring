@@ -345,6 +345,45 @@ class StudentCourseController extends Controller
      * Rows arrive already split by the import modal every other page uses, so
      * the CSV is parsed in one place rather than once per importer.
      */
+    /**
+     * The coursework rows whose course is worth nothing.
+     *
+     * A course the sheet introduced without a credits value was created worth
+     * 0, which counts for nothing towards a scholar's requirement. These are
+     * those rows in the coursework import's own columns, so the office fills
+     * the credits column and sends the same file back through that dialog.
+     */
+    public function coursesWithoutCredits()
+    {
+        if ($denied = $this->denyUnlessMayManageStudents()) {
+            return $denied;
+        }
+
+        $rows = StudentCourse::with(['course', 'student.user'])
+            ->whereHas('course', fn ($query) => $query->where('credits', 0))
+            ->get()
+            ->filter(fn (StudentCourse $taken) => $taken->course && $taken->student)
+            ->map(fn (StudentCourse $taken) => [
+                (string) $taken->student_id,
+                optional(optional($taken->student)->user)->name() ?? '',
+                (string) $taken->semester,
+                (string) $taken->course->course_code,
+                (string) $taken->course->course_name,
+                '',
+                (string) ($taken->grade ?? ''),
+            ])
+            ->values();
+
+        return response()->json([
+            'headers' => [
+                'Registration Number', 'Full Name', 'Academic Year', 'Subject Code', 'Subject Name',
+                'Credits', 'Grade Earned (Leave Blank If Enrolled But Not Cleared Yet)',
+            ],
+            'rows' => $rows,
+            'count' => $rows->count(),
+        ]);
+    }
+
     public function bulkImportFromCSV(Request $request)
     {
         try {
@@ -402,12 +441,21 @@ class StudentCourseController extends Controller
                         // several departments, and the column is nullable. A
                         // head or coordinator only manages their department's
                         // courses, so theirs is filed under the scholar's.
+                        $newCredits = $this->cell($data, 'Credits', 'credits');
                         $course = Course::create([
                             'course_code' => $courseCode,
                             'course_name' => $courseName,
-                            'credits' => (float) ($this->cell($data, 'Credits', 'credits') ?: 0),
+                            'credits' => (float) ($newCredits ?: 0),
                             'department_id' => $this->scopesCourses() ? $student->department_id : null,
                         ]);
+
+                        // A course worth nothing counts for nothing towards the
+                        // scholar's credit requirement, so it is said out loud
+                        // rather than left to be noticed in a total.
+                        if ($newCredits === '') {
+                            $errors[] = "Row {$rowNumber}: '{$courseCode}' is new and the row gives no credits, "
+                                . "so it is worth 0 until somebody says otherwise";
+                        }
                     } else {
                         if ($this->outsideScope($scope, $student, $course)) {
                             $errors[] = "Row {$rowNumber}: '{$courseCode}' is not one of your department's courses";
@@ -415,7 +463,14 @@ class StudentCourseController extends Controller
                             continue;
                         }
                         $credits = $this->cell($data, 'Credits', 'credits');
-                        if ($credits !== '' && (float) $credits !== (float) $course->credits) {
+                        if ($credits !== '' && (float) $course->credits === 0.0) {
+                            // Nobody knew what it was worth, and now the sheet
+                            // says: the same download, fill, upload round trip
+                            // the other imports have.
+                            $course->credits = (float) $credits;
+                            $course->save();
+                            $errors[] = "Row {$rowNumber}: '{$courseCode}' had no credits, now worth {$credits}";
+                        } elseif ($credits !== '' && (float) $credits !== (float) $course->credits) {
                             $errors[] = "Row {$rowNumber}: '{$courseCode}' is worth {$course->credits} credits in the portal, "
                                 . "the sheet says {$credits}. The portal's value is kept.";
                         }

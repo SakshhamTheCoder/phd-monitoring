@@ -5,6 +5,7 @@ import { baseURL } from '../../api/urls';
 import { useLoading } from '../../context/LoadingContext';
 import UnifiedBulkImportModal from '../bulkImport/UnifiedBulkImportModal';
 import { forgetKeptLists } from './requests';
+import { downloadRows } from './downloadRows';
 
 // What an import's answer tells the reader, in order. A sticky one stays up
 // long enough to read a list of rows.
@@ -150,6 +151,10 @@ const RowsImportModal = ({ spec, isOpen, onClose, onImported }) => {
       rules={spec.rules}
       sampleFileName={spec.sample.name}
       sampleCsvContent={spec.sample.csv}
+      fixList={spec.download ? {
+        label: spec.download.label,
+        onClick: () => downloadRows(spec.download),
+      } : null}
       onImport={spec.batch ? importInBatches : importWhole}
       submitting={submitting}
       uploadProgress={spec.batch ? uploadProgress : undefined}

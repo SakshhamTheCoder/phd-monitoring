@@ -55,7 +55,7 @@ class StudentController extends Controller {
                 'full_name' => 'required_without:first_name|string',
                 'first_name' => 'required_without:full_name|string',
                 'last_name' => 'nullable|string',
-                'phone' => 'required|string|unique:users,phone',
+                'phone' => 'required|string',
                 'email' => 'required|email|unique:users',
                 'roll_no' => 'required|string',
                 'department_id' => 'required|integer',
@@ -188,6 +188,13 @@ class StudentController extends Controller {
     private function syncSupervisionTeam(Student $student, array $row, int $rowNumber): array
     {
         $errors = [];
+
+        // A seat the sheet names but gives no address for. Reported once per
+        // row, so the office can chase the address instead of finding the
+        // scholar supervised by nobody months later.
+        foreach ((array) ($row['named_without_email'] ?? []) as $named) {
+            $errors[] = "Row {$rowNumber}: {$named} has no email in the sheet, seat left empty";
+        }
 
         $groups = [
             'supervisors' => [\App\Models\Supervisor::class, 'supervisor'],
@@ -539,6 +546,10 @@ class StudentController extends Controller {
             'overall_progress' => $column($row, 'Overall Progress', 'overall_progress'),
             'supervisors' => $slots($row, fn ($slot) => ["Supervisor {$slot} Email"]),
             'committee' => $slots($row, fn ($slot) => ["Committee Member {$slot} Email"]),
+            // A seat filled with a name and no address. People are matched on
+            // their email, so the seat cannot be given to anybody, and the
+            // office needs to hear whose it was rather than watch it vanish.
+            'named_without_email' => self::namedWithoutEmail($row),
             // The sheet spells these three inconsistently, so all its spellings are read.
             'irb_members' => $slots($row, fn ($slot) => ["IRB member{$slot} email", "IRB member {$slot} email", "IRB member {$slot} mail"]),
             // The sheet stops prefixing after the expert's name, so its last
@@ -551,6 +562,41 @@ class StudentController extends Controller {
                 'institution' => $column($row, 'External expert for IRB Institute name', 'Institute name'),
             ],
         ], $rows);
+    }
+
+    /**
+     * Seats the row names but gives no address for.
+     *
+     * The institute's sheet writes a good number of external supervisors by
+     * name alone. Nothing can be done with that, but it is reported per row so
+     * the office can send the addresses rather than discover the gap later.
+     *
+     * @param  array<string, mixed>  $row
+     * @return array<int, string>
+     */
+    private static function namedWithoutEmail(array $row): array
+    {
+        $column = fn (string ...$aliases) => CsvRow::column($row, ...$aliases);
+        $named = [];
+
+        foreach ([1, 2, 3] as $slot) {
+            $seats = [
+                'supervisor' => ["Supervisor {$slot} Name", "Supervisor {$slot} Email"],
+                'committee member' => [
+                    $slot === 1 ? 'Doctoral Committee Member 1 Name' : "Committee Member {$slot} Name",
+                    "Committee Member {$slot} Email",
+                ],
+            ];
+
+            foreach ($seats as $seat => [$nameColumn, $emailColumn]) {
+                $name = $column($nameColumn);
+                if ($name !== '' && $column($emailColumn) === '') {
+                    $named[] = "{$name} ({$seat})";
+                }
+            }
+        }
+
+        return $named;
     }
 
     /**
@@ -602,6 +648,69 @@ class StudentController extends Controller {
             return 'NET';
         }
         return mb_substr($answer, 0, 40);
+    }
+
+    /**
+     * The scholars whose supervisor is missing rather than not yet chosen.
+     *
+     * A scholar admitted this session has no supervisor because they have not
+     * been allotted one yet: their allocation form is open and the ordinary
+     * flow will fill it, so listing them would bury the real gaps. What is left
+     * is a scholar the portal has history for, whose sheet row named a
+     * supervisor with no address, or who was admitted in an earlier session and
+     * was never allotted anybody.
+     *
+     * Given in the columns the scholars import reads, so the office fills the
+     * two supervisor cells and sends the same file back through that dialog.
+     */
+    public function scholarsWithoutASupervisor()
+    {
+        if (!Auth::user()->may('can_manage_students')) {
+            return response()->json(['message' => 'You do not have permission to read this'], 403);
+        }
+
+        $rows = Student::with(['user', 'department'])
+            ->whereNotIn('roll_no', \App\Models\Supervisor::query()->select('student_id'))
+            ->where(function ($query) {
+                // Anything already behind them says the allocation happened
+                // elsewhere, whatever the sheet managed to say about it.
+                $query->whereNotNull('date_of_irb')
+                    ->orWhereNotNull('date_of_synopsis')
+                    ->orWhereNotNull('date_of_thesis')
+                    ->orWhere('date_of_registration', '<', self::sessionStart());
+            })
+            ->orderBy('roll_no')
+            ->get()
+            ->map(fn (Student $student) => [
+                (string) $student->roll_no,
+                optional($student->user)->name() ?? '',
+                optional($student->user)->email ?? '',
+                optional($student->department)->code ?? '',
+                '',
+                '',
+            ]);
+
+        return response()->json([
+            'headers' => ['Registration Number', 'Full Name', 'Email', 'Department Code', 'Supervisor 1 Name', 'Supervisor 1 Email'],
+            'rows' => $rows,
+            'count' => $rows->count(),
+        ]);
+    }
+
+    /**
+     * The first day of the session running now.
+     *
+     * The institute admits in July and in January, so a scholar registered on
+     * or after the current session's first day is still being allotted their
+     * supervisor through the form, not missing one.
+     */
+    private static function sessionStart(): string
+    {
+        $now = now();
+
+        return $now->month >= 7
+            ? $now->format('Y') . '-07-01'
+            : $now->format('Y') . '-01-01';
     }
 
     public function bulkUpload(Request $request)
@@ -1284,7 +1393,7 @@ class StudentController extends Controller {
             'full_name' => 'required_without:first_name|string',
             'first_name' => 'required_without:full_name|string',
             'last_name' => 'nullable|string',
-            'phone' => 'required|string|unique:users,phone,' . $user->id,
+            'phone' => 'required|string',
             'email' => 'required|email|unique:users,email,' . $user->id,
             'department_id' => 'required|integer',
             'date_of_registration' => 'required|date',

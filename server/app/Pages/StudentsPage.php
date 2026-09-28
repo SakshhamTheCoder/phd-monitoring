@@ -114,6 +114,11 @@ final class StudentsPage extends PageDefinition
                         '900011,Scholar One,scholar.one@demo.invalid,9800000011,CSED,Parent One,Female,Full Time,2024-08-01,,,,,8.4,10,,Yes,Yes,Patiala,Supervisor One,supervisor.one@thapar.edu,,,,,Committee One,committee.one@thapar.edu,,,,,cognate.one@thapar.edu,,,Expert One,expert.one@elsewhere.edu,Professor,Physics,Elsewhere Institute',
                     ])],
                     'path' => '/students/bulk-upload',
+                    'download' => self::fixList(
+                        'Scholars with no supervisor',
+                        '/students/without-a-supervisor',
+                        'scholars_with_no_supervisor.csv'
+                    ),
                     // Off by default: an import of the institute's sheet is a
                     // migration of records, and a link lives 24 hours.
                     'extra' => [[

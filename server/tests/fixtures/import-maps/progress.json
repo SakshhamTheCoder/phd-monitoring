@@ -43,6 +43,13 @@
       "semester": "2324EVEN",
       "date": "",
       "total_progress": ""
+    },
+    {
+      "row_number": 4,
+      "roll_no": "102203456",
+      "semester": "2425ODD",
+      "date": "2024-11-06",
+      "total_progress": "55"
     }
   ]
 }

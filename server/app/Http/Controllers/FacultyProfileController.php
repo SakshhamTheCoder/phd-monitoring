@@ -90,7 +90,7 @@ class FacultyProfileController extends Controller
             'expertise' => 'nullable',
             'area_of_specialization_id' => 'nullable|integer|exists:area_of_specializations,id',
             'supervised_outside' => 'nullable|integer|min:0',
-            'phone' => ['nullable', 'string', 'max:20', Rule::unique('users', 'phone')->ignore($faculty->user_id)],
+            'phone' => ['nullable', 'string', 'max:20'],
         ]);
 
         foreach ($this->identifierFields as $field) {

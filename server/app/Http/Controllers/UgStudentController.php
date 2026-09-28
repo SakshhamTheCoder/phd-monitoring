@@ -251,7 +251,7 @@ class UgStudentController extends Controller
         // account. An application copied the phone and gender it was filed
         // with, so changing them now cannot alter a form somebody is reading.
         $rules = [
-            'phone' => ['required', 'string', 'max:20', Rule::unique('users', 'phone')->ignore($user->id)],
+            'phone' => ['required', 'string', 'max:20'],
             'gender' => 'required|in:Male,Female',
         ];
 
@@ -287,7 +287,7 @@ class UgStudentController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'nullable|string|max:255',
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($account?->id)],
-            'phone' => ['nullable', 'string', 'max:20', Rule::unique('users', 'phone')->ignore($account?->id)],
+            'phone' => ['nullable', 'string', 'max:20'],
             'gender' => 'nullable|in:Male,Female',
             'roll_no' => ['required', 'string', 'max:50', Rule::unique('ug_students')->ignore($account?->ugStudent?->id)],
             'branch_id' => 'required|exists:ug_branches,id',

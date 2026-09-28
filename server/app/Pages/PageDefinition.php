@@ -65,6 +65,19 @@ abstract class PageDefinition
     }
 
     /**
+     * The records an import is still waiting on, offered inside its own dialog.
+     *
+     * The round trip an office actually wants: take away the rows that still
+     * need something, fill the one empty column in a spreadsheet, and send the
+     * same file back through the import it came from. $path answers
+     * {headers, rows} in that import's own columns, so nothing is re-typed.
+     */
+    protected static function fixList(string $label, string $path, string $filename): array
+    {
+        return ['label' => $label, 'path' => $path, 'filename' => $filename];
+    }
+
+    /**
      * A dialog: $props are its title, sizes and whether a click outside closes
      * it (close_outside); $request is where its submit sends the answers.
      */

@@ -86,7 +86,7 @@ class FacultyController extends Controller
             'first_name' => 'required_without:full_name|string',
             'last_name' => 'nullable|string',
             'email' => 'required|email|unique:users,email',
-            'phone' => 'required|string|unique:users,phone',
+            'phone' => 'required|string',
             'department_id' => 'nullable|integer',
             'designation' => 'required|string',
             // The form no longer asks. Internal is what a new faculty member is
@@ -216,7 +216,7 @@ class FacultyController extends Controller
             'first_name' => 'nullable|string',
             'last_name' => 'nullable|string',
             'email' => 'required|email|unique:users,email,' . $faculty->user_id,
-            'phone' => 'required|string|unique:users,phone,' . $faculty->user_id,
+            'phone' => 'required|string',
             'department_id' => 'nullable|integer',
             'designation' => 'required|string',
             // Never sending a type must not silently flip an existing faculty
@@ -440,6 +440,43 @@ class FacultyController extends Controller
             'supervised_outside' => CsvRow::column($row, 'Students Supervising Outside TIET', 'Students Outside TIET', 'supervised_outside'),
             'row_number' => $row['_rowNumber'] ?? $row['row_number'] ?? null,
         ], $rows);
+    }
+
+    /**
+     * The staff filed under no research area.
+     *
+     * A broad area the department's own list does not carry leaves the person
+     * without one, which keeps them out of every search by area. These are
+     * those people, in the columns the faculty import reads, so the area can
+     * be written beside each name and the file sent back through the same
+     * dialog.
+     */
+    public function facultyWithoutAnArea()
+    {
+        if (!Auth::user()->may('can_manage_faculties')) {
+            return response()->json(['message' => 'You do not have permission to read this'], 403);
+        }
+
+        $rows = Faculty::with(['user', 'department'])
+            ->whereNull('area_of_specialization_id')
+            ->where('type', 'internal')
+            ->orderBy('department_id')
+            ->get()
+            ->filter(fn (Faculty $faculty) => $faculty->user)
+            ->map(fn (Faculty $faculty) => [
+                (string) $faculty->faculty_code,
+                $faculty->user->name(),
+                $faculty->user->email,
+                optional($faculty->department)->code ?? '',
+                '',
+            ])
+            ->values();
+
+        return response()->json([
+            'headers' => ['Emp id', 'Full Name', 'Email', 'Department Code', 'Broad Area of Expertise'],
+            'rows' => $rows,
+            'count' => $rows->count(),
+        ]);
     }
 
     public function upload(Request $request)
