@@ -8,15 +8,19 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 /**
- * users.phone carries a unique index, but nothing validated it: creating a
- * second account with a phone already in use answered a raw 500 with an SQL
- * message instead of telling the office which field to change.
+ * A phone number is not an identity.
+ *
+ * It used to carry a unique index, so the second person to give a number was
+ * refused. The institute's scholar sheet has sisters on one number, and a lab
+ * or household line is ordinary, so a real scholar was losing their record
+ * over a field nothing is matched on: people are found by email and
+ * registration number.
  */
-class DuplicatePhoneIsRefusedTest extends TestCase
+class TwoPeopleMayShareAPhoneTest extends TestCase
 {
     use DatabaseTransactions;
 
-    public function test_creating_a_user_with_a_phone_already_in_use_is_a_validation_error(): void
+    public function test_a_second_account_may_carry_a_phone_already_in_use(): void
     {
         $admin = User::whereHas('role', fn ($query) => $query->where('role', 'admin'))->first();
         $taken = User::whereNotNull('phone')->where('phone', '<>', '')->first();
@@ -25,13 +29,15 @@ class DuplicatePhoneIsRefusedTest extends TestCase
         }
 
         $this->actingAs($admin)->postJson('/api/users', [
-            'full_name' => 'Duplicate Phone Probe',
-            'email' => 'duplicate.phone.probe@fixture.test',
+            'full_name' => 'Shared Phone Probe',
+            'email' => 'shared.phone.probe@fixture.test',
             'phone' => $taken->phone,
             'role_id' => Role::where('role', 'admin')->value('id'),
-        ])->assertStatus(422)->assertJsonValidationErrors('phone');
+        ])->assertSuccessful();
 
-        $this->assertNull(User::where('email', 'duplicate.phone.probe@fixture.test')->first());
+        $created = User::where('email', 'shared.phone.probe@fixture.test')->first();
+        $this->assertNotNull($created);
+        $this->assertSame($taken->phone, $created->phone);
     }
 
     public function test_saving_an_account_with_its_own_phone_unchanged_is_allowed(): void

@@ -161,6 +161,27 @@ class CarriedOverMilestonesImportTest extends TestCase
         );
     }
 
+    /**
+     * A seat named without an address is said out loud.
+     *
+     * The institute's sheet writes 31 external supervisors by name alone.
+     * Nothing can be done with a name, but the scholar quietly ending up with
+     * no supervisor is worse than a line saying whose seat is empty.
+     */
+    public function test_a_supervisor_named_without_an_email_is_reported(): void
+    {
+        $response = $this->import([$this->row([
+            'supervisors' => [],
+            'named_without_email' => ['Dr. Outside Person (supervisor)'],
+        ])])->assertStatus(200);
+
+        $this->assertStringContainsString(
+            'Dr. Outside Person (supervisor) has no email in the sheet',
+            json_encode($response->json('data.errors'))
+        );
+        $this->assertSame(0, $this->scholar()->supervisors()->count());
+    }
+
     /** A row with no supervisor is not a statement that anyone was allocated. */
     public function test_a_row_without_supervisors_leaves_the_allocation_to_be_filed(): void
     {

@@ -398,13 +398,103 @@ class PresentationController extends Controller
      */
     public static function progressRows(array $rows): array
     {
-        return array_values(array_filter(array_map(fn (array $row) => [
-            'roll_no' => CsvRow::column($row, 'Registration Number', 'roll_no'),
-            'semester' => CsvRow::column($row, 'Progress for AY', 'Academic Year', 'semester'),
-            'date' => CsvRow::column($row, 'Date of progress', 'Date', 'date'),
-            'total_progress' => CsvRow::column($row, 'Total Progress %', 'Total Progress', 'total_progress'),
-            'row_number' => $row['_rowNumber'] ?? $row['row_number'] ?? null,
-        ], $rows), fn (array $row) => $row['roll_no'] !== '' && $row['semester'] !== ''));
+        // The sheet writes a scholar's registration number once and leaves the
+        // rows under it blank, which is how a merged cell reads to a person and
+        // an empty cell to everybody else. Two thirds of the sheet is those
+        // rows, so the number is carried down as a reader would carry it.
+        $carried = '';
+
+        return array_values(array_filter(array_map(function (array $row) use (&$carried) {
+            $roll = CsvRow::column($row, 'Registration Number', 'roll_no');
+            if ($roll !== '') {
+                $carried = $roll;
+            }
+
+            return [
+                'roll_no' => $roll !== '' ? $roll : $carried,
+                'semester' => self::semesterCode(CsvRow::column($row, 'Progress for AY', 'Academic Year', 'semester')),
+                'date' => self::progressDate(CsvRow::column($row, 'Date of progress', 'Date', 'date')),
+                'total_progress' => CsvRow::column($row, 'Total Progress %', 'Total Progress', 'total_progress'),
+                'row_number' => $row['_rowNumber'] ?? $row['row_number'] ?? null,
+            ];
+        }, $rows), fn (array $row) => $row['roll_no'] !== '' && $row['semester'] !== ''));
+    }
+
+    /**
+     * The period a row reports on, as a semester code.
+     *
+     * The office writes it as a month range and a calendar year, in about as
+     * many spellings as there are rows: "July-Dec 2025", "jan-june 2025",
+     * "Jan Jun 2020", "July - December 2024". July to December is the odd
+     * semester of the academic year that starts then; January to June is the
+     * even semester of the year that started the July before.
+     */
+    public static function semesterCode(string $value): string
+    {
+        // A trailing comma or full stop is punctuation, not part of the period.
+        $value = trim($value, " 	
+ .,;:-");
+        if ($value === '') {
+            return '';
+        }
+
+        if (preg_match('/^(\d{2})(\d{2})\s*(ODD|EVEN)/i', $value, $matches)) {
+            return strtoupper($matches[1] . $matches[2] . $matches[3]);
+        }
+
+        // "January 2023 to June 2023" and "July 2022 to Dec. 2022" name a year
+        // twice; the one that decides the semester is the one beside the first
+        // month, so the first month and the first year are what is read.
+        if (!preg_match('/([a-z]+)\D*?((?:19|20)\d{2}|\d{2})(?!\d)/i', $value, $matches)) {
+            return '';
+        }
+
+        $month = strtolower(substr($matches[1], 0, 3));
+        $year = (int) $matches[2];
+        $year += $year < 100 ? 2000 : 0;
+
+        if (in_array($month, ['jan', 'feb', 'mar', 'apr', 'may', 'jun'], true)) {
+            return sprintf('%02d%02dEVEN', ($year - 1) % 100, $year % 100);
+        }
+
+        if (in_array($month, ['jul', 'aug', 'sep', 'oct', 'nov', 'dec'], true)) {
+            return sprintf('%02d%02dODD', $year % 100, ($year + 1) % 100);
+        }
+
+        return '';
+    }
+
+    /**
+     * The day a presentation was held, as far as the sheet knows it.
+     *
+     * Many rows carry only a month and year, which becomes the first of that
+     * month, and many carry a word instead: "NA", "-", "Absent", "Maternity
+     * Leave". Those leave the date empty, which the evaluation allows, and a
+     * coordinator can fill it in later.
+     */
+    public static function progressDate(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '' || !preg_match('/\d/', $value)) {
+            return '';
+        }
+
+        foreach (['d-m-Y', 'd/m/Y', 'd.m.Y', 'd-M-Y', 'd M Y', 'Y-m-d'] as $format) {
+            $date = \DateTime::createFromFormat('!' . $format, $value);
+            if ($date && $date->format($format) === $value) {
+                return $date->format('Y-m-d');
+            }
+        }
+
+        // "Sep-25", "Apr-26", "09.2025": the month is known, the day is not.
+        foreach (['M-y', 'M-Y', 'm-Y', 'm.Y', 'm/Y', 'M y'] as $format) {
+            $date = \DateTime::createFromFormat('!' . $format, $value);
+            if ($date && $date->format($format) === $value) {
+                return $date->format('Y-m-01');
+            }
+        }
+
+        return '';
     }
 
     public function importProgress(Request $request)

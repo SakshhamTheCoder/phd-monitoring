@@ -253,7 +253,7 @@ class UserManagementController extends Controller
             'full_name' => 'required_without:first_name|string|max:255',
             'first_name' => 'required_without:full_name|string|max:255',
             'last_name' => 'nullable|string|max:255',
-            'phone' => ['required', 'string', 'max:20', Rule::unique('users', 'phone')->ignore($request->id)],
+            'phone' => ['required', 'string', 'max:20'],
             'gender' => 'nullable|in:Male,Female',
             'physically_handicapped' => 'nullable|boolean',
             'role_id' => 'required|exists:roles,id',

@@ -55,7 +55,7 @@ class StudentController extends Controller {
                 'full_name' => 'required_without:first_name|string',
                 'first_name' => 'required_without:full_name|string',
                 'last_name' => 'nullable|string',
-                'phone' => 'required|string|unique:users,phone',
+                'phone' => 'required|string',
                 'email' => 'required|email|unique:users',
                 'roll_no' => 'required|string',
                 'department_id' => 'required|integer',
@@ -188,6 +188,13 @@ class StudentController extends Controller {
     private function syncSupervisionTeam(Student $student, array $row, int $rowNumber): array
     {
         $errors = [];
+
+        // A seat the sheet names but gives no address for. Reported once per
+        // row, so the office can chase the address instead of finding the
+        // scholar supervised by nobody months later.
+        foreach ((array) ($row['named_without_email'] ?? []) as $named) {
+            $errors[] = "Row {$rowNumber}: {$named} has no email in the sheet, seat left empty";
+        }
 
         $groups = [
             'supervisors' => [\App\Models\Supervisor::class, 'supervisor'],
@@ -539,6 +546,10 @@ class StudentController extends Controller {
             'overall_progress' => $column($row, 'Overall Progress', 'overall_progress'),
             'supervisors' => $slots($row, fn ($slot) => ["Supervisor {$slot} Email"]),
             'committee' => $slots($row, fn ($slot) => ["Committee Member {$slot} Email"]),
+            // A seat filled with a name and no address. People are matched on
+            // their email, so the seat cannot be given to anybody, and the
+            // office needs to hear whose it was rather than watch it vanish.
+            'named_without_email' => self::namedWithoutEmail($row),
             // The sheet spells these three inconsistently, so all its spellings are read.
             'irb_members' => $slots($row, fn ($slot) => ["IRB member{$slot} email", "IRB member {$slot} email", "IRB member {$slot} mail"]),
             // The sheet stops prefixing after the expert's name, so its last
@@ -551,6 +562,41 @@ class StudentController extends Controller {
                 'institution' => $column($row, 'External expert for IRB Institute name', 'Institute name'),
             ],
         ], $rows);
+    }
+
+    /**
+     * Seats the row names but gives no address for.
+     *
+     * The institute's sheet writes a good number of external supervisors by
+     * name alone. Nothing can be done with that, but it is reported per row so
+     * the office can send the addresses rather than discover the gap later.
+     *
+     * @param  array<string, mixed>  $row
+     * @return array<int, string>
+     */
+    private static function namedWithoutEmail(array $row): array
+    {
+        $column = fn (string ...$aliases) => CsvRow::column($row, ...$aliases);
+        $named = [];
+
+        foreach ([1, 2, 3] as $slot) {
+            $seats = [
+                'supervisor' => ["Supervisor {$slot} Name", "Supervisor {$slot} Email"],
+                'committee member' => [
+                    $slot === 1 ? 'Doctoral Committee Member 1 Name' : "Committee Member {$slot} Name",
+                    "Committee Member {$slot} Email",
+                ],
+            ];
+
+            foreach ($seats as $seat => [$nameColumn, $emailColumn]) {
+                $name = $column($nameColumn);
+                if ($name !== '' && $column($emailColumn) === '') {
+                    $named[] = "{$name} ({$seat})";
+                }
+            }
+        }
+
+        return $named;
     }
 
     /**
@@ -1284,7 +1330,7 @@ class StudentController extends Controller {
             'full_name' => 'required_without:first_name|string',
             'first_name' => 'required_without:full_name|string',
             'last_name' => 'nullable|string',
-            'phone' => 'required|string|unique:users,phone,' . $user->id,
+            'phone' => 'required|string',
             'email' => 'required|email|unique:users,email,' . $user->id,
             'department_id' => 'required|integer',
             'date_of_registration' => 'required|date',

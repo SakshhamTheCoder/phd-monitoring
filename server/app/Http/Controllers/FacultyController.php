@@ -86,7 +86,7 @@ class FacultyController extends Controller
             'first_name' => 'required_without:full_name|string',
             'last_name' => 'nullable|string',
             'email' => 'required|email|unique:users,email',
-            'phone' => 'required|string|unique:users,phone',
+            'phone' => 'required|string',
             'department_id' => 'nullable|integer',
             'designation' => 'required|string',
             // The form no longer asks. Internal is what a new faculty member is
@@ -216,7 +216,7 @@ class FacultyController extends Controller
             'first_name' => 'nullable|string',
             'last_name' => 'nullable|string',
             'email' => 'required|email|unique:users,email,' . $faculty->user_id,
-            'phone' => 'required|string|unique:users,phone,' . $faculty->user_id,
+            'phone' => 'required|string',
             'department_id' => 'nullable|integer',
             'designation' => 'required|string',
             // Never sending a type must not silently flip an existing faculty
