@@ -120,7 +120,8 @@
         "department": "Physics",
         "institution": "Elsewhere Institute"
       },
-      "named_without_email": []
+      "named_without_email": [],
+      "row_number": 2
     },
     {
       "full_name": "",
@@ -152,7 +153,8 @@
         "department": "",
         "institution": ""
       },
-      "named_without_email": []
+      "named_without_email": [],
+      "row_number": 3
     },
     {
       "full_name": "Third",
@@ -184,7 +186,8 @@
         "department": "",
         "institution": ""
       },
-      "named_without_email": []
+      "named_without_email": [],
+      "row_number": 4
     }
   ]
 }

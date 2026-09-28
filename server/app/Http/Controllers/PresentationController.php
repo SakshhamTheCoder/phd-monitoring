@@ -474,27 +474,7 @@ class PresentationController extends Controller
      */
     public static function progressDate(string $value): string
     {
-        $value = trim($value);
-        if ($value === '' || !preg_match('/\d/', $value)) {
-            return '';
-        }
-
-        foreach (['d-m-Y', 'd/m/Y', 'd.m.Y', 'd-M-Y', 'd M Y', 'Y-m-d'] as $format) {
-            $date = \DateTime::createFromFormat('!' . $format, $value);
-            if ($date && $date->format($format) === $value) {
-                return $date->format('Y-m-d');
-            }
-        }
-
-        // "Sep-25", "Apr-26", "09.2025": the month is known, the day is not.
-        foreach (['M-y', 'M-Y', 'm-Y', 'm.Y', 'm/Y', 'M y'] as $format) {
-            $date = \DateTime::createFromFormat('!' . $format, $value);
-            if ($date && $date->format($format) === $value) {
-                return $date->format('Y-m-01');
-            }
-        }
-
-        return '';
+        return \App\Support\SheetDate::parse($value);
     }
 
     /**

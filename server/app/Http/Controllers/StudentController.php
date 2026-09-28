@@ -13,6 +13,7 @@ use App\Models\ConstituteOfIRB;
 use App\Models\Presentation;
 use App\Models\Publication;
 use App\Support\CsvRow;
+use App\Support\SheetDate;
 use Illuminate\Http\Request;    
 use Illuminate\Support\Facades\Auth;
 use App\Models\Role;
@@ -162,6 +163,15 @@ class StudentController extends Controller {
         'net_gate',
         'overall_progress',
         'current_status',
+        'date_of_registration',
+        'date_of_irb',
+        'date_of_synopsis',
+        'date_of_thesis',
+        'date_of_thesis_awarded',
+    ];
+
+    /** Columns the sheet writes as dates, in whichever shape the typist's machine used. */
+    private const DATE_FIELDS = [
         'date_of_registration',
         'date_of_irb',
         'date_of_synopsis',
@@ -525,6 +535,9 @@ class StudentController extends Controller {
         ));
 
         return array_map(fn (array $row) => [
+            // The row's place in the file, so a refusal names the line the
+            // office has to look at rather than its place in one batch of fifty.
+            'row_number' => $row['_rowNumber'] ?? null,
             'full_name' => CsvRow::fallback($column($row, 'Full Name', 'full_name'), CsvRow::words($column($row, 'First Name'), $column($row, 'Last Name'))),
             'email' => $column($row, 'Email', 'email'),
             'phone' => $column($row, 'Phone', 'phone'),
@@ -740,6 +753,7 @@ class StudentController extends Controller {
             // many requests it took. It is what Send sign-in links reads.
             'import_batch' => 'nullable|string|max:64',
             'students' => 'required|array',
+            'students.*.row_number' => 'nullable|integer',
             'students.*.full_name' => 'nullable|string',
             'students.*.first_name' => 'nullable|string',
             'students.*.last_name' => 'nullable|string',
@@ -747,9 +761,12 @@ class StudentController extends Controller {
             'students.*.email' => 'required|email',
             'students.*.roll_no' => 'nullable|string',
             'students.*.department_code' => 'nullable|string',
-            'students.*.date_of_registration' => 'nullable|date',
+            // Dates are read per row, not here: one cell reading 'awaited'
+            // used to refuse the whole batch of fifty, and the shapes this rule
+            // does accept are not all shapes MySQL takes.
+            'students.*.date_of_registration' => 'nullable|string',
             'students.*.current_status' => 'nullable|in:part-time,full-time,executive',
-            'students.*.date_of_irb' => 'nullable|date',
+            'students.*.date_of_irb' => 'nullable|string',
             'students.*.phd_title' => 'nullable|string',
             'students.*.fathers_name' => 'nullable|string',
             'students.*.address' => 'nullable|string',
@@ -758,9 +775,9 @@ class StudentController extends Controller {
             'students.*.gender' => 'nullable|string',
             'students.*.is_jrf' => 'nullable|boolean',
             'students.*.net_gate' => 'nullable|string|max:40',
-            'students.*.date_of_synopsis' => 'nullable|date',
-            'students.*.date_of_thesis' => 'nullable|date',
-            'students.*.date_of_thesis_awarded' => 'nullable|date',
+            'students.*.date_of_synopsis' => 'nullable|string',
+            'students.*.date_of_thesis' => 'nullable|string',
+            'students.*.date_of_thesis_awarded' => 'nullable|string',
             'students.*.supervisors' => 'nullable|array',
             'students.*.supervisors.*' => 'nullable|string',
             'students.*.committee' => 'nullable|array',
@@ -789,12 +806,29 @@ class StudentController extends Controller {
         try {
             foreach ($request->students as $index => $studentData) {
                 try {
+                    $rowNumber = $studentData['row_number'] ?? ($index + 1);
+
+                    // The same column arrives as 23-Feb-2026, 10-01-2024 or
+                    // 2024-01-10 depending on the machine that typed it. Written
+                    // straight through, anything but the last shape was refused
+                    // by the database and cost the row every other correction
+                    // it carried.
+                    foreach (self::DATE_FIELDS as $field) {
+                        $written = trim((string) ($studentData[$field] ?? ''));
+                        if ($written === '') continue;
+
+                        $read = SheetDate::parse($written);
+                        if ($read === '') {
+                            $errors[] = "Row {$rowNumber}: {$field} reads '{$written}', which is not a date, so it was left as it was";
+                        }
+                        $studentData[$field] = $read;
+                    }
                     // Find department by code, accepting superseded codes so
                     // spreadsheets saved before the codes were corrected still
                     // import cleanly. Only validate if code was provided — partial updates may omit it.
                     $department = !empty($studentData['department_code']) ? \App\Support\DepartmentCodes::resolve($studentData['department_code']) : null;
                     if (!empty($studentData['department_code']) && !$department) {
-                        $errors[] = "Row " . ($index + 1) . ": Department code '{$studentData['department_code']}' not found";
+                        $errors[] = "Row " . $rowNumber . ": Department code '{$studentData['department_code']}' not found";
                         $failed++;
                         continue;
                     }
@@ -811,14 +845,28 @@ class StudentController extends Controller {
                     // and phone onto the first while writing everything else
                     // onto the second.
                     if ($existingUser && $existingStudent && $existingStudent->user_id !== $existingUser->id) {
-                        $errors[] = "Row " . ($index + 1) . ": the email and the registration number belong to different scholars";
+                        $errors[] = "Row " . $rowNumber . ": the email and the registration number belong to different scholars";
                         $failed++; continue;
+                    }
+
+                    // The registration number is here, the address on the row
+                    // is not. The sheet is the institute's newer record of how
+                    // to reach a scholar, and refusing the row over it threw
+                    // away every other correction the row carried, which is
+                    // what happened to most of the sheet. Nobody else holds
+                    // this address: a row whose address belongs to a different
+                    // person is refused further up.
+                    if (!$existingUser && $existingStudent) {
+                        $wasReachedAt = $existingStudent->user->email;
+                        $existingUser = $existingStudent->user;
+                        $existingUser->email = $studentData['email'];
+                        $errors[] = "Row {$rowNumber}: sign-in address changed from {$wasReachedAt} to {$studentData['email']}, which is what the sheet says";
                     }
 
                     if ($existingUser && $existingStudent) {
                         if ($this->outsideWritableDepartments($existingStudent->department_id)
                             || ($department && $this->outsideWritableDepartments($department->id))) {
-                            $errors[] = "Row " . ($index + 1) . ": this scholar or department is outside your departments";
+                            $errors[] = "Row " . $rowNumber . ": this scholar or department is outside your departments";
                             $failed++; continue;
                         }
                         // A blank cell means "not supplied", never "clear this".
@@ -854,34 +902,41 @@ class StudentController extends Controller {
                         $updateCount++;
                         continue;
                     }
-                    if ($existingUser || $existingStudent) {
-                        $errors[] = "Row " . ($index + 1) . ": email/roll mismatch for existing student";
+                    // An address the portal knows as a member of staff is
+                    // not a scholar's, whatever column it was typed into.
+                    if ($existingUser && $existingUser->faculty) {
+                        $errors[] = "Row {$rowNumber}: {$studentData['email']} is a faculty member's address, so no scholar was created for it";
                         $failed++; continue;
                     }
 
-                    // Create new - require minimal fields
+                    // Create new - require minimal fields. An account that
+                    // exists with no scholar record behind it is given one here
+                    // rather than refused: the person is already in the portal,
+                    // and what the sheet adds is the degree.
                     $name = PersonName::fromRow($studentData);
                     if ($name === null || empty($studentData['phone']) || empty($studentData['roll_no']) || empty($studentData['department_code']) || empty($studentData['date_of_registration']) || empty($studentData['current_status'])) {
-                        $errors[] = "Row " . ($index + 1) . ": missing required fields for new student (full_name, phone, roll_no, department_code, date_of_registration, current_status)";
+                        $errors[] = "Row " . $rowNumber . ": missing required fields for new student (full_name, phone, roll_no, department_code, date_of_registration, current_status)";
                         $failed++; continue;
                     }
                     if ($this->outsideWritableDepartments($department->id)) {
-                        $errors[] = "Row " . ($index + 1) . ": department '{$studentData['department_code']}' is outside your departments";
+                        $errors[] = "Row " . $rowNumber . ": department '{$studentData['department_code']}' is outside your departments";
                         $failed++; continue;
                     }
                     // Generated, never shown: the row is mailed a link below.
                     $password = Str::password(8, true, true, true, false);
 
                     // Create user (address lives on Student only)
-                    $user = new \App\Models\User();
+                    $user = $existingUser ?: new \App\Models\User();
                     $user->first_name = $name['first'];
                     $user->last_name = $name['last'];
                     $user->phone = $studentData['phone'];
                     $user->email = $studentData['email'];
-                    $user->password = bcrypt($password);
+                    if (!$existingUser) {
+                        $user->password = bcrypt($password);
+                        $user->role_id = $role_id;
+                        $user->current_role_id = $role_id;
+                    }
                     $user->gender = $studentData['gender'] ?? null;
-                    $user->role_id = $role_id;
-                    $user->current_role_id = $role_id;
                     $user->save();
 
                     // Create student
@@ -906,7 +961,7 @@ class StudentController extends Controller {
                     $student->imported_at = $importedAt;
                     $student->save();
 
-                    if ($request->boolean('send_invites')) {
+                    if ($request->boolean('send_invites') && !$existingUser) {
                         $user->inviteToSetPassword();
                     }
 
@@ -922,7 +977,7 @@ class StudentController extends Controller {
                     $createCount++;
 
                 } catch (\Exception $e) {
-                    $errors[] = "Row " . ($index + 1) . ": " . $e->getMessage();
+                    $errors[] = "Row " . $rowNumber . ": " . $e->getMessage();
                     $failed++;
                 }
             }
