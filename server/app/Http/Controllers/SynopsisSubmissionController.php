@@ -75,9 +75,10 @@ class SynopsisSubmissionController extends Controller
     /**
      * Raise the synopsis.
      *
-     * Only once the coursework is done. The credits required are per status and
-     * admin-editable (AppSetting group 'coursework'); what the scholar has is
-     * the sum of the courses marked complete on their profile.
+     * Only once the coursework is done. The credits required are the
+     * institute's own figure for the scholar's school and admission date
+     * (App\Support\CourseworkRequirement); what the scholar has is the sum of
+     * the courses marked complete on their profile.
      */
     public function createForm(Request $request)
     {

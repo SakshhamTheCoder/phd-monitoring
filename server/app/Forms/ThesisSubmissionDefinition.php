@@ -43,7 +43,14 @@ final class ThesisSubmissionDefinition extends FormDefinition
                     Field::text('Status of student at time of admission')->value($data['initial_status'] ?? null),
                 ], space: 2),
                 self::row([
-                    Field::text('Current status')->value(($data['current_status'] ?? null) === 'part-time' ? 'Part Time' : 'Full Time'),
+                    // Three statuses, not two: an executive scholar's form read
+                    // "Full Time" because anything that was not part time was
+                    // assumed to be full time.
+                    Field::text('Current status')->value(match ($data['current_status'] ?? null) {
+                        'part-time' => 'Part Time',
+                        'executive' => 'Executive',
+                        default => 'Full Time',
+                    }),
                     // "NA" until the scholar's status has changed.
                     $statusChanged !== 'NA'
                         ? Field::text('Date of change of status')->value($statusChanged)->format('date')

@@ -102,23 +102,6 @@ final class ConfigurationPage extends PageDefinition
                     'save_needs_load' => true,
                 ]],
                 ['value' => 'branches', 'label' => 'UG branches', 'section' => ['block' => 'ug-branches']],
-                ['value' => 'coursework', 'label' => 'Coursework credits', 'section' => [
-                    'kind' => 'settings',
-                    'group' => 'coursework',
-                    'fields' => $numbers([
-                        'min_credits_full_time' => 'Full time',
-                        'min_credits_part_time' => 'Part time',
-                        'min_credits_executive' => 'Executive',
-                    ], 0, 100, '200'),
-                    'checks' => [
-                        ['keys' => ['min_credits_full_time', 'min_credits_part_time', 'min_credits_executive'], 'filled' => true, 'message' => 'Fill in every field before saving.'],
-                        ['keys' => ['min_credits_full_time', 'min_credits_part_time', 'min_credits_executive'], 'integer' => true, 'min' => 0, 'max' => 100, 'message' => 'Every requirement must be a whole number between 0 and 100.'],
-                    ],
-                    'done' => 'Coursework requirements saved',
-                    'note' => "A scholar's total is the credits of the courses marked complete on their profile. Until they reach the figure for their status, the synopsis cannot be raised, and their profile says how far off they are.",
-                    'load_failed' => 'Could not load the coursework requirements. Check your connection and try again.',
-                    'save_needs_load' => true,
-                ]],
                 ['value' => 'checklist', 'label' => 'Synopsis checklist', 'section' => ['block' => 'synopsis-checklist']],
             ],
         ]);

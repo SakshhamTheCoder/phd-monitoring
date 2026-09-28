@@ -123,21 +123,10 @@ class Student extends Model
             ->sum('courses.credits');
     }
 
-    /**
-     * The credits this scholar's status requires before a synopsis.
-     *
-     * An unrecognised status falls to the full-time figure rather than throwing
-     * on a settings key that does not exist. current_status is an enum, so that
-     * only happens if a status is added without a setting to go with it.
-     */
+    /** The credits this scholar's cohort requires before a synopsis. */
     public function requiredCredits(): int
     {
-        $key = 'min_credits_' . str_replace('-', '_', (string) $this->current_status);
-        if (!array_key_exists($key, AppSetting::GROUPS['coursework']['defaults'])) {
-            $key = 'min_credits_full_time';
-        }
-
-        return AppSetting::value('coursework', $key);
+        return \App\Support\CourseworkRequirement::for($this);
     }
 
     public function hasFinishedCoursework(): bool

@@ -283,7 +283,6 @@ class SynopsisVivaRoundTest extends TestCase
             . 'Unskip with it.'
         );
 
-        AppSetting::put('coursework', 'min_credits_full_time', 12);
         $this->giveCredits(8);
         $this->openSynopsisFor($this->scholar);
 
@@ -300,7 +299,6 @@ class SynopsisVivaRoundTest extends TestCase
      */
     public function test_the_synopsis_opens_once_the_credits_are_there(): void
     {
-        AppSetting::put('coursework', 'min_credits_full_time', 12);
         $this->giveCredits(12);
         $this->openSynopsisFor($this->scholar);
 

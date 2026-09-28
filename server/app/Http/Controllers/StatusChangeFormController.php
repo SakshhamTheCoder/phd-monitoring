@@ -69,6 +69,18 @@ class StatusChangeFormController extends Controller
         if($role->role != 'student'){
             return $this->refuse();
         }
+        // The form swaps full time and part time, and nothing else. An
+        // executive scholar reaching it was read as part time, so approving the
+        // change wrote them down as full time and their admission route was
+        // lost. Whether the institute allows leaving the executive programme is
+        // a question for the office, not something to infer here.
+        if ($user->student->current_status === 'executive') {
+            return $this->refuse(
+                'The executive programme is not a full time or part time status, so this form cannot change it. '
+                . 'Ask the office.'
+            );
+        }
+
         $status_changes=$user->student->statusChanges();
         if($status_changes->count()>0){
             $steps=['student','faculty','phd_coordinator','hod','dra','dordc','director','complete'];
