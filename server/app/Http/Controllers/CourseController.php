@@ -60,7 +60,12 @@ class CourseController extends Controller
                     'credits' => $course->credits,
                     'department_id' => $course->department_id,
                     'department_name' => $course->department->name ?? 'N/A',
-                    'enrolled_count' => $course->studentCourses()->where('status', 'enrolled')->count(),
+                    // Everyone the subject has been tagged to, not only those
+                    // without a grade yet. A scholar who has passed it still took
+                    // it, and counting only the ungraded showed 0 against every
+                    // subject of an imported catalogue, which reads as an import
+                    // that did nothing.
+                    'scholars_count' => $course->studentCourses()->count(),
                     'created_at' => $course->created_at,
                 ];
             });
@@ -73,8 +78,8 @@ class CourseController extends Controller
                 'current_page' => $courses->currentPage(),
                 'totalPages' => $courses->lastPage(),
                 'role' => $role,
-                'fields' => ['course_code', 'course_name', 'credits', 'department_name', 'enrolled_count'],
-                'fieldsTitles' => ['Course Code', 'Course Name', 'Credits', 'Department', 'Enrolled Students'],
+                'fields' => ['course_code', 'course_name', 'credits', 'department_name', 'scholars_count'],
+                'fieldsTitles' => ['Course Code', 'Course Name', 'Credits', 'Department', 'Scholars tagged'],
             ], 200);
         } catch (\Exception $e) {
             Log::error('Error listing courses: ' . $e->getMessage());
