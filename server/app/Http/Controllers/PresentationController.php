@@ -415,7 +415,7 @@ class PresentationController extends Controller
                 'roll_no' => $roll !== '' ? $roll : $carried,
                 'semester' => self::semesterCode(CsvRow::column($row, 'Progress for AY', 'Academic Year', 'semester')),
                 'date' => self::progressDate(CsvRow::column($row, 'Date of progress', 'Date', 'date')),
-                'total_progress' => CsvRow::column($row, 'Total Progress %', 'Total Progress', 'total_progress'),
+                'total_progress' => self::runningTotal($row),
                 'row_number' => $row['_rowNumber'] ?? $row['row_number'] ?? null,
             ];
         // A row with a total and no period is the scholar's standing figure,
@@ -659,6 +659,35 @@ class PresentationController extends Controller
                 'errors' => $errors,
             ],
         ], 200);
+    }
+
+    /**
+     * The running total a row reports, added up when the row does not state it.
+     *
+     * The portal keeps the total and works out the gain; the sheet states all
+     * three, and on a good number of rows the total column is simply empty
+     * while the two figures either side of it are filled. Adding them is what a
+     * person reading the row would do, and it is the difference between the
+     * evaluation being recorded and being skipped.
+     *
+     * @param  array<string, mixed>  $row
+     */
+    private static function runningTotal(array $row): string
+    {
+        $total = CsvRow::column($row, 'Total Progress %', 'Total Progress', 'total_progress');
+        if ($total !== '') {
+            return $total;
+        }
+
+        $before = CsvRow::column($row, 'Previous Progress %', 'Previous Progress', 'previous_progress');
+        $gained = CsvRow::column($row, 'Progress for this period', 'Progress', 'progress');
+        $number = fn (string $value) => is_numeric(trim(str_replace('%', '', $value))) ? (float) str_replace('%', '', $value) : null;
+
+        if ($number($before) === null || $number($gained) === null) {
+            return '';
+        }
+
+        return (string) ($number($before) + $number($gained));
     }
 
     /**

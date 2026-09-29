@@ -267,4 +267,46 @@ class ProgressHistoryImportTest extends TestCase
         $this->assertSame(100.0, (float) $student->fresh()->overall_progress);
         $this->assertSame(1, Presentation::where('student_id', $student->roll_no)->count());
     }
+    /**
+     * The sheet states all three figures, and on 43 rows of the institute's own
+     * file the total column is empty while the two either side of it are
+     * filled. Adding them is what a person reading the row does, and it is the
+     * difference between the evaluation being recorded and being skipped.
+     */
+    public function test_the_total_is_added_up_when_the_row_does_not_state_it(): void
+    {
+        $this->actAs('admin');
+        $student = $this->freshScholar();
+
+        $this->postJson('/api/presentation/import-progress', ['rows' => [[
+            '_rowNumber' => 2,
+            'Registration Number' => (string) $student->roll_no,
+            'Progress for AY' => 'July-Dec 2024',
+            'Date of progress' => '04-11-2024',
+            'Previous Progress %' => '20',
+            'Progress for this period' => '15',
+            'Total Progress %' => '',
+        ]]])->assertStatus(200)->assertJsonPath('data.success_count', 1);
+
+        $this->assertSame(35.0, (float) Presentation::where('student_id', $student->roll_no)->value('total_progress'));
+    }
+
+    /** With only one of the two, there is nothing to add, so the row is skipped. */
+    public function test_one_figure_alone_is_not_a_total(): void
+    {
+        $this->actAs('admin');
+        $student = $this->freshScholar();
+
+        $this->postJson('/api/presentation/import-progress', ['rows' => [[
+            '_rowNumber' => 2,
+            'Registration Number' => (string) $student->roll_no,
+            'Progress for AY' => 'July-Dec 2024',
+            'Date of progress' => '04-11-2024',
+            'Previous Progress %' => '',
+            'Progress for this period' => '15',
+            'Total Progress %' => '',
+        ]]])->assertStatus(200)->assertJsonPath('data.success_count', 0);
+
+        $this->assertSame(0, Presentation::where('student_id', $student->roll_no)->count());
+    }
 }
