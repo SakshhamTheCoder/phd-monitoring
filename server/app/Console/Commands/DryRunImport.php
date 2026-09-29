@@ -3,7 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Http\Controllers\CourseController;
+use App\Http\Controllers\FacultyController;
 use App\Http\Controllers\PresentationController;
+use App\Http\Controllers\StudentController;
 use App\Http\Controllers\StudentCourseController;
 use App\Models\User;
 use Illuminate\Console\Command;
@@ -27,7 +29,8 @@ class DryRunImport extends Command
 {
     protected $signature = 'import:dry-run
         {file : a CSV exported from the sheet}
-        {--kind=courses : courses for the catalogue, coursework for the scholar tags, progress for the evaluation history}';
+        {--kind=courses : courses, coursework, progress, scholars or faculty}
+        {--out= : write what it would report as JSON, keyed by the row number in the sheet}';
 
     protected $description = 'Read a sheet through an import and roll it back, reporting what it would do';
 
@@ -66,6 +69,11 @@ class DryRunImport extends Command
         }
 
         $this->report($answer);
+
+        if ($this->option('out')) {
+            $this->write($answer, $this->option('out'));
+        }
+
         $this->newLine();
         $this->info('Rolled back. Nothing above was kept.');
 
@@ -114,6 +122,8 @@ class DryRunImport extends Command
             'courses' => ['/api/courses/import', CourseController::class, 'importCoursesFromCSV'],
             'coursework' => ['/api/courses/student/bulk-import', StudentCourseController::class, 'bulkImportFromCSV'],
             'progress' => ['/api/presentation/import-progress', PresentationController::class, 'importProgress'],
+            'scholars' => ['/api/students/bulk-upload', StudentController::class, 'bulkUpload'],
+            'faculty' => ['/api/faculty/bulk-import', FacultyController::class, 'upload'],
             default => [null, null, null],
         };
 
@@ -126,6 +136,31 @@ class DryRunImport extends Command
         $request->setUserResolver(fn () => Auth::user());
 
         return app($controller)->{$method}($request)->getData(true);
+    }
+
+    /**
+     * What it would report, keyed by the sheet's own row number, for the marker
+     * that colours those rows in a copy of the sheet.
+     *
+     * @param  array<string, mixed>  $answer
+     */
+    private function write(array $answer, string $path): void
+    {
+        $byRow = [];
+        foreach ($answer['data']['errors'] ?? [] as $message) {
+            if (preg_match('/^Row (\d+): (.*)$/s', (string) $message, $found)) {
+                $byRow[$found[1]][] = $found[2];
+                continue;
+            }
+
+            // A line about the run rather than a row, such as a count of the
+            // rows that gave a standing total.
+            $byRow['0'][] = (string) $message;
+        }
+
+        file_put_contents($path, json_encode($byRow, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        $this->newLine();
+        $this->info(count($byRow) . ' rows written to ' . $path);
     }
 
     /** @param array<string, mixed> $answer */
