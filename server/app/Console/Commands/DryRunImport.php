@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Http\Controllers\CourseController;
+use App\Http\Controllers\PresentationController;
 use App\Http\Controllers\StudentCourseController;
 use App\Models\User;
 use Illuminate\Console\Command;
@@ -26,7 +27,7 @@ class DryRunImport extends Command
 {
     protected $signature = 'import:dry-run
         {file : a CSV exported from the sheet}
-        {--kind=courses : courses for the catalogue, coursework for the scholar tags}';
+        {--kind=courses : courses for the catalogue, coursework for the scholar tags, progress for the evaluation history}';
 
     protected $description = 'Read a sheet through an import and roll it back, reporting what it would do';
 
@@ -112,6 +113,7 @@ class DryRunImport extends Command
         [$path, $controller, $method] = match ($this->option('kind')) {
             'courses' => ['/api/courses/import', CourseController::class, 'importCoursesFromCSV'],
             'coursework' => ['/api/courses/student/bulk-import', StudentCourseController::class, 'bulkImportFromCSV'],
+            'progress' => ['/api/presentation/import-progress', PresentationController::class, 'importProgress'],
             default => [null, null, null],
         };
 

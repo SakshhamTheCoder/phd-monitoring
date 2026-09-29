@@ -418,7 +418,11 @@ class PresentationController extends Controller
                 'total_progress' => CsvRow::column($row, 'Total Progress %', 'Total Progress', 'total_progress'),
                 'row_number' => $row['_rowNumber'] ?? $row['row_number'] ?? null,
             ];
-        }, $rows), fn (array $row) => $row['roll_no'] !== '' && $row['semester'] !== ''));
+        // A row with a total and no period is the scholar's standing figure,
+        // not an evaluation: the office writes one for everyone who has
+        // finished. It used to be dropped here, so a scholar at 100% imported
+        // as nothing at all.
+        }, $rows), fn (array $row) => $row['roll_no'] !== '' && ($row['semester'] !== '' || $row['total_progress'] !== '')));
     }
 
     /**
@@ -502,13 +506,16 @@ class PresentationController extends Controller
         $request->validate([
             'rows' => 'required|array',
             'rows.*.roll_no' => 'required',
-            'rows.*.semester' => 'required|string',
+            'rows.*.semester' => 'nullable|string',
             'rows.*.row_number' => 'required|integer',
         ]);
 
         $errors = [];
         $imported = 0;
         $skipped = 0;
+        // Rows that carry a total but name no evaluation. Counted rather than
+        // listed: the sheet has hundreds and each one is ordinary.
+        $standingTotals = 0;
 
         $byScholar = [];
         foreach ($request->rows as $row) {
@@ -530,6 +537,20 @@ class PresentationController extends Controller
                 }
                 continue;
             }
+
+            // A row with no period says where the scholar stands, not what
+            // happened in a semester, so it records no evaluation.
+            $standing = null;
+            $rows = array_values(array_filter($rows, function ($row) use (&$standing, &$standingTotals) {
+                if (trim((string) $row['semester']) !== '') {
+                    return true;
+                }
+
+                $standing = max($standing ?? 0, (float) $row['total_progress']);
+                $standingTotals++;
+
+                return false;
+            }));
 
             usort($rows, fn ($a, $b) => $this->semesterOrder($a['semester']) <=> $this->semesterOrder($b['semester']));
 
@@ -610,10 +631,18 @@ class PresentationController extends Controller
                 $imported++;
             }
 
-            if ($latestTotal !== null) {
-                $student->overall_progress = $latestTotal;
+            // The highest figure the sheet gives for this scholar, whether it
+            // came from their last evaluation or from a standing total.
+            $highest = max((float) ($latestTotal ?? 0), (float) ($standing ?? 0));
+            if ($latestTotal !== null || $standing !== null) {
+                $student->overall_progress = $highest;
                 $student->save();
             }
+        }
+
+        if ($standingTotals > 0) {
+            $errors[] = "{$standingTotals} rows gave a scholar's standing total without naming an evaluation, "
+                . "so the figure was recorded against the scholar and no evaluation was created";
         }
 
         return response()->json([

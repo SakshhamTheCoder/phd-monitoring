@@ -219,4 +219,52 @@ class ProgressHistoryImportTest extends TestCase
 
         $this->import([$this->row($student, '2324ODD', 20, 2)])->assertStatus(403);
     }
+    /**
+     * The sheet writes one row per scholar who has finished: a total, and no
+     * period, because it belongs to no semester. That is where the scholar
+     * stands, so it is recorded against them and no evaluation is invented.
+     * Those rows used to be dropped before the import saw them, so a scholar at
+     * 100% imported as nothing at all.
+     */
+    public function test_a_total_with_no_period_is_the_scholars_standing_figure(): void
+    {
+        $this->actAs('admin');
+        $student = $this->freshScholar();
+
+        $response = $this->import([[
+            'roll_no' => (string) $student->roll_no,
+            'semester' => '',
+            'date' => '',
+            'total_progress' => '100',
+            'row_number' => 2,
+        ]])->assertStatus(200);
+
+        $this->assertSame(100.0, (float) $student->fresh()->overall_progress);
+        $this->assertSame(0, Presentation::where('student_id', $student->roll_no)->count());
+        $this->assertStringContainsString(
+            'standing total without naming an evaluation',
+            json_encode($response->json('data.errors'))
+        );
+    }
+
+    /** An evaluation still wins when the sheet gives both. */
+    public function test_an_evaluation_and_a_standing_total_leave_the_higher_figure(): void
+    {
+        $this->actAs('admin');
+        $student = $this->freshScholar();
+
+        $this->import([
+            $this->row($student, '2425ODD', 40, 2),
+            [
+                'roll_no' => (string) $student->roll_no,
+                'semester' => '',
+                'date' => '',
+                'total_progress' => '100',
+                'row_number' => 3,
+            ],
+        ])->assertStatus(200);
+
+        $this->assertSame(100.0, (float) $student->fresh()->overall_progress);
+        $this->assertSame(1, Presentation::where('student_id', $student->roll_no)->count());
+    }
 }
