@@ -28,6 +28,13 @@ class SheetDatesAreReadHoweverTheyWereTypedTest extends TestCase
             'spaces either side' => ['22 - July - 2026', '2026-07-22'],
             'no leading zero' => ['9/8/2025', '2025-08-09'],
             'two digit year' => ['1-Jan-26', '2026-01-01'],
+            // The progress sheet's own habits: a third of its dates end in the
+            // comma the typist left behind, and a run of them drop the century.
+            'trailing comma' => ['23.02.2024,', '2024-02-23'],
+            'trailing comma with slashes' => ['7/04/2025,', '2025-04-07'],
+            'two digit year with dots' => ['24.03.25', '2025-03-24'],
+            'month first with a comma' => ['Sept 8, 2026', '2026-09-08'],
+            'one of each' => ['7/04/2025', '2025-04-07'],
         ];
     }
 
@@ -38,6 +45,15 @@ class SheetDatesAreReadHoweverTheyWereTypedTest extends TestCase
     }
 
     /** A cell holding a word is no date, and says so rather than guessing one. */
+    /** A date that never happened is not a date, whatever shape it arrives in. */
+    public function test_an_impossible_date_reads_as_nothing(): void
+    {
+        $this->assertSame('', SheetDate::parse('31.02.2025'));
+        $this->assertSame('', SheetDate::parse('20.03.204'));
+        $this->assertSame('', SheetDate::parse('0910/2024'));
+        $this->assertSame('', SheetDate::parse('16/03/2022, 19/09/2022'));
+    }
+
     public function test_a_cell_that_is_not_a_date_reads_as_nothing(): void
     {
         foreach (['', '  ', 'awaited', 'NA', '#N/A', 'not yet'] as $written) {
