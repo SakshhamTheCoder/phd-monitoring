@@ -6,7 +6,7 @@ use App\Forms\Field;
 use App\Models\User;
 use App\Support\Navigation;
 
-/** Faculty: the directory of internal faculty. */
+/** Faculty: the staff directory, internal and external both. */
 final class FacultyPage extends PageDefinition
 {
     /** How a batched staff import (faculty, users) reports, in the pages' words. */
@@ -31,9 +31,10 @@ final class FacultyPage extends PageDefinition
         // A viewer with only directory access is browsing, not managing.
         $manages = $user->may('can_manage_faculties');
 
-        return self::page('Faculty', 'Directory of internal faculty.', [
+        return self::page('Faculty', "The institute's own staff, and the supervisors who guide its scholars from other institutes.", [
             'actions' => $manages ? [
                 self::action('Import from CSV', 'import', 'secondary'),
+                self::action('Import external supervisors', 'import-external', 'secondary'),
                 self::action('Add faculty', 'add'),
             ] : [],
             'table' => [
@@ -66,7 +67,8 @@ final class FacultyPage extends PageDefinition
                         'Matched by email. An existing faculty member is updated from the cells the row fills in.',
                         "Broad Area of Expertise must already be on that department's research area list.",
                         "Students Supervising in TIET is compared against the portal's own count, not stored.",
-                        'New faculty are added as internal faculty.',
+                        'New faculty are added as internal faculty. Somebody from another institute '
+                            . 'goes through Import external supervisors instead.',
                     ],
                     'sample' => ['name' => 'faculty_bulk_import_sample.csv', 'csv' => implode("\n", [
                         'Emp id,Full Name,Email,Phone,Designation,Department Code,Broad Area of Expertise,Specific Areas under Broad Area of Expertise (comma separated),Students Supervising in TIET,Students Supervising Outside TIET',
@@ -85,6 +87,33 @@ final class FacultyPage extends PageDefinition
                     ]],
                     // One id for the run, so Send sign-in links on Manage Users can
                     // mail exactly the people this import brought in.
+                    'batch' => self::STAFF_IMPORT + ['run_id' => true],
+                ],
+                // Their own button and their own file. A scholar's supervisor or
+                // committee member from another institute is read from the
+                // faculty table like anybody else, so the seat the scholars
+                // sheet names for them is empty until they have a record.
+                'import-external' => [
+                    'kind' => 'rows',
+                    'title' => 'Import external supervisors from CSV',
+                    'required' => ['Full Name', 'Email', 'Designation', 'Department Code'],
+                    'rules' => [
+                        'Matched by email. Somebody already here is updated from the cells the row fills in.',
+                        'Every row is external. The employee code is given to them, so the file carries none.',
+                        'Only the name, email and Department Code are needed. Institution is worth filling in, since the list names it where somebody guides from.',
+                        'Department Code is the department of the scholar they guide, which is what files them on the lists.',
+                        'Designation sets how many scholars they may guide: 8 professor, 6 associate, 4 assistant.',
+                    ],
+                    'sample' => ['name' => 'external_supervisors_sample.csv', 'csv' => implode("\n", [
+                        'Full Name,Email,Phone,Designation,Department Code,Institution,Website Link,Areas of Expertise (comma separated)',
+                        'Dr. Sanjeev Bedi,sbedi@demo.invalid,,Professor,MED,University of Waterloo,https://uwaterloo.ca,"Machining, CAD"',
+                        'Dr. Ingo Hein,i.hein@demo.invalid,,Professor,BTD,University of Dundee,,Plant Genetics',
+                    ])],
+                    'path' => '/faculty/bulk-import-external',
+                    'extra' => [[
+                        'key' => 'send_invites',
+                        'label' => 'Email each one their sign-in link now. Leave this off: an outside supervisor has no reason to hear from the portal before the office writes to them.',
+                    ]],
                     'batch' => self::STAFF_IMPORT + ['run_id' => true],
                 ],
             ] : (object) [],
@@ -137,7 +166,7 @@ final class FacultyPage extends PageDefinition
                 $text('Designation*', 'designation'),
             ]),
             self::row([$text('Faculty Code*', 'faculty_code')]),
-            self::row([Field::text('Institution*')->key('institution')->value('Thapar Institute of Engineering and Technology')->from('institution')->open()], showIf: $external),
+            self::row([Field::text('Institution')->key('institution')->value('Thapar Institute of Engineering and Technology')->from('institution')->open()], showIf: $external),
             self::row([Field::text('Website Link')->key('website_link')->value('')->hint('https://example.com')->from('website_link')->open()], showIf: $external),
             self::row([
                 Field::select('Broad Area of Expertise', [])->key('area_of_specialization_id')->value('')->from('area_of_specialization_id')

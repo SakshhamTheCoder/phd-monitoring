@@ -88,7 +88,9 @@ class FacultyController extends Controller
             'last_name' => 'nullable|string',
             'email' => 'required|email|unique:users,email',
             'phone' => 'required|string',
-            'department_id' => 'nullable|integer',
+            // faculty.department_id is not nullable, so a create without one
+            // reached the database and came back as a 500.
+            'department_id' => 'required|integer',
             'designation' => 'required|string',
             // The form no longer asks. Internal is what a new faculty member is
             // unless another caller says otherwise.
@@ -106,7 +108,7 @@ class FacultyController extends Controller
 
         // Additional fields for external faculty
         if ($type === 'external') {
-            $validationRules['institution'] = 'required|string';
+            $validationRules['institution'] = 'nullable|string';
             $validationRules['website_link'] = 'nullable|url';
         }
 
@@ -157,7 +159,7 @@ class FacultyController extends Controller
 
         // Generate faculty code for external faculty
         if ($type === 'external') {
-            $facultyCode = '777' . str_pad($newUser->id, 6, '0', STR_PAD_LEFT);
+            $facultyCode = self::externalFacultyCode($newUser->id);
         } else {
             $facultyCode = $request->faculty_code;
         }
@@ -178,10 +180,12 @@ class FacultyController extends Controller
             $newUser->inviteToSetPassword();
         }
 
+        $added = $password === null
+            ? 'Faculty added successfully'
+            : 'Faculty added. They are emailed a link to set their password.';
+
         return response()->json([
-            'message' => $password === null
-                ? 'Faculty added successfully'
-                : 'Faculty added. They are emailed a link to set their password.',
+            'message' => trim($added . ' ' . \App\Support\OtherDirectory::expertNamed($request->email)),
             'faculty_code' => $facultyCode
         ], 200);
     }
@@ -236,7 +240,7 @@ class FacultyController extends Controller
         }
 
         if ($type === 'external') {
-            $validationRules['institution'] = 'required|string';
+            $validationRules['institution'] = 'nullable|string';
             $validationRules['website_link'] = 'nullable|url';
         }
 
@@ -366,6 +370,13 @@ class FacultyController extends Controller
                 'department_id' => $faculty->department_id,
                 'type' => $faculty->type,
                 'institution' => $faculty->institution,
+                // The list's own column. Filled only for somebody who guides
+                // from elsewhere, so the directory reads as the institute's
+                // staff with the outside supervisors named as what they are,
+                // rather than 570 rows repeating this institute's name.
+                'outside_institution' => $faculty->type === 'external'
+                    ? ($faculty->institution ?: 'Outside the institute')
+                    : null,
                 'website_link' => $faculty->website_link,
                 // supervised_students and doctored_students were built here with
                 // two queries per row. Nothing reads them from the list (the
@@ -385,11 +396,11 @@ class FacultyController extends Controller
             return $row;
         });
 
-        $fields = ['name', 'designation', 'email', 'department'];
-        $fieldsTitles = ['Name', 'Designation', 'Email', 'Department'];
+        $fields = ['name', 'designation', 'email', 'department', 'outside_institution'];
+        $fieldsTitles = ['Name', 'Designation', 'Email', 'Department', 'Guides from'];
         if ($canSeePhone) {
-            $fields = ['name', 'designation', 'email', 'phone', 'department'];
-            $fieldsTitles = ['Name', 'Designation', 'Email', 'Phone', 'Department'];
+            $fields = ['name', 'designation', 'email', 'phone', 'department', 'outside_institution'];
+            $fieldsTitles = ['Name', 'Designation', 'Email', 'Phone', 'Department', 'Guides from'];
         }
 
         return response()->json([
@@ -404,6 +415,18 @@ class FacultyController extends Controller
         ]);
     }
     
+
+    /**
+     * The employee code an external faculty member is given.
+     *
+     * They have none of their own, so it is minted from their account: 777 and
+     * the user id, which is unique and never reused. It lives here because the
+     * Add faculty screen and the import both have to arrive at the same number.
+     */
+    private static function externalFacultyCode(int $userId): string
+    {
+        return '777' . str_pad((string) $userId, 6, '0', STR_PAD_LEFT);
+    }
 
     /**
      * The faculty sheet's rows as it has them. The institute's supervisor sheet
@@ -439,6 +462,38 @@ class FacultyController extends Controller
             ),
             'supervised_campus' => CsvRow::column($row, 'Students Supervising in TIET', 'supervised_campus'),
             'supervised_outside' => CsvRow::column($row, 'Students Supervising Outside TIET', 'Students Outside TIET', 'supervised_outside'),
+            'row_number' => $row['_rowNumber'] ?? $row['row_number'] ?? null,
+        ], $rows);
+    }
+
+    /**
+     * The outside supervisors' own sheet.
+     *
+     * A supervisor or committee member at another institute is read from the
+     * faculty table like anybody else, so a seat the scholars sheet names for
+     * them stays empty until they have a record here. They are kept off the
+     * institute's staff sheet, which is a list of its own employees: this file
+     * carries no employee code, because theirs is minted, and asks instead
+     * where they work.
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return array<int, array<string, mixed>>
+     */
+    public static function externalFacultyRows(array $rows): array
+    {
+        return array_map(fn (array $row) => [
+            'full_name' => CsvRow::fallback(
+                CsvRow::column($row, 'Full Name', 'full_name'),
+                CsvRow::words(CsvRow::column($row, 'first_name'), CsvRow::column($row, 'last_name'))
+            ),
+            'email' => CsvRow::column($row, 'Email', 'email'),
+            'phone' => CsvRow::column($row, 'Phone', 'phone'),
+            'designation' => CsvRow::column($row, 'Designation', 'designation'),
+            'department_code' => CsvRow::column($row, 'Department Code', 'department_code'),
+            'institution' => CsvRow::column($row, 'Institution', 'institution'),
+            'website_link' => CsvRow::column($row, 'Website Link', 'website_link'),
+            'expertise' => CsvRow::column($row, 'Areas of Expertise (comma separated)', 'Areas of Expertise', 'expertise'),
+            'type' => 'external',
             'row_number' => $row['_rowNumber'] ?? $row['row_number'] ?? null,
         ], $rows);
     }
@@ -480,16 +535,41 @@ class FacultyController extends Controller
         ]);
     }
 
+    /**
+     * The institute's own staff sheet. Every row is internal faculty.
+     *
+     * The page posts the sheet's rows as they are; they are read here into the
+     * batch the rules check, so a row the sheet leaves without an email still
+     * fails the batch the way it did.
+     */
     public function upload(Request $request)
     {
-        $user = Auth::user();
-
-        // The page posts the sheet's rows as they are; they are read here into
-        // the batch the rules below check, so a row the sheet leaves without an
-        // email still fails the batch the way it did.
         if ($request->has('rows')) {
             $request->merge(['batch_data' => self::facultyRows((array) $request->input('rows'))]);
         }
+
+        return $this->importFaculty($request);
+    }
+
+    /**
+     * The outside supervisors' sheet, which is its own file and its own button.
+     *
+     * Kept apart from the staff sheet because that sheet is the institute's
+     * list of its employees and nothing else belongs in it. Every row here is
+     * external whatever it says, so the file cannot quietly create staff.
+     */
+    public function uploadExternal(Request $request)
+    {
+        if ($request->has('rows')) {
+            $request->merge(['batch_data' => self::externalFacultyRows((array) $request->input('rows'))]);
+        }
+
+        return $this->importFaculty($request);
+    }
+
+    private function importFaculty(Request $request)
+    {
+        $user = Auth::user();
 
         if(!$user->may('can_manage_faculties'))
         {
@@ -519,6 +599,7 @@ class FacultyController extends Controller
             'batch_data.*.designation' => 'nullable|string',
             'batch_data.*.faculty_code' => 'nullable|string',
             'batch_data.*.department_code' => 'nullable|string',
+            'batch_data.*.type' => 'nullable|string',
             'batch_data.*.institution' => 'nullable|string',
             'batch_data.*.website_link' => 'nullable|string',
             'batch_data.*.expertise' => 'nullable',
@@ -547,9 +628,12 @@ class FacultyController extends Controller
                 $name = PersonName::fromRow($data);
                 $firstName = $name['first'] ?? '';
                 $lastName = $name['last'] ?? PersonName::NO_SURNAME;
-                // Requirement 22: the CSV no longer carries a type. Everyone
-                // imported here is internal.
-                $type = 'internal';
+                // A row is internal unless it says otherwise, which is what the
+                // institute's own sheet means. A Type of external is how the
+                // outside supervisors and committee members named on the
+                // scholars sheet get the faculty record their seat is read
+                // from; they have no employee code and no department here.
+                $type = strtolower(trim((string) ($data['type'] ?? ''))) === 'external' ? 'external' : 'internal';
                 $email = trim((string)($data['email'] ?? ''));
                 // Several sheets leave the phone as #N/A or blank. users.phone
                 // is unique, so storing '' made the first such row take the
@@ -575,12 +659,33 @@ class FacultyController extends Controller
                 $existingFacultyCheck = $existingUserCheck ? Faculty::where('user_id', $existingUserCheck->id)->first() : null;
                 $isUpdate = $existingFacultyCheck !== null;
 
+                // Said once, on the row that makes the second record.
+                if (!$isUpdate && ($clash = \App\Support\OtherDirectory::expertNamed($email))) {
+                    $errors[] = "Row " . $rowNumber . ": " . $clash;
+                }
+
                 // For updates, only email is required — other fields are optional and only updated if provided
                 // For creates, enforce full validation
                 if (!$isUpdate) {
-                    if (empty($facultyCode)) { $errors[] = "Row " . $rowNumber . ": Faculty code required for internal faculty"; $errorCount++; continue; }
-                    if (empty($departmentCode)) { $errors[] = "Row " . $rowNumber . ": Department code required for internal faculty"; $errorCount++; continue; }
-                    if (empty($institution)) $institution = 'Thapar Institute of Engineering and Technology';
+                    if ($type === 'external') {
+                        // Their code is minted below from the account they get,
+                        // the same 777 numbering the Add faculty screen uses.
+                        // Where they work is worth having and often not known
+                        // yet, so the list says outside the institute until it
+                        // is filled in rather than refusing the row over it.
+                        $facultyCode = null;
+                        // faculty.department_id is not nullable, and the lists,
+                        // the clerk's scope and the recommender all read it. The
+                        // department to give is the one whose scholar they guide.
+                        if (empty($departmentCode)) {
+                            $errors[] = "Row " . $rowNumber . ": Department code required, the department of the scholar they guide";
+                            $errorCount++; continue;
+                        }
+                    } else {
+                        if (empty($facultyCode)) { $errors[] = "Row " . $rowNumber . ": Faculty code required for internal faculty"; $errorCount++; continue; }
+                        if (empty($departmentCode)) { $errors[] = "Row " . $rowNumber . ": Department code required for internal faculty"; $errorCount++; continue; }
+                        if (empty($institution)) $institution = 'Thapar Institute of Engineering and Technology';
+                    }
                     if ($firstName === '') {
                         $errors[] = "Row " . $rowNumber . ": full_name is required for a new faculty member";
                         $errorCount++;
@@ -728,10 +833,12 @@ class FacultyController extends Controller
 
                         $updateCount++;
                     } else {
-                        // User exists but not faculty - create faculty record (always internal)
+                        // User exists but has no faculty record behind it
                         Faculty::create([
                             'user_id' => $existingUser->id,
-                            'faculty_code' => $facultyCode,
+                            'faculty_code' => $type === 'external' && !$facultyCode
+                                ? self::externalFacultyCode($existingUser->id)
+                                : $facultyCode,
                             'department_id' => $department?->id,
                             'designation' => $designation,
                             'type' => $type,
@@ -770,7 +877,9 @@ class FacultyController extends Controller
 
                     Faculty::create([
                         'user_id' => $newUser->id,
-                        'faculty_code' => $facultyCode,
+                        'faculty_code' => $type === 'external' && !$facultyCode
+                            ? self::externalFacultyCode($newUser->id)
+                            : $facultyCode,
                         'department_id' => $department?->id,
                         'designation' => $designation,
                         'type' => $type,

@@ -318,6 +318,9 @@
                                 "fixed": true,
                                 "item": "suggest",
                                 "source": "/suggestions/faculty",
+                                "params": {
+                                    "type": "internal"
+                                },
                                 "shows": [
                                     "name",
                                     "department"
@@ -388,7 +391,8 @@
                                         "item_label": "Expert",
                                         "source": "/suggestions/faculty",
                                         "params": {
-                                            "department_id": 5
+                                            "department_id": 5,
+                                            "type": "internal"
                                         },
                                         "displays": [],
                                         "add_label": "Add expert",
@@ -790,6 +794,9 @@
                                 "fixed": true,
                                 "item": "suggest",
                                 "source": "/suggestions/faculty",
+                                "params": {
+                                    "type": "internal"
+                                },
                                 "shows": [
                                     "name",
                                     "department"
@@ -860,7 +867,8 @@
                                         "item_label": "Expert",
                                         "source": "/suggestions/faculty",
                                         "params": {
-                                            "department_id": 5
+                                            "department_id": 5,
+                                            "type": "internal"
                                         },
                                         "displays": [],
                                         "add_label": "Add expert",
@@ -1253,6 +1261,9 @@
                                 "fixed": true,
                                 "item": "suggest",
                                 "source": "/suggestions/faculty",
+                                "params": {
+                                    "type": "internal"
+                                },
                                 "shows": [
                                     "name",
                                     "department"
@@ -1323,7 +1334,8 @@
                                         "item_label": "Expert",
                                         "source": "/suggestions/faculty",
                                         "params": {
-                                            "department_id": 5
+                                            "department_id": 5,
+                                            "type": "internal"
                                         },
                                         "displays": [],
                                         "add_label": "Add expert",
@@ -1716,6 +1728,9 @@
                                 "fixed": true,
                                 "item": "suggest",
                                 "source": "/suggestions/faculty",
+                                "params": {
+                                    "type": "internal"
+                                },
                                 "shows": [
                                     "name",
                                     "department"
@@ -1786,7 +1801,8 @@
                                         "item_label": "Expert",
                                         "source": "/suggestions/faculty",
                                         "params": {
-                                            "department_id": 5
+                                            "department_id": 5,
+                                            "type": "internal"
                                         },
                                         "displays": [],
                                         "add_label": "Add expert",
@@ -2179,6 +2195,9 @@
                                 "fixed": true,
                                 "item": "suggest",
                                 "source": "/suggestions/faculty",
+                                "params": {
+                                    "type": "internal"
+                                },
                                 "shows": [
                                     "name",
                                     "department"
@@ -2261,7 +2280,8 @@
                                         "item_label": "Expert",
                                         "source": "/suggestions/faculty",
                                         "params": {
-                                            "department_id": 5
+                                            "department_id": 5,
+                                            "type": "internal"
                                         },
                                         "displays": [],
                                         "add_label": "Add expert",
@@ -2673,6 +2693,9 @@
                                 "fixed": true,
                                 "item": "suggest",
                                 "source": "/suggestions/faculty",
+                                "params": {
+                                    "type": "internal"
+                                },
                                 "shows": [
                                     "name",
                                     "department"
@@ -2755,7 +2778,8 @@
                                         "item_label": "Expert",
                                         "source": "/suggestions/faculty",
                                         "params": {
-                                            "department_id": 5
+                                            "department_id": 5,
+                                            "type": "internal"
                                         },
                                         "displays": [],
                                         "add_label": "Add expert",
@@ -3269,7 +3293,8 @@
                                         "item_label": "Expert",
                                         "source": "/suggestions/faculty",
                                         "params": {
-                                            "department_id": 5
+                                            "department_id": 5,
+                                            "type": "internal"
                                         },
                                         "displays": [],
                                         "add_label": "Add expert",
@@ -3706,6 +3731,9 @@
                                 "fixed": true,
                                 "item": "suggest",
                                 "source": "/suggestions/faculty",
+                                "params": {
+                                    "type": "internal"
+                                },
                                 "shows": [
                                     "name",
                                     "department"
@@ -3776,7 +3804,8 @@
                                         "item_label": "Expert",
                                         "source": "/suggestions/faculty",
                                         "params": {
-                                            "department_id": 5
+                                            "department_id": 5,
+                                            "type": "internal"
                                         },
                                         "displays": [],
                                         "add_label": "Add expert",
@@ -4286,7 +4315,8 @@
                                         "item_label": "Expert",
                                         "source": "/suggestions/faculty",
                                         "params": {
-                                            "department_id": 5
+                                            "department_id": 5,
+                                            "type": "internal"
                                         },
                                         "displays": [],
                                         "add_label": "Add expert",
@@ -4853,7 +4883,8 @@
                                         "item_label": "Expert",
                                         "source": "/suggestions/faculty",
                                         "params": {
-                                            "department_id": 5
+                                            "department_id": 5,
+                                            "type": "internal"
                                         },
                                         "displays": [
                                             "Haripada Bhunia"
@@ -7179,6 +7210,9 @@
                                 "fixed": true,
                                 "item": "suggest",
                                 "source": "/suggestions/faculty",
+                                "params": {
+                                    "type": "internal"
+                                },
                                 "shows": [
                                     "name",
                                     "department"
@@ -7249,7 +7283,8 @@
                                         "item_label": "Expert",
                                         "source": "/suggestions/faculty",
                                         "params": {
-                                            "department_id": 5
+                                            "department_id": 5,
+                                            "type": "internal"
                                         },
                                         "displays": [],
                                         "add_label": "Add expert",
@@ -7723,6 +7758,9 @@
                                 "fixed": true,
                                 "item": "suggest",
                                 "source": "/suggestions/faculty",
+                                "params": {
+                                    "type": "internal"
+                                },
                                 "shows": [
                                     "name",
                                     "department"
@@ -7793,7 +7831,8 @@
                                         "item_label": "Expert",
                                         "source": "/suggestions/faculty",
                                         "params": {
-                                            "department_id": 5
+                                            "department_id": 5,
+                                            "type": "internal"
                                         },
                                         "displays": [],
                                         "add_label": "Add expert",

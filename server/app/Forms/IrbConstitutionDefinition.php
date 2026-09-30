@@ -209,6 +209,10 @@ final class IrbConstitutionDefinition extends FormDefinition
                         'fixed' => true,
                         'item' => 'suggest',
                         'source' => '/suggestions/faculty',
+                        // A cognate is institute staff. The directory also holds
+                        // the supervisors who guide from other institutes, and
+                        // they cannot sit on this committee.
+                        'params' => ['type' => 'internal'],
                         'shows' => ['name', 'department'],
                         'item_show_label' => false,
                         'displays' => array_map(fn ($index) => $nominees[$index]['name'] ?? null, [0, 1, 2]),
@@ -269,7 +273,9 @@ final class IrbConstitutionDefinition extends FormDefinition
                             'item' => 'suggest',
                             'item_label' => 'Expert',
                             'source' => '/suggestions/faculty',
-                            'params' => ['department_id' => $data['department_id'] ?? null],
+                            // Institute staff only, as above. The outside member
+                            // of this committee is the expert picked beside it.
+                            'params' => ['department_id' => $data['department_id'] ?? null, 'type' => 'internal'],
                             'displays' => array_map(fn ($expert) => $expert['name'] ?? null, $chairman),
                             'add_label' => 'Add expert',
                             'keep_add_slot' => true,

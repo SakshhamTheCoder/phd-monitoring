@@ -41,7 +41,7 @@ final class OutsideExpertsPage extends PageDefinition
                 'add' => $this->dialog(
                     ['title' => 'Add new outside expert', 'close_outside' => false],
                     [...self::expertRows(), self::buttons('Add expert')],
-                    ['method' => 'POST', 'path' => '/outside-experts/add', 'done' => 'Outside expert added successfully', 'failed' => 'Failed to add outside expert', 'failure' => 'errors'],
+                    ['method' => 'POST', 'path' => '/outside-experts/add', 'done' => 'Outside expert added successfully', 'done_from_answer' => true, 'failed' => 'Failed to add outside expert', 'failure' => 'errors'],
                 ),
                 'edit' => $this->dialog(
                     ['title' => 'Edit outside expert', 'close_outside' => false],
@@ -53,10 +53,10 @@ final class OutsideExpertsPage extends PageDefinition
                 'import' => [
                     'kind' => 'rows',
                     'title' => 'Import outside experts from CSV',
-                    'required' => ['full_name', 'email', 'designation', 'department', 'institution'],
+                    'required' => ['full_name', 'email'],
                     'rules' => [
                         'Matched by email. An outside expert is created when the email is not found, and updated when it is.',
-                        'Phone, area_of_expertise and website are optional.',
+                        'Only the name and the email are needed. Designation, department, institution, phone, area_of_expertise and website can be added later.',
                     ],
                     'sample' => ['name' => 'outside_experts_sample.csv', 'csv' => implode("\n", [
                         'full_name,email,phone,designation,department,institution,area_of_expertise,website',
@@ -70,8 +70,10 @@ final class OutsideExpertsPage extends PageDefinition
     }
 
     /**
-     * One expert's fields. The server requires name, email, designation,
-     * department and institution; the rest are optional.
+     * One expert's fields. The server requires the two the record cannot do
+     * without: who they are, and the address their review link is sent to. An
+     * expert has no sign-in of their own to fill anything in with, so the rest
+     * are the office's to add when it knows them.
      */
     public static function expertRows(): array
     {
@@ -84,10 +86,10 @@ final class OutsideExpertsPage extends PageDefinition
                 $text('Phone', 'phone', 'Enter phone number')->from('phone'),
             ]),
             self::row([
-                $text('Designation', 'designation', 'e.g., Professor')->required()->from('designation'),
-                $text('Department', 'department', 'e.g., Computer Science')->required()->from('department'),
+                $text('Designation', 'designation', 'e.g., Professor')->from('designation'),
+                $text('Department', 'department', 'e.g., Computer Science')->from('department'),
             ]),
-            self::row([$text('Institution', 'institution', 'e.g., University Name')->required()->from('institution')], space: 2),
+            self::row([$text('Institution', 'institution', 'e.g., University Name')->from('institution')], space: 2),
             self::row([$text('Area of Expertise', 'area_of_expertise', 'Research areas')->from('area_of_expertise')], space: 2),
             self::row([$text('Website', 'website', 'https://example.com')->from('website')], space: 2),
         ];

@@ -86,9 +86,11 @@ class OutsideExpertController extends Controller
                 'full_name' => 'required_without:first_name|string',
                 'first_name' => 'required_without:full_name|string|max:255',
                 'last_name' => 'nullable|string|max:255',
-                'designation' => 'required|string|max:255',
-                'department' => 'required|string|max:255',
-                'institution' => 'required|string|max:255',
+                // Optional: an expert cannot sign in to fill these in later,
+                // so requiring them only produced a guess in the gap.
+                'designation' => 'nullable|string|max:255',
+                'department' => 'nullable|string|max:255',
+                'institution' => 'nullable|string|max:255',
                 'email' => 'required|email|unique:outside_experts,email',
                 'phone' => 'nullable|string|unique:outside_experts,phone',
                 'area_of_expertise' => 'nullable|string',
@@ -118,7 +120,8 @@ class OutsideExpertController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Outside expert added successfully',
+                'message' => 'Outside expert added successfully'
+                    . (($clash = \App\Support\OtherDirectory::facultyNamed($request->email)) ? '. ' . $clash : ''),
                 'data' => $expert
             ], 201);
         } catch (\Exception $e) {
@@ -146,9 +149,9 @@ class OutsideExpertController extends Controller
                 'full_name' => 'required_without:first_name|string',
                 'first_name' => 'required_without:full_name|string|max:255',
                 'last_name' => 'nullable|string|max:255',
-                'designation' => 'required|string|max:255',
-                'department' => 'required|string|max:255',
-                'institution' => 'required|string|max:255',
+                'designation' => 'nullable|string|max:255',
+                'department' => 'nullable|string|max:255',
+                'institution' => 'nullable|string|max:255',
                 'email' => 'required|email|unique:outside_experts,email,' . $id,
                 'phone' => 'nullable|string|unique:outside_experts,phone,' . $id,
                 'area_of_expertise' => 'nullable|string',
@@ -298,8 +301,8 @@ class OutsideExpertController extends Controller
                         continue;
                     }
 
-                    if (empty($email) || empty($designation) || empty($department) || empty($institution)) {
-                        $errors[] = "Row {$rowNumber}: email, designation, department and institution are required";
+                    if (empty($email)) {
+                        $errors[] = "Row {$rowNumber}: email is required";
                         $errorCount++;
                         continue;
                     }
@@ -326,6 +329,11 @@ class OutsideExpertController extends Controller
                         $existing->update($attributes);
                         $updateCount++;
                     } else {
+                        // Said once, on the row that makes the second record.
+                        if ($clash = \App\Support\OtherDirectory::facultyNamed($email)) {
+                            $errors[] = "Row {$rowNumber}: {$clash}";
+                        }
+
                         OutsideExpert::create($attributes + ['email' => $email]);
                         $successCount++;
                     }
