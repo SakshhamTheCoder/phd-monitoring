@@ -66,7 +66,7 @@ const FacultyForm = ({ edit = false, facultyData = {}, onSuccess, onClose }) => 
         phone: facultyData.phone || "",
         department_id: facultyData.department_id || "",
         designation: facultyData.designation || "",
-        faculty_code: facultyData.faculty_code || "",
+        faculty_code: String(facultyData.faculty_code || ""),
         institution: facultyData.institution || "Thapar Institute of Engineering and Technology",
         website_link: facultyData.website_link || "",
         area_of_specialization_id: facultyData.area_of_specialization_id || "",

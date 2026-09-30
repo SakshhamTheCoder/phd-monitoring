@@ -24,6 +24,13 @@ return Application::configure(basePath: dirname(__DIR__))
             LogRequestResponse::class,
         ]);
 
+        // A field the edit screen filled from the API comes back as the JSON
+        // number the API sent, which every `string` rule refuses. Read as text
+        // before validation rather than in each rule.
+        $middleware->append([
+            \App\Http\Middleware\NumbersAsText::class,
+        ]);
+
         // Blocks requests from a user whose current role has no backing record,
         // so the ~30 unguarded `$user->faculty->faculty_code` style reads in the
         // controllers cannot produce a 500. Runs after auth; no-ops for guests.
