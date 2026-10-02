@@ -135,7 +135,7 @@ class ReviseTitleController extends Controller
     {
         $form_id = $this->routeParam($request, 'form_id', $form_id);
         $user = Auth::user();
-        switch ($this->actingStep($user, $form_id)) {
+        switch ($this->actingStepOrStandIn($user, ReviseTitleForm::where('id', $form_id)->value('stage'), $this->actingStep($user, $form_id))) {
             case 'student':
                 return $this->studentSubmit($user, $request, $form_id);
             case 'faculty':

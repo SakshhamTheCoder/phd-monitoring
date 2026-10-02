@@ -251,7 +251,7 @@ class SynopsisSubmissionController extends Controller
         $form_id = $this->routeParam($request, 'form_id', $form_id);
         $user = Auth::user();
         $role = $user->current_role;
-        switch ($this->actingStep($user, $form_id)) {
+        switch ($this->actingStepOrStandIn($user, SynopsisSubmission::where('id', $form_id)->value('stage'), $this->actingStep($user, $form_id))) {
             case 'student':
                 return $this->studentSubmit($user, $request, $form_id);
             case 'faculty':

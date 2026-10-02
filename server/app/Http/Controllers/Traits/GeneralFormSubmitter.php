@@ -296,6 +296,13 @@ trait GeneralFormSubmitter
 
     private function handleRoleSpecificLogic($user, $formInstance, $role)
     {
+        // The office answering a step whose holder cannot answer it has no
+        // standing of its own to check: it is not the head of that department or
+        // the coordinator of that programme, which is the whole reason the chain
+        // stalled. The history records who actually answered.
+        if ($this->standingInForSomebodyElse($user, $role)) {
+            return;
+        }
 
         switch ($role) {
             case 'student':
@@ -402,6 +409,51 @@ trait GeneralFormSubmitter
     protected function formLink($formInstance, $model): string
     {
         return '/forms/' . $this->getFormType($model) . '/' . $formInstance->id;
+    }
+
+    /** Whether this reader is the office answering a step that is not theirs. */
+    private function standingInForSomebodyElse($user, string $role): bool
+    {
+        return in_array($role, self::STANDS_IN_FOR, true)
+            && $user->current_role?->role !== $role
+            && $user->may('can_approve_any_step');
+    }
+
+    /**
+     * The steps the office may answer on somebody else's behalf.
+     *
+     * The office chain only. A scholar's own step, their supervisor's, their
+     * committee's and the outside expert's belong to a particular person, and
+     * nobody else answering them would mean anything.
+     */
+    private const STANDS_IN_FOR = ['phd_coordinator', 'hod', 'dra', 'dordc', 'director'];
+
+    /**
+     * The step this reader is answering, which for the office is whichever step
+     * the form has stalled on.
+     *
+     * Every dispatcher below refuses a role that is not on the form's chain, and
+     * admin is not. That is right for everyone but the office: a chain stops dead
+     * when the holder of a step has left the institute or their role has no
+     * record behind it, and the only way through was to move the form's stage by
+     * hand, which afterwards reads as though that step had been answered when
+     * nobody answered it. With can_approve_any_step the office answers the step
+     * itself, as that step, and the history names who really answered.
+     *
+     * @param  string  $otherwise  the step this reader would answer in their own right
+     */
+    private function actingStepOrStandIn($user, $formInstance, string $otherwise): string
+    {
+        $stage = is_string($formInstance) || is_null($formInstance) ? $formInstance : $formInstance?->stage;
+        $step = $stage === 'supervisor' ? 'faculty' : $stage;
+
+        if (!$step || !$user->may('can_approve_any_step') || !in_array($step, self::STANDS_IN_FOR, true)) {
+            return $otherwise;
+        }
+
+        // Only to get past a step that is not theirs. A reader who holds the
+        // step answers it as themselves.
+        return $otherwise === $step ? $otherwise : $step;
     }
 
     /**

@@ -64,24 +64,18 @@ class AdminOnlyRoutesAreGatedTest extends TestCase
     }
 
     /**
-     * The DORDC manages a scholar's forms, because they approve the last step of
-     * every one of them. Mailing every user and the outside expert directory are
-     * still the office's alone.
+     * The DORDC is the office: every one of these is theirs as well, forms and
+     * directory alike. The one power they do not hold is can_approve_any_step,
+     * which is not a route (see TheOfficeAnswersAStalledStepTest).
      */
-    public function test_the_dordc_manages_forms_and_nothing_else_here(): void
+    public function test_the_dordc_reaches_them_too(): void
     {
         Queue::fake();
         $this->actingAs($this->account('dordc'));
 
-        foreach (self::FORM_ROUTES as [$method, $uri]) {
+        foreach (self::ROUTES as [$method, $uri]) {
             $this->assertNotSame(403, $this->json($method, $uri)->status(), "dordc refused {$method} {$uri}");
         }
-
-        foreach (self::OFFICE_ROUTES as [$method, $uri]) {
-            $this->assertSame(403, $this->json($method, $uri)->status(), "dordc reached {$method} {$uri}");
-        }
-
-        Queue::assertNothingPushed();
     }
 
     public function test_admin_still_reaches_them(): void

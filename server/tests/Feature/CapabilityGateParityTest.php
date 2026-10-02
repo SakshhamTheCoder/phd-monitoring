@@ -22,7 +22,8 @@ class CapabilityGateParityTest extends TestCase
 
     /** endpoint => the roles the code admitted before the swap. */
     private const GATES = [
-        'GET /api/users' => ['admin'],
+        // The DORDC is the office now, so Manage Users answers them as well.
+        'GET /api/users' => ['admin', 'dordc'],
         // Deliberately widened when the faculty directory opened: everyone
         // except clerk may browse it. Was admin, director, dra, dordc, hod,
         // phd_coordinator, adordc.

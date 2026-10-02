@@ -63,17 +63,17 @@ class RoleCapabilityMatrixTest extends TestCase
         'can_read_doctoral_committee' => ['hod', 'phd_coordinator', 'admin', 'doctoral', 'dordc'],
 
         // Admin-only controllers
-        'can_manage_users' => ['admin'],
+        'can_manage_users' => ['admin', 'dordc'],
         'can_manage_form_levels' => ['admin', 'dordc'],
         'can_manage_supervisor_records' => ['admin', 'dordc'],
         'can_manage_clerks' => ['admin', 'dordc'],
-        'can_manage_app_settings' => ['admin'],
+        'can_manage_app_settings' => ['admin', 'dordc'],
 
         // ClerkController
         'can_mark_attendance' => ['clerk', 'admin', 'dordc'],
         'can_read_own_clerk_departments' => ['clerk'],
-        'can_read_leave_reason' => ['student', 'hod', 'admin'],
-        'can_read_leave_settings' => ['admin', 'clerk', 'hod', 'student'],
+        'can_read_leave_reason' => ['student', 'hod', 'admin', 'dordc'],
+        'can_read_leave_settings' => ['admin', 'clerk', 'hod', 'student', 'dordc'],
 
         // ExternalReviewController::RESEND_ROLES
         'can_resend_external_review' => ['dordc', 'phd_coordinator', 'admin'],

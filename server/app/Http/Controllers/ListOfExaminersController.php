@@ -188,7 +188,7 @@ class ListOfExaminersController extends Controller
         $user = Auth::user();
         $role = $user->current_role;
 
-        switch ($role->role) {
+        switch ($this->actingStepOrStandIn($user, ListOfExaminersForm::where('id', $form_id)->value('stage'), $role->role)) {
             case 'faculty':
                 return $this->supervisorSubmit($user, $request, $form_id);
             case 'dordc':

@@ -62,7 +62,7 @@ final class StudentProfilePage extends PageDefinition
                 $mayTag ? self::action('Tag course', 'tag-course', 'secondary') : null,
                 // The request is refused without this capability, so it is only offered with it.
                 !empty(Navigation::capabilities($user)['can_propose_supervisor_changes']) ? self::action('Manage supervisors/doctoral', 'supervisors', 'secondary') : null,
-                Navigation::allows($user, 'formLevels') && !$isSelf ? ['label' => 'Manage forms', 'variant' => 'secondary', 'navigate' => "/forms/manage?roll_no={$roll}"] : null,
+                Navigation::allows($user, 'admin') && !$isSelf ? ['label' => 'Manage forms', 'variant' => 'secondary', 'navigate' => "/forms/manage?roll_no={$roll}"] : null,
                 !empty($envelope['can_edit']) ? ['edit' => true] : null,
             ])),
             // can_edit covers the scholar's own profile and those who manage

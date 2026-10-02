@@ -52,12 +52,10 @@ return [
         'publications' => ['student', 'ug_student'],
         'openings' => ['student'],
 
-        // Named apart from the rest of the office so the DORDC can be given
-        // one of these pages without being given Manage Users with it.
-        'clerks' => ['admin', 'dordc'],
-        'formLevels' => ['admin', 'dordc'],
-
-        'admin' => ['admin'],
+        // The DORDC is the office: they reach what the admin role reaches,
+        // without switching to it. What they do not hold is
+        // can_approve_any_step, which is a capability rather than a page.
+        'admin' => ['admin', 'dordc'],
     ],
 
     'nav' => [
@@ -74,7 +72,7 @@ return [
         ['path' => '/courses', 'icon' => 'graduation-cap', 'label' => 'Courses', 'area' => 'courses'],
         ['path' => '/students', 'icon' => 'users', 'label' => 'Students', 'area' => 'scholars'],
         ['path' => '/faculty', 'icon' => 'id-badge', 'label' => 'Faculty', 'area' => 'facultyDirectory'],
-        ['path' => '/clerks', 'icon' => 'id-card-o', 'label' => 'Clerks', 'area' => 'clerks'],
+        ['path' => '/clerks', 'icon' => 'id-card-o', 'label' => 'Clerks', 'area' => 'admin'],
         ['path' => '/departments', 'icon' => 'building', 'label' => 'Departments', 'area' => 'departments'],
         ['path' => '/supervisor-doctoral-approvals', 'icon' => 'user-plus', 'label' => 'Supervisor Approvals', 'area' => 'supervisorApprovals'],
         ['path' => '/attendance', 'icon' => 'calendar-check-o', 'label' => 'Attendance', 'area' => 'attendance'],
@@ -108,6 +106,6 @@ return [
         ['path' => '/outside-experts', 'label' => 'Outside experts'],
         ['path' => '/logs', 'label' => 'Activity logs'],
         // Not in the sidebar: reached from a scholar's profile.
-        ['path' => '/forms/manage', 'label' => 'Manage forms', 'area' => 'formLevels', 'icon' => 'pencil-square-o'],
+        ['path' => '/forms/manage', 'label' => 'Manage forms', 'area' => 'admin', 'icon' => 'pencil-square-o'],
     ],
 ];

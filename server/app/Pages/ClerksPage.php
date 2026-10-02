@@ -13,7 +13,7 @@ final class ClerksPage extends PageDefinition
 {
     public function allows(User $user): bool
     {
-        return Navigation::allows($user, 'clerks');
+        return Navigation::allows($user, 'admin');
     }
 
     public function view(User $user, array $params = []): array

@@ -77,28 +77,24 @@ class NavigationTest extends TestCase
     }
 
     /**
-     * The office pages the DORDC was asking an admin to open, and the ones the
-     * office keeps: Manage Users, Configuration and Logs are a different kind
-     * of power from marking attendance or naming a clerk.
+     * The DORDC is the office: every page the admin role reaches is theirs too,
+     * so they never switch role to do their own work. What they do not hold is
+     * can_approve_any_step, which is a capability rather than a page.
      */
-    public function test_the_dordc_reaches_the_office_pages_behind_the_forms_they_approve(): void
+    public function test_the_dordc_reaches_every_page_the_office_does(): void
     {
         $features = ['project_management' => true, 'job_openings' => true];
-        $menu = Navigation::for('dordc', [
-            'can_read_urf_mentees' => true,
-            'can_manage_clerks' => true,
-            'can_mark_attendance' => true,
-        ], $features);
+        $capabilities = ['can_read_urf_mentees' => true, 'can_manage_clerks' => true, 'can_mark_attendance' => true];
+        $office = Navigation::for('admin', $capabilities, $features);
+        $dordc = Navigation::for('dordc', $capabilities, $features);
 
-        foreach (['clerks', 'formLevels', 'attendance', 'courses', 'courseManagement', 'areasOfSpecialization'] as $area) {
-            $this->assertTrue($menu['areas'][$area], $area);
+        foreach (array_keys(array_filter($office['areas'])) as $area) {
+            $this->assertTrue($dordc['areas'][$area], $area . ' belongs to the office and so to the DORDC');
         }
 
-        $this->assertFalse($menu['areas']['admin'], 'Manage Users, Configuration and Logs stay with the office');
-        $paths = array_column($menu['nav'], 'path');
-        $this->assertContains('/clerks', $paths);
-        $this->assertContains('/attendance', $paths);
-        $this->assertNotContains('/users', $paths);
-        $this->assertNotContains('/configuration', $paths);
+        $paths = array_column($dordc['nav'], 'path');
+        foreach (['/clerks', '/attendance', '/users', '/configuration', '/logs', '/outside-experts'] as $path) {
+            $this->assertContains($path, $paths, $path);
+        }
     }
 }

@@ -156,7 +156,7 @@ class SupervisorChangeFormController extends Controller {
         $user = Auth::user();
         $role = $user->current_role;
 
-        switch ($role->role) {
+        switch ($this->actingStepOrStandIn($user, SupervisorChangeForm::where('id', $form_id)->value('stage'), $role->role)) {
             case 'student':
                 return $this->studentSubmit($user, $request, $form_id);
             case 'hod':
