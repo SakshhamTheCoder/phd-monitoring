@@ -91,8 +91,21 @@
   width: calc(100% - var(--space-3) - var(--space-2));
   border-radius: var(--radius);
   background-color: var(--primary-wash);
-  box-shadow: inset 3px 0 0 var(--primary-color);
   pointer-events: none;
+}
+
+/* The brand bar, as a rectangle of its own rather than an inset shadow: now
+   that the links are rounded blocks, a shadow on the edge followed the corner
+   and read as a curve. */
+.menu-highlight::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: var(--space-2);
+  bottom: var(--space-2);
+  width: 3px;
+  border-radius: 2px;
+  background-color: var(--primary-color);
 }
 
 .menu-highlight--moves { transition: transform 200ms ease-out, height 200ms ease-out; }
