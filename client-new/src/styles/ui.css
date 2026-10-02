@@ -117,22 +117,19 @@
     font-weight: 600;
 }
 
-/* One underline for the bar, placed under the chosen tab by Tabs.jsx. It is
-   1px wide and scaled to the tab, so the slide is a transform, not a resize. */
-.tabs { position: relative; }
-
-.tabs-underline {
+/* The chosen tab draws its own underline, over the bar's rule. A measured
+   element that slid between tabs replaced this for a while; it had to be told
+   the width of a tab, and it kept getting it wrong, which is a lot of moving
+   parts for a line under a word. */
+.tab.active::after {
+    content: '';
     position: absolute;
     left: 0;
-    bottom: 0;
-    width: 1px;
+    right: 0;
+    bottom: -1px;
     height: 2px;
     background: var(--primary-color);
-    transform-origin: left;
-    pointer-events: none;
 }
-
-.tabs-underline--moves { transition: transform 200ms ease-out; }
 
 .tab:focus-visible {
     outline: 2px solid var(--primary-color);

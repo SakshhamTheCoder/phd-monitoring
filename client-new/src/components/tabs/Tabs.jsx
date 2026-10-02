@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React from 'react';
 
 // The one tab bar. Styles live in styles/ui.css.
 //
@@ -11,39 +11,6 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 // is expected to behave.
 const Tabs = ({ items, value, onChange, className = '', label }) => {
   const options = items.map((item) => (typeof item === 'object' ? item : { value: item, label: item }));
-  const barRef = useRef(null);
-  // One underline that slides to the chosen tab, so the eye follows the move.
-  // null until measured; it only starts to animate after its first placement,
-  // or it would slide in from the left edge on every page load.
-  const [underline, setUnderline] = useState(null);
-  const activeIndex = options.findIndex((option) => option.value === value);
-
-  useLayoutEffect(() => {
-    const bar = barRef.current;
-    if (!bar) return undefined;
-    const place = () => {
-      const tab = bar.querySelectorAll('[role="tab"]')[activeIndex];
-      if (!tab) { setUnderline(null); return; }
-      // Under the label, not under the tab's padding as well: a tab is padded
-      // by a space on each side, and an underline that ran the whole width
-      // read as a rule somebody had drawn past the word.
-      const box = getComputedStyle(tab);
-      const left = parseFloat(box.paddingLeft) || 0;
-      const right = parseFloat(box.paddingRight) || 0;
-      setUnderline((previous) => ({
-        left: tab.offsetLeft + left,
-        width: Math.max(tab.offsetWidth - left - right, 1),
-        placed: previous !== null,
-      }));
-    };
-    place();
-    // Labels change width when the web font arrives or the window resizes.
-    // Absent in jsdom and very old browsers; the underline still lands once.
-    if (typeof ResizeObserver === 'undefined') return undefined;
-    const observer = new ResizeObserver(place);
-    observer.observe(bar);
-    return () => observer.disconnect();
-  }, [activeIndex, options.length]);
 
   const onKeyDown = (event) => {
     const step = { ArrowRight: 1, ArrowLeft: -1 }[event.key];
@@ -58,7 +25,7 @@ const Tabs = ({ items, value, onChange, className = '', label }) => {
   };
 
   return (
-    <div ref={barRef} className={`tabs ${className}`.trim()} role="tablist" aria-label={label} onKeyDown={onKeyDown}>
+    <div className={`tabs ${className}`.trim()} role="tablist" aria-label={label} onKeyDown={onKeyDown}>
       {options.map((option) => {
         const isActive = value === option.value;
         return (
@@ -75,13 +42,6 @@ const Tabs = ({ items, value, onChange, className = '', label }) => {
           </button>
         );
       })}
-      {underline && (
-        <span
-          className={`tabs-underline${underline.placed ? ' tabs-underline--moves' : ''}`}
-          style={{ transform: `translateX(${underline.left}px) scaleX(${underline.width})` }}
-          aria-hidden="true"
-        />
-      )}
     </div>
   );
 };
