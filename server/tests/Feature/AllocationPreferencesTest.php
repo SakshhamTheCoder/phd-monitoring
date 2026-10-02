@@ -48,6 +48,44 @@ class AllocationPreferencesTest extends TestCase
         );
     }
 
+    /**
+     * The list is a help, not a gate: the field stays free text. What it offers
+     * is what this department's supervisors work on, plus what scholars here
+     * have named before, so a word somebody had to type once is offered to the
+     * next of them.
+     */
+    public function test_the_suggestions_offer_listed_areas_and_ones_scholars_named(): void
+    {
+        $student = $this->scholar();
+        $supervisor = \App\Models\Faculty::where('department_id', $student->department_id)->firstOrFail();
+        $supervisor->expertise = ['Zymology', 'Fermentation science'];
+        $supervisor->save();
+
+        AreaOfSpecialization::create([
+            'department_id' => $student->department_id,
+            'name' => 'A broad heading nobody works under',
+        ]);
+
+        StudentAreaPreference::create([
+            'student_id' => $student->roll_no,
+            'broad_area' => 'Underwater basket weaving',
+        ]);
+
+        $offered = collect($this->actingAs($student->user)
+            ->postJson('/api/suggestions/specialization', ['text' => ''])
+            ->assertStatus(200)
+            ->json())
+            ->pluck('name');
+
+        $this->assertContains('Zymology', $offered, 'an area a supervisor lists should be offered');
+        $this->assertContains('Underwater basket weaving', $offered, 'an area a scholar named should be offered next time');
+        $this->assertNotContains(
+            'A broad heading nobody works under',
+            $offered,
+            'the matrix heading is what a supervisor is filed under, not what anybody works on'
+        );
+    }
+
     public function test_naming_an_area_does_not_add_it_to_the_department_list(): void
     {
         $student = $this->scholar();

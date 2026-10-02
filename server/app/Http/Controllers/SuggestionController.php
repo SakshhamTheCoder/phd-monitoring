@@ -43,18 +43,34 @@ class SuggestionController extends Controller
             'text' => 'nullable|string',
         ]);
 
-        // The specific areas the department's own faculty list, rather than the
-        // dozen broad areas the matrix names. Those broad areas are the heading
-        // a supervisor is filed under; what a scholar is choosing between, and
-        // what the recommender then matches on, is the thing people actually
-        // work on. One expertise cell holds several, comma separated.
+        // What is offered, not what is allowed: the field this feeds is free
+        // text, and a scholar naming something nobody here works on yet is the
+        // point of it. Two sources, both from this department:
+        //
+        //   - the specific areas its faculty list, which is what the
+        //     recommender matches against, rather than the dozen broad areas
+        //     the matrix names, which are the heading a supervisor is filed
+        //     under. One expertise cell holds several, comma separated;
+        //   - what scholars here have named before, kept in
+        //     student_area_preferences, so a word somebody had to type once is
+        //     offered to the next scholar.
         $typed = trim((string) $request->input('text'));
 
-        $areas = \App\Models\Faculty::where('department_id', $department->id)
+        // expertise is a JSON list of areas, and an entry of it is itself
+        // sometimes a list: "CAD, CAM, Design Automation" in one string.
+        $listed = \App\Models\Faculty::where('department_id', $department->id)
             ->whereNotNull('expertise')
             ->pluck('expertise')
-            ->flatMap(fn ($listed) => preg_split('/[;,]/', (string) $listed))
-            ->map(fn ($area) => trim(preg_replace('/\s+/', ' ', $area)))
+            ->flatMap(fn ($expertise) => is_array($expertise) ? $expertise : [(string) $expertise])
+            ->flatMap(fn ($area) => preg_split('/[;,]/', (string) $area));
+
+        $named = \App\Models\StudentAreaPreference::whereIn(
+            'student_id',
+            \App\Models\Student::where('department_id', $department->id)->select('roll_no')
+        )->pluck('broad_area');
+
+        $areas = $listed->concat($named)
+            ->map(fn ($area) => trim(preg_replace('/\s+/', ' ', (string) $area)))
             ->filter(fn ($area) => $area !== '' && mb_strlen($area) <= 80)
             ->filter(fn ($area) => $typed === '' || mb_stripos($area, $typed) !== false)
             // Two people write the same area in two cases; the first spelling
@@ -62,8 +78,7 @@ class SuggestionController extends Controller
             ->unique(fn ($area) => mb_strtolower($area))
             ->sort(fn ($a, $b) => strcasecmp($a, $b))
             ->take(50)
-            // The field stores what the scholar picks, so the wording is both
-            // the value and the key.
+            // The field stores the wording itself, so it is both value and key.
             ->map(fn ($area) => ['id' => $area, 'name' => $area])
             ->values();
 
