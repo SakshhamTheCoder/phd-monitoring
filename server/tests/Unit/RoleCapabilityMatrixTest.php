@@ -64,13 +64,13 @@ class RoleCapabilityMatrixTest extends TestCase
 
         // Admin-only controllers
         'can_manage_users' => ['admin'],
-        'can_manage_form_levels' => ['admin'],
-        'can_manage_supervisor_records' => ['admin'],
-        'can_manage_clerks' => ['admin'],
+        'can_manage_form_levels' => ['admin', 'dordc'],
+        'can_manage_supervisor_records' => ['admin', 'dordc'],
+        'can_manage_clerks' => ['admin', 'dordc'],
         'can_manage_app_settings' => ['admin'],
 
         // ClerkController
-        'can_mark_attendance' => ['clerk', 'admin'],
+        'can_mark_attendance' => ['clerk', 'admin', 'dordc'],
         'can_read_own_clerk_departments' => ['clerk'],
         'can_read_leave_reason' => ['student', 'hod', 'admin'],
         'can_read_leave_settings' => ['admin', 'clerk', 'hod', 'student'],

@@ -30,13 +30,17 @@ class AreaPagesAnswerOnlyTheirRolesTest extends TestCase
 
     public function test_only_course_managers_read_the_course_list(): void
     {
-        foreach (['student', 'faculty', 'dordc'] as $role) {
+        foreach (['student', 'faculty'] as $role) {
             $this->actingAs($this->account($role));
             foreach (['/api/courses/list', '/api/courses/filters'] as $path) {
                 $this->getJson($path)->assertForbidden();
             }
         }
-        $this->actingAs($this->account('admin'))->getJson('/api/courses/list')->assertOk();
+        // The DORDC answers for a scholar's coursework at the synopsis, so the
+        // catalogue is theirs to read and correct as well.
+        foreach (['admin', 'dordc'] as $role) {
+            $this->actingAs($this->account($role))->getJson('/api/courses/list')->assertOk();
+        }
 
         // The full list also feeds Tag course on a scholar's profile, so those
         // who manage scholars read it too.
@@ -54,7 +58,7 @@ class AreaPagesAnswerOnlyTheirRolesTest extends TestCase
         $areaId = DB::table('area_of_specializations')->insertGetId(['name' => 'Gate area', 'department_id' => $departmentId]);
         $body = ['name' => 'Renamed', 'department_id' => $departmentId];
 
-        foreach (['dordc', 'dra', 'director', 'student'] as $role) {
+        foreach (['dra', 'director', 'student'] as $role) {
             $this->actingAs($this->account($role));
             $this->getJson('/api/departments/area-of-specialization/list')->assertForbidden();
             $this->getJson('/api/departments/area-of-specialization/filters')->assertForbidden();
@@ -65,8 +69,12 @@ class AreaPagesAnswerOnlyTheirRolesTest extends TestCase
         // The plain list feeds dropdowns on profile forms, so it stays open.
         $this->actingAs($this->account('dordc'))->getJson("/api/departments/area-of-specialization?department_id={$departmentId}")->assertOk();
 
-        $this->actingAs($this->account('admin'));
-        $this->getJson('/api/departments/area-of-specialization/list')->assertOk();
-        $this->putJson("/api/departments/area-of-specialization/update/{$areaId}", $body)->assertOk();
+        // A supervisor is matched to a scholar on these areas and the DORDC
+        // answers for that match, so the list is theirs to correct as well.
+        foreach (['admin', 'dordc'] as $role) {
+            $this->actingAs($this->account($role));
+            $this->getJson('/api/departments/area-of-specialization/list')->assertOk();
+            $this->putJson("/api/departments/area-of-specialization/update/{$areaId}", $body)->assertOk();
+        }
     }
 }

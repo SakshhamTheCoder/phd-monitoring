@@ -58,4 +58,47 @@ class NavigationTest extends TestCase
         // Faculty may still open the area; the menu only hides it.
         $this->assertTrue($other['areas']['urf']);
     }
+
+    /**
+     * The DORDC approves the last step of every URF form and the ADORDC the one
+     * before it, so the page is theirs whether or not they mentor a project.
+     */
+    public function test_the_two_urf_reviewers_see_the_page_without_mentoring_anything(): void
+    {
+        $features = ['project_management' => true, 'job_openings' => true];
+
+        foreach (['dordc', 'adordc'] as $role) {
+            $menu = Navigation::for($role, ['can_read_urf_mentees' => true], $features);
+            $this->assertContains('/urf', array_column($menu['nav'], 'path'), $role);
+        }
+
+        $this->assertContains('dordc', config('navigation.urf_reviewers'));
+        $this->assertContains('adordc', config('navigation.urf_reviewers'));
+    }
+
+    /**
+     * The office pages the DORDC was asking an admin to open, and the ones the
+     * office keeps: Manage Users, Configuration and Logs are a different kind
+     * of power from marking attendance or naming a clerk.
+     */
+    public function test_the_dordc_reaches_the_office_pages_behind_the_forms_they_approve(): void
+    {
+        $features = ['project_management' => true, 'job_openings' => true];
+        $menu = Navigation::for('dordc', [
+            'can_read_urf_mentees' => true,
+            'can_manage_clerks' => true,
+            'can_mark_attendance' => true,
+        ], $features);
+
+        foreach (['clerks', 'formLevels', 'attendance', 'courses', 'courseManagement', 'areasOfSpecialization'] as $area) {
+            $this->assertTrue($menu['areas'][$area], $area);
+        }
+
+        $this->assertFalse($menu['areas']['admin'], 'Manage Users, Configuration and Logs stay with the office');
+        $paths = array_column($menu['nav'], 'path');
+        $this->assertContains('/clerks', $paths);
+        $this->assertContains('/attendance', $paths);
+        $this->assertNotContains('/users', $paths);
+        $this->assertNotContains('/configuration', $paths);
+    }
 }

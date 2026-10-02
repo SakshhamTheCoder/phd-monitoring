@@ -29,9 +29,9 @@ class CapabilityGateParityTest extends TestCase
         'GET /api/faculty' => ['admin', 'director', 'dra', 'dordc', 'hod', 'phd_coordinator', 'adordc', 'faculty', 'doctoral', 'external', 'student', 'ug_student'],
         'GET /api/students' => ['admin', 'director', 'dra', 'dordc', 'hod', 'phd_coordinator', 'adordc', 'faculty', 'doctoral', 'external', 'student'],
         'GET /api/clerks/my-departments' => ['clerk'],
-        'GET /api/clerks/attendance' => ['clerk', 'admin'],
-        'GET /api/clerks/attendance/history' => ['clerk', 'admin'],
-        'GET /api/clerks/attendance/template' => ['clerk', 'admin'],
+        'GET /api/clerks/attendance' => ['clerk', 'admin', 'dordc'],
+        'GET /api/clerks/attendance/history' => ['clerk', 'admin', 'dordc'],
+        'GET /api/clerks/attendance/template' => ['clerk', 'admin', 'dordc'],
         'GET /api/settings/leave' => ['admin', 'clerk', 'hod', 'student'],
     ];
 

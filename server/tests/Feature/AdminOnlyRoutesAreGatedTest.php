@@ -16,7 +16,8 @@ class AdminOnlyRoutesAreGatedTest extends TestCase
 {
     use DatabaseTransactions;
 
-    private const ROUTES = [
+    /** Moving, disabling or deleting a scholar's form: can_manage_form_levels. */
+    private const FORM_ROUTES = [
         ['GET', '/api/admin/forms/student/999101'],
         ['POST', '/api/admin/forms/create'],
         ['POST', '/api/admin/forms/update-control'],
@@ -24,6 +25,10 @@ class AdminOnlyRoutesAreGatedTest extends TestCase
         ['POST', '/api/admin/forms/update-stage'],
         ['POST', '/api/admin/forms/disable'],
         ['DELETE', '/api/admin/forms/delete'],
+    ];
+
+    /** The office's own: mailing every user, and the outside expert directory. */
+    private const OFFICE_ROUTES = [
         ['POST', '/api/admin/bulk-forgot-password'],
         ['GET', '/api/outside-experts/list'],
         ['GET', '/api/outside-experts/filters'],
@@ -32,6 +37,8 @@ class AdminOnlyRoutesAreGatedTest extends TestCase
         ['PUT', '/api/outside-experts/update/1'],
         ['DELETE', '/api/outside-experts/delete/1'],
     ];
+
+    private const ROUTES = [...self::FORM_ROUTES, ...self::OFFICE_ROUTES];
 
     private function account(string $role): User
     {
@@ -46,11 +53,32 @@ class AdminOnlyRoutesAreGatedTest extends TestCase
     {
         Queue::fake();
 
-        foreach (['student', 'faculty', 'hod', 'dordc', 'director', 'clerk', 'ug_student'] as $role) {
+        foreach (['student', 'faculty', 'hod', 'director', 'clerk', 'ug_student'] as $role) {
             $this->actingAs($this->account($role));
             foreach (self::ROUTES as [$method, $uri]) {
                 $this->assertSame(403, $this->json($method, $uri)->status(), "{$role} reached {$method} {$uri}");
             }
+        }
+
+        Queue::assertNothingPushed();
+    }
+
+    /**
+     * The DORDC manages a scholar's forms, because they approve the last step of
+     * every one of them. Mailing every user and the outside expert directory are
+     * still the office's alone.
+     */
+    public function test_the_dordc_manages_forms_and_nothing_else_here(): void
+    {
+        Queue::fake();
+        $this->actingAs($this->account('dordc'));
+
+        foreach (self::FORM_ROUTES as [$method, $uri]) {
+            $this->assertNotSame(403, $this->json($method, $uri)->status(), "dordc refused {$method} {$uri}");
+        }
+
+        foreach (self::OFFICE_ROUTES as [$method, $uri]) {
+            $this->assertSame(403, $this->json($method, $uri)->status(), "dordc reached {$method} {$uri}");
         }
 
         Queue::assertNothingPushed();

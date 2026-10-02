@@ -16,6 +16,7 @@ final class Navigation
     /** The acting role's capabilities, as the client has always read them. */
     public static function capabilities(User $user): array
     {
+        $config = config('navigation');
         $capabilities = collect((array) ($user->current_role?->getAttributes() ?? []))
             ->filter(fn ($value, $key) => str_starts_with($key, 'can_'))
             ->map(fn ($value) => $value === 'true')
@@ -23,7 +24,15 @@ final class Navigation
 
         // Mentoring is a fact about the person, not the role: true only while
         // they mentor something, so the URF item stays off everyone else's menu.
-        $capabilities['can_read_urf_mentees'] = !empty($capabilities['can_manage_urf'])
+        //
+        // Except for the two roles that read every project whether they mentor
+        // one or not. The DORDC approves the last step of every URF form and is
+        // the only one who can reject a project; the ADORDC approves the one
+        // before it. Hiding the page from them until they happened to mentor
+        // something left the final approver with no way in but a direct link.
+        $reviews = in_array($user->current_role?->role, $config['urf_reviewers'] ?? [], true);
+        $capabilities['can_read_urf_mentees'] = $reviews
+            || !empty($capabilities['can_manage_urf'])
             || (!empty($capabilities['can_read_urf_mentees'])
                 && UrfApplication::mentoredBy($user->faculty?->faculty_code)->exists());
 

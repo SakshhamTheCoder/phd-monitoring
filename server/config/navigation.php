@@ -14,7 +14,13 @@
 $reviewChain = ['hod', 'phd_coordinator', 'dordc', 'adordc', 'dra', 'director'];
 $everyoneButClerk = array_merge(['student', 'ug_student', 'faculty', 'doctoral', 'external', 'admin'], $reviewChain);
 
+// The two roles that read every URF project whether they mentor one or not: the
+// DORDC approves the last step of every form, the ADORDC the one before it.
+$urfReviewers = ['dordc', 'adordc'];
+
 return [
+    'urf_reviewers' => $urfReviewers,
+
     'areas' => [
         'home' => $everyoneButClerk,
         'notifications' => $everyoneButClerk,
@@ -34,17 +40,22 @@ return [
         // why the sidebar pairs this with a capability.
         'urf' => array_merge(['faculty', 'admin'], $reviewChain),
 
-        'attendance' => ['clerk', 'student', 'hod', 'admin'],
+        'attendance' => ['clerk', 'student', 'hod', 'dordc', 'admin'],
 
-        'courses' => ['student', 'hod', 'phd_coordinator', 'admin'],
-        'courseManagement' => ['hod', 'phd_coordinator', 'admin'],
+        'courses' => ['student', 'hod', 'phd_coordinator', 'dordc', 'admin'],
+        'courseManagement' => ['hod', 'phd_coordinator', 'dordc', 'admin'],
 
         // HoD and coordinators manage their own department's areas only; the
         // server scopes them.
-        'areasOfSpecialization' => ['hod', 'phd_coordinator', 'admin'],
+        'areasOfSpecialization' => ['hod', 'phd_coordinator', 'dordc', 'admin'],
 
         'publications' => ['student', 'ug_student'],
         'openings' => ['student'],
+
+        // Named apart from the rest of the office so the DORDC can be given
+        // one of these pages without being given Manage Users with it.
+        'clerks' => ['admin', 'dordc'],
+        'formLevels' => ['admin', 'dordc'],
 
         'admin' => ['admin'],
     ],
@@ -63,7 +74,7 @@ return [
         ['path' => '/courses', 'icon' => 'graduation-cap', 'label' => 'Courses', 'area' => 'courses'],
         ['path' => '/students', 'icon' => 'users', 'label' => 'Students', 'area' => 'scholars'],
         ['path' => '/faculty', 'icon' => 'id-badge', 'label' => 'Faculty', 'area' => 'facultyDirectory'],
-        ['path' => '/clerks', 'icon' => 'id-card-o', 'label' => 'Clerks', 'area' => 'admin'],
+        ['path' => '/clerks', 'icon' => 'id-card-o', 'label' => 'Clerks', 'area' => 'clerks'],
         ['path' => '/departments', 'icon' => 'building', 'label' => 'Departments', 'area' => 'departments'],
         ['path' => '/supervisor-doctoral-approvals', 'icon' => 'user-plus', 'label' => 'Supervisor Approvals', 'area' => 'supervisorApprovals'],
         ['path' => '/attendance', 'icon' => 'calendar-check-o', 'label' => 'Attendance', 'area' => 'attendance'],
@@ -97,6 +108,6 @@ return [
         ['path' => '/outside-experts', 'label' => 'Outside experts'],
         ['path' => '/logs', 'label' => 'Activity logs'],
         // Not in the sidebar: reached from a scholar's profile.
-        ['path' => '/forms/manage', 'label' => 'Manage forms', 'area' => 'admin', 'icon' => 'pencil-square-o'],
+        ['path' => '/forms/manage', 'label' => 'Manage forms', 'area' => 'formLevels', 'icon' => 'pencil-square-o'],
     ],
 ];

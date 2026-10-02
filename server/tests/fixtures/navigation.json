@@ -78,6 +78,8 @@
                 "areasOfSpecialization": true,
                 "publications": false,
                 "openings": false,
+                "clerks": true,
+                "formLevels": true,
                 "admin": true
             },
             "nav": [
@@ -360,6 +362,8 @@
                 "areasOfSpecialization": true,
                 "publications": false,
                 "openings": false,
+                "clerks": true,
+                "formLevels": true,
                 "admin": true
             },
             "nav": [
@@ -632,6 +636,8 @@
                 "areasOfSpecialization": true,
                 "publications": false,
                 "openings": false,
+                "clerks": false,
+                "formLevels": false,
                 "admin": false
             },
             "nav": [
@@ -821,6 +827,8 @@
                 "areasOfSpecialization": true,
                 "publications": false,
                 "openings": false,
+                "clerks": false,
+                "formLevels": false,
                 "admin": false
             },
             "nav": [
@@ -1000,6 +1008,8 @@
                 "areasOfSpecialization": true,
                 "publications": false,
                 "openings": false,
+                "clerks": false,
+                "formLevels": false,
                 "admin": false
             },
             "nav": [
@@ -1200,6 +1210,8 @@
                 "areasOfSpecialization": true,
                 "publications": false,
                 "openings": false,
+                "clerks": false,
+                "formLevels": false,
                 "admin": false
             },
             "nav": [
@@ -1390,6 +1402,8 @@
                 "areasOfSpecialization": false,
                 "publications": false,
                 "openings": false,
+                "clerks": false,
+                "formLevels": false,
                 "admin": false
             },
             "nav": [
@@ -1557,6 +1571,8 @@
                 "areasOfSpecialization": false,
                 "publications": false,
                 "openings": false,
+                "clerks": false,
+                "formLevels": false,
                 "admin": false
             },
             "nav": [
@@ -1714,6 +1730,8 @@
                 "areasOfSpecialization": false,
                 "publications": true,
                 "openings": true,
+                "clerks": false,
+                "formLevels": false,
                 "admin": false
             },
             "nav": [
@@ -1887,6 +1905,8 @@
                 "areasOfSpecialization": false,
                 "publications": true,
                 "openings": true,
+                "clerks": false,
+                "formLevels": false,
                 "admin": false
             },
             "nav": [
@@ -2055,6 +2075,8 @@
                 "areasOfSpecialization": false,
                 "publications": false,
                 "openings": false,
+                "clerks": false,
+                "formLevels": false,
                 "admin": false
             },
             "nav": [
@@ -2233,6 +2255,8 @@
                 "areasOfSpecialization": false,
                 "publications": false,
                 "openings": false,
+                "clerks": false,
+                "formLevels": false,
                 "admin": false
             },
             "nav": [
@@ -2395,12 +2419,14 @@
                 "departments": true,
                 "supervisorApprovals": true,
                 "urf": true,
-                "attendance": false,
-                "courses": false,
-                "courseManagement": false,
-                "areasOfSpecialization": false,
+                "attendance": true,
+                "courses": true,
+                "courseManagement": true,
+                "areasOfSpecialization": true,
                 "publications": false,
                 "openings": false,
+                "clerks": true,
+                "formLevels": true,
                 "admin": false
             },
             "nav": [
@@ -2430,6 +2456,11 @@
                     "icon": "flask"
                 },
                 {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap"
+                },
+                {
                     "path": "\/students",
                     "label": "Students",
                     "icon": "users"
@@ -2438,6 +2469,11 @@
                     "path": "\/faculty",
                     "label": "Faculty",
                     "icon": "id-badge"
+                },
+                {
+                    "path": "\/clerks",
+                    "label": "Clerks",
+                    "icon": "id-card-o"
                 },
                 {
                     "path": "\/departments",
@@ -2450,9 +2486,19 @@
                     "icon": "user-plus"
                 },
                 {
+                    "path": "\/attendance",
+                    "label": "Attendance",
+                    "icon": "calendar-check-o"
+                },
+                {
                     "path": "\/notifications",
                     "label": "Notifications",
                     "icon": "bell"
+                },
+                {
+                    "path": "\/areasOfSpecialization",
+                    "label": "Areas of Specialization",
+                    "icon": "list"
                 }
             ],
             "labels": {
@@ -2461,11 +2507,15 @@
                 "\/forms": "Forms",
                 "\/presentation": "Progress Monitoring",
                 "\/urf": "URF",
+                "\/courses": "Courses",
                 "\/students": "Students",
                 "\/faculty": "Faculty",
+                "\/clerks": "Clerks",
                 "\/departments": "Departments",
                 "\/supervisor-doctoral-approvals": "Supervisor Approvals",
-                "\/notifications": "Notifications"
+                "\/attendance": "Attendance",
+                "\/notifications": "Notifications",
+                "\/areasOfSpecialization": "Areas of Specialization"
             },
             "tiles": [
                 {
@@ -2494,6 +2544,11 @@
                     "icon": "tasks"
                 },
                 {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap"
+                },
+                {
                     "path": "\/projects",
                     "label": "Projects",
                     "icon": "briefcase"
@@ -2504,9 +2559,29 @@
                     "icon": "flask"
                 },
                 {
+                    "path": "\/attendance",
+                    "label": "Mark attendance",
+                    "icon": "calendar-check-o"
+                },
+                {
                     "path": "\/supervisor-doctoral-approvals",
                     "label": "Supervisor approvals",
                     "icon": "user-plus"
+                },
+                {
+                    "path": "\/clerks",
+                    "label": "Clerks",
+                    "icon": "id-card-o"
+                },
+                {
+                    "path": "\/areasOfSpecialization",
+                    "label": "Areas of specialization",
+                    "icon": "list"
+                },
+                {
+                    "path": "\/forms\/manage",
+                    "label": "Manage forms",
+                    "icon": "pencil-square-o"
                 }
             ]
         }
@@ -2584,12 +2659,14 @@
                 "departments": true,
                 "supervisorApprovals": true,
                 "urf": true,
-                "attendance": false,
-                "courses": false,
-                "courseManagement": false,
-                "areasOfSpecialization": false,
+                "attendance": true,
+                "courses": true,
+                "courseManagement": true,
+                "areasOfSpecialization": true,
                 "publications": false,
                 "openings": false,
+                "clerks": true,
+                "formLevels": true,
                 "admin": false
             },
             "nav": [
@@ -2614,6 +2691,11 @@
                     "icon": "flask"
                 },
                 {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap"
+                },
+                {
                     "path": "\/students",
                     "label": "Students",
                     "icon": "users"
@@ -2622,6 +2704,11 @@
                     "path": "\/faculty",
                     "label": "Faculty",
                     "icon": "id-badge"
+                },
+                {
+                    "path": "\/clerks",
+                    "label": "Clerks",
+                    "icon": "id-card-o"
                 },
                 {
                     "path": "\/departments",
@@ -2634,9 +2721,19 @@
                     "icon": "user-plus"
                 },
                 {
+                    "path": "\/attendance",
+                    "label": "Attendance",
+                    "icon": "calendar-check-o"
+                },
+                {
                     "path": "\/notifications",
                     "label": "Notifications",
                     "icon": "bell"
+                },
+                {
+                    "path": "\/areasOfSpecialization",
+                    "label": "Areas of Specialization",
+                    "icon": "list"
                 }
             ],
             "labels": {
@@ -2645,11 +2742,15 @@
                 "\/forms": "Forms",
                 "\/presentation": "Progress Monitoring",
                 "\/urf": "URF",
+                "\/courses": "Courses",
                 "\/students": "Students",
                 "\/faculty": "Faculty",
+                "\/clerks": "Clerks",
                 "\/departments": "Departments",
                 "\/supervisor-doctoral-approvals": "Supervisor Approvals",
-                "\/notifications": "Notifications"
+                "\/attendance": "Attendance",
+                "\/notifications": "Notifications",
+                "\/areasOfSpecialization": "Areas of Specialization"
             },
             "tiles": [
                 {
@@ -2678,14 +2779,39 @@
                     "icon": "tasks"
                 },
                 {
+                    "path": "\/courses",
+                    "label": "Courses",
+                    "icon": "graduation-cap"
+                },
+                {
                     "path": "\/urf",
                     "label": "URF",
                     "icon": "flask"
                 },
                 {
+                    "path": "\/attendance",
+                    "label": "Mark attendance",
+                    "icon": "calendar-check-o"
+                },
+                {
                     "path": "\/supervisor-doctoral-approvals",
                     "label": "Supervisor approvals",
                     "icon": "user-plus"
+                },
+                {
+                    "path": "\/clerks",
+                    "label": "Clerks",
+                    "icon": "id-card-o"
+                },
+                {
+                    "path": "\/areasOfSpecialization",
+                    "label": "Areas of specialization",
+                    "icon": "list"
+                },
+                {
+                    "path": "\/forms\/manage",
+                    "label": "Manage forms",
+                    "icon": "pencil-square-o"
                 }
             ]
         }
@@ -2769,6 +2895,8 @@
                 "areasOfSpecialization": false,
                 "publications": false,
                 "openings": false,
+                "clerks": false,
+                "formLevels": false,
                 "admin": false
             },
             "nav": [
@@ -2947,6 +3075,8 @@
                 "areasOfSpecialization": false,
                 "publications": false,
                 "openings": false,
+                "clerks": false,
+                "formLevels": false,
                 "admin": false
             },
             "nav": [
@@ -3115,6 +3245,8 @@
                 "areasOfSpecialization": false,
                 "publications": false,
                 "openings": false,
+                "clerks": false,
+                "formLevels": false,
                 "admin": false
             },
             "nav": [
@@ -3249,6 +3381,8 @@
                 "areasOfSpecialization": false,
                 "publications": false,
                 "openings": false,
+                "clerks": false,
+                "formLevels": false,
                 "admin": false
             },
             "nav": [
@@ -3383,6 +3517,8 @@
                 "areasOfSpecialization": false,
                 "publications": false,
                 "openings": false,
+                "clerks": false,
+                "formLevels": false,
                 "admin": false
             },
             "nav": [
@@ -3528,6 +3664,8 @@
                 "areasOfSpecialization": false,
                 "publications": false,
                 "openings": false,
+                "clerks": false,
+                "formLevels": false,
                 "admin": false
             },
             "nav": [
@@ -3673,6 +3811,8 @@
                 "areasOfSpecialization": false,
                 "publications": false,
                 "openings": false,
+                "clerks": false,
+                "formLevels": false,
                 "admin": false
             },
             "nav": [
@@ -3840,6 +3980,8 @@
                 "areasOfSpecialization": false,
                 "publications": false,
                 "openings": false,
+                "clerks": false,
+                "formLevels": false,
                 "admin": false
             },
             "nav": [
@@ -3997,6 +4139,8 @@
                 "areasOfSpecialization": false,
                 "publications": false,
                 "openings": false,
+                "clerks": false,
+                "formLevels": false,
                 "admin": false
             },
             "nav": [
@@ -4097,6 +4241,8 @@
                 "areasOfSpecialization": false,
                 "publications": false,
                 "openings": false,
+                "clerks": false,
+                "formLevels": false,
                 "admin": false
             },
             "nav": [
@@ -4197,6 +4343,8 @@
                 "areasOfSpecialization": false,
                 "publications": true,
                 "openings": false,
+                "clerks": false,
+                "formLevels": false,
                 "admin": false
             },
             "nav": [
@@ -4331,6 +4479,8 @@
                 "areasOfSpecialization": false,
                 "publications": true,
                 "openings": false,
+                "clerks": false,
+                "formLevels": false,
                 "admin": false
             },
             "nav": [

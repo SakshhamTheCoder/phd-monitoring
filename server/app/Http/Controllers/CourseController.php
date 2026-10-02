@@ -91,7 +91,9 @@ class CourseController extends Controller
 
     // Mirrors ACCESS.courseManagement on the client. add, update, delete and
     // import carried no check, so any signed-in account could change courses.
-    private const COURSE_MANAGERS = ['admin', 'hod', 'phd_coordinator'];
+    // The DORDC answers for a scholar's coursework at the synopsis, so the
+    // catalogue and the tagging are theirs to correct as well.
+    private const COURSE_MANAGERS = ['admin', 'hod', 'phd_coordinator', 'dordc'];
 
     private function managesCourses(): bool
     {
