@@ -12,6 +12,7 @@ use App\Http\Controllers\Traits\GeneralFormList;
 use App\Http\Controllers\Traits\GeneralFormSubmitter;
 use App\Http\Controllers\Traits\HasSemesterCodeValidation;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Traits\SaveFile;
 
 use App\Models\Patent;
@@ -554,90 +555,95 @@ class PresentationController extends Controller
 
             usort($rows, fn ($a, $b) => $this->semesterOrder($a['semester']) <=> $this->semesterOrder($b['semester']));
 
-            // Anything already recorded is the baseline the sheet continues from.
-            $previous = (float) Presentation::where('student_id', $student->roll_no)
-                ->max('total_progress');
-            $latestTotal = null;
+            // One commit for the scholar rather than one per write. The sheet
+            // holds thousands of evaluations and each save of its own would be
+            // a round trip the web server stops waiting for.
+            DB::transaction(function () use ($rows, $student, $rollNumber, $standing, $user, &$errors, &$imported, &$skipped) {
+                // Anything already recorded is the baseline the sheet continues from.
+                $previous = (float) Presentation::where('student_id', $student->roll_no)
+                    ->max('total_progress');
+                $latestTotal = null;
 
-            foreach ($rows as $row) {
-                $rowNumber = $row['row_number'];
-                $semesterCode = strtoupper(trim($row['semester']));
-                $total = (float) $row['total_progress'];
+                foreach ($rows as $row) {
+                    $rowNumber = $row['row_number'];
+                    $semesterCode = strtoupper(trim($row['semester']));
+                    $total = (float) $row['total_progress'];
 
-                if ($total < 0 || $total > 100) {
-                    $errors[] = "Row {$rowNumber}: total progress of {$total} is outside 0 to 100";
-                    continue;
-                }
-
-                if ($total < $previous) {
-                    $errors[] = "Row {$rowNumber}: total progress of {$total} is lower than the {$previous} already recorded";
-                    continue;
-                }
-
-                $semester = Semester::where('semester_name', $semesterCode)->first()
-                    ?? $this->createSemesterForImport($semesterCode);
-
-                if (!$semester) {
-                    $errors[] = "Row {$rowNumber}: '{$semesterCode}' is not a semester code, expected something like 2425ODD";
-                    continue;
-                }
-
-                if (!$semester->end_date) {
-                    $errors[] = "Row {$rowNumber}: {$semesterCode} was created without dates, "
-                        . "so it will not appear under Past Semesters until they are set";
-                }
-
-                $already = Presentation::where('student_id', $student->roll_no)
-                    ->where('semester_id', $semester->id)->first();
-
-                if ($already) {
-                    // Half the sheet's rows carry no date, or a word where one
-                    // belongs, so the evaluation is imported without it. When
-                    // the office fills the date in later and sends the sheet
-                    // again, that is the one thing worth taking from the row:
-                    // everything else about the evaluation is already settled.
-                    if (!$already->date && $row['date'] !== '') {
-                        $already->date = $row['date'];
-                        $already->save();
-                        $already->addHistoryEntry('Date filled from the progress sheet', $user->first_name);
-                        $errors[] = "Row {$rowNumber}: {$rollNumber}'s {$semesterCode} evaluation had no date, filled with {$row['date']}";
-                        $imported++;
+                    if ($total < 0 || $total > 100) {
+                        $errors[] = "Row {$rowNumber}: total progress of {$total} is outside 0 to 100";
                         continue;
                     }
 
-                    $errors[] = "Row {$rowNumber}: {$rollNumber} already has a presentation for {$semesterCode}";
-                    $skipped++;
-                    continue;
+                    if ($total < $previous) {
+                        $errors[] = "Row {$rowNumber}: total progress of {$total} is lower than the {$previous} already recorded";
+                        continue;
+                    }
+
+                    $semester = Semester::where('semester_name', $semesterCode)->first()
+                        ?? $this->createSemesterForImport($semesterCode);
+
+                    if (!$semester) {
+                        $errors[] = "Row {$rowNumber}: '{$semesterCode}' is not a semester code, expected something like 2425ODD";
+                        continue;
+                    }
+
+                    if (!$semester->end_date) {
+                        $errors[] = "Row {$rowNumber}: {$semesterCode} was created without dates, "
+                            . "so it will not appear under Past Semesters until they are set";
+                    }
+
+                    $already = Presentation::where('student_id', $student->roll_no)
+                        ->where('semester_id', $semester->id)->first();
+
+                    if ($already) {
+                        // Half the sheet's rows carry no date, or a word where one
+                        // belongs, so the evaluation is imported without it. When
+                        // the office fills the date in later and sends the sheet
+                        // again, that is the one thing worth taking from the row:
+                        // everything else about the evaluation is already settled.
+                        if (!$already->date && $row['date'] !== '') {
+                            $already->date = $row['date'];
+                            $already->save();
+                            $already->addHistoryEntry('Date filled from the progress sheet', $user->first_name);
+                            $errors[] = "Row {$rowNumber}: {$rollNumber}'s {$semesterCode} evaluation had no date, filled with {$row['date']}";
+                            $imported++;
+                            continue;
+                        }
+
+                        $errors[] = "Row {$rowNumber}: {$rollNumber} already has a presentation for {$semesterCode}";
+                        $skipped++;
+                        continue;
+                    }
+
+                    $presentation = Presentation::create([
+                        'student_id' => $student->roll_no,
+                        'date' => $row['date'] ?: null,
+                        'period_of_report' => $semesterCode,
+                        'semester_id' => $semester->id,
+                        'current_progress' => $previous,
+                        'progress' => $total - $previous,
+                        'total_progress' => $total,
+                        'overall_progress' => 'satisfactory',
+                        'status' => 'approved',
+                        'completion' => 'complete',
+                        'steps' => ['student', 'faculty', 'doctoral', 'hod', 'dordc', 'complete'],
+                    ]);
+
+                    $presentation->addHistoryEntry('Imported from progress sheet', $user->first_name);
+
+                    $previous = $total;
+                    $latestTotal = $total;
+                    $imported++;
                 }
 
-                $presentation = Presentation::create([
-                    'student_id' => $student->roll_no,
-                    'date' => $row['date'] ?: null,
-                    'period_of_report' => $semesterCode,
-                    'semester_id' => $semester->id,
-                    'current_progress' => $previous,
-                    'progress' => $total - $previous,
-                    'total_progress' => $total,
-                    'overall_progress' => 'satisfactory',
-                    'status' => 'approved',
-                    'completion' => 'complete',
-                    'steps' => ['student', 'faculty', 'doctoral', 'hod', 'dordc', 'complete'],
-                ]);
-
-                $presentation->addHistoryEntry('Imported from progress sheet', $user->first_name);
-
-                $previous = $total;
-                $latestTotal = $total;
-                $imported++;
-            }
-
-            // The highest figure the sheet gives for this scholar, whether it
-            // came from their last evaluation or from a standing total.
-            $highest = max((float) ($latestTotal ?? 0), (float) ($standing ?? 0));
-            if ($latestTotal !== null || $standing !== null) {
-                $student->overall_progress = $highest;
-                $student->save();
-            }
+                // The highest figure the sheet gives for this scholar, whether it
+                // came from their last evaluation or from a standing total.
+                $highest = max((float) ($latestTotal ?? 0), (float) ($standing ?? 0));
+                if ($latestTotal !== null || $standing !== null) {
+                    $student->overall_progress = $highest;
+                    $student->save();
+                }
+            });
         }
 
         if ($standingTotals > 0) {
