@@ -29,9 +29,11 @@ final class UrfPage extends PageDefinition
         $sessions = $reads ? UrfApplication::query()
             ->unless($manages, fn ($q) => $q->mentoredBy($user->faculty?->faculty_code))
             ->distinct()->orderByDesc('session')->pluck('session')->values()->all() : [];
-        // What is waiting on whoever is reading. The office holds no step on a
-        // chain, so it has no queue.
-        $queue = $manages ? [] : app(UrfDecisionController::class)->queue()->getData(true)['data'];
+        // What is waiting on whoever is reading. Asked for everyone: the DORDC
+        // manages URF and is also the last step of every form, so suppressing
+        // the queue for whoever manages it left the final approver with no list
+        // of what waits on them. A reader who holds no step gets nothing back.
+        $queue = app(UrfDecisionController::class)->queue()->getData(true)['data'];
         $waiting = array_flip(array_column($queue, 'form'));
 
         return self::page('URF', $manages

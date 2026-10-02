@@ -36,7 +36,16 @@ trait UrfApprovable
             : self::CHAIN[$next + 1];
     }
 
-    /** Which step this user is on this form. The office is not a step. */
+    /**
+     * Which step this user is on this form. The office is not a step.
+     *
+     * A reader can hold more than one: the DORDC approves every project and may
+     * mentor one of them, and so may an ADORDC in their own department. Taking
+     * the first held step stranded those projects, because a mentor who was also
+     * the DORDC read 'mentor' at every stage, so the DORDC step of their own
+     * project waited on nobody. The step the form has actually reached wins
+     * where they hold it.
+     */
     public function stepFor(User $user): ?string
     {
         $application = $this->approvalApplication();
@@ -44,18 +53,20 @@ trait UrfApprovable
             return null;
         }
 
+        $steps = [];
+
         if ($application->hasMember($user)) {
-            return 'student';
+            $steps[] = 'student';
         }
 
         $code = $user->faculty?->faculty_code;
         if ($code && in_array($code, [$application->mentor1_faculty_code, $application->mentor2_faculty_code], false)) {
-            return 'mentor';
+            $steps[] = 'mentor';
         }
 
         $role = $user->current_role?->role;
         if ($role === 'dordc') {
-            return 'dordc';
+            $steps[] = 'dordc';
         }
 
         if ($role === 'adordc') {
@@ -64,10 +75,16 @@ trait UrfApprovable
 
             // A student with no department yet sits with every ADORDC rather
             // than with none, so a form cannot be stranded by a missing link.
-            return $department === null || $theirs->contains($department) ? 'adordc' : null;
+            if ($department === null || $theirs->contains($department)) {
+                $steps[] = 'adordc';
+            }
         }
 
-        return null;
+        if (!$steps) {
+            return null;
+        }
+
+        return in_array($this->stage, $steps, true) ? $this->stage : $steps[0];
     }
 
     public function awaits(User $user): bool
