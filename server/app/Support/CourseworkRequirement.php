@@ -30,8 +30,12 @@ use App\Models\Student;
  */
 class CourseworkRequirement
 {
-    /** The management school, under every code the portal has carried for it. */
-    private const MANAGEMENT = ['LMTSM', 'DOM', 'SOM', 'SOM (Derabassi)'];
+    /**
+     * The management school. LMTSM alone: DOM and SOM are mathematics, which
+     * the first version of this read as the management school's older codes and
+     * measured against the wrong figure.
+     */
+    private const MANAGEMENT = ['LMTSM'];
 
     private const LIBERAL_ARTS = ['TSLAS', 'SLAS'];
 

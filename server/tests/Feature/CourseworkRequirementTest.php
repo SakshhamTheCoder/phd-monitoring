@@ -41,7 +41,9 @@ class CourseworkRequirementTest extends TestCase
             'humanities in the oldest band' => ['DHSS', '2018-07-27', 11],
             'management before July 2024' => ['LMTSM', '2022-09-30', 48],
             'management from July 2024' => ['LMTSM', '2024-08-20', 36],
-            'management under its older code' => ['DOM', '2021-09-20', 48],
+            // Mathematics, not the management school, whatever the codes look like.
+            'mathematics is not LMTSM' => ['DOM', '2021-09-20', 14],
+            'mathematics at Dera Bassi is not LMTSM' => ['SOM (Derabassi)', '2021-09-20', 14],
             'liberal arts, whenever they came' => ['TSLAS', '2019-07-31', 45],
             'liberal arts, newest band' => ['TSLAS', '2025-10-09', 45],
         ];
