@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Department;
 use App\Models\Faculty;
-use App\Models\UgBranch;
 use App\Models\UrfApplication;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -27,13 +26,11 @@ class SeedUrfDemoTest extends TestCase
             $this->markTestSkipped('Needs the UG fixture account, an internal faculty member and a department.');
         }
 
-        // The seeder needs a branch to attach a UG record to, and the suite's
+        // The seeder needs a department to attach a UG record to, and the suite's
         // transaction takes both away again.
-        $branch = UgBranch::first() ?: UgBranch::create([
-            'programme' => 'BE', 'code' => 'PROBE', 'name' => 'Probe Engineering', 'department_id' => $department->id,
-        ]);
+        $department = Department::first() ?: Department::firstOrCreate(['code' => 'PROBE'], ['name' => 'Probe Engineering']);
         if (!$student->ugStudent) {
-            $student->ugStudent()->create(['roll_no' => '999900001', 'branch_id' => $branch->id, 'year' => 4]);
+            $student->ugStudent()->create(['roll_no' => '999900001', 'department_id' => $department->id, 'year' => 4]);
             $student->refresh();
         }
 

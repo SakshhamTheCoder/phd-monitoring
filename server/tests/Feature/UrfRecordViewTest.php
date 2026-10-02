@@ -56,7 +56,7 @@ class UrfRecordViewTest extends TestCase
 
         $this->assertSame('Low power sensing', $view['title']);
         $team = $view['sections'][2]['parts'][0]['rows'][0];
-        $this->assertSame(['102203001', '3rd Year', 'N/A'], [$team['roll_no'], $team['year'], $team['branch']]);
+        $this->assertSame(['102203001', '3rd Year', 'N/A'], [$team['roll_no'], $team['year'], $team['department']]);
         $this->assertSame('Approved by the mentor, the ADORDC and the DORDC.', $view['sections'][0]['facts'][3]['text']);
     }
 

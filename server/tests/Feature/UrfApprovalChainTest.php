@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Department;
 use App\Models\Faculty;
 use App\Models\Role;
-use App\Models\UgBranch;
 use App\Models\UrfApplication;
 use App\Models\UrfReportWindow;
 use App\Models\User;
@@ -64,12 +63,7 @@ class UrfApprovalChainTest extends TestCase
         $student = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
 
         $department = Department::create(['name' => 'Chain Test Department', 'code' => 'CHNTD']);
-        $branch = UgBranch::create([
-            'programme' => 'BE',
-            'code' => 'CHNTB',
-            'name' => 'Chain Test Branch',
-            'department_id' => $department->id,
-        ]);
+        $department = Department::firstOrCreate(['code' => 'CHNTB'], ['name' => 'Chain Test Department']);
 
         $mentor = $this->faculty(990101, $department);
 
@@ -88,7 +82,7 @@ class UrfApprovalChainTest extends TestCase
             'project_title' => 'Chain project ' . Str::random(4),
             'student1_name' => 'Chain Student',
             'student1_roll_no' => '10230' . random_int(1000, 9999),
-            'student1_branch_id' => $branch->id,
+            'student1_department_id' => $department->id,
             'student1_year' => 2,
             'student1_gender' => 'Male',
             'student1_email' => $student->email,
@@ -162,12 +156,7 @@ class UrfApprovalChainTest extends TestCase
         $outsider = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
 
         $department = Department::create(['name' => 'Page Test Department', 'code' => 'PAGTD']);
-        $branch = UgBranch::create([
-            'programme' => 'BE',
-            'code' => 'PAGTB',
-            'name' => 'Page Test Branch',
-            'department_id' => $department->id,
-        ]);
+        $department = Department::firstOrCreate(['code' => 'PAGTB'], ['name' => 'Page Test Department']);
 
         $mentor = $this->faculty(990141, $department);
         $adordcFaculty = $this->faculty(990142, $department);
@@ -183,7 +172,7 @@ class UrfApprovalChainTest extends TestCase
             'project_title' => 'Page project ' . Str::random(4),
             'student1_name' => 'Page Student',
             'student1_roll_no' => '10230' . random_int(1000, 9999),
-            'student1_branch_id' => $branch->id,
+            'student1_department_id' => $department->id,
             'student1_year' => 2,
             'student1_gender' => 'Male',
             'student1_email' => $student->email,
@@ -293,7 +282,7 @@ class UrfApprovalChainTest extends TestCase
         $admin = $this->userAs('admin', ['can_manage_urf' => 'true', 'can_manage_app_settings' => 'true']);
         $student = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
         $department = Department::create(['name' => 'Reject Test Department', 'code' => 'REJTD']);
-        $branch = UgBranch::create(['programme' => 'BE', 'code' => 'REJTB', 'name' => 'Reject Test Branch', 'department_id' => $department->id]);
+        $department = Department::firstOrCreate(['code' => 'REJTB'], ['name' => 'Reject Test Department']);
         $mentor = $this->faculty(990131, $department);
         $adordcFaculty = $this->faculty(990132, $department);
         $adordc = $adordcFaculty->user;
@@ -308,7 +297,7 @@ class UrfApprovalChainTest extends TestCase
             'project_title' => 'Doomed project ' . Str::random(4),
             'student1_name' => 'Reject Student',
             'student1_roll_no' => '10230' . random_int(1000, 9999),
-            'student1_branch_id' => $branch->id,
+            'student1_department_id' => $department->id,
             'student1_year' => 2,
             'student1_gender' => 'Male',
             'student1_email' => $student->email,
@@ -360,7 +349,7 @@ class UrfApprovalChainTest extends TestCase
         $admin = $this->userAs('admin', ['can_manage_urf' => 'true', 'can_manage_app_settings' => 'true']);
         $student = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
         $department = Department::create(['name' => 'Override Test Department', 'code' => 'OVRTD']);
-        $branch = UgBranch::create(['programme' => 'BE', 'code' => 'OVRTB', 'name' => 'Override Test Branch', 'department_id' => $department->id]);
+        $department = Department::firstOrCreate(['code' => 'OVRTB'], ['name' => 'Override Test Department']);
         $mentor = $this->faculty(990141, $department);
 
         $this->actingAs($admin, 'sanctum')->postJson('/api/settings/urf', ['applications_open' => 1])->assertOk();
@@ -368,7 +357,7 @@ class UrfApprovalChainTest extends TestCase
             'project_title' => 'Override project ' . Str::random(4),
             'student1_name' => 'Override Student',
             'student1_roll_no' => '10230' . random_int(1000, 9999),
-            'student1_branch_id' => $branch->id,
+            'student1_department_id' => $department->id,
             'student1_year' => 2,
             'student1_gender' => 'Female',
             'student1_email' => $student->email,
@@ -393,7 +382,7 @@ class UrfApprovalChainTest extends TestCase
         $admin = $this->userAs('admin', ['can_manage_urf' => 'true', 'can_manage_app_settings' => 'true']);
         $student = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
         $department = Department::create(['name' => 'Round Test Department', 'code' => 'RNDTD']);
-        $branch = UgBranch::create(['programme' => 'BE', 'code' => 'RNDTB', 'name' => 'Round Test Branch', 'department_id' => $department->id]);
+        $department = Department::firstOrCreate(['code' => 'RNDTB'], ['name' => 'Round Test Department']);
         $mentor = $this->faculty(990121, $department);
 
         $this->actingAs($admin, 'sanctum')->postJson('/api/settings/urf', ['applications_open' => 1])->assertOk();
@@ -401,7 +390,7 @@ class UrfApprovalChainTest extends TestCase
             'project_title' => 'Round project ' . Str::random(4),
             'student1_name' => 'Round Student',
             'student1_roll_no' => '10230' . random_int(1000, 9999),
-            'student1_branch_id' => $branch->id,
+            'student1_department_id' => $department->id,
             'student1_year' => 2,
             'student1_gender' => 'Male',
             'student1_email' => $student->email,
@@ -471,12 +460,7 @@ class UrfApprovalChainTest extends TestCase
         $student = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
 
         $department = Department::create(['name' => 'Lock Test Department', 'code' => 'LCKTD']);
-        $branch = UgBranch::create([
-            'programme' => 'BE',
-            'code' => 'LCKTB',
-            'name' => 'Lock Test Branch',
-            'department_id' => $department->id,
-        ]);
+        $department = Department::firstOrCreate(['code' => 'LCKTB'], ['name' => 'Lock Test Department']);
 
         $mentor = $this->faculty(990151, $department);
         $adordcFaculty = $this->faculty(990152, $department);
@@ -492,7 +476,7 @@ class UrfApprovalChainTest extends TestCase
             'project_title' => 'Lock project ' . Str::random(4),
             'student1_name' => 'Lock Student',
             'student1_roll_no' => '10230' . random_int(1000, 9999),
-            'student1_branch_id' => $branch->id,
+            'student1_department_id' => $department->id,
             'student1_year' => 2,
             'student1_gender' => 'Male',
             'student1_email' => $student->email,
@@ -585,13 +569,13 @@ class UrfApprovalChainTest extends TestCase
         $admin = $this->userAs('admin', ['can_manage_urf' => 'true', 'can_manage_app_settings' => 'true']);
         $student = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
         $department = Department::create(['name' => 'Scope Test Department', 'code' => 'SCPTD']);
-        $branch = UgBranch::create(['programme' => 'BE', 'code' => 'SCPTB', 'name' => 'Scope Test Branch', 'department_id' => $department->id]);
+        $department = Department::firstOrCreate(['code' => 'SCPTB'], ['name' => 'Scope Test Department']);
 
         // The UG Students tab lists ug_students rows, which an application does
         // not create: the office adds them, or sign-up does.
         $student->ugStudent()->create([
             'roll_no' => '10230' . random_int(1000, 9999),
-            'branch_id' => $branch->id,
+            'department_id' => $department->id,
             'year' => 3,
         ]);
 
@@ -608,7 +592,7 @@ class UrfApprovalChainTest extends TestCase
             'project_title' => $title,
             'student1_name' => 'Scope Student',
             'student1_roll_no' => '10230' . random_int(1000, 9999),
-            'student1_branch_id' => $branch->id,
+            'student1_department_id' => $department->id,
             'student1_year' => 3,
             'student1_gender' => 'Female',
             'student1_email' => $student->email,
@@ -686,18 +670,18 @@ class UrfApprovalChainTest extends TestCase
         $admin = $this->userAs('admin', ['can_manage_urf' => 'true', 'can_manage_app_settings' => 'true']);
         $student = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
         $department = Department::create(['name' => 'Details Test Department', 'code' => 'DTLTD']);
-        $branch = UgBranch::create(['programme' => 'BE', 'code' => 'DTLTB', 'name' => 'Details Test Branch', 'department_id' => $department->id]);
-        $other = UgBranch::create(['programme' => 'BE', 'code' => 'DTLTC', 'name' => 'Other Test Branch', 'department_id' => $department->id]);
+        $department = Department::firstOrCreate(['code' => 'DTLTB'], ['name' => 'Details Test Department']);
+        $other = Department::firstOrCreate(['code' => 'DTLTC'], ['name' => 'Other Test Department']);
         $mentor = $this->faculty(990171, $department);
 
         $roll = '10230' . random_int(1000, 9999);
-        $record = $student->ugStudent()->create(['roll_no' => $roll, 'branch_id' => $branch->id, 'year' => 2]);
+        $record = $student->ugStudent()->create(['roll_no' => $roll, 'department_id' => $department->id, 'year' => 2]);
 
         $details = fn (array $overrides = []) => array_merge([
             'phone' => '9800000018',
             'gender' => 'Female',
             'roll_no' => $roll,
-            'branch_id' => $branch->id,
+            'department_id' => $department->id,
             'year' => 2,
         ], $overrides);
 
@@ -712,7 +696,7 @@ class UrfApprovalChainTest extends TestCase
             'project_title' => 'Details project ' . Str::random(4),
             'student1_name' => 'Details Student',
             'student1_roll_no' => $roll,
-            'student1_branch_id' => $branch->id,
+            'student1_department_id' => $department->id,
             'student1_year' => 3,
             'student1_gender' => 'Female',
             'student1_email' => $student->email,
@@ -730,18 +714,18 @@ class UrfApprovalChainTest extends TestCase
         $this->assertSame('Male', $student->gender);
 
         // And the rest is ignored rather than written, even if a stale page
-        // posts it: the branch is what routes a form to an ADORDC.
+        // posts it: the department is what routes a form to an ADORDC.
         $this->actingAs($student, 'sanctum')
             ->patchJson('/api/urf/me', $details([
                 'roll_no' => '999999999',
-                'branch_id' => $other->id,
+                'department_id' => $other->id,
                 'year' => 1,
             ]))
             ->assertOk();
 
         $record->refresh();
         $this->assertSame($roll, $record->roll_no, 'the roll number is the office\'s now');
-        $this->assertSame($branch->id, $record->branch_id, 'and so is the branch that routes the form');
+        $this->assertSame($department->id, $record->department_id, 'and so is the branch that routes the form');
         $this->assertSame(3, $record->year);
     }
 
@@ -758,7 +742,7 @@ class UrfApprovalChainTest extends TestCase
         $student = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
         $fresh = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
         $department = Department::create(['name' => 'Closed Test Department', 'code' => 'CLSTD']);
-        $branch = UgBranch::create(['programme' => 'BE', 'code' => 'CLSTB', 'name' => 'Closed Test Branch', 'department_id' => $department->id]);
+        $department = Department::firstOrCreate(['code' => 'CLSTB'], ['name' => 'Closed Test Department']);
         $mentor = $this->faculty(990181, $department);
 
         $this->actingAs($admin, 'sanctum')->postJson('/api/settings/urf', ['applications_open' => 1])->assertOk();
@@ -767,7 +751,7 @@ class UrfApprovalChainTest extends TestCase
             'project_title' => 'Closed window project ' . Str::random(4),
             'student1_name' => 'Closed Student',
             'student1_roll_no' => '10230' . random_int(1000, 9999),
-            'student1_branch_id' => $branch->id,
+            'student1_department_id' => $department->id,
             'student1_year' => 2,
             'student1_gender' => 'Male',
             'student1_email' => $student->email,
@@ -817,7 +801,9 @@ class UrfApprovalChainTest extends TestCase
     public function test_only_one_report_round_runs_at_a_time(): void
     {
         $admin = $this->userAs('admin', ['can_manage_urf' => 'true']);
-        $year = (int) now()->year;
+        // Next year's rounds, so none of them is running: a round that is open
+        // keeps the day it opened, which is a rule of its own and not this one.
+        $year = (int) now()->year + 1;
 
         $round = fn (array $body) => $this->actingAs($admin, 'sanctum')
             ->postJson('/api/urf/report-windows', $body);
@@ -957,7 +943,7 @@ class UrfApprovalChainTest extends TestCase
         $admin = $this->userAs('admin', ['can_manage_urf' => 'true', 'can_manage_app_settings' => 'true']);
         $student = $this->userAs('ug_student', ['can_apply_for_urf' => 'true']);
         $department = Department::create(['name' => 'Queue Test Department', 'code' => 'QUETD']);
-        $branch = UgBranch::create(['programme' => 'BE', 'code' => 'QUETB', 'name' => 'Queue Test Branch', 'department_id' => $department->id]);
+        $department = Department::firstOrCreate(['code' => 'QUETB'], ['name' => 'Queue Test Department']);
         $mentor = $this->faculty(990111, $department);
         $stranger = $this->faculty(990112, $department);
 
@@ -968,7 +954,7 @@ class UrfApprovalChainTest extends TestCase
             'project_title' => $title,
             'student1_name' => 'Queue Student',
             'student1_roll_no' => '10230' . random_int(1000, 9999),
-            'student1_branch_id' => $branch->id,
+            'student1_department_id' => $department->id,
             'student1_year' => 3,
             'student1_gender' => 'Female',
             'student1_email' => $student->email,

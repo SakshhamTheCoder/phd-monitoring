@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Helpers\CloudflareHelper;
 use App\Models\Role;
 use App\Models\UgStudent;
+use App\Support\UgYear;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -79,8 +80,10 @@ class UgSignupController extends Controller
             'gender' => 'required|in:Male,Female',
             'password' => ($vouchedFor ? 'nullable' : 'required') . '|string|min:8|confirmed',
             'roll_no' => 'required|string|max:50|unique:ug_students,roll_no',
-            'branch_id' => 'required|exists:ug_branches,id',
-            'year' => 'required|integer|between:1,4',
+            'department_id' => 'required|exists:departments,id',
+            // The address carries the admission year, so the year is only asked
+            // for when it cannot be read from the address.
+            'year' => 'nullable|integer|between:1,5',
         ]);
 
         // A Google sign-up chose no password and needs no confirmation: Google
@@ -90,8 +93,8 @@ class UgSignupController extends Controller
 
             $user->ugStudent()->create([
                 'roll_no' => $data['roll_no'],
-                'branch_id' => $data['branch_id'],
-                'year' => $data['year'],
+                'department_id' => $data['department_id'],
+                'year' => $data['year'] ?? UgYear::fromEmail($data['email']),
             ]);
 
             return $user;

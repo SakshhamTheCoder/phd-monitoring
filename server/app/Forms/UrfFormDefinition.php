@@ -72,7 +72,7 @@ final class UrfFormDefinition extends FormDefinition
         $rows = [
             self::row([Field::text('Title of Project')->value($application['project_title'] ?? null)], space: 3),
             self::row([Field::table('Team members', [
-                'name' => 'Name', 'roll_no' => 'Roll number', 'branch' => 'Branch', 'year' => 'Year',
+                'name' => 'Name', 'roll_no' => 'Roll number', 'department' => 'Department', 'year' => 'Year',
                 'gender' => 'Gender', 'email' => 'Official email', 'phone' => 'Phone',
             ], self::students($application))], space: 3),
             self::row([Field::table('Faculty mentors', [
@@ -156,7 +156,7 @@ final class UrfFormDefinition extends FormDefinition
             $students[] = [
                 'name' => $record["student{$n}_name"],
                 'roll_no' => $record["student{$n}_roll_no"] ?? null,
-                'branch' => $record["student{$n}_branch"]['name'] ?? 'N/A',
+                'department' => $record["student{$n}_department"]['name'] ?? 'N/A',
                 'year' => self::yearLabel($record["student{$n}_year"] ?? null),
                 'gender' => $record["student{$n}_gender"] ?? null,
                 'email' => $record["student{$n}_email"] ?? null,

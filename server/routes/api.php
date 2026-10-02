@@ -448,10 +448,6 @@ Route::prefix('ug-students')->group(function () {
     require base_path('routes/base/ug_students.php');
 });
 
-Route::prefix('ug-branches')->group(function () {
-    require base_path('routes/base/ug_branches.php');
-});
-
 Route::prefix('synopsis-checklist')->group(function () {
     require base_path('routes/base/synopsis_checklist.php');
 });

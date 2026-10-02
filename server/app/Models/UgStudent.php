@@ -15,7 +15,7 @@ class UgStudent extends Model
      */
     private const ELIGIBLE_EMAIL = '/(?:^|[^a-z])(?:be|btech)\d{2}@thapar\.edu$/i';
 
-    protected $fillable = ['roll_no', 'branch_id', 'year'];
+    protected $fillable = ['roll_no', 'department_id', 'year'];
 
     protected $appends = ['semester_of_study'];
 
@@ -62,8 +62,9 @@ class UgStudent extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function branch()
+    /** Which ADORDC reads the URF forms this student is named on. */
+    public function department()
     {
-        return $this->belongsTo(UgBranch::class, 'branch_id');
+        return $this->belongsTo(Department::class);
     }
 }

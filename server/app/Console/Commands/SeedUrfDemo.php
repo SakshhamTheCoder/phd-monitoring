@@ -2,11 +2,12 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Department;
 use App\Models\Faculty;
 use App\Models\Publication;
 use App\Models\Role;
-use App\Models\UgBranch;
 use App\Models\UgStudent;
+use App\Support\DepartmentCodes;
 use App\Models\UrfApplication;
 use App\Models\UrfFellow;
 use App\Models\UrfReport;
@@ -34,7 +35,7 @@ class SeedUrfDemo extends Command
     protected $signature = 'urf:seed-demo
         {email : the UG student the projects belong to}
         {--mentor= : the mentor, by email or faculty code, and the first internal faculty member otherwise}
-        {--branch= : the UG branch code or id, used only when the account has no branch yet}
+        {--department= : the department code or id, used only when the account has no UG record yet}
         {--sessions= : comma separated years, and last year plus this year otherwise}
         {--verify : mark the address confirmed, for a demonstration account that never followed its link}
         {--undo : remove the projects this command created for that student}';
@@ -104,9 +105,9 @@ class SeedUrfDemo extends Command
 
     private function attachUgRecord(User $student): ?UgStudent
     {
-        $branch = $this->branch();
-        if (!$branch) {
-            $this->error('No UG branches exist yet. Add one on the URF configuration page, or pass --branch.');
+        $department = $this->department();
+        if (!$department) {
+            $this->error('No departments exist yet, so there is nothing to file the student under.');
             return null;
         }
 
@@ -117,7 +118,7 @@ class SeedUrfDemo extends Command
 
         $record = $student->ugStudent()->create([
             'roll_no' => $roll,
-            'branch_id' => $branch->id,
+            'department_id' => $department->id,
             'year' => 4,
         ]);
 
@@ -126,18 +127,18 @@ class SeedUrfDemo extends Command
             $student->forceFill(['role_id' => $ugRole, 'current_role_id' => $ugRole, 'default_role_id' => $ugRole])->save();
         }
 
-        $this->warn('The account had no UG record, so one was added: roll ' . $roll . ', ' . $branch->code . ', year 4.');
+        $this->warn('The account had no UG record, so one was added: roll ' . $roll . ', ' . $department->code . ', year 4.');
 
         return $record;
     }
 
-    private function branch(): ?UgBranch
+    private function department(): ?Department
     {
-        $given = $this->option('branch');
+        $given = $this->option('department');
 
         return $given
-            ? UgBranch::where('code', $given)->orWhere('id', $given)->first()
-            : UgBranch::orderBy('id')->first();
+            ? DepartmentCodes::resolve($given) ?: Department::find($given)
+            : Department::orderBy('id')->first();
     }
 
     private function mentor(): ?Faculty
@@ -177,7 +178,7 @@ class SeedUrfDemo extends Command
                     : "On device speech models for regional languages ({$session})",
                 'student1_name' => $student->name(),
                 'student1_roll_no' => $record->roll_no,
-                'student1_branch_id' => $record->branch_id,
+                'student1_department_id' => $record->department_id,
                 'student1_year' => $record->year ?: 4,
                 'student1_gender' => $student->gender ?: 'Male',
                 'student1_email' => $student->email,

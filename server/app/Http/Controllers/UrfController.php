@@ -8,8 +8,10 @@ use App\Http\Controllers\Traits\NotificationManager;
 use App\Http\Controllers\Traits\SaveFile;
 use App\Models\AppSetting;
 use App\Models\Faculty;
-use App\Models\UgBranch;
+use App\Models\Department;
 use App\Models\UgStudent;
+use App\Support\DepartmentCodes;
+use App\Support\UgYear;
 use App\Models\Patent;
 use App\Models\Publication;
 use App\Models\UrfApplication;
@@ -62,7 +64,7 @@ class UrfController extends Controller
     ];
 
     private const DETAIL = [
-        'student1Branch', 'student2Branch',
+        'student1Department', 'student2Department',
         'mentor1.user', 'mentor1.department', 'mentor2.user', 'mentor2.department',
         'fellows', 'reports',
     ];
@@ -80,7 +82,7 @@ class UrfController extends Controller
         }
 
         $query = UrfApplication::with([
-            'student1Branch', 'student2Branch',
+            'student1Department', 'student2Department',
             'mentor1.user', 'mentor1.department:id,code', 'mentor2.user', 'mentor2.department:id,code',
         ])
             ->orderByDesc('session')
@@ -101,10 +103,10 @@ class UrfController extends Controller
                 'session' => $a->session,
                 'project_title' => $a->project_title,
                 'students' => collect([$a->student1_name, $a->student2_name])->filter()->join(', '),
-                // Two students of the same branch and year say it once.
-                'branch' => collect([
-                    [$a->student1Branch?->name, $a->student1_year],
-                    [$a->student2Branch?->name, $a->student2_year],
+                // Two students of the same department and year say it once.
+                'department' => collect([
+                    [$a->student1Department?->name, $a->student1_year],
+                    [$a->student2Department?->name, $a->student2_year],
                 ])->map(fn ($pair) => collect([$pair[0], UrfApplication::yearLabel($pair[1])])->filter()->join(', '))
                     ->filter()->unique()->join(' · '),
                 'mentors' => collect([$a->mentor1, $a->mentor2])->filter()
@@ -126,8 +128,8 @@ class UrfController extends Controller
             'total' => $page->total(),
             'totalPages' => $page->lastPage(),
             'role' => $user->current_role->role,
-            'fields' => ['session', 'project_title', 'students', 'branch', 'mentors', 'stage', 'status', 'applied_on'],
-            'fieldsTitles' => ['Session', 'Project Title', 'Students', 'Branch and Year', 'Mentors', 'Waiting On', 'Status', 'Applied On'],
+            'fields' => ['session', 'project_title', 'students', 'department', 'mentors', 'stage', 'status', 'applied_on'],
+            'fieldsTitles' => ['Session', 'Project Title', 'Students', 'Department and Year', 'Mentors', 'Waiting On', 'Status', 'Applied On'],
         ]);
     }
 
@@ -145,7 +147,7 @@ class UrfController extends Controller
         $filters = json_decode((string) $request->query('filters'), true);
         $details = $form === 'urf-additional-info';
         $page = ($details ? UrfFellow::query() : UrfReport::where('type', $form === 'urf-final-report' ? 'final' : 'half_yearly'))
-            ->with(['application.student1Branch', 'application.student2Branch', 'user'])
+            ->with(['application.student1Department', 'application.student2Department', 'user'])
             ->unless($user->may('can_manage_urf'), fn ($q) => $q->whereHas(
                 'application',
                 fn ($a) => $a->mentoredBy($user->faculty?->faculty_code)
@@ -158,8 +160,8 @@ class UrfController extends Controller
         $student = function ($row) {
             $n = $row->application->slotOf($row->user);
             return [
-                'branch' => collect([
-                    $row->application->{"student{$n}Branch"}?->name,
+                'department' => collect([
+                    $row->application->{"student{$n}Department"}?->name,
                     UrfApplication::yearLabel($row->application->{"student{$n}_year"}),
                 ])->filter()->join(', '),
             ];
@@ -187,11 +189,11 @@ class UrfController extends Controller
             'totalPages' => $page->lastPage(),
             'role' => $user->current_role->role,
             'fields' => $details
-                ? ['session', 'student', 'branch', 'project_title', 'stage', 'submitted_on']
-                : ['session', 'project_title', 'submitted_by', 'branch', 'conference_presentation', 'submitted_on', 'report'],
+                ? ['session', 'student', 'department', 'project_title', 'stage', 'submitted_on']
+                : ['session', 'project_title', 'submitted_by', 'department', 'conference_presentation', 'submitted_on', 'report'],
             'fieldsTitles' => $details
-                ? ['Session', 'Student', 'Branch and Year', 'Project Title', 'Waiting On', 'Submitted On']
-                : ['Session', 'Project Title', 'Submitted By', 'Branch and Year', 'Conference Presentation', 'Submitted On', 'Report'],
+                ? ['Session', 'Student', 'Department and Year', 'Project Title', 'Waiting On', 'Submitted On']
+                : ['Session', 'Project Title', 'Submitted By', 'Department and Year', 'Conference Presentation', 'Submitted On', 'Report'],
         ]);
     }
 
@@ -211,7 +213,7 @@ class UrfController extends Controller
 
         // The office reads every form. Everyone else has to be a step on this
         // one: a student of the project, its mentor, the ADORDC of their
-        // branch's department, or the DORDC.
+        // student's department, or the DORDC.
         $step = $instance->stepFor($user);
         $office = $user->may('can_manage_urf');
         if (!$office && !$step) {
@@ -378,10 +380,10 @@ class UrfController extends Controller
         return response()->json($this->payload($application, $user));
     }
 
-    /** Public: a student picking their branch at sign-up has no account yet. */
-    public function branches()
+    /** Public: a student picking their department at sign-up has no account yet. */
+    public function departments()
     {
-        return response()->json(UgBranch::ordered()->get(['id', 'programme', 'code', 'name']));
+        return response()->json(Department::orderBy('name')->get(['id', 'code', 'name']));
     }
 
     /** The sessions that have projects, for the year picker. */
@@ -493,7 +495,7 @@ class UrfController extends Controller
             'session' => (int) now()->year,
             // What they gave at sign-up. Absent for an account the office made,
             // and then the application form asks for it.
-            'student' => $user->ugStudent()->with('branch:id,programme,code,name')->first(),
+            'student' => $user->ugStudent()->with('department:id,code,name')->first(),
             // The account as it stands now, not as it was at sign-in.
             'account' => $user->only(['email', 'phone', 'gender']),
             'report_windows' => UrfReportWindow::orderByDesc('session')->get(),
@@ -543,7 +545,7 @@ class UrfController extends Controller
         // and the second mentor off rather than emptying each box; what was
         // typed for them then goes.
         if ($request->has('has_teammate') && !$request->boolean('has_teammate')) {
-            $request->merge(array_fill_keys(array_map(fn ($f) => "student2_$f", ['name', 'roll_no', 'branch_id', 'year', 'gender', 'email', 'phone']), null));
+            $request->merge(array_fill_keys(array_map(fn ($f) => "student2_$f", ['name', 'roll_no', 'department_id', 'year', 'gender', 'email', 'phone']), null));
         }
         if ($request->has('has_mentor2') && !$request->boolean('has_mentor2')) {
             $request->merge(['mentor2_faculty_code' => null]);
@@ -555,14 +557,14 @@ class UrfController extends Controller
             'project_title' => 'required|string|max:255',
             'student1_name' => 'required|string|max:255',
             'student1_roll_no' => 'required|string|max:50',
-            'student1_branch_id' => 'required|exists:ug_branches,id',
+            'student1_department_id' => 'required|exists:departments,id',
             'student1_year' => 'required|integer|between:1,4',
             'student1_gender' => 'required|in:Male,Female',
             'student1_email' => 'required|email',
             'student1_phone' => 'required|string|max:20',
             'student2_name' => 'nullable|string|max:255',
             'student2_roll_no' => "$second|string|max:50",
-            'student2_branch_id' => "$second|exists:ug_branches,id",
+            'student2_department_id' => "$second|exists:departments,id",
             'student2_year' => "$second|integer|between:1,4",
             'student2_gender' => "$second|in:Male,Female",
             'student2_email' => "$second|email|different:student1_email",
@@ -591,11 +593,11 @@ class UrfController extends Controller
             }
         }
 
-        // Roll number and branch come from the account, not the form, so they
-        // cannot drift between applications.
+        // Roll number and department come from the account, not the form, so
+        // they cannot drift between applications.
         if ($record = $user->ugStudent) {
             $data['student1_roll_no'] = $record->roll_no;
-            $data['student1_branch_id'] = $record->branch_id;
+            $data['student1_department_id'] = $record->department_id;
             if ((int) $data['student1_year'] !== (int) $record->year) {
                 $record->update(['year' => $data['student1_year']]);
             }
@@ -641,7 +643,6 @@ class UrfController extends Controller
         }
 
         $rows = $request->validate(['rows' => 'required|array|min:1'])['rows'];
-        $branches = UgBranch::all();
 
         $added = 0;
         $updated = 0;
@@ -681,7 +682,7 @@ class UrfController extends Controller
                     if ($cell("student{$slot}_email") === '') {
                         continue;
                     }
-                    $students[$slot] = $this->awardedStudent($row, $slot, $branches, $line);
+                    $students[$slot] = $this->awardedStudent($row, $slot, $line);
                 }
             } catch (\RuntimeException $e) {
                 $errors[] = $e->getMessage();
@@ -706,7 +707,7 @@ class UrfController extends Controller
                 $application->fill([
                     "student{$slot}_name" => $student ? $student['name'] : null,
                     "student{$slot}_roll_no" => $student ? $student['roll_no'] : null,
-                    "student{$slot}_branch_id" => $student ? $student['branch_id'] : null,
+                    "student{$slot}_department_id" => $student ? $student['department_id'] : null,
                     "student{$slot}_year" => $student ? $student['year'] : null,
                     "student{$slot}_gender" => $student ? $student['gender'] : null,
                     "student{$slot}_email" => $student ? $student['email'] : null,
@@ -743,13 +744,12 @@ class UrfController extends Controller
      * The account and record for one student on an awarded row, made if they
      * have none.
      *
-     * The branch comes from their own record where they already have one, so a
-     * sheet naming a department rather than a branch still imports. Only a
-     * student the portal has never seen has to be given a branch code, because
-     * a department maps to several branches and guessing which is not something
+     * The department comes from their own record where they already have one.
+     * Only a student the portal has never seen has to be given a department
+     * code in the sheet, and a superseded code is accepted, because that is
      * an import should do.
      */
-    private function awardedStudent(array $row, int $slot, $branches, $line): array
+    private function awardedStudent(array $row, int $slot, $line): array
     {
         $cell = fn (string $key) => trim((string) ($row[$key] ?? ''));
         $email = $cell("student{$slot}_email");
@@ -761,21 +761,26 @@ class UrfController extends Controller
         }
 
         $account = User::where('email', $email)->first();
-        $branchId = $account?->ugStudent?->branch_id;
+        $departmentId = $account?->ugStudent?->department_id;
 
-        if (!$branchId) {
-            $code = $cell("student{$slot}_branch_code");
-            $branch = $branches->first(fn (UgBranch $b) => strcasecmp($b->code, $code) === 0);
-            if (!$branch) {
+        if (!$departmentId) {
+            $code = $cell("student{$slot}_department") ?: $cell("student{$slot}_department_code");
+            $department = DepartmentCodes::resolve($code);
+            if (!$department) {
                 throw new \RuntimeException(
-                    "Row {$line}: {$email} is not on the portal yet, so the row needs a branch code for them"
+                    "Row {$line}: {$email} is not on the portal yet, so the row needs a department for them"
                     . ($code === '' ? "." : ", and '{$code}' is not one.")
                 );
             }
-            $branchId = $branch->id;
+            $departmentId = $department->id;
         }
 
-        $year = (int) ($cell("student{$slot}_year") ?: $account?->ugStudent?->year ?: 0);
+        // A sheet of fellows often gives the address and not the year, and the
+        // address carries the admission year, which does not go stale.
+        $year = (int) ($cell("student{$slot}_year")
+            ?: $account?->ugStudent?->year
+            ?: UgYear::fromEmail($email)
+            ?: 0);
         $gender = $cell("student{$slot}_gender");
 
         $parts = preg_split('/\s+/', $name, 2);
@@ -787,7 +792,7 @@ class UrfController extends Controller
             'gender' => in_array($gender, ['Male', 'Female'], true) ? $gender : null,
         ];
 
-        $account = DB::transaction(function () use ($details, $account, $rollNo, $branchId, $year) {
+        $account = DB::transaction(function () use ($details, $account, $rollNo, $departmentId, $year) {
             if ($account) {
                 $account->fill(array_filter($details))->save();
             } else {
@@ -797,7 +802,7 @@ class UrfController extends Controller
             $record = $account->ugStudent ?: $account->ugStudent()->make();
             $record->fill(array_filter([
                 'roll_no' => $rollNo,
-                'branch_id' => $branchId,
+                'department_id' => $departmentId,
                 'year' => $year ?: null,
             ]));
             $account->ugStudent()->save($record);
@@ -809,7 +814,7 @@ class UrfController extends Controller
             'account' => $account,
             'name' => $name,
             'roll_no' => $rollNo,
-            'branch_id' => $branchId,
+            'department_id' => $departmentId,
             'year' => $year ?: null,
             'gender' => $details['gender'],
             'email' => $email,

@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Department;
 use App\Models\Faculty;
 use App\Models\Role;
-use App\Models\UgBranch;
 use App\Models\UrfApplication;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
@@ -26,7 +25,8 @@ class UrfAwardedImportTest extends TestCase
     use DatabaseTransactions;
 
     private Department $department;
-    private UgBranch $branch;
+    // The one the imported students are filed under, which is not the mentor's.
+    private Department $studentDepartment;
     private User $office;
     private Faculty $mentor;
 
@@ -39,10 +39,7 @@ class UrfAwardedImportTest extends TestCase
             ['name' => 'URF Import Test Department']
         );
 
-        $this->branch = UgBranch::firstOrCreate(
-            ['programme' => 'BE', 'code' => 'URFC'],
-            ['name' => 'URF Test Branch', 'department_id' => $this->department->id]
-        );
+        $this->studentDepartment = Department::firstOrCreate(['code' => 'URFC'], ['name' => 'URF Import Test Students']);
 
         $this->office = $this->userAs('admin', ['can_manage_urf' => 'true']);
         $this->mentor = $this->facultyFor($this->userAs('faculty'), 993001);
@@ -92,7 +89,7 @@ class UrfAwardedImportTest extends TestCase
             'student1_phone' => '9800000001',
             'student1_gender' => 'Female',
             'student1_year' => 3,
-            'student1_branch_code' => 'URFC',
+            'student1_department_code' => 'URFC',
             'mentor1_email' => $this->mentor->user->email,
         ], $overrides);
     }
@@ -144,7 +141,7 @@ class UrfAwardedImportTest extends TestCase
         $account = User::where('email', 'awarded.one@thapar.test')->first();
         $this->assertNotNull($account);
         $this->assertSame('102203001', $account->ugStudent->roll_no);
-        $this->assertSame($this->branch->id, $account->ugStudent->branch_id);
+        $this->assertSame($this->studentDepartment->id, $account->ugStudent->department_id);
     }
 
     public function test_a_mentor_the_portal_does_not_know_names_the_row(): void
@@ -157,13 +154,13 @@ class UrfAwardedImportTest extends TestCase
         $this->assertSame(0, UrfApplication::where('project_title', 'Low power sensing for field robots')->count());
     }
 
-    public function test_a_new_student_without_a_branch_code_names_the_row(): void
+    public function test_a_new_student_without_a_department_code_names_the_row(): void
     {
-        $response = $this->import([$this->row(['student1_branch_code' => ''])])
+        $response = $this->import([$this->row(['student1_department_code' => ''])])
             ->assertStatus(200);
 
         $this->assertSame(0, $response->json('added'));
-        $this->assertStringContainsString('branch code', $response->json('errors.0'));
+        $this->assertStringContainsString('needs a department', $response->json('errors.0'));
     }
 
     public function test_the_same_file_twice_updates_rather_than_duplicates(): void

@@ -3,7 +3,7 @@
 // the next caller asks again instead of inheriting the failure.
 import { baseURL } from './urls';
 import { customFetch } from './base';
-import { apiUrfBranches } from './urf';
+import { apiUrfDepartments } from './urf';
 
 const sharedRequest = (load) => {
   let pending = null;
@@ -27,4 +27,5 @@ export const apiDepartmentList = sharedRequest(() =>
 
 export const apiRoleList = sharedRequest(() => customFetch(`${baseURL}/roles`, 'GET'));
 
-export const apiBranchOptions = sharedRequest(apiUrfBranches);
+// Public: sign-up asks for it before anybody is logged in.
+export const apiUgDepartmentOptions = sharedRequest(apiUrfDepartments);

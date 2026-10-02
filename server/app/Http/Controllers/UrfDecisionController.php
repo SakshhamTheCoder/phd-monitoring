@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 
 /**
  * Answering a URF form: the student files it, the mentor reads it, then the
- * ADORDC of their branch's department, then the DORDC.
+ * ADORDC of their department, then the DORDC.
  *
  * Rejecting ends the project and is the DORDC's alone, since theirs is also
  * the approval that selects it. The office's Select and Reject override both.
@@ -107,8 +107,8 @@ class UrfDecisionController extends Controller
         $waiting = collect();
         foreach ([UrfApplication::class, UrfFellow::class, UrfReport::class] as $model) {
             $rows = $model === UrfApplication::class
-                ? $model::with(['student1Branch', 'mentor1', 'mentor2'])->where('stage', '!=', UrfApplication::COMPLETE)->get()
-                : $model::with(['application.student1Branch'])->where('stage', '!=', UrfApplication::COMPLETE)->get();
+                ? $model::with(['student1Department', 'mentor1', 'mentor2'])->where('stage', '!=', UrfApplication::COMPLETE)->get()
+                : $model::with(['application.student1Department'])->where('stage', '!=', UrfApplication::COMPLETE)->get();
 
             $waiting = $waiting->concat($rows->filter(fn ($row) => $row->awaits($user)));
         }
@@ -206,7 +206,7 @@ class UrfDecisionController extends Controller
         }
 
         if ($stage === 'adordc') {
-            $department = $application->student1Branch?->department_id;
+            $department = $application->student1_department_id;
 
             return User::whereHas('faculty.adordcDepartments', fn ($q) => $q->when($department, fn ($inner) => $inner->where('departments.id', $department)))->get();
         }

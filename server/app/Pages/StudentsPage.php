@@ -3,7 +3,7 @@
 namespace App\Pages;
 
 use App\Forms\Field;
-use App\Models\UgBranch;
+use App\Models\Department;
 use App\Models\User;
 use App\Support\Navigation;
 
@@ -55,7 +55,7 @@ final class StudentsPage extends PageDefinition
             ] : [],
             'table' => [
                 'endpoint' => '/ug-students',
-                'search' => ['path' => '/ug-students', 'placeholder' => 'Search by name, roll number or branch…'],
+                'search' => ['path' => '/ug-students', 'placeholder' => 'Search by name, roll number or department…'],
                 // UG students have no profile page; editing is in the row menu.
                 'select' => false,
                 'filters' => ['conditions' => []],
@@ -140,15 +140,15 @@ final class StudentsPage extends PageDefinition
                 ...($managesUrf ? ['ug-import' => [
                     'kind' => 'rows',
                     'title' => 'Bulk import UG students',
-                    'required' => ['full_name', 'email', 'roll_no', 'branch_code', 'year'],
+                    'required' => ['full_name', 'email', 'roll_no', 'department_code'],
                     'rules' => [
                         'Matched on email, so importing a corrected file updates rather than duplicates.',
-                        'branch_code is the code from Configuration, and programme narrows it when two degrees share one.',
+                        'department_code is the code from the Departments page, for example CSED. A superseded code still reads.',
                         'year is the year of study, 1 to 4.',
                         'A new student is emailed a link to set their password.',
                     ],
                     'sample' => ['name' => 'ug_students_sample.csv', 'csv' => implode("\n", [
-                        'full_name,email,roll_no,programme,branch_code,year,phone,gender',
+                        'full_name,email,roll_no,department_code,year,phone,gender',
                         'Nikhil Verma,nverma_be23@thapar.edu,102303001,BE,COE,2,9876500000,Male',
                         'Aarti Singh,asingh_btech22@thapar.edu,102203002,BTech,CSE,3,9876500001,Female',
                     ])],
@@ -163,8 +163,8 @@ final class StudentsPage extends PageDefinition
     private static function ugRows(bool $edit): array
     {
         $text = fn (string $label, string $key) => Field::text($label)->key($key)->value('')->from($key)->open();
-        $branches = UgBranch::ordered()->get(['id', 'programme', 'name'])
-            ->map(fn ($branch) => ['title' => "{$branch->programme} {$branch->name}", 'value' => $branch->id])->all();
+        $departments = Department::orderBy('name')->get(['id', 'name'])
+            ->map(fn ($department) => ['title' => $department->name, 'value' => $department->id])->all();
         $suffix = fn (int $year) => ['', 'st', 'nd', 'rd'][$year] ?? 'th';
 
         return [
@@ -173,7 +173,7 @@ final class StudentsPage extends PageDefinition
                 $text('Last Name', 'last_name'),
                 $text('Institute Email', 'email')->inputType('email')->required(),
                 $text('Roll Number', 'roll_no')->required(),
-                Field::select('Branch', $branches)->key('branch_id')->value('')->from('branch_id')->required()->open(),
+                Field::select('Department', $departments)->key('department_id')->value('')->from('department_id')->required()->open(),
                 $text('Phone Number', 'phone'),
                 Field::select('Gender', [['title' => 'Male', 'value' => 'Male'], ['title' => 'Female', 'value' => 'Female']])->key('gender')->value('')->from('gender')->open(),
                 Field::select('Year of Study', array_map(fn ($year) => ['title' => $year . $suffix($year) . ' Year', 'value' => $year], [1, 2, 3, 4]))

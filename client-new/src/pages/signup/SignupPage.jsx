@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import Loader from '../../components/loader/loader';
 import { apiUrfResendVerification, apiUrfSignup } from '../../api/urf';
 import { NETWORK_ERROR_MESSAGE } from '../../api/base';
-import { useBranches } from '../../hooks/useBranches';
+import { useUgDepartments } from '../../hooks/useUgDepartments';
 import { rootURL } from '../../api/urls';
 import { mountTurnstile } from '../login/turnstile';
 
@@ -28,7 +28,7 @@ const Field = ({ id, label, error, children }) => (
 
 const SignupPage = () => {
   const { register, handleSubmit, reset } = useForm();
-  const branches = useBranches();
+  const departments = useUgDepartments();
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [captchaToken, setCaptchaToken] = useState(null);
@@ -132,12 +132,6 @@ const SignupPage = () => {
     setCaptchaToken(null);
     if (window.turnstile && !google) window.turnstile.reset();
   };
-
-  // Grouped, or the two Computer Engineering branches read as duplicates.
-  const byProgramme = branches.reduce((groups, branch) => {
-    (groups[branch.programme] = groups[branch.programme] || []).push(branch);
-    return groups;
-  }, {});
 
   const resend = async () => {
     setResending(true);
@@ -244,18 +238,16 @@ const SignupPage = () => {
                   </select>
                 </Field>
 
-                <Field id="branch_id" label="Branch" error={errors.branch_id}>
-                  <select id="branch_id" className={field} defaultValue="" {...register('branch_id', { required: true })}>
+                <Field id="department_id" label="Department" error={errors.department_id}>
+                  <select id="department_id" className={field} defaultValue="" {...register('department_id', { required: true })}>
                     <option value="" disabled>Select</option>
-                    {Object.entries(byProgramme).map(([programme, list]) => (
-                      <optgroup key={programme} label={programme}>
-                        {list.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
-                      </optgroup>
+                    {departments.map((department) => (
+                      <option key={department.id} value={department.id}>{department.name}</option>
                     ))}
                   </select>
                 </Field>
-                <Field id="year" label="Year of study" error={errors.year}>
-                  <select id="year" className={field} defaultValue="" {...register('year', { required: true })}>
+                <Field id="year" label="Year of study" error={errors.year} hint="Leave this alone and we read it from your address">
+                  <select id="year" className={field} defaultValue="" {...register('year')}>
                     <option value="" disabled>Select</option>
                     {YEARS.map((year) => <option key={year.value} value={year.value}>{year.label}</option>)}
                   </select>

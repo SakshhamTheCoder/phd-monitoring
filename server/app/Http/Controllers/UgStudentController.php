@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Traits\FilterLogicTrait;
 use App\Models\Role;
-use App\Models\UgBranch;
 use App\Models\UgStudent;
+use App\Support\DepartmentCodes;
+use App\Support\UgYear;
 use App\Models\UrfApplication;
 use App\Models\User;
 use App\Support\ImportReport;
@@ -34,7 +35,7 @@ class UgStudentController extends Controller
             return $this->refuse();
         }
 
-        $query = UgStudent::with(['user', 'branch'])->latest('id');
+        $query = UgStudent::with(['user', 'department'])->latest('id');
 
         // A mentor reads the students on the projects they mentor, as they read
         // the projects themselves. Membership is the first student's account or
@@ -68,8 +69,8 @@ class UgStudentController extends Controller
                     'first_name' => $student->user?->first_name,
                     'last_name' => $student->user?->last_name,
                     'roll_no' => $student->roll_no,
-                    'branch' => $student->branch ? "{$student->branch->programme} {$student->branch->name}" : null,
-                    'branch_id' => $student->branch_id,
+                    'department' => $student->department?->name,
+                    'department_id' => $student->department_id,
                     'year_of_study' => $student->year,
                     'year' => UrfApplication::yearLabel($student->year),
                     'semester' => $student->semester_of_study,
@@ -83,8 +84,8 @@ class UgStudentController extends Controller
             'total' => $page->total(),
             'totalPages' => $page->lastPage(),
             'role' => $user->current_role->role,
-            'fields' => ['name', 'roll_no', 'branch', 'year', 'semester', 'email', 'phone', 'projects', 'latest'],
-            'fieldsTitles' => ['Name', 'Roll No', 'Branch', 'Year', 'Semester', 'Email', 'Phone', 'URF Projects', 'Latest Project'],
+            'fields' => ['name', 'roll_no', 'department', 'year', 'semester', 'email', 'phone', 'projects', 'latest'],
+            'fieldsTitles' => ['Name', 'Roll No', 'Department', 'Year', 'Semester', 'Email', 'Phone', 'URF Projects', 'Latest Project'],
         ]);
     }
 
@@ -93,7 +94,7 @@ class UgStudentController extends Controller
         return response()->json($this->getAvailableFilters('ug_students'));
     }
 
-    /** For a student who cannot sign up: an address carrying no programme, say. */
+    /** For a student who cannot sign up: an address the portal does not expect, say. */
     public function store(Request $request)
     {
         $user = Auth::user();
@@ -114,7 +115,7 @@ class UgStudentController extends Controller
 
         $created->inviteToSetPassword();
 
-        return response()->json($created->load('ugStudent.branch'), 201);
+        return response()->json($created->load('ugStudent.department'), 201);
     }
 
     public function update(Request $request, $userId)
@@ -139,7 +140,7 @@ class UgStudentController extends Controller
         $record->fill($this->record($data));
         $account->ugStudent()->save($record);
 
-        return response()->json($account->load('ugStudent.branch'));
+        return response()->json($account->load('ugStudent.department'));
     }
 
     /**
@@ -155,7 +156,6 @@ class UgStudentController extends Controller
 
         $rows = $request->validate(['rows' => 'required|array|min:1'])['rows'];
         $role = Role::where('role', 'ug_student')->firstOrFail();
-        $branches = UgBranch::all();
 
         $added = 0;
         $updated = 0;
@@ -166,9 +166,10 @@ class UgStudentController extends Controller
             $email = trim((string) ($row['email'] ?? ''));
             $rollNo = trim((string) ($row['roll_no'] ?? ''));
             $name = trim((string) ($row['full_name'] ?? ''));
-            $code = trim((string) ($row['branch_code'] ?? ''));
-            $programme = trim((string) ($row['programme'] ?? ''));
-            $year = (int) trim((string) ($row['year'] ?? ''));
+            $code = trim((string) ($row['department_code'] ?? $row['department'] ?? ''));
+            // The address carries the admission year, so a sheet that leaves the
+            // year out still files the student in the right one.
+            $year = (int) (trim((string) ($row['year'] ?? '')) ?: UgYear::fromEmail($email) ?: 0);
 
             if ($email === '' || $rollNo === '' || $name === '') {
                 $errors[] = "Row {$line}: full_name, email and roll_no are all needed.";
@@ -180,11 +181,10 @@ class UgStudentController extends Controller
                 continue;
             }
 
-            $branch = $branches->first(fn (UgBranch $b) => strcasecmp($b->code, $code) === 0
-                && ($programme === '' || strcasecmp($b->programme, $programme) === 0));
+            $department = DepartmentCodes::resolve($code);
 
-            if (!$branch) {
-                $errors[] = "Row {$line}: no branch matches '{$programme} {$code}'.";
+            if (!$department) {
+                $errors[] = "Row {$line}: no department matches '{$code}'.";
                 continue;
             }
 
@@ -205,7 +205,7 @@ class UgStudentController extends Controller
                 'gender' => trim((string) ($row['gender'] ?? '')) ?: null,
             ];
 
-            $account = DB::transaction(function () use ($details, $rollNo, $branch, $account, $year) {
+            $account = DB::transaction(function () use ($details, $rollNo, $department, $account, $year) {
                 if ($account) {
                     $account->fill(array_filter($details))->save();
                 } else {
@@ -213,7 +213,7 @@ class UgStudentController extends Controller
                 }
 
                 $record = $account->ugStudent ?: $account->ugStudent()->make();
-                $record->fill(['roll_no' => $rollNo, 'branch_id' => $branch->id, 'year' => $year]);
+                $record->fill(['roll_no' => $rollNo, 'department_id' => $department->id, 'year' => $year]);
                 $account->ugStudent()->save($record);
 
                 return $account;
@@ -256,13 +256,13 @@ class UgStudentController extends Controller
         ];
 
         // Who they are is not. The roll number identifies them across imports,
-        // and the branch is what routes a form to an ADORDC, so once a project
+        // and the department is what routes a form to an ADORDC, so once a project
         // exists these are the office's to change.
         $applied = UrfApplication::forMember($user)->exists();
         if (!$applied) {
             $rules += [
                 'roll_no' => ['required', 'string', 'max:50', Rule::unique('ug_students')->ignore($record->id)],
-                'branch_id' => 'required|exists:ug_branches,id',
+                'department_id' => 'required|exists:departments,id',
                 'year' => 'required|integer|between:1,4',
             ];
         }
@@ -273,12 +273,12 @@ class UgStudentController extends Controller
         if (!$applied) {
             $record->fill([
                 'roll_no' => $data['roll_no'],
-                'branch_id' => $data['branch_id'],
+                'department_id' => $data['department_id'],
                 'year' => $data['year'],
             ])->save();
         }
 
-        return response()->json($record->fresh()->load('branch:id,programme,code,name'));
+        return response()->json($record->fresh()->load('department:id,code,name'));
     }
 
     private function rules(?User $account = null): array
@@ -290,7 +290,7 @@ class UgStudentController extends Controller
             'phone' => ['nullable', 'string', 'max:20'],
             'gender' => 'nullable|in:Male,Female',
             'roll_no' => ['required', 'string', 'max:50', Rule::unique('ug_students')->ignore($account?->ugStudent?->id)],
-            'branch_id' => 'required|exists:ug_branches,id',
+            'department_id' => 'required|exists:departments,id',
             'year' => 'required|integer|between:1,4',
         ];
     }
@@ -299,7 +299,7 @@ class UgStudentController extends Controller
     {
         return [
             'roll_no' => $data['roll_no'],
-            'branch_id' => $data['branch_id'],
+            'department_id' => $data['department_id'],
             'year' => $data['year'],
         ];
     }

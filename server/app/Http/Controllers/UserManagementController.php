@@ -235,7 +235,7 @@ class UserManagementController extends Controller
     /** Written only when the form sends them, so other users are untouched. */
     private function saveUgStudentRecord(User $user, Request $request): void
     {
-        if (!$request->hasAny(['roll_no', 'branch_id', 'year'])) {
+        if (!$request->hasAny(['roll_no', 'department_id', 'year'])) {
             return;
         }
 
@@ -246,7 +246,7 @@ class UserManagementController extends Controller
         $record = $user->ugStudent ?: $user->ugStudent()->make();
         $record->fill(array_filter([
             'roll_no' => $request->roll_no,
-            'branch_id' => $request->branch_id,
+            'department_id' => $request->department_id,
             'year' => $request->year,
         ]));
         $user->ugStudent()->save($record);
@@ -273,7 +273,7 @@ class UserManagementController extends Controller
             'status' => 'nullable|in:active,inactive',
             // The UG student record, which the office may correct at any time.
             'roll_no' => 'nullable|string|max:50',
-            'branch_id' => 'nullable|exists:ug_branches,id',
+            'department_id' => 'nullable|exists:departments,id',
             'year' => 'nullable|integer|between:1,4',
         ];
 

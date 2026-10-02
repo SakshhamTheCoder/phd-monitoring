@@ -13,7 +13,7 @@ const toFormData = (body) => {
 };
 
 export const apiUrfMine = () => customFetch(`${URF}/mine`, 'GET', {});
-export const apiUrfBranches = () => customFetch(`${URF}/branches`, 'GET', {}, true);
+export const apiUrfDepartments = () => customFetch(`${URF}/departments`, 'GET', {}, true);
 export const apiUrfUpdateMine = (body) => customFetch(`${URF}/me`, 'PATCH', body, true);
 
 const UG_STUDENTS = `${baseURL}/ug-students`;
@@ -40,9 +40,3 @@ export const apiUrfResendVerification = (email) => customFetch(`${URF}/resend-ve
 // Projects awarded before the portal existed, from the office's own sheet.
 export const apiUrfImportAwarded = (rows) => customFetch(`${URF}/import-awarded`, 'POST', { rows }, false);
 
-const BRANCHES = `${baseURL}/ug-branches`;
-export const apiBranchList = () => customFetch(BRANCHES, 'GET', {});
-export const apiBranchCreate = (body) => customFetch(BRANCHES, 'POST', body, true);
-export const apiBranchUpdate = (id, body) => customFetch(`${BRANCHES}/${id}`, 'PATCH', body, true);
-export const apiBranchDelete = (id) => customFetch(`${BRANCHES}/${id}`, 'DELETE', {}, true);
-export const apiBranchImport = (rows) => customFetch(`${BRANCHES}/import`, 'POST', { rows }, false);

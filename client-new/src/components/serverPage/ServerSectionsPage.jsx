@@ -5,11 +5,10 @@ import Tabs from '../tabs/Tabs';
 import LoadError from '../common/LoadError';
 import { useView } from '../../api/views';
 import SettingsSection from './SettingsSection';
-import UgBranches from '../../pages/admin/configuration/UgBranches';
 import SynopsisChecklist from '../../pages/admin/configuration/SynopsisChecklist';
 
 // Sections with behaviour of their own, which the server places by name.
-const BLOCKS = { 'ug-branches': UgBranches, 'synopsis-checklist': SynopsisChecklist };
+const BLOCKS = { 'synopsis-checklist': SynopsisChecklist };
 
 /**
  * A page of sections, one per tab, as the server describes it (GET

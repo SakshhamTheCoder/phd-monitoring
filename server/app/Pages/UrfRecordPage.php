@@ -68,7 +68,7 @@ final class UrfRecordPage extends PageDefinition
                 ]],
                 ['kind' => 'forms', 'title' => 'Forms', 'forms' => self::forms($record)],
                 ['kind' => 'panel', 'parts' => array_values(array_filter([
-                    self::table('Team members', ['name' => 'Name', 'roll_no' => 'Roll number', 'branch' => 'Branch', 'year' => 'Year', 'gender' => 'Gender', 'email' => 'Official email', 'phone' => 'Phone'], self::students($record)),
+                    self::table('Team members', ['name' => 'Name', 'roll_no' => 'Roll number', 'department' => 'Department', 'year' => 'Year', 'gender' => 'Gender', 'email' => 'Official email', 'phone' => 'Phone'], self::students($record)),
                     self::table('Faculty mentors', ['name' => 'Name', 'email' => 'Email', 'designation' => 'Designation', 'department' => 'Department'], self::mentors($record), ['name' => 'faculty']),
                     isset($record['other_projects'])
                         ? self::table('Eligibility: other URF projects', ['student' => 'Student', 'session' => 'Session', 'project_title' => 'Project', 'status' => 'Status', 'final_report' => 'Final report', 'publications' => 'Publications'], self::otherProjects($record['other_projects']))
@@ -135,7 +135,7 @@ final class UrfRecordPage extends PageDefinition
             $rows[] = [
                 'name' => $record["student{$n}_name"],
                 'roll_no' => $record["student{$n}_roll_no"] ?? null,
-                'branch' => $record["student{$n}_branch"]['name'] ?? self::EMPTY,
+                'department' => $record["student{$n}_department"]['name'] ?? self::EMPTY,
                 'year' => self::yearLabel($record["student{$n}_year"] ?? null),
                 'gender' => $record["student{$n}_gender"] ?? null,
                 'email' => $record["student{$n}_email"] ?? null,

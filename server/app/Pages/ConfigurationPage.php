@@ -9,7 +9,7 @@ use App\Support\Navigation;
  * Admin, Configuration: values the app reads at runtime, one tab per group.
  * A settings group is described here (its fields, the checks a save must pass
  * and what is said), and read and saved through its own settings endpoint.
- * UG branches and the synopsis checklist are lists of their own, drawn by
+ * The synopsis checklist is a list of its own, drawn by
  * blocks each client implements once.
  *
  * Shape: { version, title, description, sections: [ { value, label, section } ] }
@@ -101,7 +101,6 @@ final class ConfigurationPage extends PageDefinition
                     // load cannot be followed by saving the blank form over them.
                     'save_needs_load' => true,
                 ]],
-                ['value' => 'branches', 'label' => 'UG branches', 'section' => ['block' => 'ug-branches']],
                 ['value' => 'coursework', 'label' => 'Coursework credits', 'section' => [
                     'kind' => 'settings',
                     'group' => 'coursework',

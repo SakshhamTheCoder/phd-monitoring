@@ -59,10 +59,10 @@ trait UrfApprovable
         }
 
         if ($role === 'adordc') {
-            $department = $application->student1Branch?->department_id;
+            $department = $application->student1_department_id;
             $theirs = $user->faculty?->adordcDepartments->pluck('id') ?? collect();
 
-            // A branch with no department yet sits with every ADORDC rather
+            // A student with no department yet sits with every ADORDC rather
             // than with none, so a form cannot be stranded by a missing link.
             return $department === null || $theirs->contains($department) ? 'adordc' : null;
         }

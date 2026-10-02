@@ -3,10 +3,10 @@
 namespace App\Pages;
 
 use App\Forms\Field;
+use App\Models\Department;
 use App\Forms\ResolvesRows;
 use App\Models\Patent;
 use App\Models\Publication;
-use App\Models\UgBranch;
 use App\Models\User;
 
 /**
@@ -30,7 +30,7 @@ final class UrfStudentFormRows
             'phone' => $user->phone,
             'gender' => $user->gender,
             'roll_no' => $student['roll_no'] ?? null,
-            'branch_id' => $student['branch_id'] ?? null,
+            'department_id' => $student['department_id'] ?? null,
         ];
         $start = $initial ?? [
             'student1_name' => $account['name'],
@@ -38,7 +38,7 @@ final class UrfStudentFormRows
             'student1_phone' => $account['phone'],
             'student1_gender' => $account['gender'],
             'student1_roll_no' => $account['roll_no'],
-            'student1_branch_id' => $account['branch_id'],
+            'student1_department_id' => $account['department_id'],
             'student1_year' => $student['year'] ?? null,
         ];
 
@@ -126,7 +126,7 @@ final class UrfStudentFormRows
             self::row([
                 $locked('Name', $application["student{$slot}_name"] ?? null),
                 $locked('Roll No.', $application["student{$slot}_roll_no"] ?? null),
-                $locked('Branch', $application["student{$slot}_branch"]['name'] ?? null),
+                $locked('Department', $application["student{$slot}_department"]['name'] ?? null),
                 $locked('Email', $application["student{$slot}_email"] ?? null),
                 $locked('Contact No.', $application["student{$slot}_phone"] ?? null),
                 $locked('Faculty Mentor Name', implode(', ', array_map($mentorName, $mentors))),
@@ -164,13 +164,13 @@ final class UrfStudentFormRows
         // What the account already knows is locked, and sent anyway.
         $known = fn (Field $field, string $part) => !empty($account[$part]) ? $field->lockedIf(true)->alwaysSent() : $field;
         $years = array_map(fn ($year) => ['title' => $year . (['', 'st', 'nd', 'rd'][$year] ?? 'th') . ' Year', 'value' => $year], [1, 2, 3, 4]);
-        $branches = UgBranch::ordered()->get(['id', 'programme', 'name'])
-            ->map(fn ($branch) => ['title' => "{$branch->programme} {$branch->name}", 'value' => $branch->id])->all();
+        $departments = Department::orderBy('name')->get(['id', 'name'])
+            ->map(fn ($department) => ['title' => $department->name, 'value' => $department->id])->all();
 
         return [self::row([
             $known(Field::text('Name')->key($key('name'))->value($start[$key('name')] ?? null)->required()->open(), 'name'),
             $known(Field::text('Roll Number')->key($key('roll_no'))->value($start[$key('roll_no')] ?? null)->required()->open(), 'roll_no'),
-            $known(Field::select('Branch', $branches)->key($key('branch_id'))->value($start[$key('branch_id')] ?? null)->required()->open(), 'branch_id'),
+            $known(Field::select('Department', $departments)->key($key('department_id'))->value($start[$key('department_id')] ?? null)->required()->open(), 'department_id'),
             // Not locked: the year moves with the student, and a fellow applying
             // again next year corrects it here.
             Field::select('Year', $years)->key($key('year'))->value($start[$key('year')] ?? null)->required()->open(),

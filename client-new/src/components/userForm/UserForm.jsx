@@ -10,7 +10,7 @@ import GridContainer from '../forms/fields/GridContainer';
 import ToggleSwitch from '../forms/fields/ToggleSwitch';
 import LoadError from '../common/LoadError';
 import StatusNotice from '../common/StatusNotice';
-import useBranches from '../../hooks/useBranches';
+import useUgDepartmentOptions from '../../hooks/useUgDepartments';
 import useDoneFlash from '../../hooks/useDoneFlash';
 import './UserForm.css';
 
@@ -39,7 +39,7 @@ const UserForm = ({ edit, userData, onClose }) => {
   const [rolesLoaded, setRolesLoaded] = useState(false);
   const [rolesFailed, setRolesFailed] = useState(false);
   // The URF details behind a ug_student account, which only that role has.
-  const branches = useBranches();
+  const departments = useUgDepartmentOptions();
 
   useEffect(() => {
     fetchRoles();
@@ -64,7 +64,7 @@ const UserForm = ({ edit, userData, onClose }) => {
         status: userData.status || 'active',
         password: '',
         roll_no: userData.ug_student?.roll_no || '',
-        branch_id: userData.ug_student?.branch_id || '',
+        department_id: userData.ug_student?.department_id || '',
         year: userData.ug_student?.year || '',
       });
     }
@@ -353,11 +353,11 @@ const UserForm = ({ edit, userData, onClose }) => {
                   onChange={(value) => setFormData((prev) => ({ ...prev, roll_no: value }))}
                 />,
                 <DropdownField
-                  label="Branch"
-                  options={branches}
-                  initialValue={formData.branch_id || ''}
-                  onChange={(value) => setFormData((prev) => ({ ...prev, branch_id: value }))}
-                  key={`branch_${formData.id || 'new'}`}
+                  label="Department"
+                  options={departments}
+                  initialValue={formData.department_id || ''}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, department_id: value }))}
+                  key={`department_${formData.id || 'new'}`}
                 />,
                 <DropdownField
                   label="Year of study (blank counts from the roll number)"

@@ -2,20 +2,21 @@
 
 namespace App\Pages;
 
+use App\Models\Department;
+
 use App\Http\Controllers\UrfController;
-use App\Models\UgBranch;
 use App\Models\User;
 
 /**
  * A UG student's home, laid out like the PhD student profile: their name with
  * their current URF project under it, their details below that, then that
- * project and the ones behind it. Roll number, branch and year come from what
+ * project and the ones behind it. Roll number, department and year come from what
  * they gave at sign-up, falling back to the current application for an
  * account the office created.
  */
 final class UgProfilePage extends PageDefinition
 {
-    // Who they are is on a URF project once they apply, and the branch is what
+    // Who they are is on a URF project once they apply, and the department is what
     // routes a form to an ADORDC, so those rows say why rather than disappearing.
     private const LOCKED_NOTE = 'On a URF project now. Ask the office to change it.';
 
@@ -40,8 +41,8 @@ final class UgProfilePage extends PageDefinition
         $slot = $slotOn($current);
         $locked = fn (array $row) => $row + ($applied ? ['disabled' => true, 'hint' => self::LOCKED_NOTE] : []);
 
-        $branches = UgBranch::ordered()->get(['id', 'programme', 'name'])
-            ->map(fn ($branch) => ['title' => "{$branch->programme} {$branch->name}", 'value' => $branch->id])->all();
+        $departments = Department::orderBy('name')->get(['id', 'name'])
+            ->map(fn ($department) => ['title' => $department->name, 'value' => $department->id])->all();
         $years = array_map(fn ($year) => ['title' => self::yearLabel($year), 'value' => $year], [1, 2, 3, 4]);
 
         return self::page(implode(' ', array_filter([$user->first_name, $user->last_name])), null, [
@@ -53,7 +54,7 @@ final class UgProfilePage extends PageDefinition
                     'phone' => $account['phone'] ?? '',
                     'gender' => $account['gender'] ?? '',
                     'roll_no' => $student['roll_no'] ?? '',
-                    'branch_id' => $student['branch_id'] ?? '',
+                    'department_id' => $student['department_id'] ?? '',
                     'year' => $student['year'] ?? '',
                 ],
                 'request' => ['method' => 'PATCH', 'path' => '/urf/me', 'done' => 'Your details are saved', 'failure' => 'fetch', 'loader' => false],
@@ -67,14 +68,13 @@ final class UgProfilePage extends PageDefinition
                     ['label' => 'Faculty Mentors', 'links' => $current ? self::mentors($current) : null],
                 ], 'rows' => [
                     $locked(['label' => 'Roll Number', 'value' => ($student['roll_no'] ?? null) ?: ($current["student{$slot}_roll_no"] ?? null), 'field' => 'roll_no']),
-                    $locked(['label' => 'Branch', 'value' => ($student['branch']['name'] ?? null) ?: ($current["student{$slot}_branch"]['name'] ?? null), 'field' => 'branch_id', 'options' => $branches]),
+                    $locked(['label' => 'Department', 'value' => ($student['department']['name'] ?? null) ?: ($current["student{$slot}_department"]['name'] ?? null), 'field' => 'department_id', 'options' => $departments]),
                     $locked(['label' => 'Year', 'value' => self::yearLabel(($student['year'] ?? null) ?: ($current["student{$slot}_year"] ?? null)), 'field' => 'year', 'options' => $years]),
                     // Counted from the year rather than stored, so there is nothing to edit.
                     ['label' => 'Semester', 'value' => $student['semester_of_study'] ?? null],
                     ['label' => 'Email', 'value' => $account['email'] ?? null],
                     ['label' => 'Phone', 'value' => $account['phone'] ?? null, 'field' => 'phone'],
                     ['label' => 'Gender', 'value' => $account['gender'] ?? null, 'field' => 'gender', 'options' => [['title' => 'Male', 'value' => 'Male'], ['title' => 'Female', 'value' => 'Female']]],
-                    ['label' => 'Programme', 'value' => $student['branch']['programme'] ?? null],
                 ]],
                 $current ? self::projects('Current URF project', [$current], $slotOn) : null,
                 $past ? self::projects('Past URF projects', $past, $slotOn) : null,
@@ -93,7 +93,7 @@ final class UgProfilePage extends PageDefinition
                 ['key' => 'project_title', 'title' => 'Project title'],
                 ['key' => 'status', 'title' => 'Status', 'cell' => 'status'],
                 ['key' => 'teammate', 'title' => 'Team member'],
-                ['key' => 'teammate_branch', 'title' => 'Branch'],
+                ['key' => 'teammate_department', 'title' => 'Department'],
                 ['key' => 'teammate_year', 'title' => 'Year'],
                 // Each mentor links to their own research profile, as names do elsewhere.
                 ['key' => 'mentors', 'title' => 'Faculty mentors', 'cell' => 'faculty-links'],
@@ -106,7 +106,7 @@ final class UgProfilePage extends PageDefinition
                     'project_title' => $application['project_title'],
                     'status' => $application['status'],
                     'teammate' => $teammate ?: self::EMPTY,
-                    'teammate_branch' => ($teammate ? ($application["student{$other}_branch"]['name'] ?? null) : null) ?: self::EMPTY,
+                    'teammate_department' => ($teammate ? ($application["student{$other}_department"]['name'] ?? null) : null) ?: self::EMPTY,
                     'teammate_year' => ($teammate ? self::yearLabel($application["student{$other}_year"] ?? null) : null) ?: self::EMPTY,
                     'mentors' => self::mentors($application),
                 ];
